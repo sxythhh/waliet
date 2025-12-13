@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
@@ -66,6 +67,8 @@ const PLATFORM_LOGOS: Record<string, string> = {
   x: xLogo
 };
 
+type MobileView = 'messages' | 'conversation' | 'creators';
+
 export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -77,6 +80,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [messageInput, setMessageInput] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<MobileView>('creators');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -191,6 +195,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     const existing = conversations.find(c => c.creator_id === creator.id);
     if (existing) {
       setActiveConversation({ ...existing, creator });
+      setMobileView('conversation');
       return;
     }
 
@@ -208,6 +213,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       const newConversation = { ...data, creator };
       setConversations(prev => [newConversation, ...prev]);
       setActiveConversation(newConversation);
+      setMobileView('conversation');
     }
   };
 
@@ -425,7 +431,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   if (loading) {
     return (
       <div className="h-full flex">
-        <div className="w-80 border-r border-border p-4 space-y-4">
+        <div className="w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4 hidden lg:block">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3].map(i => (
             <div key={i} className="flex items-center gap-3 p-3">
@@ -437,8 +443,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             </div>
           ))}
         </div>
-        <div className="flex-1" />
-        <div className="w-80 border-l border-border p-4 space-y-4">
+        <div className="flex-1 hidden lg:block" />
+        <div className="w-full lg:w-96 border-l border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4">
           <Skeleton className="h-6 w-24" />
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="flex items-center gap-3 p-3">
@@ -454,11 +460,41 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     );
   }
 
+  // Mobile Navigation Tabs
+  const MobileNav = () => (
+    <div className="lg:hidden flex border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
+      <button
+        onClick={() => setMobileView('messages')}
+        className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
+          mobileView === 'messages' 
+            ? 'text-primary border-b-2 border-primary' 
+            : 'text-muted-foreground'
+        }`}
+      >
+        Messages
+      </button>
+      <button
+        onClick={() => setMobileView('creators')}
+        className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
+          mobileView === 'creators' 
+            ? 'text-primary border-b-2 border-primary' 
+            : 'text-muted-foreground'
+        }`}
+      >
+        Creators ({creators.length})
+      </button>
+    </div>
+  );
+
   return (
-    <div className="h-full flex bg-background">
+    <div className="h-full flex flex-col lg:flex-row bg-background">
+      <MobileNav />
+      
       {/* Left Column - Conversations List */}
-      <div className="w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className={`w-full lg:w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] flex flex-col ${
+        mobileView === 'messages' ? 'flex' : 'hidden lg:flex'
+      } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+        <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Messages</h2>
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
@@ -480,7 +516,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
               {conversations.map(conv => {
                 const creator = getConversationCreator(conv);
                 return (
@@ -489,7 +525,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                     className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
                       activeConversation?.id === conv.id ? "bg-muted/50" : ""
                     }`}
-                    onClick={() => setActiveConversation({ ...conv, creator })}
+                    onClick={() => {
+                      setActiveConversation({ ...conv, creator });
+                      setMobileView('conversation');
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
@@ -516,11 +555,21 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       </div>
 
       {/* Middle Column - Active Conversation */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 border-r border-[#e0e0e0] dark:border-[#1a1a1a] ${
+        mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'
+      }`}>
         {activeConversation ? (
           <>
             {/* Conversation Header */}
-            <div className="p-4 border-b border-border flex items-center gap-3">
+            <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 lg:hidden"
+                onClick={() => setMobileView('messages')}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <Avatar className="h-9 w-9">
                 <AvatarImage src={activeConversation.creator?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -560,10 +609,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               </div>
             </ScrollArea>
 
-            {/* Message Input */}
-            <div className="p-4 border-t border-border">
-              <div className="rounded-xl border border-border bg-card p-3">
-                <Input
+            {/* Redesigned Message Input */}
+            <div className="p-4 md:p-6 border-t border-[#e0e0e0] dark:border-[#1a1a1a] bg-background">
+              <div className="rounded-2xl border border-[#e0e0e0] dark:border-[#1a1a1a] bg-card shadow-sm overflow-hidden">
+                <Textarea
                   placeholder="Type a message..."
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
@@ -573,20 +622,32 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       sendMessage();
                     }
                   }}
-                  className="border-0 focus-visible:ring-0 p-0 h-auto text-sm"
+                  className="border-0 focus-visible:ring-0 resize-none min-h-[80px] text-sm px-4 pt-4 pb-2"
+                  rows={3}
                 />
-                <div className="flex items-center justify-between mt-3">
+                <div className="flex items-center justify-between px-4 pb-4">
                   <div className="flex items-center gap-1">
-                    {/* Placeholder for emoji/formatting buttons */}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Smile className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Link className="h-4 w-4" />
+                    </Button>
                   </div>
                   <Button
                     size="sm"
-                    className="h-8 px-4 gap-2"
+                    className="h-9 px-5 gap-2 rounded-lg bg-[#0a0a0a] dark:bg-white text-white dark:text-[#0a0a0a] hover:bg-[#0a0a0a]/90 dark:hover:bg-white/90"
                     onClick={sendMessage}
                     disabled={!messageInput.trim() || sendingMessage}
                   >
                     Send
-                    <span className="text-xs opacity-70">⌘↵</span>
+                    <span className="text-xs opacity-60 hidden sm:inline">⌘ ↵</span>
                   </Button>
                 </div>
               </div>
@@ -603,8 +664,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       </div>
 
       {/* Right Column - Creators List */}
-      <div className="w-96 border-l border-border flex flex-col">
-        <div className="p-4 border-b border-border flex items-center justify-between">
+      <div className={`w-full lg:w-96 flex flex-col ${
+        mobileView === 'creators' ? 'flex' : 'hidden lg:flex'
+      } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+        <div className="p-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Creators</h2>
             <span className="text-xs text-muted-foreground">({creators.length})</span>
@@ -623,7 +686,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         </div>
 
         {/* Search */}
-        <div className="p-3 border-b border-border">
+        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -645,7 +708,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
               {filteredCreators.map(creator => (
                 <div
                   key={creator.id}
