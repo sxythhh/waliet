@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,13 @@ import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface Campaign {
   id: string;
@@ -406,6 +413,102 @@ export function DiscoverTab() {
             <h1 className="text-2xl font-bold tracking-tight">Discover Opportunities</h1>
             <p className="text-muted-foreground">Find campaigns and bounties that match your content style</p>
           </div>
+
+          {/* Featured Programs Carousel */}
+          {campaigns.filter(c => c.is_featured && c.status === 'active').length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold tracking-tight">Featured Programs</h2>
+              <Carousel
+                opts={{
+                  align: "start",
+                  loop: true,
+                }}
+                className="w-full"
+              >
+                <CarouselContent className="-ml-4">
+                  {campaigns.filter(c => c.is_featured && c.status === 'active').map((campaign) => (
+                    <CarouselItem key={campaign.id} className="pl-4 md:basis-full lg:basis-full">
+                      <button
+                        onClick={() => {
+                          setSelectedCampaign(campaign);
+                          setSheetOpen(true);
+                        }}
+                        className="w-full text-left"
+                      >
+                        <div className="relative h-[280px] rounded-2xl overflow-hidden group cursor-pointer">
+                          {/* Background Image */}
+                          <div 
+                            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+                            style={{ 
+                              backgroundImage: campaign.banner_url 
+                                ? `url(${campaign.banner_url})` 
+                                : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+                            }}
+                          />
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+                          
+                          {/* Content */}
+                          <div className="relative h-full p-6 flex flex-col justify-between">
+                            {/* Brand Logo */}
+                            <div className="w-14 h-14 rounded-full bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
+                              {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
+                                <img 
+                                  src={campaign.brands?.logo_url || campaign.brand_logo_url} 
+                                  alt={campaign.brand_name}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white text-xl font-bold">
+                                  {campaign.brand_name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Campaign Info */}
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <h3 className="text-2xl font-bold text-white tracking-tight">
+                                  {campaign.title}
+                                </h3>
+                                <p className="text-white/70 text-sm max-w-lg line-clamp-2">
+                                  {campaign.description || `Join the ${campaign.brand_name} creator program`}
+                                </p>
+                              </div>
+                              
+                              {/* Stats Row */}
+                              <div className="flex items-center gap-8">
+                                <div className="space-y-1">
+                                  <p className="text-white/50 text-xs uppercase tracking-wider">Rewards</p>
+                                  <div className="flex items-center gap-2 text-white">
+                                    <DollarSign className="h-4 w-4" />
+                                    <span className="font-medium">${campaign.rpm_rate} per 1K views</span>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-white/50 text-xs uppercase tracking-wider">Category</p>
+                                  <div className="flex items-center gap-2 text-white">
+                                    <Sparkles className="h-4 w-4" />
+                                    <span className="font-medium">Creator</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {campaigns.filter(c => c.is_featured && c.status === 'active').length > 1 && (
+                  <>
+                    <CarouselPrevious className="left-4 bg-background/80 backdrop-blur-sm border-0 hover:bg-background" />
+                    <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm border-0 hover:bg-background" />
+                  </>
+                )}
+              </Carousel>
+            </div>
+          )}
 
         {/* Quick Stats */}
         
