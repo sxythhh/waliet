@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2, Ban, Shield } from "lucide-react";
+import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2, Ban, Shield, LogIn } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -140,6 +141,7 @@ export function UserDetailsDialog({
   const {
     toast
   } = useToast();
+  const navigate = useNavigate();
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
@@ -152,6 +154,7 @@ export function UserDetailsDialog({
   const [isBanning, setIsBanning] = useState(false);
   const [existingBan, setExistingBan] = useState<any>(null);
   const [loadingBan, setLoadingBan] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(false);
 
   // Fetch existing IP ban status when dialog opens
   useEffect(() => {
@@ -235,6 +238,39 @@ export function UserDetailsDialog({
       });
     } finally {
       setIsBanning(false);
+    }
+  };
+
+  const handleImpersonateUser = async () => {
+    if (!user?.id) return;
+    setIsImpersonating(true);
+    try {
+      // Call edge function to generate impersonation link
+      const { data, error } = await supabase.functions.invoke("impersonate-user", {
+        body: { userId: user.id }
+      });
+
+      if (error) throw error;
+      if (!data?.magicLink) throw new Error("No magic link received");
+
+      // Close dialog and redirect to magic link
+      onOpenChange(false);
+      toast({
+        title: "Impersonating User",
+        description: `Signing in as ${user.username}...`
+      });
+      
+      // Navigate to the magic link
+      window.location.href = data.magicLink;
+    } catch (error: any) {
+      console.error("Error impersonating user:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to impersonate user",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImpersonating(false);
     }
   };
   const copyToClipboard = (text: string, label: string) => {
@@ -886,6 +922,26 @@ export function UserDetailsDialog({
                       </Button>
                     </div>
                   )}
+                </div>
+
+                {/* Impersonate User */}
+                <div className="p-4 rounded-lg bg-[#111]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <LogIn className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-medium font-inter tracking-[-0.5px]">Impersonate User</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Sign in as this user to view their dashboard
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" 
+                    onClick={handleImpersonateUser}
+                    disabled={isImpersonating}
+                  >
+                    {isImpersonating ? "Signing in..." : "View as User"}
+                  </Button>
                 </div>
               </div>
             </ScrollArea>
