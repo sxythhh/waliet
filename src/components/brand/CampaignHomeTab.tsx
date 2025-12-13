@@ -547,7 +547,7 @@ export function CampaignHomeTab({
         <div className="flex items-center justify-between mb-5">
           {/* Metric Toggles */}
           <div className="flex items-center gap-2">
-            {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
                 <div className={`w-2 h-2 rounded-full transition-opacity ${activeMetrics.includes(metric) ? 'opacity-100' : 'opacity-40'}`} style={{
               backgroundColor: METRIC_COLORS[metric]
             }} />
@@ -557,10 +557,10 @@ export function CampaignHomeTab({
 
           {/* Daily/Cumulative Toggle */}
           <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5">
-            <button onClick={() => setChartMode('daily')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${chartMode === 'daily' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setChartMode('daily')} className={`px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Daily
             </button>
-            <button onClick={() => setChartMode('cumulative')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setChartMode('cumulative')} className={`px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Cumulative
             </button>
           </div>
@@ -613,7 +613,7 @@ export function CampaignHomeTab({
                                   </span>
                                 </div>
                                 <span className="text-xs font-medium text-foreground tracking-[-0.5px]">
-                                  {formatNumber(entry.value)}
+                                  {Number(entry.value).toLocaleString()}
                                 </span>
                               </div>;
                   })}
