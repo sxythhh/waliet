@@ -533,12 +533,12 @@ export function CampaignHomeTab({
       </div>
 
       {/* Metrics Chart */}
-      <Card className="p-5 bg-card/30 border-table-border">
-        <div className="flex items-center justify-between mb-5">
+      <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <span className="text-xs text-muted-foreground tracking-[-0.5px]">
+              <span className="text-xs text-muted-foreground tracking-[-0.5px] hidden sm:inline">
                 Next refresh: {format(new Date(Math.ceil(Date.now() / (4 * 60 * 60 * 1000)) * (4 * 60 * 60 * 1000)), 'h:mm a')}
               </span>
             )}
@@ -550,10 +550,10 @@ export function CampaignHomeTab({
         </div>
 
         {/* Controls Row */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
           {/* Metric Toggles */}
-          <div className="flex items-center gap-2">
-            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
                 <div className={`w-2 h-2 rounded-full transition-opacity ${activeMetrics.includes(metric) ? 'opacity-100' : 'opacity-40'}`} style={{
               backgroundColor: METRIC_COLORS[metric]
             }} />
@@ -562,17 +562,17 @@ export function CampaignHomeTab({
           </div>
 
           {/* Daily/Cumulative Toggle */}
-          <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5">
-            <button onClick={() => setChartMode('daily')} className={`px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+          <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5 self-start sm:self-auto">
+            <button onClick={() => setChartMode('daily')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Daily
             </button>
-            <button onClick={() => setChartMode('cumulative')} className={`px-3 py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setChartMode('cumulative')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
               Cumulative
             </button>
           </div>
         </div>
 
-        <div className="h-72">
+        <div className="h-56 sm:h-72">
           {metricsData.length > 0 ? <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={metricsData} margin={{
             top: 10,
