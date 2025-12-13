@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -85,7 +85,7 @@ export function CreatorsTab({
 }: CreatorsTabProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const PLATFORM_LOGOS = getPlatformLogos(isDark);
+  const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
   
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -772,7 +772,7 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground">
                 Creators will appear here once they join your campaigns.
               </p>
-            </div> : <div className="divide-y divide-border/50">
+            </div> : <div>
               {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/30 transition-all cursor-pointer group" onClick={() => setSelectedCreator(creator)}>
                   {/* Header Row */}
                   <div className="flex items-start gap-3 mb-4">
@@ -835,7 +835,7 @@ export function CreatorsTab({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium truncate font-inter tracking-[-0.5px]">@{account.username}</p>
-                          {account.follower_count != null && (
+                          {account.follower_count != null && account.follower_count > 0 && (
                             <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
                               {account.follower_count >= 1000000 
                                 ? `${(account.follower_count / 1000000).toFixed(1)}M` 
@@ -845,7 +845,6 @@ export function CreatorsTab({
                             </p>
                           )}
                         </div>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                     ))}
                     {creator.social_accounts.length > 2 && (
