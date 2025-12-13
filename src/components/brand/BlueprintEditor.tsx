@@ -96,6 +96,8 @@ export function BlueprintEditor({
   const [saving, setSaving] = useState(false);
   const [newHashtag, setNewHashtag] = useState("");
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFileName, setUploadingFileName] = useState("");
   const [showCampaignWizard, setShowCampaignWizard] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
@@ -388,6 +390,20 @@ export function BlueprintEditor({
       return;
     }
     setUploadingVideo(true);
+    setUploadingFileName(file.name);
+    setUploadProgress(0);
+
+    // Simulate progress for better UX (since Supabase doesn't provide real progress)
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${blueprintId}/${Date.now()}.${fileExt}`;
@@ -397,8 +413,11 @@ export function BlueprintEditor({
         cacheControl: "3600",
         upsert: false
       });
+
+      clearInterval(progressInterval);
+
       if (uploadError) {
-        // If bucket doesn't exist, show appropriate error
+        setUploadProgress(0);
         if (uploadError.message.includes("Bucket not found")) {
           toast.error("Video storage not configured. Please contact support.");
         } else {
@@ -407,6 +426,8 @@ export function BlueprintEditor({
         console.error("Upload error:", uploadError);
         return;
       }
+
+      setUploadProgress(100);
       const {
         data: urlData
       } = supabase.storage.from("blueprint-videos").getPublicUrl(fileName);
@@ -421,14 +442,25 @@ export function BlueprintEditor({
       });
       toast.success("Video uploaded successfully");
     } catch (error) {
+      clearInterval(progressInterval);
       console.error("Upload error:", error);
       toast.error("Failed to upload video");
     } finally {
-      setUploadingVideo(false);
+      setTimeout(() => {
+        setUploadingVideo(false);
+        setUploadProgress(0);
+        setUploadingFileName("");
+      }, 500);
       if (videoInputRef.current) {
         videoInputRef.current.value = "";
       }
     }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
   if (loading) {
     return <div className="h-full flex items-center justify-center">
@@ -640,56 +672,116 @@ export function BlueprintEditor({
           </section>
 
           {/* Example Videos */}
-          <section className="space-y-2">
+          <section className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Example Videos</label>
-              <div className="flex items-center gap-1">
-                <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
-                <Button variant="ghost" size="sm" onClick={() => videoInputRef.current?.click()} disabled={uploadingVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                  {uploadingVideo ? <>
-                      <div className="h-3 w-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Uploading...
-                    </> : <>
-                      <Upload className="h-3 w-3 mr-1" />
-                      Upload
-                    </>}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add URL
-                </Button>
-              </div>
+              <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                <Plus className="h-3 w-3 mr-1" />
+                Add URL
+              </Button>
             </div>
-            <div className="rounded-md bg-muted/20 p-3">
-              {blueprint.example_videos.length === 0 ? <div className="py-8 text-center">
-                  <Video className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                  <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">
-                    No example videos added yet
-                  </p>
-                  <p className="text-muted-foreground/60 text-xs mt-1">
-                    Upload videos or add video URLs as examples for creators
-                  </p>
-                </div> : <div className="space-y-3">
-                  {blueprint.example_videos.map((video, index) => <div key={index} className="space-y-2 group">
-                      <div className="flex items-start gap-2">
-                        {/* Video preview if URL is valid */}
-                        {video.url && <div className="w-24 h-14 rounded overflow-hidden bg-background/50 flex-shrink-0">
-                            <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
-                          // Hide video element if URL is not a valid video
-                          (e.target as HTMLVideoElement).style.display = 'none';
-                        }} />
-                          </div>}
-                        <div className="flex-1 space-y-1.5">
-                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
-                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+
+            {/* Upload Zone */}
+            <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
+            <div 
+              onClick={() => !uploadingVideo && videoInputRef.current?.click()}
+              className={`relative rounded-xl bg-muted/10 p-6 cursor-pointer transition-all hover:bg-muted/20 ${uploadingVideo ? 'pointer-events-none' : ''}`}
+            >
+              {!uploadingVideo ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center">
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-inter tracking-[-0.5px] text-foreground">
+                      Upload a video
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      or <span className="text-primary hover:underline">click to browse</span> (max 100MB)
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Video className="h-4 w-4 text-primary" />
                       </div>
-                    </div>)}
-                </div>}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
+                          {uploadingFileName}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Video List */}
+            {blueprint.example_videos.length > 0 && (
+              <div className="space-y-2">
+                {blueprint.example_videos.map((video, index) => (
+                  <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+                    <div className="flex items-start gap-3">
+                      {/* Video preview */}
+                      {video.url && (
+                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
+                          <video 
+                            src={video.url} 
+                            className="w-full h-full object-cover" 
+                            muted 
+                            preload="metadata" 
+                            onError={e => {
+                              (e.target as HTMLVideoElement).style.display = 'none';
+                            }} 
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2 min-w-0">
+                        <Input 
+                          value={video.url} 
+                          onChange={e => updateExampleVideo(index, "url", e.target.value)} 
+                          placeholder="Video URL..." 
+                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" 
+                        />
+                        <Input 
+                          value={video.description} 
+                          onChange={e => updateExampleVideo(index, "description", e.target.value)} 
+                          placeholder="Why this is a good example..." 
+                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" 
+                        />
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeExampleVideo(index)} 
+                        className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Empty state when no videos */}
+            {blueprint.example_videos.length === 0 && !uploadingVideo && (
+              <p className="text-center text-xs text-muted-foreground/60 py-2">
+                Upload videos or add URLs as examples for creators
+              </p>
+            )}
           </section>
 
           {/* Target Personas */}
