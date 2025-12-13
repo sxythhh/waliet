@@ -267,7 +267,7 @@ export function ReferralsTab() {
             <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
           letterSpacing: '-0.5px'
         }} />
-            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-muted hover:bg-muted/80 text-muted-foreground">
+            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground hover:bg-foreground/90 text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
             </Button>
