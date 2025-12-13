@@ -831,9 +831,7 @@ export function CampaignsTab({
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                 {isEnded && <div className="absolute top-2 right-2">
-                  <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold">
-                    Ended
-                  </Badge>
+                  
                 </div>}
               </div>}
 
