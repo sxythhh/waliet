@@ -9,7 +9,6 @@ import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -275,15 +274,16 @@ export function WalletTab() {
     }
     setEarningsData(dataPoints);
   };
-
   const fetchTeamEarningsData = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
     const now = new Date();
     let start: Date;
     let days: number;
-
     switch (earningsChartPeriod) {
       case '1D':
         start = subDays(now, 1);
@@ -303,26 +303,19 @@ export function WalletTab() {
         days = 180;
         break;
     }
-
-    const { data: teamTransactions } = await supabase
-      .from("wallet_transactions")
-      .select("amount, created_at, type")
-      .eq("user_id", session.user.id)
-      .eq("type", "team_earning")
-      .gte("created_at", start.toISOString())
-      .order("created_at", { ascending: true });
-
+    const {
+      data: teamTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).eq("type", "team_earning").gte("created_at", start.toISOString()).order("created_at", {
+      ascending: true
+    });
     const dataPoints: TeamEarningsDataPoint[] = [];
     let cumulativeEarnings = 0;
-
     const pointCount = Math.min(days, 30);
     const interval = Math.max(1, Math.floor(days / pointCount));
-
     for (let i = 0; i <= pointCount; i++) {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
-
       if (teamTransactions) {
         teamTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
@@ -331,24 +324,23 @@ export function WalletTab() {
           }
         });
       }
-
       dataPoints.push({
         date: dateStr,
         amount: Number(cumulativeEarnings.toFixed(2))
       });
     }
-
     setTeamEarningsData(dataPoints);
   };
-
   const fetchAffiliateEarningsData = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
     const now = new Date();
     let start: Date;
     let days: number;
-
     switch (earningsChartPeriod) {
       case '1D':
         start = subDays(now, 1);
@@ -368,26 +360,19 @@ export function WalletTab() {
         days = 180;
         break;
     }
-
-    const { data: affiliateTransactions } = await supabase
-      .from("wallet_transactions")
-      .select("amount, created_at, type")
-      .eq("user_id", session.user.id)
-      .eq("type", "affiliate_earning")
-      .gte("created_at", start.toISOString())
-      .order("created_at", { ascending: true });
-
+    const {
+      data: affiliateTransactions
+    } = await supabase.from("wallet_transactions").select("amount, created_at, type").eq("user_id", session.user.id).eq("type", "affiliate_earning").gte("created_at", start.toISOString()).order("created_at", {
+      ascending: true
+    });
     const dataPoints: AffiliateEarningsDataPoint[] = [];
     let cumulativeEarnings = 0;
-
     const pointCount = Math.min(days, 30);
     const interval = Math.max(1, Math.floor(days / pointCount));
-
     for (let i = 0; i <= pointCount; i++) {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
-
       if (affiliateTransactions) {
         affiliateTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
@@ -396,13 +381,11 @@ export function WalletTab() {
           }
         });
       }
-
       dataPoints.push({
         date: dateStr,
         amount: Number(cumulativeEarnings.toFixed(2))
       });
     }
-
     setAffiliateEarningsData(dataPoints);
   };
   const fetchWithdrawalData = async () => {
@@ -1108,9 +1091,7 @@ export function WalletTab() {
           <div className="flex items-center justify-between">
             <Skeleton className="h-5 w-28" />
             <div className="flex gap-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-8 w-10 rounded-full" />
-              ))}
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-10 rounded-full" />)}
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1121,13 +1102,9 @@ export function WalletTab() {
                 <Skeleton className="h-4 w-16" />
               </div>
               <div className="h-[200px] flex items-end gap-2 pt-4">
-                {[...Array(12)].map((_, i) => (
-                  <Skeleton 
-                    key={i} 
-                    className="flex-1 rounded-t-sm" 
-                    style={{ height: `${Math.random() * 60 + 40}%` }}
-                  />
-                ))}
+                {[...Array(12)].map((_, i) => <Skeleton key={i} className="flex-1 rounded-t-sm" style={{
+                height: `${Math.random() * 60 + 40}%`
+              }} />)}
               </div>
             </div>
             {/* Stats Cards Skeleton */}
@@ -1173,13 +1150,10 @@ export function WalletTab() {
           <div className="rounded-xl bg-muted/30 overflow-hidden">
             <div className="p-4">
               <div className="grid grid-cols-6 gap-4">
-                {[...Array(6)].map((_, i) => (
-                  <Skeleton key={i} className="h-4 w-full" />
-                ))}
+                {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}
               </div>
             </div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="p-4">
+            {[...Array(5)].map((_, i) => <div key={i} className="p-4">
                 <div className="grid grid-cols-6 gap-4 items-center">
                   <div className="flex items-center gap-2">
                     <Skeleton className="w-8 h-8 rounded-full" />
@@ -1191,8 +1165,7 @@ export function WalletTab() {
                   <Skeleton className="h-4 w-16" />
                   <Skeleton className="h-4 w-16" />
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </div>;
@@ -1360,14 +1333,20 @@ export function WalletTab() {
                 }) => {
                   if (active && payload && payload.length) {
                     const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{
+                      letterSpacing: '-0.3px'
+                    }}>
                             <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                             <p className="text-sm font-bold">${value.toFixed(2)}</p>
                           </div>;
                   }
                   return null;
                 }} cursor={false} />
-                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} activeDot={{ r: 4, fill: '#3b82f6', stroke: 'none' }} />
+                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} activeDot={{
+                  r: 4,
+                  fill: '#3b82f6',
+                  stroke: 'none'
+                }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1410,10 +1389,14 @@ export function WalletTab() {
         <Card className="bg-card border-0">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>Team Earnings</p>
+              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
+              letterSpacing: '-0.5px'
+            }}>Team Earnings</p>
             </div>
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
+              <p className="text-2xl font-bold font-geist" style={{
+              letterSpacing: '-0.3px'
+            }}>
                 {isBalanceVisible ? `$${teamEarningsData.length > 0 ? teamEarningsData[teamEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}` : "••••••"}
               </p>
             </div>
@@ -1427,17 +1410,26 @@ export function WalletTab() {
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <RechartsTooltip content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                      return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                  <RechartsTooltip content={({
+                  active,
+                  payload
+                }) => {
+                  if (active && payload && payload.length) {
+                    const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{
+                      letterSpacing: '-0.3px'
+                    }}>
                         <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                         <p className="text-sm font-bold">${value.toFixed(2)}</p>
                       </div>;
-                    }
-                    return null;
-                  }} cursor={false} />
-                  <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} fill="url(#teamEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#10b981', stroke: 'none' }} />
+                  }
+                  return null;
+                }} cursor={false} />
+                  <Area type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={2} fill="url(#teamEarningsGradient)" dot={false} activeDot={{
+                  r: 4,
+                  fill: '#10b981',
+                  stroke: 'none'
+                }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1448,10 +1440,14 @@ export function WalletTab() {
         <Card className="bg-card border-0">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{ letterSpacing: '-0.5px' }}>Affiliate Earnings</p>
+              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
+              letterSpacing: '-0.5px'
+            }}>Affiliate Earnings</p>
             </div>
             <div className="flex items-center gap-2 mb-3">
-              <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
+              <p className="text-2xl font-bold font-geist" style={{
+              letterSpacing: '-0.3px'
+            }}>
                 {isBalanceVisible ? `$${affiliateEarningsData.length > 0 ? affiliateEarningsData[affiliateEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}` : "••••••"}
               </p>
             </div>
@@ -1465,17 +1461,26 @@ export function WalletTab() {
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <RechartsTooltip content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                      return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+                  <RechartsTooltip content={({
+                  active,
+                  payload
+                }) => {
+                  if (active && payload && payload.length) {
+                    const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{
+                      letterSpacing: '-0.3px'
+                    }}>
                         <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
                         <p className="text-sm font-bold">${value.toFixed(2)}</p>
                       </div>;
-                    }
-                    return null;
-                  }} cursor={false} />
-                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#8b5cf6', stroke: 'none' }} />
+                  }
+                  return null;
+                }} cursor={false} />
+                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} activeDot={{
+                  r: 4,
+                  fill: '#8b5cf6',
+                  stroke: 'none'
+                }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -1486,10 +1491,10 @@ export function WalletTab() {
       <Card className="bg-card border border-border rounded-xl overflow-hidden">
         {/* Filter Button */}
         <div className="px-6 pt-5 pb-4">
-          <DropdownMenu open={filterOpen} onOpenChange={(open) => {
-            setFilterOpen(open);
-            if (!open) setFilterSubmenu('main');
-          }}>
+          <DropdownMenu open={filterOpen} onOpenChange={open => {
+          setFilterOpen(open);
+          if (!open) setFilterSubmenu('main');
+        }}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-background px-4 py-2 h-auto">
                 <SlidersHorizontal className="h-4 w-4" />
@@ -1502,20 +1507,14 @@ export function WalletTab() {
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
                   <div className="relative mb-3">
-                    <Input 
-                      placeholder="Filter..." 
-                      className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border"
-                    />
+                    <Input placeholder="Filter..." className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" />
                     <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
                   <div className="space-y-1">
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilterSubmenu('type');
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                    >
+                    <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('type');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                       <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
                         <div className="w-1.5 h-1.5 rounded-sm bg-current" />
                         <div className="w-1.5 h-1.5 rounded-sm bg-current" />
@@ -1523,189 +1522,154 @@ export function WalletTab() {
                         <div className="w-1.5 h-1.5 rounded-sm bg-current" />
                       </div>
                       <span className="font-medium">Type</span>
-                      {typeFilter !== 'all' && (
-                        <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
-                      )}
+                      {typeFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>}
                       <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
                     </button>
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setFilterSubmenu('status');
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                    >
+                    <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('status');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                       <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
                       <span className="font-medium">Status</span>
-                      {statusFilter !== 'all' && (
-                        <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
-                      )}
+                      {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
                       <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
                     </button>
-                    {availableCampaigns.length > 0 && (
-                      <button 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setFilterSubmenu('program');
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                      >
+                    {availableCampaigns.length > 0 && <button onClick={e => {
+                    e.preventDefault();
+                    setFilterSubmenu('program');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <Briefcase className="h-4 w-4" />
                         <span className="font-medium">Program</span>
-                        {campaignFilter !== 'all' && (
-                          <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
+                        {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
                             {availableCampaigns.find(c => c.id === campaignFilter)?.title}
-                          </span>
-                        )}
+                          </span>}
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
-                      </button>
-                    )}
+                      </button>}
                   </div>
-                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="w-full text-muted-foreground hover:text-foreground mt-3"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setTypeFilter('all');
-                        setStatusFilter('all');
-                        setCampaignFilter('all');
-                      }}
-                    >
+                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-foreground mt-3" onClick={e => {
+                  e.preventDefault();
+                  setTypeFilter('all');
+                  setStatusFilter('all');
+                  setCampaignFilter('all');
+                }}>
                       Clear filters
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
 
                 {/* Type Submenu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'type' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setFilterSubmenu('main');
-                    }}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
-                  >
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Type</span>
                   </button>
                   <div className="space-y-1">
-                    {[
-                      { value: 'all', label: 'All Types' },
-                      { value: 'earning', label: 'Campaign Payout' },
-                      { value: 'withdrawal', label: 'Withdrawal' },
-                      { value: 'team_earning', label: 'Team Earnings' },
-                      { value: 'affiliate_earning', label: 'Affiliate Earnings' },
-                      { value: 'referral', label: 'Referral Bonus' },
-                      { value: 'transfer_sent', label: 'Transfer Sent' },
-                      { value: 'transfer_received', label: 'Transfer Received' },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setTypeFilter(option.value);
-                          setFilterSubmenu('main');
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                      >
+                    {[{
+                    value: 'all',
+                    label: 'All Types'
+                  }, {
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setTypeFilter(option.value);
+                    setFilterSubmenu('main');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
 
                 {/* Status Submenu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'status' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setFilterSubmenu('main');
-                    }}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
-                  >
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Status</span>
                   </button>
                   <div className="space-y-1">
-                    {[
-                      { value: 'all', label: 'All Statuses' },
-                      { value: 'completed', label: 'Completed' },
-                      { value: 'pending', label: 'Pending' },
-                      { value: 'in_transit', label: 'In Transit' },
-                      { value: 'rejected', label: 'Rejected' },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setStatusFilter(option.value);
-                          setFilterSubmenu('main');
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                      >
+                    {[{
+                    value: 'all',
+                    label: 'All Statuses'
+                  }, {
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setStatusFilter(option.value);
+                    setFilterSubmenu('main');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
 
                 {/* Program Submenu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'program' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full absolute inset-0 pointer-events-none'}`}>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setFilterSubmenu('main');
-                    }}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
-                  >
+                  <button onClick={e => {
+                  e.preventDefault();
+                  setFilterSubmenu('main');
+                }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Program</span>
                   </button>
                   <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCampaignFilter('all');
-                        setFilterSubmenu('main');
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                    >
+                    <button onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter('all');
+                    setFilterSubmenu('main');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                       <span className="text-sm">All Programs</span>
                       {campaignFilter === 'all' && <Check className="h-4 w-4 ml-auto" />}
                     </button>
-                    {availableCampaigns.map((campaign) => (
-                      <button
-                        key={campaign.id}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setCampaignFilter(campaign.id);
-                          setFilterSubmenu('main');
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                      >
-                        {campaign.brand_logo_url ? (
-                          <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                            <img 
-                              src={campaign.brand_logo_url} 
-                              alt={campaign.brand_name || 'Brand'} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    {availableCampaigns.map(campaign => <button key={campaign.id} onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter(campaign.id);
+                    setFilterSubmenu('main');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                            <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                          </div> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                             <span className="text-[10px] text-foreground font-medium">
                               {campaign.title.charAt(0).toUpperCase()}
                             </span>
-                          </div>
-                        )}
+                          </div>}
                         <span className="text-sm truncate flex-1">{campaign.title}</span>
                         {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
               </div>
@@ -1714,13 +1678,10 @@ export function WalletTab() {
         </div>
 
         {/* Transactions Table */}
-        <div className="px-6 pb-6">
-          {transactions.length === 0 ? (
-            <div className="text-center py-12">
+        <div className="pb-6 px-0">
+          {transactions.length === 0 ? <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div>
-          ) : (
-            <>
+            </div> : <>
               <div className="overflow-x-auto border border-[#dce1eb] dark:border-[#141414] rounded-xl">
                 <Table>
                   <TableHeader>
@@ -1740,82 +1701,43 @@ export function WalletTab() {
                   </TableHeader>
                   <TableBody>
                     {transactions.filter(transaction => {
-                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                      return true;
-                    }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => (
-                      <TableRow 
-                        key={transaction.id} 
-                        onClick={() => {
-                          setSelectedTransaction(transaction);
-                          setTransactionSheetOpen(true);
-                        }}
-                        className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
-                      >
+                  if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                  if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                  if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                  return true;
+                }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <TableRow key={transaction.id} onClick={() => {
+                  setSelectedTransaction(transaction);
+                  setTransactionSheetOpen(true);
+                }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Program */}
                         <TableCell className="py-4">
-                          {transaction.campaign?.title ? (
-                            <div className="flex items-center gap-2">
-                              {transaction.campaign?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                                  <img 
-                                    src={transaction.campaign.brand_logo_url} 
-                                    alt={transaction.campaign.brand_name || 'Brand'} 
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          {transaction.campaign?.title ? <div className="flex items-center gap-2">
+                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                  <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.title.charAt(0).toUpperCase()}
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <span className="text-sm font-medium">{transaction.campaign.title}</span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
+                            </div> : <span className="text-sm text-muted-foreground">-</span>}
                         </TableCell>
                         
                         {/* Type */}
                         <TableCell className="py-4">
                           <span className="text-sm text-muted-foreground">
-                            {transaction.type === 'earning' ? 'Campaign Payout' : 
-                             transaction.type === 'withdrawal' ? 'Withdrawal' : 
-                             transaction.type === 'referral' ? 'Referral Bonus' : 
-                             transaction.type === 'balance_correction' ? 'Balance Correction' : 
-                             transaction.type === 'transfer_sent' ? 'Transfer Sent' : 
-                             transaction.type === 'transfer_received' ? 'Transfer Received' :
-                             transaction.type === 'team_earning' ? 'Team Earnings' :
-                             transaction.type === 'affiliate_earning' ? 'Affiliate Earnings' :
-                             'Other'}
+                            {transaction.type === 'earning' ? 'Campaign Payout' : transaction.type === 'withdrawal' ? 'Withdrawal' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : transaction.type === 'team_earning' ? 'Team Earnings' : transaction.type === 'affiliate_earning' ? 'Affiliate Earnings' : 'Other'}
                           </span>
                         </TableCell>
                         
                         {/* Status */}
                         <TableCell className="py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            transaction.status === 'completed' 
-                              ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
-                              : transaction.status === 'pending' 
-                              ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' 
-                              : transaction.status === 'in_transit'
-                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                              : transaction.status === 'rejected'
-                              ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : transaction.status === 'in_transit' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
                             {transaction.status === 'completed' && <Check className="h-3 w-3" />}
                             {transaction.status === 'pending' && <Clock className="h-3 w-3" />}
                             {transaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
                             {transaction.status === 'rejected' && <X className="h-3 w-3" />}
-                            {transaction.status === 'completed' ? 'Completed' : 
-                             transaction.status === 'pending' ? 'Pending' : 
-                             transaction.status === 'in_transit' ? 'In Transit' : 
-                             transaction.status === 'rejected' ? 'Rejected' : 
-                             transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1)}
+                            {transaction.status === 'completed' ? 'Completed' : transaction.status === 'pending' ? 'Pending' : transaction.status === 'in_transit' ? 'In Transit' : transaction.status === 'rejected' ? 'Rejected' : transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1)}
                           </span>
                         </TableCell>
                         
@@ -1828,19 +1750,14 @@ export function WalletTab() {
                                   {format(transaction.date, 'MMM d')}
                                 </span>
                               </TooltipTrigger>
-                              <TooltipContent 
-                                side="top" 
-                                className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]"
-                              >
+                              <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]">
                                 <div className="space-y-1.5">
                                   <p className="text-xs text-muted-foreground">Initiated</p>
                                   <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
                                   <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
-                                  {transaction.type === 'earning' && transaction.campaign && (
-                                    <p className="text-xs text-muted-foreground pt-1 border-t border-border mt-1">
+                                  {transaction.type === 'earning' && transaction.campaign && <p className="text-xs text-muted-foreground pt-1 border-t border-border mt-1">
                                       Payment for {transaction.campaign.title}
-                                    </p>
-                                  )}
+                                    </p>}
                                 </div>
                               </TooltipContent>
                             </Tooltip>
@@ -1849,18 +1766,14 @@ export function WalletTab() {
                         
                         {/* Processed */}
                         <TableCell className="py-4 text-sm text-muted-foreground">
-                          {transaction.status === 'completed' ? (
-                            <TooltipProvider>
+                          {transaction.status === 'completed' ? <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
                                     {format(transaction.date, 'MMM d')}
                                   </span>
                                 </TooltipTrigger>
-                                <TooltipContent 
-                                  side="top" 
-                                  className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]"
-                                >
+                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]">
                                   <div className="space-y-1.5">
                                     <p className="text-xs text-muted-foreground">Payment Completed</p>
                                     <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
@@ -1872,47 +1785,34 @@ export function WalletTab() {
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>
-                          ) : transaction.status === 'rejected' ? (
-                            <TooltipProvider>
+                            </TooltipProvider> : transaction.status === 'rejected' ? <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="underline decoration-dotted cursor-pointer hover:text-foreground text-red-500">
                                     {format(transaction.date, 'MMM d')}
                                   </span>
                                 </TooltipTrigger>
-                                <TooltipContent 
-                                  side="top" 
-                                  className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[240px]"
-                                >
+                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[240px]">
                                   <div className="space-y-1.5">
                                     <p className="text-xs text-muted-foreground">Rejected</p>
                                     <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
                                     <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
-                                    {transaction.rejection_reason && (
-                                      <div className="pt-1 border-t border-border mt-1">
+                                    {transaction.rejection_reason && <div className="pt-1 border-t border-border mt-1">
                                         <p className="text-xs text-red-500">Reason: {transaction.rejection_reason}</p>
-                                      </div>
-                                    )}
+                                      </div>}
                                   </div>
                                 </TooltipContent>
                               </Tooltip>
-                            </TooltipProvider>
-                          ) : '-'}
+                            </TooltipProvider> : '-'}
                         </TableCell>
                         
                         {/* Amount */}
                         <TableCell className="py-4 text-right">
-                          <span className={`text-sm font-semibold tabular-nums ${
-                            transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' 
-                              ? 'text-red-500' 
-                              : 'text-green-500'
-                          }`}>
+                          <span className={`text-sm font-semibold tabular-nums ${transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? 'text-red-500' : 'text-green-500'}`}>
                             {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                           </span>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
                 </Table>
               </div>
@@ -1921,50 +1821,37 @@ export function WalletTab() {
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
                 <p className="text-sm text-muted-foreground">
                   Viewing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length)}-{Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length)} of {transactions.filter(transaction => {
-                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                    return true;
-                  }).length} payouts
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)}-{Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length)} of {transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length} payouts
                 </p>
                 <div className="flex gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
-                    disabled={currentPage === 1} 
-                    className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50">
                     Previous
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setCurrentPage(prev => prev + 1)} 
-                    disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
-                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                      return true;
-                    }).length} 
-                    className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                return true;
+              }).length} className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50">
                     Next
                   </Button>
                 </div>
               </div>
-            </>
-          )}
+            </>}
         </div>
       </Card>
 
@@ -2165,10 +2052,7 @@ export function WalletTab() {
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
               <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0 relative">
-                <button 
-                  onClick={() => setTransactionSheetOpen(false)}
-                  className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                >
+                <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
                 <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
