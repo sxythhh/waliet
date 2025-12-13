@@ -172,14 +172,13 @@ export function BrandCampaignsTab({
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-  return <div className="space-y-6 px-4 sm:px-6 md:px-8 py-6">
+  return (
+    <div className={selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}>
       {selectedBoostId ? (
-        <div className="h-full">
-          <BoostDetailView
-            boostId={selectedBoostId}
-            onBack={() => setSelectedBoostId(null)}
-          />
-        </div>
+        <BoostDetailView
+          boostId={selectedBoostId}
+          onBack={() => setSelectedBoostId(null)}
+        />
       ) : (
         <>
           {/* Header */}
@@ -317,5 +316,6 @@ export function BrandCampaignsTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>;
+    </div>
+  );
 }
