@@ -2,7 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { Button } from '@/components/ui/button';
+
 import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Heading3, Image as ImageIcon, Undo, Redo } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -101,97 +101,79 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
   return (
     <div className="rounded-lg bg-transparent">
-      <div className="p-2 flex gap-1 flex-wrap">
-        <Button
+      <div className="p-1.5 flex gap-0.5 flex-wrap">
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={editor.isActive('bold') ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('bold') ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
+          <Bold className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={editor.isActive('italic') ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('italic') ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
+          <Italic className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive('heading', { level: 1 }) ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('heading', { level: 1 }) ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
+          <Heading1 className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive('heading', { level: 2 }) ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('heading', { level: 2 }) ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
+          <Heading2 className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={editor.isActive('heading', { level: 3 }) ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('heading', { level: 3 }) ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <Heading3 className="h-4 w-4" />
-        </Button>
-        <Button
+          <Heading3 className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={editor.isActive('bulletList') ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('bulletList') ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
+          <List className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={editor.isActive('orderedList') ? 'bg-white/10' : ''}
+          className={`p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors ${editor.isActive('orderedList') ? 'text-foreground bg-muted/50' : ''}`}
         >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button
+          <ListOrdered className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => fileInputRef.current?.click()}
+          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        <div className="border-l border-white/10 mx-1" />
-        <Button
+          <ImageIcon className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
+          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:pointer-events-none"
         >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
+          <Undo className="h-3.5 w-3.5" />
+        </button>
+        <button
           type="button"
-          size="sm"
-          variant="ghost"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
+          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:pointer-events-none"
         >
-          <Redo className="h-4 w-4" />
-        </Button>
+          <Redo className="h-3.5 w-3.5" />
+        </button>
       </div>
       <EditorContent editor={editor} />
       <input
