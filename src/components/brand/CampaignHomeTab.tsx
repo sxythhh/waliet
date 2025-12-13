@@ -531,6 +531,11 @@ export function CampaignHomeTab({
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <span className="text-xs text-muted-foreground tracking-[-0.5px]">
+                Next refresh: {format(new Date(Math.ceil(Date.now() / (4 * 60 * 60 * 1000)) * (4 * 60 * 60 * 1000)), 'h:mm a')}
+              </span>
+            )}
             {isAdmin && <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={handleRefresh} />}
             <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="h-8 px-2">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
