@@ -29,9 +29,10 @@ interface BountyCampaignsViewProps {
   onViewApplications?: (bounty: { id: string; title: string; maxAccepted: number; currentAccepted: number }) => void;
   onDelete?: (bounty: BountyCampaign) => void;
   onRefresh?: () => void;
+  onBoostSelect?: (boostId: string | null) => void;
 }
 
-export function BountyCampaignsView({ bounties, onViewApplications, onDelete, onRefresh }: BountyCampaignsViewProps) {
+export function BountyCampaignsView({ bounties, onViewApplications, onDelete, onRefresh, onBoostSelect }: BountyCampaignsViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
 
@@ -46,10 +47,12 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
 
   const handleCardClick = (bountyId: string) => {
     setSelectedBoostId(bountyId);
+    onBoostSelect?.(bountyId);
   };
 
   const handleBack = () => {
     setSelectedBoostId(null);
+    onBoostSelect?.(null);
     onRefresh?.();
   };
 

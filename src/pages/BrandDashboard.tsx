@@ -69,6 +69,7 @@ export default function BrandDashboard() {
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [activeView, setActiveView] = useState<"campaigns" | "bounties" | "home">("home");
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
+  const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
@@ -202,8 +203,8 @@ export default function BrandDashboard() {
       <div className="min-h-screen flex w-full bg-background">
         <BrandSidebar />
         <div className="flex-1 min-w-0">
-      {/* Header - Hide when showing home embed */}
-      {effectiveView !== "home" && (
+      {/* Header - Hide when showing home embed or boost detail */}
+      {effectiveView !== "home" && !selectedBoostId && (
         <>
           <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
             <div className="flex items-center justify-between mb-6">
@@ -268,87 +269,98 @@ export default function BrandDashboard() {
               />
             </div>}
 
-          {/* Campaigns View - With Padding */}
-          {effectiveView === "campaigns" && <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
-              <div className="space-y-6">
-                {campaigns.length > 0 ? <div className="space-y-3">
-                      <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                        {campaigns.map(campaign => {
-                  const usedBudget = Number(campaign.budget_used || 0);
-                  const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-                  return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
-                              {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                                  <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                                </div>}
-                              <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
-                            <div className="flex items-start justify-between">
-                              <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1">
-                                {campaign.title}
-                              </h3>
-                              <div onClick={e => e.stopPropagation()}>
-                                <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent">
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </Button>} />
+          {/* Campaigns View - With Padding (unless boost is selected) */}
+          {effectiveView === "campaigns" && (
+            <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
+              {selectedBoostId ? (
+                <BountyCampaignsView 
+                  bounties={bounties}
+                  onDelete={handleDeleteBountyClick}
+                  onBoostSelect={setSelectedBoostId}
+                />
+              ) : (
+                <div className="space-y-6">
+                  {campaigns.length > 0 ? <div className="space-y-3">
+                        <h2 className="text-lg font-semibold text-foreground">Campaigns</h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                          {campaigns.map(campaign => {
+                    const usedBudget = Number(campaign.budget_used || 0);
+                    const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
+                    return <Card key={campaign.id} className="group bg-card border transition-all duration-300 animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:bg-accent/50" onClick={() => navigate(`/brand/${slug}/management?campaign=${campaign.id}`)}>
+                                {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                                    <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                                  </div>}
+                                <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
+                              <div className="flex items-start justify-between">
+                                <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1">
+                                  {campaign.title}
+                                </h3>
+                                <div onClick={e => e.stopPropagation()}>
+                                  <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} campaign={campaign} onDelete={() => handleDeleteClick(campaign)} trigger={<Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-accent">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>} />
+                                </div>
                               </div>
-                            </div>
 
-                                {/* Budget Progress Bar - Refined */}
-                                <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
-                                  <div className="flex items-baseline justify-between">
-                                    <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                                      <span className="text-base font-bold tabular-nums">${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                                      <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                  {/* Budget Progress Bar - Refined */}
+                                  <div className="rounded-lg p-2.5 space-y-1.5 bg-[#0d0d0d]">
+                                    <div className="flex items-baseline justify-between">
+                                      <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
+                                        <span className="text-base font-bold tabular-nums">${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                        <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Progress Bar */}
+                                    <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                                      <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                              width: `${budgetPercentage}%`
+                            }} />
+                                    </div>
+                                    
+                                    <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                                      <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
                                     </div>
                                   </div>
-                                  
-                                  {/* Progress Bar */}
-                                  <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
-                                    <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                            width: `${budgetPercentage}%`
-                          }} />
-                                  </div>
-                                  
-                                  <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                                    <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
-                                  </div>
-                                </div>
 
-                                {/* RPM Display */}
-                                <div className="flex items-center justify-between text-xs pt-1">
-                                  <span className="text-muted-foreground font-medium">RPM Rate</span>
-                                  <span className="font-bold tabular-nums">
-                                    ${Number(campaign.rpm_rate).toFixed(2)}
-                                  </span>
-                                </div>
-                              </CardContent>
-                            </Card>;
-                })}
+                                  {/* RPM Display */}
+                                  <div className="flex items-center justify-between text-xs pt-1">
+                                    <span className="text-muted-foreground font-medium">RPM Rate</span>
+                                    <span className="font-bold tabular-nums">
+                                      ${Number(campaign.rpm_rate).toFixed(2)}
+                                    </span>
+                                  </div>
+                                </CardContent>
+                              </Card>;
+                  })}
+                        </div>
+                      </div> : null}
+
+                  {bounties.length > 0 ? <div className="space-y-3">
+                        <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
+                        <BountyCampaignsView 
+                          bounties={bounties}
+                          onDelete={handleDeleteBountyClick}
+                          onBoostSelect={setSelectedBoostId}
+                        />
+                      </div> : null}
+
+                  {campaigns.length === 0 && bounties.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
+                      <div className="flex gap-2">
+                        <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
+                        <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
+                          <Users className="h-4 w-4" />
+                          Create Bounty
+                        </Button>
                       </div>
-                    </div> : null}
-
-                {bounties.length > 0 ? <div className="space-y-3">
-                      <h2 className="text-lg font-semibold text-foreground">Bounties</h2>
-                      <BountyCampaignsView 
-                        bounties={bounties}
-                        onDelete={handleDeleteBountyClick}
-                      />
-                    </div> : null}
-
-                {campaigns.length === 0 && bounties.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
-                    <div className="flex gap-2">
-                      <CreateCampaignDialog brandId={brand.id} brandName={brand.name} onSuccess={fetchBrandData} />
-                      <Button onClick={() => setCreateBountyOpen(true)} variant="outline" className="gap-2">
-                        <Users className="h-4 w-4" />
-                        Create Bounty
-                      </Button>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>}
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </> :
     // Single view - no toggle needed
     effectiveView === "home" ? <div className="w-full h-screen">
@@ -417,12 +429,15 @@ export default function BrandDashboard() {
           </div>}
 
           {/* Bounties View */}
-          {effectiveView === "bounties" && <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8">
+          {effectiveView === "bounties" && (
+            <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
               <BountyCampaignsView 
                 bounties={bounties}
                 onDelete={handleDeleteBountyClick}
+                onBoostSelect={setSelectedBoostId}
               />
-          </div>}
+            </div>
+          )}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
