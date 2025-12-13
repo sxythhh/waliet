@@ -91,8 +91,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating checkout configuration for boost ${boostId} with amount $${amount}`);
 
-    // Create checkout configuration with dynamic one-time plan
-    const checkoutResponse = await fetch("https://api.whop.com/api/v5/checkout_configurations", {
+    // Create checkout configuration with dynamic one-time plan using Whop API
+    const checkoutResponse = await fetch("https://api.whop.com/checkout_configurations", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${whopApiKey}`,
@@ -105,10 +105,6 @@ Deno.serve(async (req) => {
           plan_type: "one_time",
           initial_price: amount,
           visibility: "hidden",
-          product: {
-            external_identifier: `boost_topup_${boostId}`,
-            title: `Boost Top-Up: ${boost.title}`,
-          }
         },
         redirect_url: `https://app.virality.gg/dashboard?workspace=${brand.slug}&tab=campaigns&topup=success&boostId=${boostId}`,
         metadata: {
