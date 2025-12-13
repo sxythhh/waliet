@@ -116,6 +116,7 @@ export function WalletTab() {
     title: string;
     brand_name: string;
     brand_logo_url: string | null;
+    type: 'campaign' | 'boost';
   }>>([]);
   const [earningsChartPeriod, setEarningsChartPeriod] = useState<'1D' | '1W' | '1M' | 'ALL'>('1W');
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -506,14 +507,22 @@ export function WalletTab() {
     const pendingAmount = payoutRequests?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit').reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
     setPendingWithdrawals(pendingAmount);
 
-    // Extract unique campaigns for filter dropdown
+    // Extract unique campaigns and boosts for filter dropdown
     const uniqueCampaigns = Array.from(campaignsMap.values()).map(c => ({
       id: c.id,
       title: c.title,
       brand_name: c.brand_name,
-      brand_logo_url: c.brand_logo_url || null
+      brand_logo_url: c.brand_logo_url || null,
+      type: 'campaign' as const
     }));
-    setAvailableCampaigns(uniqueCampaigns);
+    const uniqueBoosts = Array.from(boostsMap.values()).map(b => ({
+      id: b.id,
+      title: b.title,
+      brand_name: b.brand_name,
+      brand_logo_url: b.brand_logo_url || null,
+      type: 'boost' as const
+    }));
+    setAvailableCampaigns([...uniqueCampaigns, ...uniqueBoosts]);
     const allTransactions: Transaction[] = [];
     if (walletTransactions) {
       walletTransactions.forEach(txn => {
@@ -1750,7 +1759,11 @@ export function WalletTab() {
                     {transactions.filter(transaction => {
                   if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
                   if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                  if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                  if (campaignFilter !== "all") {
+                    const matchesCampaign = transaction.campaign?.id === campaignFilter;
+                    const matchesBoost = transaction.boost?.id === campaignFilter;
+                    if (!matchesCampaign && !matchesBoost) return false;
+                  }
                   return true;
                 }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <TableRow key={transaction.id} onClick={() => {
                   setSelectedTransaction(transaction);
