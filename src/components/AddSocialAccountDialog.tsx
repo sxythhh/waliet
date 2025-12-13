@@ -17,16 +17,13 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
-
 interface AddSocialAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-
 type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
 type Step = "input" | "verification";
-
 const VERIFICATION_TIME_SECONDS = 600; // 10 minutes
 
 // Generate a random verification code
@@ -38,7 +35,6 @@ const generateVerificationCode = (): string => {
   }
   return code;
 };
-
 export function AddSocialAccountDialog({
   open,
   onOpenChange,
@@ -51,8 +47,12 @@ export function AddSocialAccountDialog({
   const [timeRemaining, setTimeRemaining] = useState(VERIFICATION_TIME_SECONDS);
   const [isChecking, setIsChecking] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
-  const { resolvedTheme } = useTheme();
+  const {
+    toast
+  } = useToast();
+  const {
+    resolvedTheme
+  } = useTheme();
 
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -77,9 +77,8 @@ export function AddSocialAccountDialog({
   // Timer countdown
   useEffect(() => {
     if (step !== "verification" || timeRemaining <= 0) return;
-
     const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
+      setTimeRemaining(prev => {
         if (prev <= 1) {
           clearInterval(timer);
           return 0;
@@ -87,18 +86,14 @@ export function AddSocialAccountDialog({
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [step, timeRemaining]);
-
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
-
-  const progressPercent = (timeRemaining / VERIFICATION_TIME_SECONDS) * 100;
-
+  const progressPercent = timeRemaining / VERIFICATION_TIME_SECONDS * 100;
   const getPlatformLabel = (platform: Platform) => {
     switch (platform) {
       case "tiktok":
@@ -111,7 +106,6 @@ export function AddSocialAccountDialog({
         return "X (Twitter)";
     }
   };
-
   const getPlatformIcon = (platform: Platform, size: string = "h-5 w-5") => {
     const isLightMode = resolvedTheme === "light";
     switch (platform) {
@@ -125,38 +119,35 @@ export function AddSocialAccountDialog({
         return <img src={isLightMode ? xLogoLight : xLogo} alt="X" className={size} />;
     }
   };
-
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(verificationCode);
       setCopied(true);
       toast({
         title: "Copied!",
-        description: "Verification code copied to clipboard",
+        description: "Verification code copied to clipboard"
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to copy code",
+        description: "Failed to copy code"
       });
     }
   };
-
   const handleContinueToVerification = () => {
     if (!username.trim()) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please enter your username",
+        description: "Please enter your username"
       });
       return;
     }
     setVerificationCode(""); // Reset to generate new code
     setStep("verification");
   };
-
   const getAccountLink = (platform: Platform, username: string) => {
     switch (platform) {
       case "tiktok":
@@ -173,7 +164,6 @@ export function AddSocialAccountDialog({
         return `https://x.com/${username}`;
     }
   };
-
   const getPlaceholderText = (platform: Platform) => {
     switch (platform) {
       case "youtube":
@@ -182,110 +172,95 @@ export function AddSocialAccountDialog({
         return "username";
     }
   };
-
   const showAtSymbol = selectedPlatform !== "youtube";
-
   const handleCheckVerification = useCallback(async () => {
     if (isChecking) return;
-    
     setIsChecking(true);
-    
     try {
       // Only TikTok, Instagram, and YouTube are supported for now
       if (selectedPlatform !== "tiktok" && selectedPlatform !== "instagram" && selectedPlatform !== "youtube") {
         toast({
           variant: "destructive",
           title: "Not Supported",
-          description: `${getPlatformLabel(selectedPlatform)} verification is not yet available.`,
+          description: `${getPlatformLabel(selectedPlatform)} verification is not yet available.`
         });
         setIsChecking(false);
         return;
       }
-
-      const { data, error } = await supabase.functions.invoke('verify-social-bio', {
-        body: { username, verificationCode, platform: selectedPlatform }
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('verify-social-bio', {
+        body: {
+          username,
+          verificationCode,
+          platform: selectedPlatform
+        }
       });
-
       if (error) {
         throw new Error(error.message || 'Failed to verify');
       }
-
       if (!data.success) {
         throw new Error(data.error || 'Verification failed');
       }
-
       if (data.verified) {
         // Success! Save the account
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (!user) throw new Error("Not authenticated");
-
-        const { error: insertError } = await supabase
-          .from("social_accounts")
-          .insert({
-            user_id: user.id,
-            platform: selectedPlatform,
-            username: username,
-            account_link: getAccountLink(selectedPlatform, username),
-            follower_count: data.user?.followerCount || null,
-            is_verified: true,
-            bio: data.bio || null,
-            avatar_url: data.user?.avatar || null
-          });
-
+        const {
+          error: insertError
+        } = await supabase.from("social_accounts").insert({
+          user_id: user.id,
+          platform: selectedPlatform,
+          username: username,
+          account_link: getAccountLink(selectedPlatform, username),
+          follower_count: data.user?.followerCount || null,
+          is_verified: true,
+          bio: data.bio || null,
+          avatar_url: data.user?.avatar || null
+        });
         if (insertError) throw insertError;
-
         toast({
           title: "Account Verified!",
-          description: `@${username} has been connected successfully.`,
+          description: `@${username} has been connected successfully.`
         });
-
         onSuccess();
         onOpenChange(false);
       } else {
         toast({
           variant: "destructive",
           title: "Code Not Found",
-          description:
-            selectedPlatform === "instagram"
-              ? "The verification code was not found in your Instagram bio. Instagram may cache your profile—wait 1–2 minutes after updating your bio, then try again."
-              : "The verification code was not found in your bio. Please add it and try again.",
+          description: selectedPlatform === "instagram" ? "The verification code was not found in your Instagram bio. Instagram may cache your profile—wait 1–2 minutes after updating your bio, then try again." : "The verification code was not found in your bio. Please add it and try again."
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Verification Failed",
-        description:
-          selectedPlatform === "instagram"
-            ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again."
-            : error.message ||
-              "Could not verify your account. Please make sure the code is in your bio.",
+        description: selectedPlatform === "instagram" ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again." : error.message || "Could not verify your account. Please make sure the code is in your bio."
       });
     } finally {
       setIsChecking(false);
     }
   }, [isChecking, toast, selectedPlatform, username, verificationCode, onSuccess, onOpenChange]);
-
   const handleBack = () => {
     setStep("input");
     setVerificationCode("");
     setTimeRemaining(VERIFICATION_TIME_SECONDS);
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-[#0a0a0a] border-0 [&>button]:hidden">
         {/* Close Button */}
-        <button
-          onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors z-10"
-        >
+        <button onClick={() => onOpenChange(false)} className="absolute right-4 top-4 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors z-10">
           <X className="h-5 w-5" />
         </button>
 
-        {step === "input" ? (
-          /* Step 1: Platform & Username Input */
-          <div className="p-6">
+        {step === "input" ? (/* Step 1: Platform & Username Input */
+      <div className="p-6 px-0 py-0">
             <div className="text-center mb-6">
               <h2 className="text-xl font-semibold font-inter tracking-[-0.5px]">
                 Connect Social Account
@@ -301,7 +276,7 @@ export function AddSocialAccountDialog({
                 <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
                   Platform
                 </Label>
-                <Select value={selectedPlatform} onValueChange={(value) => setSelectedPlatform(value as Platform)}>
+                <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
                   <SelectTrigger className="w-full h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px]">
                     <SelectValue>
                       <div className="flex items-center gap-3">
@@ -311,14 +286,12 @@ export function AddSocialAccountDialog({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-[#141414] border-0">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map((platform) => (
-                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
                         <div className="flex items-center gap-3">
                           {getPlatformIcon(platform)}
                           <span>{getPlatformLabel(platform)}</span>
                         </div>
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -329,34 +302,21 @@ export function AddSocialAccountDialog({
                   {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
                 </Label>
                 <div className="relative">
-                  {showAtSymbol && (
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
-                  )}
-                  <Input
-                    id="username"
-                    placeholder={getPlaceholderText(selectedPlatform)}
-                    value={username}
-                    onChange={(e) => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())}
-                    className={`h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px] ${showAtSymbol ? 'pl-8' : 'pl-4'}`}
-                  />
+                  {showAtSymbol && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>}
+                  <Input id="username" placeholder={getPlaceholderText(selectedPlatform)} value={username} onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} className={`h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px] ${showAtSymbol ? 'pl-8' : 'pl-4'}`} />
                 </div>
               </div>
 
               {/* Continue Button */}
-              <Button
-                onClick={handleContinueToVerification}
-                className="w-full h-12 bg-primary hover:bg-primary/90 font-inter tracking-[-0.5px] border-t border-t-[#4a86ff]/50 mt-4"
-              >
+              <Button onClick={handleContinueToVerification} className="w-full h-12 bg-primary hover:bg-primary/90 font-inter tracking-[-0.5px] border-t border-t-[#4a86ff]/50 mt-4">
                 <span className="flex items-center gap-2">
                   Continue
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </Button>
             </div>
-          </div>
-        ) : (
-          /* Step 2: Verification */
-          <div className="p-5">
+          </div>) : (/* Step 2: Verification */
+      <div className="p-5">
             {/* Compact Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
@@ -383,21 +343,14 @@ export function AddSocialAccountDialog({
                 <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Add to your bio
                 </span>
-                <button
-                  onClick={handleCopyCode}
-                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]"
-                >
-                  {copied ? (
-                    <>
+                <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
+                  {copied ? <>
                       <Check className="h-3.5 w-3.5" />
                       Copied
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Copy className="h-3.5 w-3.5" />
                       Copy
-                    </>
-                  )}
+                    </>}
                 </button>
               </div>
               <div className="bg-[#0a0a0a] rounded-md py-3 px-4 text-center">
@@ -405,12 +358,10 @@ export function AddSocialAccountDialog({
                   {verificationCode}
                 </span>
               </div>
-              {selectedPlatform === "instagram" && (
-                <p className="mt-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+              {selectedPlatform === "instagram" && <p className="mt-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Instagram can take a couple of minutes to update your bio. After adding the code, wait
                   1–2 minutes before tapping Check Verification.
-                </p>
-              )}
+                </p>}
             </div>
 
             {/* Timer with Progress Bar */}
@@ -423,39 +374,23 @@ export function AddSocialAccountDialog({
                   {formatTime(timeRemaining)}
                 </span>
               </div>
-              <Progress 
-                value={progressPercent} 
-                className="h-1.5 bg-[#1a1a1a]"
-              />
+              <Progress value={progressPercent} className="h-1.5 bg-[#1a1a1a]" />
             </div>
 
             {/* Check Button */}
-            <Button
-              onClick={handleCheckVerification}
-              disabled={isChecking || timeRemaining === 0}
-              className="w-full h-11 bg-primary hover:bg-primary/90 border-0 border-t border-t-[#4a86ff]/50 font-inter tracking-[-0.5px]"
-            >
-              {isChecking ? (
-                <span className="flex items-center gap-2">
+            <Button onClick={handleCheckVerification} disabled={isChecking || timeRemaining === 0} className="w-full h-11 bg-primary hover:bg-primary/90 border-0 border-t border-t-[#4a86ff]/50 font-inter tracking-[-0.5px]">
+              {isChecking ? <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Verifying...
-                </span>
-              ) : (
-                "Check Verification"
-              )}
+                </span> : "Check Verification"}
             </Button>
 
             {/* Back Link */}
-            <button
-              onClick={handleBack}
-              className="w-full mt-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5"
-            >
+            <button onClick={handleBack} className="w-full mt-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5">
               <ArrowLeft className="h-3.5 w-3.5" />
               Go back
             </button>
-          </div>
-        )}
+          </div>)}
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
