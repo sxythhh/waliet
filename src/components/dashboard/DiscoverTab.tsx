@@ -860,27 +860,18 @@ export function DiscoverTab() {
                           </span>
                         </div>
                         
-                        {/* Title + Status */}
+                        {/* Title */}
                         <div className="flex items-center gap-2">
                           <h3 className="text-base font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
                             {bounty.title}
                           </h3>
-                          {isEnded ? (
+                          {isEnded && (
                             <span className="flex items-center gap-1 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                               backgroundColor: '#b60b0b',
                               borderTop: '1px solid #ed3030',
                               borderRadius: '20px'
                             }}>
                               Ended
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                              backgroundColor: '#1f6d36',
-                              borderTop: '1px solid #3c8544',
-                              borderRadius: '20px'
-                            }}>
-                              <img src={checkCircleWhiteIcon} alt="" className="h-2.5 w-2.5" />
-                              Active
                             </span>
                           )}
                         </div>
@@ -923,7 +914,7 @@ export function DiscoverTab() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium border-[#141414] dark:border-[#141414] border-[#d1d5db]"
+                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium dark:border-[#141414] border-[#d1d5db] hover:bg-muted"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedBounty(bounty);
