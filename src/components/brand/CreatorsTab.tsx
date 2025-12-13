@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,6 +44,7 @@ interface Conversation {
   creator?: Creator;
   last_message?: Message;
   unread_count?: number;
+  is_bookmarked?: boolean;
 }
 
 interface Message {
@@ -68,6 +69,7 @@ const PLATFORM_LOGOS: Record<string, string> = {
 };
 
 type MobileView = 'messages' | 'conversation' | 'creators';
+type MessageFilter = 'all' | 'unread' | 'bookmarked';
 
 export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
@@ -81,6 +83,9 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>('creators');
+  const [messageFilter, setMessageFilter] = useState<MessageFilter>('all');
+  const [bookmarkedConversations, setBookmarkedConversations] = useState<Set<string>>(new Set());
+  const [unreadCounts, setUnreadCounts] = useState<Map<string, number>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -143,8 +148,45 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
 
     if (data) {
       setConversations(data);
+      
+      // Fetch unread counts for each conversation
+      const counts = new Map<string, number>();
+      for (const conv of data) {
+        const { count } = await supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .eq("conversation_id", conv.id)
+          .eq("sender_type", "creator")
+          .eq("is_read", false);
+        if (count && count > 0) {
+          counts.set(conv.id, count);
+        }
+      }
+      setUnreadCounts(counts);
     }
   };
+
+  const toggleBookmark = (conversationId: string) => {
+    setBookmarkedConversations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(conversationId)) {
+        newSet.delete(conversationId);
+      } else {
+        newSet.add(conversationId);
+      }
+      return newSet;
+    });
+  };
+
+  const filteredConversations = conversations.filter(conv => {
+    if (messageFilter === 'unread') {
+      return unreadCounts.get(conv.id) && unreadCounts.get(conv.id)! > 0;
+    }
+    if (messageFilter === 'bookmarked') {
+      return bookmarkedConversations.has(conv.id);
+    }
+    return true;
+  });
 
   const fetchMessages = async (conversationId: string) => {
     const { data } = await supabase
@@ -504,21 +546,81 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           </Button>
         </div>
 
+        {/* Message Filters */}
+        <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2">
+          <Button
+            variant={messageFilter === 'all' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-3 text-xs rounded-full"
+            onClick={() => setMessageFilter('all')}
+          >
+            All
+          </Button>
+          <Button
+            variant={messageFilter === 'unread' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-3 text-xs rounded-full gap-1.5"
+            onClick={() => setMessageFilter('unread')}
+          >
+            <div className="h-2 w-2 rounded-full bg-primary" />
+            Unread
+          </Button>
+          <Button
+            variant={messageFilter === 'bookmarked' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 px-3 text-xs rounded-full gap-1.5"
+            onClick={() => setMessageFilter('bookmarked')}
+          >
+            <Bookmark className="h-3 w-3" />
+            Saved
+          </Button>
+        </div>
+
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
-              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <MessageSquare className="h-8 w-8 text-muted-foreground" />
+              <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-6">
+                <Inbox className="h-10 w-10 text-muted-foreground/50" />
               </div>
-              <h3 className="font-medium mb-2">You don't have any messages</h3>
+              <h3 className="font-semibold text-lg mb-2">Your Inbox is Empty</h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
+                Start conversations by posting a job and messaging creators. Your conversations will appear here.
+              </p>
+              <Button 
+                className="gap-2 bg-[#2060de] hover:bg-[#2060de]/90 border-t border-[#4b85f7]"
+                onClick={() => setMobileView('creators')}
+              >
+                <Plus className="h-4 w-4" />
+                Create a Campaign
+              </Button>
+              <button className="text-xs text-muted-foreground mt-4 hover:text-foreground transition-colors">
+                Need help getting started?
+              </button>
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
+              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
+                {messageFilter === 'unread' ? (
+                  <Mail className="h-8 w-8 text-muted-foreground/50" />
+                ) : (
+                  <Bookmark className="h-8 w-8 text-muted-foreground/50" />
+                )}
+              </div>
+              <h3 className="font-medium mb-2">
+                {messageFilter === 'unread' ? 'No unread messages' : 'No saved conversations'}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                When you receive a new message, it will appear here. You can also start a conversation at any time.
+                {messageFilter === 'unread' 
+                  ? "You're all caught up!" 
+                  : "Bookmark conversations to find them here."}
               </p>
             </div>
           ) : (
             <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
-              {conversations.map(conv => {
+              {filteredConversations.map(conv => {
                 const creator = getConversationCreator(conv);
+                const unreadCount = unreadCounts.get(conv.id) || 0;
+                const isBookmarked = bookmarkedConversations.has(conv.id);
                 return (
                   <div
                     key={conv.id}
@@ -531,20 +633,38 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                     }}
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={creator?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                          {creator?.username.slice(0, 2).toUpperCase() || "??"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={creator?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                            {creator?.username.slice(0, 2).toUpperCase() || "??"}
+                          </AvatarFallback>
+                        </Avatar>
+                        {unreadCount > 0 && (
+                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
+                        <p className={`text-sm truncate ${unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
                           {creator?.full_name || creator?.username || "Unknown"}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
                           {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : "No messages"}
                         </p>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(conv.id);
+                        }}
+                      >
+                        <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? 'fill-current text-primary' : 'text-muted-foreground'}`} />
+                      </Button>
                     </div>
                   </div>
                 );
