@@ -17,7 +17,6 @@ import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
-
 interface Creator {
   id: string;
   username: string;
@@ -37,7 +36,6 @@ interface Creator {
   total_earnings: number;
   date_joined: string | null;
 }
-
 interface Conversation {
   id: string;
   brand_id: string;
@@ -49,7 +47,6 @@ interface Conversation {
   unread_count?: number;
   is_bookmarked?: boolean;
 }
-
 interface Message {
   id: string;
   conversation_id: string;
@@ -59,27 +56,24 @@ interface Message {
   is_read: boolean;
   created_at: string;
 }
-
 interface CreatorsTabProps {
   brandId: string;
 }
-
 const PLATFORM_LOGOS: Record<string, string> = {
   tiktok: tiktokLogo,
   instagram: instagramLogo,
   youtube: youtubeLogo,
   x: xLogo
 };
-
 type MobileView = 'messages' | 'conversation' | 'creators';
 type MessageFilter = 'all' | 'unread' | 'bookmarked';
-
 interface Campaign {
   id: string;
   title: string;
 }
-
-export function CreatorsTab({ brandId }: CreatorsTabProps) {
+export function CreatorsTab({
+  brandId
+}: CreatorsTabProps) {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -99,68 +93,59 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
   const [campaignFilter, setCampaignFilter] = useState<string>('all');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     fetchCurrentUser();
     fetchCreators();
     fetchConversations();
   }, [brandId]);
-
   useEffect(() => {
     if (activeConversation) {
       fetchMessages(activeConversation.id);
       markMessagesAsRead(activeConversation.id);
     }
   }, [activeConversation?.id]);
-
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth"
+    });
   }, [messages]);
 
   // Subscribe to new messages
   useEffect(() => {
     if (!activeConversation) return;
-
-    const channel = supabase
-      .channel('messages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${activeConversation.id}`
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(prev => [...prev, newMessage]);
-          markMessagesAsRead(activeConversation.id);
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('messages-changes').on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'messages',
+      filter: `conversation_id=eq.${activeConversation.id}`
+    }, payload => {
+      const newMessage = payload.new as Message;
+      setMessages(prev => [...prev, newMessage]);
+      markMessagesAsRead(activeConversation.id);
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [activeConversation?.id]);
-
   const fetchCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
-
   const fetchConversations = async () => {
     if (!brandId) return;
-
-    const { data, error } = await supabase
-      .from("conversations")
-      .select("*")
-      .eq("brand_id", brandId)
-      .order("last_message_at", { ascending: false });
-
+    const {
+      data,
+      error
+    } = await supabase.from("conversations").select("*").eq("brand_id", brandId).order("last_message_at", {
+      ascending: false
+    });
     if (data) {
       setConversations(data);
-      
+
       // Set bookmarked conversations from database
       const bookmarked = new Set<string>();
       for (const conv of data) {
@@ -169,16 +154,16 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         }
       }
       setBookmarkedConversations(bookmarked);
-      
+
       // Fetch unread counts for each conversation
       const counts = new Map<string, number>();
       for (const conv of data) {
-        const { count } = await supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .eq("conversation_id", conv.id)
-          .eq("sender_type", "creator")
-          .eq("is_read", false);
+        const {
+          count
+        } = await supabase.from("messages").select("*", {
+          count: "exact",
+          head: true
+        }).eq("conversation_id", conv.id).eq("sender_type", "creator").eq("is_read", false);
         if (count && count > 0) {
           counts.set(conv.id, count);
         }
@@ -186,11 +171,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       setUnreadCounts(counts);
     }
   };
-
   const toggleBookmark = async (conversationId: string) => {
     const isCurrentlyBookmarked = bookmarkedConversations.has(conversationId);
     const newBookmarkState = !isCurrentlyBookmarked;
-    
+
     // Optimistic update
     setBookmarkedConversations(prev => {
       const newSet = new Set(prev);
@@ -203,11 +187,11 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     });
 
     // Persist to database
-    const { error } = await supabase
-      .from("conversations")
-      .update({ is_bookmarked: newBookmarkState })
-      .eq("id", conversationId);
-    
+    const {
+      error
+    } = await supabase.from("conversations").update({
+      is_bookmarked: newBookmarkState
+    }).eq("id", conversationId);
     if (error) {
       // Revert on error
       setBookmarkedConversations(prev => {
@@ -221,20 +205,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       });
     }
   };
-
   const deleteConversation = async (conversationId: string) => {
     // First delete all messages in the conversation
-    await supabase
-      .from("messages")
-      .delete()
-      .eq("conversation_id", conversationId);
-    
+    await supabase.from("messages").delete().eq("conversation_id", conversationId);
+
     // Then delete the conversation
-    const { error } = await supabase
-      .from("conversations")
-      .delete()
-      .eq("id", conversationId);
-    
+    const {
+      error
+    } = await supabase.from("conversations").delete().eq("id", conversationId);
     if (!error) {
       setConversations(prev => prev.filter(c => c.id !== conversationId));
       setBookmarkedConversations(prev => {
@@ -248,7 +226,6 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       }
     }
   };
-
   const filteredConversations = conversations.filter(conv => {
     // Filter by message type
     if (messageFilter === 'unread') {
@@ -258,7 +235,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     if (messageFilter === 'bookmarked') {
       if (!bookmarkedConversations.has(conv.id)) return false;
     }
-    
+
     // Filter by campaign
     if (campaignFilter !== 'all') {
       const creator = creators.find(c => c.id === conv.creator_id);
@@ -266,43 +243,35 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       const isInCampaign = creator.campaigns.some(c => c.id === campaignFilter);
       if (!isInCampaign) return false;
     }
-    
     return true;
   });
-
   const fetchMessages = async (conversationId: string) => {
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true });
-
+    const {
+      data
+    } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", {
+      ascending: true
+    });
     if (data) {
       setMessages(data as Message[]);
     }
   };
-
   const markMessagesAsRead = async (conversationId: string) => {
-    await supabase
-      .from("messages")
-      .update({ is_read: true })
-      .eq("conversation_id", conversationId)
-      .eq("sender_type", "creator")
-      .eq("is_read", false);
+    await supabase.from("messages").update({
+      is_read: true
+    }).eq("conversation_id", conversationId).eq("sender_type", "creator").eq("is_read", false);
   };
-
   const sendMessage = async () => {
     if (!messageInput.trim() || !activeConversation || !currentUserId) return;
-
     setSendingMessage(true);
     try {
-      const { error } = await supabase.from("messages").insert({
+      const {
+        error
+      } = await supabase.from("messages").insert({
         conversation_id: activeConversation.id,
         sender_id: currentUserId,
         sender_type: "brand",
         content: messageInput.trim()
       });
-
       if (!error) {
         setMessageInput("");
         fetchConversations();
@@ -311,65 +280,61 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
       setSendingMessage(false);
     }
   };
-
   const startConversation = async (creator: Creator) => {
     if (!currentUserId) return;
 
     // Check if conversation already exists
     const existing = conversations.find(c => c.creator_id === creator.id);
     if (existing) {
-      setActiveConversation({ ...existing, creator });
+      setActiveConversation({
+        ...existing,
+        creator
+      });
       setMobileView('conversation');
       return;
     }
 
     // Create new conversation
-    const { data, error } = await supabase
-      .from("conversations")
-      .insert({
-        brand_id: brandId,
-        creator_id: creator.id
-      })
-      .select()
-      .single();
-
+    const {
+      data,
+      error
+    } = await supabase.from("conversations").insert({
+      brand_id: brandId,
+      creator_id: creator.id
+    }).select().single();
     if (data) {
-      const newConversation = { ...data, creator };
+      const newConversation = {
+        ...data,
+        creator
+      };
       setConversations(prev => [newConversation, ...prev]);
       setActiveConversation(newConversation);
       setMobileView('conversation');
     }
   };
-
   const fetchCreators = async () => {
     if (!brandId) {
       setCreators([]);
       setLoading(false);
       return;
     }
-    
     setLoading(true);
+    const {
+      data: campaignsData
+    } = await supabase.from("campaigns").select("id, title").eq("brand_id", brandId);
 
-    const { data: campaignsData } = await supabase
-      .from("campaigns")
-      .select("id, title")
-      .eq("brand_id", brandId);
-    
     // Store campaigns for filter dropdown
     setCampaigns(campaignsData || []);
-    
     if (!campaignsData || campaignsData.length === 0) {
       setCreators([]);
       setLoading(false);
       return;
     }
-
     const campaignIds = campaignsData.map(c => c.id);
     const campaignMap = new Map(campaignsData.map(c => [c.id, c.title]));
-
-    const { data: connections } = await supabase
-      .from("social_account_campaigns")
-      .select(`
+    const {
+      data: connections
+    } = await supabase.from("social_account_campaigns").select(`
         campaign_id,
         user_id,
         connected_at,
@@ -378,50 +343,39 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           username,
           account_link
         )
-      `)
-      .in("campaign_id", campaignIds)
-      .eq("status", "active");
-    
+      `).in("campaign_id", campaignIds).eq("status", "active");
     if (!connections || connections.length === 0) {
       setCreators([]);
       setLoading(false);
       return;
     }
-
     const userIds = [...new Set(connections.map(c => c.user_id))];
     const BATCH_SIZE = 500;
     const profiles: any[] = [];
-    
     for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
       const batchIds = userIds.slice(i, i + BATCH_SIZE);
-      const { data: batchProfiles } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, avatar_url, email, total_earnings")
-        .in("id", batchIds);
+      const {
+        data: batchProfiles
+      } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email, total_earnings").in("id", batchIds);
       if (batchProfiles) {
         profiles.push(...batchProfiles);
       }
     }
-
     const analytics: any[] = [];
     for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
       const batchIds = userIds.slice(i, i + BATCH_SIZE);
-      const { data: batchAnalytics } = await supabase
-        .from("campaign_account_analytics")
-        .select("user_id, total_views, paid_views")
-        .in("campaign_id", campaignIds)
-        .in("user_id", batchIds);
+      const {
+        data: batchAnalytics
+      } = await supabase.from("campaign_account_analytics").select("user_id, total_views, paid_views").in("campaign_id", campaignIds).in("user_id", batchIds);
       if (batchAnalytics) {
         analytics.push(...batchAnalytics);
       }
     }
-
     const creatorMap = new Map<string, Creator>();
     for (const conn of connections) {
       const userId = conn.user_id;
       const profile = profiles?.find(p => p.id === userId);
       if (!profile) continue;
-
       if (!creatorMap.has(userId)) {
         creatorMap.set(userId, {
           id: userId,
@@ -441,13 +395,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           creator.date_joined = conn.connected_at;
         }
       }
-
       const creator = creatorMap.get(userId)!;
       const campaignTitle = campaignMap.get(conn.campaign_id);
       if (campaignTitle && !creator.campaigns.find(c => c.id === conn.campaign_id)) {
-        creator.campaigns.push({ id: conn.campaign_id, title: campaignTitle });
+        creator.campaigns.push({
+          id: conn.campaign_id,
+          title: campaignTitle
+        });
       }
-
       const socialAccount = conn.social_accounts as any;
       if (socialAccount && !creator.social_accounts.find(s => s.platform === socialAccount.platform && s.username === socialAccount.username)) {
         creator.social_accounts.push({
@@ -457,7 +412,6 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         });
       }
     }
-
     if (analytics && analytics.length > 0) {
       for (const analytic of analytics) {
         const creator = creatorMap.get(analytic.user_id);
@@ -466,20 +420,16 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         }
       }
     }
-
     const transactions: any[] = [];
     for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
       const batchIds = userIds.slice(i, i + BATCH_SIZE);
-      const { data: batchTx } = await supabase
-        .from("wallet_transactions")
-        .select("user_id, amount, metadata")
-        .eq("type", "earning")
-        .in("user_id", batchIds);
+      const {
+        data: batchTx
+      } = await supabase.from("wallet_transactions").select("user_id, amount, metadata").eq("type", "earning").in("user_id", batchIds);
       if (batchTx) {
         transactions.push(...batchTx);
       }
     }
-    
     if (transactions.length > 0) {
       for (const tx of transactions) {
         const campaignId = (tx.metadata as any)?.campaign_id;
@@ -491,60 +441,32 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
         }
       }
     }
-    
     setCreators(Array.from(creatorMap.values()));
     setLoading(false);
   };
-
   const filteredCreators = creators.filter(creator => {
     const query = searchQuery.toLowerCase();
-    return creator.username.toLowerCase().includes(query) || 
-           creator.full_name?.toLowerCase().includes(query) || 
-           creator.email?.toLowerCase().includes(query) ||
-           creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
+    return creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
   });
-
   const getConversationCreator = (conv: Conversation) => {
     return creators.find(c => c.id === conv.creator_id);
   };
-
   const exportToCSV = () => {
     const rows: string[][] = [];
     rows.push(["Creator Name", "Username", "Email", "Platform", "Account Username", "Account URL", "Date Joined", "Total Earnings"]);
-    
     for (const creator of creators) {
       if (creator.social_accounts.length === 0) {
-        rows.push([
-          creator.full_name || "",
-          creator.username,
-          creator.email || "",
-          "",
-          "",
-          "",
-          creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "",
-          creator.total_earnings.toFixed(2)
-        ]);
+        rows.push([creator.full_name || "", creator.username, creator.email || "", "", "", "", creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "", creator.total_earnings.toFixed(2)]);
       } else {
         for (const account of creator.social_accounts) {
-          rows.push([
-            creator.full_name || "",
-            creator.username,
-            creator.email || "",
-            account.platform,
-            account.username,
-            account.account_link || "",
-            creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "",
-            creator.total_earnings.toFixed(2)
-          ]);
+          rows.push([creator.full_name || "", creator.username, creator.email || "", account.platform, account.username, account.account_link || "", creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "", creator.total_earnings.toFixed(2)]);
         }
       }
     }
-    
-    const csvContent = rows.map(row => 
-      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-    
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;"
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -554,73 +476,46 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   if (loading) {
-    return (
-      <div className="h-full flex">
+    return <div className="h-full flex">
         <div className="w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4 hidden lg:block">
           <Skeleton className="h-6 w-24" />
-          {[1, 2, 3].map(i => (
-            <div key={i} className="flex items-center gap-3 p-3">
+          {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-3 w-32" />
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
         <div className="flex-1 hidden lg:block" />
         <div className="w-full lg:w-96 border-l border-[#e0e0e0] dark:border-[#1a1a1a] p-4 space-y-4">
           <Skeleton className="h-6 w-24" />
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="flex items-center gap-3 p-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="flex items-center gap-3 p-3">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-3 w-16" />
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Mobile Navigation Tabs
-  const MobileNav = () => (
-    <div className="lg:hidden flex border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
-      <button
-        onClick={() => setMobileView('messages')}
-        className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
-          mobileView === 'messages' 
-            ? 'text-primary border-b-2 border-primary' 
-            : 'text-muted-foreground'
-        }`}
-      >
+  const MobileNav = () => <div className="lg:hidden flex border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
+      <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${mobileView === 'messages' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
         Messages
       </button>
-      <button
-        onClick={() => setMobileView('creators')}
-        className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
-          mobileView === 'creators' 
-            ? 'text-primary border-b-2 border-primary' 
-            : 'text-muted-foreground'
-        }`}
-      >
+      <button onClick={() => setMobileView('creators')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${mobileView === 'creators' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'}`}>
         Creators ({creators.length})
       </button>
-    </div>
-  );
-
-  return (
-    <div className="h-full flex flex-col lg:flex-row bg-background">
+    </div>;
+  return <div className="h-full flex flex-col lg:flex-row bg-background">
       <MobileNav />
       
       {/* Left Column - Conversations List */}
-      <div className={`w-full lg:w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] flex flex-col ${
-        mobileView === 'messages' ? 'flex' : 'hidden lg:flex'
-      } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+      <div className={`w-full lg:w-80 border-r border-[#e0e0e0] dark:border-[#1a1a1a] flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
         <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Messages</h2>
@@ -633,59 +528,33 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
 
         {/* Message Filters */}
         <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-2 flex-wrap font-inter tracking-[-0.5px]">
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors ${
-              messageFilter === 'all' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('all')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-colors ${messageFilter === 'all' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('all')}>
             All
           </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
-              messageFilter === 'unread' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('unread')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('unread')}>
             <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-green-500'}`} />
             Unread
           </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${
-              messageFilter === 'bookmarked' 
-                ? 'bg-foreground text-background' 
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setMessageFilter('bookmarked')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-colors flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`} onClick={() => setMessageFilter('bookmarked')}>
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
           
-          {campaigns.length > 0 && (
-            <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+          {campaigns.length > 0 && <Select value={campaignFilter} onValueChange={setCampaignFilter}>
               <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-full border-0 bg-muted/50 hover:bg-muted font-inter tracking-[-0.5px]">
                 <SelectValue placeholder="All Campaigns" />
               </SelectTrigger>
               <SelectContent className="bg-popover">
                 <SelectItem value="all" className="text-xs">All Campaigns</SelectItem>
-                {campaigns.map(campaign => (
-                  <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
+                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
                     {campaign.title}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
-            </Select>
-          )}
+            </Select>}
         </div>
 
         <ScrollArea className="flex-1">
-          {conversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
+          {conversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
               <div className="w-20 h-20 rounded-full bg-muted/30 flex items-center justify-center mb-6">
                 <Inbox className="h-10 w-10 text-muted-foreground/50" />
               </div>
@@ -693,52 +562,35 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               <p className="text-sm text-muted-foreground mb-6 max-w-[240px]">
                 Start conversations by posting a job and messaging creators. Your conversations will appear here.
               </p>
-              <Button 
-                className="gap-2 bg-[#2060de] hover:bg-[#2060de]/90 border-t border-[#4b85f7]"
-                onClick={() => setMobileView('creators')}
-              >
+              <Button className="gap-2 bg-[#2060de] hover:bg-[#2060de]/90 border-t border-[#4b85f7]" onClick={() => setMobileView('creators')}>
                 <Plus className="h-4 w-4" />
                 Create a Campaign
               </Button>
               <button className="text-xs text-muted-foreground mt-4 hover:text-foreground transition-colors">
                 Need help getting started?
               </button>
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
+            </div> : filteredConversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center mb-4">
-                {messageFilter === 'unread' ? (
-                  <Mail className="h-8 w-8 text-muted-foreground/50" />
-                ) : (
-                  <Bookmark className="h-8 w-8 text-muted-foreground/50" />
-                )}
+                {messageFilter === 'unread' ? <Mail className="h-8 w-8 text-muted-foreground/50" /> : <Bookmark className="h-8 w-8 text-muted-foreground/50" />}
               </div>
               <h3 className="font-medium mb-2">
                 {messageFilter === 'unread' ? 'No unread messages' : 'No saved conversations'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {messageFilter === 'unread' 
-                  ? "You're all caught up!" 
-                  : "Bookmark conversations to find them here."}
+                {messageFilter === 'unread' ? "You're all caught up!" : "Bookmark conversations to find them here."}
               </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
+            </div> : <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
               {filteredConversations.map(conv => {
-                const creator = getConversationCreator(conv);
-                const unreadCount = unreadCounts.get(conv.id) || 0;
-                const isBookmarked = bookmarkedConversations.has(conv.id);
-                return (
-                  <div
-                    key={conv.id}
-                    className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
-                      activeConversation?.id === conv.id ? "bg-muted/50" : ""
-                    }`}
-                    onClick={() => {
-                      setActiveConversation({ ...conv, creator });
-                      setMobileView('conversation');
-                    }}
-                  >
+            const creator = getConversationCreator(conv);
+            const unreadCount = unreadCounts.get(conv.id) || 0;
+            const isBookmarked = bookmarkedConversations.has(conv.id);
+            return <div key={conv.id} className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${activeConversation?.id === conv.id ? "bg-muted/50" : ""}`} onClick={() => {
+              setActiveConversation({
+                ...conv,
+                creator
+              });
+              setMobileView('conversation');
+            }}>
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <Avatar className="h-10 w-10">
@@ -747,76 +599,56 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                             {creator?.username.slice(0, 2).toUpperCase() || "??"}
                           </AvatarFallback>
                         </Avatar>
-                        {unreadCount > 0 && (
-                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center">
+                        {unreadCount > 0 && <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center">
                             {unreadCount > 9 ? '9+' : unreadCount}
-                          </div>
-                        )}
+                          </div>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm truncate ${unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
                           {creator?.full_name || creator?.username || "Unknown"}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : "No messages"}
+                          {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), {
+                      addSuffix: true
+                    }) : "No messages"}
                         </p>
                       </div>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground shrink-0"
-                          >
+                        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0">
                             <MoreHorizontal className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleBookmark(conv.id);
-                            }}
-                            className="font-inter tracking-[-0.5px]"
-                          >
+                          <DropdownMenuItem onClick={e => {
+                      e.stopPropagation();
+                      toggleBookmark(conv.id);
+                    }} className="font-inter tracking-[-0.5px]">
                             <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
                             {isBookmarked ? 'Unbookmark' : 'Bookmark'}
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirmId(conv.id);
-                            }}
-                            className="text-destructive focus:text-destructive font-inter tracking-[-0.5px]"
-                          >
+                          <DropdownMenuItem onClick={e => {
+                      e.stopPropagation();
+                      setDeleteConfirmId(conv.id);
+                    }} className="text-destructive focus:text-destructive font-inter tracking-[-0.5px]">
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </div>;
+          })}
+            </div>}
         </ScrollArea>
       </div>
 
       {/* Middle Column - Active Conversation */}
-      <div className={`flex-1 flex flex-col min-w-0 border-r border-[#e0e0e0] dark:border-[#1a1a1a] ${
-        mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'
-      }`}>
-        {activeConversation ? (
-          <>
+      <div className={`flex-1 flex flex-col min-w-0 border-r border-[#e0e0e0] dark:border-[#1a1a1a] ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
+        {activeConversation ? <>
             {/* Conversation Header */}
             <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center gap-3 shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 lg:hidden"
-                onClick={() => setMobileView('messages')}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden" onClick={() => setMobileView('messages')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <Avatar className="h-9 w-9">
@@ -828,12 +660,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               <span className="font-medium flex-1">
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hidden lg:flex"
-                onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                 {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
               </Button>
             </div>
@@ -841,27 +668,14 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender_type === "brand" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
-                        msg.sender_type === "brand"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
+                {messages.map(msg => <div key={msg.id} className={`flex ${msg.sender_type === "brand" ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${msg.sender_type === "brand" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                       <p className="text-sm">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 ${
-                        msg.sender_type === "brand" ? "text-primary-foreground/70" : "text-muted-foreground"
-                      }`}>
+                      <p className={`text-[10px] mt-1 ${msg.sender_type === "brand" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                         {format(new Date(msg.created_at), "h:mm a")}
                       </p>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
@@ -869,19 +683,12 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             {/* Redesigned Message Input */}
             <div className="p-4 md:p-6 border-t border-[#e0e0e0] dark:border-[#1a1a1a] bg-background">
               <div className="rounded-2xl border border-[#e0e0e0] dark:border-[#1a1a1a] overflow-hidden">
-                <Textarea
-                  placeholder="Type a message..."
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  className="border-0 bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none resize-none min-h-[80px] text-sm px-4 pt-4 pb-2"
-                  rows={3}
-                />
+                <Textarea placeholder="Type a message..." value={messageInput} onChange={e => setMessageInput(e.target.value)} onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }} rows={3} className="" />
                 <div className="flex items-center justify-between px-4 pb-4">
                   <div className="flex items-center gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
@@ -897,29 +704,17 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       <Link className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    className="h-9 px-5 gap-2 rounded-lg bg-[#0a0a0a] dark:bg-white text-white dark:text-[#0a0a0a] hover:bg-[#0a0a0a]/90 dark:hover:bg-white/90"
-                    onClick={sendMessage}
-                    disabled={!messageInput.trim() || sendingMessage}
-                  >
+                  <Button size="sm" className="h-9 px-5 gap-2 rounded-lg bg-[#0a0a0a] dark:bg-white text-white dark:text-[#0a0a0a] hover:bg-[#0a0a0a]/90 dark:hover:bg-white/90" onClick={sendMessage} disabled={!messageInput.trim() || sendingMessage}>
                     Send
                     <span className="text-xs opacity-60 hidden sm:inline">⌘ ↵</span>
                   </Button>
                 </div>
               </div>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col">
+          </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
             <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-end shrink-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hidden lg:flex"
-                onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                 {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
               </Button>
             </div>
@@ -929,64 +724,39 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 <p className="text-sm">Select a conversation to view messages</p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
       {/* Right Column - Creators List */}
-      <div className={`flex flex-col transition-all duration-300 ${
-        creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'
-      } ${
-        mobileView === 'creators' ? 'flex' : 'hidden lg:flex'
-      } ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
+      <div className={`flex flex-col transition-all duration-300 ${creatorsCollapsed ? 'w-0 overflow-hidden lg:w-0' : 'w-full lg:w-96'} ${mobileView === 'creators' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
         <div className="h-14 px-4 border-b border-[#e0e0e0] dark:border-[#1a1a1a] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold">Creators</h2>
             <span className="text-xs text-muted-foreground">({creators.length})</span>
           </div>
-          {creators.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 gap-2 text-xs"
-              onClick={exportToCSV}
-            >
+          {creators.length > 0 && <Button variant="ghost" size="sm" className="h-8 px-3 gap-2 text-xs" onClick={exportToCSV}>
               <Download className="h-3.5 w-3.5" />
               Export
-            </Button>
-          )}
+            </Button>}
         </div>
 
         {/* Search */}
         <div className="p-3 border-b border-[#e0e0e0] dark:border-[#1a1a1a]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search creators..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
-            />
+            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9" />
           </div>
         </div>
 
         <ScrollArea className="flex-1">
-          {creators.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
+          {creators.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <Users className="h-10 w-10 text-muted-foreground mb-4" />
               <h3 className="font-medium mb-2">No creators yet</h3>
               <p className="text-sm text-muted-foreground">
                 Creators will appear here once they join your campaigns.
               </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
-              {filteredCreators.map(creator => (
-                <div
-                  key={creator.id}
-                  className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => setSelectedCreator(creator)}
-                >
+            </div> : <div className="divide-y divide-[#e0e0e0] dark:divide-[#1a1a1a]">
+              {filteredCreators.map(creator => <div key={creator.id} className="p-4 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedCreator(creator)}>
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar className="h-10 w-10 ring-2 ring-background">
                       <AvatarImage src={creator.avatar_url || undefined} />
@@ -1002,47 +772,28 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                         @{creator.username}
                       </p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startConversation(creator);
-                      }}
-                    >
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={e => {
+                e.stopPropagation();
+                startConversation(creator);
+              }}>
                       <MessageSquare className="h-4 w-4" />
                     </Button>
                   </div>
 
                   {/* Social Accounts */}
                   <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                    {creator.social_accounts.slice(0, 2).map((account, idx) => (
-                      <Button
-                        key={idx}
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 gap-1.5 text-foreground rounded-full bg-muted/50 hover:bg-muted"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (account.account_link) {
-                            window.open(account.account_link, "_blank");
-                          }
-                        }}
-                      >
-                        <img
-                          src={PLATFORM_LOGOS[account.platform.toLowerCase()]}
-                          alt={account.platform}
-                          className="h-3 w-3 object-contain"
-                        />
+                    {creator.social_accounts.slice(0, 2).map((account, idx) => <Button key={idx} variant="ghost" size="sm" className="h-6 px-2 gap-1.5 text-foreground rounded-full bg-muted/50 hover:bg-muted" onClick={e => {
+                e.stopPropagation();
+                if (account.account_link) {
+                  window.open(account.account_link, "_blank");
+                }
+              }}>
+                        <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
                         <span className="text-xs max-w-[60px] truncate">@{account.username}</span>
-                      </Button>
-                    ))}
-                    {creator.social_accounts.length > 2 && (
-                      <span className="text-xs text-muted-foreground">
+                      </Button>)}
+                    {creator.social_accounts.length > 2 && <span className="text-xs text-muted-foreground">
                         +{creator.social_accounts.length - 2}
-                      </span>
-                    )}
+                      </span>}
                   </div>
 
                   {/* Stats */}
@@ -1050,10 +801,8 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                     <span>Joined {creator.date_joined ? format(new Date(creator.date_joined), "MMM d, yyyy") : "-"}</span>
                     <span className="text-green-500 font-medium">${creator.total_earnings.toFixed(2)}</span>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </ScrollArea>
       </div>
 
@@ -1064,8 +813,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
             <DialogTitle>Creator Details</DialogTitle>
           </DialogHeader>
           
-          {selectedCreator && (
-            <div className="space-y-6">
+          {selectedCreator && <div className="space-y-6">
               {/* Profile Header */}
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16 ring-2 ring-background">
@@ -1077,12 +825,10 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                 <div>
                   <h3 className="font-semibold text-lg">{selectedCreator.full_name || selectedCreator.username}</h3>
                   <p className="text-sm text-muted-foreground">@{selectedCreator.username}</p>
-                  {selectedCreator.email && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  {selectedCreator.email && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
                       <Mail className="h-3.5 w-3.5" />
                       {selectedCreator.email}
-                    </p>
-                  )}
+                    </p>}
                 </div>
               </div>
 
@@ -1102,24 +848,13 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               <div>
                 <h4 className="text-sm font-medium mb-3">Connected Accounts</h4>
                 <div className="space-y-2">
-                  {selectedCreator.social_accounts.map((account, idx) => (
-                    <Button
-                      key={idx}
-                      variant="ghost"
-                      className="w-full justify-between h-auto py-2 px-3"
-                      onClick={() => account.account_link && window.open(account.account_link, "_blank")}
-                    >
+                  {selectedCreator.social_accounts.map((account, idx) => <Button key={idx} variant="ghost" className="w-full justify-between h-auto py-2 px-3" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
                       <div className="flex items-center gap-2">
-                        <img
-                          src={PLATFORM_LOGOS[account.platform.toLowerCase()]}
-                          alt={account.platform}
-                          className="h-5 w-5 object-contain"
-                        />
+                        <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-5 w-5 object-contain" />
                         <span>@{account.username}</span>
                       </div>
                       <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  ))}
+                    </Button>)}
                 </div>
               </div>
 
@@ -1127,35 +862,26 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
               <div>
                 <h4 className="text-sm font-medium mb-3">Joined Campaigns</h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedCreator.campaigns.map(campaign => (
-                    <span
-                      key={campaign.id}
-                      className="px-3 py-1 rounded-full bg-muted text-xs font-medium"
-                    >
+                  {selectedCreator.campaigns.map(campaign => <span key={campaign.id} className="px-3 py-1 rounded-full bg-muted text-xs font-medium">
                       {campaign.title}
-                    </span>
-                  ))}
+                    </span>)}
                 </div>
               </div>
 
               {/* Message Button */}
-              <Button
-                className="w-full"
-                onClick={() => {
-                  startConversation(selectedCreator);
-                  setSelectedCreator(null);
-                }}
-              >
+              <Button className="w-full" onClick={() => {
+            startConversation(selectedCreator);
+            setSelectedCreator(null);
+          }}>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Send Message
               </Button>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={open => !open && setDeleteConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="font-inter tracking-[-0.5px]">Delete conversation?</AlertDialogTitle>
@@ -1165,20 +891,16 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]"
-              onClick={() => {
-                if (deleteConfirmId) {
-                  deleteConversation(deleteConfirmId);
-                  setDeleteConfirmId(null);
-                }
-              }}
-            >
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" onClick={() => {
+            if (deleteConfirmId) {
+              deleteConversation(deleteConfirmId);
+              setDeleteConfirmId(null);
+            }
+          }}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 }
