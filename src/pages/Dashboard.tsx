@@ -126,7 +126,7 @@ export default function Dashboard() {
       case "wallet":
         return <WalletTab />;
       case "profile":
-        return <ProfileTab className="pt-[30px]" />;
+        return <ProfileTab />;
       default:
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }

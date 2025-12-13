@@ -797,7 +797,7 @@ export function ProfileTab() {
     completed: (profile?.total_earnings || 0) > 0,
     onClick: () => navigate('/dashboard?tab=discover')
   }];
-  return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8">
+  return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8">
       {/* Onboarding Checklist */}
       <ProfileOnboardingChecklist tasks={onboardingTasks} />
 
