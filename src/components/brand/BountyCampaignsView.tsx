@@ -59,50 +59,50 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {bounties.map((bounty) => {
         const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
         const isFull = spotsRemaining <= 0;
+        const fillPercentage = (bounty.accepted_creators_count / bounty.max_accepted_creators) * 100;
 
         return (
           <Card
             key={bounty.id}
-            className="bg-card border animate-fade-in flex flex-col overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+            className="group bg-card/50 border border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
             onClick={() => handleCardClick(bounty.id)}
           >
+            {/* Banner */}
             {bounty.banner_url && (
-              <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+              <div className="relative h-28 overflow-hidden">
                 <OptimizedImage
                   src={bounty.banner_url}
                   alt={bounty.title}
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
               </div>
             )}
             
-            <CardContent className="p-4 flex-1 flex flex-col gap-3">
+            <CardContent className="p-5 font-inter tracking-[-0.5px]">
               {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-1">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-semibold text-foreground truncate mb-2">
                     {bounty.title}
                   </h3>
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <Badge
-                      variant="outline"
-                      className={
-                        bounty.status === 'active'
-                          ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                          : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                      }
-                    >
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      bounty.status === 'active'
+                        ? 'bg-emerald-500/10 text-emerald-500'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
                       {bounty.status}
-                    </Badge>
+                    </span>
                     {bounty.is_private && (
-                      <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
-                        <Lock className="h-3 w-3 mr-1" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                        <Lock className="h-3 w-3" />
                         Private
-                      </Badge>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -110,62 +110,74 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(bounty);
                     }}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
 
-              {/* Stats */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <DollarSign className="h-4 w-4" />
-                    Monthly Retainer
-                  </span>
-                  <span className="font-semibold">${bounty.monthly_retainer.toLocaleString()}</span>
+              {/* Retainer highlight */}
+              <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Monthly Retainer</span>
+                  <span className="text-lg font-semibold text-primary">${bounty.monthly_retainer.toLocaleString()}</span>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Video className="h-4 w-4" />
-                    Videos/Month
-                  </span>
-                  <span className="font-semibold">{bounty.videos_per_month}</span>
+              </div>
+
+              {/* Stats row */}
+              <div className="flex items-center gap-4 mb-4 text-sm">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Video className="h-3.5 w-3.5" />
+                  <span>{bounty.videos_per_month} videos/mo</span>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    Positions
-                  </span>
-                  <span className={`font-semibold ${isFull ? 'text-red-500' : 'text-green-500'}`}>
-                    {bounty.accepted_creators_count} / {bounty.max_accepted_creators}
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" />
+                  <span className={isFull ? 'text-destructive' : ''}>
+                    {spotsRemaining} spots left
                   </span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="pt-2 flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={(e) => handleCopyUrl(bounty.id, e)}
-                >
-                  {copiedId === bounty.id ? (
-                    <Check className="h-4 w-4 mr-1" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-1" />
-                  )}
-                  {copiedId === bounty.id ? 'Copied!' : 'Copy Link'}
-                </Button>
+              {/* Progress bar */}
+              <div className="mb-4">
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isFull ? 'bg-destructive' : 'bg-primary'
+                    }`}
+                    style={{ width: `${fillPercentage}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-1.5 text-xs text-muted-foreground">
+                  <span>{bounty.accepted_creators_count} accepted</span>
+                  <span>{bounty.max_accepted_creators} max</span>
+                </div>
               </div>
+
+              {/* Copy link button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-9 text-sm font-medium border-border/50 hover:bg-muted/50"
+                onClick={(e) => handleCopyUrl(bounty.id, e)}
+              >
+                {copiedId === bounty.id ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                    Copy Link
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         );
