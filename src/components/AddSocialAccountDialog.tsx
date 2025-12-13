@@ -253,78 +253,101 @@ export function AddSocialAccountDialog({
     setTimeRemaining(VERIFICATION_TIME_SECONDS);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-[#0a0a0a] border-0 [&>button]:hidden">
-        {/* Close Button */}
-        <button onClick={() => onOpenChange(false)} className="absolute right-4 top-4 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors z-10">
-          <X className="h-5 w-5" />
-        </button>
-
-        {step === "input" ? (/* Step 1: Platform & Username Input */
-      <div className="p-6 px-0 py-0">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-semibold font-inter tracking-[-0.5px]">
-                Connect Social Account
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
-                Verify ownership by adding a code to your bio
-              </p>
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
+        {step === "input" ? (
+          <div className="flex flex-col">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
+                    Connect Account
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    Verify via bio code
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-5">
+            {/* Content */}
+            <div className="px-6 pb-2 space-y-4">
               {/* Platform Selection */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium font-inter tracking-[-0.5px]">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
                   Platform
                 </Label>
                 <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
-                  <SelectTrigger className="w-full h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px]">
+                  <SelectTrigger className="w-full h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px]">
                     <SelectValue>
-                      <div className="flex items-center gap-3">
-                        {getPlatformIcon(selectedPlatform)}
-                        <span>{getPlatformLabel(selectedPlatform)}</span>
+                      <div className="flex items-center gap-2.5">
+                        {getPlatformIcon(selectedPlatform, "h-4 w-4")}
+                        <span className="text-sm">{getPlatformLabel(selectedPlatform)}</span>
                       </div>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-[#141414] border-0">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
-                        <div className="flex items-center gap-3">
-                          {getPlatformIcon(platform)}
-                          <span>{getPlatformLabel(platform)}</span>
+                  <SelectContent className="bg-popover border-border/50">
+                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
+                      <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
+                        <div className="flex items-center gap-2.5">
+                          {getPlatformIcon(platform, "h-4 w-4")}
+                          <span className="text-sm">{getPlatformLabel(platform)}</span>
                         </div>
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Username Input */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium font-inter tracking-[-0.5px]">
+              <div className="space-y-1.5">
+                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
                   {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
                 </Label>
                 <div className="relative">
-                  {showAtSymbol && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>}
-                  <Input id="username" placeholder={getPlaceholderText(selectedPlatform)} value={username} onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} className={`h-12 bg-[#141414] border-0 font-inter tracking-[-0.5px] ${showAtSymbol ? 'pl-8' : 'pl-4'}`} />
+                  {showAtSymbol && <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>}
+                  <Input 
+                    id="username" 
+                    placeholder={getPlaceholderText(selectedPlatform)} 
+                    value={username} 
+                    onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} 
+                    className={`h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-7' : 'pl-3.5'}`} 
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Continue Button */}
-              <Button onClick={handleContinueToVerification} className="w-full h-12 bg-primary hover:bg-primary/90 font-inter tracking-[-0.5px] border-t border-t-[#4a86ff]/50 mt-4">
-                <span className="flex items-center gap-2">
-                  Continue
-                  <ArrowRight className="h-4 w-4" />
-                </span>
+            {/* Footer */}
+            <div className="px-6 py-4 mt-2 border-t border-border/50 flex gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => onOpenChange(false)} 
+                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleContinueToVerification} 
+                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
+              >
+                Continue
+                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
-          </div>) : (/* Step 2: Verification */
-      <div className="p-5">
-            {/* Compact Header */}
-            <div className="flex items-center justify-between mb-5">
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-[#141414] flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
                   {getPlatformIcon(selectedPlatform, "h-5 w-5")}
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">
+                  <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">
                     @{username}
                   </h2>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
@@ -332,65 +355,84 @@ export function AddSocialAccountDialog({
                   </p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 font-inter tracking-[-0.5px]">
-                Pending
-              </span>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+                <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                {formatTime(timeRemaining)}
+              </div>
             </div>
 
-            {/* Verification Code - Compact */}
-            <div className="bg-[#141414] rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                  Add to your bio
-                </span>
-                <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
-                  {copied ? <>
-                      <Check className="h-3.5 w-3.5" />
-                      Copied
-                    </> : <>
-                      <Copy className="h-3.5 w-3.5" />
-                      Copy
-                    </>}
-                </button>
+            {/* Verification Code */}
+            <div className="px-6 pb-4">
+              <div className="bg-muted/30 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    Add this code to your bio
+                  </span>
+                  <button 
+                    onClick={handleCopyCode} 
+                    className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div 
+                  onClick={handleCopyCode}
+                  className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors border border-border/50"
+                >
+                  <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">
+                    {verificationCode}
+                  </span>
+                </div>
+                {selectedPlatform === "instagram" && (
+                  <p className="mt-3 text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px] text-center">
+                    Instagram may take 1–2 minutes to update your bio
+                  </p>
+                )}
               </div>
-              <div className="bg-[#0a0a0a] rounded-md py-3 px-4 text-center">
-                <span className="text-lg font-bold font-mono tracking-[0.25em]">
-                  {verificationCode}
-                </span>
-              </div>
-              {selectedPlatform === "instagram" && <p className="mt-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                  Instagram can take a couple of minutes to update your bio. After adding the code, wait
-                  1–2 minutes before tapping Check Verification.
-                </p>}
             </div>
 
-            {/* Timer with Progress Bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                  Expires in
-                </span>
-                <span className="text-sm font-semibold font-mono text-foreground">
-                  {formatTime(timeRemaining)}
-                </span>
-              </div>
-              <Progress value={progressPercent} className="h-1.5 bg-[#1a1a1a]" />
+            {/* Progress */}
+            <div className="px-6 pb-4">
+              <Progress value={progressPercent} className="h-1 bg-muted/30" />
             </div>
 
-            {/* Check Button */}
-            <Button onClick={handleCheckVerification} disabled={isChecking || timeRemaining === 0} className="w-full h-11 bg-primary hover:bg-primary/90 border-0 border-t border-t-[#4a86ff]/50 font-inter tracking-[-0.5px]">
-              {isChecking ? <span className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying...
-                </span> : "Check Verification"}
-            </Button>
-
-            {/* Back Link */}
-            <button onClick={handleBack} className="w-full mt-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Go back
-            </button>
-          </div>)}
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-border/50 flex gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={handleBack} 
+                className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1.5" />
+                Back
+              </Button>
+              <Button 
+                onClick={handleCheckVerification} 
+                disabled={isChecking || timeRemaining === 0} 
+                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
+              >
+                {isChecking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify Account"
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>;
 }
