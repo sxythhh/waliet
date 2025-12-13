@@ -11,7 +11,6 @@ import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
-
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -20,7 +19,6 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 import xLogoDark from "@/assets/x-logo.png";
-
 interface BoostData {
   id: string;
   title: string;
@@ -36,7 +34,6 @@ interface BoostData {
   brand_id: string;
   discord_guild_id: string | null;
 }
-
 interface Application {
   id: string;
   user_id: string;
@@ -45,7 +42,6 @@ interface Application {
   video_url: string;
   applied_at: string;
 }
-
 interface Profile {
   id: string;
   username: string;
@@ -59,7 +55,6 @@ interface Profile {
   discord_username: string | null;
   twitter_username: string | null;
 }
-
 interface SocialAccount {
   id: string;
   user_id: string;
@@ -69,16 +64,18 @@ interface SocialAccount {
   follower_count: number | null;
   avatar_url: string | null;
 }
-
 type DetailTab = "videos" | "management" | "applications";
-
 interface BoostDetailViewProps {
   boostId: string;
   onBack: () => void;
 }
-
-export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
-  const { resolvedTheme } = useTheme();
+export function BoostDetailView({
+  boostId,
+  onBack
+}: BoostDetailViewProps) {
+  const {
+    resolvedTheme
+  } = useTheme();
   const [boost, setBoost] = useState<BoostData | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -88,7 +85,6 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
-
   const getPlatformLogo = (platform: string) => {
     const isDark = resolvedTheme === "dark";
     switch (platform.toLowerCase()) {
@@ -105,48 +101,38 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
         return null;
     }
   };
-
   useEffect(() => {
     fetchBoostData();
   }, [boostId]);
-
   const fetchBoostData = async () => {
     setLoading(true);
-    
-    const { data: boostData, error: boostError } = await supabase
-      .from("bounty_campaigns")
-      .select("*")
-      .eq("id", boostId)
-      .single();
-
+    const {
+      data: boostData,
+      error: boostError
+    } = await supabase.from("bounty_campaigns").select("*").eq("id", boostId).single();
     if (boostError || !boostData) {
       console.error("Error fetching boost:", boostError);
       setLoading(false);
       return;
     }
-
     setBoost(boostData);
-
-    const { data: applicationsData, error: applicationsError } = await supabase
-      .from("bounty_applications")
-      .select("*")
-      .eq("bounty_campaign_id", boostId)
-      .order("applied_at", { ascending: false });
-
+    const {
+      data: applicationsData,
+      error: applicationsError
+    } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).order("applied_at", {
+      ascending: false
+    });
     if (applicationsError) {
       console.error("Error fetching applications:", applicationsError);
     } else {
       setApplications(applicationsData || []);
     }
-
     if (applicationsData && applicationsData.length > 0) {
       const userIds = applicationsData.map(app => app.user_id);
-      
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .in("id", userIds);
-
+      const {
+        data: profilesData,
+        error: profilesError
+      } = await supabase.from("profiles").select("*").in("id", userIds);
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
       } else {
@@ -156,36 +142,30 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
         });
         setProfiles(profilesMap);
       }
-
-      const { data: socialData, error: socialError } = await supabase
-        .from("social_accounts")
-        .select("*")
-        .in("user_id", userIds);
-
+      const {
+        data: socialData,
+        error: socialError
+      } = await supabase.from("social_accounts").select("*").in("user_id", userIds);
       if (socialError) {
         console.error("Error fetching social accounts:", socialError);
       } else {
         setSocialAccounts(socialData || []);
       }
     }
-
     setLoading(false);
   };
-
   const handleUpdateStatus = async (applicationId: string, newStatus: 'accepted' | 'rejected') => {
-    const { error } = await supabase
-      .from("bounty_applications")
-      .update({ status: newStatus })
-      .eq("id", applicationId);
-
+    const {
+      error
+    } = await supabase.from("bounty_applications").update({
+      status: newStatus
+    }).eq("id", applicationId);
     if (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update application status");
       return;
     }
-
     toast.success(`Application ${newStatus}`);
-    
     if (newStatus === 'accepted' && boost?.discord_guild_id) {
       const application = applications.find(app => app.id === applicationId);
       if (application) {
@@ -201,17 +181,14 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
         }
       }
     }
-
     fetchBoostData();
     setDetailPanelOpen(false);
     setSelectedAppId(null);
   };
-
   const handleApplicationClick = (appId: string) => {
     setSelectedAppId(appId);
     setDetailPanelOpen(true);
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
@@ -219,48 +196,45 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
       case 'rejected':
         return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
       default:
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+        return;
     }
   };
-
   const pendingCount = applications.filter(app => app.status === 'pending').length;
   const selectedApp = applications.find(app => app.id === selectedAppId);
   const selectedProfile = selectedApp ? profiles[selectedApp.user_id] : null;
-  const selectedUserAccounts = selectedApp 
-    ? socialAccounts.filter(acc => acc.user_id === selectedApp.user_id) 
-    : [];
-
-  const tabs = [
-    { id: "videos" as DetailTab, label: "Videos", icon: Video },
-    { id: "management" as DetailTab, label: "Management", icon: FileText },
-    { id: "applications" as DetailTab, label: "Applications", icon: Users, count: pendingCount },
-  ];
-
+  const selectedUserAccounts = selectedApp ? socialAccounts.filter(acc => acc.user_id === selectedApp.user_id) : [];
+  const tabs = [{
+    id: "videos" as DetailTab,
+    label: "Videos",
+    icon: Video
+  }, {
+    id: "management" as DetailTab,
+    label: "Management",
+    icon: FileText
+  }, {
+    id: "applications" as DetailTab,
+    label: "Applications",
+    icon: Users,
+    count: pendingCount
+  }];
   if (loading) {
-    return (
-      <div className="h-full flex flex-col">
+    return <div className="h-full flex flex-col">
         <div className="flex flex-col h-full border-l border-border overflow-hidden">
           <div className="flex-1 p-6">
             <Skeleton className="h-8 w-48 mb-4" />
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!boost) {
-    return (
-      <div className="h-full flex flex-col">
+    return <div className="h-full flex flex-col">
         <div className="flex flex-col h-full border-l border-border overflow-hidden items-center justify-center">
           <p className="text-muted-foreground">Boost not found</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <>
+  return <>
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col border border-[#141414] rounded-[20px] overflow-hidden bg-background">
           {/* Header with back button and boost title - Fixed */}
@@ -271,20 +245,13 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
             </Button>
             <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline flex items-center gap-2">
               {boost.title}
-              {boost.is_private && (
-                <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+              {boost.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
                   <Lock className="h-3 w-3 mr-1" />
                   Private
-                </Badge>
-              )}
+                </Badge>}
             </button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted"
-            onClick={() => setEditDialogOpen(true)}
-          >
+          <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
             <Pencil className="h-3.5 w-3.5" />
             Edit Boost
           </Button>
@@ -293,41 +260,25 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
         {/* Tab Navigation - Horizontal bottom style */}
         <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
-                  activeTab === tab.id
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
+            {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
-                {tab.count !== undefined && tab.count > 0 && (
-                  <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
                     {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
+                  </span>}
+              </button>)}
           </nav>
         </div>
 
         {/* Content Area - Videos & Management tabs */}
-        {(activeTab === "videos" || activeTab === "management") && (
-          <div className="flex-1 overflow-auto p-4">
-          {activeTab === "videos" && (
-            <div className="flex items-center justify-center py-24 text-muted-foreground">
+        {(activeTab === "videos" || activeTab === "management") && <div className="flex-1 overflow-auto p-4">
+          {activeTab === "videos" && <div className="flex items-center justify-center py-24 text-muted-foreground">
               <div className="text-center">
                 <Video className="h-12 w-12 mx-auto mb-4 opacity-40" />
                 <p>Videos tracking coming soon</p>
               </div>
-            </div>
-          )}
+            </div>}
 
-          {activeTab === "management" && (
-            <div className="space-y-8">
+          {activeTab === "management" && <div className="space-y-8">
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-muted/30 rounded-2xl p-6">
@@ -357,54 +308,34 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
 
               {/* Description & Requirements */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {boost.description && (
-                  <div className="bg-muted/20 rounded-2xl p-6">
+                {boost.description && <div className="bg-muted/20 rounded-2xl p-6">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Description</h3>
                     <p className="text-sm leading-relaxed">{boost.description}</p>
-                  </div>
-                )}
-                {boost.content_style_requirements && (
-                  <div className="bg-muted/20 rounded-2xl p-6">
+                  </div>}
+                {boost.content_style_requirements && <div className="bg-muted/20 rounded-2xl p-6">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Content Requirements</h3>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{boost.content_style_requirements}</p>
-                  </div>
-                )}
+                  </div>}
               </div>
-            </div>
-          )}
-          </div>
-        )}
+            </div>}
+          </div>}
         {/* Applications Tab - Two Column Layout */}
-        {activeTab === "applications" && (
-          <div className="flex-1 flex overflow-hidden">
-            {applications.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        {activeTab === "applications" && <div className="flex-1 flex overflow-hidden">
+            {applications.length === 0 ? <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
                   <p>No applications yet</p>
                 </div>
-              </div>
-            ) : (
-              <>
+              </div> : <>
                 {/* Left Column - Applications List (Fixed/Scrollable) */}
                 <div className="w-[320px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
                   <ScrollArea className="flex-1">
                     <div className="p-3 space-y-2">
-                      {applications.map((app) => {
-                        const profile = profiles[app.user_id];
-                        const isSelected = selectedAppId === app.id;
-                        const appliedDate = new Date(app.applied_at);
-                        
-                        return (
-                          <button
-                            key={app.id}
-                            onClick={() => setSelectedAppId(app.id)}
-                            className={`w-full rounded-lg p-3 text-left transition-all font-inter tracking-[-0.5px] ${
-                              isSelected 
-                                ? "bg-primary/10 border border-primary/20" 
-                                : "bg-card/30 hover:bg-card/50 border border-border/30"
-                            }`}
-                          >
+                      {applications.map(app => {
+                    const profile = profiles[app.user_id];
+                    const isSelected = selectedAppId === app.id;
+                    const appliedDate = new Date(app.applied_at);
+                    return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full rounded-lg p-3 text-left transition-all font-inter tracking-[-0.5px] ${isSelected ? "bg-primary/10 border border-primary/20" : "bg-card/30 hover:bg-card/50 border border-border/30"}`}>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9 border border-border/40">
                                 <AvatarImage src={profile?.avatar_url || undefined} />
@@ -421,49 +352,42 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                                 </div>
                                 <p className="text-xs text-muted-foreground/70 truncate">@{profile?.username}</p>
                                 <p className="text-[10px] text-muted-foreground/50 mt-0.5">
-                                  {appliedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {appliedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                  {appliedDate.toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric'
+                            })} at {appliedDate.toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
+                            })}
                                 </p>
                               </div>
                             </div>
-                          </button>
-                        );
-                      })}
+                          </button>;
+                  })}
                     </div>
                   </ScrollArea>
                 </div>
 
                 {/* Right Column - Application Details (Wider) */}
                 <div className="flex-1 overflow-hidden flex flex-col relative">
-                  {selectedApp && selectedProfile ? (
-                    <>
+                  {selectedApp && selectedProfile ? <>
                       {/* Navigation Arrows */}
                       <div className="absolute top-3 right-3 flex flex-col gap-1 z-10">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 bg-muted/30 hover:bg-muted/50"
-                          onClick={() => {
-                            const currentIndex = applications.findIndex(a => a.id === selectedAppId);
-                            if (currentIndex > 0) {
-                              setSelectedAppId(applications[currentIndex - 1].id);
-                            }
-                          }}
-                          disabled={applications.findIndex(a => a.id === selectedAppId) === 0}
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7 bg-muted/30 hover:bg-muted/50" onClick={() => {
+                    const currentIndex = applications.findIndex(a => a.id === selectedAppId);
+                    if (currentIndex > 0) {
+                      setSelectedAppId(applications[currentIndex - 1].id);
+                    }
+                  }} disabled={applications.findIndex(a => a.id === selectedAppId) === 0}>
                           <ChevronUp className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 bg-muted/30 hover:bg-muted/50"
-                          onClick={() => {
-                            const currentIndex = applications.findIndex(a => a.id === selectedAppId);
-                            if (currentIndex < applications.length - 1) {
-                              setSelectedAppId(applications[currentIndex + 1].id);
-                            }
-                          }}
-                          disabled={applications.findIndex(a => a.id === selectedAppId) === applications.length - 1}
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7 bg-muted/30 hover:bg-muted/50" onClick={() => {
+                    const currentIndex = applications.findIndex(a => a.id === selectedAppId);
+                    if (currentIndex < applications.length - 1) {
+                      setSelectedAppId(applications[currentIndex + 1].id);
+                    }
+                  }} disabled={applications.findIndex(a => a.id === selectedAppId) === applications.length - 1}>
                           <ChevronDown className="h-4 w-4" />
                         </Button>
                       </div>
@@ -512,29 +436,17 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                           <div className="space-y-2">
                             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Info</h3>
                             <div className={`space-y-1 text-sm relative ${selectedApp.status !== 'accepted' ? 'select-none' : ''}`}>
-                              {selectedApp.status !== 'accepted' && (
-                                <div className="absolute inset-0 flex items-center justify-center z-10">
+                              {selectedApp.status !== 'accepted' && <div className="absolute inset-0 flex items-center justify-center z-10">
                                   <span className="text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
                                     Visible after approval
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <div className={selectedApp.status !== 'accepted' ? 'blur-sm' : ''}>
-                                {selectedProfile.email && (
-                                  <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>
-                                )}
-                                {selectedProfile.phone_number && (
-                                  <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>
-                                )}
-                                {selectedProfile.discord_username && (
-                                  <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>
-                                )}
-                                {selectedProfile.twitter_username && (
-                                  <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>
-                                )}
-                                {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
-                                  <p className="text-muted-foreground">No contact info available</p>
-                                )}
+                                {selectedProfile.email && <p><span className="text-muted-foreground">Email:</span> {selectedProfile.email}</p>}
+                                {selectedProfile.phone_number && <p><span className="text-muted-foreground">Phone:</span> {selectedProfile.phone_number}</p>}
+                                {selectedProfile.discord_username && <p><span className="text-muted-foreground">Discord:</span> {selectedProfile.discord_username}</p>}
+                                {selectedProfile.twitter_username && <p><span className="text-muted-foreground">X:</span> @{selectedProfile.twitter_username}</p>}
+                                {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && <p className="text-muted-foreground">No contact info available</p>}
                               </div>
                             </div>
                           </div>
@@ -542,60 +454,33 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                           {/* Linked Accounts */}
                           <div className="space-y-2">
                             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked Accounts</h3>
-                            {selectedUserAccounts.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
+                            {selectedUserAccounts.length > 0 ? <div className="flex flex-wrap gap-2">
                                 {selectedUserAccounts.map(account => {
-                                  const logo = getPlatformLogo(account.platform);
-                                  return (
-                                    <a
-                                      key={account.id}
-                                      href={account.account_link || '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-2 bg-muted/30 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors"
-                                    >
-                                      {account.avatar_url ? (
-                                        <img src={account.avatar_url} alt={account.username} className="h-5 w-5 rounded-full" />
-                                      ) : logo ? (
-                                        <img src={logo} alt={account.platform} className="h-4 w-4" />
-                                      ) : null}
+                          const logo = getPlatformLogo(account.platform);
+                          return <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-muted/30 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors">
+                                      {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="h-5 w-5 rounded-full" /> : logo ? <img src={logo} alt={account.platform} className="h-4 w-4" /> : null}
                                       <span className="text-sm">@{account.username}</span>
-                                      {account.follower_count ? (
-                                        <span className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()}</span>
-                                      ) : null}
-                                    </a>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-muted-foreground">No linked accounts</p>
-                            )}
+                                      {account.follower_count ? <span className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()}</span> : null}
+                                    </a>;
+                        })}
+                              </div> : <p className="text-sm text-muted-foreground">No linked accounts</p>}
                           </div>
 
                           {/* Application Submission */}
                           <div className="space-y-3">
                             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Application Submission</h3>
                             
-                            {selectedApp.application_text && (
-                              <div className="space-y-1">
+                            {selectedApp.application_text && <div className="space-y-1">
                                 <p className="text-xs text-muted-foreground">Message</p>
                                 <p className="text-sm bg-muted/20 rounded-lg p-3">
                                   {selectedApp.application_text}
                                 </p>
-                              </div>
-                            )}
+                              </div>}
                             
-                            {selectedApp.video_url && (
-                              <a
-                                href={selectedApp.video_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                              >
+                            {selectedApp.video_url && <a href={selectedApp.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
                                 <Play className="h-4 w-4" />
                                 View Submission Video
-                              </a>
-                            )}
+                              </a>}
                           </div>
                         </div>
                       </ScrollArea>
@@ -603,60 +488,37 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
                       {/* Fixed Bottom Action Bar */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/30">
                         <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
-                          <Button
-                            className="flex-1 gap-2 bg-[#2060de] hover:bg-[#1a50c8] text-white border-t border-[#4b85f7]"
-                            onClick={() => {
-                              toast.info("Messaging feature coming soon");
-                            }}
-                          >
+                          <Button className="flex-1 gap-2 bg-[#2060de] hover:bg-[#1a50c8] text-white border-t border-[#4b85f7]" onClick={() => {
+                      toast.info("Messaging feature coming soon");
+                    }}>
                             <img src={mailIcon} alt="Message" className="h-4 w-4" />
                             Message
                           </Button>
-                          {selectedApp.status === 'pending' && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                className="flex-1 bg-red-500/10 text-red-500 hover:text-red-400 hover:bg-red-500/20 border border-red-500/20"
-                                onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
-                              >
+                          {selectedApp.status === 'pending' && <>
+                              <Button variant="ghost" className="flex-1 bg-red-500/10 text-red-500 hover:text-red-400 hover:bg-red-500/20 border border-red-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}>
                                 Decline
                               </Button>
-                              <Button
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}
-                              >
+                              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}>
                                 Approve
                               </Button>
-                            </>
-                          )}
+                            </>}
                         </div>
                       </div>
-                    </>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                    </> : <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
                         <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
                         <p className="text-sm">Select an application to view details</p>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
-              </>
-            )}
-          </div>
-        )}
+              </>}
+          </div>}
         </div>
       </div>
 
-      <EditBountyDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        bountyId={boostId}
-        onSuccess={() => {
-          setEditDialogOpen(false);
-          fetchBoostData();
-        }}
-      />
-    </>
-  );
+      <EditBountyDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} bountyId={boostId} onSuccess={() => {
+      setEditDialogOpen(false);
+      fetchBoostData();
+    }} />
+    </>;
 }
