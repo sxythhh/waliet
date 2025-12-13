@@ -121,15 +121,19 @@ Deno.serve(async (req) => {
       throw new Error("Brand not found");
     }
 
-    // Create Whop checkout session
-    const response = await fetch(`${WHOP_API_URL}/checkout_sessions`, {
+    // Create Whop checkout session using v2 API
+    const whopApiUrl = "https://api.whop.com/v2/checkout_sessions";
+    
+    console.log("Creating Whop checkout with plan:", PLAN_ID);
+    
+    const response = await fetch(whopApiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${whopApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        plan_id: PLAN_ID,
+        plan: PLAN_ID,
         redirect_url: `https://app.virality.gg/dashboard?workspace=${brand.slug}&subscription=success`,
         metadata: {
           brand_id: brandId,
@@ -139,13 +143,16 @@ Deno.serve(async (req) => {
       }),
     });
 
+    const responseText = await response.text();
+    console.log("Whop API response status:", response.status);
+    console.log("Whop API response:", responseText);
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Whop API error:", errorText);
-      throw new Error(`Failed to create checkout session: ${response.status}`);
+      console.error("Whop API error:", responseText);
+      throw new Error(`Failed to create checkout session: ${response.status} - ${responseText}`);
     }
 
-    const checkoutData = await response.json();
+    const checkoutData = JSON.parse(responseText);
     console.log("Whop checkout created:", checkoutData);
 
     return new Response(
