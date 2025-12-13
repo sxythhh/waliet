@@ -790,41 +790,43 @@ export function CampaignsTab({
                     <img src={application.boost_campaigns.banner_url} alt={application.boost_campaigns.title} className="w-full h-full object-cover object-center" />
                   </div>}
 
-                <CardContent className="p-4 flex-1 flex flex-col gap-3">
-                  {/* Brand Logo + Title */}
-                  <div className="flex items-start gap-3">
-                    {application.boost_campaigns.brands?.logo_url && <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
+                <CardContent className="p-4 flex-1 flex flex-col gap-4 font-['Inter'] tracking-[-0.5px]">
+                  {/* Brand + Title Row */}
+                  <div className="flex items-center gap-3">
+                    {application.boost_campaigns.brands?.logo_url && (
+                      <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                         <img src={application.boost_campaigns.brands.logo_url} alt={application.boost_campaigns.brands.name || ''} className="w-full h-full object-cover" />
-                      </div>}
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 font-['Inter'] tracking-[-0.5px]">
+                      <h3 className="text-sm font-semibold line-clamp-1 leading-tight">
                         {application.boost_campaigns.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground font-semibold">
+                      <p className="text-xs text-muted-foreground">
                         {application.boost_campaigns.brands?.name}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="rounded-lg bg-muted/50 p-2">
-                      <div className="text-muted-foreground mb-1">Monthly</div>
-                      <div className="font-semibold">${application.boost_campaigns.monthly_retainer.toLocaleString()}</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-2">
-                      <div className="text-muted-foreground mb-1">Videos</div>
-                      <div className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</div>
-                    </div>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="mt-auto pt-2">
-                    <Badge variant={application.status === 'accepted' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} className="w-full justify-center">
-                      {application.status === 'pending' && 'Pending Review'}
+                    <Badge 
+                      variant={application.status === 'accepted' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} 
+                      className="flex-shrink-0 text-[10px] font-medium px-2 py-0.5"
+                    >
+                      {application.status === 'pending' && 'Pending'}
                       {application.status === 'accepted' && 'Accepted'}
                       {application.status === 'rejected' && 'Rejected'}
                     </Badge>
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="flex items-center justify-between text-xs border-t border-border/50 pt-3 mt-auto">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Retainer</span>
+                      <span className="font-semibold">${application.boost_campaigns.monthly_retainer.toLocaleString()}/mo</span>
+                    </div>
+                    <div className="w-px h-3 bg-border/50" />
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">Videos</span>
+                      <span className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>)}
