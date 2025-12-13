@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { DollarSign, Video, Users, Trash2, Copy, Check, Lock } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { BoostDetailView } from "./BoostDetailView";
+
 
 interface BountyCampaign {
   id: string;
@@ -34,7 +34,6 @@ interface BountyCampaignsViewProps {
 
 export function BountyCampaignsView({ bounties, onViewApplications, onDelete, onRefresh, onBoostSelect }: BountyCampaignsViewProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
 
   const handleCopyUrl = (bountyId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,20 +45,8 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
   };
 
   const handleCardClick = (bountyId: string) => {
-    setSelectedBoostId(bountyId);
     onBoostSelect?.(bountyId);
   };
-
-  const handleBack = () => {
-    setSelectedBoostId(null);
-    onBoostSelect?.(null);
-    onRefresh?.();
-  };
-
-  // Show detail view if a boost is selected
-  if (selectedBoostId) {
-    return <BoostDetailView boostId={selectedBoostId} onBack={handleBack} />;
-  }
 
   if (bounties.length === 0) {
     return (
