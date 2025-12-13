@@ -167,225 +167,220 @@ export function CampaignHomeTab({
     setTopVideos([]);
     setTotalVideos(0);
   }, [timeframe]);
+
   useEffect(() => {
     let isCancelled = false;
-    const loadData = async () => {
-      if (!isCancelled) await fetchData();
-    };
-    const loadMetrics = async () => {
-      if (!isCancelled) await fetchMetrics();
-    };
-    loadData();
-    loadMetrics();
-    return () => {
-      isCancelled = true;
-    };
-  }, [campaignId, brandId, timeframe]);
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      // Fetch brand data with API key info
-      const { data: brandData } = await supabase
-        .from('brands')
-        .select('collection_name, shortimize_api_key')
-        .eq('id', brandId)
-        .single();
-      setBrand(brandData);
-
-      // Fetch campaign hashtags
-      const { data: campaignData } = await supabase
-        .from('campaigns')
-        .select('hashtags')
-        .eq('id', campaignId)
-        .single();
-      setCampaignHashtags(campaignData?.hashtags || []);
-
-      // Get date range based on timeframe
-      const dateRange = getDateRange(timeframe);
-      const {
-        data: analyticsData
-      } = await supabase.from('campaign_account_analytics').select('total_views, paid_views').eq('campaign_id', campaignId);
-
-      // Build transactions query with optional date filter
-      let transactionsQuery = supabase
-        .from('wallet_transactions')
-        .select('amount, created_at')
-        .eq('metadata->>campaign_id', campaignId)
-        .eq('type', 'earning');
+    
+    const loadAll = async () => {
+      if (isCancelled) return;
+      setIsLoading(true);
       
-      if (dateRange) {
-        transactionsQuery = transactionsQuery
-          .gte('created_at', dateRange.start.toISOString())
-          .lte('created_at', dateRange.end.toISOString());
-      }
-      
-      const { data: transactionsData } = await transactionsQuery;
+      try {
+        // Run all initial queries in parallel for speed
+        const dateRange = getDateRange(timeframe);
+        const now = new Date();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-      // Fetch all transactions for total calculation
-      const {
-        data: allTransactionsData
-      } = await supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
-      const now = new Date();
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-      const payoutsThisWeek = allTransactionsData?.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-      const payoutsLastWeek = allTransactionsData?.filter(t => {
-        const date = new Date(t.created_at);
-        return date >= twoWeeksAgo && date < oneWeekAgo;
-      }).reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+        // Build all queries
+        const brandQuery = supabase
+          .from('brands')
+          .select('collection_name, shortimize_api_key')
+          .eq('id', brandId)
+          .single();
 
-      // Build metrics query with optional date filter
-      let metricsQuery = supabase
-        .from('campaign_video_metrics')
-        .select('total_views')
-        .eq('campaign_id', campaignId)
-        .order('recorded_at', { ascending: false })
-        .limit(1);
-      
-      if (dateRange) {
-        metricsQuery = metricsQuery
-          .gte('recorded_at', dateRange.start.toISOString())
-          .lte('recorded_at', dateRange.end.toISOString());
-      }
-      
-      const { data: metricsInRange } = await metricsQuery;
-      
-      const {
-        data: metricsThisWeek
-      } = await supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', {
-        ascending: false
-      }).limit(1);
-      const {
-        data: metricsLastWeek
-      } = await supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', twoWeeksAgo.toISOString()).lt('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', {
-        ascending: false
-      }).limit(1);
-      const viewsThisWeekValue = metricsThisWeek?.[0]?.total_views || 0;
-      const viewsLastWeekValue = metricsLastWeek?.[0]?.total_views || 0;
-      const viewsChangePercent = viewsLastWeekValue > 0 ? (viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue * 100 : 0;
-      const payoutsChangePercent = payoutsLastWeek > 0 ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 : 0;
+        const campaignQuery = supabase
+          .from('campaigns')
+          .select('hashtags')
+          .eq('id', campaignId)
+          .single();
 
-      // Use filtered data for display based on timeframe
-      const totalViews = metricsInRange?.[0]?.total_views || analyticsData?.reduce((sum, a) => sum + (a.total_views || 0), 0) || 0;
-      const totalPayouts = transactionsData?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-      // Calculate effective CPM based on total views and total payouts
-      const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
-      setStats({
-        totalViews,
-        totalPayouts,
-        effectiveCPM,
-        viewsLastWeek: viewsLastWeekValue,
-        payoutsLastWeek,
-        viewsChangePercent,
-        payoutsChangePercent
-      });
-      if (brandData?.collection_name) {
-        const fetchVideoBody: Record<string, unknown> = {
-          brandId,
-          campaignId,
-          page: 1,
-          limit: 3,
-          orderBy: 'latest_views',
-          orderDirection: 'desc'
-        };
-        
+        const allTransactionsQuery = supabase
+          .from('wallet_transactions')
+          .select('amount, created_at')
+          .eq('metadata->>campaign_id', campaignId)
+          .eq('type', 'earning');
+
+        let metricsRangeQuery = supabase
+          .from('campaign_video_metrics')
+          .select('total_views')
+          .eq('campaign_id', campaignId)
+          .order('recorded_at', { ascending: false })
+          .limit(1);
         if (dateRange) {
-          fetchVideoBody.uploadedAtStart = dateRange.start.toISOString();
-          fetchVideoBody.uploadedAtEnd = dateRange.end.toISOString();
+          metricsRangeQuery = metricsRangeQuery
+            .gte('recorded_at', dateRange.start.toISOString())
+            .lte('recorded_at', dateRange.end.toISOString());
         }
-        
-        const {
-          data: videosData,
-          error
-        } = await supabase.functions.invoke('fetch-shortimize-videos', {
-          body: fetchVideoBody
+
+        const metricsThisWeekQuery = supabase
+          .from('campaign_video_metrics')
+          .select('total_views')
+          .eq('campaign_id', campaignId)
+          .gte('recorded_at', oneWeekAgo.toISOString())
+          .order('recorded_at', { ascending: false })
+          .limit(1);
+
+        const metricsLastWeekQuery = supabase
+          .from('campaign_video_metrics')
+          .select('total_views')
+          .eq('campaign_id', campaignId)
+          .gte('recorded_at', twoWeeksAgo.toISOString())
+          .lt('recorded_at', oneWeekAgo.toISOString())
+          .order('recorded_at', { ascending: false })
+          .limit(1);
+
+        let chartMetricsQuery = supabase
+          .from('campaign_video_metrics')
+          .select('*')
+          .eq('campaign_id', campaignId)
+          .order('recorded_at', { ascending: true });
+        if (dateRange) {
+          chartMetricsQuery = chartMetricsQuery
+            .gte('recorded_at', dateRange.start.toISOString())
+            .lte('recorded_at', dateRange.end.toISOString());
+        }
+
+        // Execute ALL queries in parallel
+        const [
+          brandResult,
+          campaignResult,
+          allTransactionsResult,
+          metricsRangeResult,
+          metricsThisWeekResult,
+          metricsLastWeekResult,
+          chartMetricsResult
+        ] = await Promise.all([
+          brandQuery,
+          campaignQuery,
+          allTransactionsQuery,
+          metricsRangeQuery,
+          metricsThisWeekQuery,
+          metricsLastWeekQuery,
+          chartMetricsQuery
+        ]);
+
+        if (isCancelled) return;
+
+        const brandData = brandResult.data;
+        setBrand(brandData);
+        setCampaignHashtags(campaignResult.data?.hashtags || []);
+
+        // Process transactions
+        const allTransactionsData = allTransactionsResult.data || [];
+        let transactionsData = allTransactionsData;
+        if (dateRange) {
+          transactionsData = allTransactionsData.filter(t => {
+            const date = new Date(t.created_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+
+        const payoutsThisWeek = allTransactionsData
+          .filter(t => new Date(t.created_at) >= oneWeekAgo)
+          .reduce((sum, t) => sum + (t.amount || 0), 0);
+        const payoutsLastWeek = allTransactionsData
+          .filter(t => {
+            const date = new Date(t.created_at);
+            return date >= twoWeeksAgo && date < oneWeekAgo;
+          })
+          .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+        const viewsThisWeekValue = metricsThisWeekResult.data?.[0]?.total_views || 0;
+        const viewsLastWeekValue = metricsLastWeekResult.data?.[0]?.total_views || 0;
+        const viewsChangePercent = viewsLastWeekValue > 0 
+          ? ((viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue) * 100 
+          : 0;
+        const payoutsChangePercent = payoutsLastWeek > 0 
+          ? ((payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek) * 100 
+          : 0;
+
+        const totalViews = metricsRangeResult.data?.[0]?.total_views || 0;
+        const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
+        const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
+
+        setStats({
+          totalViews,
+          totalPayouts,
+          effectiveCPM,
+          viewsLastWeek: viewsLastWeekValue,
+          payoutsLastWeek,
+          viewsChangePercent,
+          payoutsChangePercent
         });
-        if (!error && videosData?.videos) {
-          // Deduplicate videos by ad_id
-          const uniqueVideos = videosData.videos.reduce((acc: VideoData[], video: VideoData) => {
-            if (!acc.find(v => v.ad_id === video.ad_id)) {
-              acc.push(video);
-            }
-            return acc;
-          }, []);
-          setTopVideos(uniqueVideos.slice(0, 3));
-          setTotalVideos(videosData.pagination?.total || 0);
+
+        // Process chart metrics
+        const rawMetrics = chartMetricsResult.data || [];
+        if (rawMetrics.length > 0) {
+          const formattedMetrics = rawMetrics.map((m, index) => {
+            const views = m.total_views || 0;
+            const likes = m.total_likes || 0;
+            const shares = m.total_shares || 0;
+            const bookmarks = m.total_bookmarks || 0;
+            const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
+            
+            return {
+              date: format(new Date(m.recorded_at), 'MMM d'),
+              views,
+              likes,
+              shares,
+              bookmarks,
+              dailyViews: Math.max(0, prevRecord ? views - (prevRecord.total_views || 0) : views),
+              dailyLikes: Math.max(0, prevRecord ? likes - (prevRecord.total_likes || 0) : likes),
+              dailyShares: Math.max(0, prevRecord ? shares - (prevRecord.total_shares || 0) : shares),
+              dailyBookmarks: Math.max(0, prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks)
+            };
+          });
+          setMetricsData(formattedMetrics);
+        } else {
+          setMetricsData([]);
         }
-      }
-    } catch (error) {
-      console.error('Error fetching home data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const fetchMetrics = async () => {
-    try {
-      const dateRange = getDateRange(timeframe);
-      
-      let query = supabase
-        .from('campaign_video_metrics')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .order('recorded_at', { ascending: true });
-      
-      // Only apply date filters if we have a range (not all_time)
-      if (dateRange) {
-        query = query
-          .gte('recorded_at', dateRange.start.toISOString())
-          .lte('recorded_at', dateRange.end.toISOString());
-      }
 
-      const { data: rawMetrics } = await query;
-      
-      if (rawMetrics && rawMetrics.length > 0) {
-        // Database stores snapshot totals at each recorded_at time
-        // So each row is the cumulative total at that point
-        const formattedMetrics = rawMetrics.map((m, index) => {
-          // Current snapshot values (these are already cumulative from the source)
-          const views = m.total_views || 0;
-          const likes = m.total_likes || 0;
-          const shares = m.total_shares || 0;
-          const bookmarks = m.total_bookmarks || 0;
+        setIsLoading(false);
 
-          // Calculate daily change from previous record
-          const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
-          const dailyViews = prevRecord ? views - (prevRecord.total_views || 0) : views;
-          const dailyLikes = prevRecord ? likes - (prevRecord.total_likes || 0) : likes;
-          const dailyShares = prevRecord ? shares - (prevRecord.total_shares || 0) : shares;
-          const dailyBookmarks = prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks;
-
-          return {
-            date: format(new Date(m.recorded_at), 'MMM d'),
-            // Cumulative values (snapshot from DB)
-            views,
-            likes,
-            shares,
-            bookmarks,
-            // Daily values (change since previous record)
-            dailyViews: Math.max(0, dailyViews),
-            dailyLikes: Math.max(0, dailyLikes),
-            dailyShares: Math.max(0, dailyShares),
-            dailyBookmarks: Math.max(0, dailyBookmarks)
+        // Load videos in background (non-blocking) after main UI is ready
+        if (brandData?.collection_name) {
+          const fetchVideoBody: Record<string, unknown> = {
+            brandId,
+            campaignId,
+            page: 1,
+            limit: 3,
+            orderBy: 'latest_views',
+            orderDirection: 'desc'
           };
-        });
-        setMetricsData(formattedMetrics);
-      } else {
-        setMetricsData([]);
+          if (dateRange) {
+            fetchVideoBody.uploadedAtStart = dateRange.start.toISOString();
+            fetchVideoBody.uploadedAtEnd = dateRange.end.toISOString();
+          }
+          
+          supabase.functions.invoke('fetch-shortimize-videos', { body: fetchVideoBody })
+            .then(({ data: videosData, error }) => {
+              if (isCancelled) return;
+              if (!error && videosData?.videos) {
+                const uniqueVideos = videosData.videos.reduce((acc: VideoData[], video: VideoData) => {
+                  if (!acc.find(v => v.ad_id === video.ad_id)) acc.push(video);
+                  return acc;
+                }, []);
+                setTopVideos(uniqueVideos.slice(0, 3));
+                setTotalVideos(videosData.pagination?.total || 0);
+              }
+            })
+            .catch(console.error);
+        }
+      } catch (error) {
+        console.error('Error fetching home data:', error);
+        if (!isCancelled) setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching metrics:', error);
-    }
-  };
+    };
+
+    loadAll();
+    return () => { isCancelled = true; };
+  }, [campaignId, brandId, timeframe]);
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('sync-campaign-video-metrics', {
-        body: {
-          campaignId
-        }
+      const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
+        body: { campaignId }
       });
       if (error) {
         toast.error('Failed to sync metrics: ' + error.message);
@@ -398,8 +393,11 @@ export function CampaignHomeTab({
       if (data?.synced > 0) {
         toast.success(`Successfully synced metrics`);
       }
-      await fetchMetrics();
-      await fetchData();
+      // Trigger re-fetch by updating a dependency - use key approach
+      setTopVideos([]);
+      setTotalVideos(0);
+      // Re-run the effect by forcing a state change (the effect will re-run)
+      window.location.reload();
     } catch (error) {
       console.error('Error refreshing metrics:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to refresh metrics');
@@ -533,7 +531,7 @@ export function CampaignHomeTab({
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
-            {isAdmin && <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={fetchMetrics} />}
+            {isAdmin && <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={handleRefresh} />}
             <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="h-8 px-2">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
