@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
+import { BoostDetailView } from "@/components/brand/BoostDetailView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -273,10 +274,12 @@ export default function BrandDashboard() {
           {effectiveView === "campaigns" && (
             <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
               {selectedBoostId ? (
-                <BountyCampaignsView 
-                  bounties={bounties}
-                  onDelete={handleDeleteBountyClick}
-                  onBoostSelect={setSelectedBoostId}
+                <BoostDetailView 
+                  boostId={selectedBoostId}
+                  onBack={() => {
+                    setSelectedBoostId(null);
+                    fetchBrandData();
+                  }}
                 />
               ) : (
                 <div className="space-y-6">
@@ -345,14 +348,6 @@ export default function BrandDashboard() {
                         />
                       </div> : null}
                   
-                  {selectedBoostId && (
-                    <BountyCampaignsView 
-                      bounties={bounties}
-                      onDelete={handleDeleteBountyClick}
-                      onBoostSelect={setSelectedBoostId}
-                    />
-                  )}
-
                   {campaigns.length === 0 && bounties.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <p className="text-muted-foreground mb-4">No campaigns or bounties yet</p>
@@ -439,11 +434,21 @@ export default function BrandDashboard() {
           {/* Bounties View */}
           {effectiveView === "bounties" && (
             <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
-              <BountyCampaignsView 
-                bounties={bounties}
-                onDelete={handleDeleteBountyClick}
-                onBoostSelect={setSelectedBoostId}
-              />
+              {selectedBoostId ? (
+                <BoostDetailView 
+                  boostId={selectedBoostId}
+                  onBack={() => {
+                    setSelectedBoostId(null);
+                    fetchBrandData();
+                  }}
+                />
+              ) : (
+                <BountyCampaignsView 
+                  bounties={bounties}
+                  onDelete={handleDeleteBountyClick}
+                  onBoostSelect={setSelectedBoostId}
+                />
+              )}
             </div>
           )}
 
