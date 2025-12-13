@@ -2138,8 +2138,8 @@ export function WalletTab() {
                 <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
-                <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
-                  {selectedTransaction.type === 'earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
+                <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
+                  {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
                 </div>
                 <div className="text-sm text-muted-foreground mb-3">
                   {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
@@ -2244,9 +2244,9 @@ export function WalletTab() {
                   </div>
 
                   {/* Description */}
-                  <div className="flex items-start justify-between">
-                    <span className="text-sm text-muted-foreground">Description</span>
-                    <span className="text-sm font-medium tracking-[-0.5px] text-right max-w-[200px]">
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-sm text-muted-foreground shrink-0">Description</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] text-right truncate">
                       {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' 
                         ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` 
                         : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' 
@@ -2265,7 +2265,7 @@ export function WalletTab() {
                       <span className="text-xs font-mono text-muted-foreground">
                         {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground" onClick={() => {
                         navigator.clipboard.writeText(selectedTransaction.id);
                         setCopiedId(true);
                         setTimeout(() => setCopiedId(false), 2000);
