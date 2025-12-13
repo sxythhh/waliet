@@ -82,9 +82,11 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
   }
 
   const data = await response.json();
-  console.log('Instagram API response received');
+  console.log('Instagram API response:', JSON.stringify(data).substring(0, 500));
 
-  if (!data || !data.username) {
+  // Check for error response or missing data
+  if (!data || data.error || (!data.username && !data.pk)) {
+    console.error('Instagram API returned error or no user:', data?.error || 'No user data');
     throw new Error('User not found on Instagram');
   }
 
