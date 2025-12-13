@@ -1479,12 +1479,13 @@ export function WalletTab() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto border border-[#dce1eb] dark:border-[#141414] rounded-xl">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-t border-border hover:bg-transparent">
+                    <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Period</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Program</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Type</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">Status</TableHead>
                       <TableHead className="text-muted-foreground font-medium text-sm h-12">
                         <button className="flex items-center gap-1 hover:text-foreground transition-colors">
@@ -1509,7 +1510,7 @@ export function WalletTab() {
                           setSelectedTransaction(transaction);
                           setTransactionSheetOpen(true);
                         }}
-                        className="cursor-pointer hover:bg-muted/30 transition-colors border-border"
+                        className="cursor-pointer hover:bg-muted/30 transition-colors border-[#dce1eb] dark:border-[#141414]"
                       >
                         {/* Period */}
                         <TableCell className="py-4 text-sm">
@@ -1518,34 +1519,43 @@ export function WalletTab() {
                         
                         {/* Program */}
                         <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            {transaction.campaign?.brand_logo_url ? (
-                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-foreground">
-                                <img 
-                                  src={transaction.campaign.brand_logo_url} 
-                                  alt={transaction.campaign.brand_name || 'Brand'} 
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
-                                <span className="text-xs text-background font-medium">
-                                  {transaction.type === 'earning' ? 'P' : 
-                                   transaction.type === 'withdrawal' ? 'W' : 
-                                   transaction.type === 'referral' ? 'R' : 
-                                   transaction.type === 'balance_correction' ? 'C' : 'T'}
-                                </span>
-                              </div>
-                            )}
-                            <span className="text-sm font-medium">
-                              {transaction.campaign?.title || 
-                               (transaction.type === 'earning' ? 'Payment' : 
-                                transaction.type === 'withdrawal' ? 'Withdrawal' : 
-                                transaction.type === 'referral' ? 'Referral' : 
-                                transaction.type === 'balance_correction' ? 'Correction' : 
-                                transaction.type === 'transfer_sent' ? 'Transfer Sent' : 'Transfer Received')}
-                            </span>
-                          </div>
+                          {transaction.campaign?.title ? (
+                            <div className="flex items-center gap-2">
+                              {transaction.campaign?.brand_logo_url ? (
+                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-foreground">
+                                  <img 
+                                    src={transaction.campaign.brand_logo_url} 
+                                    alt={transaction.campaign.brand_name || 'Brand'} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-background font-medium">
+                                    {transaction.campaign.title.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="text-sm font-medium">{transaction.campaign.title}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        
+                        {/* Type */}
+                        <TableCell className="py-4">
+                          <span className="text-sm text-muted-foreground">
+                            {transaction.type === 'earning' ? 'Campaign Payout' : 
+                             transaction.type === 'withdrawal' ? 'Withdrawal' : 
+                             transaction.type === 'referral' ? 'Referral Bonus' : 
+                             transaction.type === 'balance_correction' ? 'Balance Correction' : 
+                             transaction.type === 'transfer_sent' ? 'Transfer Sent' : 
+                             transaction.type === 'transfer_received' ? 'Transfer Received' :
+                             transaction.type === 'team_earning' ? 'Team Earnings' :
+                             transaction.type === 'affiliate_earning' ? 'Affiliate Earnings' :
+                             'Other'}
+                          </span>
                         </TableCell>
                         
                         {/* Status */}
@@ -1574,16 +1584,59 @@ export function WalletTab() {
                         </TableCell>
                         
                         {/* Initiated */}
-                        <TableCell className="py-4 text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground">
-                          {format(transaction.date, 'MMM d')}
+                        <TableCell className="py-4">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground">
+                                  {format(transaction.date, 'MMM d')}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent 
+                                side="top" 
+                                className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]"
+                              >
+                                <div className="space-y-1.5">
+                                  <p className="text-xs text-muted-foreground">Initiated</p>
+                                  <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
+                                  <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
+                                  {transaction.type === 'earning' && transaction.campaign && (
+                                    <p className="text-xs text-muted-foreground pt-1 border-t border-border mt-1">
+                                      Payment for {transaction.campaign.title}
+                                    </p>
+                                  )}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         
                         {/* Paid */}
                         <TableCell className="py-4 text-sm text-muted-foreground">
                           {transaction.status === 'completed' ? (
-                            <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
-                              {format(transaction.date, 'MMM d')}
-                            </span>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
+                                    {format(transaction.date, 'MMM d')}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent 
+                                  side="top" 
+                                  className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]"
+                                >
+                                  <div className="space-y-1.5">
+                                    <p className="text-xs text-muted-foreground">Payment Completed</p>
+                                    <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
+                                    <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
+                                    <div className="flex items-center gap-1.5 pt-1 border-t border-border mt-1">
+                                      <Check className="h-3 w-3 text-green-500" />
+                                      <span className="text-xs text-green-500">Successfully processed</span>
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ) : '-'}
                         </TableCell>
                         
