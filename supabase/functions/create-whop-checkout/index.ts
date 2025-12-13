@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        plan: PLAN_ID,
+        plan_id: PLAN_ID,
         redirect_url: `https://app.virality.gg/dashboard?workspace=${brand.slug}&subscription=success`,
         metadata: {
           brand_id: brandId,
