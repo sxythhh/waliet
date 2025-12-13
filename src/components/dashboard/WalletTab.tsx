@@ -65,7 +65,7 @@ interface WithdrawalDataPoint {
 }
 interface Transaction {
   id: string;
-  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received';
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning';
   amount: number;
   date: Date;
   destination?: string;
@@ -74,6 +74,12 @@ interface Transaction {
   rejection_reason?: string;
   metadata?: any;
   campaign?: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+  } | null;
+  boost?: {
     id: string;
     title: string;
     brand_name: string;
@@ -459,6 +465,12 @@ export function WalletTab() {
       return txn.type === 'earning' && metadata?.campaign_id;
     }).map(txn => (txn.metadata as any).campaign_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
+    // Extract unique boost IDs from earnings transactions
+    const boostIds = walletTransactions?.filter(txn => {
+      const metadata = txn.metadata as any;
+      return txn.type === 'earning' && metadata?.boost_id;
+    }).map(txn => (txn.metadata as any).boost_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
     // Fetch campaign details if we have campaign IDs
     let campaignsMap = new Map();
     if (campaignIds.length > 0) {
@@ -470,6 +482,22 @@ export function WalletTab() {
           ...campaign,
           // Use brands.logo_url as fallback if brand_logo_url is null
           brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url
+        });
+      });
+    }
+
+    // Fetch boost details if we have boost IDs
+    let boostsMap = new Map();
+    if (boostIds.length > 0) {
+      const {
+        data: boosts
+      } = await supabase.from("bounty_campaigns").select("id, title, brands(name, logo_url)").in("id", boostIds);
+      boosts?.forEach(boost => {
+        boostsMap.set(boost.id, {
+          id: boost.id,
+          title: boost.title,
+          brand_name: (boost.brands as any)?.name || '',
+          brand_logo_url: (boost.brands as any)?.logo_url || null
         });
       });
     }
@@ -493,6 +521,7 @@ export function WalletTab() {
         let source = '';
         let destination = '';
         let payoutDetails = null;
+        const isBoostEarning = txn.type === 'earning' && metadata?.boost_id;
 
         // Try to match with payout request to get full details
         if (txn.type === 'withdrawal' && payoutRequests) {
@@ -515,7 +544,7 @@ export function WalletTab() {
             destination = 'Wallet';
             break;
           case 'earning':
-            source = 'Campaign Submission';
+            source = isBoostEarning ? 'Boost Video' : 'Campaign Submission';
             destination = 'Wallet';
             break;
           case 'withdrawal':
@@ -553,9 +582,26 @@ export function WalletTab() {
             destination = 'Wallet';
             break;
         }
+
+        // Determine transaction type
+        let transactionType: Transaction['type'];
+        if (txn.type === 'balance_correction') {
+          transactionType = 'balance_correction';
+        } else if (txn.type === 'transfer_sent') {
+          transactionType = 'transfer_sent';
+        } else if (txn.type === 'transfer_received') {
+          transactionType = 'transfer_received';
+        } else if (isBoostEarning) {
+          transactionType = 'boost_earning';
+        } else if (txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund') {
+          transactionType = 'earning';
+        } else {
+          transactionType = 'withdrawal';
+        }
+
         allTransactions.push({
           id: txn.id,
-          type: txn.type === 'balance_correction' ? 'balance_correction' : txn.type === 'transfer_sent' ? 'transfer_sent' : txn.type === 'transfer_received' ? 'transfer_received' : txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund' ? 'earning' : 'withdrawal',
+          type: transactionType,
           amount: Number(txn.amount) || 0,
           date: new Date(txn.created_at),
           destination,
@@ -565,7 +611,8 @@ export function WalletTab() {
           metadata: Object.assign({}, txn.metadata as any, {
             payoutDetails
           }),
-          campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null
+          campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null,
+          boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null
         });
       });
     }
@@ -1711,22 +1758,45 @@ export function WalletTab() {
                 }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Program */}
                         <TableCell className="py-4">
-                          {transaction.campaign?.title ? <div className="flex items-center gap-2">
-                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                          {transaction.boost?.title ? (
+                            <div className="flex items-center gap-2">
+                              {transaction.boost?.brand_logo_url ? (
+                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                  <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs text-foreground font-medium">
+                                    {transaction.boost.title.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="text-sm font-medium">{transaction.boost.title}</span>
+                            </div>
+                          ) : transaction.campaign?.title ? (
+                            <div className="flex items-center gap-2">
+                              {transaction.campaign?.brand_logo_url ? (
+                                <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                   <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.title.charAt(0).toUpperCase()}
                                   </span>
-                                </div>}
+                                </div>
+                              )}
                               <span className="text-sm font-medium">{transaction.campaign.title}</span>
-                            </div> : <span className="text-sm text-muted-foreground">-</span>}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         
                         {/* Type */}
                         <TableCell className="py-4">
                           <span className="text-sm text-muted-foreground">
-                            {transaction.type === 'earning' ? 'Campaign Payout' : transaction.type === 'withdrawal' ? 'Withdrawal' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : transaction.type === 'team_earning' ? 'Team Earnings' : transaction.type === 'affiliate_earning' ? 'Affiliate Earnings' : 'Other'}
+                            {transaction.type === 'boost_earning' ? 'Boost Payout' : transaction.type === 'earning' ? 'Campaign Payout' : transaction.type === 'withdrawal' ? 'Withdrawal' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Other'}
                           </span>
                         </TableCell>
                         
