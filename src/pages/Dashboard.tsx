@@ -17,7 +17,6 @@ import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
-
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -127,7 +126,7 @@ export default function Dashboard() {
       case "wallet":
         return <WalletTab />;
       case "profile":
-        return <ProfileTab />;
+        return <ProfileTab className="pt-[30px]" />;
       default:
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
