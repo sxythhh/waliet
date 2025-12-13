@@ -732,69 +732,71 @@ export function ProfileTab() {
       </div>;
   }
   // Generate onboarding tasks based on profile completion
-  const onboardingTasks = [
-    {
-      id: 'profile_info',
-      label: 'Add basic profile info',
-      completed: !!(profile?.full_name && profile?.username),
-      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-    },
-    {
-      id: 'bio',
-      label: 'Update your profile description',
-      completed: !!(profile?.bio && profile.bio.length > 10),
-      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-    },
-    {
-      id: 'location',
-      label: 'Add your location',
-      completed: !!(profile?.country),
-      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-    },
-    {
-      id: 'phone',
-      label: 'Add phone number',
-      completed: !!(profile?.phone_number),
-      onClick: () => profileInfoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-    },
-    {
-      id: 'social_account',
-      label: 'Connect a social account',
-      completed: socialAccounts.length > 0,
-      onClick: () => setShowAddAccountDialog(true),
-    },
-    {
-      id: 'demographics',
-      label: 'Submit demographics',
-      completed: socialAccounts.some(a => a.demographic_submissions?.some(d => d.status === 'approved')),
-      onClick: () => {
-        if (socialAccounts.length > 0) {
-          const account = socialAccounts[0];
-          setSelectedAccountForDemographics({
-            id: account.id,
-            platform: account.platform,
-            username: account.username
-          });
-          setShowDemographicsDialog(true);
-        } else {
-          setShowAddAccountDialog(true);
-        }
-      },
-    },
-    {
-      id: 'join_campaign',
-      label: 'Join your first campaign',
-      completed: joinedCampaigns.length > 0,
-      onClick: () => navigate('/dashboard?tab=discover'),
-    },
-    {
-      id: 'earn_first',
-      label: 'Earn your first payout',
-      completed: (profile?.total_earnings || 0) > 0,
-      onClick: () => navigate('/dashboard?tab=discover'),
-    },
-  ];
-
+  const onboardingTasks = [{
+    id: 'profile_info',
+    label: 'Add basic profile info',
+    completed: !!(profile?.full_name && profile?.username),
+    onClick: () => profileInfoRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }, {
+    id: 'bio',
+    label: 'Update your profile description',
+    completed: !!(profile?.bio && profile.bio.length > 10),
+    onClick: () => profileInfoRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }, {
+    id: 'location',
+    label: 'Add your location',
+    completed: !!profile?.country,
+    onClick: () => profileInfoRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }, {
+    id: 'phone',
+    label: 'Add phone number',
+    completed: !!profile?.phone_number,
+    onClick: () => profileInfoRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+  }, {
+    id: 'social_account',
+    label: 'Connect a social account',
+    completed: socialAccounts.length > 0,
+    onClick: () => setShowAddAccountDialog(true)
+  }, {
+    id: 'demographics',
+    label: 'Submit demographics',
+    completed: socialAccounts.some(a => a.demographic_submissions?.some(d => d.status === 'approved')),
+    onClick: () => {
+      if (socialAccounts.length > 0) {
+        const account = socialAccounts[0];
+        setSelectedAccountForDemographics({
+          id: account.id,
+          platform: account.platform,
+          username: account.username
+        });
+        setShowDemographicsDialog(true);
+      } else {
+        setShowAddAccountDialog(true);
+      }
+    }
+  }, {
+    id: 'join_campaign',
+    label: 'Join your first campaign',
+    completed: joinedCampaigns.length > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }, {
+    id: 'earn_first',
+    label: 'Earn your first payout',
+    completed: (profile?.total_earnings || 0) > 0,
+    onClick: () => navigate('/dashboard?tab=discover')
+  }];
   return <div className="space-y-3 sm:space-y-6 max-w-4xl mx-auto pb-8">
       {/* Onboarding Checklist */}
       <ProfileOnboardingChecklist tasks={onboardingTasks} />
@@ -807,7 +809,7 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card ref={connectedAccountsRef} className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between gap-4 p-4 sm:p-6 px-0 py-0">
+          <div className="flex items-center justify-between p-4 sm:p-6 px-0 py-0 gap-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
