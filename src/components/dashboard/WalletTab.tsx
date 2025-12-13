@@ -1488,7 +1488,7 @@ export function WalletTab() {
         </Card>
       </div>
 
-      <Card className="bg-card border border-border rounded-xl overflow-hidden">
+      <Card className="bg-card border rounded-xl overflow-hidden border-[#141414]/0">
         {/* Filter Button */}
         <div className="pt-5 pb-4 px-0">
           <DropdownMenu open={filterOpen} onOpenChange={open => {
