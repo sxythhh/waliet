@@ -68,7 +68,7 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
         return (
           <Card
             key={bounty.id}
-            className="group bg-card/50 border border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden"
+            className="group bg-card/50 border border-border/50 hover:bg-card/80 transition-all duration-300 cursor-pointer overflow-hidden"
             onClick={() => handleCardClick(bounty.id)}
           >
             {/* Banner */}
@@ -87,24 +87,15 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
               {/* Header */}
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold text-foreground truncate mb-2">
+                  <h3 className="text-base font-semibold text-foreground truncate">
                     {bounty.title}
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      bounty.status === 'active'
-                        ? 'bg-emerald-500/10 text-emerald-500'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {bounty.status}
+                  {bounty.is_private && (
+                    <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                      <Lock className="h-3 w-3" />
+                      Private
                     </span>
-                    {bounty.is_private && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                        <Lock className="h-3 w-3" />
-                        Private
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
                 {onDelete && (
                   <Button
@@ -121,12 +112,10 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                 )}
               </div>
 
-              {/* Retainer highlight */}
-              <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wide">Monthly Retainer</span>
-                  <span className="text-lg font-semibold text-primary">${bounty.monthly_retainer.toLocaleString()}</span>
-                </div>
+              {/* Retainer */}
+              <div className="mb-4">
+                <span className="text-2xl font-semibold text-foreground">${bounty.monthly_retainer.toLocaleString()}</span>
+                <span className="text-sm text-muted-foreground ml-1">/month</span>
               </div>
 
               {/* Stats row */}
@@ -159,25 +148,37 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                 </div>
               </div>
 
-              {/* Copy link button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-9 text-sm font-medium border-border/50 hover:bg-muted/50"
-                onClick={(e) => handleCopyUrl(bounty.id, e)}
-              >
-                {copiedId === bounty.id ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 mr-1.5" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5 mr-1.5" />
-                    Copy Link
-                  </>
-                )}
-              </Button>
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-9 text-sm font-medium border-border/50 hover:bg-muted/50"
+                  onClick={(e) => handleCopyUrl(bounty.id, e)}
+                >
+                  {copiedId === bounty.id ? (
+                    <>
+                      <Check className="h-3.5 w-3.5 mr-1.5" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5 mr-1.5" />
+                      Copy Link
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  className="flex-1 h-9 text-sm font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCardClick(bounty.id);
+                  }}
+                >
+                  Manage
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );
