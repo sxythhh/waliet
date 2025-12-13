@@ -407,29 +407,29 @@ export function AppSidebar() {
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
-                  {item.tab === "campaigns" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={homeInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={homeActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "wallet" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={walletInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={walletActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "discover" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={discoverInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={discoverActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "profile" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={profileInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={profileActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "blueprints" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={blueprintsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "creators" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={creatorsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "referrals" ? <div className="relative h-[21px] w-[21px]">
-                      <img src={referralsInactive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={referralsActive} alt="" className={`absolute inset-0 h-[21px] w-[21px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.icon ? <item.icon className={`h-[21px] w-[21px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
-                  {!isCollapsed && <span className="font-['Inter'] text-[14px] font-medium tracking-[-0.5px]">{item.title}</span>}
+                  {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "wallet" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={walletInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={walletActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "discover" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={discoverInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={discoverActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "profile" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={profileInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={profileActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "blueprints" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={blueprintsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
+                  {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
           })}
           </div>
