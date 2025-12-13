@@ -49,7 +49,7 @@ import CreatorTerms from "./pages/CreatorTerms";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
-import CreatorBoostDashboard from "./pages/CreatorBoostDashboard";
+
 
 const queryClient = new QueryClient();
 
@@ -131,7 +131,7 @@ const App = () => (
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
             <Route path="/boost/:id" element={<PublicBounty />} />
-            <Route path="/boost/:id/dashboard" element={<CreatorBoostDashboard />} />
+            {/* Boost dashboard is now part of /dashboard?boost=:id */}
             <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
             <Route path="/join/:slug" element={<JoinRedirect />} />
             <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />

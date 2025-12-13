@@ -763,7 +763,7 @@ export function CampaignsTab({
             {boostApplications.filter(app => app.status === 'accepted').map(application => <Card 
                 key={application.id} 
                 className="group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer"
-                onClick={() => navigate(`/boost/${application.boost_campaigns.id}/dashboard`)}
+                onClick={() => navigate(`/dashboard?boost=${application.boost_campaigns.id}`)}
               >
                 {/* Banner Image */}
                 {application.boost_campaigns.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">

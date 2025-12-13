@@ -54,8 +54,13 @@ const platformIcons: Record<string, string> = {
   x: xLogo,
 };
 
-export default function CreatorBoostDashboard() {
-  const { id } = useParams();
+interface CreatorBoostDashboardProps {
+  boostId?: string;
+}
+
+export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorBoostDashboardProps = {}) {
+  const { id: paramId } = useParams();
+  const id = propBoostId || paramId;
   const navigate = useNavigate();
   const [boost, setBoost] = useState<BoostCampaign | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
@@ -68,7 +73,7 @@ export default function CreatorBoostDashboard() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    fetchBoostData();
+    if (id) fetchBoostData();
   }, [id]);
 
   const fetchBoostData = async () => {
