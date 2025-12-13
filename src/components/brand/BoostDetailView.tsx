@@ -237,8 +237,8 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
 
   if (loading) {
     return (
-      <div className="p-[10px] h-full flex flex-col">
-        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
+      <div className="h-full flex flex-col">
+        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px]">
           <div className="flex-1 p-6">
             <Skeleton className="h-8 w-48 mb-4" />
             <Skeleton className="h-64 w-full" />
@@ -250,8 +250,8 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
 
   if (!boost) {
     return (
-      <div className="p-[10px] h-full flex flex-col">
-        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] items-center justify-center">
+      <div className="h-full flex flex-col">
+        <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px] items-center justify-center">
           <p className="text-muted-foreground">Boost not found</p>
         </div>
       </div>
@@ -259,8 +259,8 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
   }
 
   return (
-    <div className="p-[10px] h-full flex flex-col">
-      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
+    <div className="h-full flex flex-col">
+      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414] m-[10px]">
         {/* Header with back button and boost title - Fixed */}
         <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
           <div className="flex items-center gap-0">
@@ -312,9 +312,9 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
           </nav>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto">
-          <div className="p-4">
+        {/* Content Area - Videos & Management tabs */}
+        {(activeTab === "videos" || activeTab === "management") && (
+          <div className="flex-1 overflow-auto p-4">
           {activeTab === "videos" && (
             <div className="flex items-center justify-center py-24 text-muted-foreground">
               <div className="text-center">
@@ -370,210 +370,241 @@ export function BoostDetailView({ boostId, onBack }: BoostDetailViewProps) {
               </div>
             </div>
           )}
-
-          {activeTab === "applications" && (
-            <div className="space-y-4">
-              {applications.length === 0 ? (
-                <div className="flex items-center justify-center py-24 text-muted-foreground">
-                  <div className="text-center">
-                    <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
-                    <p>No applications yet</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {applications.map((app) => {
-                    const profile = profiles[app.user_id];
-                    const userAccounts = socialAccounts.filter(acc => acc.user_id === app.user_id);
-                    
-                    return (
-                      <button
-                        key={app.id}
-                        onClick={() => handleApplicationClick(app.id)}
-                        className="bg-muted/20 hover:bg-muted/40 rounded-2xl p-5 text-left transition-colors"
-                      >
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={profile?.avatar_url || undefined} />
-                            <AvatarFallback className="text-sm">
-                              {profile?.username?.[0]?.toUpperCase() || '?'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">
-                              {profile?.full_name || profile?.username || 'Unknown'}
-                            </p>
-                            <p className="text-sm text-muted-foreground truncate">@{profile?.username}</p>
-                            <div className="mt-2">{getStatusBadge(app.status)}</div>
-                          </div>
-                        </div>
-                        
-                        {userAccounts.length > 0 && (
-                          <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border/50">
-                            {userAccounts.slice(0, 3).map(account => {
-                              const logo = getPlatformLogo(account.platform);
-                              return logo ? (
-                                <img key={account.id} src={logo} alt={account.platform} className="h-4 w-4 opacity-60" />
-                              ) : null;
-                            })}
-                            {userAccounts.length > 3 && (
-                              <span className="text-xs text-muted-foreground">+{userAccounts.length - 3}</span>
-                            )}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
           </div>
-        </div>
-      </div>
-
-      {/* Application Detail Side Panel */}
-      <Sheet open={detailPanelOpen} onOpenChange={setDetailPanelOpen}>
-        <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
-          <SheetHeader className="p-6 border-b border-border">
-            <SheetTitle>Application Details</SheetTitle>
-          </SheetHeader>
-          
-          {selectedApp && selectedProfile ? (
-            <ScrollArea className="flex-1">
-              <div className="p-6 space-y-6">
-                {/* Profile Header */}
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={selectedProfile.avatar_url || undefined} />
-                    <AvatarFallback className="text-xl">
-                      {selectedProfile.username?.[0]?.toUpperCase() || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold">
-                      {selectedProfile.full_name || selectedProfile.username}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">@{selectedProfile.username}</p>
-                    <div className="mt-2">{getStatusBadge(selectedApp.status)}</div>
-                  </div>
+        )}
+        {/* Applications Tab - Two Column Layout */}
+        {activeTab === "applications" && (
+          <div className="flex-1 flex overflow-hidden">
+            {applications.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                <div className="text-center">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
+                  <p>No applications yet</p>
                 </div>
-
-                {/* Action Buttons */}
-                {selectedApp.status === 'pending' && (
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-red-500 border-red-500/20 hover:bg-red-500/10"
-                      onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Decline
-                    </Button>
-                    <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Approve
-                    </Button>
-                  </div>
-                )}
-
-                {/* Scores */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-muted/30 rounded-xl p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Trust</p>
-                    <p className="text-xl font-semibold">{selectedProfile.trust_score ?? '—'}</p>
-                  </div>
-                  <div className="bg-muted/30 rounded-xl p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Demographics</p>
-                    <p className="text-xl font-semibold">{selectedProfile.demographics_score ?? '—'}</p>
-                  </div>
-                  <div className="bg-muted/30 rounded-xl p-4 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Views</p>
-                    <p className="text-xl font-semibold">{selectedProfile.views_score ?? '—'}</p>
-                  </div>
-                </div>
-
-                {/* Contact Info */}
-                <div className="bg-muted/20 rounded-xl p-4 space-y-2">
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact</h3>
-                  <div className="space-y-1 text-sm">
-                    {selectedProfile.email && <p>{selectedProfile.email}</p>}
-                    {selectedProfile.phone_number && <p>{selectedProfile.phone_number}</p>}
-                    {selectedProfile.discord_username && <p>Discord: {selectedProfile.discord_username}</p>}
-                    {selectedProfile.twitter_username && <p>X: @{selectedProfile.twitter_username}</p>}
-                  </div>
-                </div>
-
-                {/* Social Accounts */}
-                {selectedUserAccounts.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked Accounts</h3>
-                    <div className="space-y-2">
-                      {selectedUserAccounts.map(account => {
-                        const logo = getPlatformLogo(account.platform);
+              </div>
+            ) : (
+              <>
+                {/* Left Column - Applications List (Fixed/Scrollable) */}
+                <div className="w-[320px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
+                  <ScrollArea className="flex-1">
+                    <div className="p-3 space-y-2">
+                      {applications.map((app) => {
+                        const profile = profiles[app.user_id];
+                        const isSelected = selectedAppId === app.id;
+                        
                         return (
-                          <div key={account.id} className="flex items-center gap-3 bg-muted/20 rounded-xl p-4">
-                            {logo && <img src={logo} alt={account.platform} className="h-5 w-5" />}
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">@{account.username}</p>
-                              {account.follower_count && (
-                                <p className="text-xs text-muted-foreground">
-                                  {account.follower_count.toLocaleString()} followers
+                          <button
+                            key={app.id}
+                            onClick={() => setSelectedAppId(app.id)}
+                            className={`w-full rounded-xl p-3 text-left transition-all ${
+                              isSelected 
+                                ? "bg-primary/10 border border-primary/30" 
+                                : "bg-muted/20 hover:bg-muted/40 border border-transparent"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={profile?.avatar_url || undefined} />
+                                <AvatarFallback className="text-sm">
+                                  {profile?.username?.[0]?.toUpperCase() || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">
+                                  {profile?.full_name || profile?.username || 'Unknown'}
                                 </p>
-                              )}
+                                <p className="text-xs text-muted-foreground truncate">@{profile?.username}</p>
+                              </div>
+                              {getStatusBadge(app.status)}
                             </div>
-                            {account.account_link && (
-                              <a
-                                href={account.account_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-muted-foreground hover:text-foreground"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            )}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
-                  </div>
-                )}
+                  </ScrollArea>
+                </div>
 
-                {/* Application Details */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Application</h3>
-                  {selectedApp.application_text && (
-                    <p className="text-sm bg-muted/20 rounded-xl p-4">
-                      {selectedApp.application_text}
-                    </p>
-                  )}
-                  {selectedApp.video_url && (
-                    <a
-                      href={selectedApp.video_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-primary hover:underline"
-                    >
-                      <Play className="h-4 w-4" />
-                      View Submission Video
-                    </a>
+                {/* Right Column - Application Details (Wider) */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  {selectedApp && selectedProfile ? (
+                    <ScrollArea className="flex-1">
+                      <div className="p-6 space-y-6">
+                        {/* Profile Header Card */}
+                        <div className="bg-muted/20 rounded-2xl p-6">
+                          <div className="flex items-start gap-5">
+                            <Avatar className="h-20 w-20">
+                              <AvatarImage src={selectedProfile.avatar_url || undefined} />
+                              <AvatarFallback className="text-2xl">
+                                {selectedProfile.username?.[0]?.toUpperCase() || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <h2 className="text-xl font-semibold tracking-[-0.5px]">
+                                {selectedProfile.full_name || selectedProfile.username}
+                              </h2>
+                              <p className="text-muted-foreground">@{selectedProfile.username}</p>
+                              <div className="mt-3 flex items-center gap-3">
+                                {getStatusBadge(selectedApp.status)}
+                                <span className="text-xs text-muted-foreground">
+                                  Applied {new Date(selectedApp.applied_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          {selectedApp.status === 'pending' && (
+                            <div className="flex items-center gap-3 mt-6 pt-6 border-t border-border/50">
+                              <Button
+                                variant="outline"
+                                className="flex-1 text-red-500 border-red-500/20 hover:bg-red-500/10"
+                                onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Decline
+                              </Button>
+                              <Button
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                Approve
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="bg-muted/20 rounded-xl p-4 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
+                            <p className="text-2xl font-semibold">{selectedProfile.trust_score ?? '—'}</p>
+                          </div>
+                          <div className="bg-muted/20 rounded-xl p-4 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Demographics</p>
+                            <p className="text-2xl font-semibold">{selectedProfile.demographics_score ?? '—'}</p>
+                          </div>
+                          <div className="bg-muted/20 rounded-xl p-4 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Views Score</p>
+                            <p className="text-2xl font-semibold">{selectedProfile.views_score ?? '—'}</p>
+                          </div>
+                        </div>
+
+                        {/* Two Column Info */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {/* Contact Info */}
+                          <div className="bg-muted/20 rounded-xl p-5 space-y-3">
+                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Info</h3>
+                            <div className="space-y-2 text-sm">
+                              {selectedProfile.email && (
+                                <p className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">Email:</span>
+                                  <span>{selectedProfile.email}</span>
+                                </p>
+                              )}
+                              {selectedProfile.phone_number && (
+                                <p className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">Phone:</span>
+                                  <span>{selectedProfile.phone_number}</span>
+                                </p>
+                              )}
+                              {selectedProfile.discord_username && (
+                                <p className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">Discord:</span>
+                                  <span>{selectedProfile.discord_username}</span>
+                                </p>
+                              )}
+                              {selectedProfile.twitter_username && (
+                                <p className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">X:</span>
+                                  <span>@{selectedProfile.twitter_username}</span>
+                                </p>
+                              )}
+                              {!selectedProfile.email && !selectedProfile.phone_number && !selectedProfile.discord_username && !selectedProfile.twitter_username && (
+                                <p className="text-muted-foreground">No contact info available</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Linked Accounts */}
+                          <div className="bg-muted/20 rounded-xl p-5 space-y-3">
+                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Linked Accounts</h3>
+                            {selectedUserAccounts.length > 0 ? (
+                              <div className="space-y-2">
+                                {selectedUserAccounts.map(account => {
+                                  const logo = getPlatformLogo(account.platform);
+                                  return (
+                                    <div key={account.id} className="flex items-center gap-3 bg-background/50 rounded-lg p-3">
+                                      {logo && <img src={logo} alt={account.platform} className="h-5 w-5" />}
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">@{account.username}</p>
+                                        {account.follower_count && (
+                                          <p className="text-xs text-muted-foreground">
+                                            {account.follower_count.toLocaleString()} followers
+                                          </p>
+                                        )}
+                                      </div>
+                                      {account.account_link && (
+                                        <a
+                                          href={account.account_link}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-muted-foreground hover:text-foreground"
+                                        >
+                                          <ExternalLink className="h-4 w-4" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-muted-foreground">No linked accounts</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Application Submission */}
+                        <div className="bg-muted/20 rounded-xl p-5 space-y-4">
+                          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Application Submission</h3>
+                          
+                          {selectedApp.application_text && (
+                            <div className="space-y-2">
+                              <p className="text-xs text-muted-foreground">Message</p>
+                              <p className="text-sm bg-background/50 rounded-lg p-4">
+                                {selectedApp.application_text}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {selectedApp.video_url && (
+                            <a
+                              href={selectedApp.video_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm text-primary hover:underline bg-primary/10 rounded-lg p-3 w-fit"
+                            >
+                              <Play className="h-4 w-4" />
+                              View Submission Video
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Users className="h-12 w-12 mx-auto mb-4 opacity-40" />
+                        <p className="text-sm">Select an application to view details</p>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-            </ScrollArea>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <div className="text-center">
-                <Users className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">Select an application</p>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       <EditBountyDialog
         open={editDialogOpen}

@@ -100,7 +100,7 @@ export default function Dashboard() {
     if (isBrandMode && currentBrand) {
       switch (currentTab) {
         case "campaigns":
-          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} className="py-0 px-0" />;
+          return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "creators":
