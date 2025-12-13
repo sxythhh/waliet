@@ -1628,17 +1628,17 @@ export function WalletTab() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Program</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Type</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Status</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">
-                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                      <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Type</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">
+                        <button className="flex items-center gap-1 hover:text-muted-foreground transition-colors">
                           Initiated
                           <ChevronDown className="h-3 w-3" />
                         </button>
                       </TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Paid</TableHead>
-                      <TableHead className="text-muted-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Processed</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1750,7 +1750,7 @@ export function WalletTab() {
                           </TooltipProvider>
                         </TableCell>
                         
-                        {/* Paid */}
+                        {/* Processed */}
                         <TableCell className="py-4 text-sm text-muted-foreground">
                           {transaction.status === 'completed' ? (
                             <TooltipProvider>
@@ -1776,13 +1776,42 @@ export function WalletTab() {
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
+                          ) : transaction.status === 'rejected' ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="underline decoration-dotted cursor-pointer hover:text-foreground text-red-500">
+                                    {format(transaction.date, 'MMM d')}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent 
+                                  side="top" 
+                                  className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[240px]"
+                                >
+                                  <div className="space-y-1.5">
+                                    <p className="text-xs text-muted-foreground">Rejected</p>
+                                    <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
+                                    <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
+                                    {transaction.rejection_reason && (
+                                      <div className="pt-1 border-t border-border mt-1">
+                                        <p className="text-xs text-red-500">Reason: {transaction.rejection_reason}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ) : '-'}
                         </TableCell>
                         
                         {/* Amount */}
                         <TableCell className="py-4 text-right">
-                          <span className="text-sm font-semibold tabular-nums">
-                            ${Math.abs(transaction.amount).toFixed(2)}
+                          <span className={`text-sm font-semibold tabular-nums ${
+                            transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' 
+                              ? 'text-red-500' 
+                              : 'text-green-500'
+                          }`}>
+                            {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                           </span>
                         </TableCell>
                       </TableRow>
