@@ -1077,19 +1077,123 @@ export function WalletTab() {
     }
   };
   if (loading) {
-    return <div className="space-y-6 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-40" />
+    return <div className="space-y-6 max-w-6xl mx-auto pt-6">
+        {/* Payment Methods Skeleton */}
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-32" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-lg" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-10 h-10 rounded-lg" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96 rounded-lg" />
-          <Skeleton className="h-96 rounded-lg" />
+
+        {/* Earnings Section Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-28" />
+            <div className="flex gap-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-8 w-10 rounded-full" />
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Chart Skeleton */}
+            <div className="lg:col-span-2 rounded-xl bg-muted/30 p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="h-[200px] flex items-end gap-2 pt-4">
+                {[...Array(12)].map((_, i) => (
+                  <Skeleton 
+                    key={i} 
+                    className="flex-1 rounded-t-sm" 
+                    style={{ height: `${Math.random() * 60 + 40}%` }}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Stats Cards Skeleton */}
+            <div className="space-y-4">
+              <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+              <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+              <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-6 w-16" />
+              </div>
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-32 rounded-lg" />
-          <Skeleton className="h-32 rounded-lg" />
-          <Skeleton className="h-32 rounded-lg" />
+
+        {/* Additional Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+          <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-6 w-16" />
+          </div>
+        </div>
+
+        {/* Transactions Skeleton */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-24 rounded-lg" />
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            </div>
+          </div>
+          <div className="rounded-xl bg-muted/30 overflow-hidden">
+            <div className="p-4 border-b border-border/50">
+              <div className="grid grid-cols-6 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-4 w-full" />
+                ))}
+              </div>
+            </div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="p-4 border-b border-border/30 last:border-0">
+                <div className="grid grid-cols-6 gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-8 h-8 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>;
   }
@@ -1104,13 +1208,6 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto pt-6 font-inter tracking-[-0.5px]">
 
-      {/* Page Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
-          <p className="text-sm text-muted-foreground mt-1">View your transactions and payment methods</p>
-        </div>
-      </div>
 
       {/* Payment Methods Section */}
       <div className="space-y-3">
