@@ -2144,14 +2144,13 @@ export function WalletTab() {
                 <div className="text-sm text-muted-foreground mb-3">
                   {format(selectedTransaction.date, 'MMM dd, yyyy • h:mm a')}
                 </div>
-                {selectedTransaction.status && (selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none">
-                      <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
-                      {selectedTransaction.status}
-                    </Badge> : <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
-                      {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
-                      {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-                      {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
-                    </Badge>)}
+                {selectedTransaction.status && selectedTransaction.status !== 'completed' && (
+                  <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
+                    {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                    {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
+                  </Badge>
+                )}
               </div>
 
               {/* Invoice Details Content */}
