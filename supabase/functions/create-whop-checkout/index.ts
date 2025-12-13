@@ -42,48 +42,67 @@ Deno.serve(async (req) => {
       throw new Error("Brand ID is required");
     }
 
-    // Verify user is a brand member, or auto-add as first member
+    // Verify user is a brand member or admin, or auto-add as first member
     let membershipRole: string | null = null;
 
-    const { data: membership, error: memberError } = await supabase
-      .from("brand_members")
+    // Check if user is an admin (admins have universal brand access)
+    const { data: adminRole, error: adminError } = await supabase
+      .from("user_roles")
       .select("role")
-      .eq("brand_id", brandId)
       .eq("user_id", user.id)
+      .eq("role", "admin")
       .maybeSingle();
 
-    if (memberError) {
-      console.error("Error checking brand membership:", memberError);
-      throw new Error("Unable to verify brand membership");
+    if (adminError) {
+      console.error("Error checking admin role:", adminError);
     }
 
-    if (membership) {
-      membershipRole = membership.role as string;
-    } else {
-      // If brand has no members yet, automatically add current user as owner
-      const { count, error: countError } = await supabase
-        .from("brand_members")
-        .select("id", { count: "exact", head: true })
-        .eq("brand_id", brandId);
+    if (adminRole?.role === "admin") {
+      membershipRole = "admin";
+    }
 
-      if (countError) {
-        console.error("Error counting brand members:", countError);
+    // If not admin, enforce/establish brand membership
+    if (!membershipRole) {
+      const { data: membership, error: memberError } = await supabase
+        .from("brand_members")
+        .select("role")
+        .eq("brand_id", brandId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (memberError) {
+        console.error("Error checking brand membership:", memberError);
         throw new Error("Unable to verify brand membership");
       }
 
-      if (!count || count === 0) {
-        const { data: newMember, error: insertError } = await supabase
+      if (membership) {
+        membershipRole = membership.role as string;
+      } else {
+        // If brand has no members yet, automatically add current user as owner
+        const { count, error: countError } = await supabase
           .from("brand_members")
-          .insert({ brand_id: brandId, user_id: user.id, role: "owner" })
-          .select("role")
-          .single();
+          .select("id", { count: "exact", head: true })
+          .eq("brand_id", brandId);
 
-        if (insertError || !newMember) {
-          console.error("Error creating initial brand member:", insertError);
-          throw new Error("Unable to create brand membership");
+        if (countError) {
+          console.error("Error counting brand members:", countError);
+          throw new Error("Unable to verify brand membership");
         }
 
-        membershipRole = newMember.role as string;
+        if (!count || count === 0) {
+          const { data: newMember, error: insertError } = await supabase
+            .from("brand_members")
+            .insert({ brand_id: brandId, user_id: user.id, role: "owner" })
+            .select("role")
+            .single();
+
+          if (insertError || !newMember) {
+            console.error("Error creating initial brand member:", insertError);
+            throw new Error("Unable to create brand membership");
+          }
+
+          membershipRole = newMember.role as string;
+        }
       }
     }
 
