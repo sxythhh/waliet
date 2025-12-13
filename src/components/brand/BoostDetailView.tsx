@@ -335,7 +335,7 @@ export function BoostDetailView({
                     const profile = profiles[app.user_id];
                     const isSelected = selectedAppId === app.id;
                     const appliedDate = new Date(app.applied_at);
-                    return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full rounded-lg p-3 text-left transition-all font-inter tracking-[-0.5px] ${isSelected ? "bg-primary/10 border border-primary/20" : "bg-card/30 hover:bg-card/50 border border-border/30"}`}>
+                    return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full rounded-lg p-3 text-left transition-all font-inter tracking-[-0.5px] ${isSelected ? "bg-primary/10 border border-[#5966f3]" : "bg-card/30 hover:bg-card/50 border border-border/30"}`}>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9 border border-border/40">
                                 <AvatarImage src={profile?.avatar_url || undefined} />
