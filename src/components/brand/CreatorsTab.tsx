@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Smile, Bold, Italic, Link, Inbox, Bookmark, Filter, Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -149,6 +149,15 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     if (data) {
       setConversations(data);
       
+      // Set bookmarked conversations from database
+      const bookmarked = new Set<string>();
+      for (const conv of data) {
+        if (conv.is_bookmarked) {
+          bookmarked.add(conv.id);
+        }
+      }
+      setBookmarkedConversations(bookmarked);
+      
       // Fetch unread counts for each conversation
       const counts = new Map<string, number>();
       for (const conv of data) {
@@ -166,16 +175,66 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
     }
   };
 
-  const toggleBookmark = (conversationId: string) => {
+  const toggleBookmark = async (conversationId: string) => {
+    const isCurrentlyBookmarked = bookmarkedConversations.has(conversationId);
+    const newBookmarkState = !isCurrentlyBookmarked;
+    
+    // Optimistic update
     setBookmarkedConversations(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(conversationId)) {
-        newSet.delete(conversationId);
-      } else {
+      if (newBookmarkState) {
         newSet.add(conversationId);
+      } else {
+        newSet.delete(conversationId);
       }
       return newSet;
     });
+
+    // Persist to database
+    const { error } = await supabase
+      .from("conversations")
+      .update({ is_bookmarked: newBookmarkState })
+      .eq("id", conversationId);
+    
+    if (error) {
+      // Revert on error
+      setBookmarkedConversations(prev => {
+        const newSet = new Set(prev);
+        if (isCurrentlyBookmarked) {
+          newSet.add(conversationId);
+        } else {
+          newSet.delete(conversationId);
+        }
+        return newSet;
+      });
+    }
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    // First delete all messages in the conversation
+    await supabase
+      .from("messages")
+      .delete()
+      .eq("conversation_id", conversationId);
+    
+    // Then delete the conversation
+    const { error } = await supabase
+      .from("conversations")
+      .delete()
+      .eq("id", conversationId);
+    
+    if (!error) {
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      setBookmarkedConversations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(conversationId);
+        return newSet;
+      });
+      if (activeConversation?.id === conversationId) {
+        setActiveConversation(null);
+        setMessages([]);
+      }
+    }
   };
 
   const filteredConversations = conversations.filter(conv => {
@@ -654,17 +713,32 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                           {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true }) : "No messages"}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleBookmark(conv.id);
-                        }}
-                      >
-                        <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? 'fill-current text-primary' : 'text-muted-foreground'}`} />
-                      </Button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(conv.id);
+                          }}
+                        >
+                          <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? 'fill-current text-primary' : 'text-muted-foreground'}`} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete this conversation? This cannot be undone.')) {
+                              deleteConversation(conv.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );

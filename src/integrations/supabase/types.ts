@@ -997,6 +997,7 @@ export type Database = {
           created_at: string
           creator_id: string
           id: string
+          is_bookmarked: boolean
           last_message_at: string | null
           updated_at: string
         }
@@ -1005,6 +1006,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           id?: string
+          is_bookmarked?: boolean
           last_message_at?: string | null
           updated_at?: string
         }
@@ -1013,6 +1015,7 @@ export type Database = {
           created_at?: string
           creator_id?: string
           id?: string
+          is_bookmarked?: boolean
           last_message_at?: string | null
           updated_at?: string
         }
