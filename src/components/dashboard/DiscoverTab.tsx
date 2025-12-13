@@ -421,7 +421,7 @@ export function DiscoverTab() {
               >
                 <CarouselContent className="-ml-4">
                   {campaigns.filter(c => c.is_featured && c.status === 'active').map((campaign) => (
-                    <CarouselItem key={campaign.id} className="pl-4 md:basis-full lg:basis-full">
+                    <CarouselItem key={campaign.id} className="pl-4 basis-full md:basis-1/2">
                       <button
                         onClick={() => {
                           setSelectedCampaign(campaign);
@@ -429,7 +429,7 @@ export function DiscoverTab() {
                         }}
                         className="w-full text-left"
                       >
-                        <div className="relative h-[280px] rounded-2xl overflow-hidden group cursor-pointer">
+                        <div className="relative h-[180px] rounded-xl overflow-hidden group cursor-pointer">
                           {/* Background Image */}
                           <div 
                             className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -443,42 +443,42 @@ export function DiscoverTab() {
                           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
                           
                           {/* Content */}
-                          <div className="relative h-full p-6 flex flex-col justify-between">
+                          <div className="relative h-full p-4 flex flex-col justify-between">
                             {/* Brand Logo */}
-                            <div className="w-14 h-14 rounded-[10px] bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 rounded-[10px] bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
                               {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
                                 <img 
                                   src={campaign.brands?.logo_url || campaign.brand_logo_url} 
                                   alt={campaign.brand_name}
-                                  className="w-10 h-10 rounded-[10px] object-cover"
+                                  className="w-8 h-8 rounded-[10px] object-cover"
                                 />
                               ) : (
-                                <span className="text-white text-xl font-bold">
+                                <span className="text-white text-sm font-bold">
                                   {campaign.brand_name.charAt(0).toUpperCase()}
                                 </span>
                               )}
                             </div>
                             
                             {/* Campaign Info */}
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <h3 className="text-2xl font-bold text-white tracking-tight">
+                            <div className="space-y-2">
+                              <div className="space-y-1">
+                                <h3 className="text-lg font-bold text-white tracking-tight line-clamp-1">
                                   {campaign.title}
                                 </h3>
-                                <p className="text-white/70 text-sm max-w-lg line-clamp-2">
+                                <p className="text-white/70 text-xs line-clamp-1">
                                   {campaign.description || `Join the ${campaign.brand_name} creator program`}
                                 </p>
                               </div>
                               
                               {/* Stats Row */}
-                              <div className="flex items-center gap-8 font-['Inter'] tracking-[-0.5px]">
-                                <div className="space-y-1">
-                                  <p className="text-white/50 text-xs uppercase tracking-wider">Rewards</p>
-                                  <p className="text-white font-medium">${campaign.rpm_rate} per 1K views</p>
+                              <div className="flex items-center gap-4 font-['Inter'] tracking-[-0.5px]">
+                                <div>
+                                  <p className="text-white/50 text-[10px] uppercase tracking-wider">Rewards</p>
+                                  <p className="text-white text-xs font-medium">${campaign.rpm_rate} per 1K views</p>
                                 </div>
-                                <div className="space-y-1">
-                                  <p className="text-white/50 text-xs uppercase tracking-wider">Category</p>
-                                  <p className="text-white font-medium">Creator</p>
+                                <div>
+                                  <p className="text-white/50 text-[10px] uppercase tracking-wider">Category</p>
+                                  <p className="text-white text-xs font-medium">Creator</p>
                                 </div>
                               </div>
                             </div>
