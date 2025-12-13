@@ -5,15 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
-import { Plus, Video, DollarSign, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink } from "lucide-react";
+import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb, MoreVertical, ArrowLeft } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -28,6 +25,7 @@ interface BoostCampaign {
   content_style_requirements: string;
   status: string;
   brand_id: string;
+  blueprint_embed_url: string | null;
 }
 
 interface Brand {
@@ -69,8 +67,8 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
-  const [platform, setPlatform] = useState("tiktok");
-  const [notes, setNotes] = useState("");
+  const [postsDialogOpen, setPostsDialogOpen] = useState(false);
+  const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchBoostData();
@@ -160,6 +158,17 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
       // Calculate payout amount per video
       const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
 
+      // Detect platform from URL
+      let detectedPlatform = "tiktok";
+      const url = videoUrl.toLowerCase();
+      if (url.includes("instagram.com") || url.includes("instagr.am")) {
+        detectedPlatform = "instagram";
+      } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
+        detectedPlatform = "youtube";
+      } else if (url.includes("twitter.com") || url.includes("x.com")) {
+        detectedPlatform = "x";
+      }
+
       // Check submission limit (based on monthly quota)
       const now = new Date();
       const monthStart = startOfMonth(now);
@@ -195,8 +204,8 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
           bounty_campaign_id: boost.id,
           user_id: user.id,
           video_url: videoUrl.trim(),
-          platform,
-          submission_notes: notes.trim() || null,
+          platform: detectedPlatform,
+          submission_notes: null,
           payout_amount: payoutPerVideo
         });
 
@@ -205,7 +214,6 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
       toast.success("Video submitted successfully!");
       setSubmitDialogOpen(false);
       setVideoUrl("");
-      setNotes("");
       fetchBoostData();
     } catch (error) {
       console.error("Error submitting video:", error);
@@ -239,16 +247,12 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="grid gap-6">
-            <Skeleton className="h-48 w-full rounded-xl" />
-            <div className="grid md:grid-cols-3 gap-4">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-          </div>
+      <div className="p-4 md:p-6 space-y-4">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-40 rounded-xl" />
         </div>
       </div>
     );
@@ -269,147 +273,288 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
   const approvedThisMonth = thisMonthSubmissions.filter(s => s.status === "approved").length;
   const pendingThisMonth = thisMonthSubmissions.filter(s => s.status === "pending").length;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
-  const progressPercent = (thisMonthSubmissions.length / boost.videos_per_month) * 100;
+  const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+  const last24Hours = submissions.filter(s => {
+    const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
+    return hoursDiff < 24;
+  });
+  const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl mx-auto px-4 py-8">
-        <div className="grid gap-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row gap-6 items-start">
-            {brand?.logo_url && (
-              <img 
-                src={brand.logo_url} 
-                alt={brand.name} 
-                className="w-20 h-20 rounded-xl object-cover border" 
-              />
-            )}
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-bold font-inter tracking-[-0.5px]">{boost.title}</h1>
-                <Badge variant="outline" className={
-                  boost.status === 'active' 
-                    ? 'bg-green-500/10 text-green-500 border-green-500/20' 
-                    : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                }>
-                  {boost.status}
-                </Badge>
-              </div>
-              <p className="text-muted-foreground">{brand?.name}</p>
-              {boost.description && (
-                <p className="text-sm text-muted-foreground max-w-2xl">{boost.description}</p>
+    <div className="p-4 md:p-6 space-y-6">
+      {/* Back button for mobile */}
+      <Button 
+        variant="ghost" 
+        size="sm"
+        className="md:hidden -ml-2 gap-1.5"
+        onClick={() => navigate("/dashboard?tab=campaigns")}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
+
+      {/* Header Card */}
+      <Card className="bg-card border overflow-hidden">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6 md:items-center">
+            {/* Brand Logo + Info */}
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {brand?.logo_url ? (
+                <img 
+                  src={brand.logo_url} 
+                  alt={brand.name} 
+                  className="w-14 h-14 rounded-xl object-cover border flex-shrink-0" 
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                  <Video className="h-6 w-6 text-muted-foreground" />
+                </div>
               )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-semibold font-inter tracking-[-0.5px] truncate">{boost.title}</h1>
+                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 flex-shrink-0 text-[10px]">
+                    LIVE
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground truncate">{brand?.name}</p>
+              </div>
             </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-6 text-center border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6">
+              <div>
+                <p className="text-lg font-bold">${earnedThisMonth.toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">Earned</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">{approvedThisMonth}</p>
+                <p className="text-xs text-muted-foreground">Approved</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold">{pendingThisMonth}</p>
+                <p className="text-xs text-muted-foreground">Pending</p>
+              </div>
+            </div>
+
+            {/* Rate Badge */}
+            <div className="flex items-center gap-3 border-t md:border-t-0 md:border-l border-border/50 pt-4 md:pt-0 md:pl-6">
+              <div className="bg-muted rounded-xl px-4 py-2 text-center">
+                <p className="text-sm font-semibold">${payoutPerVideo.toFixed(0)} per video</p>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setSubmitDialogOpen(true)}
+                className="bg-foreground hover:bg-foreground/90 text-background font-semibold px-6"
+                disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
+              >
+                Submit post
+              </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Directions Card */}
+        <Card 
+          className="bg-muted/30 border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+          onClick={() => setDirectionsDialogOpen(true)}
+        >
+          <CardContent className="p-6 h-40 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold font-inter tracking-[-0.5px]">Directions and content</h3>
+              <Expand className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex-1 flex items-center justify-center gap-3">
+              <div className="p-3 bg-background rounded-xl border">
+                <FileText className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div className="p-3 bg-background rounded-xl border">
+                <Download className="h-6 w-6 text-muted-foreground" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* My Posts Card */}
+        <Card 
+          className="bg-muted/30 border-0 cursor-pointer hover:bg-muted/50 transition-colors group"
+          onClick={() => setPostsDialogOpen(true)}
+        >
+          <CardContent className="p-6 h-40 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold font-inter tracking-[-0.5px]">My posts ({submissions.length})</h3>
+              <Expand className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <div className="flex-1 flex items-center justify-center gap-3">
+              <div className="bg-background rounded-lg px-4 py-2 border text-sm">
+                <span className="font-semibold">{pendingThisMonth}</span>
+                <span className="text-muted-foreground ml-1.5">Pending</span>
+              </div>
+              <div className="bg-background rounded-lg px-4 py-2 border text-sm">
+                <span className="font-semibold">{approvedThisMonth}</span>
+                <span className="text-muted-foreground ml-1.5">Approved</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Card */}
+        <Card className="bg-muted/30 border-0">
+          <CardContent className="p-6 h-40 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold font-inter tracking-[-0.5px]">Monthly quota</h3>
+            </div>
+            <div className="flex-1 flex items-center justify-center gap-4">
+              <div className="bg-background rounded-lg px-4 py-2.5 border text-center">
+                <p className="text-lg font-semibold">{thisMonthSubmissions.length}/{boost.videos_per_month}</p>
+                <p className="text-xs text-muted-foreground">Posts</p>
+              </div>
+              <div className="bg-background rounded-lg px-4 py-2.5 border text-center">
+                <p className="text-lg font-semibold">${earnedThisMonth.toFixed(0)}</p>
+                <p className="text-xs text-muted-foreground">Earnings</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Submit Video Dialog */}
+      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <DialogContent className="sm:max-w-[480px] bg-background">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="font-inter tracking-[-0.5px] text-xl">Submit post</DialogTitle>
+              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                Daily limit: {last24Hours.length}/{dailyLimit}
+              </Badge>
+            </div>
+            <DialogDescription>
+              Link your Instagram, TikTok, YouTube post
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                <Link2 className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <Input
+                placeholder="Paste link"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                className="pl-10 h-12 text-base border-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !submitting) {
+                    handleSubmitVideo();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="bg-muted/50 rounded-xl p-4 flex items-start gap-3">
+              <Lightbulb className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium">Submit clips as soon as you post them.</p>
+                <p className="text-muted-foreground">Views gained before submission do not count toward payouts.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setSubmitDialogOpen(false)} className="flex-1">
+              Cancel
+            </Button>
             <Button 
-              onClick={() => setSubmitDialogOpen(true)}
-              className="bg-[#2060de] hover:bg-[#1a50c8] text-white border-t border-[#4b85f7] gap-2"
-              disabled={thisMonthSubmissions.length >= boost.videos_per_month}
+              onClick={handleSubmitVideo} 
+              disabled={submitting || !videoUrl.trim()}
+              className="flex-1 bg-foreground hover:bg-foreground/90 text-background"
             >
-              <Plus className="h-4 w-4" />
-              Submit Video
+              {submitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-card border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-green-500/10">
-                    <DollarSign className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Earned This Month</p>
-                    <p className="text-2xl font-bold">${earnedThisMonth.toFixed(0)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-blue-500/10">
-                    <Video className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Per Video Rate</p>
-                    <p className="text-2xl font-bold">${payoutPerVideo.toFixed(2)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-green-500/10">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Approved Videos</p>
-                    <p className="text-2xl font-bold">{approvedThisMonth}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-yellow-500/10">
-                    <Clock className="h-5 w-5 text-yellow-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Pending Review</p>
-                    <p className="text-2xl font-bold">{pendingThisMonth}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Monthly Progress */}
-          <Card className="bg-card border">
-            <CardHeader>
-              <CardTitle className="text-lg font-inter tracking-[-0.5px]">Monthly Progress</CardTitle>
-              <CardDescription>
-                {thisMonthSubmissions.length} of {boost.videos_per_month} videos submitted this month
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Progress value={progressPercent} className="h-3" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Potential earnings: ${boost.monthly_retainer}/month</span>
-                <span>
-                  {boost.videos_per_month - thisMonthSubmissions.length} videos remaining
-                </span>
+      {/* Directions Dialog */}
+      <Dialog open={directionsDialogOpen} onOpenChange={setDirectionsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto bg-background">
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px] text-xl">Directions and content</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {boost.blueprint_embed_url ? (
+              <iframe 
+                src={boost.blueprint_embed_url} 
+                className="w-full h-[400px] rounded-lg border"
+                title="Boost directions"
+              />
+            ) : boost.content_style_requirements ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <p className="whitespace-pre-wrap text-muted-foreground">{boost.content_style_requirements}</p>
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-40" />
+                <p>No content guidelines available</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Submissions Table */}
-          <Card className="bg-card border">
-            <CardHeader>
-              <CardTitle className="text-lg font-inter tracking-[-0.5px]">Your Submissions</CardTitle>
-              <CardDescription>Videos you've submitted for this boost</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {submissions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Video className="h-12 w-12 mx-auto mb-4 opacity-40" />
-                  <p>No videos submitted yet</p>
-                  <p className="text-sm">Submit your first video to start earning</p>
-                </div>
-              ) : (
+      {/* My Posts Dialog */}
+      <Dialog open={postsDialogOpen} onOpenChange={setPostsDialogOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto bg-background">
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px] text-xl">My posts ({submissions.length})</DialogTitle>
+            <DialogDescription>
+              Approved posts will continue generating earnings up to 7 days after the campaign closes.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Stats Summary */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="border">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold text-sm mb-1">Campaign views</h4>
+                  <p className="text-xs text-muted-foreground">Total views from all of your approved clips will be shown here.</p>
+                </CardContent>
+              </Card>
+              <Card className="border">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold text-sm mb-1">Earnings</h4>
+                  <p className="text-xs text-muted-foreground">Earn ${payoutPerVideo.toFixed(0)} per approved video.</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Posts Table */}
+            {submissions.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border rounded-xl">
+                <Video className="h-12 w-12 mx-auto mb-4 opacity-40" />
+                <p className="font-semibold">No results found</p>
+                <p className="text-sm">No posts submitted yet. Submit your first video to start earning.</p>
+              </div>
+            ) : (
+              <Card className="border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Video</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Submitted</TableHead>
+                      <TableHead>Post</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Payout</TableHead>
+                      <TableHead>Pay rate</TableHead>
+                      <TableHead className="text-right">You earned</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -422,22 +567,14 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 text-primary hover:underline"
                           >
-                            <ExternalLink className="h-4 w-4" />
-                            View Video
-                          </a>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
                             <img 
                               src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
                               alt={submission.platform} 
                               className="h-5 w-5" 
                             />
-                            <span className="capitalize">{submission.platform}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(submission.submitted_at), "MMM d, yyyy")}
+                            <ExternalLink className="h-4 w-4" />
+                            <span className="text-sm truncate max-w-[150px]">{submission.video_url}</span>
+                          </a>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -448,118 +585,25 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
                             <p className="text-xs text-red-500 mt-1">{submission.rejection_reason}</p>
                           )}
                         </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          ${payoutPerVideo.toFixed(0)}/video
+                        </TableCell>
                         <TableCell className="text-right font-medium">
                           {submission.status === "approved" ? (
                             <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
                           ) : submission.status === "pending" ? (
-                            <span className="text-muted-foreground">${submission.payout_amount?.toFixed(2)}</span>
+                            <span className="text-muted-foreground">-</span>
                           ) : (
-                            <span className="text-red-500 line-through">${submission.payout_amount?.toFixed(2)}</span>
+                            <span className="text-red-500">$0</span>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Guidelines */}
-          {boost.content_style_requirements && (
-            <Card className="bg-card border">
-              <CardHeader>
-                <CardTitle className="text-lg font-inter tracking-[-0.5px]">Content Requirements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground whitespace-pre-wrap">{boost.content_style_requirements}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Submit Video Dialog */}
-      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle className="font-inter tracking-[-0.5px]">Submit Video</DialogTitle>
-            <DialogDescription>
-              Submit a video link for approval. You'll earn ${payoutPerVideo.toFixed(2)} when approved.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Video URL</label>
-              <Input
-                placeholder="https://tiktok.com/@user/video/..."
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Platform</label>
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tiktok">
-                    <div className="flex items-center gap-2">
-                      <img src={tiktokLogo} alt="TikTok" className="h-4 w-4" />
-                      TikTok
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="instagram">
-                    <div className="flex items-center gap-2">
-                      <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />
-                      Instagram
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="youtube">
-                    <div className="flex items-center gap-2">
-                      <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />
-                      YouTube
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Notes (optional)</label>
-              <Textarea
-                placeholder="Any additional notes about this video..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <div className="bg-muted/30 rounded-lg p-3 text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <AlertCircle className="h-4 w-4" />
-                <span>
-                  {boost.videos_per_month - thisMonthSubmissions.length} submissions remaining this month
-                </span>
-              </div>
-            </div>
+              </Card>
+            )}
           </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSubmitDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleSubmitVideo} 
-              disabled={submitting}
-              className="bg-[#2060de] hover:bg-[#1a50c8] text-white border-t border-[#4b85f7]"
-            >
-              {submitting ? "Submitting..." : "Submit Video"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
