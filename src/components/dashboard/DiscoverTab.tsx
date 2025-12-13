@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
+import { ApplyToBoostDialog } from "@/components/ApplyToBoostDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -406,9 +407,9 @@ export function DiscoverTab() {
   const platforms = ["TikTok", "Instagram", "YouTube"];
   const totalActiveCampaigns = activeCampaigns.length;
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
-  return <div className="md:h-full md:flex md:flex-col">
+  return <div className="md:flex md:flex-col">
         {/* Header and Filters */}
-        <div className="z-20 bg-background px-6 pt-4 pb-4 space-y-6">
+        <div className="bg-background px-6 pt-4 pb-4 space-y-6">
           {/* Featured Programs Carousel */}
           {campaigns.filter(c => c.is_featured && c.status === 'active').length > 0 && (
             <div className="space-y-4">
@@ -922,7 +923,7 @@ export function DiscoverTab() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium"
+                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium border-[#141414] dark:border-[#141414] border-[#d1d5db]"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedBounty(bounty);
@@ -962,7 +963,7 @@ export function DiscoverTab() {
       }} />
       
       {/* Separate Apply Dialog triggered from card button */}
-      <ApplyToBountySheet open={applyDialogOpen} onOpenChange={setApplyDialogOpen} bounty={selectedBounty} onSuccess={() => {
+      <ApplyToBoostDialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen} bounty={selectedBounty} onSuccess={() => {
         setApplyDialogOpen(false);
         fetchCampaigns();
       }} />
