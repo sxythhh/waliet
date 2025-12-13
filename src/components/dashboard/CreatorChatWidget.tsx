@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { X, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { MessageInput } from "@/components/brand/MessageInput";
+import { toast } from "sonner";
 import mailIcon from "@/assets/mail-icon.svg";
 interface Conversation {
   id: string;
@@ -35,6 +36,8 @@ export function CreatorChatWidget() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [newMessage, setNewMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const fetchUser = async () => {
@@ -147,6 +150,32 @@ export function CreatorChatWidget() {
   const handleBack = () => {
     setActiveConversation(null);
     setMessages([]);
+    setNewMessage("");
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !activeConversation || !userId) return;
+    
+    setSending(true);
+    const { error } = await supabase.from("messages").insert({
+      conversation_id: activeConversation.id,
+      sender_id: userId,
+      sender_type: "creator",
+      content: newMessage.trim(),
+    });
+
+    if (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    } else {
+      setNewMessage("");
+      // Update conversation last_message_at
+      await supabase
+        .from("conversations")
+        .update({ last_message_at: new Date().toISOString() })
+        .eq("id", activeConversation.id);
+    }
+    setSending(false);
   };
   return <>
       {/* Floating Button */}
@@ -231,7 +260,8 @@ export function CreatorChatWidget() {
                   </div>}
               </ScrollArea> :
         // Messages View
-        <ScrollArea className="h-full">
+        <div className="flex flex-col h-full">
+              <ScrollArea className="flex-1">
                 <div className="p-4 space-y-4">
                   {messages.length === 0 ? <div className="flex flex-col items-center justify-center py-12 text-center">
                       <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
@@ -249,7 +279,18 @@ export function CreatorChatWidget() {
                       </div>)}
                   <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>}
+              </ScrollArea>
+              {/* Message Input */}
+              <div className="p-3 border-t border-border">
+                <MessageInput
+                  value={newMessage}
+                  onChange={setNewMessage}
+                  onSend={handleSendMessage}
+                  disabled={sending}
+                  placeholder="Type a message..."
+                />
+              </div>
+            </div>}
           </div>
         </div>}
     </>;
