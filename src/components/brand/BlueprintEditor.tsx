@@ -22,23 +22,19 @@ import tiktokLogoDark from "@/assets/tiktok-logo-white.png";
 import instagramLogoDark from "@/assets/instagram-logo-white.png";
 import youtubeLogoDark from "@/assets/youtube-logo-white.png";
 import xLogoDark from "@/assets/x-logo-light.png";
-
 interface Asset {
   link: string;
   notes: string;
 }
-
 interface Persona {
   name: string;
   target_audience: string;
   description: string;
 }
-
 interface ExampleVideo {
   url: string;
   description: string;
 }
-
 interface Blueprint {
   id: string;
   brand_id: string;
@@ -49,7 +45,10 @@ interface Blueprint {
   target_personas: Persona[];
   hooks: string[];
   content_guidelines: string | null;
-  dos_and_donts: { dos: string[]; donts: string[] };
+  dos_and_donts: {
+    dos: string[];
+    donts: string[];
+  };
   call_to_action: string | null;
   hashtags: string[];
   example_videos: ExampleVideo[];
@@ -57,28 +56,40 @@ interface Blueprint {
   brand_voice: string | null;
   status: string;
 }
-
 interface Brand {
   id: string;
   name: string;
   logo_url: string | null;
 }
-
 interface BlueprintEditorProps {
   blueprintId: string;
   brandId: string;
 }
-
-const getPlatforms = (isDark: boolean) => [
-  { id: "tiktok", label: "TikTok", logo: isDark ? tiktokLogoDark : tiktokLogoLight },
-  { id: "instagram", label: "Instagram", logo: isDark ? instagramLogoDark : instagramLogoLight },
-  { id: "youtube", label: "YouTube", logo: isDark ? youtubeLogoDark : youtubeLogoLight },
-  { id: "x", label: "X", logo: isDark ? xLogoDark : xLogoLight },
-];
-
-export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) {
+const getPlatforms = (isDark: boolean) => [{
+  id: "tiktok",
+  label: "TikTok",
+  logo: isDark ? tiktokLogoDark : tiktokLogoLight
+}, {
+  id: "instagram",
+  label: "Instagram",
+  logo: isDark ? instagramLogoDark : instagramLogoLight
+}, {
+  id: "youtube",
+  label: "YouTube",
+  logo: isDark ? youtubeLogoDark : youtubeLogoLight
+}, {
+  id: "x",
+  label: "X",
+  logo: isDark ? xLogoDark : xLogoLight
+}];
+export function BlueprintEditor({
+  blueprintId,
+  brandId
+}: BlueprintEditorProps) {
   const [, setSearchParams] = useSearchParams();
-  const { resolvedTheme } = useTheme();
+  const {
+    resolvedTheme
+  } = useTheme();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,177 +98,214 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [showCampaignWizard, setShowCampaignWizard] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
-
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
-
   useEffect(() => {
     fetchBlueprintAndBrand();
   }, [blueprintId, brandId]);
-
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    
-    const [blueprintRes, brandRes] = await Promise.all([
-      supabase.from("blueprints").select("*").eq("id", blueprintId).single(),
-      supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single(),
-    ]);
-
+    const [blueprintRes, brandRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single()]);
     if (blueprintRes.error) {
       console.error("Error fetching blueprint:", blueprintRes.error);
       toast.error("Failed to load blueprint");
       goBack();
       return;
     }
-
     const data = blueprintRes.data as any;
     setBlueprint({
       ...data,
-      assets: (data.assets as Asset[]) || [],
-      target_personas: (data.target_personas as Persona[]) || [],
+      assets: data.assets as Asset[] || [],
+      target_personas: data.target_personas as Persona[] || [],
       platforms: data.platforms || [],
-      hooks: (data.hooks as string[]) || [],
-      dos_and_donts: (data.dos_and_donts as { dos: string[]; donts: string[] }) || { dos: [], donts: [] },
+      hooks: data.hooks as string[] || [],
+      dos_and_donts: data.dos_and_donts as {
+        dos: string[];
+        donts: string[];
+      } || {
+        dos: [],
+        donts: []
+      },
       hashtags: data.hashtags || [],
-      example_videos: (data.example_videos as ExampleVideo[]) || [],
-      talking_points: (data.talking_points as string[]) || [],
+      example_videos: data.example_videos as ExampleVideo[] || [],
+      talking_points: data.talking_points as string[] || []
     });
-
     if (brandRes.data) {
       setBrand(brandRes.data);
     }
-
     setLoading(false);
   };
-
-  const saveBlueprint = useCallback(
-    debounce(async (updates: Partial<Blueprint>) => {
-      setSaving(true);
-      const { error } = await supabase
-        .from("blueprints")
-        .update(updates as any)
-        .eq("id", blueprintId);
-      if (error) {
-        console.error("Error saving blueprint:", error);
-        toast.error("Failed to save changes");
-      }
-      setSaving(false);
-    }, 500),
-    [blueprintId]
-  );
-
+  const saveBlueprint = useCallback(debounce(async (updates: Partial<Blueprint>) => {
+    setSaving(true);
+    const {
+      error
+    } = await supabase.from("blueprints").update(updates as any).eq("id", blueprintId);
+    if (error) {
+      console.error("Error saving blueprint:", error);
+      toast.error("Failed to save changes");
+    }
+    setSaving(false);
+  }, 500), [blueprintId]);
   const updateBlueprint = (updates: Partial<Blueprint>) => {
     if (!blueprint) return;
-    const newBlueprint = { ...blueprint, ...updates };
+    const newBlueprint = {
+      ...blueprint,
+      ...updates
+    };
     setBlueprint(newBlueprint);
     saveBlueprint(updates);
   };
-
   const goBack = () => {
-    setSearchParams((prev) => {
+    setSearchParams(prev => {
       prev.delete("blueprint");
       return prev;
     });
   };
-
   const activateBlueprint = () => {
     setShowCampaignWizard(true);
   };
 
   // Asset functions
   const addAsset = () => {
-    const newAssets = [...(blueprint?.assets || []), { link: "", notes: "" }];
-    updateBlueprint({ assets: newAssets });
+    const newAssets = [...(blueprint?.assets || []), {
+      link: "",
+      notes: ""
+    }];
+    updateBlueprint({
+      assets: newAssets
+    });
   };
-
   const updateAsset = (index: number, field: keyof Asset, value: string) => {
     const newAssets = [...(blueprint?.assets || [])];
-    newAssets[index] = { ...newAssets[index], [field]: value };
-    updateBlueprint({ assets: newAssets });
+    newAssets[index] = {
+      ...newAssets[index],
+      [field]: value
+    };
+    updateBlueprint({
+      assets: newAssets
+    });
   };
-
   const removeAsset = (index: number) => {
     const newAssets = blueprint?.assets.filter((_, i) => i !== index) || [];
-    updateBlueprint({ assets: newAssets });
+    updateBlueprint({
+      assets: newAssets
+    });
   };
 
   // Platform toggle
   const togglePlatform = (platformId: string) => {
     const platforms = blueprint?.platforms || [];
-    const newPlatforms = platforms.includes(platformId)
-      ? platforms.filter((p) => p !== platformId)
-      : [...platforms, platformId];
-    updateBlueprint({ platforms: newPlatforms });
+    const newPlatforms = platforms.includes(platformId) ? platforms.filter(p => p !== platformId) : [...platforms, platformId];
+    updateBlueprint({
+      platforms: newPlatforms
+    });
   };
 
   // Persona functions
   const addPersona = () => {
-    const newPersonas = [
-      ...(blueprint?.target_personas || []),
-      { name: `Persona #${(blueprint?.target_personas?.length || 0) + 1}`, target_audience: "", description: "" },
-    ];
-    updateBlueprint({ target_personas: newPersonas });
+    const newPersonas = [...(blueprint?.target_personas || []), {
+      name: `Persona #${(blueprint?.target_personas?.length || 0) + 1}`,
+      target_audience: "",
+      description: ""
+    }];
+    updateBlueprint({
+      target_personas: newPersonas
+    });
   };
-
   const updatePersona = (index: number, field: keyof Persona, value: string) => {
     const newPersonas = [...(blueprint?.target_personas || [])];
-    newPersonas[index] = { ...newPersonas[index], [field]: value };
-    updateBlueprint({ target_personas: newPersonas });
+    newPersonas[index] = {
+      ...newPersonas[index],
+      [field]: value
+    };
+    updateBlueprint({
+      target_personas: newPersonas
+    });
   };
-
   const removePersona = (index: number) => {
     const newPersonas = blueprint?.target_personas.filter((_, i) => i !== index) || [];
-    updateBlueprint({ target_personas: newPersonas });
+    updateBlueprint({
+      target_personas: newPersonas
+    });
   };
 
   // Hook functions
   const addHook = () => {
     const newHooks = [...(blueprint?.hooks || []), ""];
-    updateBlueprint({ hooks: newHooks });
+    updateBlueprint({
+      hooks: newHooks
+    });
   };
-
   const updateHook = (index: number, value: string) => {
     const newHooks = [...(blueprint?.hooks || [])];
     newHooks[index] = value;
-    updateBlueprint({ hooks: newHooks });
+    updateBlueprint({
+      hooks: newHooks
+    });
   };
-
   const removeHook = (index: number) => {
     const newHooks = blueprint?.hooks.filter((_, i) => i !== index) || [];
-    updateBlueprint({ hooks: newHooks });
+    updateBlueprint({
+      hooks: newHooks
+    });
   };
 
   // Do's and Don'ts functions
   const addDo = () => {
     const dos = [...(blueprint?.dos_and_donts.dos || []), ""];
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, dos } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        dos
+      }
+    });
   };
-
   const addDont = () => {
     const donts = [...(blueprint?.dos_and_donts.donts || []), ""];
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, donts } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        donts
+      }
+    });
   };
-
   const updateDo = (index: number, value: string) => {
     const dos = [...(blueprint?.dos_and_donts.dos || [])];
     dos[index] = value;
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, dos } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        dos
+      }
+    });
   };
-
   const updateDont = (index: number, value: string) => {
     const donts = [...(blueprint?.dos_and_donts.donts || [])];
     donts[index] = value;
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, donts } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        donts
+      }
+    });
   };
-
   const removeDo = (index: number) => {
     const dos = blueprint?.dos_and_donts.dos.filter((_, i) => i !== index) || [];
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, dos } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        dos
+      }
+    });
   };
-
   const removeDont = (index: number) => {
     const donts = blueprint?.dos_and_donts.donts.filter((_, i) => i !== index) || [];
-    updateBlueprint({ dos_and_donts: { ...blueprint!.dos_and_donts, donts } });
+    updateBlueprint({
+      dos_and_donts: {
+        ...blueprint!.dos_and_donts,
+        donts
+      }
+    });
   };
 
   // Hashtag functions
@@ -265,49 +313,65 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
     if (!newHashtag.trim()) return;
     const tag = newHashtag.startsWith("#") ? newHashtag : `#${newHashtag}`;
     const hashtags = [...(blueprint?.hashtags || []), tag];
-    updateBlueprint({ hashtags });
+    updateBlueprint({
+      hashtags
+    });
     setNewHashtag("");
   };
-
   const removeHashtag = (index: number) => {
     const hashtags = blueprint?.hashtags.filter((_, i) => i !== index) || [];
-    updateBlueprint({ hashtags });
+    updateBlueprint({
+      hashtags
+    });
   };
 
   // Talking points functions
   const addTalkingPoint = () => {
     const newPoints = [...(blueprint?.talking_points || []), ""];
-    updateBlueprint({ talking_points: newPoints });
+    updateBlueprint({
+      talking_points: newPoints
+    });
   };
-
   const updateTalkingPoint = (index: number, value: string) => {
     const newPoints = [...(blueprint?.talking_points || [])];
     newPoints[index] = value;
-    updateBlueprint({ talking_points: newPoints });
+    updateBlueprint({
+      talking_points: newPoints
+    });
   };
-
   const removeTalkingPoint = (index: number) => {
     const newPoints = blueprint?.talking_points.filter((_, i) => i !== index) || [];
-    updateBlueprint({ talking_points: newPoints });
+    updateBlueprint({
+      talking_points: newPoints
+    });
   };
 
   // Example video functions
   const addExampleVideo = () => {
-    const newVideos = [...(blueprint?.example_videos || []), { url: "", description: "" }];
-    updateBlueprint({ example_videos: newVideos });
+    const newVideos = [...(blueprint?.example_videos || []), {
+      url: "",
+      description: ""
+    }];
+    updateBlueprint({
+      example_videos: newVideos
+    });
   };
-
   const updateExampleVideo = (index: number, field: keyof ExampleVideo, value: string) => {
     const newVideos = [...(blueprint?.example_videos || [])];
-    newVideos[index] = { ...newVideos[index], [field]: value };
-    updateBlueprint({ example_videos: newVideos });
+    newVideos[index] = {
+      ...newVideos[index],
+      [field]: value
+    };
+    updateBlueprint({
+      example_videos: newVideos
+    });
   };
-
   const removeExampleVideo = (index: number) => {
     const newVideos = blueprint?.example_videos.filter((_, i) => i !== index) || [];
-    updateBlueprint({ example_videos: newVideos });
+    updateBlueprint({
+      example_videos: newVideos
+    });
   };
-
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -323,16 +387,16 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
       toast.error("Video must be under 100MB");
       return;
     }
-
     setUploadingVideo(true);
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${blueprintId}/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("blueprint-videos")
-        .upload(fileName, file, { cacheControl: "3600", upsert: false });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from("blueprint-videos").upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false
+      });
       if (uploadError) {
         // If bucket doesn't exist, show appropriate error
         if (uploadError.message.includes("Bucket not found")) {
@@ -343,14 +407,18 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
         console.error("Upload error:", uploadError);
         return;
       }
-
-      const { data: urlData } = supabase.storage
-        .from("blueprint-videos")
-        .getPublicUrl(fileName);
+      const {
+        data: urlData
+      } = supabase.storage.from("blueprint-videos").getPublicUrl(fileName);
 
       // Add the video to example_videos
-      const newVideos = [...(blueprint?.example_videos || []), { url: urlData.publicUrl, description: "" }];
-      updateBlueprint({ example_videos: newVideos });
+      const newVideos = [...(blueprint?.example_videos || []), {
+        url: urlData.publicUrl,
+        description: ""
+      }];
+      updateBlueprint({
+        example_videos: newVideos
+      });
       toast.success("Video uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
@@ -362,19 +430,13 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
       }
     }
   };
-
   if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
+    return <div className="h-full flex items-center justify-center">
         <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
+      </div>;
   }
-
   if (!blueprint) return null;
-
-  return (
-    <>
+  return <>
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
@@ -385,23 +447,15 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
                 Return
               </button>
               <div className="h-4 w-px bg-border/50" />
-              {brand?.logo_url && (
-                <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />
-              )}
+              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />}
               <span className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">{brand?.name}</span>
               <span className="text-muted-foreground/50">/</span>
-              <Input
-                value={blueprint.title}
-                onChange={(e) => updateBlueprint({ title: e.target.value })}
-                className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px]"
-                placeholder="Untitled"
-              />
+              <Input value={blueprint.title} onChange={e => updateBlueprint({
+              title: e.target.value
+            })} className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px]" placeholder="Untitled" />
               {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px]">Saving...</span>}
             </div>
-            <button
-              onClick={activateBlueprint}
-              className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
-            >
+            <button onClick={activateBlueprint} className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity">
               Create Campaign
             </button>
           </div>
@@ -414,11 +468,9 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           <section className="space-y-2">
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Brief Content</label>
             <div className="rounded-md bg-muted/20 overflow-hidden">
-              <RichTextEditor
-                content={blueprint.content || ""}
-                onChange={(content) => updateBlueprint({ content })}
-                placeholder="Write your campaign brief content here..."
-              />
+              <RichTextEditor content={blueprint.content || ""} onChange={content => updateBlueprint({
+                  content
+                })} placeholder="Write your campaign brief content here..." />
             </div>
           </section>
 
@@ -426,37 +478,25 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           <section className="space-y-2">
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Platforms</label>
             <div className="flex flex-wrap gap-2">
-              {PLATFORMS.map((platform) => {
-                const isSelected = blueprint.platforms.includes(platform.id);
-                return (
-                  <button
-                    key={platform.id}
-                    onClick={() => togglePlatform(platform.id)}
-                    className={`
+              {PLATFORMS.map(platform => {
+                  const isSelected = blueprint.platforms.includes(platform.id);
+                  return <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`
                       flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-150 font-inter tracking-[-0.5px] text-sm
-                      ${isSelected 
-                        ? "bg-muted text-foreground" 
-                        : "bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                      }
-                    `}
-                  >
+                      ${isSelected ? "bg-muted text-foreground" : "bg-muted/20 text-muted-foreground hover:bg-muted/40"}
+                    `}>
                     <img src={platform.logo} alt={platform.label} className="h-4 w-4 object-contain" />
-                    <span className="font-medium">{platform.label}</span>
-                  </button>
-                );
-              })}
+                    <span className="font-medium text-primary-foreground">{platform.label}</span>
+                  </button>;
+                })}
             </div>
           </section>
 
           {/* Brand Voice */}
           <section className="space-y-2">
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Brand Voice</label>
-            <Textarea
-              value={blueprint.brand_voice || ""}
-              onChange={(e) => updateBlueprint({ brand_voice: e.target.value })}
-              placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)"
-              className="min-h-[80px] resize-none bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-            />
+            <Textarea value={blueprint.brand_voice || ""} onChange={e => updateBlueprint({
+                brand_voice: e.target.value
+              })} placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)" className="min-h-[80px] resize-none bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
           </section>
 
           {/* Hooks */}
@@ -469,30 +509,14 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
               </Button>
             </div>
             <div className="space-y-1.5">
-              {blueprint.hooks.length === 0 ? (
-                <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
+              {blueprint.hooks.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
                   Add attention-grabbing hooks for creators to use
-                </div>
-              ) : (
-                blueprint.hooks.map((hook, index) => (
-                  <div key={index} className="flex items-center gap-1.5 group">
-                    <Input
-                      value={hook}
-                      onChange={(e) => updateHook(index, e.target.value)}
-                      placeholder={`Hook #${index + 1} - e.g., "Wait until you see this..."`}
-                      className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeHook(index)}
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    >
+                </div> : blueprint.hooks.map((hook, index) => <div key={index} className="flex items-center gap-1.5 group">
+                    <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1} - e.g., "Wait until you see this..."`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                    <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  </div>
-                ))
-              )}
+                  </div>)}
             </div>
           </section>
 
@@ -506,30 +530,14 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
               </Button>
             </div>
             <div className="space-y-1.5">
-              {blueprint.talking_points.length === 0 ? (
-                <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
+              {blueprint.talking_points.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
                   Add key talking points creators should mention
-                </div>
-              ) : (
-                blueprint.talking_points.map((point, index) => (
-                  <div key={index} className="flex items-center gap-1.5 group">
-                    <Input
-                      value={point}
-                      onChange={(e) => updateTalkingPoint(index, e.target.value)}
-                      placeholder={`Key message #${index + 1}`}
-                      className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeTalkingPoint(index)}
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    >
+                </div> : blueprint.talking_points.map((point, index) => <div key={index} className="flex items-center gap-1.5 group">
+                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Key message #${index + 1}`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                    <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  </div>
-                ))
-              )}
+                  </div>)}
             </div>
           </section>
 
@@ -546,24 +554,12 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
                   </Button>
                 </div>
                 <div className="space-y-1.5">
-                  {blueprint.dos_and_donts.dos.map((item, index) => (
-                    <div key={index} className="flex items-center gap-1.5 group">
-                      <Input
-                        value={item}
-                        onChange={(e) => updateDo(index, e.target.value)}
-                        placeholder="Add a do..."
-                        className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeDo(index)}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                      >
+                  {blueprint.dos_and_donts.dos.map((item, index) => <div key={index} className="flex items-center gap-1.5 group">
+                      <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                      <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                         <X className="h-3 w-3" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
               
@@ -576,24 +572,12 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
                   </Button>
                 </div>
                 <div className="space-y-1.5">
-                  {blueprint.dos_and_donts.donts.map((item, index) => (
-                    <div key={index} className="flex items-center gap-1.5 group">
-                      <Input
-                        value={item}
-                        onChange={(e) => updateDont(index, e.target.value)}
-                        placeholder="Add a don't..."
-                        className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeDont(index)}
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                      >
+                  {blueprint.dos_and_donts.donts.map((item, index) => <div key={index} className="flex items-center gap-1.5 group">
+                      <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                      <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                         <X className="h-3 w-3" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </div>
@@ -602,12 +586,9 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
           {/* Call to Action */}
           <section className="space-y-2">
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Call to Action</label>
-            <Input
-              value={blueprint.call_to_action || ""}
-              onChange={(e) => updateBlueprint({ call_to_action: e.target.value })}
-              placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')"
-              className="h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-            />
+            <Input value={blueprint.call_to_action || ""} onChange={e => updateBlueprint({
+                call_to_action: e.target.value
+              })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
           </section>
 
           {/* Hashtags */}
@@ -615,35 +596,19 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
             <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Hashtags</label>
             <div className="space-y-2">
               <div className="flex gap-1.5">
-                <Input
-                  value={newHashtag}
-                  onChange={(e) => setNewHashtag(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addHashtag()}
-                  placeholder="Add hashtag..."
-                  className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                />
+                <Input value={newHashtag} onChange={e => setNewHashtag(e.target.value)} onKeyDown={e => e.key === "Enter" && addHashtag()} placeholder="Add hashtag..." className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                 <Button variant="ghost" size="sm" onClick={addHashtag} className="h-9 px-3 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
-              {blueprint.hashtags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {blueprint.hashtags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-muted/30 text-muted-foreground text-xs font-inter tracking-[-0.5px]"
-                    >
+              {blueprint.hashtags.length > 0 && <div className="flex flex-wrap gap-1.5">
+                  {blueprint.hashtags.map((tag, index) => <span key={index} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-muted/30 text-muted-foreground text-xs font-inter tracking-[-0.5px]">
                       {tag}
-                      <button
-                        onClick={() => removeHashtag(index)}
-                        className="hover:text-foreground transition-colors"
-                      >
+                      <button onClick={() => removeHashtag(index)} className="hover:text-foreground transition-colors">
                         <X className="h-3 w-3" />
                       </button>
-                    </span>
-                  ))}
-                </div>
-              )}
+                    </span>)}
+                </div>}
             </div>
           </section>
 
@@ -657,41 +622,20 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
               </Button>
             </div>
             <div className="rounded-md bg-muted/20 p-3">
-              {blueprint.assets.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-4 font-inter tracking-[-0.5px]">No assets added yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {blueprint.assets.map((asset, index) => (
-                    <div key={index} className="flex items-center gap-2 group">
+              {blueprint.assets.length === 0 ? <p className="text-muted-foreground text-sm text-center py-4 font-inter tracking-[-0.5px]">No assets added yet</p> : <div className="space-y-2">
+                  {blueprint.assets.map((asset, index) => <div key={index} className="flex items-center gap-2 group">
                       <div className="flex-1 grid grid-cols-2 gap-2">
                         <div className="relative">
                           <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                          <Input
-                            value={asset.link}
-                            onChange={(e) => updateAsset(index, "link", e.target.value)}
-                            placeholder="https://drive.google.com/..."
-                            className="pl-8 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                          />
+                          <Input value={asset.link} onChange={e => updateAsset(index, "link", e.target.value)} placeholder="https://drive.google.com/..." className="pl-8 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                         </div>
-                        <Input
-                          value={asset.notes}
-                          onChange={(e) => updateAsset(index, "notes", e.target.value)}
-                          placeholder="Description..."
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                        />
+                        <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeAsset(index)}
-                        className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </div>
           </section>
 
@@ -700,31 +644,15 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
             <div className="flex items-center justify-between">
               <label className="text-xs font-inter tracking-[-0.5px] text-foreground">Example Videos</label>
               <div className="flex items-center gap-1">
-                <input
-                  ref={videoInputRef}
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className="hidden"
-                />
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => videoInputRef.current?.click()}
-                  disabled={uploadingVideo}
-                  className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                >
-                  {uploadingVideo ? (
-                    <>
+                <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
+                <Button variant="ghost" size="sm" onClick={() => videoInputRef.current?.click()} disabled={uploadingVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                  {uploadingVideo ? <>
                       <div className="h-3 w-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Uploading...
-                    </>
-                  ) : (
-                    <>
+                    </> : <>
                       <Upload className="h-3 w-3 mr-1" />
                       Upload
-                    </>
-                  )}
+                    </>}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-7 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
                   <Plus className="h-3 w-3 mr-1" />
@@ -733,8 +661,7 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
               </div>
             </div>
             <div className="rounded-md bg-muted/20 p-3">
-              {blueprint.example_videos.length === 0 ? (
-                <div className="py-8 text-center">
+              {blueprint.example_videos.length === 0 ? <div className="py-8 text-center">
                   <Video className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
                   <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">
                     No example videos added yet
@@ -742,54 +669,26 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
                   <p className="text-muted-foreground/60 text-xs mt-1">
                     Upload videos or add video URLs as examples for creators
                   </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {blueprint.example_videos.map((video, index) => (
-                    <div key={index} className="space-y-2 group">
+                </div> : <div className="space-y-3">
+                  {blueprint.example_videos.map((video, index) => <div key={index} className="space-y-2 group">
                       <div className="flex items-start gap-2">
                         {/* Video preview if URL is valid */}
-                        {video.url && (
-                          <div className="w-24 h-14 rounded overflow-hidden bg-background/50 flex-shrink-0">
-                            <video 
-                              src={video.url} 
-                              className="w-full h-full object-cover"
-                              muted
-                              preload="metadata"
-                              onError={(e) => {
-                                // Hide video element if URL is not a valid video
-                                (e.target as HTMLVideoElement).style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
+                        {video.url && <div className="w-24 h-14 rounded overflow-hidden bg-background/50 flex-shrink-0">
+                            <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
+                          // Hide video element if URL is not a valid video
+                          (e.target as HTMLVideoElement).style.display = 'none';
+                        }} />
+                          </div>}
                         <div className="flex-1 space-y-1.5">
-                          <Input
-                            value={video.url}
-                            onChange={(e) => updateExampleVideo(index, "url", e.target.value)}
-                            placeholder="Video URL..."
-                            className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                          />
-                          <Input
-                            value={video.description}
-                            onChange={(e) => updateExampleVideo(index, "description", e.target.value)}
-                            placeholder="Why this is a good example..."
-                            className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                          />
+                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
+                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeExampleVideo(index)}
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                        >
+                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </div>
           </section>
 
@@ -802,55 +701,29 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
                 Add
               </Button>
             </div>
-            {blueprint.target_personas.length === 0 ? (
-              <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
+            {blueprint.target_personas.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
                 Define your target audience personas
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {blueprint.target_personas.map((persona, index) => (
-                  <div key={index} className="rounded-md bg-muted/20 p-4 space-y-3 group relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removePersona(index)}
-                      className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30"
-                    >
+              </div> : <div className="space-y-3">
+                {blueprint.target_personas.map((persona, index) => <div key={index} className="rounded-md bg-muted/20 p-4 space-y-3 group relative">
+                    <Button variant="ghost" size="icon" onClick={() => removePersona(index)} className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                     <div className="grid md:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">Name</label>
-                        <Input
-                          value={persona.name}
-                          onChange={(e) => updatePersona(index, "name", e.target.value)}
-                          placeholder="Persona name"
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                        />
+                        <Input value={persona.name} onChange={e => updatePersona(index, "name", e.target.value)} placeholder="Persona name" className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">Target Audience</label>
-                        <Input
-                          value={persona.target_audience}
-                          onChange={(e) => updatePersona(index, "target_audience", e.target.value)}
-                          placeholder="e.g., Males 18-25 interested in fitness"
-                          className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
-                        />
+                        <Input value={persona.target_audience} onChange={e => updatePersona(index, "target_audience", e.target.value)} placeholder="e.g., Males 18-25 interested in fitness" className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm" />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs text-muted-foreground">Description</label>
-                      <Textarea
-                        value={persona.description}
-                        onChange={(e) => updatePersona(index, "description", e.target.value)}
-                        placeholder="Location, interests, pain points, motivations..."
-                        className="min-h-[70px] bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm resize-none"
-                      />
+                      <Textarea value={persona.description} onChange={e => updatePersona(index, "description", e.target.value)} placeholder="Location, interests, pain points, motivations..." className="min-h-[70px] bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm resize-none" />
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </section>
 
         </div>
@@ -858,13 +731,6 @@ export function BlueprintEditor({ blueprintId, brandId }: BlueprintEditorProps) 
         </div>
       </div>
 
-      <CampaignCreationWizard
-        brandId={brandId}
-        brandName={brand?.name || ""}
-        brandLogoUrl={brand?.logo_url || undefined}
-        open={showCampaignWizard}
-        onOpenChange={setShowCampaignWizard}
-      />
-    </>
-  );
+      <CampaignCreationWizard brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} open={showCampaignWizard} onOpenChange={setShowCampaignWizard} />
+    </>;
 }
