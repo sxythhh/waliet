@@ -9,7 +9,7 @@ import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -1384,193 +1384,270 @@ export function WalletTab() {
       </div>
 
       <Card className="bg-card border border-border rounded-xl overflow-hidden">
-        <CardHeader className="px-6 pt-5 pb-4 flex flex-row items-center justify-between">
-          <Collapsible open={filterOpen} onOpenChange={setFilterOpen}>
-            <CollapsibleTrigger asChild>
+        {/* Filter Button */}
+        <div className="px-6 pt-5 pb-4">
+          <DropdownMenu open={filterOpen} onOpenChange={setFilterOpen}>
+            <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-muted px-4 py-2 h-auto">
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="font-medium">Filter</span>
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
               </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="absolute left-6 mt-2 z-50">
-              <div className="bg-popover border border-border rounded-xl shadow-xl p-4 min-w-[280px] space-y-3">
-                <div className="relative">
-                  <Input 
-                    placeholder="Filter..." 
-                    className="bg-background border-border h-10 pr-10"
-                  />
-                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
-                </div>
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => {
-                      setTypeFilter(typeFilter === 'all' ? 'earning' : 'all');
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                  >
-                    <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                      <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                    </div>
-                    <span className="font-medium">Type</span>
-                    {typeFilter !== 'all' && (
-                      <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
-                    )}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setStatusFilter(statusFilter === 'all' ? 'completed' : 'all');
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                  >
-                    <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
-                    <span className="font-medium">Status</span>
-                    {statusFilter !== 'all' && (
-                      <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
-                    )}
-                  </button>
-                  {availableCampaigns.length > 0 && (
-                    <button 
-                      onClick={() => {
-                        setCampaignFilter(campaignFilter === 'all' ? availableCampaigns[0]?.id || 'all' : 'all');
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                    >
-                      <Briefcase className="h-4 w-4" />
-                      <span className="font-medium">Campaign</span>
-                      {campaignFilter !== 'all' && (
-                        <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]">
-                          {availableCampaigns.find(c => c.id === campaignFilter)?.title}
-                        </span>
-                      )}
-                    </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[280px] p-4 space-y-3">
+              <div className="relative">
+                <Input 
+                  placeholder="Filter..." 
+                  className="bg-background border-border h-10 pr-10"
+                />
+                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
+              </div>
+              <div className="space-y-1">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTypeFilter(typeFilter === 'all' ? 'earning' : 'all');
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                >
+                  <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                    <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                  </div>
+                  <span className="font-medium">Type</span>
+                  {typeFilter !== 'all' && (
+                    <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>
                   )}
-                </div>
-                {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setTypeFilter('all');
-                      setStatusFilter('all');
-                      setCampaignFilter('all');
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setStatusFilter(statusFilter === 'all' ? 'completed' : 'all');
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                >
+                  <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                  <span className="font-medium">Status</span>
+                  {statusFilter !== 'all' && (
+                    <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>
+                  )}
+                </button>
+                {availableCampaigns.length > 0 && (
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCampaignFilter(campaignFilter === 'all' ? availableCampaigns[0]?.id || 'all' : 'all');
                     }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}
                   >
-                    Clear filters
-                  </Button>
+                    <Briefcase className="h-4 w-4" />
+                    <span className="font-medium">Program</span>
+                    {campaignFilter !== 'all' && (
+                      <span className="ml-auto text-xs text-muted-foreground truncate max-w-[100px]">
+                        {availableCampaigns.find(c => c.id === campaignFilter)?.title}
+                      </span>
+                    )}
+                  </button>
                 )}
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </CardHeader>
-        <CardContent className="px-6 pb-6 pt-0">
-          {transactions.length === 0 ? <div className="text-center py-12">
+              {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setTypeFilter('all');
+                    setStatusFilter('all');
+                    setCampaignFilter('all');
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Transactions Table */}
+        <div className="px-6 pb-6">
+          {transactions.length === 0 ? (
+            <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No transactions yet</p>
-            </div> : <>
-              <div className="space-y-2">
-                {transactions.filter(transaction => {
-              if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-              if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-              if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-              return true;
-            }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => <div key={transaction.id} onClick={() => {
-              setSelectedTransaction(transaction);
-              setTransactionSheetOpen(true);
-            }} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 dark:bg-[#0a0a0a] cursor-pointer hover:bg-muted/50 dark:hover:bg-[#0a0a0a]/80 transition-colors">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {/* Icon */}
-                      <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ${transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? '' : transaction.type === 'earning' ? 'bg-green-500/15' : transaction.type === 'balance_correction' ? 'bg-orange-500/15' : transaction.type === 'referral' ? 'bg-purple-500/15' : transaction.type === 'transfer_received' ? 'bg-blue-500/15' : transaction.type === 'transfer_sent' ? 'bg-red-500/15' : 'bg-red-500/15'}`}>
-                        {transaction.type === 'earning' && transaction.campaign?.brand_logo_url ? <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" /> : transaction.type === 'earning' ? <ArrowDownLeft className="h-4 w-4 text-green-500" /> : transaction.type === 'balance_correction' ? <RefreshCw className="h-4 w-4 text-orange-500" /> : transaction.type === 'referral' ? <Gift className="h-4 w-4 text-purple-500" /> : transaction.type === 'transfer_received' ? <ArrowDownLeft className="h-4 w-4 text-blue-500" /> : transaction.type === 'transfer_sent' ? <ArrowUpRight className="h-4 w-4 text-red-500" /> : <ArrowUpRight className="h-4 w-4 text-red-500" />}
-                      </div>
-                      
-                      {/* Details */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {transaction.type === 'earning' ? <>
-                              Payment
-                              {transaction.campaign && <span className="text-muted-foreground font-normal"> · {transaction.campaign.title}</span>}
-                            </> : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Withdrawal'}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs text-muted-foreground">
-                            {(() => {
-                        const now = new Date();
-                        const diffInHours = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60 * 60));
-                        if (diffInHours < 24) {
-                          if (diffInHours < 1) {
-                            const diffInMinutes = Math.floor((now.getTime() - transaction.date.getTime()) / (1000 * 60));
-                            return diffInMinutes < 1 ? 'Just now' : `${diffInMinutes}m ago`;
-                          }
-                          return `${diffInHours}h ago`;
-                        }
-                        return format(transaction.date, 'MMM dd, yyyy');
-                      })()}
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-t border-border hover:bg-transparent">
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Period</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Program</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Status</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">
+                        <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Initiated
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12">Paid</TableHead>
+                      <TableHead className="text-muted-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.filter(transaction => {
+                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                      return true;
+                    }).slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(transaction => (
+                      <TableRow 
+                        key={transaction.id} 
+                        onClick={() => {
+                          setSelectedTransaction(transaction);
+                          setTransactionSheetOpen(true);
+                        }}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors border-border"
+                      >
+                        {/* Period */}
+                        <TableCell className="py-4 text-sm">
+                          {format(transaction.date, 'MMM d, yyyy')}
+                        </TableCell>
+                        
+                        {/* Program */}
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            {transaction.campaign?.brand_logo_url ? (
+                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-foreground">
+                                <img 
+                                  src={transaction.campaign.brand_logo_url} 
+                                  alt={transaction.campaign.brand_name || 'Brand'} 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs text-background font-medium">
+                                  {transaction.type === 'earning' ? 'P' : 
+                                   transaction.type === 'withdrawal' ? 'W' : 
+                                   transaction.type === 'referral' ? 'R' : 
+                                   transaction.type === 'balance_correction' ? 'C' : 'T'}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-sm font-medium">
+                              {transaction.campaign?.title || 
+                               (transaction.type === 'earning' ? 'Payment' : 
+                                transaction.type === 'withdrawal' ? 'Withdrawal' : 
+                                transaction.type === 'referral' ? 'Referral' : 
+                                transaction.type === 'balance_correction' ? 'Correction' : 
+                                transaction.type === 'transfer_sent' ? 'Transfer Sent' : 'Transfer Received')}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Status */}
+                        <TableCell className="py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                            transaction.status === 'completed' 
+                              ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+                              : transaction.status === 'pending' 
+                              ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' 
+                              : transaction.status === 'in_transit'
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                              : transaction.status === 'rejected'
+                              ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                              : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {transaction.status === 'completed' && <Check className="h-3 w-3" />}
+                            {transaction.status === 'pending' && <Clock className="h-3 w-3" />}
+                            {transaction.status === 'in_transit' && <Hourglass className="h-3 w-3" />}
+                            {transaction.status === 'rejected' && <X className="h-3 w-3" />}
+                            {transaction.status === 'completed' ? 'Completed' : 
+                             transaction.status === 'pending' ? 'Pending' : 
+                             transaction.status === 'in_transit' ? 'In Transit' : 
+                             transaction.status === 'rejected' ? 'Rejected' : 
+                             transaction.status?.charAt(0).toUpperCase() + transaction.status?.slice(1)}
                           </span>
-                          <span className="text-muted-foreground/50">·</span>
-                          {transaction.status && <span className={`text-xs flex items-center gap-1 ${transaction.status === 'completed' ? 'text-green-500' : transaction.status === 'in_transit' ? 'text-blue-500' : transaction.status === 'rejected' ? 'text-red-500' : 'text-yellow-500'}`}>
-                              {transaction.status === 'in_transit' && <Hourglass className="h-2.5 w-2.5" />}
-                              {transaction.status === 'pending' && <Clock className="h-2.5 w-2.5" />}
-                              {transaction.status === 'completed' && <Check className="h-2.5 w-2.5" />}
-                              {transaction.status === 'rejected' && <X className="h-2.5 w-2.5" />}
-                              {transaction.status === 'in_transit' ? 'In Transit' : transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1).toLowerCase()}
-                            </span>}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Amount */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-sm font-semibold tabular-nums ${transaction.status === 'rejected' ? 'text-red-500' : transaction.status === 'pending' ? 'text-yellow-500' : transaction.type === 'earning' || transaction.type === 'transfer_received' ? 'text-green-500' : transaction.type === 'balance_correction' ? transaction.amount >= 0 ? 'text-green-500' : 'text-red-500' : 'text-red-500'}`}>
-                        {transaction.type === 'earning' || transaction.type === 'transfer_received' ? '+' : transaction.amount < 0 ? '' : '+'}
-                        ${Math.abs(transaction.amount).toFixed(2)}
-                      </span>
-                      
-                    </div>
-                  </div>)}
+                        </TableCell>
+                        
+                        {/* Initiated */}
+                        <TableCell className="py-4 text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground">
+                          {format(transaction.date, 'MMM d')}
+                        </TableCell>
+                        
+                        {/* Paid */}
+                        <TableCell className="py-4 text-sm text-muted-foreground">
+                          {transaction.status === 'completed' ? (
+                            <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
+                              {format(transaction.date, 'MMM d')}
+                            </span>
+                          ) : '-'}
+                        </TableCell>
+                        
+                        {/* Amount */}
+                        <TableCell className="py-4 text-right">
+                          <span className="text-sm font-semibold tabular-nums">
+                            ${Math.abs(transaction.amount).toFixed(2)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
               
               {/* Pagination Controls */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3">
-                <p className="text-xs text-muted-foreground">
-                  Showing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
-                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                return true;
-              }).length)} - {Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
-                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                return true;
-              }).length)} of {transactions.filter(transaction => {
-                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                return true;
-              }).length}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground">
+                  Viewing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length)}-{Math.min(currentPage * itemsPerPage, transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length)} of {transactions.filter(transaction => {
+                    if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                    if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                    if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                    return true;
+                  }).length} payouts
                 </p>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground">
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">Previous</span>
+                <div className="flex gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} 
+                    disabled={currentPage === 1} 
+                    className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    Previous
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
-                if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
-                if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
-                if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
-                return true;
-              }).length} className="gap-1 flex-1 sm:flex-none text-muted-foreground hover:text-foreground">
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(prev => prev + 1)} 
+                    disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                      if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
+                      if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
+                      if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
+                      return true;
+                    }).length} 
+                    className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    Next
                   </Button>
                 </div>
               </div>
-            </>}
-        </CardContent>
+            </>
+          )}
+        </div>
       </Card>
 
       {/* Balance Cards - Removed duplicate */}
