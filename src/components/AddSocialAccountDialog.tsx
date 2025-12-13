@@ -253,11 +253,11 @@ export function AddSocialAccountDialog({
     setTimeRemaining(VERIFICATION_TIME_SECONDS);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
+      <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
         {step === "input" ? (
           <div className="flex flex-col">
             {/* Header */}
-            <div className="px-6 pt-6 pb-4">
+            <div className="px-5 pt-5 pb-3">
               <div className="flex items-center gap-3 mb-1">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   {getPlatformIcon(selectedPlatform, "h-5 w-5")}
@@ -274,7 +274,7 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Content */}
-            <div className="px-6 pb-2 space-y-4">
+            <div className="px-5 pb-2 space-y-4">
               {/* Platform Selection */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
@@ -321,11 +321,11 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 mt-2 border-t border-border/50 flex gap-2">
+            <div className="px-5 py-4 mt-2 border-t border-border/50 flex gap-2">
               <Button 
                 variant="ghost" 
                 onClick={() => onOpenChange(false)} 
-                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm"
+                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground"
               >
                 Cancel
               </Button>
@@ -341,7 +341,7 @@ export function AddSocialAccountDialog({
         ) : (
           <div className="flex flex-col">
             {/* Header */}
-            <div className="px-6 pt-6 pb-4 flex items-center justify-between">
+            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
                   {getPlatformIcon(selectedPlatform, "h-5 w-5")}
@@ -362,7 +362,7 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Verification Code */}
-            <div className="px-6 pb-4">
+            <div className="px-5 pb-4">
               <div className="bg-muted/30 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
@@ -402,16 +402,16 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Progress */}
-            <div className="px-6 pb-4">
+            <div className="px-5 pb-4">
               <Progress value={progressPercent} className="h-1 bg-muted/30" />
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border/50 flex gap-2">
+            <div className="px-5 py-4 border-t border-border/50 flex gap-2">
               <Button 
                 variant="ghost" 
                 onClick={handleBack} 
-                className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm"
+                className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
