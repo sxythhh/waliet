@@ -100,10 +100,12 @@ interface MetricsData {
   likes: number;
   shares: number;
   bookmarks: number;
+  videos: number;
   dailyViews: number;
   dailyLikes: number;
   dailyShares: number;
   dailyBookmarks: number;
+  dailyVideos: number;
 }
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 const extractPlatformId = (adLink: string, platform: string): string | null => {
@@ -125,12 +127,13 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
     return null;
   }
 };
-type MetricType = 'views' | 'likes' | 'shares' | 'bookmarks';
+type MetricType = 'views' | 'likes' | 'shares' | 'bookmarks' | 'videos';
 const METRIC_COLORS: Record<MetricType, string> = {
   views: '#3b82f6',
   likes: '#ef4444',
   shares: '#22c55e',
-  bookmarks: '#f59e0b'
+  bookmarks: '#f59e0b',
+  videos: '#a855f7'
 };
 export function CampaignHomeTab({
   campaignId,
@@ -317,6 +320,7 @@ export function CampaignHomeTab({
             const likes = m.total_likes || 0;
             const shares = m.total_shares || 0;
             const bookmarks = m.total_bookmarks || 0;
+            const videos = m.total_videos || 0;
             const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
             
             return {
@@ -325,10 +329,12 @@ export function CampaignHomeTab({
               likes,
               shares,
               bookmarks,
+              videos,
               dailyViews: Math.max(0, prevRecord ? views - (prevRecord.total_views || 0) : views),
               dailyLikes: Math.max(0, prevRecord ? likes - (prevRecord.total_likes || 0) : likes),
               dailyShares: Math.max(0, prevRecord ? shares - (prevRecord.total_shares || 0) : shares),
-              dailyBookmarks: Math.max(0, prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks)
+              dailyBookmarks: Math.max(0, prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks),
+              dailyVideos: Math.max(0, prevRecord ? videos - (prevRecord.total_videos || 0) : videos)
             };
           });
           setMetricsData(formattedMetrics);
@@ -547,7 +553,7 @@ export function CampaignHomeTab({
         <div className="flex items-center justify-between mb-5">
           {/* Metric Toggles */}
           <div className="flex items-center gap-2">
-            {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
+            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
                 <div className={`w-2 h-2 rounded-full transition-opacity ${activeMetrics.includes(metric) ? 'opacity-100' : 'opacity-40'}`} style={{
               backgroundColor: METRIC_COLORS[metric]
             }} />
@@ -575,7 +581,7 @@ export function CampaignHomeTab({
             bottom: 0
           }}>
                 <defs>
-                  {(['views', 'likes', 'shares', 'bookmarks'] as MetricType[]).map(metric => <linearGradient key={metric} id={`gradient-${metric}`} x1="0" y1="0" x2="0" y2="1">
+                  {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <linearGradient key={metric} id={`gradient-${metric}`} x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={METRIC_COLORS[metric]} stopOpacity={0.2} />
                       <stop offset="100%" stopColor={METRIC_COLORS[metric]} stopOpacity={0} />
                     </linearGradient>)}
