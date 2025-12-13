@@ -782,7 +782,7 @@ export function CampaignsTab({
 
       {/* Boost Applications Section */}
       {boostApplications.length > 0 && <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-muted-foreground">Boost Applications</h3>
+          <h3 className="text-lg font-semibold text-primary-foreground">Boost Applications</h3>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {boostApplications.map(application => <Card key={application.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border">
                 {/* Banner Image */}
@@ -793,11 +793,9 @@ export function CampaignsTab({
                 <CardContent className="p-4 flex-1 flex flex-col gap-4 font-['Inter'] tracking-[-0.5px]">
                   {/* Brand + Title Row */}
                   <div className="flex items-center gap-3">
-                    {application.boost_campaigns.brands?.logo_url && (
-                      <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+                    {application.boost_campaigns.brands?.logo_url && <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                         <img src={application.boost_campaigns.brands.logo_url} alt={application.boost_campaigns.brands.name || ''} className="w-full h-full object-cover" />
-                      </div>
-                    )}
+                      </div>}
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-semibold line-clamp-1 leading-tight">
                         {application.boost_campaigns.title}
@@ -806,10 +804,7 @@ export function CampaignsTab({
                         {application.boost_campaigns.brands?.name}
                       </p>
                     </div>
-                    <Badge 
-                      variant={application.status === 'accepted' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} 
-                      className="flex-shrink-0 text-[10px] font-medium px-2 py-0.5"
-                    >
+                    <Badge variant={application.status === 'accepted' ? 'default' : application.status === 'rejected' ? 'destructive' : 'secondary'} className="flex-shrink-0 text-[10px] font-medium px-2 py-0.5">
                       {application.status === 'pending' && 'Pending'}
                       {application.status === 'accepted' && 'Accepted'}
                       {application.status === 'rejected' && 'Rejected'}
