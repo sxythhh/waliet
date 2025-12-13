@@ -817,7 +817,7 @@ export function ProfileTab() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-0">
+        <CardContent className="px-[20px]">
             {socialAccounts.length === 0 ? <div className="text-center py-12">
               
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
