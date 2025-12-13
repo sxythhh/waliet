@@ -5,8 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Use the existing subscription plan - we'll override the price for top-ups
-const PLAN_ID = "plan_DU4ba3ik2UHVZ";
+// Whop company ID for Virality
+const WHOP_COMPANY_ID = "biz_QjHKs1kOH9Sxrl";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,17 +89,27 @@ Deno.serve(async (req) => {
       throw new Error("Brand not found");
     }
 
-    console.log(`Creating checkout for boost ${boostId} with amount $${amount}`);
+    console.log(`Creating checkout configuration for boost ${boostId} with amount $${amount}`);
 
-    // Create checkout session with the existing plan using v2 API
-    const checkoutResponse = await fetch("https://api.whop.com/v2/checkout_sessions", {
+    // Create checkout configuration with dynamic one-time plan
+    const checkoutResponse = await fetch("https://api.whop.com/api/v5/checkout_configurations", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${whopApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        plan_id: PLAN_ID,
+        plan: {
+          company_id: WHOP_COMPANY_ID,
+          currency: "usd",
+          plan_type: "one_time",
+          initial_price: amount,
+          visibility: "hidden",
+          product: {
+            external_identifier: `boost_topup_${boostId}`,
+            title: `Boost Top-Up: ${boost.title}`,
+          }
+        },
         redirect_url: `https://app.virality.gg/dashboard?workspace=${brand.slug}&tab=campaigns&topup=success&boostId=${boostId}`,
         metadata: {
           boost_id: boostId,
@@ -124,13 +134,10 @@ Deno.serve(async (req) => {
     const checkoutData = JSON.parse(checkoutText);
     console.log("Whop checkout created:", checkoutData);
 
-    // The checkout URL will be for the standard plan price
-    // We'll need to handle the actual amount in the webhook based on metadata
     return new Response(
       JSON.stringify({ 
-        checkoutUrl: checkoutData.purchase_url || checkoutData.url,
+        checkoutUrl: checkoutData.url,
         sessionId: checkoutData.id,
-        note: "Top-up amount will be processed from metadata after payment",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
