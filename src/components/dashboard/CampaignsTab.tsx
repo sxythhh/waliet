@@ -536,37 +536,32 @@ export function CampaignsTab({
 
       {/* Stats Cards Skeleton */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-card rounded-xl border p-4 space-y-3">
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-card rounded-xl border p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Skeleton className="w-8 h-8 rounded-lg" />
               <Skeleton className="h-4 w-20" />
             </div>
             <Skeleton className="h-7 w-16" />
-          </div>
-        ))}
+          </div>)}
       </div>
 
       {/* Actions Section Skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border">
+        {[...Array(3)].map((_, i) => <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border">
             <Skeleton className="w-10 h-10 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-32" />
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-3/4" />
             </div>
-          </div>
-        ))}
+          </div>)}
       </div>
 
       {/* Campaigns Grid Skeleton */}
       <div className="space-y-3">
         <Skeleton className="h-6 w-40" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-card rounded-lg border overflow-hidden">
+          {[...Array(6)].map((_, i) => <div key={i} className="bg-card rounded-lg border overflow-hidden">
               <Skeleton className="h-32 w-full rounded-none" />
               <div className="p-3 space-y-3">
                 <div className="flex items-center gap-2.5">
@@ -594,8 +589,7 @@ export function CampaignsTab({
                   <Skeleton className="h-8 w-16 rounded-md" />
                 </div>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
       </div>
     </div>;
@@ -969,7 +963,7 @@ export function CampaignsTab({
           </DialogHeader>
         </div>
         
-        <div className="px-6 pb-6 space-y-2">
+        <div className="pb-6 space-y-2 px-0">
           <button onClick={() => {
             setDialogOpen(false);
             navigate("/dashboard?tab=profile");
