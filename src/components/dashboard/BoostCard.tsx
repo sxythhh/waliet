@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
-import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb, MoreVertical } from "lucide-react";
+import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -199,9 +199,15 @@ export function BoostCard({ boost }: BoostCardProps) {
   });
   const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
 
+  const requiredPosts = Math.max(0, boost.videos_per_month - thisMonthSubmissions.length);
+  const totalQuota = boost.videos_per_month;
+  const earnedPercent = (approvedThisMonth / totalQuota) * 100;
+  const pendingPercent = (pendingThisMonth / totalQuota) * 100;
+  const requiredPercent = (requiredPosts / totalQuota) * 100;
+
   return (
     <>
-      <Card className="bg-card border overflow-hidden">
+      <Card className="bg-card border overflow-hidden font-inter tracking-[-0.5px]">
         <CardContent className="p-4 space-y-4">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
@@ -219,36 +225,15 @@ export function BoostCard({ boost }: BoostCardProps) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] truncate">{boost.title}</h3>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 flex-shrink-0 text-[10px]">
-                    LIVE
-                  </Badge>
-                </div>
+                <h3 className="text-sm font-semibold truncate">{boost.title}</h3>
                 <p className="text-xs text-muted-foreground truncate">{boost.brands?.name}</p>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-center text-xs">
-              <div>
-                <p className="font-bold">${earnedThisMonth.toFixed(0)}</p>
-                <p className="text-muted-foreground">Earned</p>
-              </div>
-              <div>
-                <p className="font-bold">{approvedThisMonth}</p>
-                <p className="text-muted-foreground">Approved</p>
-              </div>
-              <div>
-                <p className="font-bold">{pendingThisMonth}</p>
-                <p className="text-muted-foreground">Pending</p>
               </div>
             </div>
 
             {/* Rate + Submit */}
             <div className="flex items-center gap-2">
               <div className="bg-muted rounded-lg px-3 py-1.5 text-xs font-medium">
-                ${payoutPerVideo.toFixed(0)}/video
+                ${boost.monthly_retainer.toFixed(0)}/month
               </div>
               <Button 
                 onClick={() => setSubmitDialogOpen(true)}
@@ -258,9 +243,47 @@ export function BoostCard({ boost }: BoostCardProps) {
               >
                 Submit post
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
+              {earnedPercent > 0 && (
+                <div 
+                  className="h-full bg-green-500 transition-all" 
+                  style={{ width: `${earnedPercent}%` }} 
+                />
+              )}
+              {pendingPercent > 0 && (
+                <div 
+                  className="h-full bg-yellow-500 transition-all" 
+                  style={{ width: `${pendingPercent}%` }} 
+                />
+              )}
+              {requiredPercent > 0 && (
+                <div 
+                  className="h-full bg-muted-foreground/20 transition-all" 
+                  style={{ width: `${requiredPercent}%` }} 
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">Earned</span>
+                <span className="font-semibold">{approvedThisMonth}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <span className="text-muted-foreground">Submitted</span>
+                <span className="font-semibold">{pendingThisMonth}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-muted-foreground/20" />
+                <span className="text-muted-foreground">Still required</span>
+                <span className="font-semibold">{requiredPosts}</span>
+              </div>
             </div>
           </div>
 
