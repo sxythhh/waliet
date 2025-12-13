@@ -1053,7 +1053,7 @@ export function CampaignCreationWizard({
               </div>
 
               {/* Bottom Action Bar */}
-              <div className="border-t border-border lg:px-16 py-4 bg-neutral-950/0 px-[12px]">
+              <div className="border-t border-border lg:px-16 bg-neutral-950/0 py-0 px-[20px]">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                   {!isEditMode ? <Button type="button" variant="ghost" onClick={handleSaveDraft} disabled={isSubmitting} className="gap-2 tracking-[-0.5px]" style={{
                   fontFamily: 'Inter, sans-serif'
