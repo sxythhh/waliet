@@ -868,7 +868,7 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
 
             {/* Redesigned Message Input */}
             <div className="p-4 md:p-6 border-t border-[#e0e0e0] dark:border-[#1a1a1a] bg-background">
-              <div className="rounded-2xl border border-[#e0e0e0] dark:border-[#1a1a1a] bg-card shadow-sm overflow-hidden">
+              <div className="rounded-2xl border border-[#e0e0e0] dark:border-[#1a1a1a] overflow-hidden">
                 <Textarea
                   placeholder="Type a message..."
                   value={messageInput}
@@ -879,22 +879,22 @@ export function CreatorsTab({ brandId }: CreatorsTabProps) {
                       sendMessage();
                     }
                   }}
-                  className="border-0 focus-visible:ring-0 resize-none min-h-[80px] text-sm px-4 pt-4 pb-2"
+                  className="border-0 bg-transparent focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none resize-none min-h-[80px] text-sm px-4 pt-4 pb-2"
                   rows={3}
                 />
                 <div className="flex items-center justify-between px-4 pb-4">
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                      <Smile className="h-4 w-4" />
+                  <div className="flex items-center gap-0.5">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
+                      <Smile className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                      <Bold className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
+                      <Bold className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                      <Italic className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
+                      <Italic className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                      <Link className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-muted">
+                      <Link className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                   <Button
