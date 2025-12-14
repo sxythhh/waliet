@@ -226,7 +226,7 @@ export function CreatorChatWidget() {
           // Empty State
           <div className="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <MessageCircle className="w-8 h-8 text-muted-foreground" />
+                      <img src={mailIcon} alt="Mail" className="w-8 h-8 opacity-50" />
                     </div>
                     <h4 className="font-medium text-base font-inter tracking-[-0.5px] mb-2">No messages yet</h4>
                     <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
