@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Users, ArrowRight, Check, X, Lock, FileText } from "lucide-react";
+import { CalendarIcon, Upload, DollarSign, Users, ArrowRight, Check, X, Lock, FileText, Video } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -292,25 +293,59 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                     <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
                   </div>
 
+                  {/* Payment Schedule - First */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Monthly Retainer</Label>
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.monthly_retainer}
-                        onChange={(e) => setFormData({ ...formData, monthly_retainer: e.target.value })}
-                        placeholder="500"
-                        className="pl-8 h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]"
-                      />
+                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
+                    <Select
+                      value={formData.payment_schedule}
+                      onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
+                    >
+                      <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly" className="font-inter tracking-[-0.5px]">Weekly</SelectItem>
+                        <SelectItem value="biweekly" className="font-inter tracking-[-0.5px]">Bi-weekly</SelectItem>
+                        <SelectItem value="monthly" className="font-inter tracking-[-0.5px]">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Payment Amount with Slider */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
+                      <div className="relative w-24">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
+                        <Input
+                          type="number"
+                          min="10"
+                          max="10000"
+                          value={formData.monthly_retainer}
+                          onChange={(e) => setFormData({ ...formData, monthly_retainer: e.target.value })}
+                          placeholder="500"
+                          className="pl-7 h-9 bg-muted/30 border-0 text-right pr-3 font-geist tracking-[-0.5px] text-sm"
+                        />
+                      </div>
+                    </div>
+                    <Slider
+                      value={[parseFloat(formData.monthly_retainer) || 100]}
+                      onValueChange={(value) => setFormData({ ...formData, monthly_retainer: value[0].toString() })}
+                      min={10}
+                      max={1000}
+                      step={10}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
+                      <span>$10</span>
+                      <span>$1,000+</span>
                     </div>
                   </div>
 
+                  {/* Videos and Max Creators */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos/Month</Label>
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -333,31 +368,23 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
-                    <Select
-                      value={formData.payment_schedule}
-                      onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
-                    >
-                      <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly" className="font-inter tracking-[-0.5px]">Weekly</SelectItem>
-                        <SelectItem value="biweekly" className="font-inter tracking-[-0.5px]">Bi-weekly</SelectItem>
-                        <SelectItem value="monthly" className="font-inter tracking-[-0.5px]">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Payout per video calculation */}
-                  {formData.monthly_retainer && formData.videos_per_month && (
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/10">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Per video payout</span>
-                        <span className="text-lg font-semibold text-primary font-geist tracking-[-0.5px]">
-                          ${(parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)}
-                        </span>
+                  {/* Per Video Payout Display */}
+                  {formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 && (
+                    <div className="p-4 rounded-xl bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Video className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px] uppercase">Per Video</p>
+                          <p className="text-xl font-semibold text-foreground font-geist tracking-[-0.5px]">
+                            ${(parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">{formData.videos_per_month} videos</p>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">@ ${formData.monthly_retainer}/{formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'biweekly' ? '2wk' : 'mo'}</p>
+                        </div>
                       </div>
                     </div>
                   )}
