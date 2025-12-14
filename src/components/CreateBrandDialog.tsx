@@ -132,18 +132,9 @@ export function CreateBrandDialog({
       {!hideTrigger && <DialogTrigger asChild>
           
         </DialogTrigger>}
-      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-[5px] overflow-hidden">
-        {/* Header */}
-        <div className="relative px-5 pb-4 pt-4">
-          <DialogHeader className="relative">
-            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white">
-              Create Brand
-            </DialogTitle>
-          </DialogHeader>
-        </div>
-
+      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="px-5 pb-5 space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-5 space-y-5">
             {/* Logo Upload + Brand Name in same row */}
             <div className="flex items-center gap-3">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
