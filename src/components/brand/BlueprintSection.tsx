@@ -1,7 +1,6 @@
 import { useState, ReactNode } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 
 interface BlueprintSectionProps {
@@ -37,8 +36,9 @@ export function BlueprintSection({
   } = useSortable({ id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     transition,
+    opacity: isDragging ? 0.4 : 1,
   };
 
   const getStatusBadge = () => {
