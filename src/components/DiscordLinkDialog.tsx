@@ -94,7 +94,7 @@ export function DiscordLinkDialog({
   };
   return <Dialog open={open} onOpenChange={setOpen}>
       {!isLinked && <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0">
+          <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-2xl">
             <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" />
             Connect Discord
           </Button>
