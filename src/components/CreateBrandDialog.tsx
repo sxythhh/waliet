@@ -155,7 +155,7 @@ export function CreateBrandDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
             {/* Header */}
-            <div className="px-6 pt-6 pb-4">
+            <div className="px-6 pt-6 pb-0">
               <DialogHeader className="space-y-1.5">
                 <DialogTitle className="text-xl font-semibold tracking-tight font-inter">
                   Create Brand
@@ -167,7 +167,7 @@ export function CreateBrandDialog({
             </div>
 
             {/* Content */}
-            <div className="px-6 pb-6 space-y-6">
+            <div className="px-6 py-6 space-y-6">
               {/* Logo Section */}
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
@@ -200,7 +200,7 @@ export function CreateBrandDialog({
                       variant="ghost"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground"
+                      className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
                       <Upload className="h-3.5 w-3.5" />
                       Upload Image
@@ -243,7 +243,7 @@ export function CreateBrandDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 flex items-center justify-end gap-3">
+            <div className="px-6 py-0 pb-6 flex items-center justify-end gap-3">
               <Button 
                 type="button" 
                 variant="ghost" 
