@@ -12,8 +12,9 @@ import { BoostDetailView } from "@/components/brand/BoostDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Plus, BarChart3 } from "lucide-react";
+import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 type CampaignTypeFilter = "all" | "campaigns" | "boosts";
 interface Campaign {
@@ -70,6 +71,18 @@ export function BrandCampaignsTab({
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<CampaignTypeFilter>("all");
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+
+  // Show beta gate for non-admin users with inactive subscription
+  const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
+
+  const handleBackToCreator = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("workspace", "creator");
+    newParams.delete("tab");
+    setSearchParams(newParams);
+  };
+
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -235,7 +248,32 @@ export function BrandCampaignsTab({
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-  return <div className={selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}>
+  return <div className={`relative ${selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}`}>
+      {/* Beta Gate Overlay for non-admin users with inactive subscription */}
+      {showBetaGate && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
+          <div className="text-center space-y-6 max-w-md mx-auto px-6">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+              <Lock className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold font-inter tracking-[-0.5px] text-foreground">
+                This Feature is still in BETA
+              </h2>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                Come back soon.
+              </p>
+            </div>
+            <Button 
+              onClick={handleBackToCreator}
+              className="px-6"
+            >
+              Back to Creator Dashboard
+            </Button>
+          </div>
+        </div>
+      )}
+
       {selectedBoostId ? <BoostDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
