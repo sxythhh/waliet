@@ -1173,36 +1173,34 @@ export function BlueprintEditor({
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
-          <div className="sticky top-0 z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 sm:py-4 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-3 sm:py-4 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <button
                 onClick={goBack}
-                className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity"
+                className="flex items-center gap-1 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity shrink-0"
               >
                 <ArrowLeft className="h-4 w-4 text-white" />
-                <span className="hidden sm:inline">Return</span>
               </button>
-              <div className="h-4 w-px bg-border/50 hidden sm:block" />
+              <div className="h-4 w-px bg-border/50 shrink-0" />
               {brand?.logo_url && (
-                <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover" />
+                <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0" />
               )}
-              <span className="text-muted-foreground text-xs sm:text-sm font-inter tracking-[-0.5px] hidden sm:inline">{brand?.name}</span>
-              <span className="text-muted-foreground/50 hidden sm:inline">/</span>
+              <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input
                 value={blueprint.title}
                 onChange={e => updateBlueprint({ title: e.target.value })}
-                className="h-8 w-full sm:w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input text-sm"
+                className="h-8 flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input text-sm"
                 placeholder="Untitled"
               />
               {saving && (
-                <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px]">
+                <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px] shrink-0">
                   Saving...
                 </span>
               )}
             </div>
             <button
               onClick={activateBlueprint}
-              className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity w-full sm:w-auto"
+              className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0"
             >
               Activate Blueprint
             </button>
