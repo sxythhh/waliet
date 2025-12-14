@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, ArrowUp, Plus } from "lucide-react";
+import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useTheme } from "@/components/ThemeProvider";
@@ -18,6 +18,22 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+
+interface Blueprint {
+  id: string;
+  title: string;
+  content: string | null;
+  hooks: any[] | null;
+  talking_points: any[] | null;
+  dos_and_donts: any | null;
+  call_to_action: string | null;
+  hashtags: string[] | null;
+  brand_voice: string | null;
+  content_guidelines: string | null;
+  example_videos: any[] | null;
+  assets: any[] | null;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -39,6 +55,7 @@ interface Campaign {
   requires_application?: boolean;
   preview_url?: string | null;
   is_infinite_budget?: boolean;
+  blueprint_id?: string | null;
   brands?: {
     logo_url: string;
   };
@@ -65,6 +82,8 @@ export function JoinCampaignSheet({
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
+  const [loadingBlueprint, setLoadingBlueprint] = useState(false);
   const navigate = useNavigate();
   const {
     resolvedTheme
@@ -89,8 +108,33 @@ export function JoinCampaignSheet({
     if (open) {
       checkAuthentication();
       loadSocialAccounts();
+      loadBlueprint();
     }
-  }, [open]);
+  }, [open, campaign?.blueprint_id]);
+
+  const loadBlueprint = async () => {
+    if (!campaign?.blueprint_id) {
+      setBlueprint(null);
+      return;
+    }
+    
+    setLoadingBlueprint(true);
+    try {
+      const { data, error } = await supabase
+        .from('blueprints')
+        .select('*')
+        .eq('id', campaign.blueprint_id)
+        .single();
+      
+      if (error) throw error;
+      setBlueprint(data as Blueprint);
+    } catch (error) {
+      console.error('Error loading blueprint:', error);
+      setBlueprint(null);
+    } finally {
+      setLoadingBlueprint(false);
+    }
+  };
   const checkAuthentication = async () => {
     try {
       const {
@@ -455,6 +499,179 @@ export function JoinCampaignSheet({
                     </button>
                   </div>}
               </div>}
+
+            {/* Blueprint Content Display */}
+            {blueprint && (
+              <div className="space-y-4">
+                {/* Hooks Section */}
+                {blueprint.hooks && blueprint.hooks.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Hooks</span>
+                    </div>
+                    <div className="space-y-2">
+                      {blueprint.hooks.map((hook: any, idx: number) => (
+                        <div key={idx} className="text-sm text-foreground/80 pl-6" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          • {typeof hook === 'string' ? hook : hook.text}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Talking Points Section */}
+                {blueprint.talking_points && blueprint.talking_points.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Talking Points</span>
+                    </div>
+                    <div className="space-y-2">
+                      {blueprint.talking_points.map((point: any, idx: number) => (
+                        <div key={idx} className="text-sm text-foreground/80 pl-6" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          • {typeof point === 'string' ? point : point.text}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Do's and Don'ts Section */}
+                {blueprint.dos_and_donts && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Do's */}
+                    {blueprint.dos_and_donts.dos && blueprint.dos_and_donts.dos.length > 0 && (
+                      <div className="rounded-xl bg-emerald-500/10 p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ThumbsUp className="w-4 h-4 text-emerald-500" />
+                          <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Do's</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {blueprint.dos_and_donts.dos.map((item: string, idx: number) => (
+                            <div key={idx} className="text-xs text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              • {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {/* Don'ts */}
+                    {blueprint.dos_and_donts.donts && blueprint.dos_and_donts.donts.length > 0 && (
+                      <div className="rounded-xl bg-red-500/10 p-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <ThumbsDown className="w-4 h-4 text-red-500" />
+                          <span className="text-sm font-medium text-red-600 dark:text-red-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Don'ts</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {blueprint.dos_and_donts.donts.map((item: string, idx: number) => (
+                            <div key={idx} className="text-xs text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              • {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Call to Action */}
+                {blueprint.call_to_action && (
+                  <div className="rounded-xl bg-primary/10 p-4 space-y-2">
+                    <span className="text-sm font-medium text-primary" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Call to Action</span>
+                    <p className="text-sm text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.call_to_action}</p>
+                  </div>
+                )}
+
+                {/* Hashtags */}
+                {blueprint.hashtags && blueprint.hashtags.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Hash className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Hashtags</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {blueprint.hashtags.map((tag: string, idx: number) => (
+                        <span key={idx} className="px-2 py-1 text-xs bg-muted rounded-md text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          #{tag.replace(/^#/, '')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Brand Voice */}
+                {blueprint.brand_voice && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Mic className="w-4 h-4 text-purple-500" />
+                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Brand Voice</span>
+                    </div>
+                    <p className="text-sm text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.brand_voice}</p>
+                  </div>
+                )}
+
+                {/* Content Guidelines */}
+                {blueprint.content_guidelines && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Content Guidelines</span>
+                    <p className="text-sm text-foreground/80 whitespace-pre-line" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.content_guidelines}</p>
+                  </div>
+                )}
+
+                {/* Example Videos */}
+                {blueprint.example_videos && blueprint.example_videos.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Example Videos</span>
+                    <div className="space-y-2">
+                      {blueprint.example_videos.map((video: any, idx: number) => (
+                        <a 
+                          key={idx} 
+                          href={typeof video === 'string' ? video : video.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                          style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {typeof video === 'string' ? `Video ${idx + 1}` : (video.title || `Video ${idx + 1}`)}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assets */}
+                {blueprint.assets && blueprint.assets.length > 0 && (
+                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Assets</span>
+                    <div className="space-y-2">
+                      {blueprint.assets.map((asset: any, idx: number) => (
+                        <a 
+                          key={idx} 
+                          href={typeof asset === 'string' ? asset : asset.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                          style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          {typeof asset === 'string' ? `Asset ${idx + 1}` : (asset.label || `Asset ${idx + 1}`)}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Loading Blueprint State */}
+            {loadingBlueprint && (
+              <div className="space-y-3">
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+              </div>
+            )}
 
             {/* Budget & RPM */}
             {!campaign.is_infinite_budget}
