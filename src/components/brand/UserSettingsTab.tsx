@@ -243,16 +243,64 @@ export function UserSettingsTab() {
   if (loading) {
     return (
       <div className="p-4 space-y-6 max-w-xl mx-auto">
+        {/* Header Skeleton */}
         <div className="space-y-2">
-          <Skeleton className="h-8 w-32 dark:bg-muted-foreground/20" />
-          <Skeleton className="h-4 w-48 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-8 w-24 rounded-lg" />
+          <Skeleton className="h-4 w-56 rounded-md" />
         </div>
-        <div className="space-y-6">
-          <div className="grid gap-4">
-            {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-12 w-full dark:bg-muted-foreground/20" />
-            ))}
+
+        {/* Tabs Navigation Skeleton */}
+        <div className="flex items-center gap-1">
+          <Skeleton className="h-9 w-20 rounded-full" />
+          <Skeleton className="h-9 w-16 rounded-full" />
+          <Skeleton className="h-9 w-18 rounded-full" />
+        </div>
+
+        {/* Avatar Section Skeleton */}
+        <div className="space-y-3 pt-2">
+          <Skeleton className="h-4 w-14 rounded-md" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-16 h-16 rounded-xl" />
+            <Skeleton className="h-10 w-32 rounded-lg" />
           </div>
+          <Skeleton className="h-3 w-36 rounded-md" />
+        </div>
+
+        {/* Brand Name Input Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <Skeleton className="h-11 w-full rounded-lg" />
+        </div>
+
+        {/* Public URL Input Skeleton */}
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-20 rounded-md" />
+          <div className="flex items-center">
+            <Skeleton className="h-11 flex-1 rounded-l-lg rounded-r-none" />
+            <Skeleton className="h-11 w-24 rounded-r-lg rounded-l-none" />
+          </div>
+        </div>
+
+        {/* Save Button Skeleton */}
+        <Skeleton className="h-11 w-full rounded-lg" />
+
+        {/* Admin Plan Section Skeleton */}
+        <div className="space-y-4 p-4 rounded-xl bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-40 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-10 rounded-md" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-12 rounded-md" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+          <Skeleton className="h-9 w-full rounded-lg" />
         </div>
       </div>
     );
