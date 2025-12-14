@@ -278,21 +278,18 @@ export function CampaignDetailsDialog({
                       <div className="bg-[#22c55e] transition-all" style={{
                   width: `${Math.min(paidPercent, 100)}%`
                 }} />
-                      <div 
-                        className="transition-all relative overflow-hidden" 
-                        style={{
-                          width: `${Math.min(expectedPercent, 100 - paidPercent)}%`,
-                          background: `repeating-linear-gradient(
+                      <div className="transition-all relative overflow-hidden" style={{
+                  width: `${Math.min(expectedPercent, 100 - paidPercent)}%`,
+                  background: `repeating-linear-gradient(
                             -45deg,
                             #f59e0b,
                             #f59e0b 4px,
                             #d97706 4px,
                             #d97706 8px
                           )`,
-                          backgroundSize: '200% 100%',
-                          animation: 'stripeMove 1s linear infinite'
-                        }} 
-                      />
+                  backgroundSize: '200% 100%',
+                  animation: 'stripeMove 1s linear infinite'
+                }} />
                       <div className="bg-muted-foreground/20 transition-all" style={{
                   width: `${remainingPercent}%`
                 }} />
@@ -444,13 +441,7 @@ export function CampaignDetailsDialog({
               {campaign.asset_links!.map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center shrink-0 overflow-hidden">
-                      {faviconUrl ? <img src={faviconUrl} alt="" className="w-5 h-5 sm:w-6 sm:h-6" onError={e => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }} /> : null}
-                      <Link2 className={`w-4 h-4 sm:w-5 sm:h-5 text-[#2060df] ${faviconUrl ? 'hidden' : ''}`} />
-                    </div>
+                    
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs sm:text-sm truncate">{link.label}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
