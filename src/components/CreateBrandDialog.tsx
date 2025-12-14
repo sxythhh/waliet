@@ -133,7 +133,7 @@ export function CreateBrandDialog({
           
         </DialogTrigger>}
       <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
-        <Form {...form}>
+        <Form className="py-0 px-0">
           <form onSubmit={form.handleSubmit(onSubmit)} className="p-5 space-y-5">
             {/* Logo Upload + Brand Name in same row */}
             <div className="flex items-center gap-3">
@@ -150,13 +150,13 @@ export function CreateBrandDialog({
                 </button>}
 
               <FormField control={form.control} name="name" render={({
-                field
-              }) => <FormItem className="flex-1">
+              field
+            }) => <FormItem className="flex-1">
                   <FormControl>
                     <Input placeholder="Brand name" className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }} {...field} />
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }} {...field} />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>} />
