@@ -266,31 +266,29 @@ export function CampaignDetailsDialog({
               
               {/* Budget Progress Bar */}
               {(() => {
-                const paidOut = campaign.budget_used || 0;
-                const expected = expectedPayout.amount;
-                const total = campaign.budget || 1;
-                const remaining = Math.max(0, total - paidOut - expected);
-                const paidPercent = (paidOut / total) * 100;
-                const expectedPercent = (expected / total) * 100;
-                const remainingPercent = (remaining / total) * 100;
-                
-                return (
-                  <div>
+            const paidOut = campaign.budget_used || 0;
+            const expected = expectedPayout.amount;
+            const total = campaign.budget || 1;
+            const remaining = Math.max(0, total - paidOut - expected);
+            const paidPercent = paidOut / total * 100;
+            const expectedPercent = expected / total * 100;
+            const remainingPercent = remaining / total * 100;
+            return <div>
                     <div className="h-2 rounded-full overflow-hidden flex bg-muted/50">
-                      <div 
-                        className="bg-[#22c55e] transition-all" 
-                        style={{ width: `${Math.min(paidPercent, 100)}%` }} 
-                      />
-                      <div 
-                        className="bg-[#f59e0b] transition-all" 
-                        style={{ width: `${Math.min(expectedPercent, 100 - paidPercent)}%` }} 
-                      />
-                      <div 
-                        className="bg-muted-foreground/20 transition-all" 
-                        style={{ width: `${remainingPercent}%` }} 
-                      />
+                      <div className="bg-[#22c55e] transition-all" style={{
+                  width: `${Math.min(paidPercent, 100)}%`
+                }} />
+                      <div className="bg-[#f59e0b] transition-all" style={{
+                  width: `${Math.min(expectedPercent, 100 - paidPercent)}%`
+                }} />
+                      <div className="bg-muted-foreground/20 transition-all" style={{
+                  width: `${remainingPercent}%`
+                }} />
                     </div>
-                    <div className="flex justify-between mt-2 text-[10px]" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                    <div style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }} className="justify-between mt-2 text-[10px] flex flex-row">
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
                         <span className="text-muted-foreground">Paid ${paidOut.toLocaleString()}</span>
@@ -304,9 +302,8 @@ export function CampaignDetailsDialog({
                         <span className="text-muted-foreground">Left ${remaining.toFixed(0)}</span>
                       </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  </div>;
+          })()}
             </div>}
         </div>
 
