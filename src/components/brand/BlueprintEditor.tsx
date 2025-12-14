@@ -636,7 +636,7 @@ export function BlueprintEditor({
                       value={blueprint.brand_voice || ""}
                       onChange={e => updateBlueprint({ brand_voice: e.target.value })}
                       placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)"
-                      className="min-h-[80px] resize-none bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                      className="min-h-[80px] resize-none bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                     />
                   </BlueprintSection>
                 )}
@@ -662,7 +662,7 @@ export function BlueprintEditor({
                               value={hook}
                               onChange={e => updateHook(index, e.target.value)}
                               placeholder={`Hook #${index + 1} - e.g., "Wait until you see this..."`}
-                              className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                              className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                             />
                             <Button
                               variant="ghost"
@@ -709,7 +709,7 @@ export function BlueprintEditor({
                               value={point}
                               onChange={e => updateTalkingPoint(index, e.target.value)}
                               placeholder={`Key message #${index + 1}`}
-                              className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                              className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                             />
                             <Button
                               variant="ghost"
@@ -765,7 +765,7 @@ export function BlueprintEditor({
                                 value={item}
                                 onChange={e => updateDo(index, e.target.value)}
                                 placeholder="Add a do..."
-                                className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                               />
                               <Button
                                 variant="ghost"
@@ -800,7 +800,7 @@ export function BlueprintEditor({
                                 value={item}
                                 onChange={e => updateDont(index, e.target.value)}
                                 placeholder="Add a don't..."
-                                className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                               />
                               <Button
                                 variant="ghost"
@@ -831,7 +831,7 @@ export function BlueprintEditor({
                       value={blueprint.call_to_action || ""}
                       onChange={e => updateBlueprint({ call_to_action: e.target.value })}
                       placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')"
-                      className="h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                      className="h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                     />
                   </BlueprintSection>
                 )}
@@ -853,7 +853,7 @@ export function BlueprintEditor({
                           onChange={e => setNewHashtag(e.target.value)}
                           onKeyDown={e => e.key === "Enter" && addHashtag()}
                           placeholder="Add hashtag..."
-                          className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                          className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                         />
                         <Button
                           variant="ghost"
@@ -910,14 +910,14 @@ export function BlueprintEditor({
                                   value={asset.link}
                                   onChange={e => updateAsset(index, "link", e.target.value)}
                                   placeholder="https://drive.google.com/..."
-                                  className="pl-8 h-8 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                  className="pl-8 h-8 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                                 />
                               </div>
                               <Input
                                 value={asset.notes}
                                 onChange={e => updateAsset(index, "notes", e.target.value)}
                                 placeholder="Description..."
-                                className="h-8 bg-muted/20 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                className="h-8 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                               />
                             </div>
                             <Button
@@ -1034,13 +1034,13 @@ export function BlueprintEditor({
                                     value={video.url}
                                     onChange={e => updateExampleVideo(index, "url", e.target.value)}
                                     placeholder="Video URL..."
-                                    className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                    className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                                   />
                                   <Input
                                     value={video.description}
                                     onChange={e => updateExampleVideo(index, "description", e.target.value)}
                                     placeholder="Why this is a good example..."
-                                    className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                                    className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                                   />
                                 </div>
                                 <Button
@@ -1108,13 +1108,13 @@ export function BlueprintEditor({
                               value={persona.target_audience}
                               onChange={e => updatePersona(index, "target_audience", e.target.value)}
                               placeholder="Target audience (e.g., 'Fitness enthusiasts aged 25-35')"
-                              className="h-8 bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                              className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                             />
                             <Textarea
                               value={persona.description}
                               onChange={e => updatePersona(index, "description", e.target.value)}
                               placeholder="Describe this persona's interests, pain points, and content preferences..."
-                              className="min-h-[60px] resize-none bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-muted-foreground/20 font-inter tracking-[-0.5px] text-sm"
+                              className="min-h-[60px] resize-none bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm"
                             />
                           </div>
                         ))
