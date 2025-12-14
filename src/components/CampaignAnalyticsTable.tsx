@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import creditCardIcon from "@/assets/credit-card-icon.svg";
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {
     return {
@@ -1227,10 +1228,10 @@ export function CampaignAnalyticsTable({
       </Card>;
   }
   if (transactions.length === 0 && activeTab === 'transactions') {
-    return <Card className="bg-card border">
-        <CardContent className="p-6">
+    return <Card className="bg-card border-0 h-full">
+        <CardContent className="p-6 h-full flex items-center justify-center">
           <div className="text-center py-8">
-            <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <img src={creditCardIcon} alt="" className="h-12 w-12 mx-auto opacity-50 mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Payout Transactions</h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
               No payments have been made for this campaign yet. Payouts will appear here once creators receive payments.
