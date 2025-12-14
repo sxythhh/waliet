@@ -1,7 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokIcon from "@/assets/tiktok-logo-white.png";
 import tiktokIconBlack from "@/assets/tiktok-logo-black-new.png";
@@ -118,7 +119,39 @@ export function CampaignDetailsDialog({
   onManageAccount
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [expectedPayout, setExpectedPayout] = useState<{ views: number; amount: number } | null>(null);
   const { resolvedTheme } = useTheme();
+
+  // Fetch latest view metrics from Shortimize data
+  useEffect(() => {
+    const fetchExpectedPayout = async () => {
+      if (!campaign?.id || !open) return;
+      
+      // Get the most recent metrics snapshot for this campaign
+      const { data: metrics } = await supabase
+        .from('campaign_video_metrics')
+        .select('total_views, recorded_at')
+        .eq('campaign_id', campaign.id)
+        .order('recorded_at', { ascending: false })
+        .limit(2);
+      
+      if (metrics && metrics.length > 0) {
+        // Calculate views in the current period (since last payout)
+        // Using the difference between latest and previous snapshot if available
+        const latestViews = metrics[0]?.total_views || 0;
+        const previousViews = metrics[1]?.total_views || 0;
+        const periodViews = metrics.length > 1 ? latestViews - previousViews : latestViews;
+        
+        // Calculate expected payout: (views / 1000) * rpm_rate
+        const amount = (periodViews / 1000) * campaign.rpm_rate;
+        setExpectedPayout({ views: periodViews, amount });
+      } else {
+        setExpectedPayout(null);
+      }
+    };
+
+    fetchExpectedPayout();
+  }, [campaign?.id, campaign?.rpm_rate, open]);
   
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
@@ -200,6 +233,38 @@ export function CampaignDetailsDialog({
               </p>
             </div>
           </div>
+
+          {/* Expected Payout Card */}
+          {expectedPayout !== null && (
+            <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>Expected Payout</p>
+                  <p className="text-lg font-semibold text-[#2060df]" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    ${expectedPayout.amount.toFixed(2)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>Based on</p>
+                  <p className="text-sm font-medium" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }}>
+                    {expectedPayout.views.toLocaleString()} views
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Description with gradient + read more */}
