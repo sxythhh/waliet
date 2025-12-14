@@ -193,26 +193,7 @@ export function ReferralsTab() {
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
       </div>
 
-      {/* Tabs for Referrals vs Teams */}
-      <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="w-auto gap-1 bg-transparent p-0 h-auto">
-          <TabsTrigger 
-            value="referrals" 
-            className="data-[state=active]:bg-[#f4f4f4] dark:data-[state=active]:bg-[#1a1a1a] data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground rounded-full px-4 py-2 text-sm font-medium transition-all"
-            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-          >
-            Referrals
-          </TabsTrigger>
-          <TabsTrigger 
-            value="teams" 
-            className="data-[state=active]:bg-[#f4f4f4] dark:data-[state=active]:bg-[#1a1a1a] data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground rounded-full px-4 py-2 text-sm font-medium transition-all"
-            style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-          >
-            Teams
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="referrals" className="mt-6 space-y-8">
+      <div className="space-y-8">
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-3">
@@ -244,12 +225,6 @@ export function ReferralsTab() {
               <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
             </div>
           </div>
-          {!isEditing && (
-            <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="gap-1.5">
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-          )}
         </div>
 
         {isEditing ? <div className="space-y-3">
@@ -275,6 +250,9 @@ export function ReferralsTab() {
             <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
+            </Button>
+            <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-10 w-10">
+              <Pencil className="h-4 w-4" />
             </Button>
           </div>}
       </div>
@@ -345,11 +323,6 @@ export function ReferralsTab() {
         })}
           </div>}
       </div>
-        </TabsContent>
-
-        <TabsContent value="teams" className="mt-6">
-          <TeamManagementSection profileName={profile?.full_name || profile?.username || "Your"} />
-        </TabsContent>
-      </Tabs>
+      </div>
     </div>;
 }
