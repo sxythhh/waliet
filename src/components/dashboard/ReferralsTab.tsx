@@ -189,27 +189,36 @@ export function ReferralsTab() {
   };
   return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-6 w-full">
       {/* Header */}
-      <div className="space-y-2">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
+        <a 
+          href="https://join.virality.gg/affiliate" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+        >
+          How it works →
+        </a>
       </div>
 
       <div className="space-y-8">
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+      <div className="flex items-center gap-6">
+        <div className="flex items-baseline gap-2">
           <p className="text-2xl font-semibold tracking-tight">{referrals.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total Referrals</p>
+          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Referrals</p>
         </div>
-
-        <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        <div className="w-px h-5 bg-border" />
+        <div className="flex items-baseline gap-2">
           <p className="text-2xl font-semibold tracking-tight">{profile?.successful_referrals || 0}</p>
-          <p className="text-xs text-muted-foreground mt-1">Successful</p>
+          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Successful</p>
         </div>
-
-        <div className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+        <div className="w-px h-5 bg-border" />
+        <div className="flex items-baseline gap-2">
           <p className="text-2xl font-semibold tracking-tight">${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
-          <p className="text-xs text-muted-foreground mt-1">Earnings</p>
+          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Earnings</p>
         </div>
       </div>
 
