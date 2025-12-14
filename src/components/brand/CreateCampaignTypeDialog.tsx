@@ -74,75 +74,106 @@ export function CreateCampaignTypeDialog({
             Create Campaign
           </Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[420px] bg-[#f5f5f5] dark:bg-[#050505] border-border">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Create New Campaign</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6 pt-2">
+      <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl">
+        <div className="space-y-5">
+          {/* Header */}
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold font-inter tracking-[-0.5px] text-foreground">
+              New Campaign
+            </h2>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+              Choose your campaign type to get started
+            </p>
+          </div>
+          
           {/* Blueprint Select */}
-          {loading ? <div className="h-12 bg-muted dark:bg-[#141414] rounded-md animate-pulse" /> : hasBlueprints ? <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
-              <SelectTrigger className="w-full bg-muted dark:bg-[#141414] border-transparent h-12">
-                <SelectValue placeholder="Select a blueprint" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-[#141414] border-border">
-                {blueprints.map(blueprint => <SelectItem key={blueprint.id} value={blueprint.id}>
-                    {blueprint.title}
-                  </SelectItem>)}
-              </SelectContent>
-            </Select> : <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-muted dark:bg-[#141414] text-center">
-              <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium mb-1">No blueprints yet</p>
-              <p className="text-xs text-muted-foreground mb-4">
+          {loading ? (
+            <div className="h-11 bg-muted/50 rounded-lg animate-pulse" />
+          ) : hasBlueprints ? (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Blueprint
+              </label>
+              <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
+                <SelectTrigger className="w-full bg-muted/50 border-none h-11 rounded-lg">
+                  <SelectValue placeholder="Select a blueprint" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-none shadow-lg">
+                  {blueprints.map(blueprint => (
+                    <SelectItem key={blueprint.id} value={blueprint.id}>
+                      {blueprint.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1 font-inter tracking-[-0.5px]">No blueprints yet</p>
+              <p className="text-xs text-muted-foreground mb-4 font-inter tracking-[-0.5px]">
                 Create a blueprint first to define your campaign brief
               </p>
-              <Button onClick={handleCreateBlueprint} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
+              <Button onClick={handleCreateBlueprint} size="sm" variant="secondary" className="gap-2 rounded-lg">
+                <Plus className="h-3.5 w-3.5" />
                 Create Blueprint
               </Button>
-            </div>}
+            </div>
+          )}
 
-          {/* Campaign Workflow Selection */}
+          {/* Campaign Type Selection */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Select a Campaign Workflow</p>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Campaign Type
+            </label>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
               {/* Clipping Option */}
-              <button onClick={handleClippingClick} disabled={!hasBlueprints} className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                  backgroundColor: '#a7751e',
-                  borderTop: '2px solid #dda038'
-                }}>
-                    <img src={clippingIcon} alt="Clipping" className="h-4 w-4" />
-                  </div>
-                  <span className="font-semibold tracking-[-0.5px] text-sm">Clipping</span>
+              <button 
+                onClick={handleClippingClick} 
+                disabled={!hasBlueprints} 
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: '#a7751e' }}
+                >
+                  <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
-                  Pay a fixed CPM. Select your budget, payment terms, and requirements.
-                </p>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                    Clipping
+                  </span>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                    Pay per view with fixed CPM rates
+                  </p>
+                </div>
               </button>
 
               {/* Boost Option */}
-              <button onClick={handleBoostClick} className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                  backgroundColor: '#1ea75e',
-                  borderTop: '2px solid #38dd7a'
-                }}>
-                    <img src={boostIcon} alt="Boost" className="h-4 w-4" />
-                  </div>
-                  <span className="font-semibold tracking-[-0.5px] text-sm">Boost</span>
+              <button 
+                onClick={handleBoostClick} 
+                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
+              >
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: '#1ea75e' }}
+                >
+                  <img src={boostIcon} alt="Boost" className="h-5 w-5" />
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
-                  Retainer-based campaign with monthly creator positions
-                </p>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                    Boost
+                  </span>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                    Monthly retainer with fixed creator slots
+                  </p>
+                </div>
               </button>
             </div>
           </div>
-
-          {/* Cancel Button */}
-          
         </div>
       </DialogContent>
     </Dialog>;
