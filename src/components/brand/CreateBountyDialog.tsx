@@ -295,7 +295,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
 
                   {/* Payment Schedule - First */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
                     <Select
                       value={formData.payment_schedule}
                       onValueChange={(value: any) => setFormData({ ...formData, payment_schedule: value })}
@@ -314,7 +314,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                   {/* Payment Amount with Slider */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
                       <div className="relative w-24">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
                         <Input
@@ -345,7 +345,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                   {/* Videos and Max Creators */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
                       <Input
                         type="number"
                         min="1"
@@ -356,7 +356,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Max Creators</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Max Creators</Label>
                       <Input
                         type="number"
                         min="1"
@@ -368,26 +368,26 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                     </div>
                   </div>
 
-                  {/* Per Video Payout Display */}
-                  {formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 && (
-                    <div className="p-4 rounded-xl bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Video className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px] uppercase">Per Video</p>
-                          <p className="text-xl font-semibold text-foreground font-geist tracking-[-0.5px]">
-                            ${(parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">{formData.videos_per_month} videos</p>
-                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">@ ${formData.monthly_retainer}/{formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'biweekly' ? '2wk' : 'mo'}</p>
-                        </div>
+                  {/* Per Video Payout Display - Always visible */}
+                  <div className="p-4 rounded-xl bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Video className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px] uppercase">Per Video</p>
+                        <p className="text-xl font-semibold text-foreground font-geist tracking-[-0.5px]">
+                          {formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0
+                            ? `$${(parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2)}`
+                            : '$0.00'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">{formData.videos_per_month || '0'} videos</p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">@ ${formData.monthly_retainer || '0'}/{formData.payment_schedule === 'weekly' ? 'wk' : formData.payment_schedule === 'biweekly' ? '2wk' : 'mo'}</p>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Right Column - Settings & Dates */}
@@ -401,7 +401,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
 
                   {/* Blueprint Selection */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
                     <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
                       <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
                         <SelectValue placeholder="Select a blueprint" />
@@ -447,7 +447,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                   {/* Date Range */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Start Date</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Start Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -474,7 +474,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                       </Popover>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">End Date</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">End Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -544,7 +544,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
 
               {/* Title */}
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -554,7 +554,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Description</Label>
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Description</Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -564,7 +564,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Style & Requirements</Label>
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Style & Requirements</Label>
                 <Textarea
                   value={formData.content_style_requirements}
                   onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
