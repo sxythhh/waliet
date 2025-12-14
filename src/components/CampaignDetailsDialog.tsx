@@ -138,9 +138,9 @@ export function CampaignDetailsDialog({
       if (metrics && metrics.length > 0) {
         // Calculate views in the current period (since last payout)
         // Using the difference between latest and previous snapshot if available
-        const latestViews = metrics[0]?.total_views || 0;
-        const previousViews = metrics[1]?.total_views || 0;
-        const periodViews = metrics.length > 1 ? latestViews - previousViews : latestViews;
+        const latestViews = Number(metrics[0]?.total_views) || 0;
+        const previousViews = Number(metrics[1]?.total_views) || 0;
+        const periodViews = Math.max(0, metrics.length > 1 ? latestViews - previousViews : latestViews);
         
         // Calculate expected payout: (views / 1000) * rpm_rate
         const amount = (periodViews / 1000) * campaign.rpm_rate;
@@ -243,7 +243,7 @@ export function CampaignDetailsDialog({
                     fontFamily: 'Inter',
                     letterSpacing: '-0.3px'
                   }}>Expected Payout</p>
-                  <p className="text-lg font-semibold text-[#2060df]" style={{
+                  <p className="text-lg font-semibold text-[#22c55e]" style={{
                     fontFamily: 'Inter',
                     letterSpacing: '-0.5px'
                   }}>
