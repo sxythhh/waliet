@@ -146,7 +146,7 @@ export function CreateBrandDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && <DialogTrigger asChild />}
-      <DialogContent className="sm:max-w-[460px] bg-card border-border p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[460px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
             {/* Header */}
@@ -192,10 +192,10 @@ export function CreateBrandDialog({
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5"
+                      className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground"
                     >
                       <Upload className="h-3.5 w-3.5" />
                       Upload Image
@@ -238,12 +238,12 @@ export function CreateBrandDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
+            <div className="px-6 py-4 flex items-center justify-end gap-3">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={handleCancel}
-                className="h-10 px-4 text-sm font-medium font-inter tracking-[-0.3px]"
+                className="h-10 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent"
               >
                 Cancel
               </Button>
