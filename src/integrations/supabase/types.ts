@@ -1554,8 +1554,10 @@ export type Database = {
           phone_number: string | null
           referral_code: string | null
           referral_earnings: number | null
+          referral_tier: Database["public"]["Enums"]["referral_tier"] | null
           referred_by: string | null
           successful_referrals: number | null
+          tier_bonus_claimed_at: Json | null
           total_earnings: number | null
           total_referrals: number | null
           trust_score: number | null
@@ -1598,8 +1600,10 @@ export type Database = {
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
+          referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
           successful_referrals?: number | null
+          tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
@@ -1642,8 +1646,10 @@ export type Database = {
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
+          referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
           successful_referrals?: number | null
+          tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
           total_referrals?: number | null
           trust_score?: number | null
@@ -2646,6 +2652,21 @@ export type Database = {
       }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
       get_current_user_email: { Args: never; Returns: string }
+      get_referral_tier: {
+        Args: { referral_count: number }
+        Returns: Database["public"]["Enums"]["referral_tier"]
+      }
+      get_tier_commission_rate: {
+        Args: { tier: Database["public"]["Enums"]["referral_tier"] }
+        Returns: number
+      }
+      get_tier_upgrade_bonus: {
+        Args: {
+          new_tier: Database["public"]["Enums"]["referral_tier"]
+          old_tier: Database["public"]["Enums"]["referral_tier"]
+        }
+        Returns: number
+      }
       get_user_email: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -2674,6 +2695,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       payout_status_new: "pending" | "in_transit" | "completed" | "rejected"
+      referral_tier: "beginner" | "amateur" | "pro" | "elite"
       sales_stage: "lead" | "qualified" | "negotiation" | "won"
     }
     CompositeTypes: {
@@ -2804,6 +2826,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       payout_status_new: ["pending", "in_transit", "completed", "rejected"],
+      referral_tier: ["beginner", "amateur", "pro", "elite"],
       sales_stage: ["lead", "qualified", "negotiation", "won"],
     },
   },
