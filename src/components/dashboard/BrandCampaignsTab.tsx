@@ -266,17 +266,7 @@ export function BrandCampaignsTab({
 
           {/* Subscription Required CTA and Embed - Only show if not subscribed */}
           {subscriptionStatus !== "active" && <>
-              <Card className="border bg-[#0d0d0d] border-[#141414]/0">
-                <CardContent className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 bg-[#0d0d0d]">
-                  <h2 className="text-xl font-semibold tracking-tight">Subscription Required</h2>
-                  <p className="text-muted-foreground max-w-md">
-                    You need an active subscription to view applicants. Please upgrade your plan or purchase a job post to access this feature.
-                  </p>
-                  <Button onClick={() => setSubscriptionGateOpen(true)} className="bg-primary hover:bg-primary/90">
-                    View Pricing Plans
-                  </Button>
-                </CardContent>
-              </Card>
+              
               <div className="w-full h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>
