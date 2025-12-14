@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +59,7 @@ interface BoostCardProps {
 }
 
 export function BoostCard({ boost }: BoostCardProps) {
+  const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VideoSubmission[]>([]);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -301,11 +303,15 @@ export function BoostCard({ boost }: BoostCardProps) {
             {/* Directions Card */}
             <div 
               className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group flex flex-col"
-              onClick={() => setDirectionsDialogOpen(true)}
+              onClick={() => {
+                if (boost.blueprint_id) {
+                  navigate(`/blueprint/${boost.blueprint_id}`);
+                }
+              }}
             >
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-xs font-semibold">Directions and content</h4>
-                <Expand className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="flex-1 flex items-center justify-center gap-2">
                 <div className="p-2 bg-background rounded-lg border">
