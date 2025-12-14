@@ -388,18 +388,18 @@ export function BoostCard({ boost }: BoostCardProps) {
               {/* Stats row */}
               <div className="flex items-center gap-4 text-center">
                 <div>
-                  <p className="text-lg font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Earned</p>
+                  <p className="text-sm font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Earned</p>
                 </div>
-                <div className="w-px h-8 bg-border" />
+                <div className="w-px h-6 bg-border" />
                 <div>
-                  <p className="text-lg font-bold text-orange-500">{pendingThisMonth}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+                  <p className="text-sm font-bold text-orange-500">{pendingThisMonth}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Pending</p>
                 </div>
-                <div className="w-px h-8 bg-border" />
+                <div className="w-px h-6 bg-border" />
                 <div>
-                  <p className="text-lg font-bold">{requiredPosts}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Left</p>
+                  <p className="text-sm font-bold">{requiredPosts}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Left</p>
                 </div>
               </div>
             </div>
