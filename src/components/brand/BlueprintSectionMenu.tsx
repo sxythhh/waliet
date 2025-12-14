@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic } from "lucide-react";
+import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SectionType = 
@@ -123,16 +123,16 @@ export function BlueprintSectionMenu({
   return (
     <div ref={menuRef} className="relative flex items-center gap-4 py-2">
       {/* Left line */}
-      <div className="flex-1 h-[2px] bg-muted-foreground/20 rounded-full" />
+      <div className="flex-1 h-[1px] bg-border" />
       
       {/* Add Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-inter tracking-[-0.5px] text-sm",
+          "flex items-center gap-2 px-4 py-2 rounded-full transition-all font-inter tracking-[-0.5px] text-sm border",
           isOpen
-            ? "bg-muted text-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            ? "bg-muted text-foreground border-border"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50 border-border/50"
         )}
       >
         <Plus className="h-4 w-4" />
@@ -140,78 +140,83 @@ export function BlueprintSectionMenu({
       </button>
 
       {/* Right line */}
-      <div className="flex-1 h-[2px] bg-muted-foreground/20 rounded-full" />
+      <div className="flex-1 h-[1px] bg-border" />
 
       {/* Dropdown Menu - opens above */}
       {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-72 max-h-80 overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-80 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-2xl">
           {/* Available sections to add */}
           {availableSections.length > 0 && (
-            <div className="p-2">
-              <p className="px-2 py-1.5 text-[10px] font-medium uppercase text-muted-foreground/60 tracking-wider">
+            <div className="p-3">
+              <p className="px-2 py-2 text-[11px] font-medium uppercase text-muted-foreground/50 tracking-wider font-inter">
                 Add Section
               </p>
-              {availableSections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    onToggleSection(section.id);
-                    setIsOpen(false);
-                  }}
-                  className="w-full flex items-start gap-3 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors text-left group"
-                >
-                  <span className="mt-0.5 text-muted-foreground group-hover:text-foreground transition-colors">
-                    {section.icon}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
-                      {section.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {section.description}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              <div className="space-y-1">
+                {availableSections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      onToggleSection(section.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-all text-left group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-muted transition-all">
+                      {section.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
+                        {section.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 font-inter tracking-[-0.5px]">
+                        {section.description}
+                      </p>
+                    </div>
+                    <Plus className="h-4 w-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Divider */}
           {availableSections.length > 0 && addedSections.length > 0 && (
-            <div className="border-t border-border/50" />
+            <div className="mx-3 border-t border-border/30" />
           )}
 
           {/* Already added sections */}
           {addedSections.length > 0 && (
-            <div className="p-2">
-              <p className="px-2 py-1.5 text-[10px] font-medium uppercase text-muted-foreground/60 tracking-wider">
+            <div className="p-3">
+              <p className="px-2 py-2 text-[11px] font-medium uppercase text-muted-foreground/50 tracking-wider font-inter">
                 Active Sections
               </p>
-              {addedSections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    onToggleSection(section.id);
-                    setIsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-destructive/10 transition-colors text-left group"
-                >
-                  <span className="text-emerald-500">{section.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
-                      {section.title}
-                    </p>
-                  </div>
-                  <span className="text-xs text-muted-foreground group-hover:text-destructive transition-colors">
-                    Remove
-                  </span>
-                </button>
-              ))}
+              <div className="space-y-1">
+                {addedSections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      onToggleSection(section.id);
+                      setIsOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-all text-left group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                      {section.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
+                        {section.title}
+                      </p>
+                    </div>
+                    <MinusCircle className="h-5 w-5 text-destructive/60 group-hover:text-destructive transition-colors" />
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
           {availableSections.length === 0 && addedSections.length === 0 && (
-            <div className="p-4 text-center text-sm text-muted-foreground">
+            <div className="p-6 text-center text-sm text-muted-foreground font-inter tracking-[-0.5px]">
               No sections available
             </div>
           )}
