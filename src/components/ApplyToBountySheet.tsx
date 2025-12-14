@@ -12,6 +12,7 @@ import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import discordIcon from "@/assets/discord-icon.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
+import alternateEmailIcon from "@/assets/alternate-email-icon.svg";
 interface BountyCampaign {
   id: string;
   title: string;
@@ -298,7 +299,7 @@ export function ApplyToBountySheet({
           {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
               <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-5 bg-white/[0.02] rounded-xl">
                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                  <AlertCircle className="h-6 w-6 text-muted-foreground" />
+                  <img src={alternateEmailIcon} alt="" className="h-6 w-6 opacity-60" />
                 </div>
                 
                 <div className="space-y-2">
