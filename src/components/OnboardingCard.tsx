@@ -8,18 +8,21 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 interface OnboardingCardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSelect?: () => void;
 }
 
-export function OnboardingCard({ open, onOpenChange }: OnboardingCardProps) {
+export function OnboardingCard({ open, onOpenChange, onSelect }: OnboardingCardProps) {
   const [, setSearchParams] = useSearchParams();
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
 
   const handleCreatorSelect = () => {
+    onSelect?.();
     setSearchParams({ tab: "profile", workspace: "creator" });
     onOpenChange(false);
   };
 
   const handleBrandSelect = () => {
+    onSelect?.();
     onOpenChange(false);
     setShowCreateBrandDialog(true);
   };

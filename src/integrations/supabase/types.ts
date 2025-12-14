@@ -1527,6 +1527,7 @@ export type Database = {
           hide_from_leaderboard: boolean
           id: string
           legal_business_name: string | null
+          onboarding_completed: boolean
           phone_number: string | null
           referral_code: string | null
           referral_earnings: number | null
@@ -1570,6 +1571,7 @@ export type Database = {
           hide_from_leaderboard?: boolean
           id: string
           legal_business_name?: string | null
+          onboarding_completed?: boolean
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
@@ -1613,6 +1615,7 @@ export type Database = {
           hide_from_leaderboard?: boolean
           id?: string
           legal_business_name?: string | null
+          onboarding_completed?: boolean
           phone_number?: string | null
           referral_code?: string | null
           referral_earnings?: number | null
