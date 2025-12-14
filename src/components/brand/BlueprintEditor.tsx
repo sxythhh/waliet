@@ -624,8 +624,8 @@ export function BlueprintEditor({
                     className={`
                       flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-150 font-inter tracking-[-0.5px] text-sm border
                       ${isSelected 
-                        ? "bg-muted border-border text-foreground" 
-                        : "bg-transparent border-border/50 text-muted-foreground hover:border-border hover:bg-muted/30"}
+                        ? "bg-primary border-primary text-primary-foreground" 
+                        : "bg-transparent border-border/50 text-foreground hover:border-border hover:bg-muted/30"}
                     `}
                   >
                     <img src={platform.logo} alt={platform.label} className="h-4 w-4 object-contain" />
