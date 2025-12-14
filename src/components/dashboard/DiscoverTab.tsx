@@ -864,18 +864,7 @@ export function DiscoverTab() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2 mt-auto pt-2">
-                          
-                          <Button size="sm" className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white font-['Inter'] tracking-[-0.5px] font-medium" style={{
-                        borderTop: '1px solid #4b85f7'
-                      }} onClick={e => {
-                        e.stopPropagation();
-                        setSelectedBounty(bounty);
-                        setApplyDialogOpen(true);
-                      }} disabled={isEnded || isFull}>
-                            Apply
-                          </Button>
-                        </div>
+                        
                       </CardContent>
                     </Card>;
               }
