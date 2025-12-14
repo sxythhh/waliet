@@ -42,7 +42,7 @@ interface ReferralChartDataPoint {
   referrals: number;
   successful: number;
 }
-export function ReferralsTab() {
+export function ReferralsTab(): JSX.Element {
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<ReferralWithMilestones[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
