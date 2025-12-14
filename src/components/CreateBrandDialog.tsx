@@ -2,13 +2,14 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, X } from "lucide-react";
+import { Upload } from "lucide-react";
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
@@ -30,6 +31,7 @@ export function CreateBrandDialog({
   onOpenChange: controlledOnOpenChange,
   hideTrigger = false
 }: CreateBrandDialogProps) {
+  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
@@ -124,6 +126,9 @@ export function CreateBrandDialog({
       setLogoFile(null);
       setLogoPreview(null);
       onSuccess?.();
+      
+      // Navigate to the new brand workspace
+      navigate(`/dashboard?workspace=${slug}`);
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {
