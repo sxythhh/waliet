@@ -133,7 +133,7 @@ export function CreateBrandDialog({
           
         </DialogTrigger>}
       <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
-        <Form className="py-0 px-0">
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="p-5 space-y-5">
             {/* Logo Upload + Brand Name in same row */}
             <div className="flex items-center gap-3">
