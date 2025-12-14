@@ -884,6 +884,25 @@ export function CampaignAnalyticsTable({
       toast.error("Please enter a valid amount");
       return;
     }
+
+    // Check if campaign budget is exhausted (100% used)
+    const { data: campaignCheck } = await supabase
+      .from("campaigns")
+      .select("budget, budget_used, is_infinite_budget")
+      .eq("id", campaignId)
+      .single();
+
+    if (campaignCheck && !campaignCheck.is_infinite_budget) {
+      const remainingBudget = (campaignCheck.budget || 0) - (campaignCheck.budget_used || 0);
+      if (remainingBudget <= 0) {
+        toast.error("Campaign budget is fully exhausted. No more payouts can be made.");
+        return;
+      }
+      if (amount > remainingBudget) {
+        toast.error(`Payment exceeds remaining budget. Only $${remainingBudget.toFixed(2)} available.`);
+        return;
+      }
+    }
     setIsSubmitting(true);
     try {
       // First, update the wallet balance

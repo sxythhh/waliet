@@ -269,7 +269,7 @@ export function BrandCampaignsTab({
           {/* Subscription Required CTA and Embed - Only show if not subscribed */}
           {subscriptionStatus !== "active" && <>
               
-              <div className="w-full h-[400px] sm:h-[250px] rounded-xl overflow-hidden">
+              <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>
             </>}

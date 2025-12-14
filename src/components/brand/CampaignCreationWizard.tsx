@@ -20,11 +20,33 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+const CAMPAIGN_NICHES = [
+  { id: 'tech', label: 'Tech & Software' },
+  { id: 'gaming', label: 'Gaming' },
+  { id: 'lifestyle', label: 'Lifestyle' },
+  { id: 'fashion', label: 'Fashion & Beauty' },
+  { id: 'finance', label: 'Finance & Crypto' },
+  { id: 'creative', label: 'Art & Creative' },
+  { id: 'music', label: 'Music & Audio' },
+  { id: 'photography', label: 'Photography' },
+  { id: 'education', label: 'Education' },
+  { id: 'travel', label: 'Travel' },
+  { id: 'fitness', label: 'Health & Fitness' },
+  { id: 'food', label: 'Food & Drink' },
+  { id: 'parenting', label: 'Parenting & Family' },
+  { id: 'pets', label: 'Pets & Animals' },
+  { id: 'home', label: 'Home & Garden' },
+  { id: 'auto', label: 'Automotive' },
+  { id: 'luxury', label: 'Luxury & Premium' },
+  { id: 'ecommerce', label: 'E-commerce & Retail' },
+];
+
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
   description: z.string().trim().max(2000).optional(),
   campaign_type: z.string().optional(),
+  category: z.string().optional(),
   is_infinite_budget: z.boolean().default(false),
   budget: z.string().optional(),
   rpm_rate: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
@@ -196,6 +218,7 @@ export function CampaignCreationWizard({
       goal: campaign?.category as "attention" | "leads" | "conversions" || "attention",
       description: campaign?.description || "",
       campaign_type: campaign?.campaign_type || "clipping",
+      category: campaign?.category || "",
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "5",
@@ -231,6 +254,7 @@ export function CampaignCreationWizard({
         goal: campaign?.category as "attention" | "leads" | "conversions" || "attention",
         description: campaign?.description || "",
         campaign_type: campaign?.campaign_type || "clipping",
+        category: campaign?.category || "",
         is_infinite_budget: campaign?.is_infinite_budget || false,
         budget: campaign?.budget?.toString() || "",
         rpm_rate: campaign?.rpm_rate?.toString() || "5",
@@ -322,7 +346,7 @@ export function CampaignCreationWizard({
         title: values.title || "Untitled Campaign",
         description: values.description || null,
         campaign_type: values.campaign_type || "clipping",
-        category: values.goal,
+        category: values.category || null,
         is_infinite_budget: values.is_infinite_budget,
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
         rpm_rate: Number(values.rpm_rate) || 5,
@@ -381,7 +405,7 @@ export function CampaignCreationWizard({
           title: values.title,
           description: values.description || null,
           campaign_type: values.campaign_type || "clipping",
-          category: values.goal || null,
+          category: values.category || null,
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
@@ -419,7 +443,7 @@ export function CampaignCreationWizard({
           title: values.title,
           description: values.description || null,
           campaign_type: values.campaign_type || "clipping",
-          category: values.goal || null,
+          category: values.category || null,
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
@@ -663,6 +687,31 @@ export function CampaignCreationWizard({
                                 })}
                               </div>
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">Content Niche</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl>
+                                <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
+                                  <SelectValue placeholder="Select a niche (optional)" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {CAMPAIGN_NICHES.map((niche) => (
+                                  <SelectItem key={niche.id} value={niche.id}>
+                                    {niche.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
