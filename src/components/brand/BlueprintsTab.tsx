@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, FileText, Clock } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Clock } from "lucide-react";
+import editDocumentIcon from "@/assets/edit-document-icon.svg";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,8 +229,8 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </p>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full py-4 text-muted-foreground/50">
-                      <FileText className="h-8 w-8 mb-2" />
-                      <span className="text-xs">No content yet</span>
+                      <img src={editDocumentIcon} alt="" className="h-8 w-8 mb-2 opacity-50" />
+                      <span className="text-xs font-inter tracking-[-0.5px]">No content yet</span>
                     </div>
                   )}
                 </div>
