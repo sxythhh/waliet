@@ -30,7 +30,6 @@ const campaignSchema = z.object({
   rpm_rate: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
     message: "CPM rate must be a positive number"
   }),
-  guidelines: z.string().trim().max(2000).optional(),
   embed_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
@@ -38,11 +37,6 @@ const campaignSchema = z.object({
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
   hashtags: z.array(z.string()).default([]),
-  asset_links: z.array(z.object({
-    label: z.string(),
-    url: z.string()
-  })).default([]),
-  requirements: z.array(z.string()).default([]),
   application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([])
 }).refine(data => {
   if (data.is_private) {
@@ -205,7 +199,6 @@ export function CampaignCreationWizard({
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "5",
-      guidelines: campaign?.guidelines || "",
       embed_url: campaign?.embed_url || "",
       preview_url: campaign?.preview_url || "",
       allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
@@ -213,41 +206,10 @@ export function CampaignCreationWizard({
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
       hashtags: campaign?.hashtags || [],
-      asset_links: campaign?.asset_links || [],
-      requirements: campaign?.requirements || [],
       application_questions: campaign?.application_questions || []
     }
   });
-  const [newAssetLabel, setNewAssetLabel] = useState("");
-  const [newAssetUrl, setNewAssetUrl] = useState("");
-  const [newRequirement, setNewRequirement] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
-  const addAssetLink = () => {
-    if (newAssetLabel.trim() && newAssetUrl.trim()) {
-      const currentLinks = form.getValues("asset_links") || [];
-      form.setValue("asset_links", [...currentLinks, {
-        label: newAssetLabel.trim(),
-        url: newAssetUrl.trim()
-      }]);
-      setNewAssetLabel("");
-      setNewAssetUrl("");
-    }
-  };
-  const removeAssetLink = (index: number) => {
-    const currentLinks = form.getValues("asset_links") || [];
-    form.setValue("asset_links", currentLinks.filter((_, i) => i !== index));
-  };
-  const addRequirement = () => {
-    if (newRequirement.trim()) {
-      const currentReqs = form.getValues("requirements") || [];
-      form.setValue("requirements", [...currentReqs, newRequirement.trim()]);
-      setNewRequirement("");
-    }
-  };
-  const removeRequirement = (index: number) => {
-    const currentReqs = form.getValues("requirements") || [];
-    form.setValue("requirements", currentReqs.filter((_, i) => i !== index));
-  };
   const addQuestion = () => {
     if (newQuestion.trim()) {
       const currentQuestions = form.getValues("application_questions") || [];
@@ -272,7 +234,6 @@ export function CampaignCreationWizard({
         is_infinite_budget: campaign?.is_infinite_budget || false,
         budget: campaign?.budget?.toString() || "",
         rpm_rate: campaign?.rpm_rate?.toString() || "5",
-        guidelines: campaign?.guidelines || "",
         embed_url: campaign?.embed_url || "",
         preview_url: campaign?.preview_url || "",
         allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
@@ -280,15 +241,10 @@ export function CampaignCreationWizard({
         access_code: campaign?.access_code || "",
         requires_application: campaign?.requires_application !== false,
         hashtags: campaign?.hashtags || [],
-        asset_links: campaign?.asset_links || [],
-        requirements: campaign?.requirements || [],
         application_questions: campaign?.application_questions || []
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 2 : 1);
-      setNewAssetLabel("");
-      setNewAssetUrl("");
-      setNewRequirement("");
       setNewQuestion("");
     }
   }, [open, campaign]);
@@ -370,7 +326,6 @@ export function CampaignCreationWizard({
         is_infinite_budget: values.is_infinite_budget,
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
         rpm_rate: Number(values.rpm_rate) || 5,
-        guidelines: values.guidelines || null,
         embed_url: values.embed_url || null,
         preview_url: values.preview_url || null,
         brand_id: brandId,
@@ -430,7 +385,6 @@ export function CampaignCreationWizard({
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
-          guidelines: values.guidelines || null,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
           allowed_platforms: values.allowed_platforms,
@@ -438,8 +392,6 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
-          asset_links: values.asset_links || [],
-          requirements: values.requirements || [],
           application_questions: values.application_questions || [],
           ...(bannerFile ? {
             banner_url: bannerUrl
@@ -471,7 +423,6 @@ export function CampaignCreationWizard({
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
-          guidelines: values.guidelines || null,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
           allowed_platforms: values.allowed_platforms,
@@ -479,8 +430,6 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
-          asset_links: values.asset_links || [],
-          requirements: values.requirements || [],
           application_questions: values.application_questions || [],
           banner_url: bannerUrl,
           brand_id: brandId,
@@ -936,122 +885,8 @@ export function CampaignCreationWizard({
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="guidelines"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">Creator Guidelines</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Specific instructions for creators..."
-                              className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     {/* Collapsible Sections */}
                     <div className="space-y-3">
-                      {/* Asset Links */}
-                      <div className="rounded-lg bg-muted/20 p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground">Asset Links</span>
-                            {(form.watch("asset_links")?.length ?? 0) > 0 && (
-                              <Badge variant="secondary" className="text-xs">{form.watch("asset_links")?.length}</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Label"
-                            value={newAssetLabel}
-                            onChange={e => setNewAssetLabel(e.target.value)}
-                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
-                          />
-                          <Input
-                            placeholder="URL"
-                            value={newAssetUrl}
-                            onChange={e => setNewAssetUrl(e.target.value)}
-                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
-                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAssetLink())}
-                          />
-                          <Button type="button" variant="secondary" size="sm" onClick={addAssetLink} className="h-9">
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                        {(form.watch("asset_links")?.length ?? 0) > 0 && (
-                          <div className="mt-2 space-y-1.5">
-                            {form.watch("asset_links")?.map((link, index) => (
-                              <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background group">
-                                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                <span className="text-sm font-medium">{link.label}</span>
-                                <span className="text-xs text-muted-foreground truncate flex-1">{link.url}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
-                                  onClick={() => removeAssetLink(index)}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Requirements */}
-                      <div className="rounded-lg bg-muted/20 p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground">Requirements</span>
-                            {(form.watch("requirements")?.length ?? 0) > 0 && (
-                              <Badge variant="secondary" className="text-xs">{form.watch("requirements")?.length}</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Add a requirement..."
-                            value={newRequirement}
-                            onChange={e => setNewRequirement(e.target.value)}
-                            className="flex-1 h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
-                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
-                          />
-                          <Button type="button" variant="secondary" size="sm" onClick={addRequirement} className="h-9">
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                        {(form.watch("requirements")?.length ?? 0) > 0 && (
-                          <div className="mt-2 space-y-1.5">
-                            {form.watch("requirements")?.map((req, index) => (
-                              <div key={index} className="flex items-center gap-2 p-2 rounded-md bg-background group">
-                                <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                  <span className="text-xs font-semibold text-primary">{index + 1}</span>
-                                </span>
-                                <span className="text-sm flex-1">{req}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 opacity-0 group-hover:opacity-100"
-                                  onClick={() => removeRequirement(index)}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
 
                       {/* Admin-only: Shortimize API Key */}
                       {isAdmin && (
