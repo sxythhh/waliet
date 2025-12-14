@@ -427,29 +427,33 @@ export function BoostCard({ boost }: BoostCardProps) {
 
       {/* Submit Video Dialog */}
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] bg-background">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="font-inter tracking-[-0.5px] text-xl">Submit post</DialogTitle>
-              <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                Daily limit: {last24Hours.length}/{dailyLimit}
-              </Badge>
+        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-card border-none [&>button]:hidden">
+          {/* Header */}
+          <div className="p-6 pb-0">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="font-geist tracking-[-0.5px] text-lg font-semibold">
+                Submit post
+              </h2>
+              <span className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">
+                {last24Hours.length}/{dailyLimit} today
+              </span>
             </div>
-            <DialogDescription>
-              Link your Instagram, TikTok, YouTube post
-            </DialogDescription>
-          </DialogHeader>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+              Link your Instagram, TikTok, or YouTube post
+            </p>
+          </div>
           
-          <div className="space-y-4 py-4">
+          {/* Content */}
+          <div className="p-6 space-y-4">
             <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <Link2 className="h-5 w-5 text-muted-foreground" />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Link2 className="h-4 w-4 text-muted-foreground" />
               </div>
               <Input
-                placeholder="Paste link"
+                placeholder="Paste video link..."
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                className="pl-10 h-12 text-base border-2"
+                className="pl-11 h-12 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/60"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !submitting) {
                     handleSubmitVideo();
@@ -458,23 +462,36 @@ export function BoostCard({ boost }: BoostCardProps) {
               />
             </div>
 
-            <div className="bg-muted/50 rounded-xl p-4 flex items-start gap-3">
-              <Lightbulb className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium">Submit clips as soon as you post them.</p>
-                <p className="text-muted-foreground">Views gained before submission do not count toward payouts.</p>
+            <div className="bg-muted/20 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                  <Lightbulb className="h-4 w-4 text-yellow-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium font-inter tracking-[-0.5px]">
+                    Submit clips immediately
+                  </p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                    Views before submission don't count toward payouts
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setSubmitDialogOpen(false)} className="flex-1">
+          {/* Footer */}
+          <div className="flex gap-2 p-6 pt-0">
+            <Button 
+              variant="ghost" 
+              onClick={() => setSubmitDialogOpen(false)} 
+              className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleSubmitVideo} 
               disabled={submitting || !videoUrl.trim()}
-              className="flex-1 bg-foreground hover:bg-foreground/90 text-background"
+              className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm"
             >
               {submitting ? "Submitting..." : "Submit"}
             </Button>
