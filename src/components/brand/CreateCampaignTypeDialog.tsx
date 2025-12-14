@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import clippingIcon from "@/assets/clipping-icon.svg";
 import boostIcon from "@/assets/boost-icon.svg";
+import blueprintsIcon from "@/assets/blueprints-inactive.svg";
 interface Blueprint {
   id: string;
   title: string;
@@ -110,13 +111,13 @@ export function CreateCampaignTypeDialog({
           ) : (
             <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
               <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                <FileText className="h-5 w-5 text-muted-foreground" />
+                <img src={blueprintsIcon} alt="Blueprints" className="h-5 w-5 opacity-60" />
               </div>
               <p className="text-sm font-medium text-foreground mb-1 font-inter tracking-[-0.5px]">No blueprints yet</p>
               <p className="text-xs text-muted-foreground mb-4 font-inter tracking-[-0.5px]">
                 Create a blueprint first to define your campaign brief
               </p>
-              <Button onClick={handleCreateBlueprint} size="sm" variant="secondary" className="gap-2 rounded-lg">
+              <Button onClick={handleCreateBlueprint} size="sm" variant="secondary" className="gap-2 rounded-lg font-inter tracking-[-0.5px]">
                 <Plus className="h-3.5 w-3.5" />
                 Create Blueprint
               </Button>
