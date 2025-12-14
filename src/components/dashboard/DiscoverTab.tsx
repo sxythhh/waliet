@@ -62,6 +62,7 @@ interface BountyCampaign {
   status: string;
   created_at: string;
   brand_id: string;
+  blueprint_id?: string | null;
   brands?: {
     name: string;
     logo_url: string;
