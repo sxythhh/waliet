@@ -437,7 +437,8 @@ export function CampaignCreationWizard({
           brand_logo_url: brandData?.logo_url || null,
           status: "active",
           slug: slug,
-          is_featured: false
+          is_featured: false,
+          blueprint_id: initialBlueprintId || null
         };
         const {
           error
