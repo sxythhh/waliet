@@ -67,8 +67,8 @@ export function useOnboardingStatus(): OnboardingStatus {
       // 1. Add basic profile info
       if (profile?.full_name && profile?.username) completed++;
 
-      // 2. Update your profile description
-      if (profile?.bio && profile.bio.length > 10) completed++;
+      // 2. Choose content preferences
+      if (profile?.content_styles && profile.content_styles.length > 0) completed++;
 
       // 3. Add your location
       if (profile?.country) completed++;
