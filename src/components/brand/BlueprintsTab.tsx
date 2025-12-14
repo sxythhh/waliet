@@ -7,9 +7,13 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CampaignCreationWizard } from "./CampaignCreationWizard";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
-import instagramLogo from "@/assets/instagram-logo-black.png";
-import youtubeLogo from "@/assets/youtube-logo-black-new.png";
+import { useTheme } from "@/components/ThemeProvider";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import { format } from "date-fns";
 
 interface Blueprint {
@@ -27,6 +31,7 @@ interface BlueprintsTabProps {
 }
 
 export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
+  const { resolvedTheme } = useTheme();
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -141,13 +146,14 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
   };
 
   const getPlatformIcon = (platform: string) => {
+    const isDark = resolvedTheme === 'dark';
     switch (platform?.toLowerCase()) {
       case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-4 w-4 dark:invert" />;
+        return <img src={isDark ? tiktokLogoWhite : tiktokLogoBlack} alt="TikTok" className="h-4 w-4" />;
       case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />;
+        return <img src={isDark ? instagramLogoWhite : instagramLogoBlack} alt="Instagram" className="h-4 w-4" />;
       case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />;
+        return <img src={isDark ? youtubeLogoWhite : youtubeLogoBlack} alt="YouTube" className="h-4 w-4" />;
       default:
         return null;
     }
@@ -212,7 +218,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
               <div
                 key={blueprint.id}
                 onClick={() => openBlueprint(blueprint.id)}
-                className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 hover:bg-card/60 dark:bg-card/20 dark:hover:bg-card/40 transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden"
+                className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 hover:bg-[#f5f5f5] dark:bg-card/20 dark:hover:bg-[#0f0f0f] transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden"
               >
                 {/* Content Preview */}
                 <div className="p-5 min-h-[120px] border-b border-border/30">
