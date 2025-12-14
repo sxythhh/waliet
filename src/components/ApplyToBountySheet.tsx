@@ -70,13 +70,10 @@ export function ApplyToBountySheet({
       }
     }
   }, [open, bounty?.blueprint_id]);
-
   const fetchBlueprint = async (blueprintId: string) => {
-    const { data } = await supabase
-      .from('blueprints')
-      .select('*')
-      .eq('id', blueprintId)
-      .single();
+    const {
+      data
+    } = await supabase.from('blueprints').select('*').eq('id', blueprintId).single();
     setBlueprint(data);
   };
   const checkConnectedAccounts = async () => {
@@ -273,26 +270,18 @@ export function ApplyToBountySheet({
           </div>
 
           {/* Blueprint Content */}
-          {blueprint && (
-            <div className="space-y-4">
+          {blueprint && <div className="space-y-4">
               <div className="relative max-h-[180px] overflow-hidden">
                 <div className="space-y-3">
-                  {blueprint.content && (
-                    <div 
-                      className="text-sm text-white/80 leading-relaxed prose prose-invert prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: blueprint.content }}
-                    />
-                  )}
-                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && (
-                    <div className="space-y-2">
-                      {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => (
-                        <div key={idx} className="flex items-start gap-2 text-sm text-white/80">
+                  {blueprint.content && <div className="text-sm text-white/80 leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{
+                    __html: blueprint.content
+                  }} />}
+                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && <div className="space-y-2">
+                      {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-white/80">
                           <span className="text-amber-500 mt-0.5">•</span>
                           <span>{typeof hook === 'string' ? hook : hook.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
                 </div>
                 
                 {/* Gradient Fade Overlay */}
@@ -300,15 +289,10 @@ export function ApplyToBountySheet({
               </div>
 
               {/* View Full Blueprint Button */}
-              <Button 
-                variant="ghost" 
-                className="w-full font-inter tracking-[-0.5px] hover:bg-muted" 
-                onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}
-              >
+              <Button variant="ghost" className="w-full font-inter tracking-[-0.5px] hover:bg-muted" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
                 View full blueprint
               </Button>
-            </div>
-          )}
+            </div>}
 
           {/* Application Form - Show connect prompt if no accounts */}
           {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
@@ -352,7 +336,7 @@ export function ApplyToBountySheet({
                       }
                     };
                     window.addEventListener('message', handleMessage);
-                  }} variant="ghost" className="font-['Inter'] tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/5 w-full gap-2">
+                  }} variant="ghost" className="font-['Inter'] tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/5 w-full gap-2 opacity-100">
                     <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/db3f044f-3d8c-43ea-9461-09bfff9b41e0.webp" />
                     Connect Discord
                   </Button>
