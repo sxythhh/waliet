@@ -3,6 +3,7 @@ import { ArrowLeft, Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,11 +11,12 @@ import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
-import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
+import clippingIcon from "@/assets/clipping-icon.svg";
+import boostIcon from "@/assets/boost-icon.svg";
 import {
   DndContext,
   closestCenter,
@@ -1290,66 +1292,57 @@ export function BlueprintEditor({
   </div>
 
       {/* Campaign Type Selection Dialog */}
-      <CreateCampaignTypeDialog
-        onSelectClipping={handleSelectClipping}
-        onSelectManaged={handleSelectClipping}
-        onSelectBoost={handleSelectBoost}
-        trigger={
-          <span className="hidden" />
-        }
-        brandId={brandId}
-      />
-      {showCampaignTypeDialog && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setShowCampaignTypeDialog(false)}>
-          <div className="sm:max-w-[420px] w-full mx-4 bg-[#f5f5f5] dark:bg-[#050505] border border-border rounded-lg p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-6">Activate Blueprint</h2>
+      <Dialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog}>
+        <DialogContent className="sm:max-w-[420px] bg-[#f5f5f5] dark:bg-[#050505] border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold font-geist tracking-[-0.5px]">Activate Blueprint</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 pt-2">
+            <p className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Select a Campaign Workflow</p>
             
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Select a Campaign Workflow</p>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {/* Clipping Option */}
-                <button 
-                  onClick={handleSelectClipping}
-                  className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                      backgroundColor: '#a7751e',
-                      borderTop: '2px solid #dda038'
-                    }}>
-                      <FileText className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="font-semibold tracking-[-0.5px] text-sm">Clipping</span>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Clipping Option */}
+              <button 
+                onClick={handleSelectClipping}
+                className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                    backgroundColor: '#a7751e',
+                    borderTop: '2px solid #dda038'
+                  }}>
+                    <img src={clippingIcon} alt="Clipping" className="h-4 w-4" />
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
-                    Pay a fixed CPM. Select your budget, payment terms, and requirements.
-                  </p>
-                </button>
+                  <span className="font-semibold font-geist tracking-[-0.5px] text-sm">Clipping</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed font-geist tracking-[-0.5px]">
+                  Pay a fixed CPM. Select your budget, payment terms, and requirements.
+                </p>
+              </button>
 
-                {/* Boost Option */}
-                <button 
-                  onClick={handleSelectBoost}
-                  className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                      backgroundColor: '#1ea75e',
-                      borderTop: '2px solid #38dd7a'
-                    }}>
-                      <Share2 className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="font-semibold tracking-[-0.5px] text-sm">Boost</span>
+              {/* Boost Option */}
+              <button 
+                onClick={handleSelectBoost}
+                className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                    backgroundColor: '#1ea75e',
+                    borderTop: '2px solid #38dd7a'
+                  }}>
+                    <img src={boostIcon} alt="Boost" className="h-4 w-4" />
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
-                    Retainer-based campaign with monthly creator positions
-                  </p>
-                </button>
-              </div>
+                  <span className="font-semibold font-geist tracking-[-0.5px] text-sm">Boost</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed font-geist tracking-[-0.5px]">
+                  Retainer-based campaign with monthly creator positions
+                </p>
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Campaign Creation Wizard */}
       {showCampaignWizard && (
