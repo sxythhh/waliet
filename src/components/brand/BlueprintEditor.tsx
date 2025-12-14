@@ -1173,25 +1173,25 @@ export function BlueprintEditor({
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
-          <div className="sticky top-0 z-10 flex items-center justify-between py-4 bg-background border-b border-[#141414] px-[14px]">
-            <div className="flex items-center gap-3">
+          <div className="sticky top-0 z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 sm:py-4 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
               <button
                 onClick={goBack}
                 className="flex items-center gap-2 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity"
               >
                 <ArrowLeft className="h-4 w-4 text-white" />
-                Return
+                <span className="hidden sm:inline">Return</span>
               </button>
-              <div className="h-4 w-px bg-border/50" />
+              <div className="h-4 w-px bg-border/50 hidden sm:block" />
               {brand?.logo_url && (
-                <img src={brand.logo_url} alt={brand.name} className="h-6 w-6 rounded object-cover" />
+                <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover" />
               )}
-              <span className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">{brand?.name}</span>
-              <span className="text-muted-foreground/50">/</span>
+              <span className="text-muted-foreground text-xs sm:text-sm font-inter tracking-[-0.5px] hidden sm:inline">{brand?.name}</span>
+              <span className="text-muted-foreground/50 hidden sm:inline">/</span>
               <Input
                 value={blueprint.title}
                 onChange={e => updateBlueprint({ title: e.target.value })}
-                className="h-8 w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input"
+                className="h-8 w-full sm:w-56 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input text-sm"
                 placeholder="Untitled"
               />
               {saving && (
@@ -1202,7 +1202,7 @@ export function BlueprintEditor({
             </div>
             <button
               onClick={activateBlueprint}
-              className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
+              className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity w-full sm:w-auto"
             >
               Activate Blueprint
             </button>
@@ -1210,18 +1210,18 @@ export function BlueprintEditor({
 
           {/* Content */}
           <div className="flex-1 overflow-auto">
-            <div className="max-w-4xl mx-auto p-6 space-y-4">
+            <div className="max-w-4xl mx-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
               {/* Modular Details Header */}
-              <div className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-                    <Sparkles className="h-5 w-5 text-muted-foreground" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 sm:py-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-muted/30 flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <h2 className="text-base font-medium font-inter tracking-[-0.5px] text-foreground">
+                    <h2 className="text-sm sm:text-base font-medium font-inter tracking-[-0.5px] text-foreground">
                       Modular Details
                     </h2>
-                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                    <p className="text-xs sm:text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                       Write free-form or add the sections you need
                     </p>
                   </div>
