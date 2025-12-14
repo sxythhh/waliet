@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Video, Users, FileText, Lock } from "lucide-react";
+import { CalendarIcon, Upload, Lock } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Blueprint {
@@ -43,6 +42,9 @@ interface BountyData {
   brand_id: string;
   is_private: boolean;
 }
+
+const labelStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
+const inputStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
 
 export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: EditBountyDialogProps) {
   const [loading, setLoading] = useState(true);
@@ -171,179 +173,156 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Boost Campaign</DialogTitle>
-          <DialogDescription>
-            Update your boost campaign details
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto border-0 bg-background p-0">
+        <div className="p-6">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-xl font-semibold" style={labelStyle}>
+              Edit Boost
+            </DialogTitle>
+          </DialogHeader>
 
-        {loading ? (
-          <div className="py-8 text-center">Loading...</div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Info */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Campaign Title *</Label>
+          {loading ? (
+            <div className="py-12 flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Title */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Title</Label>
                 <Input
-                  id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g., Long-term Creator Partnership"
+                  placeholder="Campaign title"
+                  className="border-0 bg-muted/50 h-11"
+                  style={inputStyle}
                   required
                 />
               </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
+              {/* Description */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Description</Label>
                 <Textarea
-                  id="description"
                   value={formData.description || ""}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Brief overview of your boost campaign..."
-                  className="min-h-[80px]"
+                  placeholder="Brief overview..."
+                  className="border-0 bg-muted/50 min-h-[80px] resize-none"
+                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <Label htmlFor="banner">Campaign Banner</Label>
-                <div className="flex items-center gap-2">
+              {/* Banner */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Banner</Label>
+                <div className="relative">
                   <Input
-                    id="banner"
                     type="file"
                     accept="image/*"
                     onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
+                    className="border-0 bg-muted/50 h-11 file:bg-transparent file:border-0 file:text-sm"
+                    style={inputStyle}
                   />
-                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
                 {formData.banner_url && !bannerFile && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Current banner uploaded
-                  </p>
+                  <p className="text-xs text-muted-foreground" style={labelStyle}>Current banner uploaded</p>
                 )}
               </div>
-            </div>
 
-            <Separator />
-
-            {/* Compensation */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Compensation & Deliverables
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="monthly_retainer">Monthly Retainer ($) *</Label>
+              {/* Compensation Row */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">Monthly ($)</Label>
                   <Input
-                    id="monthly_retainer"
                     type="number"
                     min="0"
                     step="0.01"
                     value={formData.monthly_retainer}
                     onChange={(e) => setFormData({ ...formData, monthly_retainer: parseFloat(e.target.value) })}
-                    placeholder="500"
+                    className="border-0 bg-muted/50 h-11"
+                    style={inputStyle}
                     required
                   />
                 </div>
-
-                <div>
-                  <Label htmlFor="videos_per_month">Videos Per Month *</Label>
+                <div className="space-y-2">
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">Videos/month</Label>
                   <Input
-                    id="videos_per_month"
                     type="number"
                     min="1"
                     value={formData.videos_per_month}
                     onChange={(e) => setFormData({ ...formData, videos_per_month: parseInt(e.target.value) })}
-                    placeholder="10"
+                    className="border-0 bg-muted/50 h-11"
+                    style={inputStyle}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">Max creators</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.max_accepted_creators}
+                    onChange={(e) => setFormData({ ...formData, max_accepted_creators: parseInt(e.target.value) })}
+                    className="border-0 bg-muted/50 h-11"
+                    style={inputStyle}
                     required
                   />
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="max_accepted_creators">Maximum Creators *</Label>
-                <Input
-                  id="max_accepted_creators"
-                  type="number"
-                  min="1"
-                  value={formData.max_accepted_creators}
-                  onChange={(e) => setFormData({ ...formData, max_accepted_creators: parseInt(e.target.value) })}
-                  placeholder="5"
-                  required
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Content Requirements */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Content Requirements
-              </h3>
-
-              <div>
-                <Label htmlFor="content_style">Content Style & Format *</Label>
+              {/* Content Requirements */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Content requirements</Label>
                 <Textarea
-                  id="content_style"
                   value={formData.content_style_requirements}
                   onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
-                  placeholder="Describe content style, format, themes, tone..."
-                  className="min-h-[100px]"
+                  placeholder="Describe content style, format, themes..."
+                  className="border-0 bg-muted/50 min-h-[80px] resize-none"
+                  style={inputStyle}
                   required
                 />
               </div>
 
-              <div>
-                <Label>Blueprint</Label>
+              {/* Blueprint */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Blueprint</Label>
                 <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-0 bg-muted/50 h-11" style={inputStyle}>
                     <SelectValue placeholder="Select a blueprint" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No blueprint</SelectItem>
+                    <SelectItem value="none" style={inputStyle}>No blueprint</SelectItem>
                     {blueprints.map((bp) => (
-                      <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
+                      <SelectItem key={bp.id} value={bp.id} style={inputStyle}>{bp.title}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Select a blueprint to display its content to creators
+                <p className="text-xs text-muted-foreground" style={labelStyle}>
+                  Creators will see this blueprint when viewing directions
                 </p>
               </div>
-            </div>
 
-            <Separator />
-
-            {/* Timeline */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                Campaign Timeline
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4">
+              {/* Timeline Row */}
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">Start date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
+                        type="button"
+                        variant="ghost"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-11 bg-muted/50 hover:bg-muted/70 border-0",
                           !startDate && "text-muted-foreground"
                         )}
+                        style={inputStyle}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP") : "Pick a date"}
+                        {startDate ? format(startDate, "MMM d, yyyy") : "Pick date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 border-0">
                       <Calendar
                         mode="single"
                         selected={startDate}
@@ -353,23 +332,24 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                     </PopoverContent>
                   </Popover>
                 </div>
-
                 <div className="space-y-2">
-                  <Label>End Date</Label>
+                  <Label style={labelStyle} className="text-xs text-muted-foreground">End date</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
+                        type="button"
+                        variant="ghost"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal h-11 bg-muted/50 hover:bg-muted/70 border-0",
                           !endDate && "text-muted-foreground"
                         )}
+                        style={inputStyle}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP") : "Pick a date"}
+                        {endDate ? format(endDate, "MMM d, yyyy") : "Pick date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 border-0">
                       <Calendar
                         mode="single"
                         selected={endDate}
@@ -380,59 +360,67 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                   </Popover>
                 </div>
               </div>
-            </div>
 
-            <Separator />
-
-            {/* Private Toggle */}
-            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/10">
-              <div className="flex items-center gap-3">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm font-medium">Private Boost</p>
-                  <p className="text-xs text-muted-foreground">Only accessible via direct link</p>
-                </div>
+              {/* Status */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger className="border-0 bg-muted/50 h-11" style={inputStyle}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft" style={inputStyle}>Draft</SelectItem>
+                    <SelectItem value="active" style={inputStyle}>Active</SelectItem>
+                    <SelectItem value="ended" style={inputStyle}>Ended</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Checkbox
-                checked={formData.is_private}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
-              />
-            </div>
 
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+              {/* Private Toggle */}
+              <div 
+                className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer"
+                onClick={() => setFormData({ ...formData, is_private: !formData.is_private })}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="ended">Ended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="flex items-center gap-3">
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium" style={labelStyle}>Private</p>
+                    <p className="text-xs text-muted-foreground" style={labelStyle}>Only accessible via direct link</p>
+                  </div>
+                </div>
+                <Checkbox
+                  checked={formData.is_private}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
+                />
+              </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 justify-end pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={saving}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        )}
+              {/* Actions */}
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => onOpenChange(false)}
+                  disabled={saving}
+                  className="h-10"
+                  style={labelStyle}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={saving} 
+                  className="h-10 bg-foreground text-background hover:bg-foreground/90"
+                  style={labelStyle}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
