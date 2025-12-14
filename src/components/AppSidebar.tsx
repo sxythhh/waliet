@@ -109,6 +109,7 @@ export function AppSidebar() {
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
+  const [currentBrandSubscriptionStatus, setCurrentBrandSubscriptionStatus] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -132,20 +133,30 @@ export function AppSidebar() {
   }, [isAdmin]);
   useEffect(() => {
     // Update current brand info when workspace changes
-    if (!isCreatorMode && workspace) {
-      // Check in allBrands first (for admins), then in brandMemberships
-      const brandFromAll = allBrands.find(b => b.slug === workspace);
-      if (brandFromAll) {
-        setCurrentBrandName(brandFromAll.name);
-        setCurrentBrandLogo(brandFromAll.logo_url);
-        return;
+    const fetchCurrentBrandInfo = async () => {
+      if (!isCreatorMode && workspace) {
+        // Find the brand id first
+        const brandFromAll = allBrands.find(b => b.slug === workspace);
+        const brandFromMembership = brandMemberships.find(m => m.brands.slug === workspace);
+        
+        if (brandFromAll) {
+          setCurrentBrandName(brandFromAll.name);
+          setCurrentBrandLogo(brandFromAll.logo_url);
+          // Fetch subscription status
+          const { data } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
+          setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+        } else if (brandFromMembership) {
+          setCurrentBrandName(brandFromMembership.brands.name);
+          setCurrentBrandLogo(brandFromMembership.brands.logo_url);
+          // Fetch subscription status
+          const { data } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
+          setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+        }
+      } else {
+        setCurrentBrandSubscriptionStatus(null);
       }
-      const brand = brandMemberships.find(m => m.brands.slug === workspace);
-      if (brand) {
-        setCurrentBrandName(brand.brands.name);
-        setCurrentBrandLogo(brand.brands.logo_url);
-      }
-    }
+    };
+    fetchCurrentBrandInfo();
   }, [workspace, brandMemberships, allBrands, isCreatorMode]);
   const fetchProfile = async () => {
     if (!user) return;
@@ -444,8 +455,8 @@ export function AppSidebar() {
 
         </nav>
 
-        {/* Upgrade CTA - Only show in brand workspace and when not collapsed */}
-        {!isCreatorMode && !isCollapsed && (
+        {/* Upgrade CTA - Only show in brand workspace, when not collapsed, and when not subscribed */}
+        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== 'active' && (
           <div className="px-3 mb-2">
             <div className="rounded-lg bg-[#1a1a1a] p-3">
               <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">

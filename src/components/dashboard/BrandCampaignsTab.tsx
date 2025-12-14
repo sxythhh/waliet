@@ -265,7 +265,7 @@ export function BrandCampaignsTab({
           <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
 
           {/* Subscription Required CTA and Embed - Only show if not subscribed */}
-          {subscriptionStatus && subscriptionStatus !== "active" && <>
+          {subscriptionStatus !== "active" && <>
               <Card className="border bg-[#0d0d0d] border-[#141414]/0">
                 <CardContent className="flex flex-col items-center justify-center py-12 px-6 text-center space-y-4 bg-[#0d0d0d]">
                   <h2 className="text-xl font-semibold tracking-tight">Subscription Required</h2>
