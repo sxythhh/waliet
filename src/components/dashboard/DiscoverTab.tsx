@@ -22,14 +22,7 @@ import emptyCampaignsImage from "@/assets/empty-campaigns.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 interface Campaign {
   id: string;
   title: string;
@@ -69,7 +62,6 @@ interface BountyCampaign {
   status: string;
   created_at: string;
   brand_id: string;
-  blueprint_id: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -103,7 +95,7 @@ export function DiscoverTab() {
   const [browseFilter, setBrowseFilter] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   // Auto-open private campaign dialog if joinPrivate param is present
   useEffect(() => {
     if (searchParams.get("joinPrivate") === "true") {
@@ -111,7 +103,9 @@ export function DiscoverTab() {
       // Remove the param from URL
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("joinPrivate");
-      setSearchParams(newParams, { replace: true });
+      setSearchParams(newParams, {
+        replace: true
+      });
     }
   }, [searchParams, setSearchParams]);
 
@@ -126,22 +120,20 @@ export function DiscoverTab() {
         // Remove the param from URL
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("campaignSlug");
-        setSearchParams(newParams, { replace: true });
+        setSearchParams(newParams, {
+          replace: true
+        });
       } else {
         // Campaign not found in public campaigns (might be private), fetch it directly
         fetchCampaignBySlug(campaignSlug);
       }
     }
   }, [searchParams, campaigns, loading]);
-
   const fetchCampaignBySlug = async (slug: string) => {
-    const { data, error } = await supabase
-      .from("campaigns")
-      .select(`*, brands (logo_url)`)
-      .eq("slug", slug)
-      .in("status", ["active", "ended"])
-      .maybeSingle();
-    
+    const {
+      data,
+      error
+    } = await supabase.from("campaigns").select(`*, brands (logo_url)`).eq("slug", slug).in("status", ["active", "ended"]).maybeSingle();
     if (!error && data) {
       const campaignData: Campaign = {
         ...data,
@@ -154,108 +146,107 @@ export function DiscoverTab() {
       // Remove the param from URL
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("campaignSlug");
-      setSearchParams(newParams, { replace: true });
+      setSearchParams(newParams, {
+        replace: true
+      });
     }
   };
-
   useEffect(() => {
     fetchCampaigns();
     fetchBookmarks();
   }, []);
-
   const fetchBookmarks = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) return;
-    
+
     // Fetch campaign bookmarks
-    const { data: campaignData, error: campaignError } = await supabase
-      .from("campaign_bookmarks")
-      .select("campaign_id")
-      .eq("user_id", user.id);
-    
+    const {
+      data: campaignData,
+      error: campaignError
+    } = await supabase.from("campaign_bookmarks").select("campaign_id").eq("user_id", user.id);
     if (!campaignError && campaignData) {
       setBookmarkedCampaignIds(campaignData.map(b => b.campaign_id));
     }
-    
+
     // Fetch bounty bookmarks
-    const { data: bountyData, error: bountyError } = await supabase
-      .from("bounty_bookmarks")
-      .select("bounty_campaign_id")
-      .eq("user_id", user.id);
-    
+    const {
+      data: bountyData,
+      error: bountyError
+    } = await supabase.from("bounty_bookmarks").select("bounty_campaign_id").eq("user_id", user.id);
     if (!bountyError && bountyData) {
       setBookmarkedBountyIds(bountyData.map(b => b.bounty_campaign_id));
     }
   };
-
   const toggleBookmark = async (campaignId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to bookmark campaigns");
       return;
     }
-    
     const isBookmarked = bookmarkedCampaignIds.includes(campaignId);
-    
     if (isBookmarked) {
-      const { error } = await supabase
-        .from("campaign_bookmarks")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("campaign_id", campaignId);
-      
+      const {
+        error
+      } = await supabase.from("campaign_bookmarks").delete().eq("user_id", user.id).eq("campaign_id", campaignId);
       if (!error) {
         setBookmarkedCampaignIds(prev => prev.filter(id => id !== campaignId));
         toast.success("Bookmark removed");
       }
     } else {
-      const { error } = await supabase
-        .from("campaign_bookmarks")
-        .insert({ user_id: user.id, campaign_id: campaignId });
-      
+      const {
+        error
+      } = await supabase.from("campaign_bookmarks").insert({
+        user_id: user.id,
+        campaign_id: campaignId
+      });
       if (!error) {
         setBookmarkedCampaignIds(prev => [...prev, campaignId]);
         toast.success("Campaign bookmarked");
       }
     }
   };
-
   const toggleBountyBookmark = async (bountyId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to bookmark boosts");
       return;
     }
-    
     const isBookmarked = bookmarkedBountyIds.includes(bountyId);
-    
     if (isBookmarked) {
-      const { error } = await supabase
-        .from("bounty_bookmarks")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("bounty_campaign_id", bountyId);
-      
+      const {
+        error
+      } = await supabase.from("bounty_bookmarks").delete().eq("user_id", user.id).eq("bounty_campaign_id", bountyId);
       if (!error) {
         setBookmarkedBountyIds(prev => prev.filter(id => id !== bountyId));
         toast.success("Bookmark removed");
       }
     } else {
-      const { error } = await supabase
-        .from("bounty_bookmarks")
-        .insert({ user_id: user.id, bounty_campaign_id: bountyId });
-      
+      const {
+        error
+      } = await supabase.from("bounty_bookmarks").insert({
+        user_id: user.id,
+        bounty_campaign_id: bountyId
+      });
       if (!error) {
         setBookmarkedBountyIds(prev => [...prev, bountyId]);
         toast.success("Boost bookmarked");
       }
     }
   };
-
   const fetchCampaigns = async () => {
     setLoading(true);
 
@@ -412,36 +403,23 @@ export function DiscoverTab() {
         {/* Header and Filters */}
         <div className="bg-background px-6 pt-4 pb-4 space-y-6">
           {/* Featured Programs Carousel */}
-          {campaigns.filter(c => c.is_featured && c.status === 'active').length > 0 && (
-            <div className="space-y-4">
+          {campaigns.filter(c => c.is_featured && c.status === 'active').length > 0 && <div className="space-y-4">
               <h2 className="text-lg font-semibold tracking-tight">Featured Programs</h2>
-              <Carousel
-                opts={{
-                  align: "start",
-                  loop: true,
-                }}
-                className="w-full"
-              >
+              <Carousel opts={{
+          align: "start",
+          loop: true
+        }} className="w-full">
                 <CarouselContent className="-ml-4">
-                  {campaigns.filter(c => c.is_featured && c.status === 'active').map((campaign) => (
-                    <CarouselItem key={campaign.id} className="pl-4 basis-full md:basis-1/2">
-                      <button
-                        onClick={() => {
-                          setSelectedCampaign(campaign);
-                          setSheetOpen(true);
-                        }}
-                        className="w-full text-left"
-                      >
+                  {campaigns.filter(c => c.is_featured && c.status === 'active').map(campaign => <CarouselItem key={campaign.id} className="pl-4 basis-full md:basis-1/2">
+                      <button onClick={() => {
+                setSelectedCampaign(campaign);
+                setSheetOpen(true);
+              }} className="w-full text-left">
                         <div className="relative h-[180px] rounded-xl overflow-hidden group cursor-pointer">
                           {/* Background Image */}
-                          <div 
-                            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                            style={{ 
-                              backgroundImage: campaign.banner_url 
-                                ? `url(${campaign.banner_url})` 
-                                : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
-                            }}
-                          />
+                          <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style={{
+                    backgroundImage: campaign.banner_url ? `url(${campaign.banner_url})` : 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
+                  }} />
                           {/* Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
                           
@@ -449,17 +427,9 @@ export function DiscoverTab() {
                           <div className="relative h-full p-4 flex flex-col justify-between">
                             {/* Brand Logo */}
                             <div className="w-10 h-10 rounded-[10px] bg-background/10 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden">
-                              {(campaign.brands?.logo_url || campaign.brand_logo_url) ? (
-                                <img 
-                                  src={campaign.brands?.logo_url || campaign.brand_logo_url} 
-                                  alt={campaign.brand_name}
-                                  className="w-8 h-8 rounded-[10px] object-cover"
-                                />
-                              ) : (
-                                <span className="text-white text-sm font-bold">
+                              {campaign.brands?.logo_url || campaign.brand_logo_url ? <img src={campaign.brands?.logo_url || campaign.brand_logo_url} alt={campaign.brand_name} className="w-8 h-8 rounded-[10px] object-cover" /> : <span className="text-white text-sm font-bold">
                                   {campaign.brand_name.charAt(0).toUpperCase()}
-                                </span>
-                              )}
+                                </span>}
                             </div>
                             
                             {/* Campaign Info */}
@@ -488,18 +458,14 @@ export function DiscoverTab() {
                           </div>
                         </div>
                       </button>
-                    </CarouselItem>
-                  ))}
+                    </CarouselItem>)}
                 </CarouselContent>
-                {campaigns.filter(c => c.is_featured && c.status === 'active').length > 1 && (
-                  <>
+                {campaigns.filter(c => c.is_featured && c.status === 'active').length > 1 && <>
                     <CarouselPrevious className="left-4 bg-background/80 backdrop-blur-sm border-0 hover:bg-background" />
                     <CarouselNext className="right-4 bg-background/80 backdrop-blur-sm border-0 hover:bg-background" />
-                  </>
-                )}
+                  </>}
               </Carousel>
-            </div>
-          )}
+            </div>}
 
         {/* Quick Stats */}
         
@@ -509,10 +475,7 @@ export function DiscoverTab() {
           {/* Search and Filters Row */}
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             {/* Search Input - Click to open overlay */}
-            <button 
-              onClick={() => setSearchOverlayOpen(true)}
-              className="relative w-full sm:w-72 text-left"
-            >
+            <button onClick={() => setSearchOverlayOpen(true)} className="relative w-full sm:w-72 text-left">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
               <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
                 {searchQuery || 'Search campaigns...'}
@@ -522,18 +485,18 @@ export function DiscoverTab() {
             {/* Platform Pills */}
             <div className="flex items-center gap-1.5">
               {[{
-            value: "all",
-            label: "All"
-          }, {
-            value: "tiktok",
-            label: "TikTok"
-          }, {
-            value: "instagram",
-            label: "Instagram"
-          }, {
-            value: "youtube",
-            label: "YouTube"
-          }].map(platform => <button key={platform.value} onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedPlatform === null && platform.value === "all" || selectedPlatform === platform.value ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
+              value: "all",
+              label: "All"
+            }, {
+              value: "tiktok",
+              label: "TikTok"
+            }, {
+              value: "instagram",
+              label: "Instagram"
+            }, {
+              value: "youtube",
+              label: "YouTube"
+            }].map(platform => <button key={platform.value} onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedPlatform === null && platform.value === "all" || selectedPlatform === platform.value ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
                   {platform.label}
                 </button>)}
             </div>
@@ -604,8 +567,7 @@ export function DiscoverTab() {
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-card rounded-lg border overflow-hidden">
+            {[...Array(6)].map((_, i) => <div key={i} className="bg-card rounded-lg border overflow-hidden">
                 {/* Banner skeleton */}
                 <Skeleton className="h-32 w-full rounded-none" />
                 {/* Content */}
@@ -645,8 +607,7 @@ export function DiscoverTab() {
                     <Skeleton className="h-8 w-16 rounded-md" />
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
@@ -655,96 +616,97 @@ export function DiscoverTab() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
               {/* Combine campaigns and bounties into a single sorted array */}
               {(() => {
-                // Create unified list with type markers, applying type filter
-                const campaignItems = typeFilter === 'boosts' ? [] : sortedCampaigns.map(c => ({
-                  type: 'campaign' as const,
-                  data: c,
-                  isEnded: c.status === 'ended',
-                  createdAt: c.start_date || c.created_at,
-                  views: c.budget_used || 0, // popularity proxy
-                  payRate: c.rpm_rate
-                }));
-                
-                const bountyItems = typeFilter === 'campaigns' ? [] : bounties
-                  .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
-                  .filter(b => {
-                    // Apply search filter to bounties too
-                    if (!searchQuery) return true;
-                    const query = searchQuery.toLowerCase();
-                    return b.title.toLowerCase().includes(query) || 
-                           b.description?.toLowerCase().includes(query) ||
-                           b.brands?.name?.toLowerCase().includes(query);
-                  })
-                  .map(b => ({
-                    type: 'bounty' as const,
-                    data: b,
-                    isEnded: b.status === 'ended',
-                    createdAt: b.created_at,
-                    views: b.accepted_creators_count || 0, // popularity proxy
-                    payRate: b.monthly_retainer
-                  }));
-                
-                const allItems: Array<{type: 'campaign', data: Campaign, isEnded: boolean, createdAt: string, views: number, payRate: number} | {type: 'bounty', data: BountyCampaign, isEnded: boolean, createdAt: string, views: number, payRate: number}> = [
-                  ...campaignItems,
-                  ...bountyItems
-                ];
-                
-                // Sort based on browse filter
-                const sortedItems = allItems.sort((a, b) => {
-                  // Ended items always go last
-                  if (a.isEnded && !b.isEnded) return 1;
-                  if (!a.isEnded && b.isEnded) return -1;
-                  
-                  // Apply browse filter sorting
-                  if (browseFilter === 'new') {
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            // Create unified list with type markers, applying type filter
+            const campaignItems = typeFilter === 'boosts' ? [] : sortedCampaigns.map(c => ({
+              type: 'campaign' as const,
+              data: c,
+              isEnded: c.status === 'ended',
+              createdAt: c.start_date || c.created_at,
+              views: c.budget_used || 0,
+              // popularity proxy
+              payRate: c.rpm_rate
+            }));
+            const bountyItems = typeFilter === 'campaigns' ? [] : bounties.filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id)).filter(b => {
+              // Apply search filter to bounties too
+              if (!searchQuery) return true;
+              const query = searchQuery.toLowerCase();
+              return b.title.toLowerCase().includes(query) || b.description?.toLowerCase().includes(query) || b.brands?.name?.toLowerCase().includes(query);
+            }).map(b => ({
+              type: 'bounty' as const,
+              data: b,
+              isEnded: b.status === 'ended',
+              createdAt: b.created_at,
+              views: b.accepted_creators_count || 0,
+              // popularity proxy
+              payRate: b.monthly_retainer
+            }));
+            const allItems: Array<{
+              type: 'campaign';
+              data: Campaign;
+              isEnded: boolean;
+              createdAt: string;
+              views: number;
+              payRate: number;
+            } | {
+              type: 'bounty';
+              data: BountyCampaign;
+              isEnded: boolean;
+              createdAt: string;
+              views: number;
+              payRate: number;
+            }> = [...campaignItems, ...bountyItems];
+
+            // Sort based on browse filter
+            const sortedItems = allItems.sort((a, b) => {
+              // Ended items always go last
+              if (a.isEnded && !b.isEnded) return 1;
+              if (!a.isEnded && b.isEnded) return -1;
+
+              // Apply browse filter sorting
+              if (browseFilter === 'new') {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+              }
+              if (browseFilter === 'trending' || browseFilter === 'popular') {
+                return b.views - a.views;
+              }
+              if (browseFilter === 'high-paying') {
+                return b.payRate - a.payRate;
+              }
+              if (browseFilter === 'ending-soon') {
+                // For ending soon, we want active campaigns with end dates coming up first
+                const getEndDate = (item: typeof a) => {
+                  if (item.type === 'bounty') return item.data.end_date;
+                  return null; // Campaigns don't have end_date in our type
+                };
+                const aEnd = getEndDate(a);
+                const bEnd = getEndDate(b);
+                if (aEnd && bEnd) {
+                  return new Date(aEnd).getTime() - new Date(bEnd).getTime();
+                }
+                if (aEnd) return -1;
+                if (bEnd) return 1;
+              }
+
+              // Default: newest first
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            return sortedItems.map(item => {
+              if (item.type === 'campaign') {
+                const campaign = item.data;
+                const budgetUsed = campaign.budget_used || 0;
+                const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+                const handleCampaignClick = () => {
+                  if (campaign.status !== "ended") {
+                    setSelectedCampaign(campaign);
+                    setSheetOpen(true);
                   }
-                  if (browseFilter === 'trending' || browseFilter === 'popular') {
-                    return b.views - a.views;
-                  }
-                  if (browseFilter === 'high-paying') {
-                    return b.payRate - a.payRate;
-                  }
-                  if (browseFilter === 'ending-soon') {
-                    // For ending soon, we want active campaigns with end dates coming up first
-                    const getEndDate = (item: typeof a) => {
-                      if (item.type === 'bounty') return item.data.end_date;
-                      return null; // Campaigns don't have end_date in our type
-                    };
-                    const aEnd = getEndDate(a);
-                    const bEnd = getEndDate(b);
-                    if (aEnd && bEnd) {
-                      return new Date(aEnd).getTime() - new Date(bEnd).getTime();
-                    }
-                    if (aEnd) return -1;
-                    if (bEnd) return 1;
-                  }
-                  
-                  // Default: newest first
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                });
-                
-                return sortedItems.map(item => {
-                  if (item.type === 'campaign') {
-                    const campaign = item.data;
-                    const budgetUsed = campaign.budget_used || 0;
-                    const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-                    const handleCampaignClick = () => {
-                      if (campaign.status !== "ended") {
-                        setSelectedCampaign(campaign);
-                        setSheetOpen(true);
-                      }
-                    };
-                    const isEnded = campaign.status === "ended";
-                    const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                    
-                    return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
+                };
+                const isEnded = campaign.status === "ended";
+                const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
+                return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={handleCampaignClick}>
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                       
-                      <button
-                        onClick={(e) => toggleBookmark(campaign.id, e)}
-                        className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
-                      >
+                      <button onClick={e => toggleBookmark(campaign.id, e)} className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                       </button>
                       
@@ -762,17 +724,17 @@ export function DiscoverTab() {
                               {campaign.title}
                             </h3>
                             {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                              backgroundColor: '#b60b0b',
-                              borderTop: '1px solid #ed3030',
-                              borderRadius: '20px'
-                            }}>
+                          backgroundColor: '#b60b0b',
+                          borderTop: '1px solid #ed3030',
+                          borderRadius: '20px'
+                        }}>
                               <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                               Ended
                             </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                              backgroundColor: '#1f6d36',
-                              borderTop: '1px solid #3c8544',
-                              borderRadius: '20px'
-                            }}>
+                          backgroundColor: '#1f6d36',
+                          borderTop: '1px solid #3c8544',
+                          borderRadius: '20px'
+                        }}>
                               <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
                               Active
                             </span>}
@@ -787,10 +749,10 @@ export function DiscoverTab() {
                               </div>
                             </div>
                             <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                              background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                              backgroundSize: '20px 20px',
-                              animation: 'slide 1s linear infinite'
-                            }} />
+                          background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
+                          backgroundSize: '20px 20px',
+                          animation: 'slide 1s linear infinite'
+                        }} />
                             <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                               <span>No budget limit</span>
                             </div>
@@ -798,15 +760,21 @@ export function DiscoverTab() {
                             <div className="flex items-baseline justify-between">
                               <div className="flex items-baseline gap-1.5">
                                 <span className="text-base font-bold tabular-nums font-['Inter'] tracking-[-0.5px]">
-                                  ${Math.ceil(budgetUsed).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  ${Math.ceil(budgetUsed).toLocaleString(undefined, {
+                                maximumFractionDigits: 0
+                              })}
                                 </span>
                                 <span className="text-xs text-muted-foreground font-semibold font-['Inter'] tracking-[-0.5px]">
-                                  / ${Math.ceil(campaign.budget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  / ${Math.ceil(campaign.budget).toLocaleString(undefined, {
+                                maximumFractionDigits: 0
+                              })}
                                 </span>
                               </div>
                             </div>
                             <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
-                              <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{ width: `${budgetPercentage}%` }} />
+                              <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                            width: `${budgetPercentage}%`
+                          }} />
                             </div>
                             <div className="flex justify-between text-[10px] text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
                               <span className="font-semibold font-['Inter'] tracking-[-0.5px]">{budgetPercentage.toFixed(0)}% used</span>
@@ -815,47 +783,35 @@ export function DiscoverTab() {
                         </div>
                       </CardContent>
                     </Card>;
-                  } else {
-                    const bounty = item.data;
-                    const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                    const isFull = spotsRemaining <= 0;
-                    const isEnded = bounty.status === "ended";
-                    const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
-                    
-                    return <Card 
-                      key={`bounty-${bounty.id}`}
-                      className={`group bg-card border border-[#dce1eb] dark:border-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} 
-                      onClick={() => {
-                        if (!isEnded) {
-                          setSelectedBounty(bounty);
-                          setBountySheetOpen(true);
-                        }
-                      }}
-                    >
+              } else {
+                const bounty = item.data;
+                const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+                const isFull = spotsRemaining <= 0;
+                const isEnded = bounty.status === "ended";
+                const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
+                return <Card key={`bounty-${bounty.id}`} className={`group bg-card border border-[#dce1eb] dark:border-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={() => {
+                  if (!isEnded) {
+                    setSelectedBounty(bounty);
+                    setBountySheetOpen(true);
+                  }
+                }}>
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
                       
                       {/* Bookmark Button */}
-                      <button
-                        onClick={(e) => toggleBountyBookmark(bounty.id, e)}
-                        className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
-                      >
+                      <button onClick={e => toggleBountyBookmark(bounty.id, e)} className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                       </button>
                       
                       <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
                         {/* Brand Info */}
                         <div className="flex items-center gap-2">
-                          {bounty.brands?.logo_url ? (
-                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                          {bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/50">
                               <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
+                            </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
                               <span className="text-[10px] font-semibold text-muted-foreground">
                                 {bounty.brands?.name?.charAt(0) || 'B'}
                               </span>
-                            </div>
-                          )}
+                            </div>}
                           <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
                             {bounty.brands?.name || 'Unknown Brand'}
                           </span>
@@ -866,15 +822,13 @@ export function DiscoverTab() {
                           <h3 className="text-base font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
                             {bounty.title}
                           </h3>
-                          {isEnded && (
-                            <span className="flex items-center gap-1 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                              backgroundColor: '#b60b0b',
-                              borderTop: '1px solid #ed3030',
-                              borderRadius: '20px'
-                            }}>
+                          {isEnded && <span className="flex items-center gap-1 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#b60b0b',
+                        borderTop: '1px solid #ed3030',
+                        borderRadius: '20px'
+                      }}>
                               Ended
-                            </span>
-                          )}
+                            </span>}
                         </div>
                         
                         {/* Metadata Row */}
@@ -887,20 +841,19 @@ export function DiscoverTab() {
                             <UserCheck className="h-3 w-3" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
-                          {bounty.start_date && (
-                            <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
+                          {bounty.start_date && <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                               <Calendar className="h-3 w-3" />
-                              {new Date(bounty.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
-                          )}
+                              {new Date(bounty.start_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                            </span>}
                         </div>
                         
                         {/* Description */}
-                        {bounty.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px]">
+                        {bounty.description && <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px]">
                             {bounty.description}
-                          </p>
-                        )}
+                          </p>}
                         
                         {/* Retainer Amount */}
                         <div className="flex items-baseline gap-1 pt-2">
@@ -912,37 +865,22 @@ export function DiscoverTab() {
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 mt-auto pt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 font-['Inter'] tracking-[-0.5px] font-medium dark:border-[#141414] border-[#d1d5db] hover:bg-muted"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedBounty(bounty);
-                              setBountySheetOpen(true);
-                            }}
-                          >
-                            View details
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white font-['Inter'] tracking-[-0.5px] font-medium"
-                            style={{ borderTop: '1px solid #4b85f7' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedBounty(bounty);
-                              setApplyDialogOpen(true);
-                            }}
-                            disabled={isEnded || isFull}
-                          >
+                          
+                          <Button size="sm" className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white font-['Inter'] tracking-[-0.5px] font-medium" style={{
+                        borderTop: '1px solid #4b85f7'
+                      }} onClick={e => {
+                        e.stopPropagation();
+                        setSelectedBounty(bounty);
+                        setApplyDialogOpen(true);
+                      }} disabled={isEnded || isFull}>
                             Apply
                           </Button>
                         </div>
                       </CardContent>
                     </Card>;
-                  }
-                });
-              })()}
+              }
+            });
+          })()}
             </div>
           </div>}
         </div>
@@ -950,29 +888,18 @@ export function DiscoverTab() {
       <JoinCampaignSheet campaign={selectedCampaign} open={sheetOpen} onOpenChange={setSheetOpen} />
       
       <ApplyToBountySheet open={bountySheetOpen} onOpenChange={setBountySheetOpen} bounty={selectedBounty} onSuccess={() => {
-        setBountySheetOpen(false);
-        fetchCampaigns();
-      }} />
+      setBountySheetOpen(false);
+      fetchCampaigns();
+    }} />
       
       {/* Separate Apply Dialog triggered from card button */}
       <ApplyToBoostDialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen} bounty={selectedBounty} onSuccess={() => {
-        setApplyDialogOpen(false);
-        fetchCampaigns();
-      }} />
+      setApplyDialogOpen(false);
+      fetchCampaigns();
+    }} />
       
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
       
-      <SearchOverlay
-        isOpen={searchOverlayOpen}
-        onClose={() => setSearchOverlayOpen(false)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onTypeFilter={setTypeFilter}
-        onNicheFilter={setNicheFilter}
-        onBrowseFilter={setBrowseFilter}
-        activeTypeFilter={typeFilter}
-        activeNicheFilter={nicheFilter}
-        activeBrowseFilter={browseFilter}
-      />
+      <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} />
     </div>;
 }
