@@ -66,6 +66,7 @@ interface BoostApplication {
     monthly_retainer: number;
     videos_per_month: number;
     banner_url: string | null;
+    blueprint_id?: string | null;
     blueprint_embed_url?: string | null;
     content_style_requirements?: string | null;
     brands?: {
@@ -283,6 +284,7 @@ export function CampaignsTab({
               videos_per_month,
               banner_url,
               brand_id,
+              blueprint_id,
               blueprint_embed_url,
               content_style_requirements
             `).eq('id', app.bounty_campaign_id).single();
@@ -293,11 +295,13 @@ export function CampaignsTab({
             data: brand
           } = await supabase.from('brands').select('name, logo_url').eq('id', campaign.brand_id).single();
           brandData = brand;
-          
-          // Fetch blueprint for the brand
+        }
+        
+        // Fetch the specific blueprint linked to this boost
+        if (campaign?.blueprint_id) {
           const {
             data: blueprint
-          } = await supabase.from('blueprints').select('content, hooks, talking_points, dos_and_donts, call_to_action, content_guidelines').eq('brand_id', campaign.brand_id).eq('status', 'active').order('created_at', { ascending: false }).limit(1).single();
+          } = await supabase.from('blueprints').select('content, hooks, talking_points, dos_and_donts, call_to_action, content_guidelines').eq('id', campaign.blueprint_id).single();
           blueprintData = blueprint;
         }
         return {

@@ -40,6 +40,7 @@ interface BoostCardProps {
     monthly_retainer: number;
     videos_per_month: number;
     content_style_requirements?: string;
+    blueprint_id?: string | null;
     blueprint_embed_url?: string | null;
     brands?: {
       name: string;
