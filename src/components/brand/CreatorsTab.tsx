@@ -333,28 +333,21 @@ export function CreatorsTab({
       return;
     }
     setLoading(true);
-    
-    // Fetch campaigns and bounty campaigns in parallel
-    const [campaignsResult, bouncyCampaignsResult] = await Promise.all([
-      supabase.from("campaigns").select("id, title").eq("brand_id", brandId),
-      supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)
-    ]);
 
+    // Fetch campaigns and bounty campaigns in parallel
+    const [campaignsResult, bouncyCampaignsResult] = await Promise.all([supabase.from("campaigns").select("id, title").eq("brand_id", brandId), supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)]);
     const campaignsData = campaignsResult.data || [];
     const bouncyCampaignsData = bouncyCampaignsResult.data || [];
 
     // Store campaigns for filter dropdown
     setCampaigns(campaignsData);
-    
     const campaignIds = campaignsData.map(c => c.id);
     const bountyIds = bouncyCampaignsData.map(b => b.id);
     const campaignMap = new Map(campaignsData.map(c => [c.id, c.title]));
     const bountyMap = new Map(bouncyCampaignsData.map(b => [b.id, b.title]));
 
     // Fetch campaign connections and bounty applications in parallel
-    const [connectionsResult, bountyApplicationsResult] = await Promise.all([
-      campaignIds.length > 0 
-        ? supabase.from("social_account_campaigns").select(`
+    const [connectionsResult, bountyApplicationsResult] = await Promise.all([campaignIds.length > 0 ? supabase.from("social_account_campaigns").select(`
             campaign_id,
             user_id,
             connected_at,
@@ -365,16 +358,13 @@ export function CreatorsTab({
               avatar_url,
               follower_count
             )
-          `).in("campaign_id", campaignIds).eq("status", "active")
-        : Promise.resolve({ data: [] }),
-      bountyIds.length > 0
-        ? supabase.from("bounty_applications").select("bounty_campaign_id, user_id, applied_at, status").in("bounty_campaign_id", bountyIds)
-        : Promise.resolve({ data: [] })
-    ]);
-
+          `).in("campaign_id", campaignIds).eq("status", "active") : Promise.resolve({
+      data: []
+    }), bountyIds.length > 0 ? supabase.from("bounty_applications").select("bounty_campaign_id, user_id, applied_at, status").in("bounty_campaign_id", bountyIds) : Promise.resolve({
+      data: []
+    })]);
     const connections = connectionsResult.data || [];
     const bountyApplications = bountyApplicationsResult.data || [];
-
     if (connections.length === 0 && bountyApplications.length === 0) {
       setCreators([]);
       setLoading(false);
@@ -486,7 +476,6 @@ export function CreatorsTab({
         });
       }
     }
-
     if (analytics && analytics.length > 0) {
       for (const analytic of analytics) {
         const creator = creatorMap.get(analytic.user_id);
@@ -509,7 +498,7 @@ export function CreatorsTab({
       for (const tx of transactions) {
         const campaignId = (tx.metadata as any)?.campaign_id;
         const bountyId = (tx.metadata as any)?.bounty_campaign_id;
-        if ((campaignId && campaignIds.includes(campaignId)) || (bountyId && bountyIds.includes(bountyId))) {
+        if (campaignId && campaignIds.includes(campaignId) || bountyId && bountyIds.includes(bountyId)) {
           const creator = creatorMap.get(tx.user_id);
           if (creator) {
             creator.total_earnings += Number(tx.amount) || 0;
@@ -637,7 +626,7 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
                 Start conversations by messaging creators from the right panel.
               </p>
-              <Button className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs" onClick={() => setMobileView('creators')}>
+              <Button onClick={() => setMobileView('creators')} className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs rounded-3xl">
                 <Plus className="h-3.5 w-3.5" />
                 Browse Creators
               </Button>
@@ -941,15 +930,11 @@ export function CreatorsTab({
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedCreator.campaigns.map(campaign => {
-                    const label = campaign.type === 'campaign' 
-                      ? 'Joined' 
-                      : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
-                    return (
-                      <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
+                const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
+                return <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
                         {campaign.title} <span className="text-muted-foreground">({label})</span>
-                      </span>
-                    );
-                  })}
+                      </span>;
+              })}
                 </div>
               </div>
 
