@@ -35,6 +35,13 @@
   @apply hidden;
 }
 
+/* Blueprint editor input styles */
+@layer components {
+  .blueprint-input {
+    @apply border-0 outline-none ring-0 ring-offset-0 focus:border-0 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:border-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
