@@ -86,7 +86,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       if (error) throw error;
 
       setFormData(data);
-      setSelectedBlueprintId(data.blueprint_id || "");
+      setSelectedBlueprintId(data.blueprint_id || "none");
       if (data.start_date) setStartDate(new Date(data.start_date));
       if (data.end_date) setEndDate(new Date(data.end_date));
       
@@ -152,7 +152,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           banner_url,
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
-          blueprint_id: selectedBlueprintId || null,
+          blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
           is_private: formData.is_private
         })
         .eq('id', bountyId);
@@ -307,7 +307,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                     <SelectValue placeholder="Select a blueprint" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No blueprint</SelectItem>
+                    <SelectItem value="none">No blueprint</SelectItem>
                     {blueprints.map((bp) => (
                       <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
                     ))}
