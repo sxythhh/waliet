@@ -117,20 +117,21 @@ export function BrandCampaignDetailView({
   return <div className="p-[10px] h-full flex flex-col">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
         {/* Header with back button and campaign title - Fixed */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border sm:px-[5px] py-[10px] bg-background">
-          <div className="flex items-center gap-0">
-            <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent">
+        <div className="flex-shrink-0 flex items-center justify-between px-2 sm:px-[5px] py-[10px] bg-background gap-2">
+          <div className="flex items-center gap-0 min-w-0 flex-1">
+            <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <button onClick={handleBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline">
+            <button onClick={handleBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline truncate">
               {campaign.title}
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted">
-                  {TIMEFRAME_LABELS[timeframe]}
+                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3">
+                  <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
+                  <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -140,13 +141,13 @@ export function BrandCampaignDetailView({
                   </DropdownMenuItem>)}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted" onClick={() => setEditDialogOpen(true)}>
+            <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3" onClick={() => setEditDialogOpen(true)}>
               <Pencil className="h-3.5 w-3.5" />
-              Edit Campaign
+              <span className="hidden sm:inline">Edit Campaign</span>
             </Button>
-            <Button size="sm" className="gap-2 font-sans tracking-[-0.5px]">
+            <Button size="sm" className="gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3">
               <Plus className="h-3.5 w-3.5" />
-              Top Up Budget
+              <span className="hidden sm:inline">Top Up Budget</span>
             </Button>
           </div>
         </div>
