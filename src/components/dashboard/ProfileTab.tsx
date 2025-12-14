@@ -130,12 +130,40 @@ export function ProfileTab() {
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<SocialAccount | null>(null);
   const [linkingCampaign, setLinkingCampaign] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [updatingEmail, setUpdatingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileInfoRef = useRef<HTMLDivElement>(null);
   const connectedAccountsRef = useRef<HTMLDivElement>(null);
   const {
     toast
   } = useToast();
+
+  const handleUpdateEmail = async () => {
+    if (!newEmail || newEmail === profile?.email) return;
+    
+    setUpdatingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Confirmation email sent",
+        description: "Please check your new email address to confirm the change."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating email",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
@@ -154,6 +182,7 @@ export function ProfileTab() {
     } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     if (profileData) {
       setProfile(profileData);
+      setNewEmail(profileData.email || '');
     }
     setLoading(false);
   };
@@ -1287,21 +1316,53 @@ export function ProfileTab() {
               </Popover>
             </div>
 
-            {/* Email (read-only) */}
+            {/* Email */}
             <div>
               <p className="text-sm text-muted-foreground mb-2" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
             }}>Email</p>
-              <div className="flex items-center gap-2 h-10 px-3 bg-muted/30 rounded-md">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm" style={{
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="pl-9"
+                    style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.3px'
+                    }}
+                  />
+                </div>
+                {newEmail !== profile.email && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={updatingEmail || !newEmail}
+                    onClick={handleUpdateEmail}
+                    style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.3px'
+                    }}
+                  >
+                    {updatingEmail ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      'Update'
+                    )}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1" style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.3px'
               }}>
-                  {profile.email || 'Not set'}
-                </span>
-              </div>
+                A confirmation email will be sent to verify the new address
+              </p>
             </div>
 
             {/* Phone */}
