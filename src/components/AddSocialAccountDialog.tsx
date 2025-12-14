@@ -310,7 +310,7 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 mt-2 border-t border-border/50 flex gap-2">
+            <div className="mt-2 border-t border-border/50 flex gap-2 px-0 py-0">
               <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground">
                 Cancel
               </Button>
