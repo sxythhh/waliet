@@ -246,7 +246,7 @@ export function CampaignDetailsDialog({
                   <p style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
-              }} className="text-lg font-semibold text-[#22c55e]">
+              }} className="text-lg font-semibold text-foreground">
                     ${expectedPayout.amount.toFixed(2)}
                   </p>
                 </div>
@@ -300,16 +300,16 @@ export function CampaignDetailsDialog({
                     <div style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.3px'
-              }} className="mt-2 text-[10px] flex flex-col gap-1 items-start">
-                      <div className="flex items-center gap-1.5">
+              }} className="justify-between mt-2 text-[10px] flex flex-row">
+                      <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
                         <span className="text-muted-foreground">Paid ${paidOut.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                         <span className="text-muted-foreground">Expected ${expected.toFixed(0)}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/20" />
                         <span className="text-muted-foreground">Left ${remaining.toFixed(0)}</span>
                       </div>
