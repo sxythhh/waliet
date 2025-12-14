@@ -232,7 +232,7 @@ export function BlueprintsTab({
         return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 hover:bg-[#f5f5f5] dark:bg-card/20 dark:hover:bg-[#0f0f0f] transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
                 {/* Content Preview */}
                 <div className="p-5 min-h-[120px] border-b border-border/30">
-                  {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                  {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
                       {contentPreview}...
                     </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
                       <img src={editDocumentIcon} alt="" className="h-8 w-8 mb-2 opacity-50" />
@@ -254,14 +254,14 @@ export function BlueprintsTab({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover">
-                        <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={e => {
+                        <DropdownMenuItem className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px]" onClick={e => {
                     e.stopPropagation();
                     handleActivateBlueprint(blueprint.id);
                   }}>
                           <Plus className="h-4 w-4 mr-2" />
                           Create Campaign
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:bg-muted focus:text-destructive" onClick={e => {
+                        <DropdownMenuItem className="text-destructive focus:bg-muted focus:text-destructive font-inter tracking-[-0.5px]" onClick={e => {
                     e.stopPropagation();
                     deleteBlueprint(blueprint.id);
                   }}>
@@ -282,14 +282,14 @@ export function BlueprintsTab({
                   {/* Meta Row */}
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
-                      {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
+                      {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium font-inter tracking-[-0.5px]">
                           {(userInfo?.name || "U").charAt(0).toUpperCase()}
                         </div>}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                         {userInfo?.name || "You"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70 font-inter tracking-[-0.5px]">
                       <Clock className="h-3 w-3" />
                       <span>{format(new Date(blueprint.updated_at), 'MMM d')}</span>
                     </div>
