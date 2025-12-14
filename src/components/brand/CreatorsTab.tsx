@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Inbox, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
+import mailIcon from "@/assets/mail-icon.svg";
 interface Creator {
   id: string;
   username: string;
@@ -620,7 +621,7 @@ export function CreatorsTab({
         <ScrollArea className="flex-1">
           {conversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
               <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
-                <Inbox className="h-8 w-8 text-muted-foreground/60" />
+                <img src={mailIcon} className="h-8 w-8 opacity-60" alt="Mail" />
               </div>
               <h3 className="font-semibold text-base mb-2">Your Inbox is Empty</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
