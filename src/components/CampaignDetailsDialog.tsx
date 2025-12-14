@@ -410,7 +410,7 @@ export function CampaignDetailsDialog({
             </div>
             
             {hasConnectedAccounts ? <div className="flex flex-wrap gap-2">
-                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-full transition-all duration-200 cursor-pointer bg-popover">
+                {campaign.connected_accounts!.map(account => <button key={account.id} onClick={() => onManageAccount?.(account)} className="group relative flex items-center gap-2.5 pl-3 pr-4 py-2.5 transition-all duration-200 cursor-pointer bg-popover rounded-md">
                     <div className="w-7 h-7 rounded-full bg-background flex items-center justify-center shadow-sm">
                       {getPlatformIcon(account.platform) && <img src={getPlatformIcon(account.platform)!} alt={account.platform} className="w-4 h-4" />}
                     </div>
@@ -442,11 +442,11 @@ export function CampaignDetailsDialog({
               {campaign.asset_links!.map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                    {faviconUrl && (
-                      <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={faviconUrl} alt="" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      </div>
-                    )}
+                    {faviconUrl && <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
+                        <img src={faviconUrl} alt="" className="w-6 h-6 object-contain" onError={e => {
+                  e.currentTarget.style.display = 'none';
+                }} />
+                      </div>}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs sm:text-sm truncate">{link.label}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
