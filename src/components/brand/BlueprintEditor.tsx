@@ -88,22 +88,15 @@ interface BlueprintEditorProps {
   brandId: string;
 }
 
-const getPlatforms = (isDark: boolean) => [{
+const getPlatforms = () => [{
   id: "tiktok",
-  label: "TikTok",
-  logo: isDark ? tiktokLogoDark : tiktokLogoLight
+  label: "TikTok"
 }, {
   id: "instagram",
-  label: "Instagram",
-  logo: isDark ? instagramLogoDark : instagramLogoLight
+  label: "Instagram"
 }, {
   id: "youtube",
-  label: "YouTube",
-  logo: isDark ? youtubeLogoDark : youtubeLogoLight
-}, {
-  id: "x",
-  label: "X",
-  logo: isDark ? xLogoDark : xLogoLight
+  label: "YouTube"
 }];
 
 // Default sections that are shown when creating a new blueprint
@@ -140,7 +133,7 @@ export function BlueprintEditor({
   const [activeId, setActiveId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
-  const PLATFORMS = getPlatforms(isDark);
+  const PLATFORMS = getPlatforms();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -628,7 +621,6 @@ export function BlueprintEditor({
                         : "bg-transparent border-border/50 text-foreground hover:border-border hover:bg-muted/30"}
                     `}
                   >
-                    <img src={platform.logo} alt={platform.label} className="h-4 w-4 object-contain" />
                     <span className="font-medium">{platform.label}</span>
                   </button>
                 );
