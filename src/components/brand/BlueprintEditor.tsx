@@ -1225,6 +1225,20 @@ export function BlueprintEditor({
               </div>
             </SortableContext>
 
+            {/* Drag Overlay for smooth dragging */}
+            <DragOverlay dropAnimation={null}>
+              {activeId && (
+                <div className="rounded-xl border border-primary/50 bg-card shadow-xl p-3 opacity-90">
+                  <div className="flex items-center gap-2">
+                    {getSectionIcon(activeId as SectionType)}
+                    <span className="text-sm font-medium font-inter tracking-[-0.5px]">
+                      {getSectionTitle(activeId as SectionType)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </DragOverlay>
+
             {/* Floating Trash Zone - only visible when dragging */}
             {activeId && <TrashDropZoneInner />}
           </DndContext>

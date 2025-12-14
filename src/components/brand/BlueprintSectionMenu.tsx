@@ -142,9 +142,9 @@ export function BlueprintSectionMenu({
       {/* Right line */}
       <div className="flex-1 h-[2px] bg-muted-foreground/20 rounded-full" />
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - opens above */}
       {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-72 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-72 max-h-80 overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
           {/* Available sections to add */}
           {availableSections.length > 0 && (
             <div className="p-2">
