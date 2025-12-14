@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageInput } from "@/components/brand/MessageInput";
+import { RecruitCreatorsDialog } from "@/components/brand/RecruitCreatorsDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
@@ -112,6 +113,7 @@ export function CreatorsTab({
     creatorId: string;
     campaign: CreatorCampaign;
   } | null>(null);
+  const [recruitDialogOpen, setRecruitDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -673,9 +675,9 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
                 Start conversations by messaging creators from the right panel.
               </p>
-              <Button onClick={() => setMobileView('creators')} className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs rounded-3xl">
+              <Button onClick={() => setRecruitDialogOpen(true)} className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs rounded-3xl">
                 <Plus className="h-3.5 w-3.5" />
-                Browse Creators
+                Recruit Creators
               </Button>
             </div> : filteredConversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
@@ -1055,5 +1057,42 @@ export function CreatorsTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Recruit Creators Dialog */}
+      <RecruitCreatorsDialog
+        open={recruitDialogOpen}
+        onOpenChange={setRecruitDialogOpen}
+        brandId={brandId}
+        onStartConversation={async (creatorId, creatorName) => {
+          // Find or create conversation with this creator
+          const creator = creators.find(c => c.id === creatorId);
+          if (creator) {
+            await startConversation(creator);
+          } else {
+            // Fetch creator profile and start conversation
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("id, username, full_name, avatar_url, email")
+              .eq("id", creatorId)
+              .single();
+            
+            if (profile) {
+              const newCreator: Creator = {
+                id: profile.id,
+                username: profile.username,
+                full_name: profile.full_name,
+                avatar_url: profile.avatar_url,
+                email: profile.email,
+                campaigns: [],
+                social_accounts: [],
+                total_views: 0,
+                total_earnings: 0,
+                date_joined: null
+              };
+              await startConversation(newCreator);
+            }
+          }
+        }}
+      />
     </div>;
 }
