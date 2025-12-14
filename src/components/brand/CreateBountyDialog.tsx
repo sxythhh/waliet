@@ -173,7 +173,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
           banner_url,
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
-          blueprint_id: selectedBlueprintId || null,
+          blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
           is_private: formData.is_private
         });
 
@@ -515,7 +515,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                       <SelectValue placeholder="Select a blueprint" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No blueprint</SelectItem>
+                      <SelectItem value="none">No blueprint</SelectItem>
                       {blueprints.map((bp) => (
                         <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
                       ))}
