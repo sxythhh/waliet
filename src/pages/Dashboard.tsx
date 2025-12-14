@@ -12,17 +12,22 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
+import { OnboardingCard } from "@/components/OnboardingCard";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
+
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboardingCard, setShowOnboardingCard] = useState(true);
+  const { shouldShowOnboarding, isLoading: onboardingLoading } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<{
     id: string;
@@ -140,7 +145,14 @@ export default function Dashboard() {
           pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
-          {renderContent()}
+          {/* Show onboarding card if user has 0 tasks completed and is in creator mode */}
+          {isCreatorMode && shouldShowOnboarding && showOnboardingCard && !onboardingLoading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <OnboardingCard onCreatorSelect={() => setShowOnboardingCard(false)} />
+            </div>
+          ) : (
+            renderContent()
+          )}
         </div>
       </main>
 
