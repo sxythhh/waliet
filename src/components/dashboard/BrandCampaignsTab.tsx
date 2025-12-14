@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Pencil, Plus, BarChart3 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
+type CampaignTypeFilter = "all" | "campaigns" | "boosts";
 interface Campaign {
   id: string;
   title: string;
@@ -68,6 +69,7 @@ export function BrandCampaignsTab({
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<CampaignTypeFilter>("all");
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -272,73 +274,152 @@ export function BrandCampaignsTab({
               </div>
             </>}
 
-          {/* Campaigns Grid */}
-          {campaigns.length > 0 && <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Campaigns</h2>
-                <div className="flex items-center gap-1">
-                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <Button key={filter} variant="ghost" size="sm" onClick={() => setStatusFilter(filter)} className={`px-3 py-1.5 h-auto text-xs font-medium capitalize rounded-full transition-colors ${statusFilter === filter ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-                      {filter}
-                    </Button>)}
+          {/* Combined Campaigns & Boosts Grid */}
+          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
+                <div className="flex items-center gap-4">
+                  {/* Type Filter */}
+                  <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/40">
+                    {(["all", "campaigns", "boosts"] as CampaignTypeFilter[]).map(filter => (
+                      <button
+                        key={filter}
+                        onClick={() => setTypeFilter(filter)}
+                        className={`px-3 py-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
+                          typeFilter === filter
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Status Filter */}
+                  <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/40">
+                    {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => (
+                      <button
+                        key={filter}
+                        onClick={() => setStatusFilter(filter)}
+                        className={`px-3 py-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
+                          statusFilter === filter
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {campaigns.filter(campaign => statusFilter === "all" || campaign.status === statusFilter).map(campaign => {
-            const usedBudget = Number(campaign.budget_used || 0);
-            const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-            return <Card key={campaign.id} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
-                      <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                        {campaign.banner_url ? <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
-                            <span className="text-muted-foreground/50 text-xs font-medium tracking-[-0.5px]">
-                              No Banner
+                {/* Combined and sorted list */}
+                {[
+                  ...campaigns
+                    .filter(c => typeFilter === "all" || typeFilter === "campaigns")
+                    .filter(c => statusFilter === "all" || c.status === statusFilter)
+                    .map(c => ({ ...c, type: "campaign" as const })),
+                  ...bounties
+                    .filter(b => typeFilter === "all" || typeFilter === "boosts")
+                    .filter(b => statusFilter === "all" || b.status === statusFilter)
+                    .map(b => ({ ...b, type: "boost" as const }))
+                ]
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .map(item => {
+                    if (item.type === "campaign") {
+                      const campaign = item as Campaign & { type: "campaign" };
+                      const usedBudget = Number(campaign.budget_used || 0);
+                      const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
+                      return (
+                        <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
+                          <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                            {campaign.banner_url ? (
+                              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                                <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
+                                  No Banner
+                                </span>
+                              </div>
+                            )}
+                            <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium font-['Inter'] tracking-[-0.5px] rounded-full bg-background/80 backdrop-blur-sm text-foreground">
+                              Campaign
                             </span>
-                          </div>}
-                      </div>
-                      <CardContent className="p-3 flex-1 flex flex-col font-instrument tracking-tight bg-[#f8f8f8] dark:bg-[#0e0e0e] group-hover:bg-[#f0f0f0] dark:group-hover:bg-[#141414] transition-colors gap-0 px-[10px]">
-                        <div className="flex items-start justify-between">
-                          <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
-                            {campaign.title}
-                          </h3>
-                        </div>
-
-                        {/* Budget Progress */}
-                        <div className="rounded-lg p-2.5 space-y-1.5 px-0 py-0 bg-[#080808]/0">
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                              <span className="text-base font-bold tabular-nums">
-                                ${Math.ceil(usedBudget).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-semibold">
-                                / ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                              </span>
+                          </div>
+                          <CardContent className="p-3 flex-1 flex flex-col font-['Inter'] tracking-[-0.5px] bg-[#f8f8f8] dark:bg-[#0e0e0e] group-hover:bg-[#f0f0f0] dark:group-hover:bg-[#141414] transition-colors gap-0 px-[10px]">
+                            <div className="flex items-start justify-between">
+                              <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
+                                {campaign.title}
+                              </h3>
                             </div>
+                            <div className="rounded-lg p-2.5 space-y-1.5 px-0 py-0 bg-[#080808]/0">
+                              <div className="flex items-baseline justify-between">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="text-base font-bold tabular-nums">
+                                    ${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground font-semibold">
+                                    / ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border-t border-[#e0e0e0] dark:border-[#262626]">
+                                <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{ width: `${budgetPercentage}%` }} />
+                              </div>
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
+                                <span>{budgetPercentage.toFixed(0)}% used</span>
+                                <span>${Number(campaign.rpm_rate).toFixed(2)} RPM</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    } else {
+                      const bounty = item as BountyCampaign & { type: "boost" };
+                      const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+                      return (
+                        <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => setSelectedBoostId(bounty.id)}>
+                          <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
+                            {bounty.banner_url ? (
+                              <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
+                                  No Banner
+                                </span>
+                              </div>
+                            )}
+                            <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium font-['Inter'] tracking-[-0.5px] rounded-full bg-primary/80 backdrop-blur-sm text-primary-foreground">
+                              Boost
+                            </span>
                           </div>
-
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border-t border-[#e0e0e0] dark:border-[#262626]">
-                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />
-                          </div>
-
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
-                            <span>{budgetPercentage.toFixed(0)}% used</span>
-                            <span>${Number(campaign.rpm_rate).toFixed(2)} RPM</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>;
-          })}
+                          <CardContent className="p-3 flex-1 flex flex-col font-['Inter'] tracking-[-0.5px] bg-[#f8f8f8] dark:bg-[#0e0e0e] group-hover:bg-[#f0f0f0] dark:group-hover:bg-[#141414] transition-colors gap-0 px-[10px]">
+                            <div className="flex items-start justify-between">
+                              <h3 className="text-sm font-semibold line-clamp-2 leading-snug flex-1 group-hover:underline">
+                                {bounty.title}
+                              </h3>
+                            </div>
+                            <div className="rounded-lg space-y-1.5 py-1">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-base font-bold tabular-nums">
+                                  ${bounty.monthly_retainer.toLocaleString()}
+                                </span>
+                                <span className="text-xs text-muted-foreground font-semibold">
+                                  /month
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
+                                <span>{bounty.videos_per_month} videos/month</span>
+                                <span>{spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                  })}
               </div>
-            </div>}
-
-          {/* Bounties Section */}
-          {bounties.length > 0 && <div className="space-y-4">
-              
-              <BountyCampaignsView bounties={bounties} onDelete={handleDeleteBountyClick} onBoostSelect={setSelectedBoostId} />
             </div>}
 
           {/* Empty State */}
