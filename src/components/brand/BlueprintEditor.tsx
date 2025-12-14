@@ -981,10 +981,22 @@ export function BlueprintEditor({
                       <p className="text-sm font-inter tracking-[-0.5px] text-foreground">
                         Upload a video
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs font-inter tracking-[-0.5px] text-muted-foreground mt-0.5">
                         or <span className="text-primary hover:underline">click to browse</span> (max 100MB)
                       </p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addExampleVideo();
+                      }}
+                      className="h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/30 mt-1"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add URL
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1060,15 +1072,6 @@ export function BlueprintEditor({
                   ))}
                 </div>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={addExampleVideo}
-                className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add URL
-              </Button>
             </div>
           </BlueprintSection>
         );
