@@ -117,7 +117,7 @@ const App = () => <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} className="bg-[#050505]" />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
             <Route path="/x/callback" element={<XOAuthCallback />} />

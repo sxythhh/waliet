@@ -18,7 +18,7 @@ import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
-import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
+import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -26,8 +26,7 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showOnboardingCard, setShowOnboardingCard] = useState(true);
-  const { shouldShowOnboarding, isLoading: onboardingLoading, markOnboardingComplete } = useOnboardingStatus();
+  const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<{
     id: string;
@@ -78,10 +77,12 @@ export default function Dashboard() {
     } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     setProfile(profileData);
 
-    // Onboarding disabled - keeping code for potential future use
-    // if (profileData && !profileData.phone_number) {
-    //   setShowOnboarding(true);
-    // }
+    // Check if user selected brand during onboarding
+    const pendingBrand = sessionStorage.getItem('pendingBrandCreation');
+    if (pendingBrand === 'true') {
+      sessionStorage.removeItem('pendingBrandCreation');
+      setShowCreateBrandDialog(true);
+    }
   };
   const fetchCampaigns = async () => {
     const {
@@ -153,16 +154,12 @@ export default function Dashboard() {
       
       {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
 
-      {/* Onboarding Card Popup - show when user has 0 tasks completed */}
-      {isCreatorMode && (
-        <OnboardingCard 
-          open={shouldShowOnboarding && !onboardingLoading} 
-          onOpenChange={(open) => {
-            if (!open) markOnboardingComplete();
-          }}
-          onSelect={markOnboardingComplete}
-        />
-      )}
+      {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
+      <CreateBrandDialog 
+        open={showCreateBrandDialog} 
+        onOpenChange={setShowCreateBrandDialog} 
+        hideTrigger 
+      />
 
       {/* Creator Chat Widget - only show in creator mode */}
       {isCreatorMode && <CreatorChatWidget />}
