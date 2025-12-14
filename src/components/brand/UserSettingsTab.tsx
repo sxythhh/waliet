@@ -43,6 +43,7 @@ export function UserSettingsTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPlan, setSavingPlan] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [brand, setBrand] = useState<Brand | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
@@ -100,6 +101,44 @@ export function UserSettingsTab() {
       toast.error("Failed to update subscription plan");
     } finally {
       setSavingPlan(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !brand?.id) return;
+
+    try {
+      setUploadingAvatar(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${brand.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('brands')
+        .update({ logo_url: publicUrl })
+        .eq('id', brand.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Avatar updated successfully");
+      fetchBrand();
+      refreshBrands();
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -227,15 +266,16 @@ export function UserSettingsTab() {
                       {brand.name?.[0]?.toUpperCase() || "B"}
                     </div>
                   )}
-                  <EditBrandDialog 
-                    brand={brand} 
-                    onSuccess={fetchBrand} 
-                    trigger={
-                      <button className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors">
-                        Change avatar
-                      </button>
-                    } 
-                  />
+                  <label className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors cursor-pointer">
+                    {uploadingAvatar ? "Uploading..." : "Change avatar"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={uploadingAvatar}
+                    />
+                  </label>
                 </div>
                 <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                   Recommended: 800×800px
