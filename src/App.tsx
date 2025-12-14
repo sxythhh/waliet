@@ -51,67 +51,65 @@ import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
-
-
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
 function JoinRedirect() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
 }
-
-function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen w-full bg-background">
+function DashboardLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
       <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0">{children}</main>
-    </div>
-  );
+    </div>;
 }
-
-function BrandLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <SidebarProvider>
+function BrandLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <main className="flex-1">{children}</main>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
-
-function AdminLayout({ children }: { children: React.ReactNode }) {
+function AdminLayout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
   const navigate = useNavigate();
-  const { isAdmin, loading } = useAdminCheck();
-  
+  const {
+    isAdmin,
+    loading
+  } = useAdminCheck();
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate("/dashboard");
     }
   }, [isAdmin, loading, navigate]);
-  
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
+    return <div className="flex min-h-screen items-center justify-center">
         <p>Loading...</p>
-      </div>
-    );
+      </div>;
   }
-  
   if (!isAdmin) {
     return null;
   }
-  
-  return (
-    <div className="flex h-screen w-full overflow-hidden">
+  return <div className="flex h-screen w-full overflow-hidden">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">{children}</main>
-    </div>
-  );
+    </div>;
 }
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
@@ -119,7 +117,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth" element={<Auth />} className="bg-[#050505]" />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
             <Route path="/x/callback" element={<XOAuthCallback />} />
@@ -165,7 +163,5 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>
-);
-
+  </QueryClientProvider>;
 export default App;

@@ -32,7 +32,9 @@ export default function Auth() {
   const {
     toast
   } = useToast();
-  const { markOnboardingComplete } = useOnboardingStatus();
+  const {
+    markOnboardingComplete
+  } = useOnboardingStatus();
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -237,29 +239,19 @@ export default function Auth() {
       </div>;
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
-      {showOnboarding ? (
-        <div className="flex flex-col items-center gap-4">
-          <OnboardingCard 
-            open={true} 
-            onOpenChange={() => {}} 
-            onSelect={() => {
-              markOnboardingComplete();
-              setShowOnboarding(false);
-            }} 
-          />
+      {showOnboarding ? <div className="flex flex-col items-center gap-4">
+          <OnboardingCard open={true} onOpenChange={() => {}} onSelect={() => {
+        markOnboardingComplete();
+        setShowOnboarding(false);
+      }} />
           <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
             Already have an account?{" "}
-            <button 
-              onClick={() => setShowOnboarding(false)} 
-              className="text-primary hover:underline"
-            >
+            <button onClick={() => setShowOnboarding(false)} className="text-primary hover:underline">
               Sign in
             </button>
           </p>
-        </div>
-      ) : (
-      <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
-        <CardHeader className="text-center space-y-4 pb-2 pt-8">
+        </div> : <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
+        <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
             <span className="font-clash font-bold tracking-tight text-lg">VIRALITY</span>
@@ -369,8 +361,7 @@ export default function Auth() {
             </p>
           </div>
         </CardContent>
-      </Card>
-      )}
+      </Card>}
 
       {/* Password Reset Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
