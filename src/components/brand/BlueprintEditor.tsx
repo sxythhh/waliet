@@ -121,29 +121,6 @@ const DEFAULT_SECTIONS: SectionType[] = [
   "target_personas",
 ];
 
-// Trash Drop Zone component
-function TrashDropZone() {
-  const { isOver, setNodeRef } = useDroppable({
-    id: "trash-zone",
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full border-2 border-dashed transition-all duration-200 ${
-        isOver
-          ? "border-destructive bg-destructive/20 scale-110"
-          : "border-muted-foreground/30 bg-background/95 backdrop-blur-sm"
-      }`}
-    >
-      <Trash2 className={`h-5 w-5 ${isOver ? "text-destructive" : "text-muted-foreground"}`} />
-      <span className={`text-sm font-inter tracking-[-0.5px] ${isOver ? "text-destructive" : "text-muted-foreground"}`}>
-        Drop here to remove
-      </span>
-    </div>
-  );
-}
-
 export function BlueprintEditor({
   blueprintId,
   brandId
@@ -272,7 +249,29 @@ export function BlueprintEditor({
     }
   };
 
-  // Asset functions
+  // Trash Drop Zone - must be inside DndContext so defined as inner component
+  const TrashDropZoneInner = () => {
+    const { isOver, setNodeRef } = useDroppable({
+      id: "trash-zone",
+    });
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full border-2 border-dashed transition-all duration-200 ${
+          isOver
+            ? "border-destructive bg-destructive/20 scale-110"
+            : "border-muted-foreground/30 bg-background/95 backdrop-blur-sm"
+        }`}
+      >
+        <Trash2 className={`h-5 w-5 ${isOver ? "text-destructive" : "text-muted-foreground"}`} />
+        <span className={`text-sm font-inter tracking-[-0.5px] ${isOver ? "text-destructive" : "text-muted-foreground"}`}>
+          Drop here to remove
+        </span>
+      </div>
+    );
+  };
+
   const addAsset = () => {
     const newAssets = [...(blueprint?.assets || []), { link: "", notes: "" }];
     updateBlueprint({ assets: newAssets });
@@ -1227,7 +1226,7 @@ export function BlueprintEditor({
             </SortableContext>
 
             {/* Floating Trash Zone - only visible when dragging */}
-            {activeId && <TrashDropZone />}
+            {activeId && <TrashDropZoneInner />}
           </DndContext>
         </div>
       </div>
