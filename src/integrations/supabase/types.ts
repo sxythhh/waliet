@@ -998,6 +998,8 @@ export type Database = {
           budget: number
           budget_used: number | null
           campaign_type: string | null
+          campaign_update: string | null
+          campaign_update_at: string | null
           category: string | null
           created_at: string | null
           description: string | null
@@ -1034,6 +1036,8 @@ export type Database = {
           budget: number
           budget_used?: number | null
           campaign_type?: string | null
+          campaign_update?: string | null
+          campaign_update_at?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -1070,6 +1074,8 @@ export type Database = {
           budget?: number
           budget_used?: number | null
           campaign_type?: string | null
+          campaign_update?: string | null
+          campaign_update_at?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
