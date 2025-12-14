@@ -257,46 +257,6 @@ export function BoostCard({ boost }: BoostCardProps) {
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="h-2 rounded-full bg-muted overflow-hidden flex">
-              {earnedPercent > 0 && (
-                <div 
-                  className="h-full bg-green-500 transition-all" 
-                  style={{ width: `${earnedPercent}%` }} 
-                />
-              )}
-              {pendingPercent > 0 && (
-                <div 
-                  className="h-full bg-yellow-500 transition-all" 
-                  style={{ width: `${pendingPercent}%` }} 
-                />
-              )}
-              {requiredPercent > 0 && (
-                <div 
-                  className="h-full bg-muted-foreground/20 transition-all" 
-                  style={{ width: `${requiredPercent}%` }} 
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-muted-foreground">Earned</span>
-                <span className="font-semibold">{approvedThisMonth}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                <span className="text-muted-foreground">Submitted</span>
-                <span className="font-semibold">{pendingThisMonth}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground/20" />
-                <span className="text-muted-foreground">Still required</span>
-                <span className="font-semibold">{requiredPosts}</span>
-              </div>
-            </div>
-          </div>
 
           {/* Action Cards Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -352,7 +312,22 @@ export function BoostCard({ boost }: BoostCardProps) {
               
               {/* Semi-circle Progress Bar */}
               <div className="relative w-32 h-16 mb-3">
-                <svg viewBox="0 0 100 50" className="w-full h-full">
+                <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible">
+                  <defs>
+                    <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                      <rect width="3" height="6" fill="#f97316" />
+                      <rect x="3" width="3" height="6" fill="#fb923c" />
+                    </pattern>
+                    <clipPath id="pendingArcClip">
+                      <path
+                        d="M 5 50 A 45 45 0 0 1 95 50"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="8"
+                      />
+                    </clipPath>
+                  </defs>
+                  
                   {/* Background arc */}
                   <path
                     d="M 5 50 A 45 45 0 0 1 95 50"
@@ -361,16 +336,44 @@ export function BoostCard({ boost }: BoostCardProps) {
                     strokeWidth="8"
                     strokeLinecap="round"
                   />
-                  {/* Progress arc */}
-                  <path
-                    d="M 5 50 A 45 45 0 0 1 95 50"
-                    fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                    strokeDasharray={`${(thisMonthSubmissions.length / boost.videos_per_month) * 141.37} 141.37`}
-                    className="transition-all duration-500"
-                  />
+                  
+                  {/* Approved arc (green) */}
+                  {approvedThisMonth > 0 && (
+                    <path
+                      d="M 5 50 A 45 45 0 0 1 95 50"
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 141.37} 141.37`}
+                      className="transition-all duration-500"
+                    />
+                  )}
+                  
+                  {/* Pending arc (orange animated stripes) */}
+                  {pendingThisMonth > 0 && (
+                    <g style={{ transform: `rotate(${(approvedThisMonth / boost.videos_per_month) * 180}deg)`, transformOrigin: '50px 50px' }}>
+                      <path
+                        d="M 5 50 A 45 45 0 0 1 95 50"
+                        fill="none"
+                        stroke="url(#orangeStripes)"
+                        strokeWidth="8"
+                        strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 141.37} 141.37`}
+                        className="transition-all duration-500"
+                      />
+                    </g>
+                  )}
+                  
+                  {/* Animated stripe movement */}
+                  <style>{`
+                    @keyframes moveStripes {
+                      0% { background-position: 0 0; }
+                      100% { background-position: 12px 0; }
+                    }
+                    #orangeStripes {
+                      animation: moveStripes 0.5s linear infinite;
+                    }
+                  `}</style>
                 </svg>
                 {/* Center text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
@@ -381,13 +384,18 @@ export function BoostCard({ boost }: BoostCardProps) {
               {/* Stats row */}
               <div className="flex items-center gap-4 text-center">
                 <div>
-                  <p className="text-lg font-bold text-primary">${earnedThisMonth.toFixed(0)}</p>
+                  <p className="text-lg font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Earned</p>
                 </div>
                 <div className="w-px h-8 bg-border" />
                 <div>
-                  <p className="text-lg font-bold">{boost.videos_per_month - thisMonthSubmissions.length}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Remaining</p>
+                  <p className="text-lg font-bold text-orange-500">{pendingThisMonth}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Pending</p>
+                </div>
+                <div className="w-px h-8 bg-border" />
+                <div>
+                  <p className="text-lg font-bold">{requiredPosts}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Left</p>
                 </div>
               </div>
             </div>
