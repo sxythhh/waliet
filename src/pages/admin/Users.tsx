@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { AddReferralDialog } from "@/components/admin/AddReferralDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -156,6 +157,7 @@ export default function AdminUsers() {
   const [selectedCampaignForAdd, setSelectedCampaignForAdd] = useState<string>("");
   const [selectedSocialAccountForAdd, setSelectedSocialAccountForAdd] = useState<string>("");
   const [addingToCampaign, setAddingToCampaign] = useState(false);
+  const [addReferralDialogOpen, setAddReferralDialogOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -1321,15 +1323,26 @@ export default function AdminUsers() {
           
           {/* Filters Row */}
           <div className="space-y-3">
-            {/* Search bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by username, name, or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-10 bg-card/50 border-0 font-inter tracking-[-0.5px]"
-              />
+            {/* Search bar and actions */}
+            <div className="flex gap-3 items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by username, name, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-10 bg-card/50 border-0 font-inter tracking-[-0.5px]"
+                />
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAddReferralDialogOpen(true)}
+                className="h-10 gap-2 bg-card/50 font-inter tracking-[-0.5px]"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Referral
+              </Button>
             </div>
             {/* Main filter row */}
             <div className="flex gap-3 items-center flex-wrap">
@@ -2594,5 +2607,12 @@ export default function AdminUsers() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add Referral Dialog */}
+      <AddReferralDialog
+        open={addReferralDialogOpen}
+        onOpenChange={setAddReferralDialogOpen}
+        onSuccess={() => fetchData()}
+      />
     </div>;
 }
