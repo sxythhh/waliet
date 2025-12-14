@@ -29,7 +29,6 @@ interface CreatorCampaign {
   type: 'campaign' | 'boost';
   status?: 'pending' | 'accepted' | 'rejected';
 }
-
 interface Creator {
   id: string;
   username: string;
@@ -109,7 +108,10 @@ export function CreatorsTab({
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignFilter, setCampaignFilter] = useState<string>('all');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [removingFromCampaign, setRemovingFromCampaign] = useState<{creatorId: string; campaign: CreatorCampaign} | null>(null);
+  const [removingFromCampaign, setRemovingFromCampaign] = useState<{
+    creatorId: string;
+    campaign: CreatorCampaign;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -517,32 +519,19 @@ export function CreatorsTab({
     const query = searchQuery.toLowerCase();
     return creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
   });
-
   const removeFromCampaign = async (creatorId: string, campaign: CreatorCampaign) => {
     try {
       if (campaign.type === 'campaign') {
         // Remove from campaign - delete social_account_campaigns entries
-        await supabase
-          .from("social_account_campaigns")
-          .delete()
-          .eq("campaign_id", campaign.id)
-          .eq("user_id", creatorId);
-        
+        await supabase.from("social_account_campaigns").delete().eq("campaign_id", campaign.id).eq("user_id", creatorId);
+
         // Also delete campaign submissions
-        await supabase
-          .from("campaign_submissions")
-          .delete()
-          .eq("campaign_id", campaign.id)
-          .eq("creator_id", creatorId);
+        await supabase.from("campaign_submissions").delete().eq("campaign_id", campaign.id).eq("creator_id", creatorId);
       } else {
         // Remove from boost - delete bounty application
-        await supabase
-          .from("bounty_applications")
-          .delete()
-          .eq("bounty_campaign_id", campaign.id)
-          .eq("user_id", creatorId);
+        await supabase.from("bounty_applications").delete().eq("bounty_campaign_id", campaign.id).eq("user_id", creatorId);
       }
-      
+
       // Update local state
       setCreators(prev => prev.map(c => {
         if (c.id === creatorId) {
@@ -553,7 +542,7 @@ export function CreatorsTab({
         }
         return c;
       }).filter(c => c.campaigns.length > 0)); // Remove creator if no campaigns left
-      
+
       // Update selected creator if viewing
       if (selectedCreator?.id === creatorId) {
         const updatedCampaigns = selectedCreator.campaigns.filter(c => c.id !== campaign.id);
@@ -566,7 +555,6 @@ export function CreatorsTab({
           });
         }
       }
-      
       setRemovingFromCampaign(null);
     } catch (error) {
       console.error("Error removing from campaign:", error);
@@ -819,9 +807,7 @@ export function CreatorsTab({
             </div>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
-                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="h-7 w-7 text-muted-foreground/60" />
-                </div>
+                
                 <p className="text-sm">Select a conversation to view messages</p>
               </div>
             </div>
@@ -990,35 +976,33 @@ export function CreatorsTab({
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
                 <div className="space-y-1.5">
                   {selectedCreator.campaigns.map(campaign => {
-                    const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
-                    return <div key={campaign.id} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/20 group">
+                  const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
+                  return <div key={campaign.id} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/20 group">
                       <div className="flex-1 min-w-0">
                         <span className="text-[11px] sm:text-xs font-medium truncate block">
                           {campaign.title}
                         </span>
                         <span className="text-[10px] text-muted-foreground">{label}</span>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRemovingFromCampaign({ creatorId: selectedCreator.id, campaign });
-                        }}
-                      >
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => {
+                      e.stopPropagation();
+                      setRemovingFromCampaign({
+                        creatorId: selectedCreator.id,
+                        campaign
+                      });
+                    }}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>;
-                  })}
+                })}
                 </div>
               </div>
 
               {/* Message Button */}
               <Button className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" onClick={() => {
-                startConversation(selectedCreator);
-                setSelectedCreator(null);
-              }}>
+              startConversation(selectedCreator);
+              setSelectedCreator(null);
+            }}>
                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
                 Send Message
               </Button>
@@ -1061,14 +1045,11 @@ export function CreatorsTab({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" 
-              onClick={() => {
-                if (removingFromCampaign) {
-                  removeFromCampaign(removingFromCampaign.creatorId, removingFromCampaign.campaign);
-                }
-              }}
-            >
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" onClick={() => {
+            if (removingFromCampaign) {
+              removeFromCampaign(removingFromCampaign.creatorId, removingFromCampaign.campaign);
+            }
+          }}>
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
