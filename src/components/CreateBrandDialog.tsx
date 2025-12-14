@@ -134,7 +134,7 @@ export function CreateBrandDialog({
         </DialogTrigger>}
       <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-5 space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-0 space-y-5 bg-black/60 backdrop-blur-xl rounded-xl">
             {/* Logo Upload + Brand Name in same row */}
             <div className="flex items-center gap-3">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
