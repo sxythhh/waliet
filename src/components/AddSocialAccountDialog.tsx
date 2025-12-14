@@ -271,7 +271,7 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Content */}
-            <div className="px-5 pb-2 space-y-4">
+            <div className="pb-2 space-y-4 px-0">
               {/* Platform Selection */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
