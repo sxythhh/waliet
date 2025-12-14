@@ -3,23 +3,27 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Upload, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
+
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
   description: z.string().trim().max(500).optional()
 });
+
 type BrandFormValues = z.infer<typeof brandSchema>;
+
 interface CreateBrandDialogProps {
   onSuccess?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
 }
+
 export function CreateBrandDialog({
   onSuccess,
   open: controlledOpen,
@@ -34,6 +38,7 @@ export function CreateBrandDialog({
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
     defaultValues: {
@@ -41,6 +46,19 @@ export function CreateBrandDialog({
       description: ""
     }
   });
+
+  const brandName = form.watch("name");
+  
+  // Generate initials from brand name
+  const getInitials = (name: string) => {
+    if (!name) return "BR";
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -52,6 +70,7 @@ export function CreateBrandDialog({
       reader.readAsDataURL(file);
     }
   };
+
   const removeLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
@@ -59,40 +78,30 @@ export function CreateBrandDialog({
       fileInputRef.current.value = "";
     }
   };
+
   const uploadLogo = async (): Promise<string | null> => {
     if (!logoFile) return null;
     const fileExt = logoFile.name.split(".").pop();
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
-    const {
-      error: uploadError
-    } = await supabase.storage.from("campaign-banners").upload(filePath, logoFile);
+    const { error: uploadError } = await supabase.storage.from("campaign-banners").upload(filePath, logoFile);
     if (uploadError) throw uploadError;
-    const {
-      data: {
-        publicUrl
-      }
-    } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
   };
+
   const generateSlug = (name: string): string => {
     return name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   };
+
   const onSubmit = async (values: BrandFormValues) => {
     setIsSubmitting(true);
     try {
       const logoUrl = await uploadLogo();
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
       const slug = generateSlug(values.name);
-      const {
-        data: brandData,
-        error: brandError
-      } = await supabase.from("brands").insert({
+      const { data: brandData, error: brandError } = await supabase.from("brands").insert({
         name: values.name,
         slug: slug,
         description: values.description || null,
@@ -101,9 +110,7 @@ export function CreateBrandDialog({
       if (brandError) throw brandError;
 
       // Add creator as brand member
-      const {
-        error: memberError
-      } = await supabase.from("brand_members").insert({
+      const { error: memberError } = await supabase.from("brand_members").insert({
         brand_id: brandData.id,
         user_id: user.id,
         role: "owner"
@@ -128,56 +135,137 @@ export function CreateBrandDialog({
       setIsSubmitting(false);
     }
   };
-  return <Dialog open={open} onOpenChange={setOpen}>
-      {!hideTrigger && <DialogTrigger asChild>
-          
-        </DialogTrigger>}
-      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-0 space-y-5 bg-black/60 backdrop-blur-xl rounded-xl">
-            {/* Logo Upload + Brand Name in same row */}
-            <div className="flex items-center gap-3">
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-              {logoPreview ? <div className="relative group flex-shrink-0">
-                  <div className="w-11 h-11 rounded-xl overflow-hidden ring-2 ring-primary/20">
-                    <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
-                  </div>
-                  <button type="button" onClick={removeLogo} className="absolute -top-1.5 -right-1.5 p-1 bg-red-500/90 rounded-full hover:bg-red-500 transition-colors shadow-lg">
-                    <X className="h-2.5 w-2.5 text-white" />
-                  </button>
-                </div> : <button type="button" onClick={() => fileInputRef.current?.click()} className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:bg-primary/5 group bg-[#141414] flex-shrink-0">
-                  <Upload className="h-4 w-4 text-neutral-500 group-hover:text-primary transition-colors" />
-                </button>}
 
-              <FormField control={form.control} name="name" render={({
-              field
-            }) => <FormItem className="flex-1">
-                  <FormControl>
-                    <Input placeholder="Brand name" className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }} {...field} />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>} />
+  const handleCancel = () => {
+    form.reset();
+    setLogoFile(null);
+    setLogoPreview(null);
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!hideTrigger && <DialogTrigger asChild />}
+      <DialogContent className="sm:max-w-[460px] bg-card border-border p-0 overflow-hidden rounded-2xl">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4">
+              <DialogHeader className="space-y-1.5">
+                <DialogTitle className="text-xl font-semibold tracking-tight font-inter">
+                  Create Brand
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                  Create and customize your brand workspace.
+                </p>
+              </DialogHeader>
             </div>
 
-            {/* Submit Button */}
-            <Button type="submit" disabled={isSubmitting} className="w-full h-11 text-white font-medium rounded-xl transition-all border-t border-t-[#4b85f7]" style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.3px',
-            backgroundColor: '#2061de'
-          }}>
-              {isSubmitting ? <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating...
-                </span> : "Create Brand"}
-            </Button>
+            {/* Content */}
+            <div className="px-6 pb-6 space-y-6">
+              {/* Logo Section */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                  Set an Icon
+                </label>
+                <div className="flex items-center gap-4">
+                  <input 
+                    ref={fileInputRef} 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                  />
+                  
+                  {/* Logo Preview or Initials */}
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-primary flex items-center justify-center">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-primary-foreground text-lg font-semibold font-inter">
+                        {getInitials(brandName)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Upload/Remove Buttons */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload Image
+                    </Button>
+                    {logoPreview && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeLogo}
+                        className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Name Field */}
+              <FormField 
+                control={form.control} 
+                name="name" 
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                      Name
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter brand name" 
+                        className="h-11 bg-muted/50 border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 rounded-lg" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )} 
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-border flex items-center justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={handleCancel}
+                className="h-10 px-4 text-sm font-medium font-inter tracking-[-0.3px]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="h-10 px-6 text-sm font-medium font-inter tracking-[-0.3px] bg-foreground text-background hover:bg-foreground/90 rounded-full"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Creating...
+                  </span>
+                ) : "Continue"}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
