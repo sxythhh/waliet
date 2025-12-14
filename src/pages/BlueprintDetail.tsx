@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink, Check, X, Image, Video, Users } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Blueprint {
   id: string;
@@ -27,6 +29,29 @@ export default function BlueprintDetail() {
   const navigate = useNavigate();
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const { user } = useAuth();
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+
+  // Fetch user's subscription status
+  useEffect(() => {
+    const fetchSubscriptionStatus = async () => {
+      if (!user) return;
+      
+      const { data: memberships } = await supabase
+        .from("brand_members")
+        .select("brand_id, brands(subscription_status)")
+        .eq("user_id", user.id);
+      
+      if (memberships && memberships.length > 0) {
+        const activeSub = memberships.find((m: any) => m.brands?.subscription_status === "active");
+        setSubscriptionStatus(activeSub ? "active" : memberships[0]?.brands?.subscription_status || null);
+      }
+    };
+    fetchSubscriptionStatus();
+  }, [user]);
+
+  const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
 
   useEffect(() => {
     const fetchBlueprint = async () => {
@@ -74,7 +99,31 @@ export default function BlueprintDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Beta Gate Overlay */}
+      {showBetaGate && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
+          <div className="text-center space-y-6 max-w-md mx-auto px-6">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
+              <img src="/beta-shield-icon.svg" alt="Beta" className="h-8 w-8" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold font-inter tracking-[-0.5px] text-foreground">
+                This Feature is still in BETA
+              </h2>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                Come back soon.
+              </p>
+            </div>
+            <Button 
+              onClick={() => navigate("/dashboard?tab=campaigns")}
+              className="px-6"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">

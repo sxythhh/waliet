@@ -254,7 +254,7 @@ export function BrandCampaignsTab({
         <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
           <div className="text-center space-y-6 max-w-md mx-auto px-6">
             <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
-              <Lock className="h-8 w-8 text-muted-foreground" />
+              <img src="/beta-shield-icon.svg" alt="Beta" className="h-8 w-8" />
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-bold font-inter tracking-[-0.5px] text-foreground">
