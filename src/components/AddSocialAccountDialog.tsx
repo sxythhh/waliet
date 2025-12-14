@@ -256,9 +256,11 @@ export function AddSocialAccountDialog({
       <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col">
             {/* Header */}
-            <div className="pt-5 pb-3 py-0 px-0">
+            <div className="pt-5 pb-3 px-0 py-0">
               <div className="flex items-center gap-3 mb-1">
-                
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
+                </div>
                 <div>
                   <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
                     Connect Account
@@ -271,7 +273,7 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Content */}
-            <div className="pb-2 space-y-4 px-0">
+            <div className="px-5 pb-2 space-y-4">
               {/* Platform Selection */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
