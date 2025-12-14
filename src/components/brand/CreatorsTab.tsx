@@ -819,7 +819,7 @@ export function CreatorsTab({
         <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="font-medium text-sm">Creators</h2>
-            <span className="text-[11px] text-muted-foreground">({creators.length})</span>
+            
           </div>
           {creators.length > 0 && <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 text-xs hover:bg-muted/50" onClick={exportToCSV}>
               <Download className="h-3.5 w-3.5" />
