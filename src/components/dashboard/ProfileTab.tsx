@@ -36,6 +36,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import demographicsIcon from "@/assets/demographics-icon.svg";
+import noAccountsIcon from "@/assets/no-accounts-icon.svg";
 interface Profile {
   id: string;
   username: string;
@@ -743,9 +744,9 @@ export function ProfileTab() {
       block: 'center'
     })
   }, {
-    id: 'bio',
-    label: 'Update your profile description',
-    completed: !!(profile?.bio && profile.bio.length > 10),
+    id: 'content_preferences',
+    label: 'Choose content preferences',
+    completed: !!(profile?.content_styles && profile.content_styles.length > 0),
     onClick: () => profileInfoRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'center'
@@ -821,7 +822,7 @@ export function ProfileTab() {
         </CardHeader>
         <CardContent className="px-[20px]">
             {socialAccounts.length === 0 ? <div className="text-center py-12">
-              
+              <img src={noAccountsIcon} alt="" className="w-12 h-12 mx-auto mb-4 opacity-60" />
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
               <p className="text-sm mt-2 text-muted-foreground">Add your accounts to link them to a campaign</p>
             </div> : <div className="space-y-3">
