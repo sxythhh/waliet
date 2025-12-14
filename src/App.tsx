@@ -51,6 +51,7 @@ import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
+import BlueprintDetail from "./pages/BlueprintDetail";
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
@@ -132,6 +133,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
             <Route path="/boost/:id" element={<PublicBounty />} />
+            <Route path="/blueprint/:id" element={<BlueprintDetail />} />
             {/* Boost dashboard is now part of /dashboard?boost=:id */}
             <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
             <Route path="/join/:slug" element={<JoinRedirect />} />
