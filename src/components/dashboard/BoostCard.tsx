@@ -346,17 +346,48 @@ export function BoostCard({ boost }: BoostCardProps) {
               </div>
             </div>
 
-            {/* Quota Card */}
-            <div className="bg-muted/30 rounded-xl p-4 flex flex-col">
-              <h4 className="text-xs font-semibold mb-3">Monthly quota</h4>
-              <div className="flex-1 flex items-center justify-center gap-2">
-                <div className="bg-background rounded-lg px-3 py-1.5 border text-center">
-                  <p className="text-sm font-bold">{thisMonthSubmissions.length}/{boost.videos_per_month}</p>
-                  <p className="text-[10px] text-muted-foreground">Posts</p>
+            {/* Boost Progress Card */}
+            <div className="bg-muted/30 rounded-xl p-4 flex flex-col items-center">
+              <h4 className="text-xs font-semibold mb-4">Boost</h4>
+              
+              {/* Semi-circle Progress Bar */}
+              <div className="relative w-32 h-16 mb-3">
+                <svg viewBox="0 0 100 50" className="w-full h-full">
+                  {/* Background arc */}
+                  <path
+                    d="M 5 50 A 45 45 0 0 1 95 50"
+                    fill="none"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                  />
+                  {/* Progress arc */}
+                  <path
+                    d="M 5 50 A 45 45 0 0 1 95 50"
+                    fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(thisMonthSubmissions.length / boost.videos_per_month) * 141.37} 141.37`}
+                    className="transition-all duration-500"
+                  />
+                </svg>
+                {/* Center text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
+                  <span className="text-lg font-bold">{thisMonthSubmissions.length}/{boost.videos_per_month}</span>
                 </div>
-                <div className="bg-background rounded-lg px-3 py-1.5 border text-center">
-                  <p className="text-sm font-bold">${earnedThisMonth.toFixed(0)}</p>
-                  <p className="text-[10px] text-muted-foreground">Earnings</p>
+              </div>
+              
+              {/* Stats row */}
+              <div className="flex items-center gap-4 text-center">
+                <div>
+                  <p className="text-lg font-bold text-primary">${earnedThisMonth.toFixed(0)}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Earned</p>
+                </div>
+                <div className="w-px h-8 bg-border" />
+                <div>
+                  <p className="text-lg font-bold">{boost.videos_per_month - thisMonthSubmissions.length}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Remaining</p>
                 </div>
               </div>
             </div>
