@@ -269,7 +269,7 @@ export function BrandCampaignsTab({
           {/* Subscription Required CTA and Embed - Only show if not subscribed */}
           {subscriptionStatus !== "active" && <>
               
-              <div className="w-full h-[250px] rounded-xl overflow-hidden">
+              <div className="w-full h-[400px] sm:h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>
             </>}
@@ -278,14 +278,14 @@ export function BrandCampaignsTab({
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                   {/* Type Filter */}
-                  <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/40">
+                  <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
                     {(["all", "campaigns", "boosts"] as CampaignTypeFilter[]).map(filter => (
                       <button
                         key={filter}
                         onClick={() => setTypeFilter(filter)}
-                        className={`px-3 py-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
                           typeFilter === filter
                             ? "bg-background text-foreground shadow-sm"
                             : "text-muted-foreground hover:text-foreground"
@@ -296,12 +296,12 @@ export function BrandCampaignsTab({
                     ))}
                   </div>
                   {/* Status Filter */}
-                  <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/40">
+                  <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
                     {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => (
                       <button
                         key={filter}
                         onClick={() => setStatusFilter(filter)}
-                        className={`px-3 py-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
                           statusFilter === filter
                             ? "bg-background text-foreground shadow-sm"
                             : "text-muted-foreground hover:text-foreground"
