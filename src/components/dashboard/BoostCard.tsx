@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
-import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb } from "lucide-react";
+import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb, Trash2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -165,6 +165,23 @@ export function BoostCard({ boost }: BoostCardProps) {
       toast.error("Failed to submit video");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleWithdrawSubmission = async (submissionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("boost_video_submissions")
+        .delete()
+        .eq("id", submissionId);
+
+      if (error) throw error;
+
+      toast.success("Submission withdrawn");
+      fetchSubmissions();
+    } catch (error) {
+      console.error("Error withdrawing submission:", error);
+      toast.error("Failed to withdraw submission");
     }
   };
 
@@ -585,55 +602,92 @@ export function BoostCard({ boost }: BoostCardProps) {
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {submissions.map((submission) => (
                   <div 
                     key={submission.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-muted/20 to-muted/40 transition-all hover:border-border hover:shadow-sm"
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="h-9 w-9 rounded-lg bg-background flex items-center justify-center shrink-0">
-                        <img 
-                          src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
-                          alt={submission.platform} 
-                          className="h-5 w-5" 
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <a 
-                          href={submission.video_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-sm font-inter tracking-[-0.5px] text-foreground hover:text-primary transition-colors"
-                        >
-                          <span className="truncate max-w-[200px]">
-                            {new URL(submission.video_url).pathname.split('/').pop() || 'View post'}
-                          </span>
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        </a>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {getStatusBadge(submission.status)}
-                          {submission.rejection_reason && (
-                            <span className="text-xs text-destructive font-inter tracking-[-0.5px]">
-                              {submission.rejection_reason}
+                    {/* Status accent bar */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                      submission.status === "approved" ? "bg-green-500" : 
+                      submission.status === "rejected" ? "bg-red-500" : 
+                      "bg-yellow-500"
+                    }`} />
+                    
+                    <div className="flex items-center justify-between p-4 pl-5">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        {/* Platform icon */}
+                        <div className="h-10 w-10 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center shrink-0 border border-border/30">
+                          <img 
+                            src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
+                            alt={submission.platform} 
+                            className="h-5 w-5" 
+                          />
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(submission.status)}
+                            <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
+                              {format(new Date(submission.submitted_at), "MMM d, h:mm a")}
                             </span>
+                          </div>
+                          <a 
+                            href={submission.video_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors group/link"
+                          >
+                            <span className="truncate max-w-[180px]">
+                              {(() => {
+                                try {
+                                  return new URL(submission.video_url).pathname.split('/').pop() || 'View post';
+                                } catch {
+                                  return 'View post';
+                                }
+                              })()}
+                            </span>
+                            <ExternalLink className="h-3 w-3 shrink-0 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                          </a>
+                          {submission.rejection_reason && (
+                            <p className="text-xs text-destructive/80 font-inter tracking-[-0.5px] line-clamp-1">
+                              {submission.rejection_reason}
+                            </p>
                           )}
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right shrink-0 pl-4">
-                      <p className="text-sm font-medium font-inter tracking-[-0.5px]">
-                        {submission.status === "approved" ? (
-                          <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
-                        ) : submission.status === "pending" ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <span className="text-destructive">$0</span>
+                      
+                      {/* Right side - payout & actions */}
+                      <div className="flex items-center gap-3 shrink-0 pl-4">
+                        <div className="text-right">
+                          <p className="text-sm font-semibold font-inter tracking-[-0.5px]">
+                            {submission.status === "approved" ? (
+                              <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
+                            ) : submission.status === "pending" ? (
+                              <span className="text-muted-foreground">${payoutPerVideo.toFixed(0)}</span>
+                            ) : (
+                              <span className="text-destructive line-through">${payoutPerVideo.toFixed(0)}</span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
+                            {submission.status === "approved" ? "earned" : submission.status === "pending" ? "potential" : "rejected"}
+                          </p>
+                        </div>
+                        
+                        {/* Withdraw button - only for pending submissions */}
+                        {submission.status === "pending" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleWithdrawSubmission(submission.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         )}
-                      </p>
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                        ${payoutPerVideo.toFixed(0)}/video
-                      </p>
+                      </div>
                     </div>
                   </div>
                 ))}
