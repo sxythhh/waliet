@@ -429,7 +429,7 @@ export function BoostCard({ boost }: BoostCardProps) {
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-card border-none [&>button]:hidden">
           {/* Header */}
-          <div className="p-6 pb-0">
+          <div className="px-5 pt-5 pb-0">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-geist tracking-[-0.5px] text-lg font-semibold">
                 Submit post
@@ -444,7 +444,7 @@ export function BoostCard({ boost }: BoostCardProps) {
           </div>
           
           {/* Content */}
-          <div className="p-6 space-y-4">
+          <div className="px-5 py-4 space-y-4">
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
                 <Link2 className="h-4 w-4 text-muted-foreground" />
@@ -480,7 +480,7 @@ export function BoostCard({ boost }: BoostCardProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex gap-2 p-6 pt-0">
+          <div className="flex gap-2 px-5 pb-5">
             <Button 
               variant="ghost" 
               onClick={() => setSubmitDialogOpen(false)} 
