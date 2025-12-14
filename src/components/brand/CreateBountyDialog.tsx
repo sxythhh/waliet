@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, DollarSign, Users, ArrowRight, Check, X, Lock, FileText, Video } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Lock, FileText, Video } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -122,7 +122,7 @@ export function CreateBountyDialog({
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
   const handleSubmit = async () => {
-    if (!formData.title || !formData.monthly_retainer || !formData.videos_per_month || !formData.content_style_requirements || !formData.max_accepted_creators) {
+    if (!formData.title || !formData.monthly_retainer || !formData.videos_per_month || !formData.max_accepted_creators) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -146,7 +146,7 @@ export function CreateBountyDialog({
 
       // Get platforms from selected blueprint or default to all
       const blueprintPlatforms = selectedBlueprint?.platforms || ['tiktok', 'instagram', 'youtube'];
-      const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}\n\nCONTENT STYLE:\n${formData.content_style_requirements}`;
+      const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}`;
       const {
         error
       } = await supabase.from('bounty_campaigns').insert({
@@ -200,15 +200,10 @@ export function CreateBountyDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[900px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-9 h-9 rounded-lg object-cover" /> : <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary font-geist">{brandName?.charAt(0) || "V"}</span>
-              </div>}
-            <div>
-              <h2 className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">New Boost</h2>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
-            </div>
+        <div className="flex items-center justify-between px-6 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">New Boost</h2>
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
           </div>
           <div className="flex items-center gap-2">
             {STEPS.map((step, index) => <div key={step.id} className="flex items-center gap-2">
@@ -248,16 +243,11 @@ export function CreateBountyDialog({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Column - Compensation */}
                 <div className="space-y-5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <DollarSign className="w-4 h-4 text-primary" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
-                  </div>
+                  <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
 
                   {/* Payment Schedule - First */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
                     <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({
                   ...formData,
                   payment_schedule: value
@@ -276,7 +266,7 @@ export function CreateBountyDialog({
                   {/* Payment Amount with Slider */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
                       <div className="relative w-24">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
                         <Input type="number" min="10" max="10000" value={formData.monthly_retainer} onChange={e => setFormData({
@@ -298,14 +288,14 @@ export function CreateBountyDialog({
                   {/* Videos and Max Creators */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
                       <Input type="number" min="1" value={formData.videos_per_month} onChange={e => setFormData({
                     ...formData,
                     videos_per_month: e.target.value
                   })} placeholder="4" className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Max Creators</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Max Creators</Label>
                       <Input type="number" min="1" value={formData.max_accepted_creators} onChange={e => setFormData({
                     ...formData,
                     max_accepted_creators: e.target.value
@@ -314,23 +304,28 @@ export function CreateBountyDialog({
                   </div>
 
                   {/* Per Video Payout Display */}
-                  {formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 && <div className="p-4 rounded-xl bg-muted/30">
-                      
-                    </div>}
+                  <div className="p-4 rounded-xl bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Video className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video payout</span>
+                      </div>
+                      <span className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
+                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 
+                          ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) 
+                          : '0.00'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Column - Settings & Dates */}
                 <div className="space-y-5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Users className="w-4 h-4 text-primary" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Settings</h3>
-                  </div>
+                  <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Settings</h3>
 
                   {/* Blueprint Selection */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
                     <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
                       <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
                         <SelectValue placeholder="Select a blueprint" />
@@ -374,7 +369,7 @@ export function CreateBountyDialog({
                   {/* Date Range */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Start Date</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Start Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50 font-inter tracking-[-0.5px]", !formData.start_date && "text-muted-foreground")}>
@@ -393,7 +388,7 @@ export function CreateBountyDialog({
                       </Popover>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">End Date</Label>
+                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">End Date</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" className={cn("w-full h-11 justify-start text-left font-normal bg-muted/30 hover:bg-muted/50 font-inter tracking-[-0.5px]", !formData.end_date && "text-muted-foreground")}>
@@ -418,28 +413,9 @@ export function CreateBountyDialog({
 
           {/* Step 2: Details */}
           {currentStep === 2 && <div className="space-y-6">
-              {/* Banner Upload */}
-              <div className="space-y-2">
-                {bannerPreview ? <div className="relative h-36 rounded-xl overflow-hidden group">
-                    <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button type="button" variant="secondary" size="sm" onClick={removeBanner} className="gap-2 font-inter tracking-[-0.5px]">
-                        <X className="h-3.5 w-3.5" />
-                        Remove
-                      </Button>
-                    </div>
-                  </div> : <div className="h-36 rounded-xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer flex items-center justify-center" onClick={() => fileInputRef.current?.click()}>
-                    <div className="text-center">
-                      <Upload className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Upload banner image</p>
-                    </div>
-                  </div>}
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-              </div>
-
               {/* Title */}
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
                 <Input value={formData.title} onChange={e => setFormData({
               ...formData,
               title: e.target.value
@@ -447,19 +423,11 @@ export function CreateBountyDialog({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Description</Label>
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Description</Label>
                 <Textarea value={formData.description} onChange={e => setFormData({
               ...formData,
               description: e.target.value
             })} placeholder="Describe what this boost entails..." className="min-h-[90px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Style & Requirements</Label>
-                <Textarea value={formData.content_style_requirements} onChange={e => setFormData({
-              ...formData,
-              content_style_requirements: e.target.value
-            })} placeholder="Describe content style, format, themes, and any specific creative requirements..." className="min-h-[110px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
               </div>
 
               {/* Summary Card */}
@@ -490,7 +458,7 @@ export function CreateBountyDialog({
             </div>}
         </div>
 
-        <div className="border-t border-border px-6 py-4 flex items-center justify-between bg-background">
+        <div className="px-6 py-4 flex items-center justify-between bg-background">
           <Button type="button" variant="ghost" size="sm" onClick={currentStep === 1 ? () => onOpenChange(false) : handleBack} className="font-inter tracking-[-0.5px]">
             {currentStep === 1 ? "Cancel" : "Back"}
           </Button>
