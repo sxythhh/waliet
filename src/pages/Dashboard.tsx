@@ -89,7 +89,8 @@ export default function Dashboard() {
     }
     
     // Show onboarding card popup for new users in creator mode
-    if (profileData && !profileData.onboarding_completed && workspace === "creator") {
+    const currentWorkspace = searchParams.get("workspace") || "creator";
+    if (profileData && !profileData.onboarding_completed && currentWorkspace === "creator") {
       setShowOnboardingCard(true);
     }
   };
@@ -175,7 +176,7 @@ export default function Dashboard() {
 
       {/* Onboarding Card Popup for new users */}
       <Dialog open={showOnboardingCard} onOpenChange={setShowOnboardingCard}>
-        <DialogContent className="sm:max-w-[440px] p-0 border-0 bg-transparent">
+        <DialogContent className="sm:max-w-[440px] p-6 border-0 bg-card rounded-2xl">
           <OnboardingCard onSelect={() => {
             markOnboardingComplete();
             setShowOnboardingCard(false);

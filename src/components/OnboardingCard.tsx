@@ -36,7 +36,7 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
         {/* Creator Option */}
         <button
           onClick={handleCreatorSelect}
-          className="w-full flex items-center gap-4 p-4 rounded-lg bg-[#2060de] hover:bg-[#1a50c8] transition-colors text-left group"
+          className="w-full flex items-center gap-4 p-4 rounded-lg bg-[#2060de] hover:bg-[#1a50c8] transition-colors text-left group border-t border-[#4b85f7]"
         >
           <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
             <img src={creatorIcon} alt="" className="w-6 h-6" />
@@ -54,7 +54,7 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
         {/* Brand Option */}
         <button
           onClick={handleBrandSelect}
-          className="w-full flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left group"
+          className="w-full flex items-center gap-4 p-4 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left group"
         >
           <div className="w-10 h-10 rounded-lg bg-[#2060de] flex items-center justify-center flex-shrink-0">
             <img src={brandIcon} alt="" className="w-6 h-6" />
