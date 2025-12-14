@@ -79,7 +79,6 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
       .from('blueprints')
       .select('id, title')
       .eq('brand_id', brandId)
-      .eq('status', 'active')
       .order('created_at', { ascending: false });
     setBlueprints(data || []);
   };
