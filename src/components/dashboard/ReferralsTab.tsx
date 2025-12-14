@@ -36,15 +36,17 @@ interface ReferralWithMilestones {
   } | null;
   milestone_rewards?: MilestoneReward[];
 }
-interface AffiliateEarningsDataPoint {
+interface ReferralChartDataPoint {
   date: string;
-  amount: number;
+  earnings: number;
+  referrals: number;
+  successful: number;
 }
 export function ReferralsTab() {
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<ReferralWithMilestones[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [affiliateEarningsData, setAffiliateEarningsData] = useState<AffiliateEarningsDataPoint[]>([]);
+  const [chartData, setChartData] = useState<ReferralChartDataPoint[]>([]);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newReferralCode, setNewReferralCode] = useState("");
@@ -123,6 +125,7 @@ export function ReferralsTab() {
     const start = subMonths(now, 1);
     const days = 30;
     
+    // Fetch referral transactions
     const { data: affiliateTransactions } = await supabase
       .from("wallet_transactions")
       .select("amount, created_at, type")
@@ -131,8 +134,18 @@ export function ReferralsTab() {
       .gte("created_at", start.toISOString())
       .order("created_at", { ascending: true });
     
-    const dataPoints: AffiliateEarningsDataPoint[] = [];
+    // Fetch referrals data
+    const { data: referralsData } = await supabase
+      .from("referrals")
+      .select("created_at, status")
+      .eq("referrer_id", session.user.id)
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
+    
+    const dataPoints: ReferralChartDataPoint[] = [];
     let cumulativeEarnings = 0;
+    let cumulativeReferrals = 0;
+    let cumulativeSuccessful = 0;
     const pointCount = Math.min(days, 30);
     const interval = Math.max(1, Math.floor(days / pointCount));
     
@@ -140,21 +153,37 @@ export function ReferralsTab() {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, 'MMM dd');
+      const prevDate = new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000);
       
       if (affiliateTransactions) {
         affiliateTransactions.forEach(txn => {
           const txnDate = new Date(txn.created_at);
-          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+          if (txnDate <= currentDate && txnDate > prevDate) {
             cumulativeEarnings += Number(txn.amount) || 0;
           }
         });
       }
+      
+      if (referralsData) {
+        referralsData.forEach(ref => {
+          const refDate = new Date(ref.created_at);
+          if (refDate <= currentDate && refDate > prevDate) {
+            cumulativeReferrals += 1;
+            if (ref.status === 'completed') {
+              cumulativeSuccessful += 1;
+            }
+          }
+        });
+      }
+      
       dataPoints.push({
         date: dateStr,
-        amount: Number(cumulativeEarnings.toFixed(2))
+        earnings: Number(cumulativeEarnings.toFixed(2)),
+        referrals: cumulativeReferrals,
+        successful: cumulativeSuccessful
       });
     }
-    setAffiliateEarningsData(dataPoints);
+    setChartData(dataPoints);
   };
   const referralLink = profile?.referral_code ? `${window.location.origin}/?ref=${profile.referral_code}` : "";
   const copyReferralLink = () => {
@@ -252,104 +281,113 @@ export function ReferralsTab() {
 
       <div className="space-y-8">
 
-      {/* Stats Grid */}
-      <div className="flex items-center gap-6">
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-semibold tracking-tight">{referrals.length}</p>
-          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Referrals</p>
-        </div>
-        <div className="w-px h-5 bg-border" />
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-semibold tracking-tight">{profile?.successful_referrals || 0}</p>
-          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Successful</p>
-        </div>
-        <div className="w-px h-5 bg-border" />
-        <div className="flex items-baseline gap-2">
-          <p className="text-2xl font-semibold tracking-tight">${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
-          <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Earnings</p>
-        </div>
-      </div>
-
-      {/* Affiliate Earnings Chart */}
-      <Card className="bg-card border-0">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Affiliate Earnings</p>
-          </div>
-          <div className="flex items-center gap-2 mb-3">
-            <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
-              ${affiliateEarningsData.length > 0 ? affiliateEarningsData[affiliateEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}
-            </p>
-          </div>
-          
-          <div className="h-20 -mx-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={affiliateEarningsData}>
-                <defs>
-                  <linearGradient id="affiliateEarningsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <RechartsTooltip content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                        <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
-                        <p className="text-sm font-bold">${value.toFixed(2)}</p>
-                      </div>;
-                  }
-                  return null;
-                }} cursor={false} />
-                <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#8b5cf6', stroke: 'none' }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Referral Link Section */}
-      <div className="p-5 rounded-xl space-y-4 bg-neutral-100/0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center">
-              <Gift className="w-5 h-5 text-[#2060df]" />
+      {/* Chart and Referral Link Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Affiliate Earnings Chart */}
+        <Card className="bg-card border-0">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Referral Activity</p>
             </div>
+            
+            {/* Stats inline */}
+            <div className="flex items-center gap-4 mb-3">
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>{referrals.length}</p>
+                <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>referrals</p>
+              </div>
+              <div className="w-px h-4 bg-border" />
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-bold font-geist text-emerald-500" style={{ letterSpacing: '-0.3px' }}>{profile?.successful_referrals || 0}</p>
+                <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>successful</p>
+              </div>
+              <div className="w-px h-4 bg-border" />
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-bold font-geist text-violet-500" style={{ letterSpacing: '-0.3px' }}>${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
+                <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>earned</p>
+              </div>
+            </div>
+            
+            <div className="h-24 -mx-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="referralsGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="successfulGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <RechartsTooltip content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          <p className="text-[10px] text-muted-foreground mb-1">{data.date}</p>
+                          <div className="space-y-0.5">
+                            <p className="text-xs"><span className="text-blue-500">●</span> {data.referrals} referrals</p>
+                            <p className="text-xs"><span className="text-emerald-500">●</span> {data.successful} successful</p>
+                            <p className="text-xs"><span className="text-violet-500">●</span> ${data.earnings.toFixed(2)} earned</p>
+                          </div>
+                        </div>;
+                    }
+                    return null;
+                  }} cursor={false} />
+                  <Area type="monotone" dataKey="referrals" stroke="#3b82f6" strokeWidth={2} fill="url(#referralsGradient)" dot={false} activeDot={{ r: 3, fill: '#3b82f6', stroke: 'none' }} />
+                  <Area type="monotone" dataKey="successful" stroke="#10b981" strokeWidth={2} fill="url(#successfulGradient)" dot={false} activeDot={{ r: 3, fill: '#10b981', stroke: 'none' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Referral Link Section */}
+        <Card className="bg-card border-0">
+          <CardContent className="pt-4 pb-4 h-full flex flex-col justify-between">
             <div>
-              <h3 className="font-semibold text-sm">Your Referral Link</h3>
-              <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-[#2060df]/10 flex items-center justify-center">
+                  <Gift className="w-5 h-5 text-[#2060df]" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">Your Referral Link</h3>
+                  <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {isEditing ? <div className="space-y-3">
-            <div className="flex gap-2 items-center">
-              <span className="text-sm text-muted-foreground shrink-0">{window.location.origin}/?ref=</span>
-              <Input value={newReferralCode} onChange={e => setNewReferralCode(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))} placeholder="your-code" className="font-mono text-sm bg-background/50 border-0" />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveReferralCode} size="sm" disabled={saving}>
-                {saving ? "Saving..." : "Save"}
-              </Button>
-              <Button onClick={() => {
-            setIsEditing(false);
-            setNewReferralCode(profile?.referral_code || "");
-          }} variant="ghost" size="sm">
-                Cancel
-              </Button>
-            </div>
-          </div> : <div className="flex gap-2 items-stretch">
-            <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
-          letterSpacing: '-0.5px'
-        }} />
-            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy"}
-            </Button>
-            <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-10 w-10">
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </div>}
+            {isEditing ? <div className="space-y-3">
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-muted-foreground shrink-0">{window.location.origin}/?ref=</span>
+                  <Input value={newReferralCode} onChange={e => setNewReferralCode(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))} placeholder="your-code" className="font-mono text-sm bg-background/50 border-0" />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveReferralCode} size="sm" disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button onClick={() => {
+                setIsEditing(false);
+                setNewReferralCode(profile?.referral_code || "");
+              }} variant="ghost" size="sm">
+                    Cancel
+                  </Button>
+                </div>
+              </div> : <div className="flex gap-2 items-stretch">
+                <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
+              letterSpacing: '-0.5px'
+            }} />
+                <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+                <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-10 w-10">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </div>}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Milestone Rewards */}
