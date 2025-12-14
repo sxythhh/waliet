@@ -838,7 +838,7 @@ export function CreatorsTab({
         <ScrollArea className="flex-1">
           {creators.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                <Users className="h-7 w-7 text-muted-foreground/60" />
+                <img src="/assets/frame-person-icon.svg" alt="" className="h-7 w-7 opacity-60" />
               </div>
               <h3 className="font-medium text-sm mb-1">No creators yet</h3>
               <p className="text-xs text-muted-foreground">
