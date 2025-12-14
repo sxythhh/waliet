@@ -293,31 +293,70 @@ export default function Auth() {
                 
               </div>
             </> : (/* Email Form */
-        <div className="space-y-4">
+            <div className="space-y-5">
+              <button 
+                type="button" 
+                onClick={() => setShowEmailForm(false)} 
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px]"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
               
-              
-              
-              
-              <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+              <form onSubmit={handleEmailAuth} className="space-y-5 font-inter tracking-[-0.5px]">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    required 
+                    disabled={loading} 
+                    className="h-11 bg-background/50 border border-border/50 rounded-lg focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" 
+                  />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Password</Label>
                   <div className="relative">
-                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    <Input 
+                      id="password" 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="••••••••" 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      required 
+                      disabled={loading} 
+                      minLength={6} 
+                      className="h-11 bg-background/50 border border-border/50 rounded-lg focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary pr-10 transition-all" 
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)} 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <button type="button" onClick={() => setShowResetDialog(true)} className="text-sm text-primary hover:underline">
+                </div>
+                
+                <div className="flex items-center justify-end">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowResetDialog(true)} 
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
                     Forgot password?
                   </button>
                 </div>
                 
-                <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-inter tracking-[-0.5px]">
+                <Button 
+                  type="submit" 
+                  disabled={loading} 
+                  className="w-full h-11 font-medium text-sm font-inter tracking-[-0.5px] rounded-lg"
+                >
                   {loading ? "Please wait..." : "Continue"}
                 </Button>
               </form>
