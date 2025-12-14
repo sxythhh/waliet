@@ -27,7 +27,7 @@ export function OnboardingCard({ onSelect, inline = false }: OnboardingCardProps
   };
 
   const cardContent = (
-    <div className="w-full max-w-[400px]">
+    <div className="w-full max-w-[440px]">
       <h2 className="font-['Geist'] text-lg font-semibold tracking-[-0.5px] text-foreground mb-4">
         I am joining as..
       </h2>
