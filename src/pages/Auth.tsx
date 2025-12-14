@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import discordIcon from "@/assets/discord-icon-new.png";
+import { OnboardingCard } from "@/components/OnboardingCard";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const {
@@ -25,10 +27,12 @@ export default function Auth() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const navigate = useNavigate();
   const {
     toast
   } = useToast();
+  const { markOnboardingComplete } = useOnboardingStatus();
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -233,7 +237,27 @@ export default function Auth() {
       </div>;
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
-      
+      {showOnboarding ? (
+        <div className="flex flex-col items-center gap-4">
+          <OnboardingCard 
+            open={true} 
+            onOpenChange={() => {}} 
+            onSelect={() => {
+              markOnboardingComplete();
+              setShowOnboarding(false);
+            }} 
+          />
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+            Already have an account?{" "}
+            <button 
+              onClick={() => setShowOnboarding(false)} 
+              className="text-primary hover:underline"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
+      ) : (
       <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-2 pt-8">
           <div className="flex items-center justify-center gap-2">
@@ -346,6 +370,7 @@ export default function Auth() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Password Reset Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
