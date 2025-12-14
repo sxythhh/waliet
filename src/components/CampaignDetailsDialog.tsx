@@ -29,6 +29,7 @@ interface Campaign {
   description: string | null;
   status: string;
   budget: number;
+  budget_used?: number | null;
   rpm_rate: number;
   allowed_platforms: string[] | null;
   start_date?: string | null;
@@ -236,16 +237,16 @@ export function CampaignDetailsDialog({
 
           {/* Expected Payout Card */}
           {expectedPayout !== null && <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5" style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.3px'
-              }}>Overall Expected Payout  </p>
+              }}>Overall Expected Payout</p>
                   <p style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
-              }} className="text-lg font-semibold text-primary-foreground">
+              }} className="text-lg font-semibold text-[#22c55e]">
                     ${expectedPayout.amount.toFixed(2)}
                   </p>
                 </div>
@@ -262,6 +263,50 @@ export function CampaignDetailsDialog({
                   </p>
                 </div>
               </div>
+              
+              {/* Budget Progress Bar */}
+              {(() => {
+                const paidOut = campaign.budget_used || 0;
+                const expected = expectedPayout.amount;
+                const total = campaign.budget || 1;
+                const remaining = Math.max(0, total - paidOut - expected);
+                const paidPercent = (paidOut / total) * 100;
+                const expectedPercent = (expected / total) * 100;
+                const remainingPercent = (remaining / total) * 100;
+                
+                return (
+                  <div>
+                    <div className="h-2 rounded-full overflow-hidden flex bg-muted/50">
+                      <div 
+                        className="bg-[#22c55e] transition-all" 
+                        style={{ width: `${Math.min(paidPercent, 100)}%` }} 
+                      />
+                      <div 
+                        className="bg-[#f59e0b] transition-all" 
+                        style={{ width: `${Math.min(expectedPercent, 100 - paidPercent)}%` }} 
+                      />
+                      <div 
+                        className="bg-muted-foreground/20 transition-all" 
+                        style={{ width: `${remainingPercent}%` }} 
+                      />
+                    </div>
+                    <div className="flex justify-between mt-2 text-[10px]" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
+                        <span className="text-muted-foreground">Paid ${paidOut.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                        <span className="text-muted-foreground">Expected ${expected.toFixed(0)}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-muted-foreground/20" />
+                        <span className="text-muted-foreground">Left ${remaining.toFixed(0)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>}
         </div>
 
