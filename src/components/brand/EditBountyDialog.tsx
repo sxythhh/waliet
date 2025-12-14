@@ -96,7 +96,6 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           .from('blueprints')
           .select('id, title')
           .eq('brand_id', data.brand_id)
-          .eq('status', 'active')
           .order('created_at', { ascending: false });
         setBlueprints(bpData || []);
       }
