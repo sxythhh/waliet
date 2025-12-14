@@ -331,39 +331,58 @@ export function CreatorsTab({
       return;
     }
     setLoading(true);
-    const {
-      data: campaignsData
-    } = await supabase.from("campaigns").select("id, title").eq("brand_id", brandId);
+    
+    // Fetch campaigns and bounty campaigns in parallel
+    const [campaignsResult, bouncyCampaignsResult] = await Promise.all([
+      supabase.from("campaigns").select("id, title").eq("brand_id", brandId),
+      supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId)
+    ]);
+
+    const campaignsData = campaignsResult.data || [];
+    const bouncyCampaignsData = bouncyCampaignsResult.data || [];
 
     // Store campaigns for filter dropdown
-    setCampaigns(campaignsData || []);
-    if (!campaignsData || campaignsData.length === 0) {
-      setCreators([]);
-      setLoading(false);
-      return;
-    }
+    setCampaigns(campaignsData);
+    
     const campaignIds = campaignsData.map(c => c.id);
+    const bountyIds = bouncyCampaignsData.map(b => b.id);
     const campaignMap = new Map(campaignsData.map(c => [c.id, c.title]));
-    const {
-      data: connections
-    } = await supabase.from("social_account_campaigns").select(`
-        campaign_id,
-        user_id,
-        connected_at,
-        social_accounts!inner (
-          platform,
-          username,
-          account_link,
-          avatar_url,
-          follower_count
-        )
-      `).in("campaign_id", campaignIds).eq("status", "active");
-    if (!connections || connections.length === 0) {
+    const bountyMap = new Map(bouncyCampaignsData.map(b => [b.id, b.title]));
+
+    // Fetch campaign connections and bounty applications in parallel
+    const [connectionsResult, bountyApplicationsResult] = await Promise.all([
+      campaignIds.length > 0 
+        ? supabase.from("social_account_campaigns").select(`
+            campaign_id,
+            user_id,
+            connected_at,
+            social_accounts!inner (
+              platform,
+              username,
+              account_link,
+              avatar_url,
+              follower_count
+            )
+          `).in("campaign_id", campaignIds).eq("status", "active")
+        : Promise.resolve({ data: [] }),
+      bountyIds.length > 0
+        ? supabase.from("bounty_applications").select("bounty_campaign_id, user_id, applied_at").in("bounty_campaign_id", bountyIds)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    const connections = connectionsResult.data || [];
+    const bountyApplications = bountyApplicationsResult.data || [];
+
+    if (connections.length === 0 && bountyApplications.length === 0) {
       setCreators([]);
       setLoading(false);
       return;
     }
-    const userIds = [...new Set(connections.map(c => c.user_id))];
+
+    // Collect all unique user IDs from both sources
+    const campaignUserIds = connections.map(c => c.user_id);
+    const bountyUserIds = bountyApplications.map(b => b.user_id);
+    const userIds = [...new Set([...campaignUserIds, ...bountyUserIds])];
     const BATCH_SIZE = 500;
     const profiles: any[] = [];
     for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
@@ -428,6 +447,41 @@ export function CreatorsTab({
         });
       }
     }
+
+    // Also add creators from bounty applications
+    for (const app of bountyApplications) {
+      const userId = app.user_id;
+      const profile = profiles?.find(p => p.id === userId);
+      if (!profile) continue;
+      if (!creatorMap.has(userId)) {
+        creatorMap.set(userId, {
+          id: userId,
+          username: profile.username,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          email: profile.email,
+          campaigns: [],
+          social_accounts: [],
+          total_views: 0,
+          total_earnings: 0,
+          date_joined: app.applied_at
+        });
+      } else {
+        const creator = creatorMap.get(userId)!;
+        if (app.applied_at && (!creator.date_joined || app.applied_at < creator.date_joined)) {
+          creator.date_joined = app.applied_at;
+        }
+      }
+      const creator = creatorMap.get(userId)!;
+      const bountyTitle = bountyMap.get(app.bounty_campaign_id);
+      if (bountyTitle && !creator.campaigns.find(c => c.id === app.bounty_campaign_id)) {
+        creator.campaigns.push({
+          id: app.bounty_campaign_id,
+          title: bountyTitle
+        });
+      }
+    }
+
     if (analytics && analytics.length > 0) {
       for (const analytic of analytics) {
         const creator = creatorMap.get(analytic.user_id);
@@ -449,7 +503,8 @@ export function CreatorsTab({
     if (transactions.length > 0) {
       for (const tx of transactions) {
         const campaignId = (tx.metadata as any)?.campaign_id;
-        if (campaignId && campaignIds.includes(campaignId)) {
+        const bountyId = (tx.metadata as any)?.bounty_campaign_id;
+        if ((campaignId && campaignIds.includes(campaignId)) || (bountyId && bountyIds.includes(bountyId))) {
           const creator = creatorMap.get(tx.user_id);
           if (creator) {
             creator.total_earnings += Number(tx.amount) || 0;
