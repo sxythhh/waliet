@@ -31,6 +31,7 @@ interface Creator {
   campaigns: {
     id: string;
     title: string;
+    type: 'campaign' | 'boost';
   }[];
   social_accounts: {
     platform: string;
@@ -433,7 +434,8 @@ export function CreatorsTab({
       if (campaignTitle && !creator.campaigns.find(c => c.id === conn.campaign_id)) {
         creator.campaigns.push({
           id: conn.campaign_id,
-          title: campaignTitle
+          title: campaignTitle,
+          type: 'campaign'
         });
       }
       const socialAccount = conn.social_accounts as any;
@@ -477,7 +479,8 @@ export function CreatorsTab({
       if (bountyTitle && !creator.campaigns.find(c => c.id === app.bounty_campaign_id)) {
         creator.campaigns.push({
           id: app.bounty_campaign_id,
-          title: bountyTitle
+          title: bountyTitle,
+          type: 'boost'
         });
       }
     }
@@ -933,10 +936,10 @@ export function CreatorsTab({
 
               {/* Campaigns */}
               <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Joined Campaigns</h4>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedCreator.campaigns.map(campaign => <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
-                      {campaign.title}
+                      {campaign.title} <span className="text-muted-foreground">({campaign.type === 'boost' ? 'Applied' : 'Joined'})</span>
                     </span>)}
                 </div>
               </div>
