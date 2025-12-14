@@ -156,15 +156,58 @@ export function BlueprintsTab({
     return stripped.length > 0 ? stripped.slice(0, 180) : null;
   };
   if (loading) {
-    return <div className="p-6 space-y-6">
+    return (
+      <div className="p-6 space-y-6 animate-fade-in">
+        {/* Header Skeleton */}
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-10 w-40" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-28 rounded-lg" />
+            <Skeleton className="h-4 w-48 rounded-lg" />
+          </div>
+          <Skeleton className="h-9 w-36 rounded-xl" />
         </div>
+        
+        {/* Blueprint Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-[200px] rounded-xl" />)}
+          {[1, 2, 3].map((i) => (
+            <div 
+              key={i} 
+              className="rounded-xl border border-border/30 bg-card/20 overflow-hidden"
+              style={{ animationDelay: `${i * 100}ms` }}
+            >
+              {/* Content Preview Skeleton */}
+              <div className="p-5 min-h-[120px] border-b border-border/20 space-y-3">
+                <Skeleton className="h-3 w-full rounded-md" />
+                <Skeleton className="h-3 w-[90%] rounded-md" />
+                <Skeleton className="h-3 w-[75%] rounded-md" />
+                <Skeleton className="h-3 w-[60%] rounded-md" />
+              </div>
+              
+              {/* Footer Skeleton */}
+              <div className="p-4 space-y-3">
+                {/* Title */}
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                
+                {/* Platforms */}
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-7 w-7 rounded-md" />
+                  <Skeleton className="h-7 w-7 rounded-md" />
+                </div>
+                
+                {/* Meta Row */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-3 w-16 rounded-md" />
+                  </div>
+                  <Skeleton className="h-3 w-12 rounded-md" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>;
+      </div>
+    );
   }
   return <div className="p-6 space-y-6">
       {/* Header */}
