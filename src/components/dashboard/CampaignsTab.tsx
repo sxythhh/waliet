@@ -66,10 +66,20 @@ interface BoostApplication {
     monthly_retainer: number;
     videos_per_month: number;
     banner_url: string | null;
+    blueprint_embed_url?: string | null;
+    content_style_requirements?: string | null;
     brands?: {
       name: string;
       logo_url: string | null;
     };
+    blueprint?: {
+      content: string | null;
+      hooks: any[] | null;
+      talking_points: any[] | null;
+      dos_and_donts: any | null;
+      call_to_action: string | null;
+      content_guidelines: string | null;
+    } | null;
   };
 }
 interface RecommendedCampaign {
@@ -272,20 +282,30 @@ export function CampaignsTab({
               monthly_retainer,
               videos_per_month,
               banner_url,
-              brand_id
+              brand_id,
+              blueprint_embed_url,
+              content_style_requirements
             `).eq('id', app.bounty_campaign_id).single();
         let brandData = null;
+        let blueprintData = null;
         if (campaign?.brand_id) {
           const {
             data: brand
           } = await supabase.from('brands').select('name, logo_url').eq('id', campaign.brand_id).single();
           brandData = brand;
+          
+          // Fetch blueprint for the brand
+          const {
+            data: blueprint
+          } = await supabase.from('blueprints').select('content, hooks, talking_points, dos_and_donts, call_to_action, content_guidelines').eq('brand_id', campaign.brand_id).eq('status', 'active').order('created_at', { ascending: false }).limit(1).single();
+          blueprintData = blueprint;
         }
         return {
           ...app,
           boost_campaigns: campaign ? {
             ...campaign,
-            brands: brandData
+            brands: brandData,
+            blueprint: blueprintData
           } : null
         };
       }));
@@ -760,7 +780,10 @@ export function CampaignsTab({
           title: application.boost_campaigns.title,
           monthly_retainer: application.boost_campaigns.monthly_retainer,
           videos_per_month: application.boost_campaigns.videos_per_month,
-          brands: application.boost_campaigns.brands
+          brands: application.boost_campaigns.brands,
+          blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
+          content_style_requirements: application.boost_campaigns.content_style_requirements,
+          blueprint: application.boost_campaigns.blueprint
         }} />)}
           </div>
         </div>}
