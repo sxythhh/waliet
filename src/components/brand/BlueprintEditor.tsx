@@ -680,6 +680,9 @@ export function BlueprintEditor({
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-3">
+                    {enabledSections.map((sectionId) => renderSection(sectionId))}
+
+                    {/* Legacy per-section rendering kept for reference, disabled */}
                 {/* Content Section */}
                 {enabledSections.includes("content") && (
                   <BlueprintSection
