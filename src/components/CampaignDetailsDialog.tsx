@@ -278,9 +278,21 @@ export function CampaignDetailsDialog({
                       <div className="bg-[#22c55e] transition-all" style={{
                   width: `${Math.min(paidPercent, 100)}%`
                 }} />
-                      <div className="bg-[#f59e0b] transition-all" style={{
-                  width: `${Math.min(expectedPercent, 100 - paidPercent)}%`
-                }} />
+                      <div 
+                        className="transition-all relative overflow-hidden" 
+                        style={{
+                          width: `${Math.min(expectedPercent, 100 - paidPercent)}%`,
+                          background: `repeating-linear-gradient(
+                            -45deg,
+                            #f59e0b,
+                            #f59e0b 4px,
+                            #d97706 4px,
+                            #d97706 8px
+                          )`,
+                          backgroundSize: '200% 100%',
+                          animation: 'stripeMove 1s linear infinite'
+                        }} 
+                      />
                       <div className="bg-muted-foreground/20 transition-all" style={{
                   width: `${remainingPercent}%`
                 }} />
@@ -288,16 +300,16 @@ export function CampaignDetailsDialog({
                     <div style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.3px'
-              }} className="justify-between mt-2 text-[10px] flex flex-row">
-                      <div className="flex items-center gap-1">
+              }} className="mt-2 text-[10px] flex flex-col gap-1 items-start">
+                      <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-[#22c55e]" />
                         <span className="text-muted-foreground">Paid ${paidOut.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                         <span className="text-muted-foreground">Expected ${expected.toFixed(0)}</span>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded-full bg-muted-foreground/20" />
                         <span className="text-muted-foreground">Left ${remaining.toFixed(0)}</span>
                       </div>
