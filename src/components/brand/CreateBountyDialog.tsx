@@ -190,7 +190,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
       if (error) throw error;
 
       toast.success("Boost created successfully!");
-      onSuccess();
+      onSuccess?.();
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
