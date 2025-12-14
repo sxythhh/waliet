@@ -98,6 +98,7 @@ export type Database = {
           hooks: Json | null
           id: string
           platforms: string[] | null
+          section_order: string[] | null
           status: string
           talking_points: Json | null
           target_personas: Json | null
@@ -118,6 +119,7 @@ export type Database = {
           hooks?: Json | null
           id?: string
           platforms?: string[] | null
+          section_order?: string[] | null
           status?: string
           talking_points?: Json | null
           target_personas?: Json | null
@@ -138,6 +140,7 @@ export type Database = {
           hooks?: Json | null
           id?: string
           platforms?: string[] | null
+          section_order?: string[] | null
           status?: string
           talking_points?: Json | null
           target_personas?: Json | null

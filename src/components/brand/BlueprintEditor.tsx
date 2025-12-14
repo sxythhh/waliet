@@ -184,6 +184,11 @@ export function BlueprintEditor({
       talking_points: data.talking_points as string[] || []
     });
 
+    // Load saved section order if it exists
+    if (data.section_order && Array.isArray(data.section_order) && data.section_order.length > 0) {
+      setEnabledSections(data.section_order as SectionType[]);
+    }
+
     if (brandRes.data) {
       setBrand(brandRes.data);
     }
@@ -219,12 +224,25 @@ export function BlueprintEditor({
   };
 
   const toggleSection = (sectionId: SectionType) => {
-    setEnabledSections(prev => 
-      prev.includes(sectionId)
+    setEnabledSections(prev => {
+      const newSections = prev.includes(sectionId)
         ? prev.filter(s => s !== sectionId)
-        : [...prev, sectionId]
-    );
+        : [...prev, sectionId];
+      // Save section order to database
+      saveSectionOrder(newSections);
+      return newSections;
+    });
   };
+
+  const saveSectionOrder = useCallback(debounce(async (sections: SectionType[]) => {
+    const { error } = await supabase
+      .from("blueprints")
+      .update({ section_order: sections })
+      .eq("id", blueprintId);
+    if (error) {
+      console.error("Error saving section order:", error);
+    }
+  }, 500), [blueprintId]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -236,7 +254,11 @@ export function BlueprintEditor({
 
     // Check if dropped on trash
     if (over?.id === "trash-zone") {
-      setEnabledSections(prev => prev.filter(s => s !== active.id));
+      setEnabledSections(prev => {
+        const newSections = prev.filter(s => s !== active.id);
+        saveSectionOrder(newSections);
+        return newSections;
+      });
       return;
     }
 
@@ -244,7 +266,9 @@ export function BlueprintEditor({
       setEnabledSections((items) => {
         const oldIndex = items.indexOf(active.id as SectionType);
         const newIndex = items.indexOf(over.id as SectionType);
-        return arrayMove(items, oldIndex, newIndex);
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        saveSectionOrder(newOrder);
+        return newOrder;
       });
     }
   };
