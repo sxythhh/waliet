@@ -197,13 +197,14 @@ export function BoostCard({ boost }: BoostCardProps) {
   };
 
   const getStatusBadge = (status: string) => {
+    const baseClasses = "font-inter tracking-[-0.5px] text-[10px] font-medium border-0 bg-transparent px-0 hover:bg-transparent";
     switch (status) {
       case "approved":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Approved</Badge>;
+        return <Badge className={`${baseClasses} text-green-500`}>Approved</Badge>;
       case "rejected":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
+        return <Badge className={`${baseClasses} text-red-500`}>Rejected</Badge>;
       default:
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+        return <Badge className={`${baseClasses} text-yellow-500`}>Pending</Badge>;
     }
   };
 
