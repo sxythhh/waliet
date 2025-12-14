@@ -133,18 +133,15 @@ export function CampaignDetailsDialog({
         .select('total_views, recorded_at')
         .eq('campaign_id', campaign.id)
         .order('recorded_at', { ascending: false })
-        .limit(2);
+        .limit(1);
       
       if (metrics && metrics.length > 0) {
-        // Calculate views in the current period (since last payout)
-        // Using the difference between latest and previous snapshot if available
-        const latestViews = Number(metrics[0]?.total_views) || 0;
-        const previousViews = Number(metrics[1]?.total_views) || 0;
-        const periodViews = Math.max(0, metrics.length > 1 ? latestViews - previousViews : latestViews);
+        // Use latest total views for cumulative earnings display
+        const totalViews = Number(metrics[0]?.total_views) || 0;
         
-        // Calculate expected payout: (views / 1000) * rpm_rate
-        const amount = (periodViews / 1000) * campaign.rpm_rate;
-        setExpectedPayout({ views: periodViews, amount });
+        // Calculate payout: (views / 1000) * rpm_rate
+        const amount = (totalViews / 1000) * campaign.rpm_rate;
+        setExpectedPayout({ views: totalViews, amount });
       } else {
         setExpectedPayout(null);
       }
@@ -242,7 +239,7 @@ export function CampaignDetailsDialog({
                   <p className="text-xs text-muted-foreground mb-0.5" style={{
                     fontFamily: 'Inter',
                     letterSpacing: '-0.3px'
-                  }}>Expected Payout</p>
+                  }}>Total Estimated Earnings</p>
                   <p className="text-lg font-semibold text-[#22c55e]" style={{
                     fontFamily: 'Inter',
                     letterSpacing: '-0.5px'
@@ -254,12 +251,12 @@ export function CampaignDetailsDialog({
                   <p className="text-xs text-muted-foreground" style={{
                     fontFamily: 'Inter',
                     letterSpacing: '-0.3px'
-                  }}>Based on</p>
+                  }}>Total views</p>
                   <p className="text-sm font-medium" style={{
                     fontFamily: 'Inter',
                     letterSpacing: '-0.5px'
                   }}>
-                    {expectedPayout.views.toLocaleString()} views
+                    {expectedPayout.views.toLocaleString()}
                   </p>
                 </div>
               </div>
