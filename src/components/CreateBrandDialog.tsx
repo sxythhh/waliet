@@ -132,64 +132,44 @@ export function CreateBrandDialog({
       {!hideTrigger && <DialogTrigger asChild>
           
         </DialogTrigger>}
-      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-0 overflow-hidden">
-        {/* Header with gradient accent */}
-        <div className="relative px-6 pb-6 pt-0">
+      <DialogContent className="max-w-sm bg-[#0a0a0a] border-0 p-[5px] overflow-hidden">
+        {/* Header */}
+        <div className="relative px-5 pb-4 pt-4">
           <DialogHeader className="relative">
-            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white mb-1">
+            <DialogTitle className="text-xl font-semibold tracking-[-0.5px] text-white">
               Create Brand
             </DialogTitle>
-            <p className="text-sm text-neutral-500" style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.3px'
-          }}>
-              Set up your brand workspace to manage campaigns
-            </p>
           </DialogHeader>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="px-6 pb-6 space-y-5">
-            {/* Logo Upload - Left aligned */}
-            <div className="flex flex-col items-start">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="px-5 pb-5 space-y-5">
+            {/* Logo Upload + Brand Name in same row */}
+            <div className="flex items-center gap-3">
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-              {logoPreview ? <div className="relative group">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-primary/20">
+              {logoPreview ? <div className="relative group flex-shrink-0">
+                  <div className="w-11 h-11 rounded-xl overflow-hidden ring-2 ring-primary/20">
                     <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
                   </div>
-                  <button type="button" onClick={removeLogo} className="absolute -top-2 -right-2 p-1.5 bg-red-500/90 rounded-full hover:bg-red-500 transition-colors shadow-lg">
-                    <X className="h-3 w-3 text-white" />
+                  <button type="button" onClick={removeLogo} className="absolute -top-1.5 -right-1.5 p-1 bg-red-500/90 rounded-full hover:bg-red-500 transition-colors shadow-lg">
+                    <X className="h-2.5 w-2.5 text-white" />
                   </button>
-                </div> : <button type="button" onClick={() => fileInputRef.current?.click()} className="w-20 h-20 rounded-2xl flex items-center justify-center transition-all hover:bg-primary/5 group bg-[#141414]">
-                  <Upload className="h-5 w-5 text-neutral-500 group-hover:text-primary transition-colors" />
+                </div> : <button type="button" onClick={() => fileInputRef.current?.click()} className="w-11 h-11 rounded-xl flex items-center justify-center transition-all hover:bg-primary/5 group bg-[#141414] flex-shrink-0">
+                  <Upload className="h-4 w-4 text-neutral-500 group-hover:text-primary transition-colors" />
                 </button>}
+
+              <FormField control={form.control} name="name" render={({
+                field
+              }) => <FormItem className="flex-1">
+                  <FormControl>
+                    <Input placeholder="Brand name" className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.3px'
+                    }} {...field} />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>} />
             </div>
-
-            {/* Brand Name Input */}
-            <FormField control={form.control} name="name" render={({
-            field
-          }) => <FormItem>
-                <FormControl>
-                  <Input placeholder="Brand name" className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }} {...field} />
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>} />
-
-            {/* Description Input */}
-            <FormField control={form.control} name="description" render={({
-            field
-          }) => <FormItem>
-                <FormControl>
-                  <Input placeholder="Brief description (optional)" className="bg-[#141414] border-0 h-11 text-sm text-white placeholder:text-neutral-500 focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-0 rounded-xl" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }} {...field} />
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>} />
 
             {/* Submit Button */}
             <Button type="submit" disabled={isSubmitting} className="w-full h-11 text-white font-medium rounded-xl transition-all border-t border-t-[#4b85f7]" style={{
