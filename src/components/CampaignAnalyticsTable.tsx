@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, TrendingUp, TrendingDown, Eye, Heart, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Eye, Heart, ArrowUpDown, ArrowUp, ArrowDown, User, Trash2, Filter, DollarSign, AlertTriangle, Clock, CheckCircle, Check, Link2, Receipt, Plus, RotateCcw, X, Diamond, Download, Pause, Play, CalendarIcon, ChevronLeft, ChevronRight, ExternalLink, Megaphone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -26,6 +26,8 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import creditCardIcon from "@/assets/credit-card-icon.svg";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { CampaignUpdateDialog } from "./CampaignUpdateDialog";
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {
     return {
@@ -131,6 +133,7 @@ export function CampaignAnalyticsTable({
   view = 'analytics',
   className
 }: CampaignAnalyticsTableProps) {
+  const { isAdmin } = useAdminCheck();
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,6 +144,8 @@ export function CampaignAnalyticsTable({
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showLinkedOnly, setShowLinkedOnly] = useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [campaignUpdate, setCampaignUpdate] = useState<string | null>(null);
   const [showPaidOnly, setShowPaidOnly] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AnalyticsData | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -249,9 +254,10 @@ export function CampaignAnalyticsTable({
       const {
         data,
         error
-      } = await supabase.from("campaigns").select("rpm_rate").eq("id", campaignId).single();
+      } = await supabase.from("campaigns").select("rpm_rate, campaign_update").eq("id", campaignId).single();
       if (error) throw error;
       setCampaignRPM(data?.rpm_rate || 0);
+      setCampaignUpdate(data?.campaign_update || null);
     } catch (error) {
       console.error("Error fetching campaign RPM:", error);
     }
@@ -1584,6 +1590,22 @@ export function CampaignAnalyticsTable({
                 {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
               </p>
               <div className="flex flex-wrap items-center gap-2">
+                {isAdmin && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setUpdateDialogOpen(true)}
+                    className={cn(
+                      "h-8 gap-2 text-xs rounded-lg tracking-[-0.3px]",
+                      campaignUpdate 
+                        ? "bg-[#2060df]/10 text-[#2060df] hover:bg-[#2060df]/20" 
+                        : "bg-muted/50 hover:bg-muted text-foreground"
+                    )}
+                  >
+                    <Megaphone className="h-3.5 w-3.5" />
+                    {campaignUpdate ? "Edit Update" : "Post Update"}
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -2649,5 +2671,14 @@ export function CampaignAnalyticsTable({
           </>}
       </DialogContent>
     </Dialog>
+
+    {/* Campaign Update Dialog */}
+    <CampaignUpdateDialog
+      open={updateDialogOpen}
+      onOpenChange={setUpdateDialogOpen}
+      campaignId={campaignId}
+      currentUpdate={campaignUpdate}
+      onUpdateSaved={fetchCampaignRPM}
+    />
   </>;
 }

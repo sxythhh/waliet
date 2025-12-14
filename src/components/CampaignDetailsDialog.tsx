@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone } from "lucide-react";
 import addDiamondIcon from "@/assets/add-diamond-icon.svg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +42,8 @@ interface Campaign {
   connected_accounts?: ConnectedAccount[];
   asset_links?: AssetLink[] | null;
   requirements?: string[] | null;
+  campaign_update?: string | null;
+  campaign_update_at?: string | null;
 }
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
@@ -201,6 +203,21 @@ export function CampaignDetailsDialog({
             </div>
           </div>
         </div>
+
+        {/* Campaign Update Banner */}
+        {campaign.campaign_update && (
+          <div className="mb-4 p-3 rounded-xl bg-[#2060df]/10 border border-[#2060df]/20 flex items-start gap-3">
+            <Megaphone className="w-4 h-4 text-[#2060df] flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-[#2060df] mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                Campaign Update
+              </p>
+              <p className="text-sm text-foreground whitespace-pre-wrap" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                {campaign.campaign_update}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Next Payout Card */}
         <div className="mb-4 p-4 rounded-2xl px-0 py-0">
