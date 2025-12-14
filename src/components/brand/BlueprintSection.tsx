@@ -2,6 +2,7 @@ import { useState, ReactNode } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BlueprintSectionProps {
   id: string;
@@ -25,6 +26,7 @@ export function BlueprintSection({
   defaultOpen = true,
 }: BlueprintSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const isMobile = useIsMobile();
 
   const {
     attributes,
@@ -33,7 +35,7 @@ export function BlueprintSection({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({ id, disabled: isMobile });
 
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
@@ -77,14 +79,16 @@ export function BlueprintSection({
         isDragging && "opacity-50 z-50 shadow-xl"
       )}
     >
-      {/* Drag Handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-      >
-        <GripVertical className="h-4 w-4 text-muted-foreground/50" />
-      </div>
+      {/* Drag Handle - hidden on mobile */}
+      {!isMobile && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+        </div>
+      )}
 
       {/* Header */}
       <button
