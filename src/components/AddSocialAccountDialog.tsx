@@ -258,9 +258,7 @@ export function AddSocialAccountDialog({
             {/* Header */}
             <div className="pt-5 pb-3 px-0 py-0">
               <div className="flex items-center gap-3 mb-1">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
-                </div>
+                
                 <div>
                   <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
                     Connect Account
