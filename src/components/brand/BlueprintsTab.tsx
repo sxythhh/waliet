@@ -16,7 +16,6 @@ import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import { format } from "date-fns";
-
 interface Blueprint {
   id: string;
   title: string;
@@ -26,13 +25,15 @@ interface Blueprint {
   created_at: string;
   updated_at: string;
 }
-
 interface BlueprintsTabProps {
   brandId: string;
 }
-
-export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
-  const { resolvedTheme } = useTheme();
+export function BlueprintsTab({
+  brandId
+}: BlueprintsTabProps) {
+  const {
+    resolvedTheme
+  } = useTheme();
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -46,21 +47,21 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     name: string;
     avatarUrl?: string;
   } | null>(null);
-
   useEffect(() => {
     fetchBlueprints();
     fetchBrandInfo();
     fetchUserInfo();
   }, [brandId]);
-
   const fetchUserInfo = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("full_name, username, avatar_url")
-        .eq("id", user.id)
-        .single();
+      const {
+        data
+      } = await supabase.from("profiles").select("full_name, username, avatar_url").eq("id", user.id).single();
       if (data) {
         setUserInfo({
           name: data.full_name || data.username || "You",
@@ -69,13 +70,10 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
       }
     }
   };
-
   const fetchBrandInfo = async () => {
-    const { data } = await supabase
-      .from("brands")
-      .select("name, logo_url")
-      .eq("id", brandId)
-      .single();
+    const {
+      data
+    } = await supabase.from("brands").select("name, logo_url").eq("id", brandId).single();
     if (data) {
       setBrandInfo({
         name: data.name,
@@ -83,15 +81,14 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
       });
     }
   };
-
   const fetchBlueprints = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("blueprints")
-      .select("id, title, status, content, platforms, created_at, updated_at")
-      .eq("brand_id", brandId)
-      .order("updated_at", { ascending: false });
-    
+    const {
+      data,
+      error
+    } = await supabase.from("blueprints").select("id, title, status, content, platforms, created_at, updated_at").eq("brand_id", brandId).order("updated_at", {
+      ascending: false
+    });
     if (error) {
       console.error("Error fetching blueprints:", error);
       toast.error("Failed to load blueprints");
@@ -100,31 +97,28 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     }
     setLoading(false);
   };
-
   const createBlueprint = async () => {
-    const { data, error } = await supabase
-      .from("blueprints")
-      .insert({
-        brand_id: brandId,
-        title: "Untitled"
-      })
-      .select()
-      .single();
-
+    const {
+      data,
+      error
+    } = await supabase.from("blueprints").insert({
+      brand_id: brandId,
+      title: "Untitled"
+    }).select().single();
     if (error) {
       console.error("Error creating blueprint:", error);
       toast.error("Failed to create blueprint");
       return;
     }
-
     setSearchParams(prev => {
       prev.set("blueprint", data.id);
       return prev;
     });
   };
-
   const deleteBlueprint = async (id: string) => {
-    const { error } = await supabase.from("blueprints").delete().eq("id", id);
+    const {
+      error
+    } = await supabase.from("blueprints").delete().eq("id", id);
     if (error) {
       console.error("Error deleting blueprint:", error);
       toast.error("Failed to delete blueprint");
@@ -133,19 +127,16 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     toast.success("Blueprint deleted");
     fetchBlueprints();
   };
-
   const openBlueprint = (id: string) => {
     setSearchParams(prev => {
       prev.set("blueprint", id);
       return prev;
     });
   };
-
   const handleActivateBlueprint = (blueprintId: string) => {
     setSelectedBlueprintId(blueprintId);
     setCreateCampaignOpen(true);
   };
-
   const getPlatformIcon = (platform: string) => {
     const isDark = resolvedTheme === 'dark';
     switch (platform?.toLowerCase()) {
@@ -159,31 +150,23 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
         return null;
     }
   };
-
   const getContentPreview = (content: string | null) => {
     if (!content) return null;
     const stripped = content.replace(/<[^>]*>/g, '').trim();
     return stripped.length > 0 ? stripped.slice(0, 180) : null;
   };
-
   if (loading) {
-    return (
-      <div className="p-6 space-y-6">
+    return <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-10 w-40" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-[200px] rounded-xl" />
-          ))}
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-[200px] rounded-xl" />)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-6 space-y-6">
+  return <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -192,47 +175,26 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             Create and manage your campaign briefs
           </p>
         </div>
-        <Button 
-          onClick={createBlueprint} 
-          size="sm" 
-          className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5"
-        >
+        <Button onClick={createBlueprint} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5">
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
       </div>
 
-      {blueprints.length === 0 ? (
-        <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
-          <iframe 
-            src="https://joinvirality.com/blueprint-card" 
-            className="w-full h-full border-0 rounded-lg" 
-            title="Blueprint Introduction" 
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {blueprints.length === 0 ? <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
+          <iframe src="https://joinvirality.com/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
+        </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {blueprints.map(blueprint => {
-            const contentPreview = getContentPreview(blueprint.content);
-            
-            return (
-              <div
-                key={blueprint.id}
-                onClick={() => openBlueprint(blueprint.id)}
-                className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 hover:bg-[#f5f5f5] dark:bg-card/20 dark:hover:bg-[#0f0f0f] transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden"
-              >
+        const contentPreview = getContentPreview(blueprint.content);
+        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 hover:bg-[#f5f5f5] dark:bg-card/20 dark:hover:bg-[#0f0f0f] transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
                 {/* Content Preview */}
                 <div className="p-5 min-h-[120px] border-b border-border/30">
-                  {contentPreview ? (
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                  {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
                       {contentPreview}...
-                    </p>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full py-4 text-muted-foreground/50">
+                    </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
                       <img src={editDocumentIcon} alt="" className="h-8 w-8 mb-2 opacity-50" />
                       <span className="text-xs font-inter tracking-[-0.5px]">No content yet</span>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
                 {/* Footer */}
@@ -244,32 +206,22 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </h3>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0 hover:bg-muted transition-opacity"
-                        >
+                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0 hover:bg-muted transition-opacity">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover">
-                        <DropdownMenuItem 
-                          className="focus:bg-muted focus:text-foreground" 
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleActivateBlueprint(blueprint.id);
-                          }}
-                        >
+                        <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={e => {
+                    e.stopPropagation();
+                    handleActivateBlueprint(blueprint.id);
+                  }}>
                           <Plus className="h-4 w-4 mr-2" />
                           Create Campaign
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive focus:bg-muted focus:text-destructive" 
-                          onClick={e => {
-                            e.stopPropagation();
-                            deleteBlueprint(blueprint.id);
-                          }}
-                        >
+                        <DropdownMenuItem className="text-destructive focus:bg-muted focus:text-destructive" onClick={e => {
+                    e.stopPropagation();
+                    deleteBlueprint(blueprint.id);
+                  }}>
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
@@ -278,33 +230,18 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                   </div>
 
                   {/* Platforms */}
-                  {blueprint.platforms && blueprint.platforms.length > 0 && (
-                    <div className="flex items-center gap-1.5">
-                      {blueprint.platforms.map((platform, idx) => (
-                        <div 
-                          key={idx} 
-                          className="p-1.5 rounded-md bg-muted/50"
-                        >
+                  {blueprint.platforms && blueprint.platforms.length > 0 && <div className="flex items-center gap-1.5">
+                      {blueprint.platforms.map((platform, idx) => <div key={idx} className="p-1.5 rounded-md bg-muted/50">
                           {getPlatformIcon(platform)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
 
                   {/* Meta Row */}
                   <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-2">
-                      {userInfo?.avatarUrl ? (
-                        <img 
-                          src={userInfo.avatarUrl} 
-                          alt={userInfo.name} 
-                          className="h-5 w-5 rounded-full object-cover" 
-                        />
-                      ) : (
-                        <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
+                      {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium">
                           {(userInfo?.name || "U").charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                        </div>}
                       <span className="text-xs text-muted-foreground">
                         {userInfo?.name || "You"}
                       </span>
@@ -315,22 +252,10 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              </div>;
+      })}
+        </div>}
 
-      {brandInfo && (
-        <CampaignCreationWizard 
-          brandId={brandId} 
-          brandName={brandInfo.name} 
-          brandLogoUrl={brandInfo.logoUrl} 
-          onSuccess={() => {}} 
-          open={createCampaignOpen} 
-          onOpenChange={setCreateCampaignOpen} 
-        />
-      )}
-    </div>
-  );
+      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
+    </div>;
 }
