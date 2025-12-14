@@ -25,6 +25,7 @@ interface BountyCampaign {
   end_date: string | null;
   banner_url: string | null;
   status: string;
+  blueprint_id: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -55,14 +56,29 @@ export function ApplyToBountySheet({
   const [userId, setUserId] = useState<string>("");
   const [showAddSocialDialog, setShowAddSocialDialog] = useState(false);
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
+  const [blueprint, setBlueprint] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check for connected accounts when sheet opens
+  // Check for connected accounts and fetch blueprint when sheet opens
   useEffect(() => {
     if (open) {
       checkConnectedAccounts();
+      if (bounty?.blueprint_id) {
+        fetchBlueprint(bounty.blueprint_id);
+      } else {
+        setBlueprint(null);
+      }
     }
-  }, [open]);
+  }, [open, bounty?.blueprint_id]);
+
+  const fetchBlueprint = async (blueprintId: string) => {
+    const { data } = await supabase
+      .from('blueprints')
+      .select('*')
+      .eq('id', blueprintId)
+      .single();
+    setBlueprint(data);
+  };
   const checkConnectedAccounts = async () => {
     setIsCheckingAccounts(true);
     try {
@@ -228,9 +244,6 @@ export function ApplyToBountySheet({
               </div>
             </div>
             
-            {bounty.description && <SheetDescription className="text-white/70 text-sm leading-relaxed">
-                {bounty.description}
-              </SheetDescription>}
           </SheetHeader>
 
           {/* Stats Row - Clean horizontal layout */}
@@ -259,24 +272,43 @@ export function ApplyToBountySheet({
             </div>
           </div>
 
-          {/* Content Requirements - Redesigned */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-1 font-['Inter'] tracking-[-0.5px]">
-                What We're Looking For
-              </h3>
-              <p className="text-xs text-white/40">Content guidelines and requirements</p>
+          {/* Blueprint Content */}
+          {blueprint && (
+            <div className="space-y-4">
+              <div className="relative max-h-[180px] overflow-hidden">
+                <div className="space-y-3">
+                  {blueprint.content && (
+                    <div 
+                      className="text-sm text-white/80 leading-relaxed prose prose-invert prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: blueprint.content }}
+                    />
+                  )}
+                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && (
+                    <div className="space-y-2">
+                      {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => (
+                        <div key={idx} className="flex items-start gap-2 text-sm text-white/80">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{typeof hook === 'string' ? hook : hook.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Gradient Fade Overlay */}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent pointer-events-none" />
+              </div>
+
+              {/* View Full Blueprint Button */}
+              <Button 
+                variant="ghost" 
+                className="w-full font-inter tracking-[-0.5px] hover:bg-muted" 
+                onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}
+              >
+                View full blueprint
+              </Button>
             </div>
-            
-            <div className="space-y-3">
-              {bounty.content_style_requirements.split('\n').filter(line => line.trim()).map((requirement, index) => <div key={index} className="flex gap-3 items-start">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                  <p className="text-sm text-white/80 leading-relaxed">
-                    {requirement.trim()}
-                  </p>
-                </div>)}
-            </div>
-          </div>
+          )}
 
           {/* Application Form - Show connect prompt if no accounts */}
           {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
