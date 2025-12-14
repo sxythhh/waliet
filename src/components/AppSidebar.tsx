@@ -344,7 +344,7 @@ export function AppSidebar() {
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414] transition-all duration-200`}>
         {/* Logo */}
         <div className="flex items-center justify-between py-[10px] px-[10px]">
-          <div className={`flex items-center gap-2.5 ${isCollapsed ? 'justify-center w-full' : ''}`}>
+          <div className={`flex items-center gap-0 ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
             {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
                 VIRALITY
