@@ -629,7 +629,13 @@ export function CampaignsTab({
           </h1>
           
         </div>
-        
+        <Button 
+          variant="outline" 
+          className="hidden sm:flex"
+          onClick={() => navigate('/dashboard?tab=discover')}
+        >
+          Discover Campaigns
+        </Button>
       </div>
 
       {/* Actions Section */}
