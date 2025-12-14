@@ -119,37 +119,41 @@ export function CampaignDetailsDialog({
   onManageAccount
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [expectedPayout, setExpectedPayout] = useState<{ views: number; amount: number } | null>(null);
-  const { resolvedTheme } = useTheme();
+  const [expectedPayout, setExpectedPayout] = useState<{
+    views: number;
+    amount: number;
+  } | null>(null);
+  const {
+    resolvedTheme
+  } = useTheme();
 
   // Fetch latest view metrics from Shortimize data
   useEffect(() => {
     const fetchExpectedPayout = async () => {
       if (!campaign?.id || !open) return;
-      
+
       // Get the most recent metrics snapshot for this campaign
-      const { data: metrics } = await supabase
-        .from('campaign_video_metrics')
-        .select('total_views, recorded_at')
-        .eq('campaign_id', campaign.id)
-        .order('recorded_at', { ascending: false })
-        .limit(1);
-      
+      const {
+        data: metrics
+      } = await supabase.from('campaign_video_metrics').select('total_views, recorded_at').eq('campaign_id', campaign.id).order('recorded_at', {
+        ascending: false
+      }).limit(1);
       if (metrics && metrics.length > 0) {
         // Use latest total views for cumulative earnings display
         const totalViews = Number(metrics[0]?.total_views) || 0;
-        
+
         // Calculate payout: (views / 1000) * rpm_rate
-        const amount = (totalViews / 1000) * campaign.rpm_rate;
-        setExpectedPayout({ views: totalViews, amount });
+        const amount = totalViews / 1000 * campaign.rpm_rate;
+        setExpectedPayout({
+          views: totalViews,
+          amount
+        });
       } else {
         setExpectedPayout(null);
       }
     };
-
     fetchExpectedPayout();
   }, [campaign?.id, campaign?.rpm_rate, open]);
-  
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
@@ -165,7 +169,6 @@ export function CampaignDetailsDialog({
         return null;
     }
   };
-  
   if (!campaign) return null;
   const daysUntilEnd = calculateDaysUntilEnd(campaign.end_date);
   const timeAgo = calculateTimeAgo(campaign.created_at);
@@ -232,36 +235,34 @@ export function CampaignDetailsDialog({
           </div>
 
           {/* Expected Payout Card */}
-          {expectedPayout !== null && (
-            <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+          {expectedPayout !== null && <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>Total Estimated Earnings</p>
-                  <p className="text-lg font-semibold text-[#22c55e]" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Total Estimated Earnings</p>
+                  <p style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }} className="text-lg font-semibold text-secondary-foreground">
                     ${expectedPayout.amount.toFixed(2)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>Total views</p>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>Total views</p>
                   <p className="text-sm font-medium" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
                     {expectedPayout.views.toLocaleString()}
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
 
         {/* Description with gradient + read more */}
@@ -313,9 +314,9 @@ export function CampaignDetailsDialog({
           }}>Platforms</p>
             <div className="flex justify-center gap-1 mt-1.5">
               {campaign.allowed_platforms?.map(platform => {
-                const iconSrc = getPlatformIcon(platform);
-                return iconSrc ? <img key={platform} src={iconSrc} alt={platform} className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : null;
-              })}
+              const iconSrc = getPlatformIcon(platform);
+              return iconSrc ? <img key={platform} src={iconSrc} alt={platform} className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : null;
+            })}
             </div>
           </div>
 
