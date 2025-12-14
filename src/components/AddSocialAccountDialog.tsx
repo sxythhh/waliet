@@ -43,6 +43,7 @@ export function AddSocialAccountDialog({
   const [verificationCode, setVerificationCode] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
   const {
     toast
   } = useToast();
@@ -58,8 +59,17 @@ export function AddSocialAccountDialog({
       setVerificationCode("");
       setIsChecking(false);
       setCopied(false);
+      setCooldownRemaining(0);
     }
   }, [open]);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownRemaining > 0) {
+      const timer = setTimeout(() => setCooldownRemaining(cooldownRemaining - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldownRemaining]);
 
   // Generate verification code when moving to verification step
   useEffect(() => {
@@ -247,6 +257,7 @@ export function AddSocialAccountDialog({
             ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again." 
             : error.message || "Could not verify your account. Please make sure the code is in your bio."
       });
+      setCooldownRemaining(30);
     } finally {
       setIsChecking(false);
     }
@@ -398,11 +409,11 @@ export function AddSocialAccountDialog({
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
               </Button>
-              <Button onClick={handleCheckVerification} disabled={isChecking} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+              <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
                 {isChecking ? <>
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                     Verifying...
-                  </> : "Verify Account"}
+                  </> : cooldownRemaining > 0 ? `Wait ${cooldownRemaining}s` : "Verify Account"}
               </Button>
             </div>
           </div>}
