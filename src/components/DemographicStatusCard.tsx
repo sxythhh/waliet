@@ -63,7 +63,7 @@ export function DemographicStatusCard({
 
     if (status === 'approved' && latestSubmission.reviewed_at) {
       const reviewedDate = new Date(latestSubmission.reviewed_at);
-      const nextDate = addDays(reviewedDate, 30);
+      const nextDate = addDays(reviewedDate, 7); // Weekly submissions
       const canSubmit = isAfter(new Date(), nextDate);
       
       if (!canSubmit) {
@@ -198,7 +198,7 @@ export function DemographicStatusCard({
             {status === 'approved' && latestSubmission.reviewed_at && (
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground/60">Next:</span>
-                <span>{format(addDays(new Date(latestSubmission.reviewed_at), 30), "MMM d, yyyy")}</span>
+                <span>{format(addDays(new Date(latestSubmission.reviewed_at), 7), "MMM d, yyyy")}</span>
               </div>
             )}
           </div>

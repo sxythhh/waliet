@@ -235,6 +235,16 @@ export function CampaignDetailsDialog({
               </p>
             </div>
           </div>
+          
+          {/* Demographics Reminder Notice - show 1 day before payout */}
+          {nextPayout.daysUntil === 1 && (
+            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <p className="text-xs text-amber-600 dark:text-amber-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                Payout is tomorrow! Make sure to submit your view demographics before the deadline.
+              </p>
+            </div>
+          )}
 
           {/* Expected Payout Card */}
           {expectedPayout !== null && <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
