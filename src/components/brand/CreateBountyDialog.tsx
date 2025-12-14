@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,11 @@ import { Label } from "@/components/ui/label";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+
+interface Blueprint {
+  id: string;
+  title: string;
+}
 
 interface CreateBountyDialogProps {
   open: boolean;
@@ -44,6 +49,8 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["tiktok"]);
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
@@ -60,6 +67,22 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
     blueprint_embed_url: "",
     is_private: false
   });
+
+  useEffect(() => {
+    if (open && brandId) {
+      fetchBlueprints();
+    }
+  }, [open, brandId]);
+
+  const fetchBlueprints = async () => {
+    const { data } = await supabase
+      .from('blueprints')
+      .select('id, title')
+      .eq('brand_id', brandId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    setBlueprints(data || []);
+  };
 
   const togglePlatform = (platformId: string) => {
     setSelectedPlatforms(prev =>
@@ -150,6 +173,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
           banner_url,
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
+          blueprint_id: selectedBlueprintId || null,
           is_private: formData.is_private
         });
 
@@ -185,6 +209,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
     setBannerFile(null);
     setBannerPreview(null);
     setSelectedPlatforms(["tiktok"]);
+    setSelectedBlueprintId("");
     setCurrentStep(1);
   };
 
@@ -472,7 +497,7 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </div>
 
-              {/* Title & Description */}
+              {/* Title & Blueprint */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Boost Title</Label>
@@ -484,13 +509,18 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Blueprint URL</Label>
-                  <Input
-                    value={formData.blueprint_embed_url}
-                    onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
-                    placeholder="https://..."
-                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
-                  />
+                  <Label className="text-xs text-muted-foreground">Blueprint</Label>
+                  <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
+                    <SelectTrigger className="h-10 bg-muted/30 border-0">
+                      <SelectValue placeholder="Select a blueprint" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No blueprint</SelectItem>
+                      {blueprints.map((bp) => (
+                        <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

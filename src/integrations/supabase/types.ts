@@ -297,6 +297,7 @@ export type Database = {
           accepted_creators_count: number
           banner_url: string | null
           blueprint_embed_url: string | null
+          blueprint_id: string | null
           brand_id: string
           budget: number | null
           budget_used: number | null
@@ -319,6 +320,7 @@ export type Database = {
           accepted_creators_count?: number
           banner_url?: string | null
           blueprint_embed_url?: string | null
+          blueprint_id?: string | null
           brand_id: string
           budget?: number | null
           budget_used?: number | null
@@ -341,6 +343,7 @@ export type Database = {
           accepted_creators_count?: number
           banner_url?: string | null
           blueprint_embed_url?: string | null
+          blueprint_id?: string | null
           brand_id?: string
           budget?: number | null
           budget_used?: number | null
@@ -360,6 +363,13 @@ export type Database = {
           videos_per_month?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "bounty_campaigns_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bounty_campaigns_brand_id_fkey"
             columns: ["brand_id"]

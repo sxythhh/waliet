@@ -15,6 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 
+interface Blueprint {
+  id: string;
+  title: string;
+}
+
 interface EditBountyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +39,8 @@ interface BountyData {
   banner_url: string | null;
   status: string;
   blueprint_embed_url: string | null;
+  blueprint_id: string | null;
+  brand_id: string;
   is_private: boolean;
 }
 
@@ -41,6 +48,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
   const [formData, setFormData] = useState<BountyData>({
     title: "",
     description: "",
@@ -53,6 +62,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
     banner_url: null,
     status: "active",
     blueprint_embed_url: null,
+    blueprint_id: null,
+    brand_id: "",
     is_private: false
   });
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -75,8 +86,20 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       if (error) throw error;
 
       setFormData(data);
+      setSelectedBlueprintId(data.blueprint_id || "");
       if (data.start_date) setStartDate(new Date(data.start_date));
       if (data.end_date) setEndDate(new Date(data.end_date));
+      
+      // Fetch blueprints for the brand
+      if (data.brand_id) {
+        const { data: bpData } = await supabase
+          .from('blueprints')
+          .select('id, title')
+          .eq('brand_id', data.brand_id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+        setBlueprints(bpData || []);
+      }
     } catch (error: any) {
       console.error("Error fetching bounty:", error);
       toast.error("Failed to load bounty data");
@@ -129,6 +152,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           banner_url,
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
+          blueprint_id: selectedBlueprintId || null,
           is_private: formData.is_private
         })
         .eq('id', bountyId);
@@ -277,15 +301,20 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
               </div>
 
               <div>
-                <Label htmlFor="blueprint_embed_url">Blueprint Embed URL</Label>
-                <Input
-                  id="blueprint_embed_url"
-                  value={formData.blueprint_embed_url || ""}
-                  onChange={(e) => setFormData({ ...formData, blueprint_embed_url: e.target.value })}
-                  placeholder="https://virality.cc/resources/your-guidelines"
-                />
+                <Label>Blueprint</Label>
+                <Select value={selectedBlueprintId} onValueChange={setSelectedBlueprintId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a blueprint" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No blueprint</SelectItem>
+                    {blueprints.map((bp) => (
+                      <SelectItem key={bp.id} value={bp.id}>{bp.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Full URL with https:// - will be embedded as an iframe on the public boost page
+                  Select a blueprint to display its content to creators
                 </p>
               </div>
             </div>
