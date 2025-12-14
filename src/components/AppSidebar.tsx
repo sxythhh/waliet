@@ -3,7 +3,7 @@ import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialo
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
-import viralityIcon from "@/assets/virality-icon.png";
+import viralityIcon from "@/assets/avatar-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
 import supportIcon from "@/assets/support-icon.svg";
 import homeInactive from "@/assets/home-inactive.svg";
