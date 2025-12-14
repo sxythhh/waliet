@@ -6,11 +6,13 @@ interface OnboardingStatus {
   completedCount: number;
   totalCount: number;
   shouldShowOnboarding: boolean;
+  markOnboardingComplete: () => Promise<void>;
 }
 
 export function useOnboardingStatus(): OnboardingStatus {
   const [isLoading, setIsLoading] = useState(true);
   const [completedCount, setCompletedCount] = useState(0);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true); // Default to true to prevent flash
   const totalCount = 8;
 
   useEffect(() => {
@@ -27,12 +29,21 @@ export function useOnboardingStatus(): OnboardingStatus {
     }
 
     try {
-      // Fetch profile data
+      // Fetch profile data including onboarding_completed flag
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, onboarding_completed")
         .eq("id", session.user.id)
         .single();
+
+      // If already marked as completed, don't show
+      if (profile?.onboarding_completed) {
+        setOnboardingCompleted(true);
+        setIsLoading(false);
+        return;
+      }
+
+      setOnboardingCompleted(false);
 
       // Fetch social accounts with demographics
       const { data: socialAccounts } = await supabase
@@ -87,10 +98,23 @@ export function useOnboardingStatus(): OnboardingStatus {
     setIsLoading(false);
   };
 
+  const markOnboardingComplete = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    await supabase
+      .from("profiles")
+      .update({ onboarding_completed: true })
+      .eq("id", session.user.id);
+
+    setOnboardingCompleted(true);
+  };
+
   return {
     isLoading,
     completedCount,
     totalCount,
-    shouldShowOnboarding: !isLoading && completedCount === 0
+    shouldShowOnboarding: !isLoading && !onboardingCompleted && completedCount === 0,
+    markOnboardingComplete
   };
 }

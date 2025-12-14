@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingCard, setShowOnboardingCard] = useState(true);
-  const { shouldShowOnboarding, isLoading: onboardingLoading } = useOnboardingStatus();
+  const { shouldShowOnboarding, isLoading: onboardingLoading, markOnboardingComplete } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<{
     id: string;
@@ -156,8 +156,11 @@ export default function Dashboard() {
       {/* Onboarding Card Popup - show when user has 0 tasks completed */}
       {isCreatorMode && (
         <OnboardingCard 
-          open={shouldShowOnboarding && showOnboardingCard && !onboardingLoading} 
-          onOpenChange={setShowOnboardingCard} 
+          open={shouldShowOnboarding && !onboardingLoading} 
+          onOpenChange={(open) => {
+            if (!open) markOnboardingComplete();
+          }}
+          onSelect={markOnboardingComplete}
         />
       )}
 
