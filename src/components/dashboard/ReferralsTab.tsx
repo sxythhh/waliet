@@ -298,12 +298,12 @@ export function ReferralsTab(): JSX.Element {
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-bold font-geist text-emerald-500" style={{ letterSpacing: '-0.3px' }}>{profile?.successful_referrals || 0}</p>
+                <p className="text-xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>{profile?.successful_referrals || 0}</p>
                 <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>successful</p>
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-baseline gap-1.5">
-                <p className="text-xl font-bold font-geist text-violet-500" style={{ letterSpacing: '-0.3px' }}>${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
+                <p className="text-xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
                 <p className="text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>earned</p>
               </div>
             </div>
