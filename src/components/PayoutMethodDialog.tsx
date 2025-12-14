@@ -11,7 +11,8 @@ import solanaLogo from "@/assets/solana-logo.png";
 import polygonLogo from "@/assets/polygon-logo.png";
 import usdcLogo from "@/assets/usdc-logo.png";
 import walletIcon from "@/assets/wallet-active.svg";
-import { Building2, Smartphone } from "lucide-react";
+import bankIcon from "@/assets/bank-icon.svg";
+import upiIcon from "@/assets/upi-icon.svg";
 
 interface PayoutMethodDialogProps {
   open: boolean;
@@ -153,7 +154,7 @@ export default function PayoutMethodDialog({
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedMethod === "bank" ? "bg-primary-foreground/20" : "bg-muted"
                   }`}>
-                    <Building2 className="w-4 h-4" />
+                    <img src={bankIcon} alt="Bank" className="w-4 h-4" />
                   </div>
                   <span className="text-sm font-medium">
                     Bank
@@ -171,7 +172,7 @@ export default function PayoutMethodDialog({
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedMethod === "upi" ? "bg-primary-foreground/20" : "bg-muted"
                   }`}>
-                    <Smartphone className="w-4 h-4" />
+                    <img src={upiIcon} alt="UPI" className="w-4 h-4" />
                   </div>
                   <span className="text-sm font-medium">
                     UPI
