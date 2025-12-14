@@ -145,20 +145,21 @@ export default function Dashboard() {
           pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
-          {/* Show onboarding card if user has 0 tasks completed and is in creator mode */}
-          {isCreatorMode && shouldShowOnboarding && showOnboardingCard && !onboardingLoading ? (
-            <div className="flex items-center justify-center min-h-[400px]">
-              <OnboardingCard onCreatorSelect={() => setShowOnboardingCard(false)} />
-            </div>
-          ) : (
-            renderContent()
-          )}
+          {renderContent()}
         </div>
       </main>
 
       <JoinPrivateCampaignDialog open={privateDialogOpen} onOpenChange={setPrivateDialogOpen} />
       
       {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
+
+      {/* Onboarding Card Popup - show when user has 0 tasks completed */}
+      {isCreatorMode && (
+        <OnboardingCard 
+          open={shouldShowOnboarding && showOnboardingCard && !onboardingLoading} 
+          onOpenChange={setShowOnboardingCard} 
+        />
+      )}
 
       {/* Creator Chat Widget - only show in creator mode */}
       {isCreatorMode && <CreatorChatWidget />}

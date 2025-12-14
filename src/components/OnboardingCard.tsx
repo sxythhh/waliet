@@ -3,28 +3,31 @@ import { useSearchParams } from "react-router-dom";
 import creatorIcon from "@/assets/creator-icon.svg";
 import brandIcon from "@/assets/brand-icon.svg";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface OnboardingCardProps {
-  onCreatorSelect?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function OnboardingCard({ onCreatorSelect }: OnboardingCardProps) {
+export function OnboardingCard({ open, onOpenChange }: OnboardingCardProps) {
   const [, setSearchParams] = useSearchParams();
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
 
   const handleCreatorSelect = () => {
     setSearchParams({ tab: "profile", workspace: "creator" });
-    onCreatorSelect?.();
+    onOpenChange(false);
   };
 
   const handleBrandSelect = () => {
+    onOpenChange(false);
     setShowCreateBrandDialog(true);
   };
 
   return (
     <>
-      <div className="w-full max-w-md mx-auto">
-        <div className="rounded-xl border border-border/50 bg-card/50 p-6">
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[400px] p-6 gap-0">
           <h2 className="font-['Geist'] text-lg font-semibold tracking-[-0.5px] text-foreground mb-4">
             I am joining as..
           </h2>
@@ -66,8 +69,8 @@ export function OnboardingCard({ onCreatorSelect }: OnboardingCardProps) {
               </div>
             </button>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <CreateBrandDialog 
         open={showCreateBrandDialog} 
