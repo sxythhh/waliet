@@ -503,17 +503,45 @@ export function JoinCampaignSheet({
             {/* Blueprint Content Display */}
             {blueprint && (
               <div className="space-y-4">
+                {/* Blueprint Header */}
+                <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Lightbulb className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">
+                      Content Brief
+                    </h4>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      Follow these guidelines to create your content
+                    </p>
+                  </div>
+                </div>
+
+                {/* Main Content */}
+                {blueprint.content && (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div 
+                      className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-inter tracking-[-0.3px]"
+                      dangerouslySetInnerHTML={{ __html: blueprint.content }}
+                    />
+                  </div>
+                )}
+
                 {/* Hooks Section */}
                 {blueprint.hooks && blueprint.hooks.length > 0 && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                  <div className="rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Lightbulb className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Hooks</span>
+                      <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                      </div>
+                      <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Hooks</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 pl-1">
                       {blueprint.hooks.map((hook: any, idx: number) => (
-                        <div key={idx} className="text-sm text-foreground/80 pl-6" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                          • {typeof hook === 'string' ? hook : hook.text}
+                        <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
+                          <span className="text-amber-500 mt-0.5">•</span>
+                          <span>{typeof hook === 'string' ? hook : hook.text}</span>
                         </div>
                       ))}
                     </div>
@@ -522,15 +550,18 @@ export function JoinCampaignSheet({
 
                 {/* Talking Points Section */}
                 {blueprint.talking_points && blueprint.talking_points.length > 0 && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                  <div className="rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20 p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Talking Points</span>
+                      <div className="w-6 h-6 rounded-md bg-blue-500/20 flex items-center justify-center">
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+                      </div>
+                      <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Talking Points</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 pl-1">
                       {blueprint.talking_points.map((point: any, idx: number) => (
-                        <div key={idx} className="text-sm text-foreground/80 pl-6" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                          • {typeof point === 'string' ? point : point.text}
+                        <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
+                          <span className="text-blue-500 mt-0.5">•</span>
+                          <span>{typeof point === 'string' ? point : point.text}</span>
                         </div>
                       ))}
                     </div>
@@ -538,19 +569,22 @@ export function JoinCampaignSheet({
                 )}
 
                 {/* Do's and Don'ts Section */}
-                {blueprint.dos_and_donts && (
+                {blueprint.dos_and_donts && (blueprint.dos_and_donts.dos?.length > 0 || blueprint.dos_and_donts.donts?.length > 0) && (
                   <div className="grid grid-cols-2 gap-3">
                     {/* Do's */}
                     {blueprint.dos_and_donts.dos && blueprint.dos_and_donts.dos.length > 0 && (
-                      <div className="rounded-xl bg-emerald-500/10 p-4 space-y-3">
+                      <div className="rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 p-4 space-y-3">
                         <div className="flex items-center gap-2">
-                          <ThumbsUp className="w-4 h-4 text-emerald-500" />
-                          <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Do's</span>
+                          <div className="w-6 h-6 rounded-md bg-emerald-500/20 flex items-center justify-center">
+                            <ThumbsUp className="w-3.5 h-3.5 text-emerald-500" />
+                          </div>
+                          <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 font-geist tracking-[-0.5px]">Do's</span>
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 pl-1">
                           {blueprint.dos_and_donts.dos.map((item: string, idx: number) => (
-                            <div key={idx} className="text-xs text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                              • {item}
+                            <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80 font-inter tracking-[-0.3px]">
+                              <Check className="w-3 h-3 text-emerald-500 mt-0.5 flex-shrink-0" />
+                              <span>{item}</span>
                             </div>
                           ))}
                         </div>
@@ -558,15 +592,18 @@ export function JoinCampaignSheet({
                     )}
                     {/* Don'ts */}
                     {blueprint.dos_and_donts.donts && blueprint.dos_and_donts.donts.length > 0 && (
-                      <div className="rounded-xl bg-red-500/10 p-4 space-y-3">
+                      <div className="rounded-xl bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/20 p-4 space-y-3">
                         <div className="flex items-center gap-2">
-                          <ThumbsDown className="w-4 h-4 text-red-500" />
-                          <span className="text-sm font-medium text-red-600 dark:text-red-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Don'ts</span>
+                          <div className="w-6 h-6 rounded-md bg-red-500/20 flex items-center justify-center">
+                            <ThumbsDown className="w-3.5 h-3.5 text-red-500" />
+                          </div>
+                          <span className="text-sm font-semibold text-red-600 dark:text-red-400 font-geist tracking-[-0.5px]">Don'ts</span>
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 pl-1">
                           {blueprint.dos_and_donts.donts.map((item: string, idx: number) => (
-                            <div key={idx} className="text-xs text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                              • {item}
+                            <div key={idx} className="flex items-start gap-2 text-xs text-foreground/80 font-inter tracking-[-0.3px]">
+                              <span className="text-red-500 mt-0.5">✕</span>
+                              <span>{item}</span>
                             </div>
                           ))}
                         </div>
@@ -577,22 +614,24 @@ export function JoinCampaignSheet({
 
                 {/* Call to Action */}
                 {blueprint.call_to_action && (
-                  <div className="rounded-xl bg-primary/10 p-4 space-y-2">
-                    <span className="text-sm font-medium text-primary" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Call to Action</span>
-                    <p className="text-sm text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.call_to_action}</p>
+                  <div className="rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 p-4 space-y-2">
+                    <span className="text-sm font-semibold text-primary font-geist tracking-[-0.5px]">Call to Action</span>
+                    <p className="text-sm text-foreground/80 font-inter tracking-[-0.3px]">{blueprint.call_to_action}</p>
                   </div>
                 )}
 
                 {/* Hashtags */}
                 {blueprint.hashtags && blueprint.hashtags.length > 0 && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
+                  <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Hash className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Hashtags</span>
+                      <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center">
+                        <Hash className="w-3.5 h-3.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Hashtags</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {blueprint.hashtags.map((tag: string, idx: number) => (
-                        <span key={idx} className="px-2 py-1 text-xs bg-muted rounded-md text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        <span key={idx} className="px-2.5 py-1 text-xs font-medium bg-background border border-border rounded-full text-muted-foreground font-inter tracking-[-0.3px]">
                           #{tag.replace(/^#/, '')}
                         </span>
                       ))}
@@ -602,27 +641,29 @@ export function JoinCampaignSheet({
 
                 {/* Brand Voice */}
                 {blueprint.brand_voice && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-2">
+                  <div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 p-4 space-y-2">
                     <div className="flex items-center gap-2">
-                      <Mic className="w-4 h-4 text-purple-500" />
-                      <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Brand Voice</span>
+                      <div className="w-6 h-6 rounded-md bg-purple-500/20 flex items-center justify-center">
+                        <Mic className="w-3.5 h-3.5 text-purple-500" />
+                      </div>
+                      <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Brand Voice</span>
                     </div>
-                    <p className="text-sm text-foreground/80" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.brand_voice}</p>
+                    <p className="text-sm text-foreground/80 font-inter tracking-[-0.3px] pl-1">{blueprint.brand_voice}</p>
                   </div>
                 )}
 
                 {/* Content Guidelines */}
                 {blueprint.content_guidelines && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-2">
-                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Content Guidelines</span>
-                    <p className="text-sm text-foreground/80 whitespace-pre-line" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>{blueprint.content_guidelines}</p>
+                  <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-2">
+                    <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Content Guidelines</span>
+                    <p className="text-sm text-foreground/80 whitespace-pre-line font-inter tracking-[-0.3px]">{blueprint.content_guidelines}</p>
                   </div>
                 )}
 
                 {/* Example Videos */}
                 {blueprint.example_videos && blueprint.example_videos.length > 0 && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
-                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Example Videos</span>
+                  <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3">
+                    <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Example Videos</span>
                     <div className="space-y-2">
                       {blueprint.example_videos.map((video: any, idx: number) => (
                         <a 
@@ -630,11 +671,10 @@ export function JoinCampaignSheet({
                           href={typeof video === 'string' ? video : video.url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-primary hover:underline"
-                          style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                          className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.3px]"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                          {typeof video === 'string' ? `Video ${idx + 1}` : (video.title || `Video ${idx + 1}`)}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          {typeof video === 'string' ? `Video ${idx + 1}` : (video.description || video.title || `Video ${idx + 1}`)}
                         </a>
                       ))}
                     </div>
@@ -643,20 +683,19 @@ export function JoinCampaignSheet({
 
                 {/* Assets */}
                 {blueprint.assets && blueprint.assets.length > 0 && (
-                  <div className="rounded-xl bg-muted/30 p-4 space-y-3">
-                    <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Assets</span>
+                  <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3">
+                    <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Assets</span>
                     <div className="space-y-2">
                       {blueprint.assets.map((asset: any, idx: number) => (
                         <a 
                           key={idx} 
-                          href={typeof asset === 'string' ? asset : asset.url} 
+                          href={typeof asset === 'string' ? asset : asset.link} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-primary hover:underline"
-                          style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                          className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.3px]"
                         >
-                          <ExternalLink className="w-3 h-3" />
-                          {typeof asset === 'string' ? `Asset ${idx + 1}` : (asset.label || `Asset ${idx + 1}`)}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          {typeof asset === 'string' ? `Asset ${idx + 1}` : (asset.notes || `Asset ${idx + 1}`)}
                         </a>
                       ))}
                     </div>
@@ -668,8 +707,19 @@ export function JoinCampaignSheet({
             {/* Loading Blueprint State */}
             {loadingBlueprint && (
               <div className="space-y-3">
+                <div className="flex items-center gap-3 pb-2 border-b border-border/50">
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-40" />
+                  </div>
+                </div>
                 <Skeleton className="h-24 w-full rounded-xl" />
                 <Skeleton className="h-20 w-full rounded-xl" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="h-28 w-full rounded-xl" />
+                  <Skeleton className="h-28 w-full rounded-xl" />
+                </div>
               </div>
             )}
 
