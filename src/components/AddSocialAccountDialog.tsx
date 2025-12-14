@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Check, ArrowRight, ArrowLeft, X, Loader2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Copy, Check, ArrowLeft, Loader2 } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -24,8 +23,6 @@ interface AddSocialAccountDialogProps {
 }
 type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
 type Step = "input" | "verification";
-const VERIFICATION_TIME_SECONDS = 600; // 10 minutes
-
 // Generate a random verification code
 const generateVerificationCode = (): string => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -44,7 +41,6 @@ export function AddSocialAccountDialog({
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>("tiktok");
   const [username, setUsername] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState(VERIFICATION_TIME_SECONDS);
   const [isChecking, setIsChecking] = useState(false);
   const [copied, setCopied] = useState(false);
   const {
@@ -60,7 +56,6 @@ export function AddSocialAccountDialog({
       setStep("input");
       setUsername("");
       setVerificationCode("");
-      setTimeRemaining(VERIFICATION_TIME_SECONDS);
       setIsChecking(false);
       setCopied(false);
     }
@@ -70,30 +65,9 @@ export function AddSocialAccountDialog({
   useEffect(() => {
     if (step === "verification" && !verificationCode) {
       setVerificationCode(generateVerificationCode());
-      setTimeRemaining(VERIFICATION_TIME_SECONDS);
     }
   }, [step, verificationCode]);
-
-  // Timer countdown
-  useEffect(() => {
-    if (step !== "verification" || timeRemaining <= 0) return;
-    const timer = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [step, timeRemaining]);
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-  const progressPercent = timeRemaining / VERIFICATION_TIME_SECONDS * 100;
+  
   const getPlatformLabel = (platform: Platform) => {
     switch (platform) {
       case "tiktok":
@@ -136,7 +110,7 @@ export function AddSocialAccountDialog({
       });
     }
   };
-  const handleContinueToVerification = () => {
+  const handleContinueToVerification = async () => {
     if (!username.trim()) {
       toast({
         variant: "destructive",
@@ -145,6 +119,28 @@ export function AddSocialAccountDialog({
       });
       return;
     }
+
+    // Check if this account already exists in the database
+    const { data: existingAccount, error: checkError } = await supabase
+      .from("social_accounts")
+      .select("id, user_id")
+      .eq("platform", selectedPlatform)
+      .eq("username", username.toLowerCase())
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking existing account:", checkError);
+    }
+
+    if (existingAccount) {
+      toast({
+        variant: "destructive",
+        title: "Account Already Connected",
+        description: "This social account is already connected to another user."
+      });
+      return;
+    }
+
     setVerificationCode(""); // Reset to generate new code
     setStep("verification");
   };
@@ -173,6 +169,7 @@ export function AddSocialAccountDialog({
     }
   };
   const showAtSymbol = selectedPlatform !== "youtube";
+  const [isContinuing, setIsContinuing] = useState(false);
   const handleCheckVerification = useCallback(async () => {
     if (isChecking) return;
     setIsChecking(true);
@@ -238,10 +235,17 @@ export function AddSocialAccountDialog({
         });
       }
     } catch (error: any) {
+      const errorMessage = error.message || "";
+      const isRateLimit = errorMessage.includes("429") || errorMessage.toLowerCase().includes("rate limit");
+      
       toast({
         variant: "destructive",
-        title: "Verification Failed",
-        description: selectedPlatform === "instagram" ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again." : error.message || "Could not verify your account. Please make sure the code is in your bio."
+        title: isRateLimit ? "API Rate Limited" : "Verification Failed",
+        description: isRateLimit 
+          ? "Too many verification attempts. Please try again in a few minutes."
+          : selectedPlatform === "instagram" 
+            ? "Could not verify your account. Make sure the code is in your Instagram bio and wait 1–2 minutes after updating before trying again." 
+            : error.message || "Could not verify your account. Please make sure the code is in your bio."
       });
     } finally {
       setIsChecking(false);
@@ -250,7 +254,15 @@ export function AddSocialAccountDialog({
   const handleBack = () => {
     setStep("input");
     setVerificationCode("");
-    setTimeRemaining(VERIFICATION_TIME_SECONDS);
+  };
+  
+  const handleContinueClick = async () => {
+    setIsContinuing(true);
+    try {
+      await handleContinueToVerification();
+    } finally {
+      setIsContinuing(false);
+    }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[380px] p-6 overflow-hidden bg-card border-none [&>button]:hidden">
@@ -329,8 +341,8 @@ export function AddSocialAccountDialog({
               <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
                 Cancel
               </Button>
-              <Button onClick={handleContinueToVerification} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
-                Continue
+              <Button onClick={handleContinueClick} disabled={isContinuing} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+                {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>
             </div>
           </div> : <div className="flex flex-col">
@@ -348,10 +360,6 @@ export function AddSocialAccountDialog({
                     {getPlatformLabel(selectedPlatform)}
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                {formatTime(timeRemaining)}
               </div>
             </div>
 
@@ -383,10 +391,6 @@ export function AddSocialAccountDialog({
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="pb-4">
-              <Progress value={progressPercent} className="h-1 bg-muted/20" />
-            </div>
 
             {/* Footer */}
             <div className="flex gap-2">
@@ -394,7 +398,7 @@ export function AddSocialAccountDialog({
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
               </Button>
-              <Button onClick={handleCheckVerification} disabled={isChecking || timeRemaining === 0} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+              <Button onClick={handleCheckVerification} disabled={isChecking} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
                 {isChecking ? <>
                     <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                     Verifying...
