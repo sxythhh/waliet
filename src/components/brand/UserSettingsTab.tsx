@@ -49,6 +49,9 @@ export function UserSettingsTab() {
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [activeTab, setActiveTab] = useState("general");
+  const [editedBrandName, setEditedBrandName] = useState("");
+  const [editedSlug, setEditedSlug] = useState("");
+  const [savingBrand, setSavingBrand] = useState(false);
   const [profile, setProfile] = useState({
     billing_address: "",
     legal_business_name: ""
@@ -74,10 +77,48 @@ export function UserSettingsTab() {
         .single();
       if (error) throw error;
       setBrand(data);
+      setEditedBrandName(data?.name || "");
+      setEditedSlug(data?.slug || "");
       setSelectedPlan(data?.subscription_plan || "");
       setSelectedStatus(data?.subscription_status || "inactive");
     } catch (error) {
       console.error("Error fetching brand:", error);
+    }
+  };
+
+  const handleSaveBrand = async () => {
+    if (!brand?.id) return;
+    
+    // Validate slug format
+    const slugRegex = /^[a-z0-9-]+$/;
+    if (!slugRegex.test(editedSlug)) {
+      toast.error("URL can only contain lowercase letters, numbers, and hyphens");
+      return;
+    }
+    
+    try {
+      setSavingBrand(true);
+      const { error } = await supabase
+        .from("brands")
+        .update({
+          name: editedBrandName,
+          slug: editedSlug
+        })
+        .eq("id", brand.id);
+      
+      if (error) throw error;
+      toast.success("Brand settings saved");
+      fetchBrand();
+      refreshBrands();
+    } catch (error: any) {
+      console.error("Error saving brand:", error);
+      if (error.message?.includes("duplicate") || error.code === "23505") {
+        toast.error("This URL is already taken");
+      } else {
+        toast.error("Failed to save brand settings");
+      }
+    } finally {
+      setSavingBrand(false);
     }
   };
 
@@ -290,8 +331,8 @@ export function UserSettingsTab() {
                   Brand name
                 </Label>
                 <Input 
-                  value={brand.name} 
-                  readOnly
+                  value={editedBrandName} 
+                  onChange={(e) => setEditedBrandName(e.target.value)}
                   className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
                 />
               </div>
@@ -305,8 +346,8 @@ export function UserSettingsTab() {
                 </Label>
                 <div className="flex items-center">
                   <Input 
-                    value={brand.slug} 
-                    readOnly
+                    value={editedSlug} 
+                    onChange={(e) => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                     className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" 
                   />
                   <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
@@ -314,6 +355,17 @@ export function UserSettingsTab() {
                   </span>
                 </div>
               </div>
+
+              <Spacer />
+
+              {/* Save Button */}
+              <Button 
+                onClick={handleSaveBrand} 
+                disabled={savingBrand || (editedBrandName === brand.name && editedSlug === brand.slug)}
+                className="w-full h-11 tracking-[-0.5px]"
+              >
+                {savingBrand ? "Saving..." : "Save Changes"}
+              </Button>
 
               <Spacer />
 
