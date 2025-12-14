@@ -18,7 +18,6 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-
 interface Blueprint {
   id: string;
   title: string;
@@ -33,7 +32,6 @@ interface Blueprint {
   example_videos: any[] | null;
   assets: any[] | null;
 }
-
 interface Campaign {
   id: string;
   title: string;
@@ -111,21 +109,17 @@ export function JoinCampaignSheet({
       loadBlueprint();
     }
   }, [open, campaign?.blueprint_id]);
-
   const loadBlueprint = async () => {
     if (!campaign?.blueprint_id) {
       setBlueprint(null);
       return;
     }
-    
     setLoadingBlueprint(true);
     try {
-      const { data, error } = await supabase
-        .from('blueprints')
-        .select('*')
-        .eq('id', campaign.blueprint_id)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('blueprints').select('*').eq('id', campaign.blueprint_id).single();
       if (error) throw error;
       setBlueprint(data as Blueprint);
     } catch (error) {
@@ -163,7 +157,6 @@ export function JoinCampaignSheet({
   };
   const loadSocialAccounts = async () => {
     if (!campaign) return;
-
     setLoadingAccounts(true);
     // Reset answers when loading accounts for a new campaign
     setAnswers({});
@@ -501,39 +494,22 @@ export function JoinCampaignSheet({
               </div>}
 
             {/* Blueprint Content Display */}
-            {blueprint && (
-              <div className="space-y-4">
+            {blueprint && <div className="space-y-4">
                 {/* Blueprint Header */}
-                <div className="flex items-center gap-3 pb-2 border-b border-border/50">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Lightbulb className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">
-                      Content Brief
-                    </h4>
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                      Follow these guidelines to create your content
-                    </p>
-                  </div>
-                </div>
+                
 
                 {/* Preview Container with Gradient Fade */}
                 <div className="relative">
                   <div className="max-h-[180px] overflow-hidden">
                     {/* Main Content */}
-                    {blueprint.content && (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <div 
-                          className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-inter tracking-[-0.3px]"
-                          dangerouslySetInnerHTML={{ __html: blueprint.content }}
-                        />
-                      </div>
-                    )}
+                    {blueprint.content && <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line font-inter tracking-[-0.3px]" dangerouslySetInnerHTML={{
+                    __html: blueprint.content
+                  }} />
+                      </div>}
 
                     {/* Hooks Section Preview */}
-                    {blueprint.hooks && blueprint.hooks.length > 0 && (
-                      <div className="rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-4 space-y-3 mt-4">
+                    {blueprint.hooks && blueprint.hooks.length > 0 && <div className="rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20 p-4 space-y-3 mt-4">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
                             <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
@@ -541,15 +517,12 @@ export function JoinCampaignSheet({
                           <span className="text-sm font-semibold font-geist tracking-[-0.5px]">Hooks</span>
                         </div>
                         <div className="space-y-2 pl-1">
-                          {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => (
-                            <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
+                          {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-foreground/80 font-inter tracking-[-0.3px]">
                               <span className="text-amber-500 mt-0.5">•</span>
                               <span>{typeof hook === 'string' ? hook : hook.text}</span>
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   
                   {/* Gradient Fade Overlay */}
@@ -557,20 +530,14 @@ export function JoinCampaignSheet({
                 </div>
 
                 {/* View Full Blueprint Button */}
-                <Button
-                  variant="outline"
-                  className="w-full font-inter tracking-[-0.5px]"
-                  onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}
-                >
+                <Button variant="outline" className="w-full font-inter tracking-[-0.5px]" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View full blueprint
                 </Button>
-              </div>
-            )}
+              </div>}
 
             {/* Loading Blueprint State */}
-            {loadingBlueprint && (
-              <div className="space-y-3">
+            {loadingBlueprint && <div className="space-y-3">
                 <div className="flex items-center gap-3 pb-2 border-b border-border/50">
                   <Skeleton className="w-8 h-8 rounded-lg" />
                   <div className="space-y-1.5">
@@ -584,8 +551,7 @@ export function JoinCampaignSheet({
                   <Skeleton className="h-28 w-full rounded-xl" />
                   <Skeleton className="h-28 w-full rounded-xl" />
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Budget & RPM */}
             {!campaign.is_infinite_budget}
