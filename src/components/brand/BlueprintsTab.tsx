@@ -193,7 +193,7 @@ export function BlueprintsTab({
                       {contentPreview}...
                     </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
                       <img src={editDocumentIcon} alt="" className="h-8 w-8 mb-2 opacity-50" />
-                      <span className="text-xs font-inter tracking-[-0.5px]">No content yet</span>
+                      <span className="text-xs font-inter tracking-[-0.5px] font-semibold">No content yet</span>
                     </div>}
                 </div>
 
