@@ -138,18 +138,16 @@ export function ProfileTab() {
   const {
     toast
   } = useToast();
-
   const handleUpdateEmail = async () => {
     if (!newEmail || newEmail === profile?.email) return;
-    
     setUpdatingEmail(true);
     try {
-      const { error } = await supabase.auth.updateUser({
+      const {
+        error
+      } = await supabase.auth.updateUser({
         email: newEmail
       });
-      
       if (error) throw error;
-      
       toast({
         title: "Confirmation email sent",
         description: "Please check your new email address to confirm the change."
@@ -853,7 +851,7 @@ export function ProfileTab() {
             {socialAccounts.length === 0 ? <div className="text-center py-4 my-0">
               <img alt="" className="w-12 h-12 mx-auto mb-4 opacity-100" src="/lovable-uploads/c6c38db9-e9f4-44c4-b188-4e8bbe1cb2df.png" />
               <p className="text-base font-medium text-foreground">No connected accounts yet</p>
-              <p className="text-sm mt-2 text-muted-foreground">Add your accounts to link them to a campaign</p>
+              
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
@@ -1325,42 +1323,22 @@ export function ProfileTab() {
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="pl-9"
-                    style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}
-                  />
+                  <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="Enter email address" className="pl-9" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }} />
                 </div>
-                {newEmail !== profile.email && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    disabled={updatingEmail || !newEmail}
-                    onClick={handleUpdateEmail}
-                    style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}
-                  >
-                    {updatingEmail ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    ) : (
-                      'Update'
-                    )}
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1" style={{
+                {newEmail !== profile.email && <Button type="button" size="sm" variant="outline" disabled={updatingEmail || !newEmail} onClick={handleUpdateEmail} style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.3px'
               }}>
+                    {updatingEmail ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : 'Update'}
+                  </Button>}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                 A confirmation email will be sent to verify the new address
               </p>
             </div>
