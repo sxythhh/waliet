@@ -1317,25 +1317,7 @@ export function ProfileTab() {
             </div>
 
             {/* Brand Workspace */}
-            <div className="pt-4 border-t border-border/50">
-              <p className="text-sm text-muted-foreground mb-2" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>Brand Workspace</p>
-              <Button 
-                type="button"
-                variant="outline" 
-                onClick={() => setShowCreateBrandDialog(true)}
-                className="gap-2"
-                style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}
-              >
-                <Plus className="h-4 w-4" />
-                Create Brand Workspace
-              </Button>
-            </div>
+            
 
             {/* Save Button */}
             <div className="pt-2 flex justify-end">
