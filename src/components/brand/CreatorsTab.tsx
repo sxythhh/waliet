@@ -23,18 +23,20 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
 import mailIcon from "@/assets/mail-icon.svg";
+interface CreatorCampaign {
+  id: string;
+  title: string;
+  type: 'campaign' | 'boost';
+  status?: 'pending' | 'accepted' | 'rejected';
+}
+
 interface Creator {
   id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
-  campaigns: {
-    id: string;
-    title: string;
-    type: 'campaign' | 'boost';
-    status?: 'pending' | 'accepted' | 'rejected';
-  }[];
+  campaigns: CreatorCampaign[];
   social_accounts: {
     platform: string;
     username: string;
@@ -107,6 +109,7 @@ export function CreatorsTab({
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignFilter, setCampaignFilter] = useState<string>('all');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [removingFromCampaign, setRemovingFromCampaign] = useState<{creatorId: string; campaign: CreatorCampaign} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -514,6 +517,61 @@ export function CreatorsTab({
     const query = searchQuery.toLowerCase();
     return creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
   });
+
+  const removeFromCampaign = async (creatorId: string, campaign: CreatorCampaign) => {
+    try {
+      if (campaign.type === 'campaign') {
+        // Remove from campaign - delete social_account_campaigns entries
+        await supabase
+          .from("social_account_campaigns")
+          .delete()
+          .eq("campaign_id", campaign.id)
+          .eq("user_id", creatorId);
+        
+        // Also delete campaign submissions
+        await supabase
+          .from("campaign_submissions")
+          .delete()
+          .eq("campaign_id", campaign.id)
+          .eq("creator_id", creatorId);
+      } else {
+        // Remove from boost - delete bounty application
+        await supabase
+          .from("bounty_applications")
+          .delete()
+          .eq("bounty_campaign_id", campaign.id)
+          .eq("user_id", creatorId);
+      }
+      
+      // Update local state
+      setCreators(prev => prev.map(c => {
+        if (c.id === creatorId) {
+          return {
+            ...c,
+            campaigns: c.campaigns.filter(camp => camp.id !== campaign.id)
+          };
+        }
+        return c;
+      }).filter(c => c.campaigns.length > 0)); // Remove creator if no campaigns left
+      
+      // Update selected creator if viewing
+      if (selectedCreator?.id === creatorId) {
+        const updatedCampaigns = selectedCreator.campaigns.filter(c => c.id !== campaign.id);
+        if (updatedCampaigns.length === 0) {
+          setSelectedCreator(null);
+        } else {
+          setSelectedCreator({
+            ...selectedCreator,
+            campaigns: updatedCampaigns
+          });
+        }
+      }
+      
+      setRemovingFromCampaign(null);
+    } catch (error) {
+      console.error("Error removing from campaign:", error);
+    }
+  };
   const getConversationCreator = (conv: Conversation) => {
     return creators.find(c => c.id === conv.creator_id);
   };
@@ -863,39 +921,40 @@ export function CreatorsTab({
 
       {/* Creator Details Dialog */}
       <Dialog open={!!selectedCreator} onOpenChange={() => setSelectedCreator(null)}>
-        <DialogContent className="max-w-md font-inter tracking-[-0.5px] p-0 gap-0 overflow-hidden">
-          <div className="p-6 pb-4">
+        <DialogContent className="max-w-md font-inter tracking-[-0.5px] p-0 gap-0 overflow-hidden max-h-[90vh]">
+          <div className="p-4 sm:p-6 pb-3 sm:pb-4">
             <DialogHeader className="p-0">
               <DialogTitle className="font-inter tracking-[-0.5px] text-base">Creator Details</DialogTitle>
             </DialogHeader>
           </div>
           
-          {selectedCreator && <div className="pb-6 space-y-5 px-0">
+          {selectedCreator && <ScrollArea className="max-h-[calc(90vh-80px)]">
+            <div className="pb-4 sm:pb-6 space-y-4 sm:space-y-5 px-4 sm:px-6">
               {/* Profile Header */}
-              <div className="flex items-center gap-4">
-                <Avatar className="h-14 w-14">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Avatar className="h-12 w-12 sm:h-14 sm:w-14 shrink-0">
                   <AvatarImage src={selectedCreator.avatar_url || undefined} />
-                  <AvatarFallback className="bg-muted text-muted-foreground text-base font-medium">
+                  <AvatarFallback className="bg-muted text-muted-foreground text-sm sm:text-base font-medium">
                     {selectedCreator.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm">{selectedCreator.full_name || selectedCreator.username}</h3>
-                  <p className="text-xs text-muted-foreground">@{selectedCreator.username}</p>
-                  {selectedCreator.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
-                      <Mail className="h-3 w-3" />
-                      {selectedCreator.email}
+                  <h3 className="font-medium text-sm truncate">{selectedCreator.full_name || selectedCreator.username}</h3>
+                  <p className="text-xs text-muted-foreground truncate">@{selectedCreator.username}</p>
+                  {selectedCreator.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 truncate">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{selectedCreator.email}</span>
                     </p>}
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-muted/30 p-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Views</p>
                   <p className="font-medium text-sm">{selectedCreator.total_views.toLocaleString()}</p>
                 </div>
-                <div className="rounded-lg bg-muted/30 p-3">
+                <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Earnings</p>
                   <p className="font-medium text-sm text-emerald-500">${selectedCreator.total_earnings.toFixed(2)}</p>
                 </div>
@@ -905,23 +964,23 @@ export function CreatorsTab({
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
                 <div className="space-y-1.5">
-                  {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
-                      {account.avatar_url ? <Avatar className="h-8 w-8">
+                  {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
+                      {account.avatar_url ? <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
                           <AvatarImage src={account.avatar_url} />
                           <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
                             {account.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
-                        </Avatar> : <div className="h-8 w-8 rounded-full bg-muted/50 flex items-center justify-center">
-                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain" />
+                        </Avatar> : <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
+                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4 object-contain" />
                         </div>}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain" />
+                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain shrink-0" />
                           <span className="text-xs font-medium truncate">@{account.username}</span>
                         </div>
                         {account.follower_count && account.follower_count > 0 && <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>}
                       </div>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50" />
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                     </div>)}
                 </div>
               </div>
@@ -929,29 +988,46 @@ export function CreatorsTab({
               {/* Campaigns */}
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="space-y-1.5">
                   {selectedCreator.campaigns.map(campaign => {
-                const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
-                return <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
-                        {campaign.title} <span className="text-muted-foreground">({label})</span>
-                      </span>;
-              })}
+                    const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
+                    return <div key={campaign.id} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/20 group">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] sm:text-xs font-medium truncate block">
+                          {campaign.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{label}</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRemovingFromCampaign({ creatorId: selectedCreator.id, campaign });
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>;
+                  })}
                 </div>
               </div>
 
               {/* Message Button */}
               <Button className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" onClick={() => {
-            startConversation(selectedCreator);
-            setSelectedCreator(null);
-          }}>
+                startConversation(selectedCreator);
+                setSelectedCreator(null);
+              }}>
                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
                 Send Message
               </Button>
-            </div>}
+            </div>
+          </ScrollArea>}
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Conversation Confirmation Dialog */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={open => !open && setDeleteConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -969,6 +1045,31 @@ export function CreatorsTab({
             }
           }}>
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove from Campaign Confirmation Dialog */}
+      <AlertDialog open={!!removingFromCampaign} onOpenChange={open => !open && setRemovingFromCampaign(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-inter tracking-[-0.5px]">Remove from {removingFromCampaign?.campaign.type === 'boost' ? 'boost' : 'campaign'}?</AlertDialogTitle>
+            <AlertDialogDescription className="font-inter tracking-[-0.5px]">
+              This will remove the creator from "{removingFromCampaign?.campaign.title}". They will need to rejoin if they want to participate again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" 
+              onClick={() => {
+                if (removingFromCampaign) {
+                  removeFromCampaign(removingFromCampaign.creatorId, removingFromCampaign.campaign);
+                }
+              }}
+            >
+              Remove
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
