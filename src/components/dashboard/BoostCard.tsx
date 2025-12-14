@@ -306,6 +306,8 @@ export function BoostCard({ boost }: BoostCardProps) {
               onClick={() => {
                 if (boost.blueprint_id) {
                   navigate(`/blueprint/${boost.blueprint_id}`);
+                } else {
+                  toast.error("No blueprint linked to this boost");
                 }
               }}
             >
