@@ -474,9 +474,9 @@ export function DiscoverTab() {
         {/* Filters */}
         <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
           {/* Search and Filters Row */}
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <div className="flex flex-wrap gap-2 items-center">
             {/* Search Input - Click to open overlay */}
-            <button onClick={() => setSearchOverlayOpen(true)} className="relative w-full sm:w-72 text-left">
+            <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
               <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
                 {searchQuery || 'Search campaigns...'}
@@ -484,7 +484,7 @@ export function DiscoverTab() {
             </button>
 
             {/* Platform Pills */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {[{
               value: "all",
               label: "All"
