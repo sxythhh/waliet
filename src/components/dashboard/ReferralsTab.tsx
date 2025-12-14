@@ -244,7 +244,12 @@ export function ReferralsTab() {
               <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
             </div>
           </div>
-          {!isEditing}
+          {!isEditing && (
+            <Button onClick={() => setIsEditing(true)} variant="ghost" size="sm" className="gap-1.5">
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+          )}
         </div>
 
         {isEditing ? <div className="space-y-3">
@@ -267,7 +272,7 @@ export function ReferralsTab() {
             <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
           letterSpacing: '-0.5px'
         }} />
-            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground hover:bg-foreground/90 text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+            <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               {copied ? "Copied" : "Copy"}
             </Button>
