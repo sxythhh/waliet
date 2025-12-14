@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, ArrowRight, Check, Lock, FileText, Video } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Lock, FileText } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -307,13 +307,11 @@ export function CreateBountyDialog({
                   <div className="p-4 rounded-xl bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Video className="w-4 h-4 text-muted-foreground" />
+                        
                         <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video payout</span>
                       </div>
                       <span className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
-                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 
-                          ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) 
-                          : '0.00'}
+                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) : '0.00'}
                       </span>
                     </div>
                   </div>
