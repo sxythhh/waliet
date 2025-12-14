@@ -253,32 +253,27 @@ export function AddSocialAccountDialog({
     setTimeRemaining(VERIFICATION_TIME_SECONDS);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden bg-card border border-border/50 [&>button]:hidden">
+      <DialogContent className="sm:max-w-[380px] p-6 overflow-hidden bg-card border-none [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col">
             {/* Header */}
-            <div className="pt-5 pb-3 px-0 py-0">
-              <div className="flex items-center gap-3 mb-1">
-                
-                <div>
-                  <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
-                    Connect Account
-                  </h2>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    Verify via bio code
-                  </p>
-                </div>
-              </div>
+            <div className="pb-4">
+              <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
+                Connect Account
+              </h2>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                Verify via bio code
+              </p>
             </div>
 
             {/* Content */}
-            <div className="pb-2 space-y-4 px-0">
+            <div className="space-y-4">
               {/* Platform Selection */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
                   Platform
                 </Label>
                 <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
-                  <SelectTrigger className="w-full h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px]">
+                  <SelectTrigger className="w-full h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px]">
                     <SelectValue>
                       <div className="flex items-center gap-2.5">
                         {getPlatformIcon(selectedPlatform, "h-4 w-4")}
@@ -298,32 +293,51 @@ export function AddSocialAccountDialog({
               </div>
 
               {/* Username Input */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
                   {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
                 </Label>
-                <div className="relative">
-                  {showAtSymbol && <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>}
-                  <Input id="username" placeholder={getPlaceholderText(selectedPlatform)} value={username} onChange={e => setUsername(showAtSymbol ? e.target.value.replace(/@/g, "").trim() : e.target.value.trim())} className={`h-11 bg-muted/50 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-7' : 'pl-3.5'}`} />
+                <div className="relative flex items-center">
+                  {showAtSymbol && (
+                    <div className="absolute left-0 h-11 w-11 rounded-l-xl bg-muted/50 flex items-center justify-center border-r border-border/30">
+                      <span className="text-muted-foreground text-sm font-medium">@</span>
+                    </div>
+                  )}
+                  <Input 
+                    id="username" 
+                    placeholder={getPlaceholderText(selectedPlatform)} 
+                    value={username} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      // Remove @ symbol and trim whitespace
+                      const sanitized = value.replace(/@/g, "").trim();
+                      setUsername(sanitized);
+                    }} 
+                    className={`h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-12' : 'pl-4'}`} 
+                  />
                 </div>
+                {username.includes('@') && (
+                  <p className="text-[11px] text-amber-500 font-inter tracking-[-0.5px]">
+                    The @ symbol will be removed automatically
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 mt-2 border-t flex gap-2 border-[#141414]/0">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground">
+            <div className="flex gap-2 mt-6">
+              <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
                 Cancel
               </Button>
               <Button onClick={handleContinueToVerification} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
                 Continue
-                <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
           </div> : <div className="flex flex-col">
             {/* Header */}
-            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <div className="pb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
                   {getPlatformIcon(selectedPlatform, "h-5 w-5")}
                 </div>
                 <div>
@@ -342,8 +356,8 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Verification Code */}
-            <div className="px-5 pb-4">
-              <div className="bg-muted/30 rounded-xl p-4">
+            <div className="pb-4">
+              <div className="bg-muted/20 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                     Add this code to your bio
@@ -358,7 +372,7 @@ export function AddSocialAccountDialog({
                       </>}
                   </button>
                 </div>
-                <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors border border-border/50">
+                <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
                   <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">
                     {verificationCode}
                   </span>
@@ -370,13 +384,13 @@ export function AddSocialAccountDialog({
             </div>
 
             {/* Progress */}
-            <div className="px-5 pb-4">
-              <Progress value={progressPercent} className="h-1 bg-muted/30" />
+            <div className="pb-4">
+              <Progress value={progressPercent} className="h-1 bg-muted/20" />
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-border/50 flex gap-2">
-              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm hover:bg-muted hover:text-foreground">
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
                 <ArrowLeft className="h-4 w-4 mr-1.5" />
                 Back
               </Button>
