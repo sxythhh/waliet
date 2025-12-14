@@ -241,21 +241,25 @@ export function BoostCard({ boost }: BoostCardProps) {
               </div>
             </div>
 
-            {/* Rate + Submit */}
-            <div className="flex items-center gap-2">
-              <div className="bg-muted rounded-lg px-3 py-1.5 text-xs font-medium">
-                ${boost.monthly_retainer.toFixed(0)}/month
-              </div>
-              <Button 
-                onClick={() => setSubmitDialogOpen(true)}
-                size="sm"
-                className="bg-foreground hover:bg-foreground/90 text-background font-semibold"
-                disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
-              >
-                Submit post
-              </Button>
-            </div>
+            {/* Submit Button - Desktop only */}
+            <Button 
+              onClick={() => setSubmitDialogOpen(true)}
+              size="sm"
+              className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold"
+              disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
+            >
+              Submit post
+            </Button>
           </div>
+
+          {/* Submit Button - Mobile only (full width at bottom) */}
+          <Button 
+            onClick={() => setSubmitDialogOpen(true)}
+            className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold"
+            disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
+          >
+            Submit post
+          </Button>
 
 
           {/* Action Cards Row */}
