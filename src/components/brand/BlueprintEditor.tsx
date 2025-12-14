@@ -13,6 +13,24 @@ import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizar
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  useDroppable,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 // Light mode logos (dark logos for light backgrounds)
 import tiktokLogoLight from "@/assets/tiktok-logo-black-new.png";
@@ -103,6 +121,29 @@ const DEFAULT_SECTIONS: SectionType[] = [
   "target_personas",
 ];
 
+// Trash Drop Zone component
+function TrashDropZone() {
+  const { isOver, setNodeRef } = useDroppable({
+    id: "trash-zone",
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full border-2 border-dashed transition-all duration-200 ${
+        isOver
+          ? "border-destructive bg-destructive/20 scale-110"
+          : "border-muted-foreground/30 bg-background/95 backdrop-blur-sm"
+      }`}
+    >
+      <Trash2 className={`h-5 w-5 ${isOver ? "text-destructive" : "text-muted-foreground"}`} />
+      <span className={`text-sm font-inter tracking-[-0.5px] ${isOver ? "text-destructive" : "text-muted-foreground"}`}>
+        Drop here to remove
+      </span>
+    </div>
+  );
+}
+
 export function BlueprintEditor({
   blueprintId,
   brandId
@@ -119,9 +160,21 @@ export function BlueprintEditor({
   const [uploadingFileName, setUploadingFileName] = useState("");
   const [showCampaignWizard, setShowCampaignWizard] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchBlueprintAndBrand();
@@ -194,6 +247,29 @@ export function BlueprintEditor({
         ? prev.filter(s => s !== sectionId)
         : [...prev, sectionId]
     );
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    // Check if dropped on trash
+    if (over?.id === "trash-zone") {
+      setEnabledSections(prev => prev.filter(s => s !== active.id));
+      return;
+    }
+
+    if (over && active.id !== over.id) {
+      setEnabledSections((items) => {
+        const oldIndex = items.indexOf(active.id as SectionType);
+        const newIndex = items.indexOf(over.id as SectionType);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   // Asset functions
@@ -570,7 +646,17 @@ export function BlueprintEditor({
               </div>
 
               {/* Modular Sections */}
-              <div className="space-y-3">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={enabledSections}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-3">
                 {/* Content Section */}
                 {enabledSections.includes("content") && (
                   <BlueprintSection
@@ -1138,10 +1224,15 @@ export function BlueprintEditor({
                   onToggleSection={toggleSection}
                 />
               </div>
-            </div>
-          </div>
+            </SortableContext>
+
+            {/* Floating Trash Zone - only visible when dragging */}
+            {activeId && <TrashDropZone />}
+          </DndContext>
         </div>
       </div>
+    </div>
+  </div>
 
       {/* Campaign Creation Wizard */}
       {showCampaignWizard && (

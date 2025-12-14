@@ -121,24 +121,30 @@ export function BlueprintSectionMenu({
   );
 
   return (
-    <div ref={menuRef} className="relative">
+    <div ref={menuRef} className="relative flex items-center gap-4 py-2">
+      {/* Left line */}
+      <div className="flex-1 h-[2px] bg-muted-foreground/20 rounded-full" />
+      
       {/* Add Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed transition-all font-inter tracking-[-0.5px] text-sm",
+          "flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-inter tracking-[-0.5px] text-sm",
           isOpen
-            ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-500"
-            : "border-border/50 text-muted-foreground hover:border-border hover:text-foreground"
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         )}
       >
         <Plus className="h-4 w-4" />
         <span>Add section</span>
       </button>
 
+      {/* Right line */}
+      <div className="flex-1 h-[2px] bg-muted-foreground/20 rounded-full" />
+
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 z-50 w-72 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-72 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
           {/* Available sections to add */}
           {availableSections.length > 0 && (
             <div className="p-2">

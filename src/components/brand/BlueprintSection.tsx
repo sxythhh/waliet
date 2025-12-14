@@ -1,5 +1,7 @@
 import { useState, ReactNode } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 
 interface BlueprintSectionProps {
@@ -24,6 +26,20 @@ export function BlueprintSection({
   defaultOpen = true,
 }: BlueprintSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   const getStatusBadge = () => {
     if (!status) return null;
@@ -53,9 +69,20 @@ export function BlueprintSection({
   };
 
   return (
-    <div className="group relative rounded-xl border border-border/50 bg-card/30 transition-all hover:border-border/80">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative rounded-xl border border-border/50 bg-card/30 transition-all hover:border-border/80",
+        isDragging && "opacity-50 z-50 shadow-xl"
+      )}
+    >
       {/* Drag Handle */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab">
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+      >
         <GripVertical className="h-4 w-4 text-muted-foreground/50" />
       </div>
 
