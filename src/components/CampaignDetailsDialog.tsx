@@ -1,6 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2 } from "lucide-react";
+import addDiamondIcon from "@/assets/add-diamond-icon.svg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
@@ -420,7 +421,7 @@ export function CampaignDetailsDialog({
                   </button>)}
               </div> : <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-muted-foreground" />
+                  <img src={addDiamondIcon} alt="Add" className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-sm font-medium" style={{
@@ -441,7 +442,11 @@ export function CampaignDetailsDialog({
               {campaign.asset_links!.map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                    
+                    {faviconUrl && (
+                      <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
+                        <img src={faviconUrl} alt="" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-xs sm:text-sm truncate">{link.label}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
