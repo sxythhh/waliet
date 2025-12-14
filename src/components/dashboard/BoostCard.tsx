@@ -45,6 +45,14 @@ interface BoostCardProps {
       name: string;
       logo_url: string | null;
     };
+    blueprint?: {
+      content: string | null;
+      hooks: any[] | null;
+      talking_points: any[] | null;
+      dos_and_donts: any | null;
+      call_to_action: string | null;
+      content_guidelines: string | null;
+    } | null;
   };
 }
 
@@ -418,6 +426,75 @@ export function BoostCard({ boost }: BoostCardProps) {
                 className="w-full h-[400px] rounded-lg border"
                 title="Boost directions"
               />
+            ) : boost.blueprint ? (
+              <div className="space-y-6">
+                {boost.blueprint.content && (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div dangerouslySetInnerHTML={{ __html: boost.blueprint.content }} />
+                  </div>
+                )}
+                
+                {boost.blueprint.content_guidelines && (
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2">Content Guidelines</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{boost.blueprint.content_guidelines}</p>
+                  </div>
+                )}
+                
+                {boost.blueprint.hooks && boost.blueprint.hooks.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2">Hooks</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {boost.blueprint.hooks.map((hook: any, i: number) => (
+                        <li key={i}>{typeof hook === 'string' ? hook : hook.text || hook.hook}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {boost.blueprint.talking_points && boost.blueprint.talking_points.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2">Talking Points</h4>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      {boost.blueprint.talking_points.map((point: any, i: number) => (
+                        <li key={i}>{typeof point === 'string' ? point : point.text || point.point}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {boost.blueprint.dos_and_donts && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {boost.blueprint.dos_and_donts.dos && boost.blueprint.dos_and_donts.dos.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-sm mb-2 text-green-500">Do's</h4>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                          {boost.blueprint.dos_and_donts.dos.map((item: string, i: number) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {boost.blueprint.dos_and_donts.donts && boost.blueprint.dos_and_donts.donts.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-sm mb-2 text-red-500">Don'ts</h4>
+                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                          {boost.blueprint.dos_and_donts.donts.map((item: string, i: number) => (
+                            <li key={i}>{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {boost.blueprint.call_to_action && (
+                  <div>
+                    <h4 className="font-semibold text-sm mb-2">Call to Action</h4>
+                    <p className="text-sm text-muted-foreground">{boost.blueprint.call_to_action}</p>
+                  </div>
+                )}
+              </div>
             ) : boost.content_style_requirements ? (
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <p className="whitespace-pre-wrap text-muted-foreground">{boost.content_style_requirements}</p>
