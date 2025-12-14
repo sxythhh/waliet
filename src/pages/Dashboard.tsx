@@ -13,6 +13,8 @@ import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialo
 import { AppSidebar } from "@/components/AppSidebar";
 import { OnboardingDialog } from "@/components/OnboardingDialog";
 import { OnboardingCard } from "@/components/OnboardingCard";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
@@ -26,7 +28,9 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboardingCard, setShowOnboardingCard] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const { completedCount, markOnboardingComplete } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<{
     id: string;
@@ -82,6 +86,11 @@ export default function Dashboard() {
     if (pendingBrand === 'true') {
       sessionStorage.removeItem('pendingBrandCreation');
       setShowCreateBrandDialog(true);
+    }
+    
+    // Show onboarding card popup for new users in creator mode
+    if (profileData && !profileData.onboarding_completed && workspace === "creator") {
+      setShowOnboardingCard(true);
     }
   };
   const fetchCampaigns = async () => {
@@ -163,5 +172,15 @@ export default function Dashboard() {
 
       {/* Creator Chat Widget - only show in creator mode */}
       {isCreatorMode && <CreatorChatWidget />}
+
+      {/* Onboarding Card Popup for new users */}
+      <Dialog open={showOnboardingCard} onOpenChange={setShowOnboardingCard}>
+        <DialogContent className="sm:max-w-[440px] p-0 border-0 bg-transparent">
+          <OnboardingCard onSelect={() => {
+            markOnboardingComplete();
+            setShowOnboardingCard(false);
+          }} />
+        </DialogContent>
+      </Dialog>
     </div>;
 }
