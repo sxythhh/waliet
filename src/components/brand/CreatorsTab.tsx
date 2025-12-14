@@ -32,6 +32,7 @@ interface Creator {
     id: string;
     title: string;
     type: 'campaign' | 'boost';
+    status?: 'pending' | 'accepted' | 'rejected';
   }[];
   social_accounts: {
     platform: string;
@@ -367,7 +368,7 @@ export function CreatorsTab({
           `).in("campaign_id", campaignIds).eq("status", "active")
         : Promise.resolve({ data: [] }),
       bountyIds.length > 0
-        ? supabase.from("bounty_applications").select("bounty_campaign_id, user_id, applied_at").in("bounty_campaign_id", bountyIds)
+        ? supabase.from("bounty_applications").select("bounty_campaign_id, user_id, applied_at, status").in("bounty_campaign_id", bountyIds)
         : Promise.resolve({ data: [] })
     ]);
 
@@ -480,7 +481,8 @@ export function CreatorsTab({
         creator.campaigns.push({
           id: app.bounty_campaign_id,
           title: bountyTitle,
-          type: 'boost'
+          type: 'boost',
+          status: app.status
         });
       }
     }
@@ -938,9 +940,16 @@ export function CreatorsTab({
               <div>
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
                 <div className="flex flex-wrap gap-1.5">
-                  {selectedCreator.campaigns.map(campaign => <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
-                      {campaign.title} <span className="text-muted-foreground">({campaign.type === 'boost' ? 'Applied' : 'Joined'})</span>
-                    </span>)}
+                  {selectedCreator.campaigns.map(campaign => {
+                    const label = campaign.type === 'campaign' 
+                      ? 'Joined' 
+                      : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
+                    return (
+                      <span key={campaign.id} className="px-2.5 py-1 rounded-md bg-muted/30 text-[11px] font-medium">
+                        {campaign.title} <span className="text-muted-foreground">({label})</span>
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
 
