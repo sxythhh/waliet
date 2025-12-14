@@ -991,6 +991,7 @@ export type Database = {
           application_questions: Json | null
           asset_links: Json | null
           banner_url: string | null
+          blueprint_id: string | null
           brand_id: string | null
           brand_logo_url: string | null
           brand_name: string
@@ -1026,6 +1027,7 @@ export type Database = {
           application_questions?: Json | null
           asset_links?: Json | null
           banner_url?: string | null
+          blueprint_id?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
           brand_name: string
@@ -1061,6 +1063,7 @@ export type Database = {
           application_questions?: Json | null
           asset_links?: Json | null
           banner_url?: string | null
+          blueprint_id?: string | null
           brand_id?: string | null
           brand_logo_url?: string | null
           brand_name?: string
@@ -1090,6 +1093,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "campaigns_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "campaigns_brand_id_fkey"
             columns: ["brand_id"]
