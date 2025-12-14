@@ -226,4 +226,13 @@ All colors MUST be HSL.
       background-position: 40px 0;
     }
   }
+
+  @keyframes stripeMove {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 11.31px 0;
+    }
+  }
 }
