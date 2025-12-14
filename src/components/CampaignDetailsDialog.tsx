@@ -458,7 +458,7 @@ export function CampaignDetailsDialog({
           letterSpacing: '-0.5px'
         }}>Campaign Requirements</h4>
             <div className="space-y-2">
-              {campaign.requirements!.map((req, index) => <div key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
+              {campaign.requirements!.map((req, index) => <div key={index} className="gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] flex items-center justify-start">
                   <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#2060df] flex items-center justify-center text-white text-[10px] sm:text-xs font-semibold shrink-0 mt-0.5">
                     {index + 1}
                   </div>
