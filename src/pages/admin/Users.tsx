@@ -258,9 +258,10 @@ export default function AdminUsers() {
       )
     `, { count: 'exact' });
 
-    // Search filter - searches across all users in database
+    // Search filter - searches across all users in database (profile fields only, social accounts filtered post-query)
     if (debouncedSearchQuery) {
       const searchTerm = debouncedSearchQuery.toLowerCase();
+      // Note: we also do post-query filter for social_accounts.username
       query = query.or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
 
@@ -329,6 +330,52 @@ export default function AdminUsers() {
     }
 
     let filtered = usersData as User[] || [];
+
+    // If searching, also include users whose social accounts match the search term
+    if (debouncedSearchQuery) {
+      const searchTerm = debouncedSearchQuery.toLowerCase();
+      
+      // Search for social accounts matching the query
+      const { data: matchingSocialAccounts } = await supabase
+        .from("social_accounts")
+        .select("user_id")
+        .ilike("username", `%${searchTerm}%`);
+      
+      if (matchingSocialAccounts && matchingSocialAccounts.length > 0) {
+        const socialAccountUserIds = new Set(matchingSocialAccounts.map(sa => sa.user_id));
+        
+        // Fetch additional users whose social accounts match but weren't in the original query
+        const existingUserIds = new Set(filtered.map(u => u.id));
+        const missingUserIds = [...socialAccountUserIds].filter(id => !existingUserIds.has(id));
+        
+        if (missingUserIds.length > 0) {
+          const { data: additionalUsers } = await supabase
+            .from("profiles")
+            .select(`
+              *,
+              wallets (
+                balance,
+                total_earned,
+                total_withdrawn
+              ),
+              social_accounts (
+                id,
+                platform,
+                username,
+                follower_count,
+                demographic_submissions (
+                  status
+                )
+              )
+            `)
+            .in("id", missingUserIds);
+          
+          if (additionalUsers) {
+            filtered = [...filtered, ...(additionalUsers as User[])];
+          }
+        }
+      }
+    }
 
     // Campaign filter (requires separate query)
     if (selectedCampaign !== "all") {
