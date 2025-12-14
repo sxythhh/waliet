@@ -10,6 +10,8 @@ import { debounce } from "@/lib/utils";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
+import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
+import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
@@ -132,6 +134,8 @@ export function BlueprintEditor({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingFileName, setUploadingFileName] = useState("");
   const [showCampaignWizard, setShowCampaignWizard] = useState(false);
+  const [showCampaignTypeDialog, setShowCampaignTypeDialog] = useState(false);
+  const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -216,7 +220,17 @@ export function BlueprintEditor({
   };
 
   const activateBlueprint = () => {
+    setShowCampaignTypeDialog(true);
+  };
+
+  const handleSelectClipping = () => {
+    setShowCampaignTypeDialog(false);
     setShowCampaignWizard(true);
+  };
+
+  const handleSelectBoost = () => {
+    setShowCampaignTypeDialog(false);
+    setShowBoostDialog(true);
   };
 
   const toggleSection = (sectionId: SectionType) => {
@@ -1186,9 +1200,9 @@ export function BlueprintEditor({
             </div>
             <button
               onClick={activateBlueprint}
-              className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-inter tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
+              className="px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-sm hover:opacity-90 transition-opacity"
             >
-              Create Campaign
+              Activate Blueprint
             </button>
           </div>
 
@@ -1275,6 +1289,68 @@ export function BlueprintEditor({
     </div>
   </div>
 
+      {/* Campaign Type Selection Dialog */}
+      <CreateCampaignTypeDialog
+        onSelectClipping={handleSelectClipping}
+        onSelectManaged={handleSelectClipping}
+        onSelectBoost={handleSelectBoost}
+        trigger={
+          <span className="hidden" />
+        }
+        brandId={brandId}
+      />
+      {showCampaignTypeDialog && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={() => setShowCampaignTypeDialog(false)}>
+          <div className="sm:max-w-[420px] w-full mx-4 bg-[#f5f5f5] dark:bg-[#050505] border border-border rounded-lg p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-6">Activate Blueprint</h2>
+            
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Select a Campaign Workflow</p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {/* Clipping Option */}
+                <button 
+                  onClick={handleSelectClipping}
+                  className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                      backgroundColor: '#a7751e',
+                      borderTop: '2px solid #dda038'
+                    }}>
+                      <FileText className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="font-semibold tracking-[-0.5px] text-sm">Clipping</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
+                    Pay a fixed CPM. Select your budget, payment terms, and requirements.
+                  </p>
+                </button>
+
+                {/* Boost Option */}
+                <button 
+                  onClick={handleSelectBoost}
+                  className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
+                      backgroundColor: '#1ea75e',
+                      borderTop: '2px solid #38dd7a'
+                    }}>
+                      <Share2 className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="font-semibold tracking-[-0.5px] text-sm">Boost</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed tracking-[-0.5px]">
+                    Retainer-based campaign with monthly creator positions
+                  </p>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Campaign Creation Wizard */}
       {showCampaignWizard && (
         <CampaignCreationWizard
@@ -1283,6 +1359,16 @@ export function BlueprintEditor({
           brandId={brandId}
           brandName={brand?.name || ""}
           brandLogoUrl={brand?.logo_url || undefined}
+          initialBlueprintId={blueprintId}
+        />
+      )}
+
+      {/* Boost Creation Dialog */}
+      {showBoostDialog && (
+        <CreateBountyDialog
+          open={showBoostDialog}
+          onOpenChange={setShowBoostDialog}
+          brandId={brandId}
           initialBlueprintId={blueprintId}
         />
       )}

@@ -29,7 +29,8 @@ interface CreateBountyDialogProps {
   brandId: string;
   brandName?: string;
   brandLogoUrl?: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  initialBlueprintId?: string;
 }
 
 const STEPS = [
@@ -43,7 +44,7 @@ const platforms = [
   { id: "youtube", name: "YouTube", logo: youtubeLogo }
 ];
 
-export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, brandLogoUrl, onSuccess }: CreateBountyDialogProps) {
+export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, brandLogoUrl, onSuccess, initialBlueprintId }: CreateBountyDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [creating, setCreating] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -74,6 +75,12 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
     }
   }, [open, brandId]);
 
+  useEffect(() => {
+    if (initialBlueprintId && open) {
+      setSelectedBlueprintId(initialBlueprintId);
+    }
+  }, [initialBlueprintId, open]);
+
   const fetchBlueprints = async () => {
     const { data } = await supabase
       .from('blueprints')
@@ -81,6 +88,10 @@ export function CreateBountyDialog({ open, onOpenChange, brandId, brandName, bra
       .eq('brand_id', brandId)
       .order('created_at', { ascending: false });
     setBlueprints(data || []);
+    // Set initial blueprint if provided and not already set
+    if (initialBlueprintId && !selectedBlueprintId) {
+      setSelectedBlueprintId(initialBlueprintId);
+    }
   };
 
   const togglePlatform = (platformId: string) => {
