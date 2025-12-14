@@ -22,6 +22,7 @@ interface BountyCampaign {
   end_date: string | null;
   brand_id: string;
   blueprint_embed_url: string | null;
+  blueprint_id: string | null;
 }
 
 interface Brand {
