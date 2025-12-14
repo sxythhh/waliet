@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-react";
+import { Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TeamManagementSection } from "./TeamManagementSection";
+import { Card, CardContent } from "@/components/ui/card";
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
+import { format, subDays, subMonths } from "date-fns";
+
 interface Milestone {
   id: string;
   milestone_type: string;
@@ -35,10 +36,15 @@ interface ReferralWithMilestones {
   } | null;
   milestone_rewards?: MilestoneReward[];
 }
+interface AffiliateEarningsDataPoint {
+  date: string;
+  amount: number;
+}
 export function ReferralsTab() {
   const [profile, setProfile] = useState<any>(null);
   const [referrals, setReferrals] = useState<ReferralWithMilestones[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [affiliateEarningsData, setAffiliateEarningsData] = useState<AffiliateEarningsDataPoint[]>([]);
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newReferralCode, setNewReferralCode] = useState("");
@@ -50,6 +56,7 @@ export function ReferralsTab() {
     fetchProfile();
     fetchReferrals();
     fetchMilestones();
+    fetchAffiliateEarningsData();
   }, []);
   const fetchProfile = async () => {
     const {
@@ -107,6 +114,47 @@ export function ReferralsTab() {
     } else {
       setReferrals([]);
     }
+  };
+  const fetchAffiliateEarningsData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    const now = new Date();
+    const start = subMonths(now, 1);
+    const days = 30;
+    
+    const { data: affiliateTransactions } = await supabase
+      .from("wallet_transactions")
+      .select("amount, created_at, type")
+      .eq("user_id", session.user.id)
+      .eq("type", "referral")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
+    
+    const dataPoints: AffiliateEarningsDataPoint[] = [];
+    let cumulativeEarnings = 0;
+    const pointCount = Math.min(days, 30);
+    const interval = Math.max(1, Math.floor(days / pointCount));
+    
+    for (let i = 0; i <= pointCount; i++) {
+      const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
+      if (currentDate > now) break;
+      const dateStr = format(currentDate, 'MMM dd');
+      
+      if (affiliateTransactions) {
+        affiliateTransactions.forEach(txn => {
+          const txnDate = new Date(txn.created_at);
+          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
+            cumulativeEarnings += Number(txn.amount) || 0;
+          }
+        });
+      }
+      dataPoints.push({
+        date: dateStr,
+        amount: Number(cumulativeEarnings.toFixed(2))
+      });
+    }
+    setAffiliateEarningsData(dataPoints);
   };
   const referralLink = profile?.referral_code ? `${window.location.origin}/?ref=${profile.referral_code}` : "";
   const copyReferralLink = () => {
@@ -221,6 +269,44 @@ export function ReferralsTab() {
           <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Earnings</p>
         </div>
       </div>
+
+      {/* Affiliate Earnings Chart */}
+      <Card className="bg-card border-0">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Affiliate Earnings</p>
+          </div>
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-2xl font-bold font-geist" style={{ letterSpacing: '-0.3px' }}>
+              ${affiliateEarningsData.length > 0 ? affiliateEarningsData[affiliateEarningsData.length - 1]?.amount?.toFixed(2) || "0.00" : "0.00"}
+            </p>
+          </div>
+          
+          <div className="h-20 -mx-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={affiliateEarningsData}>
+                <defs>
+                  <linearGradient id="affiliateEarningsGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <RechartsTooltip content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
+                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                        <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
+                        <p className="text-sm font-bold">${value.toFixed(2)}</p>
+                      </div>;
+                  }
+                  return null;
+                }} cursor={false} />
+                <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2} fill="url(#affiliateEarningsGradient)" dot={false} activeDot={{ r: 4, fill: '#8b5cf6', stroke: 'none' }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Referral Link Section */}
       <div className="p-5 rounded-xl space-y-4 bg-neutral-100/0">
