@@ -121,7 +121,7 @@ function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'
 
 export function CreatorChatWidget() {
   const { resolvedTheme } = useTheme();
-  const mailIcon = mailIconDark; // Always use white icon on blue button background
+  const mailIcon = mailIconLight; // Always use white icon on blue button background
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
