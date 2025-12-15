@@ -257,12 +257,7 @@ export function BoostDetailView({
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-2 font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" 
-              onClick={() => setTopUpDialogOpen(true)}
-            >
+            <Button variant="ghost" size="sm" className="gap-2 font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" onClick={() => setTopUpDialogOpen(true)}>
               <Plus className="h-3.5 w-3.5" />
               Top Up
             </Button>
@@ -286,38 +281,24 @@ export function BoostDetailView({
         </div>
 
         {/* Content Area - Videos Tab */}
-        {activeTab === "videos" && (
-          <BoostVideosTab 
-            boostId={boostId} 
-            monthlyRetainer={boost.monthly_retainer} 
-            videosPerMonth={boost.videos_per_month}
-          />
-        )}
+        {activeTab === "videos" && <BoostVideosTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} />}
 
         {/* Content Area - Management tab */}
-        {activeTab === "management" && (
-          <div className="flex-1 overflow-auto p-6">
+        {activeTab === "management" && <div className="flex-1 overflow-auto p-6">
             <div className="space-y-6">
               {/* About Section */}
-              {boost.description && (
-                <div>
+              {boost.description && <div>
                   <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed tracking-[-0.3px]">
                     {boost.description}
                   </p>
-                </div>
-              )}
+                </div>}
 
               {/* Budget Card */}
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold tracking-[-0.5px]">Balance</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="gap-1.5 h-7 text-xs font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" 
-                    onClick={() => setTopUpDialogOpen(true)}
-                  >
+                  <Button variant="ghost" size="sm" className="gap-1.5 h-7 text-xs font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" onClick={() => setTopUpDialogOpen(true)}>
                     <Plus className="h-3 w-3" />
                     Add Funds
                   </Button>
@@ -326,19 +307,28 @@ export function BoostDetailView({
                   <div>
                     <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Total Budget</p>
                     <p className="text-lg font-semibold tracking-[-0.5px] text-emerald-500">
-                      ${(boost.budget || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${(boost.budget || 0).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Used</p>
                     <p className="text-lg font-semibold tracking-[-0.5px]">
-                      ${(boost.budget_used || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${(boost.budget_used || 0).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground tracking-[-0.3px] mb-1">Remaining</p>
                     <p className="text-lg font-semibold tracking-[-0.5px]">
-                      ${((boost.budget || 0) - (boost.budget_used || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${((boost.budget || 0) - (boost.budget_used || 0)).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
                     </p>
                   </div>
                 </div>
@@ -403,22 +393,9 @@ export function BoostDetailView({
               </div>
 
               {/* Content Requirements */}
-              {boost.content_style_requirements && (
-                <div>
-                  <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">Content Requirements</h2>
-                  <ul className="space-y-2">
-                    {boost.content_style_requirements.split('\n').filter(line => line.trim()).map((line, idx) => (
-                      <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground tracking-[-0.3px]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-1.5 flex-shrink-0" />
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {boost.content_style_requirements}
             </div>
-          </div>
-        )}
+          </div>}
         {/* Applications Tab - Two Column Layout */}
         {activeTab === "applications" && <div className="flex-1 flex overflow-hidden">
             {applications.length === 0 ? <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -617,16 +594,10 @@ export function BoostDetailView({
       </div>
 
       <EditBountyDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} bountyId={boostId} onSuccess={() => {
-        setEditDialogOpen(false);
-        fetchBoostData();
-      }} />
+      setEditDialogOpen(false);
+      fetchBoostData();
+    }} />
 
-      <TopUpBalanceDialog
-        open={topUpDialogOpen}
-        onOpenChange={setTopUpDialogOpen}
-        boostId={boostId}
-        boostTitle={boost?.title || ""}
-        currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)}
-      />
+      <TopUpBalanceDialog open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} boostId={boostId} boostTitle={boost?.title || ""} currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)} />
     </>;
 }
