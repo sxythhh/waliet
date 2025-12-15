@@ -30,6 +30,9 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 
   if (!response.ok) {
     console.error(`TikTok API error: ${response.status}`);
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+    }
     throw new Error(`TikTok API error: ${response.status}`);
   }
 
@@ -76,6 +79,9 @@ async function verifyInstagram(username: string, verificationCode: string, rapid
     console.error(`Instagram API error: ${response.status}`);
     const errorText = await response.text();
     console.error(`Instagram API response: ${errorText}`);
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+    }
     throw new Error(`Instagram API error: ${response.status}`);
   }
 
@@ -151,6 +157,9 @@ async function verifyYouTube(channelId: string, verificationCode: string, rapidA
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`YouTube API error: ${response.status}, body: ${errorText}`);
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+    }
     throw new Error(`YouTube API error: ${response.status}`);
   }
 
