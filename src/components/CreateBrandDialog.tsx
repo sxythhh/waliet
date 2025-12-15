@@ -171,13 +171,13 @@ export function CreateBrandDialog({
             </div>
 
             {/* Content */}
-            <div className="space-y-5 px-6 py-5">
+            <div className="px-6 py-5 space-y-4">
               {/* Logo Section */}
-              <div className="space-y-2">
-                <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+              <div>
+                <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
                   Set an Icon
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-1.5">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
                   {/* Logo Preview or Initials */}
@@ -203,8 +203,8 @@ export function CreateBrandDialog({
               {/* Name Field */}
               <FormField control={form.control} name="name" render={({
               field
-            }) => <FormItem className="space-y-1.5">
-                    <FormLabel className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+            }) => <FormItem>
+                    <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">
                       Name
                     </FormLabel>
                     <FormControl>
@@ -216,8 +216,8 @@ export function CreateBrandDialog({
               {/* Website URL Field */}
               <FormField control={form.control} name="home_url" render={({
               field
-            }) => <FormItem className="space-y-1.5">
-                    <FormLabel className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+            }) => <FormItem>
+                    <FormLabel className="text-sm text-foreground font-inter tracking-[-0.5px]">
                       Website URL
                     </FormLabel>
                     <FormControl>
