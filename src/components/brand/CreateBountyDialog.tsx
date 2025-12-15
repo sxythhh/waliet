@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, ArrowRight, Check, Lock, FileText } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Lock, FileText, Plus, X, HelpCircle } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -67,8 +67,10 @@ export function CreateBountyDialog({
     status: "active" as "draft" | "active",
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
     blueprint_embed_url: "",
-    is_private: false
+    is_private: false,
+    application_questions: [] as string[]
   });
+  const [newQuestion, setNewQuestion] = useState("");
   useEffect(() => {
     if (open && brandId) {
       fetchBlueprints();
@@ -163,7 +165,8 @@ export function CreateBountyDialog({
         status: formData.status,
         blueprint_embed_url: formData.blueprint_embed_url || null,
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
-        is_private: formData.is_private
+        is_private: formData.is_private,
+        application_questions: formData.application_questions.length > 0 ? formData.application_questions : null
       });
       if (error) throw error;
       toast.success("Boost created successfully!");
@@ -190,8 +193,10 @@ export function CreateBountyDialog({
       status: "active",
       payment_schedule: "monthly",
       blueprint_embed_url: "",
-      is_private: false
+      is_private: false,
+      application_questions: []
     });
+    setNewQuestion("");
     setBannerFile(null);
     setBannerPreview(null);
     setSelectedBlueprintId("");
@@ -428,13 +433,87 @@ export function CreateBountyDialog({
             })} placeholder="Describe what this boost entails..." className="min-h-[90px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
               </div>
 
+              {/* Application Questions */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Application Questions</Label>
+                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">(Optional)</span>
+                </div>
+                
+                {/* Existing Questions */}
+                {formData.application_questions.length > 0 && (
+                  <div className="space-y-2">
+                    {formData.application_questions.map((question, index) => (
+                      <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] shrink-0">Q{index + 1}.</span>
+                        <span className="text-sm text-foreground font-inter tracking-[-0.5px] flex-1">{question}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            const updated = formData.application_questions.filter((_, i) => i !== index);
+                            setFormData({ ...formData, application_questions: updated });
+                          }}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Add New Question */}
+                <div className="flex gap-2">
+                  <Input
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Enter a question for applicants..."
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newQuestion.trim()) {
+                        e.preventDefault();
+                        setFormData({
+                          ...formData,
+                          application_questions: [...formData.application_questions, newQuestion.trim()]
+                        });
+                        setNewQuestion("");
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-10 px-3 font-inter tracking-[-0.5px]"
+                    disabled={!newQuestion.trim()}
+                    onClick={() => {
+                      if (newQuestion.trim()) {
+                        setFormData({
+                          ...formData,
+                          application_questions: [...formData.application_questions, newQuestion.trim()]
+                        });
+                        setNewQuestion("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Add questions that creators must answer when applying to this boost.
+                </p>
+              </div>
+
               {/* Summary Card */}
               <div className="rounded-xl bg-muted/20 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Summary</span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   <div className="p-3 rounded-lg bg-background">
                     <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Retainer</p>
                     <p className="text-sm font-semibold font-geist tracking-[-0.5px]">${formData.monthly_retainer || '0'}/mo</p>
@@ -450,6 +529,10 @@ export function CreateBountyDialog({
                   <div className="p-3 rounded-lg bg-background">
                     <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</p>
                     <p className="text-sm font-semibold font-geist tracking-[-0.5px] truncate">{selectedBlueprint?.title || 'None'}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-background">
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Questions</p>
+                    <p className="text-sm font-semibold font-geist tracking-[-0.5px]">{formData.application_questions.length}</p>
                   </div>
                 </div>
               </div>

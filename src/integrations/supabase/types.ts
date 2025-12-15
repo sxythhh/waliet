@@ -298,6 +298,7 @@ export type Database = {
       bounty_campaigns: {
         Row: {
           accepted_creators_count: number
+          application_questions: Json | null
           banner_url: string | null
           blueprint_embed_url: string | null
           blueprint_id: string | null
@@ -321,6 +322,7 @@ export type Database = {
         }
         Insert: {
           accepted_creators_count?: number
+          application_questions?: Json | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
@@ -344,6 +346,7 @@ export type Database = {
         }
         Update: {
           accepted_creators_count?: number
+          application_questions?: Json | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
