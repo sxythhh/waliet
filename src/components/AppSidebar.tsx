@@ -379,7 +379,7 @@ export function AppSidebar() {
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                    <span className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Workspaces</span>
+                    <span className="text-[11px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Workspaces</span>
                     <span className="text-[11px] text-neutral-600">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
                   </div>
                   
@@ -401,7 +401,7 @@ export function AppSidebar() {
                   
                   {/* Active Section */}
                   <div className="px-3 pt-2 pb-1">
-                    <span className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Active</span>
+                    <span className="text-[10px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Active</span>
                   </div>
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5">
