@@ -127,6 +127,7 @@ export function WalletTab() {
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterSubmenu, setFilterSubmenu] = useState<'main' | 'type' | 'status' | 'program'>('main');
+  const [filterSearch, setFilterSearch] = useState('');
   const {
     toast
   } = useToast();
@@ -1481,7 +1482,10 @@ export function WalletTab() {
         <div className="pt-5 pb-4 px-0">
           <DropdownMenu open={filterOpen} onOpenChange={open => {
           setFilterOpen(open);
-          if (!open) setFilterSubmenu('main');
+          if (!open) {
+            setFilterSubmenu('main');
+            setFilterSearch('');
+          }
         }}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2 rounded-full border-border bg-background hover:bg-background px-4 py-2 h-auto">
@@ -1495,7 +1499,29 @@ export function WalletTab() {
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
                   <div className="relative mb-3">
-                    <Input placeholder="Filter..." className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" />
+                    <Input 
+                      placeholder="Filter..." 
+                      value={filterSearch}
+                      onChange={(e) => {
+                        const value = e.target.value.toLowerCase();
+                        setFilterSearch(e.target.value);
+                        // Auto-navigate to matching submenu
+                        const typeOptions = ['earning', 'payout', 'withdrawal', 'team', 'affiliate', 'referral', 'transfer', 'bonus'];
+                        const statusOptions = ['pending', 'completed', 'processing', 'rejected', 'failed'];
+                        const programOptions = ['program', 'campaign', 'boost'];
+                        
+                        if (value && typeOptions.some(opt => opt.includes(value))) {
+                          setFilterSubmenu('type');
+                        } else if (value && statusOptions.some(opt => opt.includes(value))) {
+                          setFilterSubmenu('status');
+                        } else if (value && programOptions.some(opt => opt.includes(value)) && availableCampaigns.length > 0) {
+                          setFilterSubmenu('program');
+                        } else if (!value) {
+                          setFilterSubmenu('main');
+                        }
+                      }}
+                      className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" 
+                    />
                     <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
                   <div className="space-y-1">
@@ -1549,6 +1575,7 @@ export function WalletTab() {
                   <button onClick={e => {
                   e.preventDefault();
                   setFilterSubmenu('main');
+                  setFilterSearch('');
                 }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Type</span>
@@ -1578,11 +1605,13 @@ export function WalletTab() {
                   }, {
                     value: 'transfer_received',
                     label: 'Transfer Received'
-                  }].map(option => <button key={option.value} onClick={e => {
-                    e.preventDefault();
-                    setTypeFilter(option.value);
-                    setFilterSubmenu('main');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase()))
+                    .map(option => <button key={option.value} onClick={e => {
+                      e.preventDefault();
+                      setTypeFilter(option.value);
+                      setFilterSubmenu('main');
+                      setFilterSearch('');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
                       </button>)}
@@ -1594,6 +1623,7 @@ export function WalletTab() {
                   <button onClick={e => {
                   e.preventDefault();
                   setFilterSubmenu('main');
+                  setFilterSearch('');
                 }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Status</span>
@@ -1614,11 +1644,13 @@ export function WalletTab() {
                   }, {
                     value: 'rejected',
                     label: 'Rejected'
-                  }].map(option => <button key={option.value} onClick={e => {
-                    e.preventDefault();
-                    setStatusFilter(option.value);
-                    setFilterSubmenu('main');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase()))
+                    .map(option => <button key={option.value} onClick={e => {
+                      e.preventDefault();
+                      setStatusFilter(option.value);
+                      setFilterSubmenu('main');
+                      setFilterSearch('');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
                       </button>)}
@@ -1630,6 +1662,7 @@ export function WalletTab() {
                   <button onClick={e => {
                   e.preventDefault();
                   setFilterSubmenu('main');
+                  setFilterSearch('');
                 }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3">
                     <ChevronLeft className="h-4 w-4" />
                     <span>Program</span>
@@ -1639,15 +1672,19 @@ export function WalletTab() {
                     e.preventDefault();
                     setCampaignFilter('all');
                     setFilterSubmenu('main');
+                    setFilterSearch('');
                   }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                       <span className="text-sm">All Programs</span>
                       {campaignFilter === 'all' && <Check className="h-4 w-4 ml-auto" />}
                     </button>
-                    {availableCampaigns.map(campaign => <button key={campaign.id} onClick={e => {
-                    e.preventDefault();
-                    setCampaignFilter(campaign.id);
-                    setFilterSubmenu('main');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    {availableCampaigns
+                      .filter(campaign => !filterSearch || campaign.title.toLowerCase().includes(filterSearch.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(filterSearch.toLowerCase()))
+                      .map(campaign => <button key={campaign.id} onClick={e => {
+                      e.preventDefault();
+                      setCampaignFilter(campaign.id);
+                      setFilterSubmenu('main');
+                      setFilterSearch('');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
                             <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
                           </div> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
