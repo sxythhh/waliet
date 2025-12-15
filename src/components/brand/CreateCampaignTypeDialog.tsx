@@ -88,28 +88,19 @@ export function CreateCampaignTypeDialog({
           </div>
           
           {/* Blueprint Select */}
-          {loading ? (
-            <div className="h-11 bg-muted/50 rounded-lg animate-pulse" />
-          ) : hasBlueprints ? (
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Blueprint
-              </label>
+          {loading ? <div className="h-11 bg-muted/50 rounded-lg animate-pulse" /> : hasBlueprints ? <div className="space-y-2">
+              
               <Select value={selectedBlueprint} onValueChange={setSelectedBlueprint}>
                 <SelectTrigger className="w-full bg-muted/50 border-none h-11 rounded-lg">
                   <SelectValue placeholder="Select a blueprint" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-none shadow-lg">
-                  {blueprints.map(blueprint => (
-                    <SelectItem key={blueprint.id} value={blueprint.id}>
+                  {blueprints.map(blueprint => <SelectItem key={blueprint.id} value={blueprint.id}>
                       {blueprint.title}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
+            </div> : <div className="flex flex-col items-center justify-center py-8 px-4 rounded-xl bg-muted/30 text-center">
               <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
                 <img src={blueprintsIcon} alt="Blueprints" className="h-5 w-5 opacity-60" />
               </div>
@@ -121,8 +112,7 @@ export function CreateCampaignTypeDialog({
                 <Plus className="h-3.5 w-3.5" />
                 Create Blueprint
               </Button>
-            </div>
-          )}
+            </div>}
 
           {/* Campaign Type Selection */}
           <div className="space-y-3">
@@ -132,15 +122,10 @@ export function CreateCampaignTypeDialog({
             
             <div className="space-y-2">
               {/* Clipping Option */}
-              <button 
-                onClick={handleClippingClick} 
-                disabled={!hasBlueprints} 
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: '#a7751e' }}
-                >
+              <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
+                backgroundColor: '#a7751e'
+              }}>
                   <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -154,14 +139,10 @@ export function CreateCampaignTypeDialog({
               </button>
 
               {/* Boost Option */}
-              <button 
-                onClick={handleBoostClick} 
-                className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
-              >
-                <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: '#1ea75e' }}
-                >
+              <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
+                backgroundColor: '#1ea75e'
+              }}>
                   <img src={boostIcon} alt="Boost" className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
