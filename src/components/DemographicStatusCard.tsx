@@ -123,39 +123,24 @@ export function DemographicStatusCard({
     }
 
     if (status === 'approved') {
-      const dueDate = getDemographicDueDate();
-      const submittedDate = startOfDay(new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at));
       const now = startOfDay(new Date());
+      const reviewedDate = startOfDay(new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at));
       
-      if (dueDate) {
-        // If submission was recent (within 2 days of due date), block until next cycle
-        const daysSinceSubmission = Math.floor((now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (daysSinceSubmission < 2) {
-          const daysLeft = Math.max(1, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-          return {
-            canSubmit: false,
-            reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
-            nextDate: dueDate,
-          };
-        }
-        
-        // Allow submission if due date is approaching or passed
-        return { canSubmit: true, reason: null, nextDate: dueDate };
+      // Calculate next due date: 7 days from when demographics were reviewed/approved
+      const nextDueDate = addDays(reviewedDate, 7);
+      
+      // If due date has passed or is today, allow submission immediately
+      if (!isAfter(nextDueDate, now)) {
+        return { canSubmit: true, reason: null, nextDate: nextDueDate };
       }
       
-      // Fallback to 7-day rolling window if no campaigns connected
-      const scheduledNext = addDays(submittedDate, 7);
-      if (!isAfter(now, scheduledNext)) {
-        const daysLeft = Math.ceil((scheduledNext.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return {
-          canSubmit: false,
-          reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
-          nextDate: scheduledNext,
-        };
-      }
-
-      return { canSubmit: true, reason: null, nextDate: addDays(now, 7) };
+      // Calculate days until submission is allowed
+      const daysLeft = Math.ceil((nextDueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return {
+        canSubmit: false,
+        reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+        nextDate: nextDueDate,
+      };
     }
 
     return { canSubmit: true, reason: null, nextDate: getDemographicDueDate() };
