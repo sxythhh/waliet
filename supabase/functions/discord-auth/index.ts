@@ -100,8 +100,7 @@ serve(async (req) => {
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
       const existingUser = existingUsers?.users?.find(u => u.email === discordUser.email);
 
-      let session;
-      let user;
+      const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
       if (existingUser) {
         // User exists - sign them in by creating a session
@@ -120,11 +119,21 @@ serve(async (req) => {
           console.error('Error generating magic link:', signInError);
           throw signInError;
         }
-
-        user = existingUser;
         
-        // Update profile with Discord data
-        const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
+        // Store encrypted tokens in secure table using RPC
+        const { error: tokenStoreError } = await supabaseAdmin.rpc('upsert_discord_tokens', {
+          p_user_id: existingUser.id,
+          p_discord_id: discordUser.id,
+          p_access_token: access_token,
+          p_refresh_token: refresh_token,
+          p_token_expires_at: expiresAt
+        });
+
+        if (tokenStoreError) {
+          console.error('Failed to store encrypted tokens:', tokenStoreError);
+        }
+
+        // Update profile with Discord data (without tokens)
         await supabaseAdmin
           .from('profiles')
           .update({
@@ -136,9 +145,10 @@ serve(async (req) => {
               : null,
             discord_email: discordUser.email,
             discord_connected_at: new Date().toISOString(),
-            discord_access_token: access_token,
-            discord_refresh_token: refresh_token,
-            discord_token_expires_at: expiresAt
+            // Clear legacy token fields
+            discord_access_token: null,
+            discord_refresh_token: null,
+            discord_token_expires_at: null
           })
           .eq('id', existingUser.id);
 
@@ -185,11 +195,23 @@ serve(async (req) => {
           throw signUpError;
         }
 
-        user = signUpData.user;
+        const user = signUpData.user;
         console.log('User created:', user.id);
 
-        // Update profile with Discord data
-        const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
+        // Store encrypted tokens in secure table using RPC
+        const { error: tokenStoreError } = await supabaseAdmin.rpc('upsert_discord_tokens', {
+          p_user_id: user.id,
+          p_discord_id: discordUser.id,
+          p_access_token: access_token,
+          p_refresh_token: refresh_token,
+          p_token_expires_at: expiresAt
+        });
+
+        if (tokenStoreError) {
+          console.error('Failed to store encrypted tokens:', tokenStoreError);
+        }
+
+        // Update profile with Discord data (without tokens)
         await supabaseAdmin
           .from('profiles')
           .update({
@@ -205,9 +227,10 @@ serve(async (req) => {
               : null,
             discord_email: discordUser.email,
             discord_connected_at: new Date().toISOString(),
-            discord_access_token: access_token,
-            discord_refresh_token: refresh_token,
-            discord_token_expires_at: expiresAt
+            // Clear legacy token fields
+            discord_access_token: null,
+            discord_refresh_token: null,
+            discord_token_expires_at: null
           })
           .eq('id', user.id);
 

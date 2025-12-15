@@ -21,6 +21,16 @@ serve(async (req) => {
 
     // Handle disconnect action
     if (action === 'disconnect') {
+      // Remove tokens from secure storage using RPC
+      const { error: tokenError } = await supabaseClient.rpc('delete_discord_tokens', {
+        p_user_id: userId
+      });
+
+      if (tokenError) {
+        console.error('Failed to delete discord tokens:', tokenError);
+      }
+
+      // Clear Discord profile fields (except tokens which are now in separate table)
       const { error } = await supabaseClient
         .from('profiles')
         .update({
@@ -30,6 +40,7 @@ serve(async (req) => {
           discord_avatar: null,
           discord_email: null,
           discord_connected_at: null,
+          // Legacy fields - set to null for cleanup
           discord_access_token: null,
           discord_refresh_token: null,
           discord_token_expires_at: null
@@ -91,7 +102,21 @@ serve(async (req) => {
 
     const discordUser = await userResponse.json();
 
-    // Update profile with Discord data and store encrypted tokens
+    // Store encrypted tokens in secure table using RPC
+    const { error: tokenStoreError } = await supabaseClient.rpc('upsert_discord_tokens', {
+      p_user_id: userId,
+      p_discord_id: discordUser.id,
+      p_access_token: access_token,
+      p_refresh_token: refresh_token,
+      p_token_expires_at: expiresAt
+    });
+
+    if (tokenStoreError) {
+      console.error('Failed to store encrypted tokens:', tokenStoreError);
+      throw new Error('Failed to store tokens securely');
+    }
+
+    // Update profile with Discord data (without tokens)
     const { error: updateError } = await supabaseClient
       .from('profiles')
       .update({
@@ -103,9 +128,10 @@ serve(async (req) => {
           : null,
         discord_email: discordUser.email,
         discord_connected_at: new Date().toISOString(),
-        discord_access_token: access_token,
-        discord_refresh_token: refresh_token,
-        discord_token_expires_at: expiresAt
+        // Clear legacy token fields from profiles table
+        discord_access_token: null,
+        discord_refresh_token: null,
+        discord_token_expires_at: null
       })
       .eq('id', userId);
 
@@ -113,6 +139,20 @@ serve(async (req) => {
       console.error('Failed to update profile:', updateError);
       throw updateError;
     }
+
+    // Log successful token storage to audit log
+    await supabaseClient
+      .from('security_audit_log')
+      .insert({
+        user_id: userId,
+        action: 'STORE_DISCORD_TOKENS',
+        table_name: 'discord_tokens',
+        new_data: {
+          discord_id: discordUser.id,
+          discord_username: discordUser.username,
+          stored_at: new Date().toISOString()
+        }
+      });
 
     return new Response(
       JSON.stringify({ 

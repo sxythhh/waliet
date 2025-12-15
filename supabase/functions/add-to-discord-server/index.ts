@@ -28,28 +28,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Fetch user's Discord data
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('discord_id, discord_username, discord_access_token, discord_refresh_token, discord_token_expires_at')
-      .eq('id', userId)
-      .single();
+    // Fetch user's Discord tokens from secure storage using RPC
+    const { data: tokenData, error: tokenError } = await supabaseClient.rpc('get_discord_tokens', {
+      p_user_id: userId
+    });
 
-    if (profileError || !profile) {
-      console.error('Failed to fetch user profile:', profileError);
-      throw new Error('User profile not found');
+    if (tokenError) {
+      console.error('Failed to fetch discord tokens:', tokenError);
+      throw new Error('Failed to retrieve Discord tokens');
     }
 
-    if (!profile.discord_id || !profile.discord_access_token) {
+    const tokens = tokenData?.[0];
+
+    if (!tokens?.discord_id || !tokens?.access_token) {
       throw new Error('User has not connected their Discord account');
     }
 
     // Check if token is expired and refresh if needed
-    let accessToken = profile.discord_access_token;
-    const tokenExpiry = new Date(profile.discord_token_expires_at);
+    let accessToken = tokens.access_token;
+    const tokenExpiry = new Date(tokens.token_expires_at);
     const now = new Date();
 
-    if (tokenExpiry <= now && profile.discord_refresh_token) {
+    if (tokenExpiry <= now && tokens.refresh_token) {
       console.log('Token expired, refreshing...');
       
       const DISCORD_CLIENT_ID = Deno.env.get('DISCORD_CLIENT_ID');
@@ -64,7 +64,7 @@ serve(async (req) => {
           client_id: DISCORD_CLIENT_ID!,
           client_secret: DISCORD_CLIENT_SECRET!,
           grant_type: 'refresh_token',
-          refresh_token: profile.discord_refresh_token,
+          refresh_token: tokens.refresh_token,
         }),
       });
 
@@ -73,15 +73,18 @@ serve(async (req) => {
         accessToken = access_token;
         const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
-        // Update tokens in database
-        await supabaseClient
-          .from('profiles')
-          .update({
-            discord_access_token: access_token,
-            discord_refresh_token: refresh_token,
-            discord_token_expires_at: expiresAt
-          })
-          .eq('id', userId);
+        // Update tokens in secure storage using RPC
+        const { error: updateError } = await supabaseClient.rpc('upsert_discord_tokens', {
+          p_user_id: userId,
+          p_discord_id: tokens.discord_id,
+          p_access_token: access_token,
+          p_refresh_token: refresh_token,
+          p_token_expires_at: expiresAt
+        });
+
+        if (updateError) {
+          console.error('Failed to update tokens:', updateError);
+        }
       } else {
         throw new Error('Failed to refresh Discord token');
       }
@@ -91,7 +94,7 @@ serve(async (req) => {
 
     // Add user to Discord server using Discord API
     const addMemberResponse = await fetch(
-      `https://discord.com/api/v10/guilds/${guildId}/members/${profile.discord_id}`,
+      `https://discord.com/api/v10/guilds/${guildId}/members/${tokens.discord_id}`,
       {
         method: 'PUT',
         headers: {
@@ -103,6 +106,13 @@ serve(async (req) => {
         }),
       }
     );
+
+    // Get username from profiles for logging
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('discord_username')
+      .eq('id', userId)
+      .single();
 
     if (!addMemberResponse.ok) {
       const errorText = await addMemberResponse.text();
@@ -124,13 +134,13 @@ serve(async (req) => {
       throw new Error(`Failed to add user to Discord server: ${errorText}`);
     }
 
-    console.log(`Successfully added user ${profile.discord_username} to guild ${guildId}`);
+    console.log(`Successfully added user ${profile?.discord_username} to guild ${guildId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'User added to Discord server successfully',
-        discordUsername: profile.discord_username
+        discordUsername: profile?.discord_username
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
