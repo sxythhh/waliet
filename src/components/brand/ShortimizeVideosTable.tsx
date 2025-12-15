@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -126,6 +126,10 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+  
+  // Request tracking to prevent duplicates and stale responses
+  const requestIdRef = useRef(0);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate effective date range - custom dates override timeframe
   const { startDate, endDate } = useMemo(() => {
@@ -166,9 +170,10 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
     }
   };
 
-  const fetchVideos = async () => {
-    console.log('[ShortimizeVideosTable] fetchVideos called, brandId:', brandId, 'collectionName:', collectionName, 'campaignId:', campaignId);
+  const fetchVideos = useCallback(async (currentRequestId: number) => {
+    console.log('[ShortimizeVideosTable] fetchVideos called, requestId:', currentRequestId, 'brandId:', brandId);
     setIsLoading(true);
+    
     try {
       const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
         body: {
@@ -184,12 +189,17 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
         },
       });
 
+      // Ignore stale responses
+      if (currentRequestId !== requestIdRef.current) {
+        console.log('[ShortimizeVideosTable] Ignoring stale response, requestId:', currentRequestId, 'current:', requestIdRef.current);
+        return;
+      }
+
       console.log('[ShortimizeVideosTable] fetch response:', { 
         error, 
         hasData: !!data, 
         videosCount: data?.videos?.length,
         pagination: data?.pagination,
-        debug: data?.debug
       });
 
       if (error) {
@@ -198,14 +208,13 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
       }
 
       if (data.error) {
-        // Handle "API key not configured" gracefully - not an error, just no integration
         if (data.error.includes('API key not configured')) {
           console.log('[ShortimizeVideosTable] Shortimize not configured for this brand');
           setHasApiKey(false);
           setVideos([]);
           return;
         }
-        console.error('[ShortimizeVideosTable] API error:', data.error, 'Debug:', data.debug);
+        console.error('[ShortimizeVideosTable] API error:', data.error);
         throw new Error(data.error);
       }
 
@@ -214,21 +223,14 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
       setVideos(videosData);
       setPagination(prev => ({ ...prev, ...data.pagination }));
       
-      if (videosData.length === 0) {
-        console.log('[ShortimizeVideosTable] No videos found. Debug info:', {
-          collectionUsed: data?.debug?.collectionUsed,
-          pagination: data?.pagination
-        });
-      } else {
-        console.log('[ShortimizeVideosTable] videos set successfully, count:', videosData.length);
-      }
-      
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
       await fetchCreatorMatches(uniqueUsernames);
     } catch (error: any) {
+      // Only handle error if this is still the current request
+      if (currentRequestId !== requestIdRef.current) return;
+      
       console.error('[ShortimizeVideosTable] Error fetching videos:', error);
-      // Don't show toast for "API key not configured" error
       const errorMsg = error?.message || '';
       if (!errorMsg.includes('API key not configured')) {
         toast.error(errorMsg || 'Failed to fetch videos');
@@ -236,21 +238,52 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
         setHasApiKey(false);
       }
     } finally {
-      console.log('[ShortimizeVideosTable] setting isLoading to false');
-      setIsLoading(false);
+      // Only update loading state if this is still the current request
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [brandId, collectionName, campaignId, pagination.page, sortField, sortDirection, startDate, endDate]);
+
+  // Debounced fetch trigger
+  const triggerFetch = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      // Increment request ID to invalidate any in-flight requests
+      requestIdRef.current += 1;
+      const currentRequestId = requestIdRef.current;
+      
+      // Clear videos before new fetch to prevent duplicates
+      setVideos([]);
+      fetchVideos(currentRequestId);
+    }, 300);
+  }, [fetchVideos]);
 
   useEffect(() => {
-    // Fetch when we have brandId and either collectionName or campaignId (for hashtag filtering)
     if (brandId && (collectionName || campaignId)) {
-      fetchVideos();
+      triggerFetch();
     }
-  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate]);
+    
+    // Cleanup debounce timer on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate, triggerFetch]);
 
   const handleSearch = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
-    fetchVideos();
+    triggerFetch();
+  };
+  
+  const handleManualRefresh = () => {
+    requestIdRef.current += 1;
+    setVideos([]);
+    fetchVideos(requestIdRef.current);
   };
 
   const formatNumber = (num: number | null) => {
@@ -292,7 +325,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
       {/* Header with filters */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={fetchVideos} variant="ghost" size="icon" disabled={isLoading || (!collectionName && !campaignId)} className="h-8 w-8">
+          <Button type="button" onClick={handleManualRefresh} variant="ghost" size="icon" disabled={isLoading || (!collectionName && !campaignId)} className="h-8 w-8">
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
           
@@ -375,7 +408,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                     className="text-xs tracking-[-0.5px]"
                     onClick={() => {
                       setPagination(prev => ({ ...prev, page: 1 }));
-                      fetchVideos();
+                      triggerFetch();
                     }}
                   >
                     Apply Filter

@@ -168,12 +168,15 @@ serve(async (req) => {
     const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
     console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
 
-    // If filtering by hashtags, fetch all pages to find matching videos
+    // If filtering by hashtags, fetch pages to find matching videos (optimized)
     if (shouldFilterByHashtags) {
       const allMatchingVideos: any[] = [];
-      const maxPages = 50; // Increased limit to scan more videos
+      const maxPages = 10; // Reduced from 50 to 10 for faster response
       let currentPage = 1;
       let totalPagesAvailable = 1;
+      let consecutiveEmptyPages = 0;
+      
+      console.log(`[fetch-shortimize-videos] Starting hashtag filter scan (max ${maxPages} pages)`);
       
       while (currentPage <= Math.min(maxPages, totalPagesAvailable)) {
         const pageParams = new URLSearchParams();
@@ -191,10 +194,11 @@ serve(async (req) => {
         try {
           const response = await fetchWithRetry(pageUrl, {
             headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
-          }, 3);
+          }, 2); // Reduced retries from 3 to 2
           
           if (!response.ok) {
             console.error(`[fetch-shortimize-videos] Page ${currentPage} failed: ${response.status}`);
+            // Return partial results instead of failing completely
             break;
           }
           
@@ -208,7 +212,18 @@ serve(async (req) => {
             totalPagesAvailable = result.pagination.total_pages;
           }
           
-          console.log(`[fetch-shortimize-videos] Page ${currentPage}/${totalPagesAvailable}: ${videos.length} videos, ${matchingVideos.length} matching, total: ${allMatchingVideos.length}`);
+          console.log(`[fetch-shortimize-videos] Page ${currentPage}/${Math.min(maxPages, totalPagesAvailable)}: ${matchingVideos.length} matching`);
+          
+          // Early exit optimization: stop if 3 consecutive pages have no matches
+          if (matchingVideos.length === 0) {
+            consecutiveEmptyPages++;
+            if (consecutiveEmptyPages >= 3) {
+              console.log('[fetch-shortimize-videos] 3 consecutive empty pages, stopping scan');
+              break;
+            }
+          } else {
+            consecutiveEmptyPages = 0;
+          }
           
           // Check if we've reached the end
           if (!result.pagination || currentPage >= result.pagination.total_pages || videos.length === 0) {
@@ -216,9 +231,10 @@ serve(async (req) => {
           }
           
           currentPage++;
-          await delay(200); // Small delay between requests
+          await delay(100); // Reduced delay from 200ms to 100ms
         } catch (err) {
           console.error(`[fetch-shortimize-videos] Page ${currentPage} error:`, err);
+          // Return partial results on error
           break;
         }
       }
