@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +23,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
+import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { useAuth } from "@/contexts/AuthContext";
 interface Campaign {
   id: string;
   title: string;
@@ -69,6 +72,7 @@ interface BountyCampaign {
   };
 }
 export function DiscoverTab() {
+  const { user } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,8 +98,29 @@ export function DiscoverTab() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'campaigns' | 'boosts'>('all');
   const [nicheFilter, setNicheFilter] = useState<string | null>(null);
   const [browseFilter, setBrowseFilter] = useState<string | null>(null);
+  const [userBrand, setUserBrand] = useState<{ id: string; slug: string } | null>(null);
+  const [createCampaignDialogOpen, setCreateCampaignDialogOpen] = useState(false);
+  const [createBrandDialogOpen, setCreateBrandDialogOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Fetch user's brand membership
+  useEffect(() => {
+    const fetchUserBrand = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("brand_members")
+        .select("brand_id, brands(id, slug)")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (!error && data?.brands) {
+        setUserBrand({ id: (data.brands as any).id, slug: (data.brands as any).slug });
+      }
+    };
+    fetchUserBrand();
+  }, [user]);
 
   // Auto-open private campaign dialog if joinPrivate param is present
   useEffect(() => {
@@ -450,6 +475,22 @@ export function DiscoverTab() {
               <SlidersHorizontal className="h-3.5 w-3.5" />
               Filters
             </button>
+
+            {/* Create Campaign Button */}
+            <Button 
+              onClick={() => {
+                if (userBrand) {
+                  setCreateCampaignDialogOpen(true);
+                } else {
+                  setCreateBrandDialogOpen(true);
+                }
+              }}
+              className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7] ml-auto"
+              size="sm"
+            >
+              <Plus className="h-4 w-4" />
+              Create Campaign
+            </Button>
           </div>
 
           {/* Expanded Filters */}
@@ -828,5 +869,31 @@ export function DiscoverTab() {
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
       
       <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} />
+      
+      {/* Create Campaign Dialog */}
+      <CreateCampaignTypeDialog
+        open={createCampaignDialogOpen}
+        onOpenChange={setCreateCampaignDialogOpen}
+        brandId={userBrand?.id}
+        onSelectClipping={(blueprintId) => {
+          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
+        }}
+        onSelectManaged={(blueprintId) => {
+          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
+        }}
+        onSelectBoost={() => {
+          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createBoost=true`);
+        }}
+      />
+      
+      {/* Create Brand Dialog */}
+      <CreateBrandDialog
+        open={createBrandDialogOpen}
+        onOpenChange={setCreateBrandDialogOpen}
+        hideTrigger
+        onSuccess={() => {
+          setCreateBrandDialogOpen(false);
+        }}
+      />
     </div>;
 }
