@@ -66,6 +66,8 @@ export function BoostVideosTab({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const payoutPerVideo = monthlyRetainer / videosPerMonth;
   const getPlatformLogo = (platform: string) => {
     const isDark = resolvedTheme === "dark";
@@ -285,19 +287,100 @@ export function BoostVideosTab({
 
         {/* Right: Pending Videos / Creator Videos */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="p-3 border-b border-border">
-            <h3 className="text-sm font-medium text-muted-foreground">
-              {selectedCreator ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions` : "Pending Videos"}
-            </h3>
+          <div className="p-3 border-b border-border space-y-3">
+            {/* Header with PFP */}
+            <div className="flex items-center gap-2.5">
+              {selectedCreator && profiles[selectedCreator] && (
+                <Avatar className="h-7 w-7 ring-2 ring-background">
+                  <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs font-medium bg-muted/60 font-inter tracking-[-0.5px]">
+                    {profiles[selectedCreator]?.username?.[0]?.toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <h3 className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">
+                {selectedCreator ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions` : "Pending Videos"}
+              </h3>
+            </div>
+            
+            {/* Filters */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Status Filter */}
+              <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
+                {(["all", "pending", "approved", "rejected"] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilterStatus(status)}
+                    className={`px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md transition-colors ${
+                      filterStatus === status 
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
+              
+              {/* Sort By */}
+              <div className="flex items-center gap-1 ml-auto">
+                <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Sort:</span>
+                <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
+                  {(["date", "status", "platform"] as const).map((sort) => (
+                    <button
+                      key={sort}
+                      onClick={() => setSortBy(sort)}
+                      className={`px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md transition-colors ${
+                        sortBy === sort 
+                          ? "bg-background text-foreground shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {sort.charAt(0).toUpperCase() + sort.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
-              {(selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : pendingSubmissions).length === 0 ? <div className="text-center py-12 text-muted-foreground">
-                  <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">
-                    {selectedCreator ? "No submissions from this creator" : "No pending videos"}
-                  </p>
-                </div> : (selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : pendingSubmissions).map(submission => {
+              {(() => {
+                // Get filtered and sorted submissions
+                let filteredSubs = selectedCreator 
+                  ? submissions.filter(s => s.user_id === selectedCreator)
+                  : pendingSubmissions;
+                
+                // Apply status filter
+                if (filterStatus !== "all") {
+                  filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
+                }
+                
+                // Apply sorting
+                filteredSubs = [...filteredSubs].sort((a, b) => {
+                  if (sortBy === "date") {
+                    return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+                  } else if (sortBy === "status") {
+                    const statusOrder = { pending: 0, approved: 1, rejected: 2 };
+                    return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0);
+                  } else if (sortBy === "platform") {
+                    return a.platform.localeCompare(b.platform);
+                  }
+                  return 0;
+                });
+                
+                if (filteredSubs.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm font-inter tracking-[-0.5px]">
+                        {selectedCreator ? "No submissions from this creator" : "No pending videos"}
+                      </p>
+                    </div>
+                  );
+                }
+                
+                return filteredSubs.map(submission => {
               const profile = profiles[submission.user_id];
               return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
                       {/* Header */}
@@ -389,8 +472,10 @@ export function BoostVideosTab({
                           </button>
                         </div>
                       )}
-                    </div>;
-            })}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </ScrollArea>
         </div>
