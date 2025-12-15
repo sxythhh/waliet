@@ -280,11 +280,67 @@ export function BoostCard({ boost }: BoostCardProps) {
           </Button>
 
 
+          {/* Stats Overview */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-muted/30 rounded-xl p-3 text-center">
+              <p className="text-lg font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
+              <p className="text-[10px] text-muted-foreground">Earned this month</p>
+            </div>
+            <div className="bg-muted/30 rounded-xl p-3 text-center">
+              <p className="text-lg font-bold text-orange-500">${(pendingThisMonth * payoutPerVideo).toFixed(0)}</p>
+              <p className="text-[10px] text-muted-foreground">Pending payout</p>
+            </div>
+            <div className="bg-muted/30 rounded-xl p-3 text-center">
+              <p className="text-lg font-bold">${payoutPerVideo.toFixed(0)}</p>
+              <p className="text-[10px] text-muted-foreground">Per video</p>
+            </div>
+            <div className="bg-muted/30 rounded-xl p-3 text-center">
+              <p className="text-lg font-bold">${boost.monthly_retainer}</p>
+              <p className="text-[10px] text-muted-foreground">Max monthly</p>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Monthly Progress</span>
+              <span className="font-semibold">{thisMonthSubmissions.length} / {boost.videos_per_month} videos</span>
+            </div>
+            <div className="h-2.5 bg-muted rounded-full overflow-hidden flex">
+              {approvedThisMonth > 0 && (
+                <div 
+                  className="h-full bg-green-500 transition-all duration-500" 
+                  style={{ width: `${earnedPercent}%` }}
+                />
+              )}
+              {pendingThisMonth > 0 && (
+                <div 
+                  className="h-full bg-orange-500 transition-all duration-500" 
+                  style={{ width: `${pendingPercent}%` }}
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-4 text-[10px]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">{approvedThisMonth} Approved</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className="text-muted-foreground">{pendingThisMonth} Pending</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-muted" />
+                <span className="text-muted-foreground">{requiredPosts} Remaining</span>
+              </div>
+            </div>
+          </div>
+
           {/* Action Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Directions Card */}
             <div 
-              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group flex flex-col"
+              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group"
               onClick={() => {
                 if (boost.blueprint_id) {
                   navigate(`/blueprint/${boost.blueprint_id}`);
@@ -293,132 +349,36 @@ export function BoostCard({ boost }: BoostCardProps) {
                 }
               }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold">Directions and content</h4>
-                <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="flex-1 flex items-center justify-center gap-2">
-                <div className="p-2 bg-background rounded-lg border">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-background rounded-lg border">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold">Directions & content</h4>
+                    <p className="text-[10px] text-muted-foreground">View campaign brief</p>
+                  </div>
                 </div>
-                <div className="p-2 bg-background rounded-lg border">
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                </div>
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
 
             {/* My Posts Card */}
             <div 
-              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group flex flex-col"
+              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group"
               onClick={() => setPostsDialogOpen(true)}
             >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold">My posts ({submissions.length})</h4>
-                <Expand className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="flex-1 flex items-center justify-center gap-2">
-                <div className="bg-background rounded-lg px-3 py-1.5 border text-xs">
-                  <span className="font-semibold">{pendingThisMonth}</span>
-                  <span className="text-muted-foreground ml-1">Pending</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-background rounded-lg border">
+                    <Video className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold">My posts ({submissions.length})</h4>
+                    <p className="text-[10px] text-muted-foreground">{dailyRemaining} submissions left today</p>
+                  </div>
                 </div>
-                <div className="bg-background rounded-lg px-3 py-1.5 border text-xs">
-                  <span className="font-semibold">{approvedThisMonth}</span>
-                  <span className="text-muted-foreground ml-1">Approved</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Boost Progress Card */}
-            <div className="bg-muted/30 rounded-xl p-4 flex flex-col items-center">
-              <h4 className="text-xs font-semibold mb-4">Boost</h4>
-              
-              {/* Semi-circle Progress Bar */}
-              <div className="relative w-32 h-16 mb-3">
-                <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible">
-                  <defs>
-                    <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                      <rect width="3" height="6" fill="#f97316" />
-                      <rect x="3" width="3" height="6" fill="#fb923c" />
-                    </pattern>
-                    <clipPath id="pendingArcClip">
-                      <path
-                        d="M 5 50 A 45 45 0 0 1 95 50"
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="8"
-                      />
-                    </clipPath>
-                  </defs>
-                  
-                  {/* Background arc */}
-                  <path
-                    d="M 5 50 A 45 45 0 0 1 95 50"
-                    fill="none"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
-                  
-                  {/* Approved arc (green) */}
-                  {approvedThisMonth > 0 && (
-                    <path
-                      d="M 5 50 A 45 45 0 0 1 95 50"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 141.37} 141.37`}
-                      className="transition-all duration-500"
-                    />
-                  )}
-                  
-                  {/* Pending arc (orange animated stripes) */}
-                  {pendingThisMonth > 0 && (
-                    <g style={{ transform: `rotate(${(approvedThisMonth / boost.videos_per_month) * 180}deg)`, transformOrigin: '50px 50px' }}>
-                      <path
-                        d="M 5 50 A 45 45 0 0 1 95 50"
-                        fill="none"
-                        stroke="url(#orangeStripes)"
-                        strokeWidth="8"
-                        strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 141.37} 141.37`}
-                        className="transition-all duration-500"
-                      />
-                    </g>
-                  )}
-                  
-                  {/* Animated stripe movement */}
-                  <style>{`
-                    @keyframes moveStripes {
-                      0% { background-position: 0 0; }
-                      100% { background-position: 12px 0; }
-                    }
-                    #orangeStripes {
-                      animation: moveStripes 0.5s linear infinite;
-                    }
-                  `}</style>
-                </svg>
-                {/* Center text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
-                  <span className="text-lg font-bold">{thisMonthSubmissions.length}/{boost.videos_per_month}</span>
-                </div>
-              </div>
-              
-              {/* Stats row */}
-              <div className="flex items-center gap-4 text-center">
-                <div>
-                  <p className="text-sm font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Earned</p>
-                </div>
-                <div className="w-px h-6 bg-border" />
-                <div>
-                  <p className="text-sm font-bold text-orange-500">{pendingThisMonth}</p>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Pending</p>
-                </div>
-                <div className="w-px h-6 bg-border" />
-                <div>
-                  <p className="text-sm font-bold">{requiredPosts}</p>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Left</p>
-                </div>
+                <Expand className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </div>
           </div>
