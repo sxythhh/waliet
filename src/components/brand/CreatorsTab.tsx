@@ -165,8 +165,34 @@ export function CreatorsTab({
     } = await supabase.from("conversations").select("*").eq("brand_id", brandId).order("last_message_at", {
       ascending: false
     });
-    if (data) {
-      setConversations(data);
+    if (data && data.length > 0) {
+      // Fetch creator profiles for all conversations
+      const creatorIds = data.map(c => c.creator_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, email")
+        .in("id", creatorIds);
+      
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      // Attach creator data to each conversation
+      const conversationsWithCreators = data.map(conv => ({
+        ...conv,
+        creator: profileMap.get(conv.creator_id) ? {
+          id: profileMap.get(conv.creator_id)!.id,
+          username: profileMap.get(conv.creator_id)!.username,
+          full_name: profileMap.get(conv.creator_id)!.full_name,
+          avatar_url: profileMap.get(conv.creator_id)!.avatar_url,
+          email: profileMap.get(conv.creator_id)!.email,
+          campaigns: [],
+          social_accounts: [],
+          total_views: 0,
+          total_earnings: 0,
+          date_joined: null
+        } : undefined
+      }));
+      
+      setConversations(conversationsWithCreators);
 
       // Set bookmarked conversations from database
       const bookmarked = new Set<string>();
