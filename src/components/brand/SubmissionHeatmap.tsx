@@ -1,6 +1,7 @@
-import { useMemo } from "react";
-import { format, startOfWeek, addDays, subMonths, isSameDay, isAfter, isBefore } from "date-fns";
+import { useMemo, useState } from "react";
+import { format, startOfWeek, addDays, subDays, subWeeks, subMonths, isSameDay, isAfter, isBefore, endOfWeek } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 interface SubmissionDay {
   date: Date;
@@ -15,14 +16,29 @@ interface SubmissionHeatmapProps {
     submitted_at: string;
     status: string;
   }>;
-  months?: number;
 }
 
-export function SubmissionHeatmap({ submissions, months = 6 }: SubmissionHeatmapProps) {
+type TimeRange = "week" | "month" | "3months";
+
+export function SubmissionHeatmap({ submissions }: SubmissionHeatmapProps) {
+  const [timeRange, setTimeRange] = useState<TimeRange>("month");
+  
   const { weeks, monthLabels } = useMemo(() => {
     const today = new Date();
-    const startDate = startOfWeek(subMonths(today, months), { weekStartsOn: 0 });
-    const endDate = today;
+    const endDate = endOfWeek(addDays(today, 14), { weekStartsOn: 0 }); // Show 2 weeks ahead
+    
+    let startDate: Date;
+    switch (timeRange) {
+      case "week":
+        startDate = startOfWeek(subWeeks(today, 1), { weekStartsOn: 0 });
+        break;
+      case "month":
+        startDate = startOfWeek(subMonths(today, 1), { weekStartsOn: 0 });
+        break;
+      case "3months":
+        startDate = startOfWeek(subMonths(today, 3), { weekStartsOn: 0 });
+        break;
+    }
     
     // Create a map of dates to submission counts
     const submissionMap = new Map<string, SubmissionDay>();
@@ -93,62 +109,94 @@ export function SubmissionHeatmap({ submissions, months = 6 }: SubmissionHeatmap
     }
     
     return { weeks, monthLabels };
-  }, [submissions, months]);
+  }, [submissions, timeRange]);
   
-  const getColorClass = (day: SubmissionDay, isFuture: boolean) => {
-    if (isFuture) return "bg-muted/20";
-    if (day.total === 0) return "bg-muted/40";
+  const getColorClass = (day: SubmissionDay, isFuture: boolean, isToday: boolean) => {
+    if (isFuture) return "bg-muted/20 border border-dashed border-muted-foreground/20";
+    if (isToday) return day.total === 0 
+      ? "bg-primary/20 ring-1 ring-primary/40" 
+      : day.approved > 0 
+        ? "bg-emerald-500/80 ring-1 ring-emerald-400" 
+        : day.pending > 0 
+          ? "bg-amber-500/70 ring-1 ring-amber-400" 
+          : "bg-primary/20 ring-1 ring-primary/40";
+    if (day.total === 0) return "bg-muted/30";
     if (day.pending > 0 && day.approved === 0) return "bg-amber-500/60";
     if (day.rejected > 0 && day.approved === 0 && day.pending === 0) return "bg-red-500/50";
     if (day.approved > 0) return "bg-emerald-500/70";
-    return "bg-muted/40";
+    return "bg-muted/30";
   };
   
-  const dayLabels = ["Sun", "", "Tue", "", "Thu", "", "Sat"];
+  const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+  const today = new Date();
   
   return (
     <TooltipProvider delayDuration={100}>
       <div className="w-full">
-        {/* Month labels */}
-        <div className="flex mb-1.5 pl-8">
-          {monthLabels.map((month, idx) => (
-            <div
-              key={idx}
-              className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]"
-              style={{
-                marginLeft: idx === 0 ? 0 : `${(month.weekIndex - (monthLabels[idx - 1]?.weekIndex || 0)) * 12 - 24}px`,
-              }}
+        {/* Time Range Filter */}
+        <div className="flex items-center gap-1 mb-3">
+          {(["week", "month", "3months"] as TimeRange[]).map((range) => (
+            <Button
+              key={range}
+              variant="ghost"
+              size="sm"
+              onClick={() => setTimeRange(range)}
+              className={`h-6 px-2 text-[10px] font-inter tracking-[-0.5px] ${
+                timeRange === range 
+                  ? "bg-primary/10 text-primary" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              {month.label}
-            </div>
+              {range === "week" ? "1W" : range === "month" ? "1M" : "3M"}
+            </Button>
           ))}
         </div>
         
+        {/* Month labels */}
+        <div className="flex mb-1.5 pl-6">
+          {monthLabels.map((month, idx) => {
+            const cellWidth = 14; // Cell width + gap
+            const offset = idx === 0 
+              ? month.weekIndex * cellWidth 
+              : (month.weekIndex - (monthLabels[idx - 1]?.weekIndex || 0)) * cellWidth;
+            return (
+              <div
+                key={idx}
+                className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]"
+                style={{ marginLeft: idx === 0 ? offset : offset - 20 }}
+              >
+                {month.label}
+              </div>
+            );
+          })}
+        </div>
+        
         {/* Grid */}
-        <div className="flex gap-0.5">
+        <div className="flex gap-[2px]">
           {/* Day labels */}
-          <div className="flex flex-col gap-0.5 pr-1.5">
+          <div className="flex flex-col gap-[2px] pr-1">
             {dayLabels.map((label, idx) => (
               <div
                 key={idx}
-                className="h-[10px] text-[9px] text-muted-foreground font-inter tracking-[-0.5px] flex items-center"
+                className="h-[12px] w-4 text-[9px] text-muted-foreground font-inter tracking-[-0.5px] flex items-center justify-end pr-0.5"
               >
-                {label}
+                {idx % 2 === 0 ? label : ""}
               </div>
             ))}
           </div>
           
           {/* Weeks */}
-          <div className="flex gap-0.5 flex-1 overflow-hidden">
+          <div className="flex gap-[2px] flex-1">
             {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex flex-col gap-0.5">
+              <div key={weekIdx} className="flex flex-col gap-[2px]">
                 {week.map((day, dayIdx) => {
-                  const isFuture = isAfter(day.date, new Date());
+                  const isFuture = isAfter(day.date, today);
+                  const isToday = isSameDay(day.date, today);
                   return (
                     <Tooltip key={dayIdx}>
                       <TooltipTrigger asChild>
                         <div
-                          className={`h-[10px] w-[10px] rounded-[2px] transition-all hover:ring-1 hover:ring-foreground/30 cursor-pointer ${getColorClass(day, isFuture)}`}
+                          className={`h-[12px] w-[12px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)}`}
                         />
                       </TooltipTrigger>
                       <TooltipContent 
@@ -156,24 +204,30 @@ export function SubmissionHeatmap({ submissions, months = 6 }: SubmissionHeatmap
                         className="bg-popover border border-border/60 shadow-lg px-3 py-2"
                       >
                         <div className="font-geist tracking-[-0.5px]">
-                          <p className="text-sm font-medium text-foreground">
-                            {day.total} {day.total === 1 ? "video" : "videos"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground mb-0.5">
                             {format(day.date, "EEE, MMM d")}
                           </p>
-                          {day.total > 0 && (
-                            <div className="flex gap-2 mt-1.5 text-[10px]">
-                              {day.approved > 0 && (
-                                <span className="text-emerald-500">{day.approved} approved</span>
+                          {isFuture ? (
+                            <p className="text-sm font-medium text-foreground/60">Upcoming</p>
+                          ) : (
+                            <>
+                              <p className="text-sm font-medium text-foreground">
+                                {day.total} {day.total === 1 ? "video" : "videos"}
+                              </p>
+                              {day.total > 0 && (
+                                <div className="flex gap-2 mt-1 text-[10px]">
+                                  {day.approved > 0 && (
+                                    <span className="text-emerald-500">{day.approved} approved</span>
+                                  )}
+                                  {day.pending > 0 && (
+                                    <span className="text-amber-500">{day.pending} pending</span>
+                                  )}
+                                  {day.rejected > 0 && (
+                                    <span className="text-red-400">{day.rejected} rejected</span>
+                                  )}
+                                </div>
                               )}
-                              {day.pending > 0 && (
-                                <span className="text-amber-500">{day.pending} pending</span>
-                              )}
-                              {day.rejected > 0 && (
-                                <span className="text-red-400">{day.rejected} rejected</span>
-                              )}
-                            </div>
+                            </>
                           )}
                         </div>
                       </TooltipContent>
@@ -186,13 +240,23 @@ export function SubmissionHeatmap({ submissions, months = 6 }: SubmissionHeatmap
         </div>
         
         {/* Legend */}
-        <div className="flex items-center justify-end gap-1.5 mt-2">
-          <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Less</span>
-          <div className="h-[10px] w-[10px] rounded-[2px] bg-muted/40" />
-          <div className="h-[10px] w-[10px] rounded-[2px] bg-emerald-500/30" />
-          <div className="h-[10px] w-[10px] rounded-[2px] bg-emerald-500/50" />
-          <div className="h-[10px] w-[10px] rounded-[2px] bg-emerald-500/70" />
-          <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">More</span>
+        <div className="flex items-center gap-3 mt-2.5 text-[10px] font-inter tracking-[-0.5px]">
+          <div className="flex items-center gap-1">
+            <div className="h-[10px] w-[10px] rounded-[2px] bg-muted/30" />
+            <span className="text-muted-foreground">None</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-[10px] w-[10px] rounded-[2px] bg-amber-500/60" />
+            <span className="text-muted-foreground">Pending</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-[10px] w-[10px] rounded-[2px] bg-emerald-500/70" />
+            <span className="text-muted-foreground">Approved</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-[10px] w-[10px] rounded-[2px] bg-muted/20 border border-dashed border-muted-foreground/30" />
+            <span className="text-muted-foreground">Upcoming</span>
+          </div>
         </div>
       </div>
     </TooltipProvider>
