@@ -244,55 +244,78 @@ export function ApplyToBountySheet({
             
           </SheetHeader>
 
-          {/* Stats Row - Clean horizontal layout */}
-          <div className="flex items-center gap-6 py-4">
-            <div className="flex-1">
-              <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
+          {/* Stats Cards - Visual grid layout */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 p-4 ring-1 ring-emerald-500/20">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <p className="text-xl font-bold text-emerald-400 font-inter tracking-[-0.5px]">
                 ${bounty.monthly_retainer.toLocaleString()}
               </p>
-              <p className="text-xs text-white/50 font-medium">per month</p>
+              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">Per Month</p>
             </div>
             
-            <div className="flex-1">
-              <p className="text-2xl font-bold text-white font-['Inter'] tracking-[-0.5px]">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/5 p-4 ring-1 ring-blue-500/20">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <p className="text-xl font-bold text-blue-400 font-inter tracking-[-0.5px]">
                 {bounty.videos_per_month}
               </p>
-              <p className="text-xs text-white/50 font-medium">videos/month</p>
+              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">Videos/Mo</p>
             </div>
             
-            <div className="flex-1">
-              <p className={`text-2xl font-bold font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-white/40' : 'text-white'}`}>
+            <div className={`relative overflow-hidden rounded-xl p-4 ring-1 ${isFull ? 'bg-white/5 ring-white/10' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/5 ring-amber-500/20'}`}>
+              <div className={`absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 ${isFull ? 'bg-white/5' : 'bg-amber-500/10'}`} />
+              <p className={`text-xl font-bold font-inter tracking-[-0.5px] ${isFull ? 'text-white/40' : 'text-amber-400'}`}>
                 {spotsRemaining > 0 ? spotsRemaining : 0}
               </p>
-              <p className="text-xs text-white/50 font-medium">
-                {isFull ? 'fully booked' : 'spots left'}
+              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">
+                {isFull ? 'Full' : 'Spots Left'}
               </p>
             </div>
           </div>
 
-          {/* Blueprint Content */}
-          {blueprint && <div className="space-y-4">
-              <div className="relative max-h-[180px] overflow-hidden">
-                <div className="space-y-3">
-                  {blueprint.content && <div className="text-sm text-white/80 leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{
-                    __html: blueprint.content
-                  }} />}
-                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && <div className="space-y-2">
-                      {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-white/80">
-                          <span className="text-amber-500 mt-0.5">•</span>
-                          <span>{typeof hook === 'string' ? hook : hook.text}</span>
-                        </div>)}
-                    </div>}
+          {/* Blueprint Details Section */}
+          {blueprint && <div className="space-y-3">
+              <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/10 overflow-hidden">
+                {/* Blueprint Header */}
+                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                  <span className="text-xs font-medium text-white/40 uppercase tracking-wider">Content Brief</span>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-inter tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/10" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View Full
+                  </Button>
                 </div>
                 
-                {/* Gradient Fade Overlay */}
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent pointer-events-none" />
+                <div className="p-4 space-y-4">
+                  {/* Content Preview */}
+                  {blueprint.content && <div className="text-sm text-white/70 leading-relaxed line-clamp-3 prose prose-invert prose-sm max-w-none [&>*]:m-0" dangerouslySetInnerHTML={{
+                    __html: blueprint.content
+                  }} />}
+                  
+                  {/* Hooks */}
+                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && <div className="space-y-2">
+                      <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Suggested Hooks</span>
+                      <div className="space-y-1.5">
+                        {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-white/70 bg-white/[0.03] rounded-lg px-3 py-2">
+                            <span className="text-amber-400 mt-0.5 text-xs">→</span>
+                            <span className="line-clamp-1">{typeof hook === 'string' ? hook : hook.text}</span>
+                          </div>)}
+                      </div>
+                    </div>}
+                  
+                  {/* Call to Action */}
+                  {blueprint.call_to_action && <div className="space-y-1.5">
+                      <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Call to Action</span>
+                      <p className="text-sm text-white/70 bg-emerald-500/10 rounded-lg px-3 py-2 ring-1 ring-emerald-500/20">{blueprint.call_to_action}</p>
+                    </div>}
+                  
+                  {/* Hashtags */}
+                  {blueprint.hashtags && Array.isArray(blueprint.hashtags) && blueprint.hashtags.length > 0 && <div className="flex flex-wrap gap-1.5">
+                      {blueprint.hashtags.slice(0, 5).map((tag: string, idx: number) => <span key={idx} className="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                          #{tag}
+                        </span>)}
+                    </div>}
+                </div>
               </div>
-
-              {/* View Full Blueprint Button */}
-              <Button variant="ghost" className="w-full font-inter tracking-[-0.5px] hover:bg-muted" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
-                View full blueprint
-              </Button>
             </div>}
 
           {/* Application Form - Show connect prompt if no accounts */}
