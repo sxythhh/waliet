@@ -44,12 +44,12 @@ export default function Index() {
                   </Link>
                   <Button variant="ghost" size="sm" onClick={async () => {
                 await supabase.auth.signOut();
-              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-white/10 gap-1.5 rounded">
+              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>
                 </> : <>
-                  <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-muted hover:text-foreground px-[10px] rounded-3xl" onClick={() => setShowAuthDialog(true)}>
+                  <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:text-foreground px-[10px] rounded-3xl" onClick={() => setShowAuthDialog(true)}>
                     Sign In
                   </Button>
                   <Button size="sm" onClick={() => setShowAuthDialog(true)} className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl">
