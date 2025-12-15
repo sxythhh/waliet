@@ -49,12 +49,13 @@ export function DemographicStatusCard({
   const status = latestSubmission?.status;
 
   // Calculate if user can submit based on business rules:
-  // - 30 days from reviewed_at if approved
+  // - Weekly schedule anchored to the last review (preferred) or last submission.
+  // - If a user missed a deadline (next date is in the past), they can submit now and we show the next standard deadline (7 days from today).
   // - Can resubmit immediately if rejected
-  // - Cannot resubmit while pending
+  // - Cannot resubmit while pending (unless it's been stale long enough — handled elsewhere)
   const getSubmissionAvailability = () => {
     if (!latestSubmission) {
-      return { canSubmit: true, reason: null, nextDate: null };
+      return { canSubmit: true, reason: null as string | null, nextDate: null as Date | null };
     }
 
     if (status === 'pending') {
@@ -65,20 +66,27 @@ export function DemographicStatusCard({
       return { canSubmit: true, reason: null, nextDate: null };
     }
 
-    if (status === 'approved' && latestSubmission.reviewed_at) {
-      const reviewedDate = new Date(latestSubmission.reviewed_at);
-      const nextDate = addDays(reviewedDate, 7); // Weekly submissions
-      const canSubmit = isAfter(new Date(), nextDate);
-      
-      if (!canSubmit) {
-        const daysLeft = Math.ceil((nextDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return { 
-          canSubmit: false, 
+    if (status === 'approved') {
+      const baseDate = new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at);
+      const scheduledNext = addDays(baseDate, 7);
+      const now = new Date();
+
+      // If the scheduled next date is in the future, block submission until then.
+      if (!isAfter(now, scheduledNext)) {
+        const daysLeft = Math.ceil((scheduledNext.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          canSubmit: false,
           reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
-          nextDate 
+          nextDate: scheduledNext,
         };
       }
-      return { canSubmit: true, reason: null, nextDate };
+
+      // Missed deadline: allow submission now and show the next standard deadline from today.
+      return {
+        canSubmit: true,
+        reason: null,
+        nextDate: addDays(now, 7),
+      };
     }
 
     return { canSubmit: true, reason: null, nextDate: null };
@@ -199,10 +207,10 @@ export function DemographicStatusCard({
                 </button>
               )}
             </div>
-            {status === 'approved' && latestSubmission.reviewed_at && (
+            {status === 'approved' && availability.nextDate && (
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground/60">Next:</span>
-                <span>{format(addDays(new Date(latestSubmission.reviewed_at), 7), "MMM d, yyyy")}</span>
+                <span>{format(availability.nextDate, "MMM d, yyyy")}</span>
               </div>
             )}
           </div>
