@@ -15,8 +15,7 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
     const response = await fetch(url, options);
     
     if (response.status === 429) {
-      // Rate limited - wait and retry with exponential backoff
-      const waitTime = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s, 16s, 32s
+      const waitTime = Math.pow(2, attempt) * 2000;
       console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
       await delay(waitTime);
       continue;
@@ -29,16 +28,9 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 5)
 }
 
 // Check if video caption contains any of the hashtags
-function videoMatchesHashtags(video: any, hashtags: string[], logFirst = false): boolean {
+function videoMatchesHashtags(video: any, hashtags: string[]): boolean {
   if (!hashtags || hashtags.length === 0) return true;
   
-  if (logFirst) {
-    // Log all available fields on the video object
-    console.log('[fetch-shortimize-videos] Sample video object keys:', Object.keys(video));
-    console.log('[fetch-shortimize-videos] Sample video data:', JSON.stringify(video, null, 2).substring(0, 2000));
-  }
-  
-  // Check multiple possible caption fields from Shortimize API
   const caption = (
     video.title || 
     video.caption || 
@@ -58,6 +50,55 @@ function videoMatchesHashtags(video: any, hashtags: string[], logFirst = false):
   });
 }
 
+// Fetch a single page from Shortimize API
+async function fetchShortimizePage(
+  apiKey: string,
+  page: number,
+  limit: number,
+  orderBy: string,
+  orderDirection: string,
+  collection: string | null,
+  username: string | null,
+  uploadedAtStart: string | null,
+  uploadedAtEnd: string | null
+): Promise<{ videos: any[]; pagination: any }> {
+  const params = new URLSearchParams();
+  params.append('page', page.toString());
+  params.append('limit', limit.toString());
+  params.append('order_by', orderBy);
+  params.append('order_direction', orderDirection);
+  
+  if (collection) {
+    params.append('collections', collection.trim());
+  }
+  if (username) {
+    params.append('username', username);
+  }
+  if (uploadedAtStart) {
+    params.append('uploaded_at_start', uploadedAtStart);
+  }
+  if (uploadedAtEnd) {
+    params.append('uploaded_at_end', uploadedAtEnd);
+  }
+
+  const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
+  
+  const response = await fetchWithRetry(apiUrl, {
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  }, 5);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Shortimize API returned ${response.status}: ${errorText}`);
+  }
+
+  const result = await response.json();
+  return {
+    videos: result.data || [],
+    pagination: result.pagination || {}
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,27 +110,17 @@ serve(async (req) => {
       collectionName,
       campaignId,
       page = 1,
-      limit = 100,
+      limit = 50,
       orderBy = 'uploaded_at',
       orderDirection = 'desc',
       username,
       uploadedAtStart,
       uploadedAtEnd,
-      noCollectionFilter = false, // New option to skip collection filtering
+      noCollectionFilter = false,
     } = await req.json();
 
     console.log('[fetch-shortimize-videos] Request params:', { 
-      brandId, 
-      collectionName, 
-      campaignId,
-      page, 
-      limit, 
-      orderBy, 
-      orderDirection,
-      username,
-      uploadedAtStart,
-      uploadedAtEnd,
-      noCollectionFilter
+      brandId, campaignId, page, limit, orderBy, orderDirection, username, noCollectionFilter
     });
 
     if (!brandId) {
@@ -107,125 +138,154 @@ serve(async (req) => {
       .eq('id', brandId)
       .single();
 
-    console.log('[fetch-shortimize-videos] Brand data:', { 
-      brandName: brand?.name,
-      hasApiKey: !!brand?.shortimize_api_key,
-      storedCollectionName: brand?.collection_name,
-      error: brandError
-    });
-
-    if (brandError) {
-      console.error('[fetch-shortimize-videos] Error fetching brand:', brandError);
-      throw new Error('Failed to fetch brand');
-    }
-
-    if (!brand?.shortimize_api_key) {
+    if (brandError || !brand?.shortimize_api_key) {
       throw new Error('Shortimize API key not configured for this brand');
     }
 
     // Get campaign hashtags if campaignId is provided
     let campaignHashtags: string[] = [];
     if (campaignId) {
-      const { data: campaign, error: campaignError } = await supabase
+      const { data: campaign } = await supabase
         .from('campaigns')
         .select('hashtags')
         .eq('id', campaignId)
         .single();
       
-      if (!campaignError && campaign?.hashtags && campaign.hashtags.length > 0) {
+      if (campaign?.hashtags && campaign.hashtags.length > 0) {
         campaignHashtags = campaign.hashtags;
         console.log('[fetch-shortimize-videos] Campaign hashtags:', campaignHashtags);
       }
     }
 
-    // Determine which Shortimize collection to use
-    // If campaign has hashtags configured, skip collection filter and search all videos by hashtag
-    const collection = (campaignHashtags.length > 0 || noCollectionFilter) ? null : (collectionName || brand.collection_name);
+    // Determine collection filter - skip if using hashtag filtering
+    const useHashtagFiltering = campaignHashtags.length > 0;
+    const collection = (useHashtagFiltering || noCollectionFilter) ? null : (collectionName || brand.collection_name);
     
-    console.log('[fetch-shortimize-videos] Using collection:', collection, 'Hashtags:', campaignHashtags);
+    console.log('[fetch-shortimize-videos] Mode:', useHashtagFiltering ? 'hashtag filtering' : 'collection filtering');
 
-    // Build query parameters
-    const params = new URLSearchParams();
-    params.append('page', page.toString());
-    params.append('limit', limit.toString());
-    params.append('order_by', orderBy);
-    params.append('order_direction', orderDirection);
-    
-    if (collection) {
-      params.append('collections', collection.trim());
-    }
-    if (username) {
-      params.append('username', username);
-    }
-    if (uploadedAtStart) {
-      params.append('uploaded_at_start', uploadedAtStart);
-    }
-    if (uploadedAtEnd) {
-      params.append('uploaded_at_end', uploadedAtEnd);
-    }
+    // If using hashtag filtering, we need to paginate through API pages to find enough matches
+    if (useHashtagFiltering) {
+      const matchedVideos: any[] = [];
+      const targetCount = limit; // How many videos we want
+      const skipCount = (page - 1) * limit; // How many to skip for pagination
+      let totalMatched = 0;
+      let apiPage = 1;
+      const maxApiPages = 50; // Safety limit
+      const apiPageSize = 100; // Fetch larger pages for efficiency
+      let totalApiVideos = 0;
+      let hasMorePages = true;
 
-    const apiUrl = `https://api.shortimize.com/videos?${params.toString()}`;
-    console.log('[fetch-shortimize-videos] Calling Shortimize API:', apiUrl);
+      console.log('[fetch-shortimize-videos] Starting hashtag search, need:', targetCount, 'skip:', skipCount);
 
-    // Standard fetch with collection filter and server-side sorting/filtering
-    const response = await fetchWithRetry(apiUrl, {
-      headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
-    }, 5);
+      while (matchedVideos.length < targetCount && apiPage <= maxApiPages && hasMorePages) {
+        const pageResult = await fetchShortimizePage(
+          brand.shortimize_api_key,
+          apiPage,
+          apiPageSize,
+          orderBy,
+          orderDirection,
+          null, // No collection filter
+          username,
+          uploadedAtStart,
+          uploadedAtEnd
+        );
 
-    console.log('[fetch-shortimize-videos] API response status:', response.status);
+        if (apiPage === 1) {
+          totalApiVideos = pageResult.pagination.total || 0;
+          console.log('[fetch-shortimize-videos] Total videos in API:', totalApiVideos);
+        }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[fetch-shortimize-videos] Shortimize API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorText
+        // Filter this page by hashtags
+        const pageMatches = pageResult.videos.filter((v: any) => videoMatchesHashtags(v, campaignHashtags));
+        
+        // Apply skip logic (for pagination)
+        for (const video of pageMatches) {
+          if (totalMatched >= skipCount && matchedVideos.length < targetCount) {
+            matchedVideos.push(video);
+          }
+          totalMatched++;
+        }
+
+        console.log('[fetch-shortimize-videos] Page', apiPage, ':', pageResult.videos.length, 'videos,', pageMatches.length, 'matches, accumulated:', matchedVideos.length);
+
+        // Check if there are more pages
+        hasMorePages = pageResult.videos.length === apiPageSize && apiPage < (pageResult.pagination.total_pages || maxApiPages);
+        apiPage++;
+
+        // Small delay to avoid rate limiting
+        if (hasMorePages && matchedVideos.length < targetCount) {
+          await delay(100);
+        }
+      }
+
+      // Estimate total matching videos based on match rate
+      const pagesScanned = apiPage - 1;
+      const videosScanned = pagesScanned * apiPageSize;
+      const matchRate = videosScanned > 0 ? totalMatched / Math.min(videosScanned, totalApiVideos) : 0;
+      const estimatedTotal = Math.round(totalApiVideos * matchRate);
+
+      console.log('[fetch-shortimize-videos] Hashtag search complete:', {
+        matchedVideos: matchedVideos.length,
+        totalMatched,
+        pagesScanned,
+        estimatedTotal
       });
-      throw new Error(`Shortimize API returned ${response.status}: ${errorText}`);
-    }
 
-    const result = await response.json();
-    let videos = result.data || [];
-    
-    // Filter by campaign hashtags if provided
-    if (campaignHashtags.length > 0) {
-      const originalCount = videos.length;
-      videos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags, originalCount > 0 && videos.indexOf(video) === 0));
-      console.log('[fetch-shortimize-videos] Filtered by hashtags:', {
-        hashtags: campaignHashtags,
-        originalCount,
-        filteredCount: videos.length
+      return new Response(JSON.stringify({
+        videos: matchedVideos,
+        pagination: {
+          total: estimatedTotal,
+          page,
+          limit,
+          total_pages: Math.ceil(estimatedTotal / limit),
+          order_by: orderBy,
+          order_direction: orderDirection,
+        },
+        debug: {
+          mode: 'hashtag_filtering',
+          hashtagFilter: campaignHashtags,
+          pagesScanned,
+          totalMatched,
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
-    console.log('[fetch-shortimize-videos] Final response:', {
-      videosCount: videos.length,
-      pagination: result.pagination,
-    });
+
+    // Standard collection-based fetch (single page)
+    const pageResult = await fetchShortimizePage(
+      brand.shortimize_api_key,
+      page,
+      limit,
+      orderBy,
+      orderDirection,
+      collection,
+      username,
+      uploadedAtStart,
+      uploadedAtEnd
+    );
+
+    console.log('[fetch-shortimize-videos] Collection fetch complete:', pageResult.videos.length, 'videos');
 
     return new Response(JSON.stringify({
-      videos,
+      videos: pageResult.videos,
       pagination: {
-        ...result.pagination,
-        // Note: pagination totals from API won't reflect hashtag filtering
-        // This is a tradeoff for efficiency - we filter a single page at a time
-        total: result.pagination?.total ?? videos.length,
-        total_pages: result.pagination?.total_pages ?? (videos.length > 0 ? 1 : 0),
+        ...pageResult.pagination,
+        total: pageResult.pagination?.total ?? pageResult.videos.length,
+        total_pages: pageResult.pagination?.total_pages ?? 1,
       },
       debug: {
+        mode: 'collection_filtering',
         collectionUsed: collection,
-        hashtagFilter: campaignHashtags.length > 0 ? campaignHashtags : null,
-        apiKeyConfigured: true,
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('[fetch-shortimize-videos] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
+        error: error instanceof Error ? error.message : 'Unknown error',
         debug: { timestamp: new Date().toISOString() }
       }),
       {
