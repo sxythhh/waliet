@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageSquare, Users, Lock, Filter, X } from "lucide-react";
+import { Search, MessageSquare, Users, Filter, X } from "lucide-react";
+import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { useTheme } from "@/components/ThemeProvider";
@@ -353,7 +354,7 @@ export function RecruitCreatorsDialog({
                 <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
                   <div className="text-center p-8 max-w-sm">
                     <div className="w-16 h-16 rounded-2xl bg-muted/80 flex items-center justify-center mx-auto mb-5">
-                      <Lock className="h-8 w-8 text-muted-foreground" />
+                      <img src={vpnKeyIcon} alt="Key" className="h-8 w-8" />
                     </div>
                     <h3 className="font-semibold text-lg mb-2 tracking-[-0.5px]">
                       Upgrade to Access
@@ -362,7 +363,7 @@ export function RecruitCreatorsDialog({
                       Subscribe to browse and message creators for your campaigns
                     </p>
                     <Button
-                      className="rounded-full px-6"
+                      className="px-6 font-inter tracking-[-0.5px] border-t border-t-[#3672ea] rounded-[5px]"
                       onClick={() => setSubscriptionGateOpen(true)}
                     >
                       Upgrade Now
