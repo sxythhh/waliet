@@ -236,7 +236,7 @@ export default function Auth() {
       <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">
-            <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/cb6c1dd3-b66b-47b3-b6ea-4a3ca8b5a371.png" />
+            <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" />
             <span className="font-clash font-bold tracking-tight text-lg">VIRALITY</span>
           </div>
         </CardHeader>
