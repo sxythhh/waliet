@@ -37,6 +37,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import demographicsIcon from "@/assets/demographics-icon.svg";
 import noAccountsIcon from "@/assets/no-accounts-icon.svg";
+import noAccountsIconBlack from "@/assets/no-accounts-icon-black.svg";
 interface Profile {
   id: string;
   username: string;
@@ -850,7 +851,7 @@ export function ProfileTab() {
         <CardContent className="px-[20px]">
             {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8">
               <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <img alt="" className="w-7 h-7 opacity-60 dark:opacity-80 dark:invert" src={noAccountsIcon} />
+                <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
               </div>
               <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
               <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
