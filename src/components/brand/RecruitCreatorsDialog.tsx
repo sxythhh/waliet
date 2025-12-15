@@ -88,13 +88,28 @@ export function RecruitCreatorsDialog({
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (open) {
       checkSubscription();
-      fetchDiscoverableCreators();
     }
   }, [open, brandId]);
+
+  // Fetch creators when dialog opens or search/filters change
+  useEffect(() => {
+    if (open && hasActivePlan) {
+      fetchDiscoverableCreators();
+    }
+  }, [open, hasActivePlan, debouncedSearch, platformFilter, followerFilter, countryFilter]);
 
   const checkSubscription = async () => {
     const { data } = await supabase
@@ -109,11 +124,23 @@ export function RecruitCreatorsDialog({
   const fetchDiscoverableCreators = async () => {
     setLoading(true);
     try {
-      const { data: profiles, error } = await supabase
+      // Build query with search and filters
+      let query = supabase
         .from("profiles")
         .select("id, username, full_name, avatar_url, bio, city, country, content_niches")
-        .eq("onboarding_completed", true)
-        .limit(100);
+        .eq("onboarding_completed", true);
+
+      // Apply search filter at database level
+      if (debouncedSearch) {
+        query = query.or(`username.ilike.%${debouncedSearch}%,full_name.ilike.%${debouncedSearch}%,bio.ilike.%${debouncedSearch}%`);
+      }
+
+      // Apply country filter
+      if (countryFilter !== 'all') {
+        query = query.eq('country', countryFilter);
+      }
+
+      const { data: profiles, error } = await query.limit(100);
 
       if (error) throw error;
       if (!profiles || profiles.length === 0) {
@@ -122,11 +149,18 @@ export function RecruitCreatorsDialog({
         return;
       }
 
-      const { data: socialAccounts } = await supabase
+      // Fetch social accounts with platform filter
+      let socialQuery = supabase
         .from("social_accounts")
         .select("user_id, platform, username, account_link, follower_count")
         .in("user_id", profiles.map(p => p.id))
         .eq("is_verified", true);
+
+      if (platformFilter !== 'all') {
+        socialQuery = socialQuery.eq('platform', platformFilter);
+      }
+
+      const { data: socialAccounts } = await socialQuery;
 
       const creatorsWithSocial: DiscoverableCreator[] = profiles.map(profile => ({
         ...profile,
@@ -140,7 +174,18 @@ export function RecruitCreatorsDialog({
           }))
       }));
 
-      setCreators(creatorsWithSocial.filter(c => c.social_accounts.length > 0));
+      // Filter by follower count (client-side as it's aggregated across accounts)
+      let filtered = creatorsWithSocial.filter(c => c.social_accounts.length > 0);
+      
+      if (followerFilter !== 'any') {
+        const minFollowers = getMinFollowers(followerFilter);
+        filtered = filtered.filter(c => {
+          const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0));
+          return maxFollowers >= minFollowers;
+        });
+      }
+
+      setCreators(filtered);
     } catch (error) {
       console.error("Error fetching discoverable creators:", error);
     } finally {
@@ -160,37 +205,8 @@ export function RecruitCreatorsDialog({
     }
   };
 
-  const filteredCreators = creators.filter(creator => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = creator.username.toLowerCase().includes(query) ||
-        creator.full_name?.toLowerCase().includes(query) ||
-        creator.bio?.toLowerCase().includes(query) ||
-        creator.content_niches?.some(n => n.toLowerCase().includes(query));
-      if (!matchesSearch) return false;
-    }
-
-    // Platform filter
-    if (platformFilter !== 'all') {
-      const hasPlatform = creator.social_accounts.some(a => a.platform === platformFilter);
-      if (!hasPlatform) return false;
-    }
-
-    // Follower filter
-    if (followerFilter !== 'any') {
-      const minFollowers = getMinFollowers(followerFilter);
-      const maxFollowers = Math.max(...creator.social_accounts.map(a => a.follower_count || 0));
-      if (maxFollowers < minFollowers) return false;
-    }
-
-    // Country filter
-    if (countryFilter !== 'all') {
-      if (creator.country !== countryFilter) return false;
-    }
-
-    return true;
-  });
+  // Creators are now filtered at database level, just use the array directly
+  const filteredCreators = creators;
 
   const hasActiveFilters = platformFilter !== 'all' || followerFilter !== 'any' || countryFilter !== 'all';
 
