@@ -41,7 +41,11 @@ export function DemographicStatusCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
-  const latestSubmission = submissions[0];
+  // Sort submissions by submitted_at descending to ensure latest is always first
+  const sortedSubmissions = [...submissions].sort((a, b) => 
+    new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+  );
+  const latestSubmission = sortedSubmissions[0];
   const status = latestSubmission?.status;
 
   // Calculate if user can submit based on business rules:
