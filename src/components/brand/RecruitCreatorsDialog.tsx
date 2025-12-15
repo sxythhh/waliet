@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MessageSquare, Users, Lock, Filter, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -86,6 +87,7 @@ export function RecruitCreatorsDialog({
   const [followerFilter, setFollowerFilter] = useState<string>('any');
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -343,10 +345,7 @@ export function RecruitCreatorsDialog({
                     </p>
                     <Button
                       className="rounded-full px-6"
-                      onClick={() => {
-                        // TODO: Open subscription dialog
-                        window.open('https://whop.com/virality/', '_blank');
-                      }}
+                      onClick={() => setSubscriptionGateOpen(true)}
                     >
                       Upgrade Now
                     </Button>
@@ -503,9 +502,8 @@ export function RecruitCreatorsDialog({
 
                         {/* CTA Button */}
                         <Button
-                          variant="outline"
                           size="sm"
-                          className="w-full h-9 rounded-full text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50"
+                          className="w-full h-9 rounded-full text-xs font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
                           onClick={() => {
                             if (onStartConversation) {
                               onStartConversation(creator.id, creator.full_name || creator.username);
@@ -525,6 +523,12 @@ export function RecruitCreatorsDialog({
           </div>
         </ScrollArea>
       </DialogContent>
+      
+      <SubscriptionGateDialog 
+        brandId={brandId} 
+        open={subscriptionGateOpen} 
+        onOpenChange={setSubscriptionGateOpen} 
+      />
     </Dialog>
   );
 }
