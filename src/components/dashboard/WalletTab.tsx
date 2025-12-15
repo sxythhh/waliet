@@ -2036,11 +2036,20 @@ export function WalletTab() {
           })()}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)} disabled={isSubmittingPayout}>
+          <DialogFooter className="gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => setPayoutDialogOpen(false)} 
+              disabled={isSubmittingPayout}
+              className="font-inter tracking-[-0.5px] border-0 hover:bg-destructive/10 hover:text-destructive"
+            >
               Cancel
             </Button>
-            <Button onClick={handleConfirmPayout} disabled={isSubmittingPayout}>
+            <Button 
+              onClick={handleConfirmPayout} 
+              disabled={isSubmittingPayout}
+              className="font-inter tracking-[-0.5px]"
+            >
               {isSubmittingPayout ? "Processing..." : "Confirm Payout"}
             </Button>
           </DialogFooter>
