@@ -312,11 +312,11 @@ const PublicBounty = () => {
           </div>
         )}
 
-        {/* Content Requirements */}
-        {bounty.content_style_requirements && (
+        {/* Content Guidelines from Blueprint */}
+        {blueprint?.content_guidelines && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Content Requirements</h2>
-            <p className="text-muted-foreground font-inter tracking-[-0.5px] whitespace-pre-wrap">{bounty.content_style_requirements}</p>
+            <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Content Guidelines</h2>
+            <p className="text-muted-foreground font-inter tracking-[-0.5px] whitespace-pre-wrap">{blueprint.content_guidelines}</p>
           </div>
         )}
 
