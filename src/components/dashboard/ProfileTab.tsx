@@ -207,7 +207,7 @@ export function ProfileTab() {
           reviewed_at,
           screenshot_url
         )
-      `).eq("user_id", session.user.id).eq("is_verified", true).order("connected_at", {
+      `).eq("user_id", session.user.id).order("connected_at", {
       ascending: false
     });
     if (accounts) {
@@ -887,6 +887,11 @@ export function ProfileTab() {
                             }}>
                                     {account.username}
                                   </span>
+                                  {!account.is_verified && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
+                                      Unverified
+                                    </span>
+                                  )}
                                 </div>
                                 
                                 {/* Stats Row */}
