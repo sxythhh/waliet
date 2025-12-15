@@ -256,16 +256,16 @@ export default function AuthDialog({
                   </div>
                 </> : (/* Email Form */
             <div className="space-y-4">
-                  <form onSubmit={handleEmailAuth} className="space-y-4">
+                  <form onSubmit={handleEmailAuth} className="space-y-4 font-inter tracking-[-0.5px]">
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium text-white">Email</Label>
-                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-black/80 border-0 focus-visible:ring-1 focus-visible:ring-primary" />
+                      <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required disabled={loading} className="h-12 bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary" />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-sm font-medium text-white">Password</Label>
                       <div className="relative">
-                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-black/80 border-0 focus-visible:ring-1 focus-visible:ring-primary pr-10" />
+                        <Input id="password" type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required disabled={loading} minLength={6} className="h-12 bg-black/80 border-0 focus-visible:ring-2 focus-visible:ring-primary pr-10" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -277,9 +277,7 @@ export default function AuthDialog({
                       </div>
                     </div>
 
-                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-geist" style={{
-                  letterSpacing: '-0.5px'
-                }}>
+                    <Button type="submit" disabled={loading} className="w-full h-12 font-semibold text-sm font-inter tracking-[-0.5px]">
                       {loading ? "Please wait..." : "Continue"}
                     </Button>
                   </form>
