@@ -421,11 +421,11 @@ export function AppSidebar() {
           </div>}
 
         {/* Main Navigation */}
-        <nav className="flex-1 py-0 px-0">
-          <div>
+        <nav className="flex-1 py-0 px-2">
+          <div className="flex flex-col gap-1">
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors hover:bg-[#0e0e0e] ${isActive ? 'text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-[#0e0e0e] ${isActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
