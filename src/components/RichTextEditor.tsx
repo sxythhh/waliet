@@ -44,7 +44,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-invert max-w-none min-h-[200px] p-4 focus:outline-none [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer',
+        class: 'prose prose-invert max-w-none min-h-[200px] p-4 focus:outline-none [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_p]:text-sm',
       },
       handleClick: (view, pos, event) => {
         const target = event.target as HTMLElement;
