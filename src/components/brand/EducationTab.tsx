@@ -276,7 +276,7 @@ export function EducationTab({ brandId }: EducationTabProps) {
     return (
       <div className="h-full flex">
         {/* Desktop Sidebar */}
-        <div className={`${sidebarOpen ? 'hidden lg:block' : 'hidden'} w-80 bg-muted/30 min-h-full transition-all duration-300`}>
+        <div className={`${sidebarOpen ? 'hidden md:block' : 'hidden'} w-64 md:w-72 lg:w-80 min-h-full transition-all duration-300 border-r border-border`}>
           <div className="p-4 sticky top-0 max-h-screen overflow-y-auto">
             <div className="mb-4">
               <Button variant="ghost" size="sm" onClick={handleBackToList} className="text-muted-foreground hover:text-foreground mb-2 -ml-2">
