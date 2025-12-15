@@ -159,7 +159,13 @@ export function BoostDetailView({
     }
     setLoading(false);
   };
-  const handleUpdateStatus = async (applicationId: string, newStatus: 'accepted' | 'rejected') => {
+  const handleUpdateStatus = async (applicationId: string, newStatus: 'accepted' | 'rejected' | 'pending') => {
+    // Find the next pending application before updating
+    const currentIndex = applications.findIndex(a => a.id === applicationId);
+    const nextPendingApp = applications.find((app, idx) => idx > currentIndex && app.status === 'pending');
+    const prevPendingApp = [...applications].reverse().find((app, idx) => applications.indexOf(app) < currentIndex && app.status === 'pending');
+    const nextApp = nextPendingApp || prevPendingApp;
+
     const {
       error
     } = await supabase.from("bounty_applications").update({
@@ -170,7 +176,7 @@ export function BoostDetailView({
       toast.error("Failed to update application status");
       return;
     }
-    toast.success(`Application ${newStatus}`);
+    toast.success(`Application ${newStatus === 'pending' ? 'reverted to pending' : newStatus}`);
     if (newStatus === 'accepted' && boost?.discord_guild_id) {
       const application = applications.find(app => app.id === applicationId);
       if (application) {
@@ -186,9 +192,13 @@ export function BoostDetailView({
         }
       }
     }
+    
+    // Auto-select next pending application
+    if (nextApp && newStatus !== 'pending') {
+      setSelectedAppId(nextApp.id);
+    }
+    
     fetchBoostData();
-    setDetailPanelOpen(false);
-    setSelectedAppId(null);
   };
   const handleApplicationClick = (appId: string) => {
     setSelectedAppId(appId);
@@ -710,6 +720,11 @@ export function BoostDetailView({
                                 Approve
                               </Button>
                             </>}
+                          {selectedApp.status === 'rejected' && 
+                              <Button variant="ghost" className="flex-1 gap-2 bg-amber-500/10 text-amber-500 hover:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'pending')}>
+                                Revert Rejection
+                              </Button>
+                          }
                         </div>
                       </div>
                     </> : <div className="flex-1 flex items-center justify-center text-muted-foreground">
