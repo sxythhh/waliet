@@ -164,7 +164,7 @@ export function CampaignHomeTab({
     shortimize_api_key: string | null;
   } | null>(null);
   const [campaignHashtags, setCampaignHashtags] = useState<string[]>([]);
-
+  const [refreshKey, setRefreshKey] = useState(0);
   // Reset videos when timeframe changes to prevent stale data
   useEffect(() => {
     setTopVideos([]);
@@ -344,35 +344,40 @@ export function CampaignHomeTab({
 
         setIsLoading(false);
 
-        // Load videos in background (non-blocking) after main UI is ready
-        if (brandData?.collection_name) {
-          const fetchVideoBody: Record<string, unknown> = {
-            brandId,
-            campaignId,
-            page: 1,
-            limit: 3,
-            orderBy: 'latest_views',
-            orderDirection: 'desc'
-          };
-          if (dateRange) {
-            fetchVideoBody.uploadedAtStart = dateRange.start.toISOString();
-            fetchVideoBody.uploadedAtEnd = dateRange.end.toISOString();
-          }
-          
-          supabase.functions.invoke('fetch-shortimize-videos', { body: fetchVideoBody })
-            .then(({ data: videosData, error }) => {
-              if (isCancelled) return;
-              if (!error && videosData?.videos) {
-                const uniqueVideos = videosData.videos.reduce((acc: VideoData[], video: VideoData) => {
-                  if (!acc.find(v => v.ad_id === video.ad_id)) acc.push(video);
-                  return acc;
-                }, []);
-                setTopVideos(uniqueVideos.slice(0, 3));
-                setTotalVideos(videosData.pagination?.total || 0);
-              }
-            })
-            .catch(console.error);
+        // Load top videos from cached data (non-blocking)
+        let videosQuery = supabase
+          .from('cached_campaign_videos')
+          .select('*', { count: 'exact' })
+          .eq('campaign_id', campaignId)
+          .order('views', { ascending: false })
+          .limit(3);
+        
+        if (dateRange) {
+          videosQuery = videosQuery
+            .gte('uploaded_at', dateRange.start.toISOString())
+            .lte('uploaded_at', dateRange.end.toISOString());
         }
+        
+        videosQuery.then(({ data: cachedVideos, count, error }) => {
+          if (isCancelled) return;
+          if (!error && cachedVideos) {
+            const mappedVideos: VideoData[] = cachedVideos.map(v => ({
+              ad_id: v.shortimize_video_id,
+              username: v.username,
+              platform: v.platform,
+              ad_link: v.video_url || '',
+              uploaded_at: v.uploaded_at || '',
+              title: v.title || v.caption || '',
+              latest_views: v.views || 0,
+              latest_likes: v.likes || 0,
+              latest_comments: v.comments || 0,
+              latest_shares: v.shares || 0,
+            }));
+            setTopVideos(mappedVideos);
+            setTotalVideos(count || 0);
+          }
+        });
+        
       } catch (error) {
         console.error('Error fetching home data:', error);
         if (!isCancelled) setIsLoading(false);
@@ -381,13 +386,25 @@ export function CampaignHomeTab({
 
     loadAll();
     return () => { isCancelled = true; };
-  }, [campaignId, brandId, timeframe]);
+  }, [campaignId, brandId, timeframe, refreshKey]);
+  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
+      // First sync videos from Shortimize to cache
+      const { error: syncError } = await supabase.functions.invoke('sync-campaign-account-videos', {
+        body: { campaignId, forceRefresh: true }
+      });
+      
+      if (syncError) {
+        console.error('Video sync error:', syncError);
+      }
+      
+      // Then sync metrics from cached videos
       const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
         body: { campaignId }
       });
+      
       if (error) {
         toast.error('Failed to sync metrics: ' + error.message);
         return;
@@ -396,14 +413,11 @@ export function CampaignHomeTab({
         toast.error('Sync failed: ' + (data.errorMessage || 'Unknown error'));
         return;
       }
-      if (data?.synced > 0) {
-        toast.success(`Successfully synced metrics`);
-      }
-      // Trigger re-fetch by updating a dependency - use key approach
-      setTopVideos([]);
-      setTotalVideos(0);
-      // Re-run the effect by forcing a state change (the effect will re-run)
-      window.location.reload();
+      
+      toast.success('Metrics synced successfully');
+      
+      // Trigger re-fetch by incrementing refresh key
+      setRefreshKey(k => k + 1);
     } catch (error) {
       console.error('Error refreshing metrics:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to refresh metrics');
