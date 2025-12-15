@@ -650,6 +650,97 @@ export type Database = {
         }
         Relationships: []
       }
+      cached_campaign_videos: {
+        Row: {
+          bookmarks: number | null
+          brand_id: string
+          cached_at: string
+          campaign_id: string
+          caption: string | null
+          comments: number | null
+          created_at: string
+          description: string | null
+          id: string
+          likes: number | null
+          platform: string
+          shares: number | null
+          shortimize_video_id: string
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          uploaded_at: string | null
+          username: string
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          bookmarks?: number | null
+          brand_id: string
+          cached_at?: string
+          campaign_id: string
+          caption?: string | null
+          comments?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number | null
+          platform: string
+          shares?: number | null
+          shortimize_video_id: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          uploaded_at?: string | null
+          username: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          bookmarks?: number | null
+          brand_id?: string
+          cached_at?: string
+          campaign_id?: string
+          caption?: string | null
+          comments?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number | null
+          platform?: string
+          shares?: number | null
+          shortimize_video_id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          uploaded_at?: string | null
+          username?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cached_campaign_videos_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cached_campaign_videos_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cached_campaign_videos_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_account_analytics: {
         Row: {
           account_link: string | null
@@ -927,6 +1018,54 @@ export type Database = {
             foreignKeyName: "campaign_video_metrics_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_video_sync_status: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          error_message: string | null
+          id: string
+          last_synced_at: string | null
+          sync_status: string | null
+          updated_at: string
+          videos_synced: number | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_synced_at?: string | null
+          sync_status?: string | null
+          updated_at?: string
+          videos_synced?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_synced_at?: string | null
+          sync_status?: string | null
+          updated_at?: string
+          videos_synced?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_video_sync_status_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_video_sync_status_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
             referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },

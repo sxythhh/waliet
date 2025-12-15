@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X, User } from "lucide-react";
-import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
+import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X, User, Clock } from "lucide-react";
+import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, formatDistanceToNow } from "date-fns";
 import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
@@ -19,6 +19,32 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+
+interface CachedVideo {
+  id: string;
+  shortimize_video_id: string;
+  username: string;
+  platform: string;
+  video_url: string | null;
+  thumbnail_url: string | null;
+  title: string | null;
+  caption: string | null;
+  description: string | null;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  bookmarks: number;
+  uploaded_at: string | null;
+  cached_at: string;
+}
+
+interface SyncStatus {
+  last_synced_at: string | null;
+  sync_status: string;
+  videos_synced: number;
+}
+
 interface ShortimizeVideo {
   ad_id: string;
   username: string;
@@ -59,22 +85,22 @@ interface ShortimizeVideosTableProps {
   campaignId?: string;
   timeframe?: TimeframeOption;
 }
-type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
+type SortField = 'uploaded_at' | 'views' | 'likes' | 'comments' | 'shares';
 type SortDirection = 'asc' | 'desc';
 const SORT_OPTIONS = [{
   value: 'uploaded_at',
   label: 'Most Recent'
 }, {
-  value: 'latest_views',
+  value: 'views',
   label: 'Most Viewed'
 }, {
-  value: 'latest_likes',
+  value: 'likes',
   label: 'Most Liked'
 }, {
-  value: 'latest_comments',
+  value: 'comments',
   label: 'Most Comments'
 }, {
-  value: 'latest_shares',
+  value: 'shares',
   label: 'Most Shares'
 }] as const;
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
@@ -173,12 +199,14 @@ export function ShortimizeVideosTable({
     resolvedTheme
   } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
+  const [videos, setVideos] = useState<CachedVideo[]>([]);
   const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
-  const [sortField, setSortField] = useState<SortField>('latest_views');
+  const [sortField, setSortField] = useState<SortField>('views');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [usernameFilter, setUsernameFilter] = useState<string>('');
   const [availableUsernames, setAvailableUsernames] = useState<string[]>([]);
@@ -190,9 +218,6 @@ export function ShortimizeVideosTable({
   });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-  // Request tracking to prevent duplicates and stale responses
-  const requestIdRef = useRef(0);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Platform logos based on theme
   const platformLogos = useMemo(() => ({
@@ -221,23 +246,16 @@ export function ShortimizeVideosTable({
   const fetchCreatorMatches = async (usernames: string[]) => {
     if (usernames.length === 0) return;
     try {
-      // Fetch social accounts with profile data
       const {
         data: accountsData,
         error: accountsError
       } = await supabase.from('social_accounts').select('id, username, platform, user_id, account_link, avatar_url, follower_count, profiles:user_id(id, full_name, username, avatar_url, email)').in('username', usernames);
       if (accountsError) throw accountsError;
 
-      // Get unique user IDs to fetch wallet data
       const userIds = [...new Set(accountsData?.map(a => a.user_id).filter(Boolean) || [])];
-
-      // Fetch wallet data for earnings
-      const {
-        data: walletsData
-      } = await supabase.from('wallets').select('user_id, total_earned').in('user_id', userIds);
+      const { data: walletsData } = await supabase.from('wallets').select('user_id, total_earned').in('user_id', userIds);
       const walletMap = new Map(walletsData?.map(w => [w.user_id, w.total_earned || 0]) || []);
 
-      // Group accounts by user
       const userAccountsMap = new Map<string, typeof accountsData>();
       accountsData?.forEach(account => {
         if (account.user_id) {
@@ -266,7 +284,6 @@ export function ShortimizeVideosTable({
               follower_count: a.follower_count
             })),
             total_views: 0,
-            // Could be fetched from analytics if needed
             total_earnings: walletMap.get(account.user_id) || 0
           });
         }
@@ -276,140 +293,160 @@ export function ShortimizeVideosTable({
       console.error('Error fetching creator matches:', error);
     }
   };
-  const fetchVideos = useCallback(async (currentRequestId: number) => {
-    console.log('[ShortimizeVideosTable] fetchVideos called, requestId:', currentRequestId, 'brandId:', brandId);
+
+  // Fetch sync status
+  const fetchSyncStatus = async () => {
+    if (!campaignId) return;
+    const { data } = await supabase
+      .from('campaign_video_sync_status')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .single();
+    if (data) {
+      setSyncStatus({
+        last_synced_at: data.last_synced_at,
+        sync_status: data.sync_status,
+        videos_synced: data.videos_synced || 0
+      });
+    }
+  };
+
+  // Fetch cached videos from database
+  const fetchCachedVideos = useCallback(async () => {
+    if (!campaignId) return;
+    
+    console.log('[ShortimizeVideosTable] Fetching cached videos for campaign:', campaignId);
     setIsLoading(true);
+
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('fetch-shortimize-videos', {
-        body: {
-          brandId,
-          collectionName,
-          campaignId,
-          page: pagination.page,
-          limit: 50,
-          orderBy: sortField,
-          orderDirection: sortDirection,
-          uploadedAtStart: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-          uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
-          username: usernameFilter || undefined
-        }
-      });
+      // Build query with filters
+      let query = supabase
+        .from('cached_campaign_videos')
+        .select('*', { count: 'exact' })
+        .eq('campaign_id', campaignId);
 
-      // Ignore stale responses
-      if (currentRequestId !== requestIdRef.current) {
-        console.log('[ShortimizeVideosTable] Ignoring stale response, requestId:', currentRequestId, 'current:', requestIdRef.current);
-        return;
+      // Apply username filter
+      if (usernameFilter) {
+        query = query.eq('username', usernameFilter);
       }
-      console.log('[ShortimizeVideosTable] fetch response:', {
-        error,
-        hasData: !!data,
-        videosCount: data?.videos?.length,
-        pagination: data?.pagination
-      });
-      if (error) {
-        console.error('[ShortimizeVideosTable] Supabase function error:', error);
-        throw error;
+
+      // Apply date filters
+      if (startDate) {
+        query = query.gte('uploaded_at', format(startDate, 'yyyy-MM-dd'));
       }
-      if (data.error) {
-        if (data.error.includes('API key not configured')) {
-          console.log('[ShortimizeVideosTable] Shortimize not configured for this brand');
-          setHasApiKey(false);
-          setVideos([]);
-          return;
-        }
-        console.error('[ShortimizeVideosTable] API error:', data.error);
-        throw new Error(data.error);
+      if (endDate) {
+        query = query.lte('uploaded_at', format(endDate, 'yyyy-MM-dd') + 'T23:59:59');
       }
+
+      // Apply sorting
+      query = query.order(sortField, { ascending: sortDirection === 'asc' });
+
+      // Apply pagination
+      const from = (pagination.page - 1) * pagination.limit;
+      const to = from + pagination.limit - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      setVideos(data || []);
       setHasApiKey(true);
-      const videosData = data.videos || [];
-
-      // Ensure client-side sort matches the selected metric/order in case the API doesn't fully respect it
-      const sortedVideos = [...videosData].sort((a: ShortimizeVideo, b: ShortimizeVideo) => {
-        const field = sortField as keyof ShortimizeVideo;
-        const aVal = (a[field] as number | null) ?? 0;
-        const bVal = (b[field] as number | null) ?? 0;
-        if (aVal === bVal) return 0;
-        const direction = sortDirection === 'desc' ? -1 : 1;
-        return aVal > bVal ? direction : -direction;
-      });
-
-      setVideos(sortedVideos);
+      
+      // Update pagination
+      const total = count || 0;
       setPagination(prev => ({
         ...prev,
-        ...data.pagination
+        total,
+        total_pages: Math.ceil(total / prev.limit)
       }));
 
-      // Update available usernames for filter (only on first load or when no filter is set)
-      if (!usernameFilter) {
-        const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
+      // Get unique usernames for filter dropdown
+      if (!usernameFilter && data && data.length > 0) {
+        const uniqueUsernames = [...new Set(data.map(v => v.username))];
         setAvailableUsernames(prev => {
           const combined = new Set([...prev, ...uniqueUsernames]);
           return [...combined].sort();
         });
       }
 
-      // Fetch creator matches for unique usernames
-      const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
-      await fetchCreatorMatches(uniqueUsernames);
+      // Fetch creator matches
+      if (data && data.length > 0) {
+        const uniqueUsernames = [...new Set(data.map(v => v.username))];
+        await fetchCreatorMatches(uniqueUsernames);
+      }
+
     } catch (error: any) {
-      // Only handle error if this is still the current request
-      if (currentRequestId !== requestIdRef.current) return;
-      console.error('[ShortimizeVideosTable] Error fetching videos:', error);
-      const errorMsg = error?.message || '';
-      if (!errorMsg.includes('API key not configured')) {
-        toast.error(errorMsg || 'Failed to fetch videos');
-      } else {
-        setHasApiKey(false);
-      }
+      console.error('[ShortimizeVideosTable] Error fetching cached videos:', error);
+      toast.error('Failed to fetch videos');
     } finally {
-      // Only update loading state if this is still the current request
-      if (currentRequestId === requestIdRef.current) {
-        setIsLoading(false);
+      setIsLoading(false);
+    }
+  }, [campaignId, pagination.page, pagination.limit, sortField, sortDirection, startDate, endDate, usernameFilter]);
+
+  // Trigger a sync of videos from Shortimize
+  const triggerSync = async (forceRefresh = false) => {
+    if (!campaignId) return;
+    
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-campaign-account-videos', {
+        body: { campaignId, forceRefresh }
+      });
+
+      if (error) throw error;
+      
+      if (data.error) {
+        if (data.error.includes('not configured')) {
+          setHasApiKey(false);
+          return;
+        }
+        throw new Error(data.error);
       }
-    }
-  }, [brandId, collectionName, campaignId, pagination.page, sortField, sortDirection, startDate, endDate, usernameFilter]);
 
-  // Debounced fetch trigger
-  const triggerFetch = useCallback(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+      toast.success(`Synced ${data.videos_synced} videos from ${data.accounts_processed} accounts`);
+      
+      // Refresh cached videos and sync status
+      await fetchSyncStatus();
+      await fetchCachedVideos();
+      
+    } catch (error: any) {
+      console.error('[ShortimizeVideosTable] Sync error:', error);
+      toast.error(error.message || 'Failed to sync videos');
+    } finally {
+      setIsSyncing(false);
     }
-    debounceTimerRef.current = setTimeout(() => {
-      // Increment request ID to invalidate any in-flight requests
-      requestIdRef.current += 1;
-      const currentRequestId = requestIdRef.current;
-
-      // Clear videos before new fetch to prevent duplicates
-      setVideos([]);
-      fetchVideos(currentRequestId);
-    }, 300);
-  }, [fetchVideos]);
-  useEffect(() => {
-    if (brandId && (collectionName || campaignId)) {
-      triggerFetch();
-    }
-
-    // Cleanup debounce timer on unmount
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate, usernameFilter, triggerFetch]);
-  const handleSearch = () => {
-    setPagination(prev => ({
-      ...prev,
-      page: 1
-    }));
-    triggerFetch();
   };
+
+  // Initial load: fetch sync status and cached videos
+  useEffect(() => {
+    if (campaignId) {
+      fetchSyncStatus();
+      fetchCachedVideos();
+    }
+  }, [campaignId, fetchCachedVideos]);
+
+  // Refetch when filters change
+  useEffect(() => {
+    if (campaignId) {
+      fetchCachedVideos();
+    }
+  }, [sortField, sortDirection, pagination.page, startDate, endDate, usernameFilter]);
+
+  // Auto-sync if no cached data or stale (older than 6 hours)
+  useEffect(() => {
+    if (campaignId && syncStatus) {
+      const shouldSync = !syncStatus.last_synced_at || 
+        (new Date().getTime() - new Date(syncStatus.last_synced_at).getTime() > 6 * 60 * 60 * 1000);
+      
+      if (shouldSync && syncStatus.sync_status !== 'in_progress') {
+        triggerSync(false);
+      }
+    }
+  }, [campaignId, syncStatus?.last_synced_at]);
+
   const handleManualRefresh = () => {
-    requestIdRef.current += 1;
-    setVideos([]);
-    fetchVideos(requestIdRef.current);
+    triggerSync(true);
   };
   const formatNumber = (num: number | null) => {
     if (num === null || num === undefined) return '-';
@@ -424,12 +461,12 @@ export function ShortimizeVideosTable({
     }
     return <span className="h-4 w-4 flex items-center justify-center text-xs">🎬</span>;
   };
-  const getThumbnailUrl = (video: ShortimizeVideo) => {
-    const platformId = extractPlatformId(video.ad_link, video.platform);
+  const getThumbnailUrl = (video: CachedVideo) => {
+    const platformId = extractPlatformId(video.video_url || '', video.platform);
     if (!platformId) return null;
     return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
   };
-  const getCreatorInfo = (video: ShortimizeVideo): CreatorInfo | null => {
+  const getCreatorInfo = (video: CachedVideo): CreatorInfo | null => {
     const key = `${video.username.toLowerCase()}_${video.platform.toLowerCase()}`;
     return creatorMatches.get(key) || null;
   };
@@ -518,7 +555,6 @@ export function ShortimizeVideosTable({
                     ...prev,
                     page: 1
                   }));
-                  triggerFetch();
                 }}>
                     Apply Filter
                   </Button>
@@ -534,7 +570,6 @@ export function ShortimizeVideosTable({
             ...prev,
             page: 1
           }));
-          setTimeout(fetchVideos, 0);
         }}>
               <X className="h-3.5 w-3.5" />
             </Button>}
@@ -589,9 +624,9 @@ export function ShortimizeVideosTable({
                 </TableCell>
               </TableRow> : videos.map(video => {
             const creatorInfo = getCreatorInfo(video);
-            return <TableRow key={video.ad_id} className="border-b border-table-border bg-transparent hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a]">
+            return <TableRow key={video.id} className="border-b border-table-border bg-transparent hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a]">
                     <TableCell>
-                      <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
+                      <a href={video.video_url || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
                         <div className="relative h-16 w-9 rounded overflow-hidden bg-muted/50 flex-shrink-0">
                           {getThumbnailUrl(video) && <img src={getThumbnailUrl(video)!} alt={video.title || 'Video thumbnail'} className="h-full w-full object-cover" onError={e => {
                       e.currentTarget.style.display = 'none';
@@ -628,16 +663,16 @@ export function ShortimizeVideosTable({
                       {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
                     </TableCell>
                     <TableCell className="text-sm tracking-[-0.5px] text-right font-medium">
-                      {formatNumber(video.latest_views)}
+                      {formatNumber(video.views)}
                     </TableCell>
                     <TableCell className="text-sm tracking-[-0.5px] text-right">
-                      {formatNumber(video.latest_likes)}
+                      {formatNumber(video.likes)}
                     </TableCell>
                     <TableCell className="text-sm tracking-[-0.5px] text-right">
-                      {formatNumber(video.latest_comments)}
+                      {formatNumber(video.comments)}
                     </TableCell>
                     <TableCell className="text-sm tracking-[-0.5px] text-right">
-                      {formatNumber(video.latest_shares)}
+                      {formatNumber(video.shares)}
                     </TableCell>
                   </TableRow>;
           })}
