@@ -166,17 +166,21 @@ export function BoostDetailView({
     const prevPendingApp = [...applications].reverse().find((app, idx) => applications.indexOf(app) < currentIndex && app.status === 'pending');
     const nextApp = nextPendingApp || prevPendingApp;
 
-    const {
-      error
-    } = await supabase.from("bounty_applications").update({
+    const { error } = await supabase.from("bounty_applications").update({
       status: newStatus
     }).eq("id", applicationId);
+    
     if (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update application status");
       return;
     }
-    toast.success(`Application ${newStatus === 'pending' ? 'reverted to pending' : newStatus}`);
+    
+    // Update local state instead of refetching
+    setApplications(prev => prev.map(app => 
+      app.id === applicationId ? { ...app, status: newStatus } : app
+    ));
+    
     if (newStatus === 'accepted' && boost?.discord_guild_id) {
       const application = applications.find(app => app.id === applicationId);
       if (application) {
@@ -197,9 +201,28 @@ export function BoostDetailView({
     if (nextApp && newStatus !== 'pending') {
       setSelectedAppId(nextApp.id);
     }
-    
-    fetchBoostData();
   };
+
+  // Keyboard navigation for applications
+  useEffect(() => {
+    if (activeTab !== 'applications' || !selectedAppId) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const currentIndex = applications.findIndex(a => a.id === selectedAppId);
+      if (currentIndex === -1) return;
+      
+      if (e.key === 'ArrowUp' && currentIndex > 0) {
+        e.preventDefault();
+        setSelectedAppId(applications[currentIndex - 1].id);
+      } else if (e.key === 'ArrowDown' && currentIndex < applications.length - 1) {
+        e.preventDefault();
+        setSelectedAppId(applications[currentIndex + 1].id);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, selectedAppId, applications]);
   const handleApplicationClick = (appId: string) => {
     setSelectedAppId(appId);
     setDetailPanelOpen(true);
