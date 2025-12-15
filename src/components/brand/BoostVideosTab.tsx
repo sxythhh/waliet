@@ -275,7 +275,6 @@ export function BoostVideosTab({
                             submitted_at: s.submitted_at,
                             status: s.status
                           }))}
-                          months={3}
                         />
                       </div>
                     </button>;
