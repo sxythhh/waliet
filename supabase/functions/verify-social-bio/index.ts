@@ -17,6 +17,71 @@ function filterVerificationCode(bio: string, verificationCode: string): string {
 async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching TikTok profile for: ${username}`);
   
+  // Try primary API first (scraptik - more reliable)
+  try {
+    const result = await tryScrapTikApi(username, verificationCode, rapidApiKey);
+    if (result) return result;
+  } catch (error) {
+    console.log('Primary TikTok API failed, trying fallback:', error);
+  }
+  
+  // Fallback to secondary API
+  try {
+    const result = await tryTikTokApi23(username, verificationCode, rapidApiKey);
+    if (result) return result;
+  } catch (error) {
+    console.log('Fallback TikTok API also failed:', error);
+  }
+  
+  throw new Error('TikTok verification temporarily unavailable. Please try again in a few minutes.');
+}
+
+async function tryScrapTikApi(username: string, verificationCode: string, rapidApiKey: string) {
+  const response = await fetch(
+    `https://scraptik.p.rapidapi.com/get-user?username=${encodeURIComponent(username)}`,
+    {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'scraptik.p.rapidapi.com',
+        'x-rapidapi-key': rapidApiKey,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    console.error(`ScrapTik API error: ${response.status}`);
+    if (response.status === 429) {
+      throw new Error('Rate limit exceeded');
+    }
+    throw new Error(`ScrapTik API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('ScrapTik API response received');
+
+  if (!data.user) {
+    throw new Error('User not found on TikTok');
+  }
+
+  const user = data.user;
+  const bio = user.signature || user.bio || '';
+  const verified = bio.toUpperCase().includes(verificationCode.toUpperCase());
+
+  const cleanBio = filterVerificationCode(bio, verificationCode);
+
+  return {
+    verified,
+    bio: cleanBio,
+    user: {
+      nickname: user.nickname || user.uniqueId || username,
+      avatar: user.avatarMedium || user.avatarThumb,
+      followerCount: user.followerCount || data.stats?.followerCount || 0,
+      isVerified: user.verified || false,
+    },
+  };
+}
+
+async function tryTikTokApi23(username: string, verificationCode: string, rapidApiKey: string) {
   const response = await fetch(
     `https://tiktok-api23.p.rapidapi.com/api/user/info?uniqueId=${encodeURIComponent(username)}`,
     {
@@ -29,15 +94,15 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
   );
 
   if (!response.ok) {
-    console.error(`TikTok API error: ${response.status}`);
+    console.error(`TikTok API23 error: ${response.status}`);
     if (response.status === 429) {
-      throw new Error('Rate limit exceeded. Please wait a minute and try again.');
+      throw new Error('Rate limit exceeded');
     }
     throw new Error(`TikTok API error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log('TikTok API response received');
+  console.log('TikTok API23 response received');
 
   if (data.statusCode !== 0 || !data.userInfo?.user) {
     throw new Error('User not found on TikTok');
@@ -45,7 +110,7 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
 
   const user = data.userInfo.user;
   const bio = user.signature || '';
-  const verified = bio.includes(verificationCode);
+  const verified = bio.toUpperCase().includes(verificationCode.toUpperCase());
 
   const cleanBio = filterVerificationCode(bio, verificationCode);
 
