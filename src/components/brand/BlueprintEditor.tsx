@@ -1175,8 +1175,8 @@ export function BlueprintEditor({
       <div className="h-full p-[5px]">
         <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-3 sm:py-4 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-2 sm:py-2.5 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               <button
                 onClick={goBack}
                 className="flex items-center gap-1 font-inter tracking-[-0.5px] text-white hover:opacity-80 transition-opacity shrink-0"
@@ -1191,7 +1191,7 @@ export function BlueprintEditor({
               <Input
                 value={blueprint.title}
                 onChange={e => updateBlueprint({ title: e.target.value })}
-                className="h-8 flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input text-sm"
+                className="h-8 flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] blueprint-input text-sm hover:underline"
                 placeholder="Untitled"
               />
               {saving && (
