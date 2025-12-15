@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, Plus, Copy, Link } from "lucide-react";
 import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { BoostVideosTab } from "./BoostVideosTab";
@@ -286,6 +286,35 @@ export function BoostDetailView({
         {/* Content Area - Management tab */}
         {activeTab === "management" && <div className="flex-1 overflow-auto p-6">
             <div className="space-y-6">
+              {/* Invite URL Section */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Link className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium tracking-[-0.5px]">Invite URL</p>
+                      <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+                        {`${window.location.origin}/boost/${boostId}`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px]"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/boost/${boostId}`);
+                      toast.success("Invite URL copied to clipboard");
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
               {/* About Section */}
               {boost.description && <div>
                   <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
@@ -391,9 +420,6 @@ export function BoostDetailView({
                   </div>
                 </div>
               </div>
-
-              {/* Content Requirements */}
-              {boost.content_style_requirements}
             </div>
           </div>}
         {/* Applications Tab - Two Column Layout */}
