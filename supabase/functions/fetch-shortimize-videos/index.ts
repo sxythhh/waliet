@@ -123,12 +123,25 @@ serve(async (req) => {
       throw new Error('Shortimize API key not configured for this brand');
     }
 
+    // Get campaign hashtags if campaignId is provided
+    let campaignHashtags: string[] = [];
+    if (campaignId) {
+      const { data: campaign, error: campaignError } = await supabase
+        .from('campaigns')
+        .select('hashtags')
+        .eq('id', campaignId)
+        .single();
+      
+      if (!campaignError && campaign?.hashtags && campaign.hashtags.length > 0) {
+        campaignHashtags = campaign.hashtags;
+        console.log('[fetch-shortimize-videos] Campaign hashtags:', campaignHashtags);
+      }
+    }
+
     // Determine which Shortimize collection to use
-    // Prefer the explicit collectionName, otherwise fall back to the brand's configured collection_name
-    // Allow opting out of collection filtering via noCollectionFilter (primarily for debugging)
     const collection = !noCollectionFilter ? (collectionName || brand.collection_name) : null;
     
-    console.log('[fetch-shortimize-videos] Using collection:', collection);
+    console.log('[fetch-shortimize-videos] Using collection:', collection, 'Hashtags:', campaignHashtags);
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -171,9 +184,20 @@ serve(async (req) => {
     }
 
     const result = await response.json();
-    const videos = result.data || [];
+    let videos = result.data || [];
     
-    console.log('[fetch-shortimize-videos] API response:', {
+    // Filter by campaign hashtags if provided
+    if (campaignHashtags.length > 0) {
+      const originalCount = videos.length;
+      videos = videos.filter((video: any) => videoMatchesHashtags(video, campaignHashtags, originalCount > 0 && videos.indexOf(video) === 0));
+      console.log('[fetch-shortimize-videos] Filtered by hashtags:', {
+        hashtags: campaignHashtags,
+        originalCount,
+        filteredCount: videos.length
+      });
+    }
+    
+    console.log('[fetch-shortimize-videos] Final response:', {
       videosCount: videos.length,
       pagination: result.pagination,
     });
@@ -182,11 +206,14 @@ serve(async (req) => {
       videos,
       pagination: {
         ...result.pagination,
+        // Note: pagination totals from API won't reflect hashtag filtering
+        // This is a tradeoff for efficiency - we filter a single page at a time
         total: result.pagination?.total ?? videos.length,
         total_pages: result.pagination?.total_pages ?? (videos.length > 0 ? 1 : 0),
       },
       debug: {
         collectionUsed: collection,
+        hashtagFilter: campaignHashtags.length > 0 ? campaignHashtags : null,
         apiKeyConfigured: true,
       }
     }), {
