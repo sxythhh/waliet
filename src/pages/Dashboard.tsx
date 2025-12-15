@@ -18,6 +18,7 @@ import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
+import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -122,6 +123,8 @@ export default function Dashboard() {
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "creators":
           return <CreatorsTab brandId={currentBrand.id} />;
+        case "education":
+          return <EducationTab brandId={currentBrand.id} />;
         case "profile":
           return <UserSettingsTab />;
         default:
