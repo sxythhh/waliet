@@ -16,24 +16,35 @@ function filterVerificationCode(bio: string, verificationCode: string): string {
 
 async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching TikTok profile for: ${username}`);
-  
-  // Try primary API first (scraptik - more reliable)
+
+  let hitRateLimit = false;
+
+  // Try primary API first (ScrapTik). Note: this endpoint may return 403 if the RapidAPI key
+  // is not subscribed to it, so we treat that as "unavailable" and fall back.
   try {
     const result = await tryScrapTikApi(username, verificationCode, rapidApiKey);
     if (result) return result;
-  } catch (error) {
-    console.log('Primary TikTok API failed, trying fallback:', error);
+  } catch (error: any) {
+    const msg = String(error?.message || error);
+    if (msg === 'RATE_LIMIT') hitRateLimit = true;
+    console.log('Primary TikTok API failed, trying fallback:', msg);
   }
-  
-  // Fallback to secondary API
+
+  // Fallback to TikTok API23
   try {
     const result = await tryTikTokApi23(username, verificationCode, rapidApiKey);
     if (result) return result;
-  } catch (error) {
-    console.log('Fallback TikTok API also failed:', error);
+  } catch (error: any) {
+    const msg = String(error?.message || error);
+    if (msg === 'RATE_LIMIT') hitRateLimit = true;
+    console.log('Fallback TikTok API also failed:', msg);
   }
-  
-  throw new Error('TikTok verification temporarily unavailable. Please try again in a few minutes.');
+
+  if (hitRateLimit) {
+    throw new Error('RATE_LIMIT');
+  }
+
+  throw new Error('TIKTOK_UNAVAILABLE');
 }
 
 async function tryScrapTikApi(username: string, verificationCode: string, rapidApiKey: string) {
@@ -49,17 +60,25 @@ async function tryScrapTikApi(username: string, verificationCode: string, rapidA
   );
 
   if (!response.ok) {
-    console.error(`ScrapTik API error: ${response.status}`);
-    if (response.status === 429) {
-      throw new Error('Rate limit exceeded');
+    // 403 commonly means the RapidAPI key isn't subscribed to this API
+    if (response.status === 403) {
+      console.log('ScrapTik API returned 403 (likely not subscribed); skipping to fallback.');
+      return null;
     }
-    throw new Error(`ScrapTik API error: ${response.status}`);
+
+    console.error(`ScrapTik API error: ${response.status}`);
+
+    if (response.status === 429) {
+      throw new Error('RATE_LIMIT');
+    }
+
+    return null;
   }
 
   const data = await response.json();
   console.log('ScrapTik API response received');
 
-  if (!data.user) {
+  if (!data?.user) {
     throw new Error('User not found on TikTok');
   }
 
@@ -96,9 +115,9 @@ async function tryTikTokApi23(username: string, verificationCode: string, rapidA
   if (!response.ok) {
     console.error(`TikTok API23 error: ${response.status}`);
     if (response.status === 429) {
-      throw new Error('Rate limit exceeded');
+      throw new Error('RATE_LIMIT');
     }
-    throw new Error(`TikTok API error: ${response.status}`);
+    return null;
   }
 
   const data = await response.json();
@@ -301,9 +320,19 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('Verification error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+
+    // IMPORTANT: Return 200 with success=false so the client can show a friendly toast
+    // (and avoid surfacing a generic "Edge function returned 500" error).
+    const friendlyError =
+      errorMessage === 'RATE_LIMIT'
+        ? 'TikTok verification is temporarily rate-limited by our provider. Please wait a few minutes and try again.'
+        : errorMessage === 'TIKTOK_UNAVAILABLE'
+          ? 'TikTok verification is temporarily unavailable. Please try again in a few minutes.'
+          : errorMessage;
+
+    return new Response(JSON.stringify({ success: false, error: friendlyError }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
