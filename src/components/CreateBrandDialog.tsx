@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
+  home_url: z.string().trim().url("Please enter a valid URL").optional().or(z.literal("")),
   description: z.string().trim().max(500).optional()
 });
 type BrandFormValues = z.infer<typeof brandSchema>;
@@ -40,6 +41,7 @@ export function CreateBrandDialog({
     resolver: zodResolver(brandSchema),
     defaultValues: {
       name: "",
+      home_url: "",
       description: ""
     }
   });
@@ -109,6 +111,7 @@ export function CreateBrandDialog({
         name: values.name,
         slug: slug,
         description: values.description || null,
+        home_url: values.home_url || null,
         logo_url: logoUrl
       }).select().single();
       if (brandError) throw brandError;
@@ -152,13 +155,13 @@ export function CreateBrandDialog({
   };
   return <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && <DialogTrigger asChild />}
-      <DialogContent className="sm:max-w-[460px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
             {/* Header */}
-            <div className="px-6 pt-6 pb-0">
-              <DialogHeader className="space-y-1.5">
-                <DialogTitle className="text-xl font-semibold tracking-tight font-inter">
+            <div className="px-6 pt-6">
+              <DialogHeader className="space-y-1">
+                <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
                   Create Brand
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
@@ -168,7 +171,7 @@ export function CreateBrandDialog({
             </div>
 
             {/* Content */}
-            <div className="space-y-6 py-0 px-0">
+            <div className="space-y-5 px-6 py-5">
               {/* Logo Section */}
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
@@ -178,19 +181,19 @@ export function CreateBrandDialog({
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
                   {/* Logo Preview or Initials */}
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-primary flex items-center justify-center">
-                    {logoPreview ? <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" /> : <span className="text-primary-foreground text-lg font-semibold font-inter">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-primary flex items-center justify-center">
+                    {logoPreview ? <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" /> : <span className="text-primary-foreground text-base font-semibold font-inter">
                         {getInitials(brandName)}
                       </span>}
                   </div>
 
                   {/* Upload/Remove Buttons */}
                   <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="h-9 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="h-8 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
                       <Upload className="h-3.5 w-3.5" />
-                      Upload Image
+                      Upload
                     </Button>
-                    {logoPreview && <Button type="button" variant="ghost" size="sm" onClick={removeLogo} className="h-9 px-3 text-sm text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]">
+                    {logoPreview && <Button type="button" variant="ghost" size="sm" onClick={removeLogo} className="h-8 px-3 text-sm text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]">
                         Remove
                       </Button>}
                   </div>
@@ -200,20 +203,33 @@ export function CreateBrandDialog({
               {/* Name Field */}
               <FormField control={form.control} name="name" render={({
               field
-            }) => <FormItem className="space-y-2">
+            }) => <FormItem className="space-y-1.5">
                     <FormLabel className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                       Name
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter brand name" className="h-11 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" {...field} />
+                      <Input placeholder="Enter brand name" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>} />
+
+              {/* Website URL Field */}
+              <FormField control={form.control} name="home_url" render={({
+              field
+            }) => <FormItem className="space-y-1.5">
+                    <FormLabel className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                      Website URL
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://yourbrand.com" className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" {...field} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>} />
             </div>
 
             {/* Footer */}
-            <div className="py-0 pb-6 flex items-center justify-end gap-3 px-0">
-              <Button type="button" variant="ghost" onClick={handleCancel} className="h-10 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
+            <div className="px-6 pb-6 flex items-center justify-end gap-3">
+              <Button type="button" variant="ghost" onClick={handleCancel} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting} className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg">
