@@ -26,7 +26,7 @@ import BrandLibrary from "./pages/BrandLibrary";
 import BrandAssets from "./pages/BrandAssets";
 import BrandInvite from "./pages/BrandInvite";
 import Training from "./pages/Training";
-import CourseDetail from "./pages/CourseDetail";
+
 import PublicProfile from "./pages/PublicProfile";
 import CampaignPreview from "./pages/CampaignPreview";
 import Apply from "./pages/Apply";
@@ -157,7 +157,6 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
             <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
             <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
-            <Route path="/brand/:slug/training/:courseId" element={<CourseDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/:username" element={<PublicProfile />} />
             <Route path="*" element={<NotFound />} />
