@@ -476,9 +476,23 @@ export function ShortimizeVideosTable({
       {/* Header with filters */}
       <div className="flex items-center justify-between gap-4 flex-wrap py-[10px]">
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={handleManualRefresh} variant="ghost" size="icon" disabled={isLoading || !collectionName && !campaignId} className="h-8 w-8">
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button type="button" onClick={handleManualRefresh} variant="ghost" size="icon" disabled={isLoading || isSyncing || !campaignId} className="h-8 w-8">
+            <RefreshCw className={`h-4 w-4 ${isLoading || isSyncing ? 'animate-spin' : ''}`} />
           </Button>
+          
+          {/* Sync Status Indicator */}
+          {syncStatus?.last_synced_at && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground tracking-[-0.5px]">
+              <Clock className="h-3 w-3" />
+              <span>Synced {formatDistanceToNow(new Date(syncStatus.last_synced_at), { addSuffix: true })}</span>
+              {syncStatus.videos_synced > 0 && (
+                <span className="text-foreground">({syncStatus.videos_synced} videos)</span>
+              )}
+            </div>
+          )}
+          {isSyncing && (
+            <span className="text-xs text-muted-foreground tracking-[-0.5px]">Syncing...</span>
+          )}
           
           {/* Sort Selector */}
           <Select value={sortField} onValueChange={value => {
