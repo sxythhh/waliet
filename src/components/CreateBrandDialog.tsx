@@ -168,7 +168,7 @@ export function CreateBrandDialog({
             </div>
 
             {/* Content */}
-            <div className="px-6 space-y-6 py-0">
+            <div className="space-y-6 py-0 px-0">
               {/* Logo Section */}
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
