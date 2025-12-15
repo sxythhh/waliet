@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Clock, Pencil } from "lucide-react";
-import editDocumentIcon from "@/assets/edit-document-icon.svg";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CampaignCreationWizard } from "./CampaignCreationWizard";
 import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "./CreateBountyDialog";
+import { TemplateSelector } from "./TemplateSelector";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -43,6 +43,7 @@ export function BlueprintsTab({
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
   const [createBoostOpen, setCreateBoostOpen] = useState(false);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
+  const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const [brandInfo, setBrandInfo] = useState<{
     name: string;
     logoUrl?: string;
@@ -114,6 +115,7 @@ export function BlueprintsTab({
       toast.error("Failed to create blueprint");
       return;
     }
+    setTemplateSelectorOpen(false);
     setSearchParams(prev => {
       prev.set("blueprint", data.id);
       return prev;
@@ -154,6 +156,42 @@ export function BlueprintsTab({
     setTypeDialogOpen(false);
     setCreateBoostOpen(true);
   };
+
+  const handleSelectTemplate = async (template: any) => {
+    const { data, error } = await supabase
+      .from("blueprints")
+      .insert({
+        brand_id: brandId,
+        title: template.title || "Untitled",
+        content: template.content,
+        platforms: template.platforms,
+        hooks: template.hooks,
+        talking_points: template.talking_points,
+        dos_and_donts: template.dos_and_donts,
+        call_to_action: template.call_to_action,
+        hashtags: template.hashtags,
+        brand_voice: template.brand_voice,
+        target_personas: template.target_personas,
+        assets: template.assets,
+        example_videos: template.example_videos,
+        content_guidelines: template.content_guidelines,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating blueprint from template:", error);
+      toast.error("Failed to create blueprint");
+      return;
+    }
+
+    setTemplateSelectorOpen(false);
+    setSearchParams(prev => {
+      prev.set("blueprint", data.id);
+      return prev;
+    });
+  };
+
   const getPlatformIcon = (platform: string) => {
     const isDark = resolvedTheme === 'dark';
     switch (platform?.toLowerCase()) {
@@ -235,7 +273,7 @@ export function BlueprintsTab({
             Create and manage your campaign briefs
           </p>
         </div>
-        <Button onClick={createBlueprint} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5">
+        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5">
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
@@ -321,5 +359,12 @@ export function BlueprintsTab({
       {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
       
       {brandInfo && <CreateBountyDialog brandId={brandId} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
+
+      <TemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelectTemplate={handleSelectTemplate}
+        onStartBlank={createBlueprint}
+      />
     </div>;
 }

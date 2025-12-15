@@ -26,13 +26,20 @@ interface BlueprintTemplate {
 }
 
 interface TemplateSelectorProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSelectTemplate: (template: BlueprintTemplate) => void;
+  onStartBlank?: () => void;
 }
 
-export function TemplateSelector({ onSelectTemplate }: TemplateSelectorProps) {
-  const [open, setOpen] = useState(false);
+export function TemplateSelector({ open: controlledOpen, onOpenChange, onSelectTemplate, onStartBlank }: TemplateSelectorProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [templates, setTemplates] = useState<BlueprintTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (onOpenChange || (() => {})) : setInternalOpen;
 
   useEffect(() => {
     if (open) {
@@ -68,6 +75,119 @@ export function TemplateSelector({ onSelectTemplate }: TemplateSelectorProps) {
     onSelectTemplate(template);
     setOpen(false);
   };
+
+  const handleStartBlank = () => {
+    if (onStartBlank) {
+      onStartBlank();
+    }
+    setOpen(false);
+  };
+
+  // If controlled, don't render the trigger button
+  if (isControlled) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px] flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              New Blueprint
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+              Start from a template or create a blank blueprint
+            </p>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto py-4">
+            {/* Start Blank Option */}
+            <button
+              onClick={handleStartBlank}
+              className="w-full text-left p-4 rounded-xl border border-border/50 bg-card/30 hover:bg-card/50 hover:border-border transition-all group mb-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <h3 className="font-medium text-[15px] text-foreground font-inter tracking-[-0.5px]">
+                      Start with blank
+                    </h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                    Create a blueprint from scratch
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0 mt-1" />
+              </div>
+            </button>
+
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-24 rounded-xl" />
+                ))}
+              </div>
+            ) : templates.length === 0 ? (
+              null
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] uppercase px-1">
+                  Or start from a template
+                </p>
+                {templates.map(template => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelect(template)}
+                    className="w-full text-left p-4 rounded-xl border border-border/50 bg-card/30 hover:bg-card/50 hover:border-border transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-[15px] text-foreground font-inter tracking-[-0.5px]">
+                            {template.title}
+                          </h3>
+                          {template.category && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {template.category}
+                            </Badge>
+                          )}
+                        </div>
+                        {template.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 font-inter tracking-[-0.5px]">
+                            {template.description}
+                          </p>
+                        )}
+                        {template.platforms && template.platforms.length > 0 && (
+                          <div className="flex items-center gap-1.5 mt-2">
+                            {template.platforms.map(platform => (
+                              <Badge key={platform} variant="outline" className="text-[10px] capitalize">
+                                {platform}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground/70">
+                          <span>{template.hooks?.length || 0} hooks</span>
+                          <span>•</span>
+                          <span>{template.talking_points?.length || 0} talking points</span>
+                          {template.dos_and_donts?.dos?.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span>{template.dos_and_donts.dos.length} do's</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0 mt-1" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <>
