@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { format, formatDistanceToNow, addDays, isAfter } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, addDays, isAfter, nextDay, previousDay, isBefore, startOfDay } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ interface DemographicStatusCardProps {
   submissions: DemographicSubmission[];
   onSubmitNew: () => void;
   onRefresh: () => void;
+  campaignIds?: string[];
 }
 
 export function DemographicStatusCard({
@@ -35,11 +36,32 @@ export function DemographicStatusCard({
   submissions,
   onSubmitNew,
   onRefresh,
+  campaignIds = [],
 }: DemographicStatusCardProps) {
   const [viewingSubmission, setViewingSubmission] = useState<DemographicSubmission | null>(null);
   const [deletingSubmission, setDeletingSubmission] = useState<DemographicSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [campaignPayoutDays, setCampaignPayoutDays] = useState<number[]>([]);
   const { toast } = useToast();
+
+  // Fetch payout days from connected campaigns
+  useEffect(() => {
+    const fetchCampaignPayoutDays = async () => {
+      if (campaignIds.length === 0) return;
+      
+      const { data } = await supabase
+        .from('campaigns')
+        .select('payout_day_of_week')
+        .in('id', campaignIds);
+      
+      if (data) {
+        const days = data.map(c => c.payout_day_of_week ?? 2); // Default to Tuesday
+        setCampaignPayoutDays([...new Set(days)]);
+      }
+    };
+    
+    fetchCampaignPayoutDays();
+  }, [campaignIds]);
 
   // Sort submissions by submitted_at descending to ensure latest is always first
   const sortedSubmissions = [...submissions].sort((a, b) => 
@@ -48,14 +70,48 @@ export function DemographicStatusCard({
   const latestSubmission = sortedSubmissions[0];
   const status = latestSubmission?.status;
 
-  // Calculate if user can submit based on business rules:
-  // - Weekly schedule anchored to the last review (preferred) or last submission.
-  // - If a user missed a deadline (next date is in the past), they can submit now and we show the next standard deadline (7 days from today).
-  // - Can resubmit immediately if rejected
-  // - Cannot resubmit while pending (unless it's been stale long enough — handled elsewhere)
+  // Get next occurrence of a day of week (0=Sunday, 6=Saturday)
+  const getNextDayOfWeek = (dayOfWeek: number, fromDate: Date = new Date()): Date => {
+    const today = startOfDay(fromDate);
+    const todayDay = today.getDay();
+    
+    if (todayDay === dayOfWeek) {
+      return today;
+    }
+    
+    const daysUntil = (dayOfWeek - todayDay + 7) % 7;
+    return addDays(today, daysUntil || 7);
+  };
+
+  // Calculate demographic due date: 1 day before payout day OR on payout day
+  const getDemographicDueDate = (): Date | null => {
+    if (campaignPayoutDays.length === 0) return null;
+    
+    const now = startOfDay(new Date());
+    let nearestDue: Date | null = null;
+    
+    for (const payoutDay of campaignPayoutDays) {
+      // Due date is 1 day before payout day
+      const dueDay = (payoutDay - 1 + 7) % 7;
+      let nextDue = getNextDayOfWeek(dueDay);
+      
+      // If due date is today or in the past for this week, also consider it valid
+      if (isBefore(nextDue, now)) {
+        nextDue = addDays(nextDue, 7);
+      }
+      
+      if (!nearestDue || isBefore(nextDue, nearestDue)) {
+        nearestDue = nextDue;
+      }
+    }
+    
+    return nearestDue;
+  };
+
+  // Calculate if user can submit based on business rules
   const getSubmissionAvailability = () => {
     if (!latestSubmission) {
-      return { canSubmit: true, reason: null as string | null, nextDate: null as Date | null };
+      return { canSubmit: true, reason: null as string | null, nextDate: getDemographicDueDate() };
     }
 
     if (status === 'pending') {
@@ -67,11 +123,29 @@ export function DemographicStatusCard({
     }
 
     if (status === 'approved') {
-      const baseDate = new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at);
-      const scheduledNext = addDays(baseDate, 7);
-      const now = new Date();
-
-      // If the scheduled next date is in the future, block submission until then.
+      const dueDate = getDemographicDueDate();
+      const submittedDate = startOfDay(new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at));
+      const now = startOfDay(new Date());
+      
+      if (dueDate) {
+        // If submission was recent (within 2 days of due date), block until next cycle
+        const daysSinceSubmission = Math.floor((now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysSinceSubmission < 2) {
+          const daysLeft = Math.max(1, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+          return {
+            canSubmit: false,
+            reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+            nextDate: dueDate,
+          };
+        }
+        
+        // Allow submission if due date is approaching or passed
+        return { canSubmit: true, reason: null, nextDate: dueDate };
+      }
+      
+      // Fallback to 7-day rolling window if no campaigns connected
+      const scheduledNext = addDays(submittedDate, 7);
       if (!isAfter(now, scheduledNext)) {
         const daysLeft = Math.ceil((scheduledNext.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return {
@@ -81,15 +155,10 @@ export function DemographicStatusCard({
         };
       }
 
-      // Missed deadline: allow submission now and show the next standard deadline from today.
-      return {
-        canSubmit: true,
-        reason: null,
-        nextDate: addDays(now, 7),
-      };
+      return { canSubmit: true, reason: null, nextDate: addDays(now, 7) };
     }
 
-    return { canSubmit: true, reason: null, nextDate: null };
+    return { canSubmit: true, reason: null, nextDate: getDemographicDueDate() };
   };
 
   const availability = getSubmissionAvailability();
@@ -209,7 +278,7 @@ export function DemographicStatusCard({
             </div>
             {status === 'approved' && availability.nextDate && (
               <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground/60">Next:</span>
+                <span className="text-muted-foreground/60">Due:</span>
                 <span>{format(availability.nextDate, "MMM d, yyyy")}</span>
               </div>
             )}

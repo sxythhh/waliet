@@ -1014,14 +1014,22 @@ export function ProfileTab() {
                             </div>
                           </div> :
                   // Has Submission - Show Status Card
-                  <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} onSubmitNew={() => {
-                    setSelectedAccountForDemographics({
-                      id: account.id,
-                      platform: account.platform,
-                      username: account.username
-                    });
-                    setShowDemographicsDialog(true);
-                  }} onRefresh={fetchSocialAccounts} />}
+                  <DemographicStatusCard 
+                    accountId={account.id} 
+                    platform={account.platform} 
+                    username={account.username} 
+                    submissions={demographicSubmissions} 
+                    campaignIds={account.connected_campaigns?.map(c => c.campaign.id) || []}
+                    onSubmitNew={() => {
+                      setSelectedAccountForDemographics({
+                        id: account.id,
+                        platform: account.platform,
+                        username: account.username
+                      });
+                      setShowDemographicsDialog(true);
+                    }} 
+                    onRefresh={fetchSocialAccounts} 
+                  />}
                       </div>
                     </div>
                   </div>;
