@@ -212,7 +212,7 @@ export function CreateBrandDialog({
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-0 pb-6 flex items-center justify-end gap-3">
+            <div className="py-0 pb-6 flex items-center justify-end gap-3 px-0">
               <Button type="button" variant="ghost" onClick={handleCancel} className="h-10 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent">
                 Cancel
               </Button>
