@@ -198,6 +198,9 @@ export function CreateBrandDialog({
                       </Button>}
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-1.5">
+                  We support PNGs, JPGs and JPEGs under 10MB
+                </p>
               </div>
 
               {/* Name Field */}
