@@ -53,7 +53,7 @@ export function CreateBrandDialog({
   
   // Generate initials from brand name
   const getInitials = (name: string) => {
-    if (!name) return "BR";
+    if (!name) return "V";
     const words = name.trim().split(/\s+/);
     if (words.length >= 2) {
       return (words[0][0] + words[1][0]).toUpperCase();
@@ -232,7 +232,7 @@ export function CreateBrandDialog({
                     <FormControl>
                       <Input 
                         placeholder="Enter brand name" 
-                        className="h-11 bg-muted/50 border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 rounded-lg" 
+                        className="h-11 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors" 
                         {...field} 
                       />
                     </FormControl>
@@ -255,7 +255,7 @@ export function CreateBrandDialog({
               <Button 
                 type="submit" 
                 disabled={isSubmitting} 
-                className="h-10 px-6 text-sm font-medium font-inter tracking-[-0.3px] bg-foreground text-background hover:bg-foreground/90 rounded-full"
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] rounded-[5px] border-t border-[#3672ea]"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
