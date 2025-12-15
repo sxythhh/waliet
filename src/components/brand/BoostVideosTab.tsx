@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Video, Check, X, ExternalLink, ChevronRight, User } from "lucide-react";
+import { Check, X, ExternalLink, ChevronRight, User } from "lucide-react";
+import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import { SubmissionHeatmap } from "./SubmissionHeatmap";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
@@ -346,9 +347,9 @@ export function BoostVideosTab({
               });
               if (filteredSubs.length === 0) {
                 return <div className="text-center py-12 text-muted-foreground">
-                      <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <img src={videoLibraryIcon} alt="" className="h-8 w-8 mx-auto mb-2 opacity-40" />
                       <p className="text-sm font-inter tracking-[-0.5px]">
-                        {selectedCreator ? "No submissions from this creator" : "No pending videos"}
+                        No submissions found for the applied filter
                       </p>
                     </div>;
               }
