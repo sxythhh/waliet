@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, MessageCircle, ExternalLink } from "lucide-react";
+import { X, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -92,27 +92,26 @@ function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'
 
   return (
     <div 
-      className={`mt-2 p-3 rounded-xl border cursor-pointer transition-colors ${
+      className={`mt-2 p-2.5 rounded-lg cursor-pointer ${
         isCreatorMessage 
-          ? 'bg-white/10 border-white/20 hover:bg-white/20' 
-          : 'bg-background border-border hover:bg-accent'
+          ? 'bg-white/5 border border-white/10' 
+          : 'bg-muted/50 border border-border/50'
       }`}
       onClick={handleClick}
     >
-      <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 rounded-lg">
+      <div className="flex items-center gap-2.5">
+        <Avatar className="h-8 w-8 rounded-md">
           <AvatarImage src={data.logo_url || undefined} />
-          <AvatarFallback className="rounded-lg text-xs">{data.brand_name.charAt(0)}</AvatarFallback>
+          <AvatarFallback className="rounded-md text-[10px] font-medium">{data.brand_name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium truncate ${isCreatorMessage ? 'text-white' : 'text-foreground'}`}>
+          <p className={`text-xs font-medium truncate font-inter tracking-[-0.5px] ${isCreatorMessage ? 'text-white' : 'text-foreground'}`}>
             {data.title}
           </p>
-          <p className={`text-xs ${isCreatorMessage ? 'text-white/70' : 'text-muted-foreground'}`}>
+          <p className={`text-[10px] font-inter tracking-[-0.5px] ${isCreatorMessage ? 'text-white/60' : 'text-muted-foreground'}`}>
             {type === 'boost' ? 'Boost' : 'Campaign'} • {data.brand_name}
           </p>
         </div>
-        <ExternalLink className={`h-4 w-4 ${isCreatorMessage ? 'text-white/70' : 'text-muted-foreground'}`} />
       </div>
     </div>
   );
