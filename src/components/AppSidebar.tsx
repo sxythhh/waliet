@@ -428,7 +428,7 @@ export function AppSidebar() {
                         <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
-                                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                                <span className="text-[11px] font-medium text-neutral-400 uppercase">{brand.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
                           </div>
@@ -443,7 +443,7 @@ export function AppSidebar() {
                         <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
                             {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
-                                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                                <span className="text-[11px] font-medium text-neutral-400 uppercase">{membership.brands.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
                           </div>
