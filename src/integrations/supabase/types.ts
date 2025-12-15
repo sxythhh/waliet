@@ -1330,6 +1330,39 @@ export type Database = {
           },
         ]
       }
+      discord_tokens: {
+        Row: {
+          access_token_encrypted: string
+          created_at: string
+          discord_id: string
+          id: string
+          refresh_token_encrypted: string
+          token_expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          created_at?: string
+          discord_id: string
+          id?: string
+          refresh_token_encrypted: string
+          token_expires_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          created_at?: string
+          discord_id?: string
+          id?: string
+          refresh_token_encrypted?: string
+          token_expires_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       encryption_keys: {
         Row: {
           created_at: string | null
@@ -2652,12 +2685,27 @@ export type Database = {
         Returns: boolean
       }
       cleanup_demographic_videos: { Args: never; Returns: undefined }
+      decrypt_discord_token: {
+        Args: { encrypted_token: string }
+        Returns: string
+      }
       decrypt_payout_details: {
         Args: { encrypted_details: string; wallet_user_id: string }
         Returns: Json
       }
+      delete_discord_tokens: { Args: { p_user_id: string }; Returns: undefined }
+      encrypt_discord_token: { Args: { token: string }; Returns: string }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
       get_current_user_email: { Args: never; Returns: string }
+      get_discord_tokens: {
+        Args: { p_user_id: string }
+        Returns: {
+          access_token: string
+          discord_id: string
+          refresh_token: string
+          token_expires_at: string
+        }[]
+      }
       get_referral_tier: {
         Args: { referral_count: number }
         Returns: Database["public"]["Enums"]["referral_tier"]
@@ -2696,6 +2744,16 @@ export type Database = {
           total_count: number
           unmatched_count: number
         }[]
+      }
+      upsert_discord_tokens: {
+        Args: {
+          p_access_token: string
+          p_discord_id: string
+          p_refresh_token: string
+          p_token_expires_at: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

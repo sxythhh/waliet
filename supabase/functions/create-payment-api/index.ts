@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'x-api-key, content-type',
+  'Access-Control-Allow-Headers': 'x-api-key, x-signature, x-timestamp, content-type',
 };
 
 interface PaymentRequest {
@@ -48,6 +48,79 @@ function validatePaymentRequest(body: any): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
+// HMAC-SHA256 signature verification
+async function verifySignature(
+  payload: string,
+  signature: string,
+  timestamp: string,
+  apiKey: string
+): Promise<boolean> {
+  // Check timestamp is within 5 minutes to prevent replay attacks
+  const requestTime = parseInt(timestamp, 10);
+  const currentTime = Math.floor(Date.now() / 1000);
+  const timeDiff = Math.abs(currentTime - requestTime);
+  
+  if (timeDiff > 300) { // 5 minutes
+    console.error('Request timestamp too old:', timeDiff, 'seconds');
+    return false;
+  }
+  
+  // Create the message to sign: timestamp + payload
+  const message = `${timestamp}.${payload}`;
+  
+  // Create HMAC-SHA256 signature
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(apiKey);
+  const messageData = encoder.encode(message);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  // Constant-time comparison to prevent timing attacks
+  if (signature.length !== expectedSignature.length) {
+    return false;
+  }
+  
+  let result = 0;
+  for (let i = 0; i < signature.length; i++) {
+    result |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+  }
+  
+  return result === 0;
+}
+
+// Simple in-memory rate limiting (resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 20; // requests per minute
+const RATE_WINDOW = 60 * 1000; // 1 minute in ms
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+  
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_WINDOW });
+    return true;
+  }
+  
+  if (entry.count >= RATE_LIMIT) {
+    return false;
+  }
+  
+  entry.count++;
+  return true;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -55,15 +128,42 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify API key
     const apiKey = req.headers.get('x-api-key');
+    const signature = req.headers.get('x-signature');
+    const timestamp = req.headers.get('x-timestamp');
     const expectedApiKey = Deno.env.get('VIRALITY_API_KEY');
     
+    // Basic API key check first
     if (!apiKey || apiKey !== expectedApiKey) {
+      console.error('Invalid API key attempt');
       return new Response(
         JSON.stringify({ error: 'Invalid or missing API key' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Rate limiting check
+    if (!checkRateLimit(apiKey)) {
+      console.error('Rate limit exceeded for API key');
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Maximum 20 requests per minute.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get raw body for signature verification
+    const rawBody = await req.text();
+    
+    // If signature is provided, verify it (enhanced security)
+    if (signature && timestamp) {
+      const isValid = await verifySignature(rawBody, signature, timestamp, expectedApiKey!);
+      if (!isValid) {
+        console.error('Invalid signature or expired timestamp');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature or expired timestamp' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -71,7 +171,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse and validate request body
-    const body: PaymentRequest = await req.json();
+    const body: PaymentRequest = JSON.parse(rawBody);
     const validation = validatePaymentRequest(body);
     
     if (!validation.valid) {
@@ -138,6 +238,7 @@ Deno.serve(async (req) => {
       campaign_budget_before: parseFloat(campaign.budget_used?.toString() || '0'),
       campaign_budget_after: newBudgetUsed,
       campaign_total_budget: parseFloat(campaign.budget.toString()),
+      signed_request: !!signature, // Track if request was signed
     };
 
     if (views) metadata.views = views;
@@ -194,7 +295,7 @@ Deno.serve(async (req) => {
       // Don't fail the transaction for this
     }
 
-    // Log to audit trail
+    // Enhanced audit logging
     await supabase
       .from('security_audit_log')
       .insert({
@@ -208,10 +309,12 @@ Deno.serve(async (req) => {
           amount,
           campaign_id,
           source: 'api_key',
+          signed: !!signature,
+          timestamp: timestamp || null,
         },
       });
 
-    console.log(`Payment created via API: ${amount} for user ${profile.username} (${user_id}) in campaign ${campaign.title}`);
+    console.log(`Payment created via API: ${amount} for user ${profile.username} (${user_id}) in campaign ${campaign.title} [signed: ${!!signature}]`);
 
     return new Response(
       JSON.stringify({
