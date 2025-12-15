@@ -130,10 +130,9 @@ export function RecruitCreatorsDialog({
         .select("id, username, full_name, avatar_url, bio, city, country, content_niches")
         .eq("onboarding_completed", true);
 
-      // Apply search filter at database level using proper Supabase ilike syntax
+      // Apply search filter at database level - use * for wildcards in or() filter strings
       if (debouncedSearch) {
-        const searchTerm = `%${debouncedSearch}%`;
-        query = query.or(`username.ilike.${searchTerm},full_name.ilike.${searchTerm},bio.ilike.${searchTerm}`);
+        query = query.or(`username.ilike.*${debouncedSearch}*,full_name.ilike.*${debouncedSearch}*,bio.ilike.*${debouncedSearch}*`);
       }
 
       // Apply country filter
