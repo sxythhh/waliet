@@ -217,9 +217,7 @@ export function CreateCampaignTypeDialog({
 
           {/* Campaign Type Selection */}
           <div className="space-y-3">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Campaign Type
-            </label>
+            
             
             <div className="space-y-2">
               {/* Clipping Option */}
