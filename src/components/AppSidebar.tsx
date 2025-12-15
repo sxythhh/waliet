@@ -295,11 +295,17 @@ export function AppSidebar() {
                     </div>
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => { setFeedbackType("feature"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                  <button onClick={() => {
+                  setFeedbackType("feature");
+                  setFeedbackOpen(true);
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
                   </button>
-                  <button onClick={() => { setFeedbackType("bug"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                  <button onClick={() => {
+                  setFeedbackType("bug");
+                  setFeedbackOpen(true);
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
                   </button>
@@ -393,7 +399,7 @@ export function AppSidebar() {
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
                     <span className="text-[11px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Workspaces</span>
-                    <span className="text-[11px] text-neutral-600">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
+                    <span className="text-[11px] text-neutral-600 font-normal">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
                   </div>
                   
                   {/* Search */}
@@ -575,11 +581,17 @@ export function AppSidebar() {
                   <img src={supportIcon} alt="Support" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
                 </button>
-                <button onClick={() => { setFeedbackType("feature"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
+                <button onClick={() => {
+                setFeedbackType("feature");
+                setFeedbackOpen(true);
+              }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
                   <img src={lightbulbIcon} alt="Feature Request" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Feature Request</span>
                 </button>
-                <button onClick={() => { setFeedbackType("bug"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
+                <button onClick={() => {
+                setFeedbackType("bug");
+                setFeedbackOpen(true);
+              }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
                   <img src={bugIcon} alt="Report Bug" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Report Bug</span>
                 </button>
