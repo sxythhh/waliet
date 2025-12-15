@@ -322,7 +322,7 @@ export function BoostVideosTab({
             <div className="p-3 space-y-2">
               {(() => {
               // Get filtered and sorted submissions
-              let filteredSubs = selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : pendingSubmissions;
+              let filteredSubs = selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : submissions;
 
               // Apply status filter
               if (filterStatus !== "all") {
