@@ -75,7 +75,7 @@ export function FeedbackDialog({ open, onOpenChange, type }: FeedbackDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#0a0a0a] border-0 sm:max-w-[440px] p-0 overflow-hidden">
         {/* Header */}
-        <div className={`px-5 pt-5 pb-3 ${isFeature ? 'bg-gradient-to-br from-amber-500/10 to-transparent' : 'bg-gradient-to-br from-red-500/10 to-transparent'}`}>
+        <div className={`p-5 ${isFeature ? 'bg-gradient-to-br from-amber-500/10 to-transparent' : 'bg-gradient-to-br from-red-500/10 to-transparent'}`}>
           <DialogHeader className="space-y-3">
             <div className="flex items-center gap-3">
               <div className={`p-2.5 rounded-xl ${isFeature ? 'bg-amber-500/20' : 'bg-red-500/20'}`}>
@@ -98,7 +98,7 @@ export function FeedbackDialog({ open, onOpenChange, type }: FeedbackDialogProps
         </div>
 
         {/* Content */}
-        <div className="px-5 pb-5 space-y-4">
+        <div className="p-5 pt-0 space-y-4">
           <div className="space-y-2">
             <label className="text-xs font-medium text-neutral-500 font-inter tracking-[-0.5px] uppercase">
               {isFeature ? "Your idea" : "Bug description"}
