@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, Plus, Copy, Link } from "lucide-react";
+import { ArrowLeft, Video, Users, FileText, Pencil, DollarSign, Lock, Check, X, ExternalLink, Play, ChevronUp, ChevronDown, Plus, Copy, Link, MessageSquare } from "lucide-react";
 import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { BoostVideosTab } from "./BoostVideosTab";
@@ -591,17 +591,52 @@ export function BoostDetailView({
                       {/* Fixed Bottom Action Bar */}
                       <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/30">
                         <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
-                          <Button className="flex-1 gap-2 bg-[#2060de] hover:bg-[#1a50c8] text-white border-t border-[#4b85f7]" onClick={() => {
-                      toast.info("Messaging feature coming soon");
-                    }}>
-                            <img src={mailIcon} alt="Message" className="h-4 w-4" />
+                          <Button className="flex-1 gap-2 bg-[#1f60dd] hover:bg-[#1a50c8] text-white border-t border-[#3672ea]" onClick={async () => {
+                            const profile = profiles[selectedApp.user_id];
+                            if (!profile || !boost) return;
+                            
+                            // Check for existing conversation
+                            const { data: existingConv } = await supabase
+                              .from("conversations")
+                              .select("*")
+                              .eq("brand_id", boost.brand_id)
+                              .eq("creator_id", profile.id)
+                              .maybeSingle();
+                            
+                            if (existingConv) {
+                              toast.success("Opening conversation...");
+                              window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
+                              return;
+                            }
+                            
+                            // Create new conversation
+                            const { data, error } = await supabase
+                              .from("conversations")
+                              .insert({
+                                brand_id: boost.brand_id,
+                                creator_id: profile.id
+                              })
+                              .select()
+                              .single();
+                            
+                            if (error) {
+                              toast.error("Failed to start conversation");
+                              return;
+                            }
+                            
+                            toast.success("Conversation started!");
+                            window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
+                          }}>
+                            <MessageSquare className="h-4 w-4" />
                             Message
                           </Button>
                           {selectedApp.status === 'pending' && <>
-                              <Button variant="ghost" className="flex-1 bg-red-500/10 text-red-500 hover:text-red-400 hover:bg-red-500/20 border border-red-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}>
+                              <Button variant="ghost" className="flex-1 gap-2 bg-red-500/10 text-red-500 hover:text-red-400 hover:bg-red-500/20 border border-red-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}>
+                                <X className="h-4 w-4" />
                                 Decline
                               </Button>
-                              <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}>
+                              <Button className="flex-1 gap-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')}>
+                                <Check className="h-4 w-4" />
                                 Approve
                               </Button>
                             </>}
