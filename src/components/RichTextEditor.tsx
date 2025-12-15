@@ -1,18 +1,93 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Bold, Italic, List, ListOrdered, Heading1, Heading2, Heading3, Image as ImageIcon, Undo, Redo } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useRef } from 'react';
+import { useRef, useCallback, useState } from 'react';
 
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
 }
+
+// Resizable Image Component
+function ResizableImageComponent({ node, updateAttributes, selected }: NodeViewProps) {
+  const [isResizing, setIsResizing] = useState(false);
+  const imageRef = useRef<HTMLImageElement>(null);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = imageRef.current?.offsetWidth || 300;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - startXRef.current;
+      const newWidth = Math.max(100, startWidthRef.current + diff);
+      updateAttributes({ width: newWidth });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [updateAttributes]);
+
+  return (
+    <NodeViewWrapper className="relative inline-block group">
+      <img
+        ref={imageRef}
+        src={node.attrs.src}
+        alt={node.attrs.alt || ''}
+        style={{ width: node.attrs.width ? `${node.attrs.width}px` : 'auto' }}
+        className={`max-w-full h-auto ${selected ? 'ring-2 ring-primary' : ''}`}
+        draggable={false}
+      />
+      {/* Right resize handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        className={`absolute top-0 right-0 w-3 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity ${isResizing ? 'opacity-100' : ''}`}
+        style={{ background: 'linear-gradient(to right, transparent, hsl(var(--primary) / 0.3))' }}
+      />
+      {/* Resize indicator */}
+      <div
+        onMouseDown={handleMouseDown}
+        className={`absolute top-1/2 -translate-y-1/2 right-0 w-2 h-8 bg-primary rounded-l cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity ${isResizing ? 'opacity-100' : ''}`}
+      />
+    </NodeViewWrapper>
+  );
+}
+
+// Custom Image Extension with resize support
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: element => element.getAttribute('width') || element.style.width?.replace('px', '') || null,
+        renderHTML: attributes => {
+          if (!attributes.width) return {};
+          return { width: attributes.width, style: `width: ${attributes.width}px` };
+        },
+      },
+    };
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(ResizableImageComponent);
+  },
+});
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,12 +99,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           levels: [1, 2, 3],
         },
       }),
-      Image.configure({
+      ResizableImage.configure({
         inline: false,
         allowBase64: true,
-        HTMLAttributes: {
-          class: 'resizable-image',
-        },
       }),
       Link.configure({
         openOnClick: true,
@@ -44,28 +116,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-invert max-w-none min-h-[200px] p-4 focus:outline-none [&_img]:max-w-full [&_img]:h-auto [&_img]:cursor-pointer [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_p]:text-sm',
-      },
-      handleClick: (view, pos, event) => {
-        const target = event.target as HTMLElement;
-        if (target.tagName === 'IMG') {
-          const newWidth = prompt('Enter image width (e.g., 300px, 50%, or 100%):', '400px');
-          if (newWidth && editor) {
-            const { state } = view;
-            const $pos = state.doc.resolve(pos);
-            const node = state.doc.nodeAt(pos);
-            
-            if (node?.type.name === 'image') {
-              const tr = state.tr.setNodeMarkup(pos, undefined, {
-                ...node.attrs,
-                style: `width: ${newWidth}; height: auto;`,
-              });
-              view.dispatch(tr);
-            }
-          }
-          return true;
-        }
-        return false;
+        class: 'prose prose-invert max-w-none min-h-[200px] p-4 focus:outline-none [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-lg [&_h3]:font-medium [&_h3]:mb-2 [&_p]:text-sm',
       },
     },
   });
