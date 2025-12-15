@@ -14,7 +14,6 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import xLogo from "@/assets/x-logo.png";
-
 interface VideoSubmission {
   id: string;
   video_url: string;
@@ -26,14 +25,12 @@ interface VideoSubmission {
   reviewed_at: string | null;
   rejection_reason: string | null;
 }
-
 const platformIcons: Record<string, string> = {
   tiktok: tiktokLogo,
   instagram: instagramLogo,
   youtube: youtubeLogo,
-  x: xLogo,
+  x: xLogo
 };
-
 interface BoostCardProps {
   boost: {
     id: string;
@@ -57,8 +54,9 @@ interface BoostCardProps {
     } | null;
   };
 }
-
-export function BoostCard({ boost }: BoostCardProps) {
+export function BoostCard({
+  boost
+}: BoostCardProps) {
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VideoSubmission[]>([]);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
@@ -66,43 +64,43 @@ export function BoostCard({ boost }: BoostCardProps) {
   const [videoUrl, setVideoUrl] = useState("");
   const [postsDialogOpen, setPostsDialogOpen] = useState(false);
   const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
-
   useEffect(() => {
     fetchSubmissions();
   }, [boost.id]);
-
   const fetchSubmissions = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data } = await supabase
-        .from("boost_video_submissions")
-        .select("*")
-        .eq("bounty_campaign_id", boost.id)
-        .eq("user_id", user.id)
-        .order("submitted_at", { ascending: false });
-
+      const {
+        data
+      } = await supabase.from("boost_video_submissions").select("*").eq("bounty_campaign_id", boost.id).eq("user_id", user.id).order("submitted_at", {
+        ascending: false
+      });
       if (data) setSubmissions(data);
     } catch (error) {
       console.error("Error fetching submissions:", error);
     }
   };
-
   const handleSubmitVideo = async () => {
     if (!videoUrl.trim()) {
       toast.error("Please enter a video URL");
       return;
     }
-
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in");
         return;
       }
-
       const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
 
       // Detect platform from URL
@@ -115,47 +113,39 @@ export function BoostCard({ boost }: BoostCardProps) {
       } else if (url.includes("twitter.com") || url.includes("x.com")) {
         detectedPlatform = "x";
       }
-
       const now = new Date();
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
-      
       const thisMonthSubmissions = submissions.filter(s => {
         const submitDate = new Date(s.submitted_at);
         return submitDate >= monthStart && submitDate <= monthEnd;
       });
-
       if (thisMonthSubmissions.length >= boost.videos_per_month) {
         toast.error(`You've reached your monthly limit of ${boost.videos_per_month} videos`);
         setSubmitting(false);
         return;
       }
-
       const dailyLimit = Math.ceil(boost.videos_per_month / 30);
       const last24Hours = submissions.filter(s => {
         const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
         return hoursDiff < 24;
       });
-
       if (last24Hours.length >= dailyLimit) {
         toast.error(`You can only submit ${dailyLimit} video(s) per day`);
         setSubmitting(false);
         return;
       }
-
-      const { error } = await supabase
-        .from("boost_video_submissions")
-        .insert({
-          bounty_campaign_id: boost.id,
-          user_id: user.id,
-          video_url: videoUrl.trim(),
-          platform: detectedPlatform,
-          submission_notes: null,
-          payout_amount: payoutPerVideo
-        });
-
+      const {
+        error
+      } = await supabase.from("boost_video_submissions").insert({
+        bounty_campaign_id: boost.id,
+        user_id: user.id,
+        video_url: videoUrl.trim(),
+        platform: detectedPlatform,
+        submission_notes: null,
+        payout_amount: payoutPerVideo
+      });
       if (error) throw error;
-
       toast.success("Video submitted successfully!");
       setSubmitDialogOpen(false);
       setVideoUrl("");
@@ -167,16 +157,12 @@ export function BoostCard({ boost }: BoostCardProps) {
       setSubmitting(false);
     }
   };
-
   const handleWithdrawSubmission = async (submissionId: string) => {
     try {
-      const { error } = await supabase
-        .from("boost_video_submissions")
-        .delete()
-        .eq("id", submissionId);
-
+      const {
+        error
+      } = await supabase.from("boost_video_submissions").delete().eq("id", submissionId);
       if (error) throw error;
-
       toast.success("Submission withdrawn");
       fetchSubmissions();
     } catch (error) {
@@ -184,7 +170,6 @@ export function BoostCard({ boost }: BoostCardProps) {
       toast.error("Failed to withdraw submission");
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "approved":
@@ -195,7 +180,6 @@ export function BoostCard({ boost }: BoostCardProps) {
         return <Clock className="h-4 w-4 text-yellow-500" />;
     }
   };
-
   const getStatusBadge = (status: string) => {
     const baseClasses = "font-inter tracking-[-0.5px] text-[10px] font-medium border-0 bg-transparent px-0 hover:bg-transparent";
     switch (status) {
@@ -207,17 +191,14 @@ export function BoostCard({ boost }: BoostCardProps) {
         return <Badge className={`${baseClasses} text-yellow-500`}>Pending</Badge>;
     }
   };
-
   const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
-  
   const thisMonthSubmissions = submissions.filter(s => {
     const submitDate = new Date(s.submitted_at);
     return submitDate >= monthStart && submitDate <= monthEnd;
   });
-  
   const approvedThisMonth = thisMonthSubmissions.filter(s => s.status === "approved").length;
   const pendingThisMonth = thisMonthSubmissions.filter(s => s.status === "pending").length;
   const earnedThisMonth = approvedThisMonth * payoutPerVideo;
@@ -227,32 +208,21 @@ export function BoostCard({ boost }: BoostCardProps) {
     return hoursDiff < 24;
   });
   const dailyRemaining = Math.max(0, dailyLimit - last24Hours.length);
-
   const requiredPosts = Math.max(0, boost.videos_per_month - thisMonthSubmissions.length);
   const totalQuota = boost.videos_per_month;
-  const earnedPercent = (approvedThisMonth / totalQuota) * 100;
-  const pendingPercent = (pendingThisMonth / totalQuota) * 100;
-  const requiredPercent = (requiredPosts / totalQuota) * 100;
-
-  return (
-    <>
+  const earnedPercent = approvedThisMonth / totalQuota * 100;
+  const pendingPercent = pendingThisMonth / totalQuota * 100;
+  const requiredPercent = requiredPosts / totalQuota * 100;
+  return <>
       <Card className="bg-card border overflow-hidden font-inter tracking-[-0.5px]">
         <CardContent className="p-4 space-y-4">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
             {/* Brand Logo + Info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              {boost.brands?.logo_url ? (
-                <img 
-                  src={boost.brands.logo_url} 
-                  alt={boost.brands.name || ''} 
-                  className="w-12 h-12 rounded-xl object-cover border flex-shrink-0" 
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+              {boost.brands?.logo_url ? <img src={boost.brands.logo_url} alt={boost.brands.name || ''} className="w-12 h-12 rounded-xl object-cover border flex-shrink-0" /> : <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                   <Video className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
+                </div>}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold truncate">{boost.title}</h3>
                 <p className="text-xs text-muted-foreground truncate">{boost.brands?.name}</p>
@@ -260,22 +230,13 @@ export function BoostCard({ boost }: BoostCardProps) {
             </div>
 
             {/* Submit Button - Desktop only */}
-            <Button 
-              onClick={() => setSubmitDialogOpen(true)}
-              size="sm"
-              className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold"
-              disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
-            >
+            <Button onClick={() => setSubmitDialogOpen(true)} size="sm" className="hidden sm:flex bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}>
               Submit post
             </Button>
           </div>
 
           {/* Submit Button - Mobile only (full width at bottom) */}
-          <Button 
-            onClick={() => setSubmitDialogOpen(true)}
-            className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold"
-            disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}
-          >
+          <Button onClick={() => setSubmitDialogOpen(true)} className="sm:hidden w-full bg-foreground hover:bg-foreground/90 text-background font-semibold" disabled={thisMonthSubmissions.length >= boost.videos_per_month || dailyRemaining === 0}>
             Submit post
           </Button>
 
@@ -314,40 +275,18 @@ export function BoostCard({ boost }: BoostCardProps) {
                   </defs>
                   
                   {/* Background arc */}
-                  <path
-                    d="M 5 50 A 45 45 0 0 1 95 50"
-                    fill="none"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="8"
-                    strokeLinecap="round"
-                  />
+                  <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" strokeLinecap="round" />
                   
                   {/* Approved arc (green) */}
-                  {approvedThisMonth > 0 && (
-                    <path
-                      d="M 5 50 A 45 45 0 0 1 95 50"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(approvedThisMonth / boost.videos_per_month) * 141.37} 141.37`}
-                      className="transition-all duration-500"
-                    />
-                  )}
+                  {approvedThisMonth > 0 && <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${approvedThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />}
                   
                   {/* Pending arc (orange animated stripes) */}
-                  {pendingThisMonth > 0 && (
-                    <g style={{ transform: `rotate(${(approvedThisMonth / boost.videos_per_month) * 180}deg)`, transformOrigin: '50px 50px' }}>
-                      <path
-                        d="M 5 50 A 45 45 0 0 1 95 50"
-                        fill="none"
-                        stroke="url(#orangeStripes)"
-                        strokeWidth="8"
-                        strokeDasharray={`${(pendingThisMonth / boost.videos_per_month) * 141.37} 141.37`}
-                        className="transition-all duration-500"
-                      />
-                    </g>
-                  )}
+                  {pendingThisMonth > 0 && <g style={{
+                  transform: `rotate(${approvedThisMonth / boost.videos_per_month * 180}deg)`,
+                  transformOrigin: '50px 50px'
+                }}>
+                      <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="url(#orangeStripes)" strokeWidth="8" strokeDasharray={`${pendingThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />
+                    </g>}
                 </svg>
                 {/* Center text */}
                 <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
@@ -362,18 +301,12 @@ export function BoostCard({ boost }: BoostCardProps) {
                   <span className="font-semibold">{thisMonthSubmissions.length} / {boost.videos_per_month} videos</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                  {approvedThisMonth > 0 && (
-                    <div 
-                      className="h-full bg-green-500 transition-all duration-500" 
-                      style={{ width: `${earnedPercent}%` }}
-                    />
-                  )}
-                  {pendingThisMonth > 0 && (
-                    <div 
-                      className="h-full bg-orange-500 transition-all duration-500" 
-                      style={{ width: `${pendingPercent}%` }}
-                    />
-                  )}
+                  {approvedThisMonth > 0 && <div className="h-full bg-green-500 transition-all duration-500" style={{
+                  width: `${earnedPercent}%`
+                }} />}
+                  {pendingThisMonth > 0 && <div className="h-full bg-orange-500 transition-all duration-500" style={{
+                  width: `${pendingPercent}%`
+                }} />}
                 </div>
                 <div className="flex items-center gap-4 text-[10px]">
                   <div className="flex items-center gap-1.5">
@@ -396,16 +329,13 @@ export function BoostCard({ boost }: BoostCardProps) {
           {/* Action Cards Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Blueprint Card */}
-            <div 
-              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group"
-              onClick={() => {
-                if (boost.blueprint_id) {
-                  navigate(`/blueprint/${boost.blueprint_id}`);
-                } else {
-                  toast.error("No blueprint linked to this boost");
-                }
-              }}
-            >
+            <div className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group" onClick={() => {
+            if (boost.blueprint_id) {
+              navigate(`/blueprint/${boost.blueprint_id}`);
+            } else {
+              toast.error("No blueprint linked to this boost");
+            }
+          }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-background rounded-lg border">
@@ -421,10 +351,7 @@ export function BoostCard({ boost }: BoostCardProps) {
             </div>
 
             {/* My Posts Card */}
-            <div 
-              className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group"
-              onClick={() => setPostsDialogOpen(true)}
-            >
+            <div className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group" onClick={() => setPostsDialogOpen(true)}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-background rounded-lg border">
@@ -446,7 +373,7 @@ export function BoostCard({ boost }: BoostCardProps) {
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-card border-none [&>button]:hidden">
           {/* Header */}
-          <div className="px-5 pt-5 pb-0">
+          <div className="pt-5 pb-0 px-0">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-geist tracking-[-0.5px] text-lg font-semibold">
                 Submit post
@@ -466,17 +393,11 @@ export function BoostCard({ boost }: BoostCardProps) {
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
                 <Link2 className="h-4 w-4 text-muted-foreground" />
               </div>
-              <Input
-                placeholder="Paste video link..."
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                className="pl-11 h-12 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/60"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !submitting) {
-                    handleSubmitVideo();
-                  }
-                }}
-              />
+              <Input placeholder="Paste video link..." value={videoUrl} onChange={e => setVideoUrl(e.target.value)} className="pl-11 h-12 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/60" onKeyDown={e => {
+              if (e.key === "Enter" && !submitting) {
+                handleSubmitVideo();
+              }
+            }} />
             </div>
 
             <div className="bg-muted/20 rounded-xl p-4">
@@ -498,18 +419,10 @@ export function BoostCard({ boost }: BoostCardProps) {
 
           {/* Footer */}
           <div className="flex gap-2 px-5 pb-5">
-            <Button 
-              variant="ghost" 
-              onClick={() => setSubmitDialogOpen(false)} 
-              className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground"
-            >
+            <Button variant="ghost" onClick={() => setSubmitDialogOpen(false)} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
               Cancel
             </Button>
-            <Button 
-              onClick={handleSubmitVideo} 
-              disabled={submitting || !videoUrl.trim()}
-              className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm"
-            >
+            <Button onClick={handleSubmitVideo} disabled={submitting || !videoUrl.trim()} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
               {submitting ? "Submitting..." : "Submit"}
             </Button>
           </div>
@@ -524,91 +437,57 @@ export function BoostCard({ boost }: BoostCardProps) {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            {boost.blueprint_embed_url ? (
-              <iframe 
-                src={boost.blueprint_embed_url} 
-                className="w-full h-[400px] rounded-lg border"
-                title="Boost directions"
-              />
-            ) : boost.blueprint ? (
-              <div className="space-y-6">
-                {boost.blueprint.content && (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: boost.blueprint.content }} />
-                  </div>
-                )}
+            {boost.blueprint_embed_url ? <iframe src={boost.blueprint_embed_url} className="w-full h-[400px] rounded-lg border" title="Boost directions" /> : boost.blueprint ? <div className="space-y-6">
+                {boost.blueprint.content && <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <div dangerouslySetInnerHTML={{
+                __html: boost.blueprint.content
+              }} />
+                  </div>}
                 
-                {boost.blueprint.content_guidelines && (
-                  <div>
+                {boost.blueprint.content_guidelines && <div>
                     <h4 className="font-semibold text-sm mb-2">Content Guidelines</h4>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{boost.blueprint.content_guidelines}</p>
-                  </div>
-                )}
+                  </div>}
                 
-                {boost.blueprint.hooks && boost.blueprint.hooks.length > 0 && (
-                  <div>
+                {boost.blueprint.hooks && boost.blueprint.hooks.length > 0 && <div>
                     <h4 className="font-semibold text-sm mb-2">Hooks</h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {boost.blueprint.hooks.map((hook: any, i: number) => (
-                        <li key={i}>{typeof hook === 'string' ? hook : hook.text || hook.hook}</li>
-                      ))}
+                      {boost.blueprint.hooks.map((hook: any, i: number) => <li key={i}>{typeof hook === 'string' ? hook : hook.text || hook.hook}</li>)}
                     </ul>
-                  </div>
-                )}
+                  </div>}
                 
-                {boost.blueprint.talking_points && boost.blueprint.talking_points.length > 0 && (
-                  <div>
+                {boost.blueprint.talking_points && boost.blueprint.talking_points.length > 0 && <div>
                     <h4 className="font-semibold text-sm mb-2">Talking Points</h4>
                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                      {boost.blueprint.talking_points.map((point: any, i: number) => (
-                        <li key={i}>{typeof point === 'string' ? point : point.text || point.point}</li>
-                      ))}
+                      {boost.blueprint.talking_points.map((point: any, i: number) => <li key={i}>{typeof point === 'string' ? point : point.text || point.point}</li>)}
                     </ul>
-                  </div>
-                )}
+                  </div>}
                 
-                {boost.blueprint.dos_and_donts && (
-                  <div className="grid grid-cols-2 gap-4">
-                    {boost.blueprint.dos_and_donts.dos && boost.blueprint.dos_and_donts.dos.length > 0 && (
-                      <div>
+                {boost.blueprint.dos_and_donts && <div className="grid grid-cols-2 gap-4">
+                    {boost.blueprint.dos_and_donts.dos && boost.blueprint.dos_and_donts.dos.length > 0 && <div>
                         <h4 className="font-semibold text-sm mb-2 text-green-500">Do's</h4>
                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {boost.blueprint.dos_and_donts.dos.map((item: string, i: number) => (
-                            <li key={i}>{item}</li>
-                          ))}
+                          {boost.blueprint.dos_and_donts.dos.map((item: string, i: number) => <li key={i}>{item}</li>)}
                         </ul>
-                      </div>
-                    )}
-                    {boost.blueprint.dos_and_donts.donts && boost.blueprint.dos_and_donts.donts.length > 0 && (
-                      <div>
+                      </div>}
+                    {boost.blueprint.dos_and_donts.donts && boost.blueprint.dos_and_donts.donts.length > 0 && <div>
                         <h4 className="font-semibold text-sm mb-2 text-red-500">Don'ts</h4>
                         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {boost.blueprint.dos_and_donts.donts.map((item: string, i: number) => (
-                            <li key={i}>{item}</li>
-                          ))}
+                          {boost.blueprint.dos_and_donts.donts.map((item: string, i: number) => <li key={i}>{item}</li>)}
                         </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
                 
-                {boost.blueprint.call_to_action && (
-                  <div>
+                {boost.blueprint.call_to_action && <div>
                     <h4 className="font-semibold text-sm mb-2">Call to Action</h4>
                     <p className="text-sm text-muted-foreground">{boost.blueprint.call_to_action}</p>
-                  </div>
-                )}
-              </div>
-            ) : boost.content_style_requirements ? (
-              <div className="prose prose-sm dark:prose-invert max-w-none">
+                  </div>}
+              </div> : boost.content_style_requirements ? <div className="prose prose-sm dark:prose-invert max-w-none">
                 <p className="whitespace-pre-wrap text-muted-foreground">{boost.content_style_requirements}</p>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
+              </div> : <div className="text-center py-12 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-40" />
                 <p>No content guidelines available</p>
-              </div>
-            )}
+              </div>}
           </div>
         </DialogContent>
       </Dialog>
@@ -626,8 +505,7 @@ export function BoostCard({ boost }: BoostCardProps) {
           </DialogHeader>
           
           <div className="space-y-3 pt-2">
-            {submissions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
+            {submissions.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                   <Video className="h-6 w-6 text-muted-foreground/60" />
                 </div>
@@ -635,30 +513,16 @@ export function BoostCard({ boost }: BoostCardProps) {
                 <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
                   Submit your first video to start earning
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {submissions.map((submission) => (
-                  <div 
-                    key={submission.id}
-                    className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-muted/20 to-muted/40 transition-all hover:border-border hover:shadow-sm"
-                  >
+              </div> : <div className="space-y-3">
+                {submissions.map(submission => <div key={submission.id} className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-muted/20 to-muted/40 transition-all hover:border-border hover:shadow-sm">
                     {/* Status accent bar */}
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                      submission.status === "approved" ? "bg-green-500" : 
-                      submission.status === "rejected" ? "bg-red-500" : 
-                      "bg-yellow-500"
-                    }`} />
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${submission.status === "approved" ? "bg-green-500" : submission.status === "rejected" ? "bg-red-500" : "bg-yellow-500"}`} />
                     
                     <div className="flex items-center justify-between p-4 pl-5">
                       <div className="flex items-center gap-4 min-w-0 flex-1">
                         {/* Platform icon */}
                         <div className="h-10 w-10 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center shrink-0 border border-border/30">
-                          <img 
-                            src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} 
-                            alt={submission.platform} 
-                            className="h-5 w-5" 
-                          />
+                          <img src={platformIcons[submission.platform.toLowerCase()] || platformIcons.tiktok} alt={submission.platform} className="h-5 w-5" />
                         </div>
                         
                         {/* Content */}
@@ -669,28 +533,21 @@ export function BoostCard({ boost }: BoostCardProps) {
                               {format(new Date(submission.submitted_at), "MMM d, h:mm a")}
                             </span>
                           </div>
-                          <a 
-                            href={submission.video_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors group/link"
-                          >
+                          <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors group/link">
                             <span className="truncate max-w-[180px]">
                               {(() => {
-                                try {
-                                  return new URL(submission.video_url).pathname.split('/').pop() || 'View post';
-                                } catch {
-                                  return 'View post';
-                                }
-                              })()}
+                          try {
+                            return new URL(submission.video_url).pathname.split('/').pop() || 'View post';
+                          } catch {
+                            return 'View post';
+                          }
+                        })()}
                             </span>
                             <ExternalLink className="h-3 w-3 shrink-0 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                           </a>
-                          {submission.rejection_reason && (
-                            <p className="text-xs text-destructive/80 font-inter tracking-[-0.5px] line-clamp-1">
+                          {submission.rejection_reason && <p className="text-xs text-destructive/80 font-inter tracking-[-0.5px] line-clamp-1">
                               {submission.rejection_reason}
-                            </p>
-                          )}
+                            </p>}
                         </div>
                       </div>
                       
@@ -698,13 +555,7 @@ export function BoostCard({ boost }: BoostCardProps) {
                       <div className="flex items-center gap-3 shrink-0 pl-4">
                         <div className="text-right">
                           <p className="text-sm font-semibold font-inter tracking-[-0.5px]">
-                            {submission.status === "approved" ? (
-                              <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span>
-                            ) : submission.status === "pending" ? (
-                              <span className="text-muted-foreground">${payoutPerVideo.toFixed(0)}</span>
-                            ) : (
-                              <span className="text-destructive line-through">${payoutPerVideo.toFixed(0)}</span>
-                            )}
+                            {submission.status === "approved" ? <span className="text-green-500">+${submission.payout_amount?.toFixed(2)}</span> : submission.status === "pending" ? <span className="text-muted-foreground">${payoutPerVideo.toFixed(0)}</span> : <span className="text-destructive line-through">${payoutPerVideo.toFixed(0)}</span>}
                           </p>
                           <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
                             {submission.status === "approved" ? "earned" : submission.status === "pending" ? "potential" : "rejected"}
@@ -712,25 +563,15 @@ export function BoostCard({ boost }: BoostCardProps) {
                         </div>
                         
                         {/* Withdraw button - only for pending submissions */}
-                        {submission.status === "pending" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => handleWithdrawSubmission(submission.id)}
-                          >
+                        {submission.status === "pending" && <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleWithdrawSubmission(submission.id)}>
                             <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                          </Button>}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 }
