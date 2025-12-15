@@ -892,7 +892,7 @@ export function BlueprintEditor({
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               
               <div className="h-4 w-px bg-border/50 shrink-0" />
-              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0" />}
+              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => { prev.delete('blueprint'); return prev; })} />}
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
