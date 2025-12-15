@@ -576,6 +576,7 @@ export type Database = {
           collection_name: string | null
           created_at: string
           description: string | null
+          discord_webhook_url: string | null
           home_url: string | null
           id: string
           is_active: boolean
@@ -584,6 +585,7 @@ export type Database = {
           renewal_date: string | null
           shortimize_api_key: string | null
           show_account_tab: boolean
+          slack_webhook_url: string | null
           slug: string
           subscription_expires_at: string | null
           subscription_plan: string | null
@@ -601,6 +603,7 @@ export type Database = {
           collection_name?: string | null
           created_at?: string
           description?: string | null
+          discord_webhook_url?: string | null
           home_url?: string | null
           id?: string
           is_active?: boolean
@@ -609,6 +612,7 @@ export type Database = {
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
+          slack_webhook_url?: string | null
           slug: string
           subscription_expires_at?: string | null
           subscription_plan?: string | null
@@ -626,6 +630,7 @@ export type Database = {
           collection_name?: string | null
           created_at?: string
           description?: string | null
+          discord_webhook_url?: string | null
           home_url?: string | null
           id?: string
           is_active?: boolean
@@ -634,6 +639,7 @@ export type Database = {
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
+          slack_webhook_url?: string | null
           slug?: string
           subscription_expires_at?: string | null
           subscription_plan?: string | null

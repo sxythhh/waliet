@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload, Crown, Check } from "lucide-react";
+import { Upload, Crown, Check, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -14,6 +14,8 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import slackLogo from "@/assets/slack-logo.png";
+import discordLogo from "@/assets/discord-logo.png";
 
 interface Brand {
   id: string;
@@ -28,6 +30,9 @@ interface Brand {
   show_account_tab: boolean;
   subscription_plan: string | null;
   subscription_status: string | null;
+  shortimize_api_key: string | null;
+  slack_webhook_url: string | null;
+  discord_webhook_url: string | null;
 }
 
 export function UserSettingsTab() {
@@ -56,6 +61,13 @@ export function UserSettingsTab() {
     billing_address: "",
     legal_business_name: ""
   });
+  
+  // Integration states
+  const [shortimizeApiKey, setShortimizeApiKey] = useState("");
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState("");
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
+  const [savingIntegrations, setSavingIntegrations] = useState(false);
+  const [showShortimizeKey, setShowShortimizeKey] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -81,8 +93,36 @@ export function UserSettingsTab() {
       setEditedSlug(data?.slug || "");
       setSelectedPlan(data?.subscription_plan || "");
       setSelectedStatus(data?.subscription_status || "inactive");
+      setShortimizeApiKey(data?.shortimize_api_key || "");
+      setSlackWebhookUrl(data?.slack_webhook_url || "");
+      setDiscordWebhookUrl(data?.discord_webhook_url || "");
     } catch (error) {
       console.error("Error fetching brand:", error);
+    }
+  };
+
+  const handleSaveIntegrations = async () => {
+    if (!brand?.id) return;
+    
+    try {
+      setSavingIntegrations(true);
+      const { error } = await supabase
+        .from("brands")
+        .update({
+          shortimize_api_key: shortimizeApiKey || null,
+          slack_webhook_url: slackWebhookUrl || null,
+          discord_webhook_url: discordWebhookUrl || null
+        })
+        .eq("id", brand.id);
+      
+      if (error) throw error;
+      toast.success("Integrations saved");
+      fetchBrand();
+    } catch (error) {
+      console.error("Error saving integrations:", error);
+      toast.error("Failed to save integrations");
+    } finally {
+      setSavingIntegrations(false);
     }
   };
 
@@ -319,7 +359,7 @@ export function UserSettingsTab() {
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center gap-1">
-          {["general", "team", "billing"].map((tab) => (
+          {["general", "integrations", "team", "billing"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -484,6 +524,102 @@ export function UserSettingsTab() {
                   </Button>
                 </div>
               )}
+            </>
+          )}
+        </TabsContent>
+
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="mt-6 space-y-6">
+          {isBrandMode && brand && (
+            <>
+              {/* Shortimize API Key */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                    S
+                  </div>
+                  <div>
+                    <h3 className="font-medium tracking-[-0.5px]">Shortimize</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Connect to track video analytics</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                    API Key
+                  </Label>
+                  <div className="relative">
+                    <Input 
+                      type={showShortimizeKey ? "text" : "password"}
+                      value={shortimizeApiKey} 
+                      onChange={(e) => setShortimizeApiKey(e.target.value)}
+                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" 
+                      placeholder="Enter your Shortimize API key" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowShortimizeKey(!showShortimizeKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Slack Webhook */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <img src={slackLogo} alt="Slack" className="w-10 h-10 rounded-lg object-contain" />
+                  <div>
+                    <h3 className="font-medium tracking-[-0.5px]">Slack</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                    Webhook URL
+                  </Label>
+                  <Input 
+                    type="url"
+                    value={slackWebhookUrl} 
+                    onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
+                    placeholder="https://hooks.slack.com/services/..." 
+                  />
+                </div>
+              </div>
+
+              {/* Discord Webhook */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
+                  <div>
+                    <h3 className="font-medium tracking-[-0.5px]">Discord</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                    Webhook URL
+                  </Label>
+                  <Input 
+                    type="url"
+                    value={discordWebhookUrl} 
+                    onChange={(e) => setDiscordWebhookUrl(e.target.value)}
+                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
+                    placeholder="https://discord.com/api/webhooks/..." 
+                  />
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <Button 
+                onClick={handleSaveIntegrations} 
+                disabled={savingIntegrations}
+                className="w-full h-11 tracking-[-0.5px]"
+              >
+                {savingIntegrations ? "Saving..." : "Save Integrations"}
+              </Button>
             </>
           )}
         </TabsContent>
