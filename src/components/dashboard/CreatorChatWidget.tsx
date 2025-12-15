@@ -8,7 +8,9 @@ import { MessageInput } from "@/components/brand/MessageInput";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import mailIcon from "@/assets/mail-icon.svg";
+import { useTheme } from "@/components/ThemeProvider";
+import mailIconLight from "@/assets/mail-icon.svg";
+import mailIconDark from "@/assets/mail-icon-dark.svg";
 interface Conversation {
   id: string;
   brand_id: string;
@@ -118,6 +120,8 @@ function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'
 }
 
 export function CreatorChatWidget() {
+  const { resolvedTheme } = useTheme();
+  const mailIcon = resolvedTheme === 'dark' ? mailIconDark : mailIconLight;
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
