@@ -117,10 +117,7 @@ export function AppSidebar() {
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
 
   // Get current brand ID for subscription dialog
-  const currentBrandId = !isCreatorMode && workspace
-    ? (allBrands.find(b => b.slug === workspace)?.id || 
-       brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '')
-    : '';
+  const currentBrandId = !isCreatorMode && workspace ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '' : '';
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -139,18 +136,21 @@ export function AppSidebar() {
         // Find the brand id first
         const brandFromAll = allBrands.find(b => b.slug === workspace);
         const brandFromMembership = brandMemberships.find(m => m.brands.slug === workspace);
-        
         if (brandFromAll) {
           setCurrentBrandName(brandFromAll.name);
           setCurrentBrandLogo(brandFromAll.logo_url);
           // Fetch subscription status
-          const { data } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
+          const {
+            data
+          } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
         } else if (brandFromMembership) {
           setCurrentBrandName(brandFromMembership.brands.name);
           setCurrentBrandLogo(brandFromMembership.brands.logo_url);
           // Fetch subscription status
-          const { data } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
+          const {
+            data
+          } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
         }
       } else {
@@ -387,13 +387,7 @@ export function AppSidebar() {
                   <div className="px-3 pb-2">
                     <div className="flex items-center gap-2 px-2.5 py-2 bg-[#0f0f0f] border border-[#1a1a1a] rounded-md">
                       <Search className="w-4 h-4 text-neutral-500" />
-                      <input 
-                        type="text" 
-                        placeholder="Type to filter..." 
-                        className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 outline-none"
-                        value={workspaceSearch}
-                        onChange={(e) => setWorkspaceSearch(e.target.value)}
-                      />
+                      <input type="text" placeholder="Type to filter..." className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 outline-none" value={workspaceSearch} onChange={e => setWorkspaceSearch(e.target.value)} />
                     </div>
                   </div>
                   
@@ -404,10 +398,9 @@ export function AppSidebar() {
                     <span className="text-[10px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Active</span>
                   </div>
                   
-                  <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5">
+                  <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[3px]">
                     {/* Creator Dashboard */}
-                    {("creator dashboard".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && (
-                      <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {("creator dashboard".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                         <div className="flex items-center gap-2.5">
                           <Avatar className="w-7 h-7">
                             <AvatarImage src={avatarUrl || undefined} />
@@ -418,14 +411,10 @@ export function AppSidebar() {
                           <span className="text-[13px] font-medium text-white">Creator Dashboard</span>
                         </div>
                         {isCreatorMode && <Check className="w-4 h-4 text-neutral-400" />}
-                      </button>
-                    )}
+                      </button>}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands
-                      .filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "")
-                      .map(brand => (
-                        <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                                 <span className="text-[11px] font-medium text-neutral-400 uppercase">{brand.name.charAt(0)}</span>
@@ -433,14 +422,10 @@ export function AppSidebar() {
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
                           </div>
                           {workspace === brand.slug && <Check className="w-4 h-4 text-neutral-400" />}
-                        </button>
-                      ))}
+                        </button>)}
                     
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships
-                      .filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "")
-                      .map(membership => (
-                        <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
                             {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                                 <span className="text-[11px] font-medium text-neutral-400 uppercase">{membership.brands.name.charAt(0)}</span>
@@ -448,8 +433,7 @@ export function AppSidebar() {
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
                           </div>
                           {workspace === membership.brands.slug && <Check className="w-4 h-4 text-neutral-400" />}
-                        </button>
-                      ))}
+                        </button>)}
                   </div>
                   
                   <div className="border-t border-[#1a1a1a]" />
@@ -457,9 +441,9 @@ export function AppSidebar() {
                   {/* Create Brand */}
                   <div className="p-1.5">
                     <button onClick={() => {
-                      setWorkspaceOpen(false);
-                      setShowCreateBrandDialog(true);
-                    }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
+                  setWorkspaceOpen(false);
+                  setShowCreateBrandDialog(true);
+                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
                       <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                         <Plus className="w-3.5 h-3.5" />
                       </div>
@@ -511,8 +495,7 @@ export function AppSidebar() {
         </nav>
 
         {/* Upgrade CTA - Only show in brand workspace, when not collapsed, and when not subscribed */}
-        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== 'active' && (
-          <div className="px-3 mb-2">
+        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== 'active' && <div className="px-3 mb-2">
             <div className="rounded-lg bg-[#1a1a1a] p-3">
               <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
                 Unlock more features
@@ -520,15 +503,11 @@ export function AppSidebar() {
               <p className="font-['Geist'] text-[12px] tracking-[-0.5px] text-[#6f6f6f] mb-3">
                 Get access to advanced analytics, unlimited campaigns, and priority support.
               </p>
-              <button 
-                className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center"
-                onClick={() => setSubscriptionGateOpen(true)}
-              >
+              <button className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" onClick={() => setSubscriptionGateOpen(true)}>
                 Upgrade Plan
               </button>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* User Profile Section */}
         <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
@@ -599,10 +578,6 @@ export function AppSidebar() {
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
       fetchBrandMemberships();
     }} />
-      <SubscriptionGateDialog 
-        brandId={currentBrandId} 
-        open={subscriptionGateOpen} 
-        onOpenChange={setSubscriptionGateOpen} 
-      />
+      <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
     </>;
 }
