@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from "react";
-import { X, MessageCircle } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { X, MessageCircle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { MessageInput } from "@/components/brand/MessageInput";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import mailIcon from "@/assets/mail-icon.svg";
 interface Conversation {
   id: string;
@@ -28,6 +30,94 @@ interface Message {
   is_read: boolean;
   created_at: string;
 }
+
+// Helper to detect and parse boost/campaign URLs
+const parseInviteUrl = (content: string): { type: 'boost' | 'campaign'; id: string } | null => {
+  // Match patterns like /boost/{id} or /c/{slug}
+  const boostMatch = content.match(/\/boost\/([a-zA-Z0-9-]+)/);
+  const campaignMatch = content.match(/\/c\/([a-zA-Z0-9-]+)/);
+  
+  if (boostMatch) return { type: 'boost', id: boostMatch[1] };
+  if (campaignMatch) return { type: 'campaign', id: campaignMatch[1] };
+  return null;
+};
+
+// Invite Card Component for boost/campaign links
+function InviteCard({ type, id, isCreatorMessage }: { type: 'boost' | 'campaign'; id: string; isCreatorMessage: boolean }) {
+  const navigate = useNavigate();
+  const [data, setData] = useState<{ title: string; brand_name: string; logo_url: string | null } | null>(null);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      if (type === 'boost') {
+        const { data: boost } = await supabase
+          .from('bounty_campaigns')
+          .select('title, brands!inner(name, logo_url)')
+          .eq('id', id)
+          .maybeSingle();
+        if (boost) {
+          setData({
+            title: boost.title,
+            brand_name: (boost.brands as any)?.name || '',
+            logo_url: (boost.brands as any)?.logo_url || null
+          });
+        }
+      } else {
+        const { data: campaign } = await supabase
+          .from('campaigns')
+          .select('title, brand_name, brand_logo_url')
+          .eq('slug', id)
+          .maybeSingle();
+        if (campaign) {
+          setData({
+            title: campaign.title,
+            brand_name: campaign.brand_name,
+            logo_url: campaign.brand_logo_url
+          });
+        }
+      }
+    };
+    fetchData();
+  }, [type, id]);
+
+  const handleClick = () => {
+    if (type === 'boost') {
+      navigate(`/boost/${id}`);
+    } else {
+      navigate(`/c/${id}`);
+    }
+  };
+
+  if (!data) return null;
+
+  return (
+    <div 
+      className={`mt-2 p-3 rounded-xl border cursor-pointer transition-colors ${
+        isCreatorMessage 
+          ? 'bg-white/10 border-white/20 hover:bg-white/20' 
+          : 'bg-background border-border hover:bg-accent'
+      }`}
+      onClick={handleClick}
+    >
+      <div className="flex items-center gap-3">
+        <Avatar className="h-10 w-10 rounded-lg">
+          <AvatarImage src={data.logo_url || undefined} />
+          <AvatarFallback className="rounded-lg text-xs">{data.brand_name.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-medium truncate ${isCreatorMessage ? 'text-white' : 'text-foreground'}`}>
+            {data.title}
+          </p>
+          <p className={`text-xs ${isCreatorMessage ? 'text-white/70' : 'text-muted-foreground'}`}>
+            {type === 'boost' ? 'Boost' : 'Campaign'} • {data.brand_name}
+          </p>
+        </div>
+        <ExternalLink className={`h-4 w-4 ${isCreatorMessage ? 'text-white/70' : 'text-muted-foreground'}`} />
+      </div>
+    </div>
+  );
+}
+
 export function CreatorChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -267,16 +357,30 @@ export function CreatorChatWidget() {
                       <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                         No messages in this conversation yet.
                       </p>
-                    </div> : messages.map(message => <div key={message.id} className={`flex ${message.sender_type === "creator" ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${message.sender_type === "creator" ? "bg-[#2060de] text-white" : "bg-muted"}`}>
-                          <p className="text-sm font-inter tracking-[-0.5px] whitespace-pre-wrap">
-                            {message.content}
-                          </p>
-                          <p className={`text-[10px] mt-1 ${message.sender_type === "creator" ? "text-white/70" : "text-muted-foreground"}`}>
-                            {format(new Date(message.created_at), "h:mm a")}
-                          </p>
+                    </div> : messages.map(message => {
+                      const inviteData = parseInviteUrl(message.content);
+                      const isCreatorMessage = message.sender_type === "creator";
+                      
+                      return (
+                        <div key={message.id} className={`flex ${isCreatorMessage ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 overflow-hidden ${isCreatorMessage ? "bg-[#2060de] text-white" : "bg-muted"}`}>
+                            <p className="text-sm font-inter tracking-[-0.5px] whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                            {inviteData && (
+                              <InviteCard 
+                                type={inviteData.type} 
+                                id={inviteData.id} 
+                                isCreatorMessage={isCreatorMessage} 
+                              />
+                            )}
+                            <p className={`text-[10px] mt-1 ${isCreatorMessage ? "text-white/70" : "text-muted-foreground"}`}>
+                              {format(new Date(message.created_at), "h:mm a")}
+                            </p>
+                          </div>
                         </div>
-                      </div>)}
+                      );
+                    })}
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
