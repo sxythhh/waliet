@@ -779,12 +779,13 @@ export function CampaignsTab({
       {boostApplications.filter(app => app.status === 'accepted').length > 0 && <div className="space-y-3">
           <h3 className="text-lg font-semibold">Your Boosts</h3>
           <div className="space-y-3">
-            {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
+          {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
           id: application.boost_campaigns.id,
           title: application.boost_campaigns.title,
           monthly_retainer: application.boost_campaigns.monthly_retainer,
           videos_per_month: application.boost_campaigns.videos_per_month,
           brands: application.boost_campaigns.brands,
+          blueprint_id: application.boost_campaigns.blueprint_id,
           blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
           content_style_requirements: application.boost_campaigns.content_style_requirements,
           blueprint: application.boost_campaigns.blueprint
