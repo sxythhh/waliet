@@ -106,6 +106,7 @@ export function WalletTab() {
   const [transactionSheetOpen, setTransactionSheetOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [pendingBoostEarnings, setPendingBoostEarnings] = useState(0);
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -131,6 +132,7 @@ export function WalletTab() {
   } = useToast();
   useEffect(() => {
     fetchWallet();
+    fetchPendingBoostEarnings();
 
     // Set up real-time listener for payout requests
     const channel = supabase.channel('payout-updates').on('postgres_changes', {
@@ -147,6 +149,35 @@ export function WalletTab() {
       supabase.removeChannel(channel);
     };
   }, []);
+  
+  const fetchPendingBoostEarnings = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    // Get all pending boost submissions
+    const { data: pendingSubmissions } = await supabase
+      .from("boost_video_submissions")
+      .select("payout_amount, bounty_campaign_id, bounty_campaigns(monthly_retainer, videos_per_month)")
+      .eq("user_id", session.user.id)
+      .eq("status", "pending");
+    
+    if (pendingSubmissions && pendingSubmissions.length > 0) {
+      let totalPending = 0;
+      pendingSubmissions.forEach(sub => {
+        if (sub.payout_amount) {
+          totalPending += sub.payout_amount;
+        } else if (sub.bounty_campaigns) {
+          // Calculate estimated payout if not set
+          const campaign = sub.bounty_campaigns as any;
+          const perVideoRate = campaign.monthly_retainer / campaign.videos_per_month;
+          totalPending += perVideoRate;
+        }
+      });
+      setPendingBoostEarnings(totalPending);
+    } else {
+      setPendingBoostEarnings(0);
+    }
+  };
   useEffect(() => {
     if (wallet) {
       fetchEarningsData();
@@ -246,32 +277,37 @@ export function WalletTab() {
       ascending: true
     });
     const dataPoints: EarningsDataPoint[] = [];
-    let cumulativeEarnings = 0;
 
-    // Generate data points
+    // Generate data points - show daily earnings (not cumulative) for better visualization
     const pointCount = Math.min(days, 30); // Max 30 points for performance
     const interval = Math.max(1, Math.floor(days / pointCount));
+    
+    // Group transactions by date
+    const earningsByDate: Record<string, number> = {};
+    if (allTransactions) {
+      allTransactions.forEach(txn => {
+        const txnDate = new Date(txn.created_at);
+        const dateKey = format(txnDate, 'yyyy-MM-dd');
+        const amount = Number(txn.amount) || 0;
+        // Only count earnings (positive amounts)
+        if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received', 'boost'].includes(txn.type) && amount > 0) {
+          earningsByDate[dateKey] = (earningsByDate[dateKey] || 0) + amount;
+        }
+      });
+    }
+    
     for (let i = 0; i <= pointCount; i++) {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
-
-      // Calculate cumulative earnings up to this date (only positive transactions)
-      if (allTransactions) {
-        allTransactions.forEach(txn => {
-          const txnDate = new Date(txn.created_at);
-          if (txnDate <= currentDate && txnDate > new Date(start.getTime() + (i - 1) * interval * 24 * 60 * 60 * 1000)) {
-            const amount = Number(txn.amount) || 0;
-            // Only count earnings (positive amounts)
-            if (['earning', 'admin_adjustment', 'bonus', 'refund', 'transfer_received'].includes(txn.type) && amount > 0) {
-              cumulativeEarnings += amount;
-            }
-          }
-        });
-      }
+      const dateKey = format(currentDate, 'yyyy-MM-dd');
+      
+      // Show daily earnings for that specific day
+      const dailyEarnings = earningsByDate[dateKey] || 0;
+      
       dataPoints.push({
         date: dateStr,
-        amount: Number(cumulativeEarnings.toFixed(2))
+        amount: Number(dailyEarnings.toFixed(2))
       });
     }
 
@@ -1424,8 +1460,8 @@ export function WalletTab() {
             </p>
             <Separator className="my-2" />
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground font-medium">Available Balance</span>
-              <span className="text-base font-semibold">{isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}</span>
+              <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
+              <span className="text-base font-semibold text-amber-500">{isBalanceVisible ? `$${pendingBoostEarnings.toFixed(2)}` : "••••••"}</span>
             </div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground font-medium">In Transit</span>
