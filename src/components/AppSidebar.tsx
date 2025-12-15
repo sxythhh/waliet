@@ -1,11 +1,14 @@
 import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check } from "lucide-react";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import viralityIcon from "@/assets/avatar-icon.png";
 import discordIcon from "@/assets/discord-icon.png";
 import supportIcon from "@/assets/support-icon.svg";
+import lightbulbIcon from "@/assets/lightbulb-icon.svg";
+import bugIcon from "@/assets/bug-icon.svg";
 import homeInactive from "@/assets/home-inactive.svg";
 import homeActive from "@/assets/home-active.svg";
 import walletInactive from "@/assets/wallet-inactive.svg";
@@ -114,6 +117,8 @@ export function AppSidebar() {
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+  const [feedbackType, setFeedbackType] = useState<"feature" | "bug">("feature");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
 
   // Get current brand ID for subscription dialog
@@ -562,6 +567,14 @@ export function AppSidebar() {
                   <img src={supportIcon} alt="Support" className="w-5 h-5" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
                 </button>
+                <button onClick={() => { setFeedbackType("feature"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
+                  <img src={lightbulbIcon} alt="Feature Request" className="w-5 h-5" />
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Feature Request</span>
+                </button>
+                <button onClick={() => { setFeedbackType("bug"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
+                  <img src={bugIcon} alt="Report Bug" className="w-5 h-5" />
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Report Bug</span>
+                </button>
               </div>
 
               {/* Sign Out Button */}
@@ -577,5 +590,6 @@ export function AppSidebar() {
       fetchBrandMemberships();
     }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
     </>;
 }
