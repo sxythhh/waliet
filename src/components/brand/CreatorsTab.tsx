@@ -589,6 +589,9 @@ export function CreatorsTab({
     }
   };
   const getConversationCreator = (conv: Conversation) => {
+    // First check if creator data is attached to the conversation
+    if (conv.creator) return conv.creator;
+    // Fall back to looking in campaign creators list
     return creators.find(c => c.id === conv.creator_id);
   };
   const exportToCSV = () => {
@@ -660,7 +663,7 @@ export function CreatorsTab({
           <div className="flex items-center gap-2">
             <h2 className="font-medium text-sm">Messages</h2>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50">
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={() => setRecruitDialogOpen(true)}>
             <PenSquare className="h-4 w-4" />
           </Button>
         </div>
