@@ -223,11 +223,81 @@ export function BoostDetailView({
     count: pendingCount
   }];
   if (loading) {
-    return <div className="h-full flex flex-col">
-        <div className="flex flex-col h-full border-l border-border overflow-hidden">
-          <div className="flex-1 p-6">
-            <Skeleton className="h-8 w-48 mb-4" />
-            <Skeleton className="h-64 w-full" />
+    return <div className="h-full p-[5px]">
+        <div className="h-full flex flex-col border border-border/50 rounded-[20px] overflow-hidden bg-background animate-fade-in">
+          {/* Header skeleton */}
+          <div className="flex-shrink-0 flex items-center justify-between px-4 border-b border-border/30 py-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-20 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-full" />
+            </div>
+          </div>
+          
+          {/* Tabs skeleton */}
+          <div className="flex-shrink-0 flex items-center gap-4 px-6 py-3 border-b border-border/30">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+          
+          {/* Content area skeleton */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left sidebar skeleton */}
+            <div className="w-80 border-r border-border/30 p-4 space-y-4">
+              <Skeleton className="h-5 w-24 mb-3" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Right content skeleton */}
+            <div className="flex-1 p-6 space-y-6">
+              {/* Stats cards */}
+              <div className="grid grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Main content area */}
+              <div className="space-y-4">
+                <Skeleton className="h-5 w-32" />
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Description skeleton */}
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </div>
           </div>
         </div>
       </div>;
