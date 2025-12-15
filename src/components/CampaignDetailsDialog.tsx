@@ -45,6 +45,7 @@ interface Campaign {
   requirements?: string[] | null;
   campaign_update?: string | null;
   campaign_update_at?: string | null;
+  payout_day_of_week?: number | null;
 }
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
@@ -71,18 +72,18 @@ const calculateDaysUntilEnd = (endDate: string | null) => {
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
 };
-const getNextPayoutDate = () => {
+const getNextPayoutDate = (payoutDayOfWeek: number = 2) => {
   const now = new Date();
   const dayOfWeek = now.getDay();
-  // Tuesday = 2, Wednesday = 3
-  let daysUntilTuesday = (2 - dayOfWeek + 7) % 7;
-  if (daysUntilTuesday === 0) daysUntilTuesday = 7; // If today is Tuesday, next Tuesday
-  const nextTuesday = new Date(now);
-  nextTuesday.setDate(now.getDate() + daysUntilTuesday);
-  nextTuesday.setHours(12, 0, 0, 0);
+  // Calculate days until next payout day
+  let daysUntilPayout = (payoutDayOfWeek - dayOfWeek + 7) % 7;
+  if (daysUntilPayout === 0) daysUntilPayout = 7; // If today is payout day, next week
+  const nextPayoutDate = new Date(now);
+  nextPayoutDate.setDate(now.getDate() + daysUntilPayout);
+  nextPayoutDate.setHours(12, 0, 0, 0);
   return {
-    date: nextTuesday,
-    daysUntil: daysUntilTuesday
+    date: nextPayoutDate,
+    daysUntil: daysUntilPayout
   };
 };
 const formatDate = (dateString: string) => {
@@ -180,7 +181,7 @@ export function CampaignDetailsDialog({
   const hasConnectedAccounts = campaign.connected_accounts && campaign.connected_accounts.length > 0;
   const hasAssetLinks = campaign.asset_links && campaign.asset_links.length > 0;
   const hasRequirements = campaign.requirements && campaign.requirements.length > 0;
-  const nextPayout = getNextPayoutDate();
+  const nextPayout = getNextPayoutDate(campaign.payout_day_of_week ?? 2);
   const startDate = campaign.start_date || campaign.created_at;
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-8">

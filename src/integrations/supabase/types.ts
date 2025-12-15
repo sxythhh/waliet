@@ -1160,6 +1160,7 @@ export type Database = {
           is_featured: boolean
           is_infinite_budget: boolean | null
           is_private: boolean | null
+          payout_day_of_week: number | null
           preview_url: string | null
           requirements: string[] | null
           requires_application: boolean
@@ -1198,6 +1199,7 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          payout_day_of_week?: number | null
           preview_url?: string | null
           requirements?: string[] | null
           requires_application?: boolean
@@ -1236,6 +1238,7 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          payout_day_of_week?: number | null
           preview_url?: string | null
           requirements?: string[] | null
           requires_application?: boolean

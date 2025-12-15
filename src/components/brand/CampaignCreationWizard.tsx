@@ -41,6 +41,16 @@ const CAMPAIGN_NICHES = [
   { id: 'ecommerce', label: 'E-commerce & Retail' },
 ];
 
+const PAYOUT_DAYS = [
+  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+];
+
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
@@ -59,7 +69,8 @@ const campaignSchema = z.object({
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
   hashtags: z.array(z.string()).default([]),
-  application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([])
+  application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([]),
+  payout_day_of_week: z.number().min(0).max(6).default(2)
 }).refine(data => {
   if (data.is_private) {
     return data.access_code && data.access_code.length >= 6;
@@ -105,6 +116,7 @@ interface Campaign {
   }[] | null;
   requirements?: string[] | null;
   application_questions?: string[] | null;
+  payout_day_of_week?: number | null;
 }
 interface CampaignCreationWizardProps {
   brandId: string;
@@ -229,7 +241,8 @@ export function CampaignCreationWizard({
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
       hashtags: campaign?.hashtags || [],
-      application_questions: campaign?.application_questions || []
+      application_questions: campaign?.application_questions || [],
+      payout_day_of_week: campaign?.payout_day_of_week ?? 2
     }
   });
   const [newQuestion, setNewQuestion] = useState("");
@@ -265,7 +278,8 @@ export function CampaignCreationWizard({
         access_code: campaign?.access_code || "",
         requires_application: campaign?.requires_application !== false,
         hashtags: campaign?.hashtags || [],
-        application_questions: campaign?.application_questions || []
+        application_questions: campaign?.application_questions || [],
+        payout_day_of_week: campaign?.payout_day_of_week ?? 2
       });
       setBannerPreview(campaign?.banner_url || null);
       setCurrentStep(isEditMode ? 2 : 1);
@@ -417,6 +431,7 @@ export function CampaignCreationWizard({
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
           application_questions: values.application_questions || [],
+          payout_day_of_week: values.payout_day_of_week,
           ...(bannerFile ? {
             banner_url: bannerUrl
           } : {})
@@ -455,6 +470,7 @@ export function CampaignCreationWizard({
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
           application_questions: values.application_questions || [],
+          payout_day_of_week: values.payout_day_of_week,
           banner_url: bannerUrl,
           brand_id: brandId,
           brand_name: brandName,
