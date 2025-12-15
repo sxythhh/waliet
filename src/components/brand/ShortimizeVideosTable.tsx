@@ -19,7 +19,6 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
-
 interface ShortimizeVideo {
   ad_id: string;
   username: string;
@@ -38,7 +37,6 @@ interface ShortimizeVideo {
   private: boolean;
   creator_name?: string;
 }
-
 interface CreatorInfo {
   id: string;
   name: string;
@@ -55,25 +53,30 @@ interface CreatorInfo {
   total_views: number;
   total_earnings: number;
 }
-
 interface ShortimizeVideosTableProps {
   brandId: string;
   collectionName?: string;
   campaignId?: string;
   timeframe?: TimeframeOption;
 }
-
 type SortField = 'uploaded_at' | 'latest_views' | 'latest_likes' | 'latest_comments' | 'latest_shares';
 type SortDirection = 'asc' | 'desc';
-
-const SORT_OPTIONS = [
-  { value: 'uploaded_at', label: 'Most Recent' },
-  { value: 'latest_views', label: 'Most Viewed' },
-  { value: 'latest_likes', label: 'Most Liked' },
-  { value: 'latest_comments', label: 'Most Comments' },
-  { value: 'latest_shares', label: 'Most Shares' },
-] as const;
-
+const SORT_OPTIONS = [{
+  value: 'uploaded_at',
+  label: 'Most Recent'
+}, {
+  value: 'latest_views',
+  label: 'Most Viewed'
+}, {
+  value: 'latest_likes',
+  label: 'Most Liked'
+}, {
+  value: 'latest_comments',
+  label: 'Most Comments'
+}, {
+  value: 'latest_shares',
+  label: 'Most Shares'
+}] as const;
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
 
 // Extract platform-specific video ID from ad_link
@@ -101,38 +104,75 @@ const extractPlatformId = (adLink: string, platform: string): string | null => {
 };
 
 // Calculate date range from timeframe
-const getDateRangeFromTimeframe = (timeframe: TimeframeOption | undefined): { start: Date | undefined; end: Date | undefined } => {
+const getDateRangeFromTimeframe = (timeframe: TimeframeOption | undefined): {
+  start: Date | undefined;
+  end: Date | undefined;
+} => {
   if (!timeframe || timeframe === 'all_time') {
-    return { start: undefined, end: undefined };
+    return {
+      start: undefined,
+      end: undefined
+    };
   }
-  
   const now = new Date();
   const today = startOfDay(now);
-  
   switch (timeframe) {
     case 'today':
-      return { start: today, end: now };
+      return {
+        start: today,
+        end: now
+      };
     case 'this_week':
-      return { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) };
-    case 'last_week': {
-      const lastWeek = subWeeks(now, 1);
-      return { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) };
-    }
+      return {
+        start: startOfWeek(now, {
+          weekStartsOn: 1
+        }),
+        end: endOfWeek(now, {
+          weekStartsOn: 1
+        })
+      };
+    case 'last_week':
+      {
+        const lastWeek = subWeeks(now, 1);
+        return {
+          start: startOfWeek(lastWeek, {
+            weekStartsOn: 1
+          }),
+          end: endOfWeek(lastWeek, {
+            weekStartsOn: 1
+          })
+        };
+      }
     case 'this_month':
-      return { start: startOfMonth(now), end: endOfMonth(now) };
-    case 'last_month': {
-      const lastMonth = subMonths(now, 1);
-      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
-    }
+      return {
+        start: startOfMonth(now),
+        end: endOfMonth(now)
+      };
+    case 'last_month':
+      {
+        const lastMonth = subMonths(now, 1);
+        return {
+          start: startOfMonth(lastMonth),
+          end: endOfMonth(lastMonth)
+        };
+      }
     default:
-      return { start: undefined, end: undefined };
+      return {
+        start: undefined,
+        end: undefined
+      };
   }
 };
-
-export function ShortimizeVideosTable({ brandId, collectionName, campaignId, timeframe }: ShortimizeVideosTableProps) {
-  const { resolvedTheme } = useTheme();
+export function ShortimizeVideosTable({
+  brandId,
+  collectionName,
+  campaignId,
+  timeframe
+}: ShortimizeVideosTableProps) {
+  const {
+    resolvedTheme
+  } = useTheme();
   const isDark = resolvedTheme === 'dark';
-  
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
@@ -140,53 +180,62 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
   const [sortField, setSortField] = useState<SortField>('uploaded_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 50, total_pages: 0 });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 50,
+    total_pages: 0
+  });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-  
+
   // Request tracking to prevent duplicates and stale responses
   const requestIdRef = useRef(0);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Platform logos based on theme
   const platformLogos = useMemo(() => ({
     tiktok: isDark ? tiktokLogoWhite : tiktokLogoBlack,
     instagram: isDark ? instagramLogoWhite : instagramLogoBlack,
-    youtube: isDark ? youtubeLogoWhite : youtubeLogoBlack,
+    youtube: isDark ? youtubeLogoWhite : youtubeLogoBlack
   }), [isDark]);
 
   // Calculate effective date range - custom dates override timeframe
-  const { startDate, endDate } = useMemo(() => {
+  const {
+    startDate,
+    endDate
+  } = useMemo(() => {
     if (customStartDate || customEndDate) {
-      return { startDate: customStartDate, endDate: customEndDate };
+      return {
+        startDate: customStartDate,
+        endDate: customEndDate
+      };
     }
     const range = getDateRangeFromTimeframe(timeframe);
-    return { startDate: range.start, endDate: range.end };
+    return {
+      startDate: range.start,
+      endDate: range.end
+    };
   }, [timeframe, customStartDate, customEndDate]);
-
   const fetchCreatorMatches = async (usernames: string[]) => {
     if (usernames.length === 0) return;
-    
     try {
       // Fetch social accounts with profile data
-      const { data: accountsData, error: accountsError } = await supabase
-        .from('social_accounts')
-        .select('id, username, platform, user_id, account_link, avatar_url, follower_count, profiles:user_id(id, full_name, username, avatar_url, email)')
-        .in('username', usernames);
-      
+      const {
+        data: accountsData,
+        error: accountsError
+      } = await supabase.from('social_accounts').select('id, username, platform, user_id, account_link, avatar_url, follower_count, profiles:user_id(id, full_name, username, avatar_url, email)').in('username', usernames);
       if (accountsError) throw accountsError;
-      
+
       // Get unique user IDs to fetch wallet data
       const userIds = [...new Set(accountsData?.map(a => a.user_id).filter(Boolean) || [])];
-      
+
       // Fetch wallet data for earnings
-      const { data: walletsData } = await supabase
-        .from('wallets')
-        .select('user_id, total_earned')
-        .in('user_id', userIds);
-      
+      const {
+        data: walletsData
+      } = await supabase.from('wallets').select('user_id, total_earned').in('user_id', userIds);
       const walletMap = new Map(walletsData?.map(w => [w.user_id, w.total_earned || 0]) || []);
-      
+
       // Group accounts by user
       const userAccountsMap = new Map<string, typeof accountsData>();
       accountsData?.forEach(account => {
@@ -196,7 +245,6 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
           userAccountsMap.set(account.user_id, existing);
         }
       });
-      
       const matches = new Map<string, CreatorInfo>();
       accountsData?.forEach((account: any) => {
         const key = `${account.username.toLowerCase()}_${account.platform.toLowerCase()}`;
@@ -214,10 +262,11 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
               username: a.username,
               account_link: a.account_link,
               avatar_url: a.avatar_url,
-              follower_count: a.follower_count,
+              follower_count: a.follower_count
             })),
-            total_views: 0, // Could be fetched from analytics if needed
-            total_earnings: walletMap.get(account.user_id) || 0,
+            total_views: 0,
+            // Could be fetched from analytics if needed
+            total_earnings: walletMap.get(account.user_id) || 0
           });
         }
       });
@@ -226,13 +275,14 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
       console.error('Error fetching creator matches:', error);
     }
   };
-
   const fetchVideos = useCallback(async (currentRequestId: number) => {
     console.log('[ShortimizeVideosTable] fetchVideos called, requestId:', currentRequestId, 'brandId:', brandId);
     setIsLoading(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-shortimize-videos', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('fetch-shortimize-videos', {
         body: {
           brandId,
           collectionName,
@@ -242,8 +292,8 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
           orderBy: sortField,
           orderDirection: sortDirection,
           uploadedAtStart: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-          uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
-        },
+          uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined
+        }
       });
 
       // Ignore stale responses
@@ -251,19 +301,16 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
         console.log('[ShortimizeVideosTable] Ignoring stale response, requestId:', currentRequestId, 'current:', requestIdRef.current);
         return;
       }
-
-      console.log('[ShortimizeVideosTable] fetch response:', { 
-        error, 
-        hasData: !!data, 
+      console.log('[ShortimizeVideosTable] fetch response:', {
+        error,
+        hasData: !!data,
         videosCount: data?.videos?.length,
-        pagination: data?.pagination,
+        pagination: data?.pagination
       });
-
       if (error) {
         console.error('[ShortimizeVideosTable] Supabase function error:', error);
         throw error;
       }
-
       if (data.error) {
         if (data.error.includes('API key not configured')) {
           console.log('[ShortimizeVideosTable] Shortimize not configured for this brand');
@@ -274,19 +321,20 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
         console.error('[ShortimizeVideosTable] API error:', data.error);
         throw new Error(data.error);
       }
-
       setHasApiKey(true);
       const videosData = data.videos || [];
       setVideos(videosData);
-      setPagination(prev => ({ ...prev, ...data.pagination }));
-      
+      setPagination(prev => ({
+        ...prev,
+        ...data.pagination
+      }));
+
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
       await fetchCreatorMatches(uniqueUsernames);
     } catch (error: any) {
       // Only handle error if this is still the current request
       if (currentRequestId !== requestIdRef.current) return;
-      
       console.error('[ShortimizeVideosTable] Error fetching videos:', error);
       const errorMsg = error?.message || '';
       if (!errorMsg.includes('API key not configured')) {
@@ -307,23 +355,21 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    
     debounceTimerRef.current = setTimeout(() => {
       // Increment request ID to invalidate any in-flight requests
       requestIdRef.current += 1;
       const currentRequestId = requestIdRef.current;
-      
+
       // Clear videos before new fetch to prevent duplicates
       setVideos([]);
       fetchVideos(currentRequestId);
     }, 300);
   }, [fetchVideos]);
-
   useEffect(() => {
     if (brandId && (collectionName || campaignId)) {
       triggerFetch();
     }
-    
+
     // Cleanup debounce timer on unmount
     return () => {
       if (debounceTimerRef.current) {
@@ -331,25 +377,24 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
       }
     };
   }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate, triggerFetch]);
-
   const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
     triggerFetch();
   };
-  
   const handleManualRefresh = () => {
     requestIdRef.current += 1;
     setVideos([]);
     fetchVideos(requestIdRef.current);
   };
-
   const formatNumber = (num: number | null) => {
     if (num === null || num === undefined) return '-';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toLocaleString();
   };
-
   const getPlatformIcon = (platform: string) => {
     const logo = platformLogos[platform?.toLowerCase() as keyof typeof platformLogos];
     if (logo) {
@@ -357,48 +402,41 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
     }
     return <span className="h-4 w-4 flex items-center justify-center text-xs">🎬</span>;
   };
-
   const getThumbnailUrl = (video: ShortimizeVideo) => {
     const platformId = extractPlatformId(video.ad_link, video.platform);
     if (!platformId) return null;
     return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
   };
-
   const getCreatorInfo = (video: ShortimizeVideo): CreatorInfo | null => {
     const key = `${video.username.toLowerCase()}_${video.platform.toLowerCase()}`;
     return creatorMatches.get(key) || null;
   };
-
   const startIndex = (pagination.page - 1) * pagination.limit + 1;
   const endIndex = Math.min(pagination.page * pagination.limit, pagination.total);
-
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       {/* Header with filters */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center justify-between gap-4 flex-wrap py-[10px]">
         <div className="flex items-center gap-2">
-          <Button type="button" onClick={handleManualRefresh} variant="ghost" size="icon" disabled={isLoading || (!collectionName && !campaignId)} className="h-8 w-8">
+          <Button type="button" onClick={handleManualRefresh} variant="ghost" size="icon" disabled={isLoading || !collectionName && !campaignId} className="h-8 w-8">
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
           
           {/* Sort Selector */}
-          <Select 
-            value={sortField} 
-            onValueChange={(value) => {
-              setSortField(value as SortField);
-              setPagination(prev => ({ ...prev, page: 1 }));
-            }}
-          >
+          <Select value={sortField} onValueChange={value => {
+          setSortField(value as SortField);
+          setPagination(prev => ({
+            ...prev,
+            page: 1
+          }));
+        }}>
             <SelectTrigger className="h-8 w-[140px] text-xs tracking-[-0.5px] border-0 bg-muted/50 hover:bg-muted">
               <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SORT_OPTIONS.map(option => (
-                <SelectItem key={option.value} value={option.value} className="text-xs tracking-[-0.5px]">
+              {SORT_OPTIONS.map(option => <SelectItem key={option.value} value={option.value} className="text-xs tracking-[-0.5px]">
                   {option.label}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -409,13 +447,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2 tracking-[-0.5px] h-8 text-xs min-w-[200px] justify-start bg-muted/50 hover:bg-muted">
                 <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                {startDate && endDate ? (
-                  <span>{format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}</span>
-                ) : startDate ? (
-                  <span>{format(startDate, 'MMM d, yyyy')} - ...</span>
-                ) : (
-                  <span className="text-muted-foreground">Filter by upload date</span>
-                )}
+                {startDate && endDate ? <span>{format(startDate, 'MMM d')} - {format(endDate, 'MMM d, yyyy')}</span> : startDate ? <span>{format(startDate, 'MMM d, yyyy')} - ...</span> : <span className="text-muted-foreground">Filter by upload date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-4 bg-black/50 backdrop-blur-xl border-none" align="end">
@@ -423,46 +455,27 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                 <div className="flex gap-4">
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">Start Date</p>
-                    <Calendar
-                      mode="single"
-                      selected={customStartDate}
-                      onSelect={setCustomStartDate}
-                      disabled={(date) => customEndDate ? date > customEndDate : false}
-                      initialFocus
-                      className="rounded-md border-none"
-                    />
+                    <Calendar mode="single" selected={customStartDate} onSelect={setCustomStartDate} disabled={date => customEndDate ? date > customEndDate : false} initialFocus className="rounded-md border-none" />
                   </div>
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground tracking-[-0.5px] text-center">End Date</p>
-                    <Calendar
-                      mode="single"
-                      selected={customEndDate}
-                      onSelect={setCustomEndDate}
-                      disabled={(date) => customStartDate ? date < customStartDate : false}
-                      className="rounded-md border-none"
-                    />
+                    <Calendar mode="single" selected={customEndDate} onSelect={setCustomEndDate} disabled={date => customStartDate ? date < customStartDate : false} className="rounded-md border-none" />
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs tracking-[-0.5px]"
-                    onClick={() => {
-                      setCustomStartDate(undefined);
-                      setCustomEndDate(undefined);
-                    }}
-                  >
+                  <Button variant="ghost" size="sm" className="text-xs tracking-[-0.5px]" onClick={() => {
+                  setCustomStartDate(undefined);
+                  setCustomEndDate(undefined);
+                }}>
                     Clear
                   </Button>
-                  <Button 
-                    size="sm" 
-                    className="text-xs tracking-[-0.5px]"
-                    onClick={() => {
-                      setPagination(prev => ({ ...prev, page: 1 }));
-                      triggerFetch();
-                    }}
-                  >
+                  <Button size="sm" className="text-xs tracking-[-0.5px]" onClick={() => {
+                  setPagination(prev => ({
+                    ...prev,
+                    page: 1
+                  }));
+                  triggerFetch();
+                }}>
                     Apply Filter
                   </Button>
                 </div>
@@ -470,21 +483,17 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
             </PopoverContent>
           </Popover>
 
-          {(customStartDate || customEndDate) && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => {
-                setCustomStartDate(undefined);
-                setCustomEndDate(undefined);
-                setPagination(prev => ({ ...prev, page: 1 }));
-                setTimeout(fetchVideos, 0);
-              }}
-            >
+          {(customStartDate || customEndDate) && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+          setCustomStartDate(undefined);
+          setCustomEndDate(undefined);
+          setPagination(prev => ({
+            ...prev,
+            page: 1
+          }));
+          setTimeout(fetchVideos, 0);
+        }}>
               <X className="h-3.5 w-3.5" />
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
 
@@ -504,9 +513,9 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array.from({ length: 10 }).map((_, i) => (
-                <TableRow key={i} className="border-b border-table-border bg-transparent">
+            {isLoading ? Array.from({
+            length: 10
+          }).map((_, i) => <TableRow key={i} className="border-b border-table-border bg-transparent">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Skeleton className="h-16 w-9 rounded" />
@@ -520,49 +529,29 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                   <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
-                </TableRow>
-              ))
-            ) : hasApiKey === false ? (
-              <TableRow>
+                </TableRow>) : hasApiKey === false ? <TableRow>
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   <div className="space-y-2">
                     <p>Video tracking not configured</p>
                     <p className="text-xs">Connect a Shortimize API key in brand settings to enable video analytics.</p>
                   </div>
                 </TableCell>
-              </TableRow>
-            ) : videos.length === 0 ? (
-              <TableRow>
+              </TableRow> : videos.length === 0 ? <TableRow>
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   <div className="space-y-2">
                     <p>No videos found{collectionName ? ` for collection "${collectionName}"` : ''}</p>
                     <p className="text-xs">Videos are filtered by campaign hashtags. Check that your videos have the correct hashtags.</p>
                   </div>
                 </TableCell>
-              </TableRow>
-            ) : (
-              videos.map((video) => {
-                const creatorInfo = getCreatorInfo(video);
-                return (
-                  <TableRow key={video.ad_id} className="border-b border-table-border bg-transparent hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a]">
+              </TableRow> : videos.map(video => {
+            const creatorInfo = getCreatorInfo(video);
+            return <TableRow key={video.ad_id} className="border-b border-table-border bg-transparent hover:bg-[#F4F4F4] dark:hover:bg-[#0a0a0a]">
                     <TableCell>
-                      <a 
-                        href={video.ad_link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 group"
-                      >
+                      <a href={video.ad_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
                         <div className="relative h-16 w-9 rounded overflow-hidden bg-muted/50 flex-shrink-0">
-                          {getThumbnailUrl(video) && (
-                            <img 
-                              src={getThumbnailUrl(video)!} 
-                              alt={video.title || 'Video thumbnail'}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          )}
+                          {getThumbnailUrl(video) && <img src={getThumbnailUrl(video)!} alt={video.title || 'Video thumbnail'} className="h-full w-full object-cover" onError={e => {
+                      e.currentTarget.style.display = 'none';
+                    }} />}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Play className="h-3 w-3 text-white fill-white" />
                           </div>
@@ -579,11 +568,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                       </div>
                     </TableCell>
                     <TableCell>
-                      {creatorInfo ? (
-                        <button
-                          onClick={() => setSelectedCreator(creatorInfo)}
-                          className="flex items-center gap-2 hover:opacity-70 transition-opacity"
-                        >
+                      {creatorInfo ? <button onClick={() => setSelectedCreator(creatorInfo)} className="flex items-center gap-2 hover:opacity-70 transition-opacity">
                           <Avatar className="h-6 w-6">
                             <AvatarImage src={creatorInfo.avatar_url || ''} alt={creatorInfo.name} />
                             <AvatarFallback className="text-[10px]">
@@ -593,10 +578,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                           <span className="text-sm tracking-[-0.5px] text-foreground">
                             {creatorInfo.username.toLowerCase()}
                           </span>
-                        </button>
-                      ) : (
-                        <span className="text-sm tracking-[-0.5px] text-muted-foreground">-</span>
-                      )}
+                        </button> : <span className="text-sm tracking-[-0.5px] text-muted-foreground">-</span>}
                     </TableCell>
                     <TableCell className="text-sm tracking-[-0.5px] text-muted-foreground">
                       {video.uploaded_at ? format(new Date(video.uploaded_at), 'MMM d, yyyy') : '-'}
@@ -613,45 +595,35 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                     <TableCell className="text-sm tracking-[-0.5px] text-right">
                       {formatNumber(video.latest_shares)}
                     </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+                  </TableRow>;
+          })}
           </TableBody>
         </Table>
       </div>
 
       {/* Pagination */}
-      {pagination.total > 0 && (
-        <div className="flex items-center justify-between text-sm">
+      {pagination.total > 0 && <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground tracking-[-0.5px]">
             {startIndex} - {endIndex} of {pagination.total.toLocaleString()}
           </span>
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              disabled={pagination.page <= 1}
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pagination.page <= 1} onClick={() => setPagination(prev => ({
+          ...prev,
+          page: prev.page - 1
+        }))}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              disabled={pagination.page >= pagination.total_pages}
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pagination.page >= pagination.total_pages} onClick={() => setPagination(prev => ({
+          ...prev,
+          page: prev.page + 1
+        }))}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Creator Details Popup */}
-      <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
+      <Dialog open={!!selectedCreator} onOpenChange={open => !open && setSelectedCreator(null)}>
         <DialogContent className="max-w-md font-inter tracking-[-0.5px] p-0 gap-0 overflow-hidden max-h-[90vh]">
           <div className="p-4 sm:p-6 pb-3 sm:pb-4">
             <DialogHeader className="p-0">
@@ -659,8 +631,7 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
             </DialogHeader>
           </div>
           
-          {selectedCreator && (
-            <div className="pb-4 sm:pb-6 space-y-4 sm:space-y-5 px-4 sm:px-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+          {selectedCreator && <div className="pb-4 sm:pb-6 space-y-4 sm:space-y-5 px-4 sm:px-6 overflow-y-auto max-h-[calc(90vh-80px)]">
               {/* Profile Header */}
               <div className="flex items-center gap-3 sm:gap-4">
                 <Avatar className="h-12 w-12 sm:h-14 sm:w-14 shrink-0">
@@ -672,11 +643,9 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm truncate">{selectedCreator.name || selectedCreator.username}</h3>
                   <p className="text-xs text-muted-foreground truncate">@{selectedCreator.username}</p>
-                  {selectedCreator.email && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 truncate">
+                  {selectedCreator.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 truncate">
                       <span className="truncate">{selectedCreator.email}</span>
-                    </p>
-                  )}
+                    </p>}
                 </div>
               </div>
 
@@ -693,66 +662,37 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
               </div>
 
               {/* Social Accounts */}
-              {selectedCreator.social_accounts.length > 0 && (
-                <div>
+              {selectedCreator.social_accounts.length > 0 && <div>
                   <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
                   <div className="space-y-1.5">
-                    {selectedCreator.social_accounts.map((account, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" 
-                        onClick={() => account.account_link && window.open(account.account_link, "_blank")}
-                      >
-                        {account.avatar_url ? (
-                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+                    {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
+                        {account.avatar_url ? <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
                             <AvatarImage src={account.avatar_url} />
                             <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
                               {account.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
-                            <img 
-                              src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} 
-                              alt={account.platform} 
-                              className="h-3.5 w-3.5 sm:h-4 sm:w-4 object-contain" 
-                            />
-                          </div>
-                        )}
+                          </Avatar> : <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
+                            <img src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} alt={account.platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4 object-contain" />
+                          </div>}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <img 
-                              src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} 
-                              alt={account.platform} 
-                              className="h-3 w-3 object-contain shrink-0" 
-                            />
+                            <img src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} alt={account.platform} className="h-3 w-3 object-contain shrink-0" />
                             <span className="text-xs font-medium truncate">@{account.username}</span>
                           </div>
-                          {account.follower_count && account.follower_count > 0 && (
-                            <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
-                          )}
+                          {account.follower_count && account.follower_count > 0 && <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>}
                         </div>
                         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* View Profile Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full tracking-[-0.5px]"
-                onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
-              >
+              <Button variant="outline" size="sm" className="w-full tracking-[-0.5px]" onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 View Full Profile
               </Button>
-            </div>
-          )}
+            </div>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
