@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,11 +13,10 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { useTheme } from "@/components/ThemeProvider";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
+import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
-import clippingIcon from "@/assets/clipping-icon.svg";
-import boostIcon from "@/assets/boost-icon.svg";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -192,7 +191,7 @@ export function BlueprintEditor({
   const activateBlueprint = () => {
     setShowCampaignTypeDialog(true);
   };
-  const handleSelectClipping = () => {
+  const handleSelectClipping = (selectedBlueprintId?: string) => {
     setShowCampaignTypeDialog(false);
     setShowCampaignWizard(true);
   };
@@ -973,51 +972,15 @@ export function BlueprintEditor({
   </div>
 
       {/* Campaign Type Selection Dialog */}
-      <Dialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog}>
-        <DialogContent className="sm:max-w-[420px] bg-[#f5f5f5] dark:bg-[#050505] border-border">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold font-geist tracking-[-0.5px]">Activate Blueprint</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-3 pt-2">
-            <p className="text-sm font-medium text-foreground font-geist tracking-[-0.5px]">Select a Campaign Workflow</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {/* Clipping Option */}
-              <button onClick={handleSelectClipping} className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                  backgroundColor: '#a7751e',
-                  borderTop: '2px solid #dda038'
-                }}>
-                    <img src={clippingIcon} alt="Clipping" className="h-4 w-4" />
-                  </div>
-                  <span className="font-semibold font-geist tracking-[-0.5px] text-sm">Clipping</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed font-geist tracking-[-0.5px]">
-                  Pay a fixed CPM. Select your budget, payment terms, and requirements.
-                </p>
-              </button>
-
-              {/* Boost Option */}
-              <button onClick={handleSelectBoost} className="flex flex-col items-start p-4 rounded-xl bg-muted dark:bg-[#141414] border-transparent hover:bg-muted/70 dark:hover:bg-[#1a1a1a] transition-all text-left group">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
-                  backgroundColor: '#1ea75e',
-                  borderTop: '2px solid #38dd7a'
-                }}>
-                    <img src={boostIcon} alt="Boost" className="h-4 w-4" />
-                  </div>
-                  <span className="font-semibold font-geist tracking-[-0.5px] text-sm">Boost</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed font-geist tracking-[-0.5px]">
-                  Retainer-based campaign with monthly creator positions
-                </p>
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CreateCampaignTypeDialog
+        open={showCampaignTypeDialog}
+        onOpenChange={setShowCampaignTypeDialog}
+        onSelectClipping={handleSelectClipping}
+        onSelectManaged={handleSelectClipping}
+        onSelectBoost={handleSelectBoost}
+        brandId={brandId}
+        defaultBlueprintId={blueprintId}
+      />
 
       {/* Campaign Creation Wizard */}
       {showCampaignWizard && <CampaignCreationWizard open={showCampaignWizard} onOpenChange={setShowCampaignWizard} brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} initialBlueprintId={blueprintId} />}
