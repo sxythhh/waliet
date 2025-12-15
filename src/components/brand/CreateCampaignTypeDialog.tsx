@@ -86,7 +86,7 @@ export function CreateCampaignTypeDialog({
   // If controlled, don't render trigger
   if (controlledOpen !== undefined) {
     return <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl p-6">
         <div className="space-y-5">
           {/* Header */}
           <div className="space-y-1">
@@ -176,7 +176,7 @@ export function CreateCampaignTypeDialog({
             Create Campaign
           </Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl">
+      <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl p-6">
         <div className="space-y-5">
           {/* Header */}
           <div className="space-y-1">
