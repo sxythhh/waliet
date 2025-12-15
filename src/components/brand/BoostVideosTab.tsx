@@ -300,61 +300,96 @@ export function BoostVideosTab({
                   </p>
                 </div> : (selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : pendingSubmissions).map(submission => {
               const profile = profiles[submission.user_id];
-              return <div key={submission.id} className="rounded-xl p-4 bg-card/30 border border-border/30 space-y-3">
-                      <div className="flex items-start justify-between">
+              return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
+                      {/* Header */}
+                      <div className="flex items-center justify-between p-4 border-b border-border/20">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                          <Avatar className="h-9 w-9 ring-2 ring-background">
                             <AvatarImage src={profile?.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs bg-muted/40">
+                            <AvatarFallback className="text-xs font-medium bg-muted/60 font-inter tracking-[-0.5px]">
                               {profile?.username?.[0]?.toUpperCase() || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium">
+                            <p className="text-sm font-medium font-geist tracking-[-0.5px]">
                               {profile?.full_name || profile?.username}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(submission.submitted_at), "MMM d 'at' h:mm a")}
+                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                              {format(new Date(submission.submitted_at), "MMM d, yyyy")}
                             </p>
                           </div>
                         </div>
-                        <Badge className={submission.status === "approved" ? "bg-green-500/10 text-green-500 border-green-500/20" : submission.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"}>
+                        <Badge className={`font-inter tracking-[-0.5px] text-[11px] font-medium ${
+                          submission.status === "approved" 
+                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                            : submission.status === "rejected" 
+                            ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        }`}>
                           {submission.status}
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-5 w-5" />
-                        <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
-                          <ExternalLink className="h-3 w-3" />
-                          View Video
-                        </a>
-                        <span className="text-sm text-muted-foreground ml-auto">
-                          ${(submission.payout_amount || payoutPerVideo).toFixed(2)}
-                        </span>
+                      {/* Content */}
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-7 w-7 rounded-lg bg-muted/40 flex items-center justify-center">
+                              <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-4 w-4" />
+                            </div>
+                            <a 
+                              href={submission.video_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm text-primary hover:underline flex items-center gap-1.5 font-inter tracking-[-0.5px]"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              View Video
+                            </a>
+                          </div>
+                          <span className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">
+                            ${(submission.payout_amount || payoutPerVideo).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {submission.submission_notes && (
+                          <p className="text-sm text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 font-inter tracking-[-0.5px]">
+                            {submission.submission_notes}
+                          </p>
+                        )}
+
+                        {submission.rejection_reason && (
+                          <p className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 font-inter tracking-[-0.5px]">
+                            {submission.rejection_reason}
+                          </p>
+                        )}
                       </div>
 
-                      {submission.submission_notes && <p className="text-sm text-muted-foreground bg-muted/20 rounded-lg p-2">
-                          {submission.submission_notes}
-                        </p>}
-
-                      {submission.rejection_reason && <p className="text-sm text-red-500 bg-red-500/10 rounded-lg p-2">
-                          Rejected: {submission.rejection_reason}
-                        </p>}
-
-                      {submission.status === "pending" && <div className="flex gap-2 pt-2">
-                          <Button size="sm" variant="ghost" className="flex-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400" onClick={() => {
-                    setSelectedSubmission(submission);
-                    setRejectDialogOpen(true);
-                  }} disabled={processing}>
-                            <X className="h-4 w-4 mr-1" />
+                      {/* Actions */}
+                      {submission.status === "pending" && (
+                        <div className="flex border-t border-border/20">
+                          <button
+                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/5 transition-colors font-inter tracking-[-0.5px] disabled:opacity-50"
+                            onClick={() => {
+                              setSelectedSubmission(submission);
+                              setRejectDialogOpen(true);
+                            }}
+                            disabled={processing}
+                          >
+                            <X className="h-4 w-4" />
                             Reject
-                          </Button>
-                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApprove(submission)} disabled={processing}>
-                            <Check className="h-4 w-4 mr-1" />
+                          </button>
+                          <div className="w-px bg-border/20" />
+                          <button
+                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/5 transition-colors font-inter tracking-[-0.5px] disabled:opacity-50"
+                            onClick={() => handleApprove(submission)}
+                            disabled={processing}
+                          >
+                            <Check className="h-4 w-4" />
                             Approve
-                          </Button>
-                        </div>}
+                          </button>
+                        </div>
+                      )}
                     </div>;
             })}
             </div>
