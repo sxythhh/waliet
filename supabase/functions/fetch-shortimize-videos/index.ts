@@ -171,34 +171,39 @@ serve(async (req) => {
     // If filtering by hashtags, fetch pages to find matching videos (optimized)
     if (shouldFilterByHashtags) {
       const allMatchingVideos: any[] = [];
-      const maxPages = 10; // Reduced from 50 to 10 for faster response
+      const maxPages = 20; // Increased to scan more videos
       let currentPage = 1;
       let totalPagesAvailable = 1;
       let consecutiveEmptyPages = 0;
       
-      console.log(`[fetch-shortimize-videos] Starting hashtag filter scan (max ${maxPages} pages)`);
+      console.log(`[fetch-shortimize-videos] Starting hashtag filter scan (max ${maxPages} pages), username filter: ${username || 'none'}`);
       
       while (currentPage <= Math.min(maxPages, totalPagesAvailable)) {
         const pageParams = new URLSearchParams();
         pageParams.append('page', currentPage.toString());
         pageParams.append('limit', '100');
+        // Always fetch by uploaded_at for scanning, we'll sort results after
         pageParams.append('order_by', 'uploaded_at');
         pageParams.append('order_direction', 'desc');
         
-        if (username) pageParams.append('username', username);
+        // Apply username filter at API level for efficiency
+        if (username) {
+          pageParams.append('username', username);
+          console.log(`[fetch-shortimize-videos] Applying username filter: ${username}`);
+        }
         if (uploadedAtStart) pageParams.append('uploaded_at_start', uploadedAtStart);
         if (uploadedAtEnd) pageParams.append('uploaded_at_end', uploadedAtEnd);
 
         const pageUrl = `https://api.shortimize.com/videos?${pageParams.toString()}`;
+        console.log(`[fetch-shortimize-videos] Fetching page ${currentPage}: ${pageUrl}`);
         
         try {
           const response = await fetchWithRetry(pageUrl, {
             headers: { 'Authorization': `Bearer ${brand.shortimize_api_key}` },
-          }, 2); // Reduced retries from 3 to 2
+          }, 2);
           
           if (!response.ok) {
             console.error(`[fetch-shortimize-videos] Page ${currentPage} failed: ${response.status}`);
-            // Return partial results instead of failing completely
             break;
           }
           
@@ -212,13 +217,13 @@ serve(async (req) => {
             totalPagesAvailable = result.pagination.total_pages;
           }
           
-          console.log(`[fetch-shortimize-videos] Page ${currentPage}/${Math.min(maxPages, totalPagesAvailable)}: ${matchingVideos.length} matching`);
+          console.log(`[fetch-shortimize-videos] Page ${currentPage}/${Math.min(maxPages, totalPagesAvailable)}: ${videos.length} fetched, ${matchingVideos.length} matching hashtags`);
           
-          // Early exit optimization: stop if 3 consecutive pages have no matches
+          // Early exit optimization: stop if 5 consecutive pages have no matches (increased from 3)
           if (matchingVideos.length === 0) {
             consecutiveEmptyPages++;
-            if (consecutiveEmptyPages >= 3) {
-              console.log('[fetch-shortimize-videos] 3 consecutive empty pages, stopping scan');
+            if (consecutiveEmptyPages >= 5) {
+              console.log('[fetch-shortimize-videos] 5 consecutive empty pages, stopping scan');
               break;
             }
           } else {
@@ -231,13 +236,14 @@ serve(async (req) => {
           }
           
           currentPage++;
-          await delay(100); // Reduced delay from 200ms to 100ms
+          await delay(80);
         } catch (err) {
           console.error(`[fetch-shortimize-videos] Page ${currentPage} error:`, err);
-          // Return partial results on error
           break;
         }
       }
+
+      console.log(`[fetch-shortimize-videos] Hashtag scan complete: ${allMatchingVideos.length} total matching videos found`);
 
       // Sort by the requested field
       const sortedVideos = allMatchingVideos.sort((a, b) => {
@@ -248,6 +254,8 @@ serve(async (req) => {
         }
         return (aVal > bVal ? 1 : aVal < bVal ? -1 : 0);
       });
+
+      console.log(`[fetch-shortimize-videos] Sorted by ${orderBy} ${orderDirection}, first video views: ${sortedVideos[0]?.latest_views}`);
 
       // Paginate results
       const startIdx = (page - 1) * limit;
@@ -264,8 +272,11 @@ serve(async (req) => {
         debug: {
           collectionUsed: null,
           hashtagFilter: campaignHashtags,
+          usernameFilter: username || null,
           apiKeyConfigured: true,
-          totalMatching: allMatchingVideos.length
+          totalMatching: allMatchingVideos.length,
+          sortedBy: orderBy,
+          pagesScanned: currentPage
         }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
