@@ -1,7 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone } from "lucide-react";
 import addDiamondIcon from "@/assets/add-diamond-icon.svg";
+import warningIcon from "@/assets/warning-icon.svg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
@@ -255,8 +256,8 @@ export function CampaignDetailsDialog({
           
           {/* Demographics Reminder Notice - show 1 day before payout */}
           {nextPayout.daysUntil === 1 && (
-            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
-              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-transparent flex items-center gap-3">
+              <img src={warningIcon} alt="" className="w-4 h-4 flex-shrink-0" />
               <p className="text-xs text-amber-600 dark:text-amber-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                 Payout is tomorrow! Make sure to submit your view demographics before the deadline.
               </p>
