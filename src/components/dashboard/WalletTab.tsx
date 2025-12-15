@@ -1502,65 +1502,150 @@ export function WalletTab() {
                     <Input 
                       placeholder="Filter..." 
                       value={filterSearch}
-                      onChange={(e) => {
-                        const value = e.target.value.toLowerCase();
-                        setFilterSearch(e.target.value);
-                        // Auto-navigate to matching submenu
-                        const typeOptions = ['earning', 'payout', 'withdrawal', 'team', 'affiliate', 'referral', 'transfer', 'bonus'];
-                        const statusOptions = ['pending', 'completed', 'processing', 'rejected', 'failed'];
-                        const programOptions = ['program', 'campaign', 'boost'];
-                        
-                        if (value && typeOptions.some(opt => opt.includes(value))) {
-                          setFilterSubmenu('type');
-                        } else if (value && statusOptions.some(opt => opt.includes(value))) {
-                          setFilterSubmenu('status');
-                        } else if (value && programOptions.some(opt => opt.includes(value)) && availableCampaigns.length > 0) {
-                          setFilterSubmenu('program');
-                        } else if (!value) {
-                          setFilterSubmenu('main');
-                        }
-                      }}
+                      onChange={(e) => setFilterSearch(e.target.value)}
                       className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" 
                     />
                     <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
-                  <div className="space-y-1">
-                    <button onClick={e => {
-                    e.preventDefault();
-                    setFilterSubmenu('type');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                      <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                      </div>
-                      <span className="font-medium">Type</span>
-                      {typeFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>}
-                      <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
-                    </button>
-                    <button onClick={e => {
-                    e.preventDefault();
-                    setFilterSubmenu('status');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                      <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
-                      <span className="font-medium">Status</span>
-                      {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
-                      <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
-                    </button>
-                    {availableCampaigns.length > 0 && <button onClick={e => {
-                    e.preventDefault();
-                    setFilterSubmenu('program');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                        <Briefcase className="h-4 w-4" />
-                        <span className="font-medium">Program</span>
-                        {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
-                            {availableCampaigns.find(c => c.id === campaignFilter)?.title}
-                          </span>}
+                  
+                  {/* Show matching filter options when searching */}
+                  {filterSearch ? (
+                    <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                      {/* Type options */}
+                      {[{
+                        value: 'earning',
+                        label: 'Campaign Payout'
+                      }, {
+                        value: 'withdrawal',
+                        label: 'Withdrawal'
+                      }, {
+                        value: 'team_earning',
+                        label: 'Team Earnings'
+                      }, {
+                        value: 'affiliate_earning',
+                        label: 'Affiliate Earnings'
+                      }, {
+                        value: 'referral',
+                        label: 'Referral Bonus'
+                      }, {
+                        value: 'transfer_sent',
+                        label: 'Transfer Sent'
+                      }, {
+                        value: 'transfer_received',
+                        label: 'Transfer Received'
+                      }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase()))
+                        .map(option => (
+                          <button key={option.value} onClick={e => {
+                            e.preventDefault();
+                            setTypeFilter(option.value);
+                            setFilterSearch('');
+                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                              <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                            </div>
+                            <span className="text-sm">{option.label}</span>
+                            {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                          </button>
+                        ))}
+                      
+                      {/* Status options */}
+                      {[{
+                        value: 'completed',
+                        label: 'Completed'
+                      }, {
+                        value: 'pending',
+                        label: 'Pending'
+                      }, {
+                        value: 'in_transit',
+                        label: 'In Transit'
+                      }, {
+                        value: 'rejected',
+                        label: 'Rejected'
+                      }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase()))
+                        .map(option => (
+                          <button key={option.value} onClick={e => {
+                            e.preventDefault();
+                            setStatusFilter(option.value);
+                            setFilterSearch('');
+                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                            <span className="text-sm">{option.label}</span>
+                            {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
+                          </button>
+                        ))}
+                      
+                      {/* Program options */}
+                      {availableCampaigns
+                        .filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase()))
+                        .map(campaign => (
+                          <button key={campaign.id} onClick={e => {
+                            e.preventDefault();
+                            setCampaignFilter(campaign.id);
+                            setFilterSearch('');
+                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            {campaign.brand_logo_url ? (
+                              <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <Briefcase className="h-4 w-4" />
+                            )}
+                            <span className="text-sm truncate">{campaign.title}</span>
+                            {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
+                          </button>
+                        ))}
+                      
+                      {/* No results */}
+                      {[{value: 'earning', label: 'Campaign Payout'}, {value: 'withdrawal', label: 'Withdrawal'}, {value: 'team_earning', label: 'Team Earnings'}, {value: 'affiliate_earning', label: 'Affiliate Earnings'}, {value: 'referral', label: 'Referral Bonus'}, {value: 'transfer_sent', label: 'Transfer Sent'}, {value: 'transfer_received', label: 'Transfer Received'}].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 &&
+                       [{value: 'completed', label: 'Completed'}, {value: 'pending', label: 'Pending'}, {value: 'in_transit', label: 'In Transit'}, {value: 'rejected', label: 'Rejected'}].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 &&
+                       availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No matching filters</p>
+                      )}
+                    </div>
+                  ) : (
+                    /* Default menu items when not searching */
+                    <div className="space-y-1">
+                      <button onClick={e => {
+                      e.preventDefault();
+                      setFilterSubmenu('type');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
+                        </div>
+                        <span className="font-medium">Type</span>
+                        {typeFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>}
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
-                      </button>}
-                  </div>
-                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-foreground mt-3" onClick={e => {
+                      </button>
+                      <button onClick={e => {
+                      e.preventDefault();
+                      setFilterSubmenu('status');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                        <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                        <span className="font-medium">Status</span>
+                        {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
+                        <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                      </button>
+                      {availableCampaigns.length > 0 && <button onClick={e => {
+                      e.preventDefault();
+                      setFilterSubmenu('program');
+                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                          <Briefcase className="h-4 w-4" />
+                          <span className="font-medium">Program</span>
+                          {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
+                              {availableCampaigns.find(c => c.id === campaignFilter)?.title}
+                            </span>}
+                          <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
+                        </button>}
+                    </div>
+                  )}
+                  
+                  {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && !filterSearch && <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-foreground mt-3" onClick={e => {
                   e.preventDefault();
                   setTypeFilter('all');
                   setStatusFilter('all');
