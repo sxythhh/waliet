@@ -12,9 +12,13 @@ import { toast } from "sonner";
 import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X } from "lucide-react";
 import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
-import instagramLogo from "@/assets/instagram-logo-black.png";
-import youtubeLogo from "@/assets/youtube-logo-black-new.png";
+import { useTheme } from "@/components/ThemeProvider";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 
 interface ShortimizeVideo {
   ad_id: string;
@@ -36,10 +40,20 @@ interface ShortimizeVideo {
 }
 
 interface CreatorInfo {
+  id: string;
   name: string;
   avatar_url: string | null;
-  user_id: string;
   username: string;
+  email: string | null;
+  social_accounts: {
+    platform: string;
+    username: string;
+    account_link: string | null;
+    avatar_url?: string | null;
+    follower_count?: number | null;
+  }[];
+  total_views: number;
+  total_earnings: number;
 }
 
 interface ShortimizeVideosTableProps {
@@ -116,6 +130,9 @@ const getDateRangeFromTimeframe = (timeframe: TimeframeOption | undefined): { st
 };
 
 export function ShortimizeVideosTable({ brandId, collectionName, campaignId, timeframe }: ShortimizeVideosTableProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  
   const [videos, setVideos] = useState<ShortimizeVideo[]>([]);
   const [creatorMatches, setCreatorMatches] = useState<Map<string, CreatorInfo>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +147,13 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
   // Request tracking to prevent duplicates and stale responses
   const requestIdRef = useRef(0);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Platform logos based on theme
+  const platformLogos = useMemo(() => ({
+    tiktok: isDark ? tiktokLogoWhite : tiktokLogoBlack,
+    instagram: isDark ? instagramLogoWhite : instagramLogoBlack,
+    youtube: isDark ? youtubeLogoWhite : youtubeLogoBlack,
+  }), [isDark]);
 
   // Calculate effective date range - custom dates override timeframe
   const { startDate, endDate } = useMemo(() => {
@@ -144,23 +168,56 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
     if (usernames.length === 0) return;
     
     try {
-      const { data, error } = await supabase
+      // Fetch social accounts with profile data
+      const { data: accountsData, error: accountsError } = await supabase
         .from('social_accounts')
-        .select('username, platform, user_id, profiles:user_id(full_name, username, avatar_url)')
+        .select('id, username, platform, user_id, account_link, avatar_url, follower_count, profiles:user_id(id, full_name, username, avatar_url, email)')
         .in('username', usernames);
       
-      if (error) throw error;
+      if (accountsError) throw accountsError;
+      
+      // Get unique user IDs to fetch wallet data
+      const userIds = [...new Set(accountsData?.map(a => a.user_id).filter(Boolean) || [])];
+      
+      // Fetch wallet data for earnings
+      const { data: walletsData } = await supabase
+        .from('wallets')
+        .select('user_id, total_earned')
+        .in('user_id', userIds);
+      
+      const walletMap = new Map(walletsData?.map(w => [w.user_id, w.total_earned || 0]) || []);
+      
+      // Group accounts by user
+      const userAccountsMap = new Map<string, typeof accountsData>();
+      accountsData?.forEach(account => {
+        if (account.user_id) {
+          const existing = userAccountsMap.get(account.user_id) || [];
+          existing.push(account);
+          userAccountsMap.set(account.user_id, existing);
+        }
+      });
       
       const matches = new Map<string, CreatorInfo>();
-      data?.forEach((account: any) => {
+      accountsData?.forEach((account: any) => {
         const key = `${account.username.toLowerCase()}_${account.platform.toLowerCase()}`;
         const creatorName = account.profiles?.full_name || account.profiles?.username || null;
         if (creatorName && account.user_id) {
+          const userAccounts = userAccountsMap.get(account.user_id) || [];
           matches.set(key, {
+            id: account.user_id,
             name: creatorName,
             avatar_url: account.profiles?.avatar_url || null,
-            user_id: account.user_id,
-            username: account.profiles?.username || account.username
+            username: account.profiles?.username || account.username,
+            email: account.profiles?.email || null,
+            social_accounts: userAccounts.map((a: any) => ({
+              platform: a.platform,
+              username: a.username,
+              account_link: a.account_link,
+              avatar_url: a.avatar_url,
+              follower_count: a.follower_count,
+            })),
+            total_views: 0, // Could be fetched from analytics if needed
+            total_earnings: walletMap.get(account.user_id) || 0,
           });
         }
       });
@@ -294,16 +351,11 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
   };
 
   const getPlatformIcon = (platform: string) => {
-    switch (platform?.toLowerCase()) {
-      case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-4 w-4" />;
-      case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />;
-      case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />;
-      default:
-        return <span className="h-4 w-4 flex items-center justify-center text-xs">🎬</span>;
+    const logo = platformLogos[platform?.toLowerCase() as keyof typeof platformLogos];
+    if (logo) {
+      return <img src={logo} alt={platform} className="h-4 w-4" />;
     }
+    return <span className="h-4 w-4 flex items-center justify-center text-xs">🎬</span>;
   };
 
   const getThumbnailUrl = (video: ShortimizeVideo) => {
@@ -598,42 +650,106 @@ export function ShortimizeVideosTable({ brandId, collectionName, campaignId, tim
         </div>
       )}
 
-      {/* Creator Popup */}
+      {/* Creator Details Popup */}
       <Dialog open={!!selectedCreator} onOpenChange={(open) => !open && setSelectedCreator(null)}>
-        <DialogContent className="sm:max-w-[480px] bg-white dark:bg-[#0a0a0a] border-border">
+        <DialogContent className="max-w-md font-inter tracking-[-0.5px] p-0 gap-0 overflow-hidden max-h-[90vh]">
+          <div className="p-4 sm:p-6 pb-3 sm:pb-4">
+            <DialogHeader className="p-0">
+              <DialogTitle className="font-inter tracking-[-0.5px] text-base">Creator Details</DialogTitle>
+            </DialogHeader>
+          </div>
+          
           {selectedCreator && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="sr-only">Creator Details</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                {/* Profile Header */}
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16 ring-2 ring-background">
-                    <AvatarImage src={selectedCreator.avatar_url || ''} alt={selectedCreator.name} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                      {selectedCreator.name.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold tracking-[-0.5px]">{selectedCreator.name}</h3>
-                    <p className="text-sm text-muted-foreground tracking-[-0.5px]">@{selectedCreator.username.toLowerCase()}</p>
+            <div className="pb-4 sm:pb-6 space-y-4 sm:space-y-5 px-4 sm:px-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {/* Profile Header */}
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Avatar className="h-12 w-12 sm:h-14 sm:w-14 shrink-0">
+                  <AvatarImage src={selectedCreator.avatar_url || undefined} />
+                  <AvatarFallback className="bg-muted text-muted-foreground text-sm sm:text-base font-medium">
+                    {selectedCreator.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm truncate">{selectedCreator.name || selectedCreator.username}</h3>
+                  <p className="text-xs text-muted-foreground truncate">@{selectedCreator.username}</p>
+                  {selectedCreator.email && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 truncate">
+                      <span className="truncate">{selectedCreator.email}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Views</p>
+                  <p className="font-medium text-sm">{selectedCreator.total_views.toLocaleString()}</p>
+                </div>
+                <div className="rounded-lg bg-muted/30 p-2.5 sm:p-3">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Total Earnings</p>
+                  <p className="font-medium text-sm text-emerald-500">${selectedCreator.total_earnings.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Social Accounts */}
+              {selectedCreator.social_accounts.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
+                  <div className="space-y-1.5">
+                    {selectedCreator.social_accounts.map((account, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" 
+                        onClick={() => account.account_link && window.open(account.account_link, "_blank")}
+                      >
+                        {account.avatar_url ? (
+                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+                            <AvatarImage src={account.avatar_url} />
+                            <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                              {account.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : (
+                          <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
+                            <img 
+                              src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} 
+                              alt={account.platform} 
+                              className="h-3.5 w-3.5 sm:h-4 sm:w-4 object-contain" 
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <img 
+                              src={platformLogos[account.platform.toLowerCase() as keyof typeof platformLogos]} 
+                              alt={account.platform} 
+                              className="h-3 w-3 object-contain shrink-0" 
+                            />
+                            <span className="text-xs font-medium truncate">@{account.username}</span>
+                          </div>
+                          {account.follower_count && account.follower_count > 0 && (
+                            <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
+                          )}
+                        </div>
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                      </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                {/* View Profile Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full tracking-[-0.5px]"
-                  onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View Full Profile
-                </Button>
-              </div>
-            </>
+              {/* View Profile Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full tracking-[-0.5px]"
+                onClick={() => window.open(`/u/${selectedCreator.username}`, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Full Profile
+              </Button>
+            </div>
           )}
         </DialogContent>
       </Dialog>
