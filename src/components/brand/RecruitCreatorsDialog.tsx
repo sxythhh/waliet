@@ -174,13 +174,15 @@ export function RecruitCreatorsDialog({
           }))
       }));
 
-      // Filter by follower count (client-side as it's aggregated across accounts)
-      let filtered = creatorsWithSocial.filter(c => c.social_accounts.length > 0);
+      // When searching, show all matching profiles; otherwise only those with social accounts
+      let filtered = debouncedSearch 
+        ? creatorsWithSocial 
+        : creatorsWithSocial.filter(c => c.social_accounts.length > 0);
       
-      if (followerFilter !== 'any') {
+      if (followerFilter !== 'any' && !debouncedSearch) {
         const minFollowers = getMinFollowers(followerFilter);
         filtered = filtered.filter(c => {
-          const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0));
+          const maxFollowers = Math.max(...c.social_accounts.map(a => a.follower_count || 0), 0);
           return maxFollowers >= minFollowers;
         });
       }
