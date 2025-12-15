@@ -139,7 +139,8 @@ serve(async (req) => {
     }
 
     // Determine which Shortimize collection to use
-    const collection = !noCollectionFilter ? (collectionName || brand.collection_name) : null;
+    // If campaign has hashtags, we skip collection filter and use hashtag filtering instead
+    const collection = (campaignHashtags.length > 0 || noCollectionFilter) ? null : (collectionName || brand.collection_name);
     
     console.log('[fetch-shortimize-videos] Using collection:', collection, 'Hashtags:', campaignHashtags);
 
