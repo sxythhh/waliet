@@ -1017,6 +1017,38 @@ export function CampaignCreationWizard({
                           </div>
                         )}
 
+                        {/* Payout Day - Admin Only */}
+                        {isAdmin && (
+                          <FormField
+                            control={form.control}
+                            name="payout_day_of_week"
+                            render={({ field }) => (
+                              <div className="rounded-lg bg-muted/20 p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="text-sm font-medium text-foreground">Payout Day</span>
+                                  <Badge variant="outline" className="text-xs">Admin</Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-2">Demographics due 1 day before</p>
+                                <Select 
+                                  onValueChange={(val) => field.onChange(parseInt(val))} 
+                                  value={field.value?.toString()}
+                                >
+                                  <SelectTrigger className="h-9 bg-muted/30 border-0">
+                                    <SelectValue placeholder="Select payout day" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {PAYOUT_DAYS.map((day) => (
+                                      <SelectItem key={day.value} value={day.value.toString()}>
+                                        {day.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+                          />
+                        )}
+
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                           <div>
                             <span className="text-sm font-medium text-foreground">Pause Campaign</span>
