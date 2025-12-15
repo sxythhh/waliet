@@ -234,11 +234,9 @@ export function BlueprintsTab({
                   <div className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 dark:bg-card/20 transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
                     {/* Content Preview */}
                     <div className="p-5 min-h-[120px] border-b border-border/30">
-                      {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
+                      {contentPreview && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
                           {contentPreview}...
-                        </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
-                          <img src={editDocumentIcon} alt="" className="h-8 w-8 opacity-50" />
-                        </div>}
+                        </p>}
                     </div>
 
                     {/* Footer */}
