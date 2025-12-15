@@ -573,7 +573,7 @@ export function ShortimizeVideosTable({
                 <TableCell colSpan={8} className="text-center py-16 text-muted-foreground tracking-[-0.5px]">
                   <div className="space-y-2">
                     <p>No videos found{collectionName ? ` for collection "${collectionName}"` : ''}</p>
-                    <p className="text-xs">Videos are filtered by campaign hashtags. Check that your videos have the correct hashtags.</p>
+                    <p className="text-xs">Make sure your campaign is linked to the correct Shortimize collection and try adjusting your filters.</p>
                   </div>
                 </TableCell>
               </TableRow> : videos.map(video => {
