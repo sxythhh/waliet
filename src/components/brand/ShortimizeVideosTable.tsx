@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X } from "lucide-react";
+import { RefreshCw, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Play, ExternalLink, ArrowUpDown, X, User } from "lucide-react";
 import { format, startOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from "date-fns";
 import type { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 import { useTheme } from "@/components/ThemeProvider";
@@ -178,8 +178,10 @@ export function ShortimizeVideosTable({
   const [isLoading, setIsLoading] = useState(false);
   const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
   const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
-  const [sortField, setSortField] = useState<SortField>('uploaded_at');
+  const [sortField, setSortField] = useState<SortField>('latest_views');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [usernameFilter, setUsernameFilter] = useState<string>('');
+  const [availableUsernames, setAvailableUsernames] = useState<string[]>([]);
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -188,7 +190,6 @@ export function ShortimizeVideosTable({
   });
   const [selectedCreator, setSelectedCreator] = useState<CreatorInfo | null>(null);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
-
   // Request tracking to prevent duplicates and stale responses
   const requestIdRef = useRef(0);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -292,7 +293,8 @@ export function ShortimizeVideosTable({
           orderBy: sortField,
           orderDirection: sortDirection,
           uploadedAtStart: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-          uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined
+          uploadedAtEnd: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+          username: usernameFilter || undefined
         }
       });
 
@@ -329,6 +331,15 @@ export function ShortimizeVideosTable({
         ...data.pagination
       }));
 
+      // Update available usernames for filter (only on first load or when no filter is set)
+      if (!usernameFilter) {
+        const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
+        setAvailableUsernames(prev => {
+          const combined = new Set([...prev, ...uniqueUsernames]);
+          return [...combined].sort();
+        });
+      }
+
       // Fetch creator matches for unique usernames
       const uniqueUsernames = [...new Set(videosData.map((v: ShortimizeVideo) => v.username))] as string[];
       await fetchCreatorMatches(uniqueUsernames);
@@ -348,7 +359,7 @@ export function ShortimizeVideosTable({
         setIsLoading(false);
       }
     }
-  }, [brandId, collectionName, campaignId, pagination.page, sortField, sortDirection, startDate, endDate]);
+  }, [brandId, collectionName, campaignId, pagination.page, sortField, sortDirection, startDate, endDate, usernameFilter]);
 
   // Debounced fetch trigger
   const triggerFetch = useCallback(() => {
@@ -376,7 +387,7 @@ export function ShortimizeVideosTable({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate, triggerFetch]);
+  }, [brandId, collectionName, campaignId, sortField, sortDirection, pagination.page, startDate, endDate, usernameFilter, triggerFetch]);
   const handleSearch = () => {
     setPagination(prev => ({
       ...prev,
@@ -423,12 +434,12 @@ export function ShortimizeVideosTable({
           
           {/* Sort Selector */}
           <Select value={sortField} onValueChange={value => {
-          setSortField(value as SortField);
-          setPagination(prev => ({
-            ...prev,
-            page: 1
-          }));
-        }}>
+            setSortField(value as SortField);
+            setPagination(prev => ({
+              ...prev,
+              page: 1
+            }));
+          }}>
             <SelectTrigger className="h-8 w-[140px] text-xs tracking-[-0.5px] border-0 bg-muted/50 hover:bg-muted">
               <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
               <SelectValue />
@@ -437,6 +448,28 @@ export function ShortimizeVideosTable({
               {SORT_OPTIONS.map(option => <SelectItem key={option.value} value={option.value} className="text-xs tracking-[-0.5px]">
                   {option.label}
                 </SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          {/* Account Filter */}
+          <Select value={usernameFilter} onValueChange={value => {
+            setUsernameFilter(value === 'all' ? '' : value);
+            setPagination(prev => ({
+              ...prev,
+              page: 1
+            }));
+          }}>
+            <SelectTrigger className="h-8 w-[160px] text-xs tracking-[-0.5px] border-0 bg-muted/50 hover:bg-muted">
+              <User className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="All Accounts" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs tracking-[-0.5px]">All Accounts</SelectItem>
+              {availableUsernames.map(username => (
+                <SelectItem key={username} value={username} className="text-xs tracking-[-0.5px]">
+                  @{username}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
