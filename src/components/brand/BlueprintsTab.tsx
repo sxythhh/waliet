@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, Clock } from "lucide-react";
+import { Plus, Trash2, Clock, Pencil } from "lucide-react";
 import editDocumentIcon from "@/assets/edit-document-icon.svg";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -229,72 +229,67 @@ export function BlueprintsTab({
         </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {blueprints.map(blueprint => {
         const contentPreview = getContentPreview(blueprint.content);
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 dark:bg-card/20 transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
-                {/* Content Preview */}
-                <div className="p-5 min-h-[120px] border-b border-border/30">
-                  {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
-                      {contentPreview}...
-                    </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
-                      <img src={editDocumentIcon} alt="" className="h-8 w-8 opacity-50" />
-                    </div>}
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 space-y-3 group-hover:bg-[#f5f5f5] dark:group-hover:bg-[#0f0f0f] transition-colors">
-                  {/* Title Row */}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-[15px] truncate flex-1">
-                      {blueprint.title}
-                    </h3>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0 hover:bg-muted transition-opacity">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-popover">
-                        <DropdownMenuItem className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px]" onClick={e => {
-                    e.stopPropagation();
-                    handleActivateBlueprint(blueprint.id);
-                  }}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Campaign
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:bg-muted focus:text-destructive font-inter tracking-[-0.5px]" onClick={e => {
-                    e.stopPropagation();
-                    deleteBlueprint(blueprint.id);
-                  }}>
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Platforms */}
-                  {blueprint.platforms && blueprint.platforms.length > 0 && <div className="flex items-center gap-1.5">
-                      {blueprint.platforms.map((platform, idx) => <div key={idx} className="p-1.5 rounded-md bg-muted/50">
-                          {getPlatformIcon(platform)}
-                        </div>)}
-                    </div>}
-
-                  {/* Meta Row */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
-                      {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium font-inter tracking-[-0.5px]">
-                          {(userInfo?.name || "U").charAt(0).toUpperCase()}
+        return <DropdownMenu key={blueprint.id}>
+                <DropdownMenuTrigger asChild>
+                  <div className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 dark:bg-card/20 transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
+                    {/* Content Preview */}
+                    <div className="p-5 min-h-[120px] border-b border-border/30">
+                      {contentPreview ? <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
+                          {contentPreview}...
+                        </p> : <div className="flex-col h-full py-4 text-muted-foreground/50 flex items-center justify-end">
+                          <img src={editDocumentIcon} alt="" className="h-8 w-8 opacity-50" />
                         </div>}
-                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                        {userInfo?.name || "You"}
-                      </span>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70 font-inter tracking-[-0.5px]">
-                      <Clock className="h-3 w-3" />
-                      <span>{format(new Date(blueprint.updated_at), 'MMM d')}</span>
+
+                    {/* Footer */}
+                    <div className="p-4 space-y-3 group-hover:bg-[#f5f5f5] dark:group-hover:bg-[#0f0f0f] transition-colors">
+                      {/* Title Row */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-medium text-[15px] truncate flex-1">
+                          {blueprint.title}
+                        </h3>
+                      </div>
+
+                      {/* Platforms */}
+                      {blueprint.platforms && blueprint.platforms.length > 0 && <div className="flex items-center gap-1.5">
+                          {blueprint.platforms.map((platform, idx) => <div key={idx} className="p-1.5 rounded-md bg-muted/50">
+                              {getPlatformIcon(platform)}
+                            </div>)}
+                        </div>}
+
+                      {/* Meta Row */}
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-2">
+                          {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium font-inter tracking-[-0.5px]">
+                              {(userInfo?.name || "U").charAt(0).toUpperCase()}
+                            </div>}
+                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                            {userInfo?.name || "You"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground/70 font-inter tracking-[-0.5px]">
+                          <Clock className="h-3 w-3" />
+                          <span>{format(new Date(blueprint.updated_at), 'MMM d')}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>;
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="bg-popover w-48">
+                  <DropdownMenuItem className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px]" onClick={() => openBlueprint(blueprint.id)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Blueprint
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px]" onClick={() => handleActivateBlueprint(blueprint.id)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Campaign
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive focus:bg-muted focus:text-destructive font-inter tracking-[-0.5px]" onClick={() => deleteBlueprint(blueprint.id)}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>;
       })}
         </div>}
 
