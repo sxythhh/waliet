@@ -39,13 +39,11 @@ export function CreateCampaignTypeDialog({
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  
   useEffect(() => {
     if (defaultBlueprintId) {
       setSelectedBlueprint(defaultBlueprintId);
     }
   }, [defaultBlueprintId]);
-  
   useEffect(() => {
     if (open && brandId) {
       fetchBlueprints();
@@ -84,7 +82,7 @@ export function CreateCampaignTypeDialog({
     setSearchParams(newParams);
   };
   const hasBlueprints = blueprints.length > 0;
-  
+
   // If controlled, don't render trigger
   if (controlledOpen !== undefined) {
     return <Dialog open={open} onOpenChange={setOpen}>
@@ -129,16 +127,14 @@ export function CreateCampaignTypeDialog({
 
           {/* Campaign Type Selection */}
           <div className="space-y-3">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Campaign Type
-            </label>
+            
             
             <div className="space-y-2">
               {/* Clipping Option */}
               <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#a7751e'
-              }}>
+                  backgroundColor: '#a7751e'
+                }}>
                   <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -154,8 +150,8 @@ export function CreateCampaignTypeDialog({
               {/* Boost Option */}
               <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#1ea75e'
-              }}>
+                  backgroundColor: '#1ea75e'
+                }}>
                   <img alt="Boost" className="h-5 w-5" src="/lovable-uploads/a5e5e0b5-a5aa-4ed7-88da-c3e121539f10.png" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -173,7 +169,6 @@ export function CreateCampaignTypeDialog({
       </DialogContent>
     </Dialog>;
   }
-  
   return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || <Button className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7]">
