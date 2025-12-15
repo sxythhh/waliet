@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Video, Check, X, ExternalLink, ChevronRight, User } from "lucide-react";
-import { LiquidProgressPot } from "./LiquidProgressPot";
+import { SubmissionHeatmap } from "./SubmissionHeatmap";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
@@ -268,14 +268,14 @@ export function BoostVideosTab({
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? 'rotate-90' : ''}`} />
                       </div>
                       
-                      {/* Visual Liquid Pot */}
-                      <div className="mt-2">
-                        <LiquidProgressPot
-                          current={creator.approvedThisMonth}
-                          max={videosPerMonth}
-                          earnedAmount={creator.earnedThisMonth}
-                          maxAmount={monthlyRetainer}
-                          pendingCount={creator.pendingThisMonth}
+                      {/* Submission Heatmap */}
+                      <div className="mt-3">
+                        <SubmissionHeatmap 
+                          submissions={creator.submissions.map(s => ({
+                            submitted_at: s.submitted_at,
+                            status: s.status
+                          }))}
+                          months={3}
                         />
                       </div>
                     </button>;
