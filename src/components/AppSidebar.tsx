@@ -345,7 +345,7 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="flex items-center justify-between py-[10px] px-[10px]">
           <div className={`flex items-center gap-0 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-            <OptimizedImage src={viralityIcon} alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
+            <OptimizedImage src={viralityIcon} alt="Logo" className="h-6 w-6 rounded-lg object-cover" />
             {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
                 VIRALITY
               </span>}
