@@ -8,6 +8,8 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CampaignCreationWizard } from "./CampaignCreationWizard";
+import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
+import { CreateBountyDialog } from "./CreateBountyDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -37,7 +39,9 @@ export function BlueprintsTab({
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
+  const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
+  const [createBoostOpen, setCreateBoostOpen] = useState(false);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
   const [brandInfo, setBrandInfo] = useState<{
     name: string;
@@ -135,7 +139,20 @@ export function BlueprintsTab({
   };
   const handleActivateBlueprint = (blueprintId: string) => {
     setSelectedBlueprintId(blueprintId);
+    setTypeDialogOpen(true);
+  };
+  
+  const handleSelectClipping = (blueprintId?: string) => {
+    setTypeDialogOpen(false);
+    if (blueprintId) {
+      setSelectedBlueprintId(blueprintId);
+    }
     setCreateCampaignOpen(true);
+  };
+  
+  const handleSelectBoost = () => {
+    setTypeDialogOpen(false);
+    setCreateBoostOpen(true);
   };
   const getPlatformIcon = (platform: string) => {
     const isDark = resolvedTheme === 'dark';
@@ -291,6 +308,18 @@ export function BlueprintsTab({
       })}
         </div>}
 
-      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
+      <CreateCampaignTypeDialog 
+        open={typeDialogOpen} 
+        onOpenChange={setTypeDialogOpen}
+        brandId={brandId}
+        defaultBlueprintId={selectedBlueprintId || undefined}
+        onSelectClipping={handleSelectClipping}
+        onSelectManaged={handleSelectClipping}
+        onSelectBoost={handleSelectBoost}
+      />
+
+      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
+      
+      {brandInfo && <CreateBountyDialog brandId={brandId} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
     </div>;
 }
