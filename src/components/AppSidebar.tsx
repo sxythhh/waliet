@@ -394,9 +394,7 @@ export function AppSidebar() {
                   <div className="border-t border-[#1a1a1a]" />
                   
                   {/* Active Section */}
-                  <div className="px-3 pt-2 pb-1">
-                    <span className="text-[10px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Active</span>
-                  </div>
+                  
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[3px]">
                     {/* Creator Dashboard */}
