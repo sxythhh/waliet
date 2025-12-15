@@ -381,8 +381,9 @@ export function BoostVideosTab({
                 }
                 
                 return filteredSubs.map(submission => {
-              const profile = profiles[submission.user_id];
-              return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
+                  const profile = profiles[submission.user_id];
+                  return (
+                    <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
                       {/* Header */}
                       <div className="flex items-center justify-between p-4 border-b border-border/20">
                         <div className="flex items-center gap-3">
