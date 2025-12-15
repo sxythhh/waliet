@@ -286,14 +286,22 @@ export function AppSidebar() {
                 <div className="space-y-0.5">
                   <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <img src={supportIcon} alt="Support" className="w-4 h-4" />
-                    <span className="text-sm">Support</span>
+                    <span className="text-sm font-inter tracking-[-0.5px]">Support</span>
                   </button>
                   <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
                     <div className="flex items-center gap-3">
                       <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
-                      <span className="text-sm">Discord</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">Discord</span>
                     </div>
                     <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => { setFeedbackType("feature"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                    <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
+                    <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
+                  </button>
+                  <button onClick={() => { setFeedbackType("bug"); setFeedbackOpen(true); }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                    <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
+                    <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
                   </button>
                 </div>
 
