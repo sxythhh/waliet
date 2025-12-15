@@ -16,91 +16,7 @@ function filterVerificationCode(bio: string, verificationCode: string): string {
 
 async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
   console.log(`Fetching TikTok profile for: ${username}`);
-
-  let hitRateLimit = false;
-
-  // Try primary API first (ScrapTik). Note: this endpoint may return 403 if the RapidAPI key
-  // is not subscribed to it, so we treat that as "unavailable" and fall back.
-  try {
-    const result = await tryScrapTikApi(username, verificationCode, rapidApiKey);
-    if (result) return result;
-  } catch (error: any) {
-    const msg = String(error?.message || error);
-    if (msg === 'RATE_LIMIT') hitRateLimit = true;
-    console.log('Primary TikTok API failed, trying fallback:', msg);
-  }
-
-  // Fallback to TikTok API23
-  try {
-    const result = await tryTikTokApi23(username, verificationCode, rapidApiKey);
-    if (result) return result;
-  } catch (error: any) {
-    const msg = String(error?.message || error);
-    if (msg === 'RATE_LIMIT') hitRateLimit = true;
-    console.log('Fallback TikTok API also failed:', msg);
-  }
-
-  if (hitRateLimit) {
-    throw new Error('RATE_LIMIT');
-  }
-
-  throw new Error('TIKTOK_UNAVAILABLE');
-}
-
-async function tryScrapTikApi(username: string, verificationCode: string, rapidApiKey: string) {
-  const response = await fetch(
-    `https://scraptik.p.rapidapi.com/get-user?username=${encodeURIComponent(username)}`,
-    {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-host': 'scraptik.p.rapidapi.com',
-        'x-rapidapi-key': rapidApiKey,
-      },
-    }
-  );
-
-  if (!response.ok) {
-    // 403 commonly means the RapidAPI key isn't subscribed to this API
-    if (response.status === 403) {
-      console.log('ScrapTik API returned 403 (likely not subscribed); skipping to fallback.');
-      return null;
-    }
-
-    console.error(`ScrapTik API error: ${response.status}`);
-
-    if (response.status === 429) {
-      throw new Error('RATE_LIMIT');
-    }
-
-    return null;
-  }
-
-  const data = await response.json();
-  console.log('ScrapTik API response received');
-
-  if (!data?.user) {
-    throw new Error('User not found on TikTok');
-  }
-
-  const user = data.user;
-  const bio = user.signature || user.bio || '';
-  const verified = bio.toUpperCase().includes(verificationCode.toUpperCase());
-
-  const cleanBio = filterVerificationCode(bio, verificationCode);
-
-  return {
-    verified,
-    bio: cleanBio,
-    user: {
-      nickname: user.nickname || user.uniqueId || username,
-      avatar: user.avatarMedium || user.avatarThumb,
-      followerCount: user.followerCount || data.stats?.followerCount || 0,
-      isVerified: user.verified || false,
-    },
-  };
-}
-
-async function tryTikTokApi23(username: string, verificationCode: string, rapidApiKey: string) {
+  
   const response = await fetch(
     `https://tiktok-api23.p.rapidapi.com/api/user/info?uniqueId=${encodeURIComponent(username)}`,
     {
@@ -113,15 +29,15 @@ async function tryTikTokApi23(username: string, verificationCode: string, rapidA
   );
 
   if (!response.ok) {
-    console.error(`TikTok API23 error: ${response.status}`);
+    console.error(`TikTok API error: ${response.status}`);
     if (response.status === 429) {
-      throw new Error('RATE_LIMIT');
+      throw new Error('Rate limit exceeded. Please wait a minute and try again.');
     }
-    return null;
+    throw new Error(`TikTok API error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log('TikTok API23 response received');
+  console.log('TikTok API response received');
 
   if (data.statusCode !== 0 || !data.userInfo?.user) {
     throw new Error('User not found on TikTok');
@@ -129,7 +45,7 @@ async function tryTikTokApi23(username: string, verificationCode: string, rapidA
 
   const user = data.userInfo.user;
   const bio = user.signature || '';
-  const verified = bio.toUpperCase().includes(verificationCode.toUpperCase());
+  const verified = bio.includes(verificationCode);
 
   const cleanBio = filterVerificationCode(bio, verificationCode);
 
@@ -320,19 +236,9 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('Verification error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
-    // IMPORTANT: Return 200 with success=false so the client can show a friendly toast
-    // (and avoid surfacing a generic "Edge function returned 500" error).
-    const friendlyError =
-      errorMessage === 'RATE_LIMIT'
-        ? 'TikTok verification is temporarily rate-limited by our provider. Please wait a few minutes and try again.'
-        : errorMessage === 'TIKTOK_UNAVAILABLE'
-          ? 'TikTok verification is temporarily unavailable. Please try again in a few minutes.'
-          : errorMessage;
-
-    return new Response(JSON.stringify({ success: false, error: friendlyError }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });
