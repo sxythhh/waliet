@@ -325,7 +325,18 @@ export function ShortimizeVideosTable({
       }
       setHasApiKey(true);
       const videosData = data.videos || [];
-      setVideos(videosData);
+
+      // Ensure client-side sort matches the selected metric/order in case the API doesn't fully respect it
+      const sortedVideos = [...videosData].sort((a: ShortimizeVideo, b: ShortimizeVideo) => {
+        const field = sortField as keyof ShortimizeVideo;
+        const aVal = (a[field] as number | null) ?? 0;
+        const bVal = (b[field] as number | null) ?? 0;
+        if (aVal === bVal) return 0;
+        const direction = sortDirection === 'desc' ? -1 : 1;
+        return aVal > bVal ? direction : -direction;
+      });
+
+      setVideos(sortedVideos);
       setPagination(prev => ({
         ...prev,
         ...data.pagination
