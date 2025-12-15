@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check } from "lucide-react";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
@@ -107,6 +107,7 @@ export function AppSidebar() {
   const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
   const [allBrands, setAllBrands] = useState<Brand[]>([]);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [workspaceSearch, setWorkspaceSearch] = useState("");
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
   const [currentBrandSubscriptionStatus, setCurrentBrandSubscriptionStatus] = useState<string | null>(null);
@@ -374,43 +375,97 @@ export function AppSidebar() {
                   <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1.5 bg-[#141414] border-0" align="start" sideOffset={4}>
-                <div className="space-y-0.5 max-h-[400px] overflow-y-auto font-inter tracking-[-0.5px]">
-                  <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${isCreatorMode ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                    <Avatar className="w-5 h-5">
-                      <AvatarImage src={avatarUrl || undefined} />
-                      <AvatarFallback className="bg-[#1f1f1f] text-[10px] text-neutral-400">
-                        {displayName?.charAt(0)?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-white">Creator Dashboard</span>
-                  </button>
-                  {isAdmin && allBrands.length > 0 && <>
-                      {allBrands.map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                              <Building2 className="w-3 h-3 text-neutral-400" />
-                            </div>}
-                          <span className="text-sm font-medium text-white truncate">{brand.name}</span>
-                        </button>)}
-                    </>}
-                  {!isAdmin && brandMemberships.length > 0 && <>
-                      <p className="px-2 py-1 text-[10px] text-neutral-500 uppercase tracking-wider">Your Brands</p>
-                      {brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]'}`}>
-                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" /> : <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                              <Building2 className="w-3 h-3 text-neutral-400" />
-                            </div>}
-                          <span className="text-sm font-medium text-white truncate">{membership.brands.name}</span>
-                        </button>)}
-                    </>}
-                  <button onClick={() => {
-                setWorkspaceOpen(false);
-                setShowCreateBrandDialog(true);
-              }} className="w-full flex items-center gap-2 px-2 py-1.5 rounded transition-colors hover:bg-[#1f1f1f] text-neutral-400 hover:text-white">
-                    <div className="w-5 h-5 rounded bg-[#1f1f1f] flex items-center justify-center">
-                      <Plus className="w-3 h-3" />
+              <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
+                <div className="font-inter tracking-[-0.5px]">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 pt-3 pb-2">
+                    <span className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Workspaces</span>
+                    <span className="text-[11px] text-neutral-600">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
+                  </div>
+                  
+                  {/* Search */}
+                  <div className="px-3 pb-2">
+                    <div className="flex items-center gap-2 px-2.5 py-2 bg-[#0f0f0f] border border-[#1a1a1a] rounded-md">
+                      <Search className="w-4 h-4 text-neutral-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Type to filter..." 
+                        className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 outline-none"
+                        value={workspaceSearch}
+                        onChange={(e) => setWorkspaceSearch(e.target.value)}
+                      />
                     </div>
-                    <span className="text-sm font-medium">Create Brand</span>
-                  </button>
+                  </div>
+                  
+                  <div className="border-t border-[#1a1a1a]" />
+                  
+                  {/* Active Section */}
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-medium text-neutral-500 uppercase tracking-wider">Active</span>
+                  </div>
+                  
+                  <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5">
+                    {/* Creator Dashboard */}
+                    {("creator dashboard".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && (
+                      <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="w-7 h-7">
+                            <AvatarImage src={avatarUrl || undefined} />
+                            <AvatarFallback className="bg-[#1a1a1a] text-[11px] text-neutral-400">
+                              {displayName?.charAt(0)?.toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-[13px] font-medium text-white">Creator Dashboard</span>
+                        </div>
+                        {isCreatorMode && <Check className="w-4 h-4 text-neutral-400" />}
+                      </button>
+                    )}
+                    
+                    {/* Admin brands */}
+                    {isAdmin && allBrands
+                      .filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "")
+                      .map(brand => (
+                        <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                          <div className="flex items-center gap-2.5">
+                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                              </div>}
+                            <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
+                          </div>
+                          {workspace === brand.slug && <Check className="w-4 h-4 text-neutral-400" />}
+                        </button>
+                      ))}
+                    
+                    {/* Non-admin brand memberships */}
+                    {!isAdmin && brandMemberships
+                      .filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "")
+                      .map(membership => (
+                        <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                          <div className="flex items-center gap-2.5">
+                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                                <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                              </div>}
+                            <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
+                          </div>
+                          {workspace === membership.brands.slug && <Check className="w-4 h-4 text-neutral-400" />}
+                        </button>
+                      ))}
+                  </div>
+                  
+                  <div className="border-t border-[#1a1a1a]" />
+                  
+                  {/* Create Brand */}
+                  <div className="p-1.5">
+                    <button onClick={() => {
+                      setWorkspaceOpen(false);
+                      setShowCreateBrandDialog(true);
+                    }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
+                      <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                        <Plus className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-[13px] font-medium">Create Brand</span>
+                    </button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
