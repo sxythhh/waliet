@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, BookOpen, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check } from "lucide-react";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
@@ -23,6 +23,8 @@ import creatorsInactive from "@/assets/creators-inactive.svg";
 import creatorsActive from "@/assets/creators-active.svg";
 import referralsInactive from "@/assets/referrals-inactive.svg";
 import referralsActive from "@/assets/referrals-active.svg";
+import educationInactive from "@/assets/education-inactive.svg";
+import educationActive from "@/assets/education-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -85,7 +87,7 @@ const brandMenuItems = [{
 }, {
   title: "Education",
   tab: "education",
-  icon: BookOpen
+  icon: null as any
 }, {
   title: "Settings",
   tab: "profile",
@@ -507,6 +509,9 @@ export function AppSidebar() {
                     </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
                       <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={educationInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={educationActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
                   {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
