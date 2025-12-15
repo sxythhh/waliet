@@ -92,34 +92,39 @@ export function DiscordLinkDialog({
       setLoading(false);
     }
   };
-  return <Dialog open={open} onOpenChange={setOpen}>
-      {!isLinked ? (
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-2xl">
-            <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" />
-            Connect Discord
-          </Button>
-        </DialogTrigger>
-      ) : (
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight text-destructive hover:text-destructive hover:bg-destructive/10">
-            <Unlink className="h-4 w-4" />
-            Unlink Discord
-          </Button>
-        </DialogTrigger>
-      )}
+  if (!isLinked) {
+    return (
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-2xl"
+        onClick={handleLinkDiscord}
+      >
+        <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" />
+        Connect Discord
+      </Button>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight text-destructive hover:text-destructive hover:bg-destructive/10">
+          <Unlink className="h-4 w-4" />
+          Unlink Discord
+        </Button>
+      </DialogTrigger>
       <DialogContent className="bg-[#0b0b0b] border">
         <DialogHeader>
-          <DialogTitle>
-            {isLinked ? "Discord Account Linked" : "Link Discord Account"}
-          </DialogTitle>
+          <DialogTitle>Discord Account Linked</DialogTitle>
           <DialogDescription>
-            {isLinked ? "Your Discord account is currently linked to your Virality profile." : "Link your Discord account to enable additional features and connect with the community."}
+            Your Discord account is currently linked to your Virality profile.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pt-4">
-          {isLinked && discordUsername && <div className="p-4 rounded-lg bg-muted/20 border border-border">
+          {discordUsername && (
+            <div className="p-4 rounded-lg bg-muted/20 border border-border">
               <div className="flex items-center gap-3">
                 <img src={discordAvatar || discordIcon} alt="Discord" className="w-12 h-12 rounded-full object-cover" />
                 <div className="flex-1">
@@ -130,22 +135,10 @@ export function DiscordLinkDialog({
                   <Unlink className="h-4 w-4" />
                 </Button>
               </div>
-            </div>}
-
-          {!isLinked && <>
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  By linking your Discord account, you'll be able to access exclusive features and connect with other creators in the Virality community.
-                </p>
-              </div>
-
-              <Button className="w-full gap-2" onClick={handleLinkDiscord} disabled={loading}>
-                <img src={discordIcon} alt="Discord" className="w-4 h-4" />
-                Connect Discord
-              </Button>
-            </>}
+            </div>
+          )}
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
