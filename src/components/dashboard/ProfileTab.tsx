@@ -848,10 +848,12 @@ export function ProfileTab() {
           </div>
         </CardHeader>
         <CardContent className="px-[20px]">
-            {socialAccounts.length === 0 ? <div className="text-center py-4 my-0">
-              <img alt="" className="w-12 h-12 mx-auto mb-4 opacity-100" src="/lovable-uploads/c6c38db9-e9f4-44c4-b188-4e8bbe1cb2df.png" />
-              <p className="text-base font-medium text-foreground">No connected accounts yet</p>
-              
+            {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                <img alt="" className="w-7 h-7 opacity-60 dark:opacity-80 dark:invert" src={noAccountsIcon} />
+              </div>
+              <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
+              <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
