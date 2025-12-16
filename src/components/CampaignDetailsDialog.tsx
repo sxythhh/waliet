@@ -377,17 +377,21 @@ export function CampaignDetailsDialog({
             <div className="relative">
               {blueprintContent ? (
                 <div 
-                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all prose prose-sm dark:prose-invert max-w-none ${showFullDescription ? '' : 'max-h-[100px]'}`} 
+                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all prose prose-sm dark:prose-invert max-w-none break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} 
                   style={{
                     fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
+                    letterSpacing: '-0.3px',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word'
                   }}
                   dangerouslySetInnerHTML={{ __html: blueprintContent }}
                 />
               ) : (
-                <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
+                <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
                   fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
+                  letterSpacing: '-0.3px',
+                  overflowWrap: 'break-word',
+                  wordBreak: 'break-word'
                 }}>
                   {renderDescriptionWithLinks(campaign.description!)}
                 </div>
