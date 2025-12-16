@@ -303,7 +303,7 @@ export function BrandCampaignsTab({
 
           {/* Action Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
               <div className="p-2 bg-muted rounded-lg">
                 <GraduationCap className="w-5 h-5 text-muted-foreground" />
               </div>
@@ -312,7 +312,7 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
               </div>
             </div>
-            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
               <div className="p-2 bg-muted rounded-lg">
                 <Rocket className="w-5 h-5 text-muted-foreground" />
               </div>
@@ -321,7 +321,7 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
               </div>
             </div>
-            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
               <div className="p-2 bg-muted rounded-lg">
                 <Search className="w-5 h-5 text-muted-foreground" />
               </div>
