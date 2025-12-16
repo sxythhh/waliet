@@ -318,8 +318,8 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setSearchParams(prev => { prev.set('tab', 'education'); return prev; })}
             >
-              <div className="p-3 bg-muted rounded-lg shrink-0">
-                <img src={schoolIcon} alt="" className="w-6 h-6" />
+              <div className="p-2 bg-muted rounded-lg shrink-0">
+                <img src={schoolIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
@@ -330,8 +330,8 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setCampaignTypeDialogOpen(true)}
             >
-              <div className="p-3 bg-muted rounded-lg shrink-0">
-                <img src={webStoriesIcon} alt="" className="w-6 h-6" />
+              <div className="p-2 bg-muted rounded-lg shrink-0">
+                <img src={webStoriesIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
@@ -342,8 +342,8 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setSearchParams(prev => { prev.set('tab', 'blueprints'); return prev; })}
             >
-              <div className="p-3 bg-muted rounded-lg shrink-0">
-                <img src={stickyNoteIcon} alt="" className="w-6 h-6" />
+              <div className="p-2 bg-muted rounded-lg shrink-0">
+                <img src={stickyNoteIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
