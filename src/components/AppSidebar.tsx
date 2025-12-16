@@ -2,7 +2,7 @@ import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift,
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
 import discordIcon from "@/assets/discord-icon.png";
@@ -247,10 +247,10 @@ export function AppSidebar() {
   return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
           <span className="font-geist font-bold tracking-tighter-custom text-base text-white">VIRALITY</span>
-        </div>
+        </Link>
         <div className="flex items-center gap-3">
           <Popover>
             <PopoverTrigger asChild>
@@ -373,12 +373,12 @@ export function AppSidebar() {
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414] transition-all duration-200`}>
         {/* Logo */}
         <div className="flex items-center justify-between py-[10px] px-[10px]">
-          <div className={`flex items-center gap-0 ${isCollapsed ? 'justify-center w-full' : ''}`}>
+          <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover mr-[2px]" />
             {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
                 VIRALITY
               </span>}
-          </div>
+          </Link>
           {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors">
               <PanelLeftClose className="h-4 w-4" />
             </button>}
