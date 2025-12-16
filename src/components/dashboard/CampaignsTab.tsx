@@ -48,6 +48,7 @@ interface Campaign {
   is_infinite_budget?: boolean;
   allowed_platforms: string[] | null;
   created_at: string;
+  blueprint_id?: string | null;
   connected_accounts?: Array<{
     id: string;
     platform: string;
@@ -101,6 +102,7 @@ interface RecommendedCampaign {
   status: string | null;
   start_date: string | null;
   guidelines: string | null;
+  blueprint_id: string | null;
 }
 interface RecentActivity {
   id: string;
@@ -210,7 +212,7 @@ export function CampaignsTab({
       data: userSubmissions
     } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id);
     const joinedCampaignIds = userSubmissions?.map(s => s.campaign_id) || [];
-    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget, requires_application, application_questions, description, status, start_date, guidelines").eq("status", "active").eq("is_private", false).limit(3);
+    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget, requires_application, application_questions, description, status, start_date, guidelines, blueprint_id").eq("status", "active").eq("is_private", false).limit(3);
     if (joinedCampaignIds.length > 0) {
       recommendedQuery = recommendedQuery.not("id", "in", `(${joinedCampaignIds.join(",")})`);
     }
@@ -710,7 +712,8 @@ export function CampaignsTab({
                 ? ((campaign as any).application_questions as string[])
                 : [],
               requires_application: (campaign as any).requires_application,
-              is_infinite_budget: campaign.is_infinite_budget
+              is_infinite_budget: campaign.is_infinite_budget,
+              blueprint_id: (campaign as any).blueprint_id || null
             });
             setJoinCampaignSheetOpen(true);
           }}>
