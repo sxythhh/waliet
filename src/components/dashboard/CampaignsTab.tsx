@@ -95,6 +95,12 @@ interface RecommendedCampaign {
   budget: number;
   budget_used: number | null;
   is_infinite_budget: boolean | null;
+  requires_application: boolean | null;
+  application_questions: string[] | null;
+  description: string | null;
+  status: string | null;
+  start_date: string | null;
+  guidelines: string | null;
 }
 interface RecentActivity {
   id: string;
@@ -204,14 +210,17 @@ export function CampaignsTab({
       data: userSubmissions
     } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id);
     const joinedCampaignIds = userSubmissions?.map(s => s.campaign_id) || [];
-    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget").eq("status", "active").eq("is_private", false).limit(3);
+    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget, requires_application, application_questions, description, status, start_date, guidelines").eq("status", "active").eq("is_private", false).limit(3);
     if (joinedCampaignIds.length > 0) {
       recommendedQuery = recommendedQuery.not("id", "in", `(${joinedCampaignIds.join(",")})`);
     }
     const {
       data: recommendedData
     } = await recommendedQuery;
-    setRecommendedCampaigns(recommendedData || []);
+    setRecommendedCampaigns((recommendedData || []).map(c => ({
+      ...c,
+      application_questions: Array.isArray(c.application_questions) ? c.application_questions as string[] : []
+    })));
 
     // Fetch recent activity (recent transactions)
     const {
