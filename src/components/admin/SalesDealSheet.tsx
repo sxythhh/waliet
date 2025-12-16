@@ -1,16 +1,17 @@
-import { useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ManageRoadmapDialog } from "@/components/admin/ManageRoadmapDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarDays, DollarSign, TrendingUp, ExternalLink, Trash2 } from "lucide-react";
+import { CalendarDays, ExternalLink, Trash2, Users, CreditCard, Globe, User, Crown, Power, Pencil, Map } from "lucide-react";
+
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+
 interface Brand {
   id: string;
   name: string;
@@ -24,7 +25,11 @@ interface Brand {
   show_account_tab: boolean;
   is_active: boolean;
   created_at: string;
+  subscription_status?: string | null;
+  subscription_plan?: string | null;
+  subscription_expires_at?: string | null;
 }
+
 interface SalesDeal {
   id: string;
   brand_id: string;
@@ -39,57 +44,89 @@ interface SalesDeal {
   lost_reason: string | null;
   brands: Brand;
 }
+
+interface BrandOwner {
+  user_id: string;
+  profile?: {
+    username: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  };
+}
+
 interface SalesDealSheetProps {
   deal: SalesDeal | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate?: () => void;
 }
-const STAGES: {
-  value: SalesStage;
-  label: string;
-  color: string;
-}[] = [{
-  value: 'lead',
-  label: 'Lead',
-  color: 'bg-slate-500'
-}, {
-  value: 'qualified',
-  label: 'Qualified',
-  color: 'bg-blue-500'
-}, {
-  value: 'proposal',
-  label: 'Proposal',
-  color: 'bg-purple-500'
-}, {
-  value: 'negotiation',
-  label: 'Negotiation',
-  color: 'bg-orange-500'
-}, {
-  value: 'won',
-  label: 'Won',
-  color: 'bg-green-500'
-}, {
-  value: 'lost',
-  label: 'Lost',
-  color: 'bg-red-500'
-}];
-export function SalesDealSheet({
-  deal,
-  open,
-  onOpenChange,
-  onUpdate
-}: SalesDealSheetProps) {
+
+const STAGES: { value: SalesStage; label: string; color: string }[] = [
+  { value: 'lead', label: 'Lead', color: 'bg-slate-500' },
+  { value: 'qualified', label: 'Qualified', color: 'bg-blue-500' },
+  { value: 'proposal', label: 'Proposal', color: 'bg-purple-500' },
+  { value: 'negotiation', label: 'Negotiation', color: 'bg-orange-500' },
+  { value: 'won', label: 'Won', color: 'bg-green-500' },
+  { value: 'lost', label: 'Lost', color: 'bg-red-500' },
+];
+
+export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDealSheetProps) {
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [brandOwner, setBrandOwner] = useState<BrandOwner | null>(null);
+  const [memberCount, setMemberCount] = useState(0);
+  const [campaignCount, setCampaignCount] = useState(0);
+
+  useEffect(() => {
+    if (deal?.brands?.id && open) {
+      fetchBrandContext();
+    }
+  }, [deal?.brands?.id, open]);
+
+  const fetchBrandContext = async () => {
+    if (!deal?.brands?.id) return;
+
+    // Fetch owner
+    const { data: ownerData } = await supabase
+      .from("brand_members")
+      .select("user_id")
+      .eq("brand_id", deal.brands.id)
+      .eq("role", "owner")
+      .single();
+
+    if (ownerData) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("username, full_name, email, avatar_url")
+        .eq("id", ownerData.user_id)
+        .single();
+
+      setBrandOwner({ user_id: ownerData.user_id, profile: profileData || undefined });
+    }
+
+    // Fetch member count
+    const { count: members } = await supabase
+      .from("brand_members")
+      .select("*", { count: "exact", head: true })
+      .eq("brand_id", deal.brands.id);
+    setMemberCount(members || 0);
+
+    // Fetch campaign count
+    const { count: campaigns } = await supabase
+      .from("campaigns")
+      .select("*", { count: "exact", head: true })
+      .eq("brand_id", deal.brands.id);
+    setCampaignCount(campaigns || 0);
+  };
+
   const toggleBrandActive = async () => {
-    if (!deal.brands) return;
+    if (!deal?.brands) return;
     try {
-      const {
-        error
-      } = await supabase.from("brands").update({
-        is_active: !deal.brands.is_active
-      }).eq("id", deal.brands.id);
+      const { error } = await supabase
+        .from("brands")
+        .update({ is_active: !deal.brands.is_active })
+        .eq("id", deal.brands.id);
       if (error) throw error;
       toast.success(`Brand ${!deal.brands.is_active ? 'activated' : 'deactivated'}`);
       if (onUpdate) onUpdate();
@@ -98,15 +135,13 @@ export function SalesDealSheet({
       toast.error("Failed to update brand status");
     }
   };
-  const handleDeleteClick = () => {
-    setDeleteDialogOpen(true);
-  };
+
+  const handleDeleteClick = () => setDeleteDialogOpen(true);
+
   const handleDeleteConfirm = async () => {
-    if (!deal.brands) return;
+    if (!deal?.brands) return;
     try {
-      const {
-        error
-      } = await supabase.from("brands").delete().eq("id", deal.brands.id);
+      const { error } = await supabase.from("brands").delete().eq("id", deal.brands.id);
       if (error) throw error;
       toast.success("Brand deleted successfully");
       if (onUpdate) onUpdate();
@@ -118,104 +153,199 @@ export function SalesDealSheet({
       setDeleteDialogOpen(false);
     }
   };
-  const getBrandTypeBadgeColor = (type: string | null) => {
-    switch (type) {
-      case "Standard":
-        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30";
-      case "DWY":
-        return "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30";
-      default:
-        return "";
-    }
+
+  const getSubscriptionBadge = () => {
+    const status = deal?.brands?.subscription_status;
+    if (status === 'active') return <Badge className="bg-emerald-500/15 text-emerald-500 border-0">Active</Badge>;
+    if (status === 'cancelled') return <Badge className="bg-amber-500/15 text-amber-500 border-0">Cancelled</Badge>;
+    return <Badge className="bg-muted text-muted-foreground border-0">No Plan</Badge>;
   };
+
+  const getStageBadge = () => {
+    const stage = STAGES.find(s => s.value === deal?.stage);
+    if (!stage) return null;
+    return (
+      <Badge className={`${stage.color} text-white border-0`}>
+        {stage.label}
+      </Badge>
+    );
+  };
+
   if (!deal) return null;
-  const currentStage = STAGES.find(s => s.value === deal.stage);
-  return <>
+
+  return (
+    <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader>
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12">
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto p-0">
+          {/* Header with gradient background */}
+          <div className="relative bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-6 pb-8">
+            <div className="flex items-start gap-4">
+              <Avatar className="w-16 h-16 border-2 border-background shadow-lg">
                 <AvatarImage src={deal.brands.logo_url || ''} />
-                <AvatarFallback>{deal.brands.name[0]}</AvatarFallback>
+                <AvatarFallback className="text-xl font-semibold bg-primary/10 text-primary">
+                  {deal.brands.name[0]}
+                </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <SheetTitle className="text-xl">{deal.brands.name}</SheetTitle>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className={`w-2 h-2 rounded-full ${currentStage?.color}`} />
-                  <span className="text-sm text-muted-foreground">{currentStage?.label}</span>
-                  {deal.brands?.brand_type && <Badge className={getBrandTypeBadgeColor(deal.brands.brand_type)}>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl font-semibold font-inter tracking-[-0.5px] truncate">
+                  {deal.brands.name}
+                </h2>
+                <p className="text-sm text-muted-foreground font-mono mt-0.5">
+                  /{deal.brands.slug}
+                </p>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  {getStageBadge()}
+                  {deal.brands?.brand_type && (
+                    <Badge variant="outline" className="border-border/50">
                       {deal.brands.brand_type}
-                    </Badge>}
+                    </Badge>
+                  )}
+                  {!deal.brands.is_active && (
+                    <Badge className="bg-destructive/15 text-destructive border-0">
+                      Inactive
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
-          </SheetHeader>
+          </div>
 
-          <div className="mt-6 space-y-6">
-            {/* Brand Information Section */}
-            <div className="space-y-4 pb-6 border-b">
-              <h3 className="font-semibold text-lg">Brand Information</h3>
-              
-              {deal.brands?.description && <div>
-                  <Label className="text-muted-foreground">Description</Label>
-                  <p className="text-sm mt-1">{deal.brands.description}</p>
-                </div>}
-
-              <div className="grid grid-cols-2 gap-4">
-                {deal.brands?.slug && <div>
-                    <Label className="text-muted-foreground">Slug</Label>
-                    <p className="text-sm mt-1 font-mono">{deal.brands.slug}</p>
-                  </div>}
-                {deal.brands?.created_at && <div>
-                    <Label className="text-muted-foreground">Created</Label>
-                    <p className="text-sm mt-1">
-                      {new Date(deal.brands.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                    </p>
-                  </div>}
+          <div className="p-6 space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <Users className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                <p className="text-lg font-semibold">{memberCount}</p>
+                <p className="text-xs text-muted-foreground">Members</p>
               </div>
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <Globe className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                <p className="text-lg font-semibold">{campaignCount}</p>
+                <p className="text-xs text-muted-foreground">Campaigns</p>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <CalendarDays className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
+                <p className="text-lg font-semibold">
+                  {new Date(deal.brands.created_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
+                </p>
+                <p className="text-xs text-muted-foreground">Created</p>
+              </div>
+            </div>
 
+            {/* Owner Section */}
+            {brandOwner?.profile && (
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Crown className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium">Owner</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={brandOwner.profile.avatar_url || ''} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {brandOwner.profile.full_name?.[0] || brandOwner.profile.username[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">
+                      {brandOwner.profile.full_name || brandOwner.profile.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {brandOwner.profile.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-              {/* Brand Actions - Keep only Edit and View Page here */}
-              <div className="flex flex-wrap gap-2 pt-2">
-                {deal.brands?.brand_type === "DWY" && <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />}
+            {/* Subscription Section */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Subscription</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">
+                    {deal.brands.subscription_plan || 'No Plan'}
+                  </p>
+                  {deal.brands.subscription_expires_at && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires {new Date(deal.brands.subscription_expires_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+                {getSubscriptionBadge()}
+              </div>
+            </div>
+
+            {/* Description */}
+            {deal.brands?.description && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  Description
+                </p>
+                <p className="text-sm text-foreground/80 leading-relaxed">
+                  {deal.brands.description}
+                </p>
+              </div>
+            )}
+
+            {/* Lost Reason */}
+            {deal.stage === 'lost' && deal.lost_reason && (
+              <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+                <p className="text-xs font-medium text-destructive uppercase tracking-wider mb-2">
+                  Lost Reason
+                </p>
+                <p className="text-sm">{deal.lost_reason}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Actions
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {deal.brands?.brand_type === "DWY" && (
+                  <ManageRoadmapDialog brandId={deal.brands.id} brandName={deal.brands.name} />
+                )}
                 {deal.brands && <EditBrandDialog brand={deal.brands} onSuccess={onUpdate} />}
-                <Button size="sm" variant="ghost" onClick={() => window.open(`/brand/${deal.brands?.slug}/account`, '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-1" />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`/brand/${deal.brands?.slug}/account`, '_blank')}
+                  className="gap-1.5"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
                   View Page
                 </Button>
               </div>
             </div>
 
-            {/* Deal Value & Probability */}
-            
-
-            {/* Dates */}
-            
-
-            {/* Notes */}
-            
-
-            {/* Lost Reason */}
-            {deal.stage === 'lost' && <div className="space-y-2">
-                <Label className="text-muted-foreground">Lost Reason</Label>
-                {deal.lost_reason ? <p className="text-sm whitespace-pre-wrap">{deal.lost_reason}</p> : <span className="text-muted-foreground text-sm">No reason provided</span>}
-              </div>}
-
-            {/* Danger Zone - Deactivate & Delete at bottom */}
-            <div className="space-y-3 pt-6 border-t mt-6">
-              <h4 className="text-sm font-medium text-muted-foreground">Danger Zone</h4>
+            {/* Danger Zone */}
+            <div className="pt-4 border-t border-border/50">
+              <p className="text-xs font-medium text-destructive/70 uppercase tracking-wider mb-3">
+                Danger Zone
+              </p>
               <div className="flex gap-2">
-                <Button size="sm" variant="destructive" onClick={toggleBrandActive} className="flex-1">
-                  {deal.brands?.is_active ? 'Deactivate Brand' : 'Activate Brand'}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={toggleBrandActive}
+                  className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Power className="h-3.5 w-3.5 mr-1.5" />
+                  {deal.brands?.is_active ? 'Deactivate' : 'Activate'}
                 </Button>
-                <Button size="sm" variant="destructive" onClick={handleDeleteClick} className="flex-1">
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete Brand
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDeleteClick}
+                  className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Delete
                 </Button>
               </div>
             </div>
@@ -226,7 +356,7 @@ export function SalesDealSheet({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Brand</AlertDialogTitle>
             <AlertDialogDescription>
               This will permanently delete <strong>{deal.brands?.name}</strong> and all
               associated campaigns and deals. This action cannot be undone.
@@ -234,11 +364,15 @@ export function SalesDealSheet({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
-              Delete
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete Brand
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>;
+    </>
+  );
 }
