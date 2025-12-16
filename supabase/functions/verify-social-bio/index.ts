@@ -14,8 +14,55 @@ function filterVerificationCode(bio: string, verificationCode: string): string {
   return filtered.replace(/\s+/g, ' ').trim();
 }
 
-async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
-  console.log(`Fetching TikTok profile for: ${username}`);
+// Primary TikTok API (tiktok-scraper7)
+async function verifyTikTokPrimary(username: string, verificationCode: string, rapidApiKey: string) {
+  console.log(`Fetching TikTok profile (primary API) for: ${username}`);
+  
+  const response = await fetch(
+    `https://tiktok-scraper7.p.rapidapi.com/user/info?unique_id=${encodeURIComponent(username)}`,
+    {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-host': 'tiktok-scraper7.p.rapidapi.com',
+        'x-rapidapi-key': rapidApiKey,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    console.error(`TikTok primary API error: ${response.status}`);
+    throw new Error(`TikTok primary API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('TikTok primary API response received');
+
+  if (data.code !== 0 || !data.data?.user) {
+    throw new Error('User not found on TikTok (primary API)');
+  }
+
+  const user = data.data.user;
+  const bio = user.signature || '';
+  const verified = bio.includes(verificationCode);
+
+  const cleanBio = filterVerificationCode(bio, verificationCode);
+
+  return {
+    verified,
+    bio: cleanBio,
+    user: {
+      nickname: user.nickname,
+      avatar: user.avatarMedium,
+      followerCount: data.data.stats?.followerCount || 0,
+      isVerified: user.verified,
+      region: null, // This API doesn't provide region
+    },
+  };
+}
+
+// Fallback TikTok API (tiktok-api23 with region)
+async function verifyTikTokFallback(username: string, verificationCode: string, rapidApiKey: string) {
+  console.log(`Fetching TikTok profile (fallback API) for: ${username}`);
   
   const response = await fetch(
     `https://tiktok-api23.p.rapidapi.com/api/user/info-with-region?uniqueId=${encodeURIComponent(username)}`,
@@ -29,15 +76,15 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
   );
 
   if (!response.ok) {
-    console.error(`TikTok API error: ${response.status}`);
+    console.error(`TikTok fallback API error: ${response.status}`);
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please wait a minute and try again.');
     }
-    throw new Error(`TikTok API error: ${response.status}`);
+    throw new Error(`TikTok fallback API error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log('TikTok API response received');
+  console.log('TikTok fallback API response received');
 
   if (data.statusCode !== 0 || !data.userInfo?.user) {
     throw new Error('User not found on TikTok');
@@ -60,6 +107,21 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
       region: user.language || null,
     },
   };
+}
+
+// Main TikTok verification with fallback
+async function verifyTikTok(username: string, verificationCode: string, rapidApiKey: string) {
+  try {
+    return await verifyTikTokPrimary(username, verificationCode, rapidApiKey);
+  } catch (primaryError) {
+    console.log('Primary TikTok API failed, trying fallback:', primaryError);
+    try {
+      return await verifyTikTokFallback(username, verificationCode, rapidApiKey);
+    } catch (fallbackError) {
+      console.error('Both TikTok APIs failed:', fallbackError);
+      throw fallbackError;
+    }
+  }
 }
 
 async function verifyInstagram(username: string, verificationCode: string, rapidApiKey: string) {
