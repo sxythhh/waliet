@@ -685,20 +685,22 @@ export function CampaignsTab({
             setSelectedCampaignForJoin({
               id: campaign.id,
               title: campaign.title,
-              description: '',
+              description: (campaign as any).description || '',
               brand_name: campaign.brand_name,
               brand_logo_url: campaign.brand_logo_url || '',
               budget: campaign.budget,
               budget_used: campaign.budget_used || 0,
               rpm_rate: campaign.rpm_rate,
-              status: 'active',
-              start_date: null,
+              status: (campaign as any).status || 'active',
+              start_date: (campaign as any).start_date || null,
               banner_url: campaign.banner_url,
               platforms: campaign.allowed_platforms || [],
               slug: campaign.slug,
-              guidelines: null,
-              application_questions: [],
-              requires_application: false,
+              guidelines: (campaign as any).guidelines || null,
+              application_questions: Array.isArray((campaign as any).application_questions)
+                ? ((campaign as any).application_questions as string[])
+                : [],
+              requires_application: (campaign as any).requires_application,
               is_infinite_budget: campaign.is_infinite_budget
             });
             setJoinCampaignSheetOpen(true);
