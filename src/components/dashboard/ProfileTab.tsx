@@ -25,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PhoneInput } from "@/components/PhoneInput";
 import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
+import { VerifyAccountDialog } from "@/components/VerifyAccountDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { useTheme } from "@/components/ThemeProvider";
@@ -131,6 +132,12 @@ export function ProfileTab() {
   const [selectedAccountForLinking, setSelectedAccountForLinking] = useState<SocialAccount | null>(null);
   const [linkingCampaign, setLinkingCampaign] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
+  const [showVerifyAccountDialog, setShowVerifyAccountDialog] = useState(false);
+  const [selectedAccountForVerification, setSelectedAccountForVerification] = useState<{
+    id: string;
+    platform: string;
+    username: string;
+  } | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -888,9 +895,20 @@ export function ProfileTab() {
                                     {account.username}
                                   </span>
                                   {!account.is_verified && (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium">
-                                      Unverified
-                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedAccountForVerification({
+                                          id: account.id,
+                                          platform: account.platform,
+                                          username: account.username
+                                        });
+                                        setShowVerifyAccountDialog(true);
+                                      }}
+                                      className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
+                                    >
+                                      Verify
+                                    </button>
                                   )}
                                 </div>
                                 
@@ -1407,6 +1425,21 @@ export function ProfileTab() {
 
       {/* Demographics Dialog */}
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
+
+      {/* Verify Account Dialog */}
+      {selectedAccountForVerification && (
+        <VerifyAccountDialog
+          open={showVerifyAccountDialog}
+          onOpenChange={(open) => {
+            setShowVerifyAccountDialog(open);
+            if (!open) setSelectedAccountForVerification(null);
+          }}
+          onSuccess={fetchSocialAccounts}
+          accountId={selectedAccountForVerification.id}
+          platform={selectedAccountForVerification.platform}
+          username={selectedAccountForVerification.username}
+        />
+      )}
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={open => {
