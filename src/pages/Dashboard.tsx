@@ -110,13 +110,11 @@ export default function Dashboard() {
       // Show subscription embed if no active plan
       if (currentBrand.subscription_status !== 'active') {
         return (
-          <div className="w-full h-full">
-            <iframe
-              src="https://join.virality.gg/page-2"
-              className="w-full h-full border-0"
-              title="Subscribe"
-            />
-          </div>
+          <iframe
+            src="https://join.virality.gg/page-2"
+            className="w-full h-full border-0"
+            title="Subscribe"
+          />
         );
       }
 
