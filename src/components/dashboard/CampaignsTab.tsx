@@ -931,7 +931,7 @@ export function CampaignsTab({
               {/* Application Status */}
               {isPending && <div className="mt-auto pt-2 space-y-2">
                   <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
-                    <span className="text-[11px] font-instrument tracking-tight text-muted-foreground font-semibold">
+                    <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground font-semibold">
                       Pending Review
                     </span>
                   </div>
@@ -939,7 +939,7 @@ export function CampaignsTab({
                   e.stopPropagation();
                   setSelectedCampaignId(campaign.id);
                   setWithdrawDialogOpen(true);
-                }} className="w-full h-8 text-[11px] font-instrument tracking-tight hover:bg-destructive/10 hover:text-destructive font-semibold">
+                }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
