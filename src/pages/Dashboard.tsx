@@ -22,6 +22,7 @@ import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
@@ -104,11 +105,13 @@ export default function Dashboard() {
     });
     setCampaigns(data || []);
   };
+  const { isAdmin } = useAdminCheck();
+
   const renderContent = () => {
-    // Brand mode - check subscription status first
+    // Brand mode - check subscription status first (admins bypass paywall)
     if (isBrandMode && currentBrand) {
-      // Show subscription embed if no active plan
-      if (currentBrand.subscription_status !== 'active') {
+      // Show subscription embed if no active plan (unless admin)
+      if (currentBrand.subscription_status !== 'active' && !isAdmin) {
         return (
           <iframe
             src="https://join.virality.gg/page-2"
