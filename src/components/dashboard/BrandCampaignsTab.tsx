@@ -318,7 +318,7 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setSearchParams(prev => { prev.set('tab', 'education'); return prev; })}
             >
-              <div className="p-2 bg-muted rounded-lg">
+              <div className="w-12 h-12 flex items-center justify-center bg-muted rounded-lg">
                 <img src={schoolIcon} alt="" className="w-8 h-8" />
               </div>
               <div>
@@ -330,7 +330,7 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setCampaignTypeDialogOpen(true)}
             >
-              <div className="p-2 bg-muted rounded-lg">
+              <div className="w-12 h-12 flex items-center justify-center bg-muted rounded-lg">
                 <img src={webStoriesIcon} alt="" className="w-8 h-8" />
               </div>
               <div>
@@ -342,7 +342,7 @@ export function BrandCampaignsTab({
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
               onClick={() => setSearchParams(prev => { prev.set('tab', 'blueprints'); return prev; })}
             >
-              <div className="p-2 bg-muted rounded-lg">
+              <div className="w-12 h-12 flex items-center justify-center bg-muted rounded-lg">
                 <img src={stickyNoteIcon} alt="" className="w-8 h-8" />
               </div>
               <div>
