@@ -284,6 +284,10 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} className="font-inter tracking-[-0.5px]">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Campaign
+            </Button>
             <CreateCampaignTypeDialog 
               brandId={brandId} 
               open={campaignTypeDialogOpen}
