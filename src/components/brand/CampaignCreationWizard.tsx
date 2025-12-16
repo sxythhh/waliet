@@ -89,6 +89,12 @@ const campaignSchema = z.object({
   path: ["budget"]
 });
 type CampaignFormValues = z.infer<typeof campaignSchema>;
+
+interface Blueprint {
+  id: string;
+  title: string;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -117,6 +123,7 @@ interface Campaign {
   requirements?: string[] | null;
   application_questions?: string[] | null;
   payout_day_of_week?: number | null;
+  blueprint_id?: string | null;
 }
 interface CampaignCreationWizardProps {
   brandId: string;
@@ -156,6 +163,8 @@ export function CampaignCreationWizard({
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const [manualBudgetUsed, setManualBudgetUsed] = useState<string>("");
   const [isAdjustingBudget, setIsAdjustingBudget] = useState(false);
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(campaign?.blueprint_id || initialBlueprintId || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
@@ -299,6 +308,28 @@ export function CampaignCreationWizard({
     };
     loadShortimizeApiKey();
   }, [open, brandId, isAdmin]);
+
+  // Load brand's blueprints
+  useEffect(() => {
+    const loadBlueprints = async () => {
+      if (open && brandId) {
+        const { data } = await supabase
+          .from('blueprints')
+          .select('id, title')
+          .eq('brand_id', brandId)
+          .order('created_at', { ascending: false });
+        setBlueprints(data || []);
+      }
+    };
+    loadBlueprints();
+  }, [open, brandId]);
+
+  // Reset selected blueprint when dialog opens
+  useEffect(() => {
+    if (open) {
+      setSelectedBlueprintId(campaign?.blueprint_id || initialBlueprintId || null);
+    }
+  }, [open, campaign?.blueprint_id, initialBlueprintId]);
   const watchedValues = form.watch();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -432,6 +463,7 @@ export function CampaignCreationWizard({
           hashtags: values.hashtags || [],
           application_questions: values.application_questions || [],
           payout_day_of_week: values.payout_day_of_week,
+          blueprint_id: selectedBlueprintId || null,
           ...(bannerFile ? {
             banner_url: bannerUrl
           } : {})
@@ -478,7 +510,7 @@ export function CampaignCreationWizard({
           status: "active",
           slug: slug,
           is_featured: false,
-          blueprint_id: initialBlueprintId || null
+          blueprint_id: selectedBlueprintId || initialBlueprintId || null
         };
         const {
           error
@@ -618,7 +650,7 @@ export function CampaignCreationWizard({
                           name="budget"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs text-muted-foreground">Total Budget</FormLabel>
+                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Total Budget</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
@@ -637,7 +669,7 @@ export function CampaignCreationWizard({
                         render={({ field }) => (
                           <FormItem>
                             <div className="flex items-center justify-between">
-                              <FormLabel className="text-xs text-muted-foreground">CPM Rate</FormLabel>
+                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">CPM Rate</FormLabel>
                               <span className="text-xs text-muted-foreground">per 1K views</span>
                             </div>
                             <FormControl>
@@ -666,7 +698,7 @@ export function CampaignCreationWizard({
                         name="allowed_platforms"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Platforms</FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Platforms</FormLabel>
                             <FormControl>
                               <div className="flex gap-2">
                                 {[
@@ -713,7 +745,7 @@ export function CampaignCreationWizard({
                         name="category"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Content Niche</FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Niche</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value || ""}>
                               <FormControl>
                                 <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
@@ -739,7 +771,7 @@ export function CampaignCreationWizard({
                           name="is_private"
                           render={({ field }) => (
                             <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                              <FormLabel className="text-xs text-foreground cursor-pointer">Private</FormLabel>
+                              <FormLabel className="text-xs text-foreground cursor-pointer font-inter tracking-[-0.5px]">Private</FormLabel>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
@@ -751,7 +783,7 @@ export function CampaignCreationWizard({
                           name="requires_application"
                           render={({ field }) => (
                             <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                              <FormLabel className="text-xs text-foreground cursor-pointer">Applications</FormLabel>
+                              <FormLabel className="text-xs text-foreground cursor-pointer font-inter tracking-[-0.5px]">Applications</FormLabel>
                               <FormControl>
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
@@ -766,7 +798,7 @@ export function CampaignCreationWizard({
                           name="access_code"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs text-muted-foreground">Access Code</FormLabel>
+                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Access Code</FormLabel>
                               <FormControl>
                                 <Input placeholder="BRAND2024" className="h-10 bg-muted/30 border-0 uppercase focus:ring-1 focus:ring-primary/30" {...field} />
                               </FormControl>
@@ -876,7 +908,7 @@ export function CampaignCreationWizard({
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Campaign Name</FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Campaign Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
                             </FormControl>
@@ -890,7 +922,7 @@ export function CampaignCreationWizard({
                         name="hashtags"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">Tracking Hashtags</FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Tracking Hashtags</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -938,7 +970,7 @@ export function CampaignCreationWizard({
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">Description</FormLabel>
+                          <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Description</FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Describe your campaign..."
@@ -951,6 +983,27 @@ export function CampaignCreationWizard({
                       )}
                     />
 
+                    {/* Blueprint Selection */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
+                      <Select
+                        value={selectedBlueprintId || "none"}
+                        onValueChange={(val) => setSelectedBlueprintId(val === "none" ? null : val)}
+                      >
+                        <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
+                          <SelectValue placeholder="Select a blueprint" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No blueprint</SelectItem>
+                          {blueprints.map((blueprint) => (
+                            <SelectItem key={blueprint.id} value={blueprint.id}>
+                              {blueprint.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Collapsible Sections */}
                     <div className="space-y-3">
 
@@ -959,7 +1012,7 @@ export function CampaignCreationWizard({
                         <div className="rounded-lg bg-muted/20 p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground">Shortimize Integration</span>
+                            <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Shortimize Integration</span>
                             <Badge variant="outline" className="text-xs">Admin</Badge>
                           </div>
                           <Input
@@ -980,7 +1033,7 @@ export function CampaignCreationWizard({
                         {isAdmin && (
                           <div className="rounded-lg bg-muted/20 p-4">
                             <div className="flex items-center gap-2 mb-3">
-                              <span className="text-sm font-medium text-foreground">Manual Budget Adjustment</span>
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Manual Budget Adjustment</span>
                               <Badge variant="outline" className="text-xs">Admin</Badge>
                             </div>
                             <p className="text-xs text-muted-foreground mb-2">Current: ${(campaign?.budget_used || 0).toFixed(2)}</p>
@@ -1025,7 +1078,7 @@ export function CampaignCreationWizard({
                             render={({ field }) => (
                               <div className="rounded-lg bg-muted/20 p-4">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-sm font-medium text-foreground">Payout Day</span>
+                                  <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Payout Day</span>
                                   <Badge variant="outline" className="text-xs">Admin</Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-2">Demographics due 1 day before</p>
@@ -1051,7 +1104,7 @@ export function CampaignCreationWizard({
 
                         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                           <div>
-                            <span className="text-sm font-medium text-foreground">Pause Campaign</span>
+                            <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Pause Campaign</span>
                             <p className="text-xs text-muted-foreground">Hide from discover</p>
                           </div>
                           <Switch
