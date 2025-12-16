@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, ChevronDown, FileText, Megaphone, Zap } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,9 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
+import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
+import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,16 +55,14 @@ export default function Index() {
                 <NavigationMenu>
                   <NavigationMenuList>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-white/10 font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-white/10">
+                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-[#1a1a1a] font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-[#1a1a1a]">
                         Product
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-[#141414] border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl">
+                        <div className="w-64 p-3 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl">
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
-                              <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                                <FileText className="w-4 h-4 text-blue-400" />
-                              </div>
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                              <img src={blueprintsMenuIcon} alt="" className="w-5 h-5" />
                               <div>
                                 <div className="font-medium text-white">Blueprints</div>
                                 <div className="text-xs text-white/50">Campaign templates & briefs</div>
@@ -69,10 +70,8 @@ export default function Index() {
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
-                              <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-                                <Megaphone className="w-4 h-4 text-purple-400" />
-                              </div>
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                              <img src={campaignsMenuIcon} alt="" className="w-5 h-5" />
                               <div>
                                 <div className="font-medium text-white">Campaigns</div>
                                 <div className="text-xs text-white/50">RPM-based creator programs</div>
@@ -80,10 +79,8 @@ export default function Index() {
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
-                              <div className="p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
-                                <Zap className="w-4 h-4 text-amber-400" />
-                              </div>
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                              <img src={boostsMenuIcon} alt="" className="w-5 h-5" />
                               <div>
                                 <div className="font-medium text-white">Boosts</div>
                                 <div className="text-xs text-white/50">Fixed-rate video bounties</div>
