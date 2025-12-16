@@ -12,7 +12,7 @@ import { BoostDetailView } from "@/components/brand/BoostDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
+import { Pencil, Plus, BarChart3, Lock, GraduationCap, Rocket, Search } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
@@ -299,6 +299,37 @@ export function BrandCampaignsTab({
             setSubscriptionGateOpen(true);
           }
         }} />
+          </div>
+
+          {/* Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+              <div className="p-2 bg-muted rounded-lg">
+                <GraduationCap className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
+              </div>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+              <div className="p-2 bg-muted rounded-lg">
+                <Rocket className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
+              </div>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-3">
+              <div className="p-2 bg-muted rounded-lg">
+                <Search className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Spy on your competitor's Viral videos through our curated content library</p>
+              </div>
+            </div>
           </div>
 
           {/* Subscription Gate Dialog */}
