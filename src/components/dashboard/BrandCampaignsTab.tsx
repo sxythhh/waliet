@@ -12,7 +12,10 @@ import { BoostDetailView } from "@/components/brand/BoostDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Plus, BarChart3, Lock, GraduationCap, Rocket, Search } from "lucide-react";
+import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
+import schoolIcon from "@/assets/school-icon.svg";
+import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
+import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
@@ -71,6 +74,7 @@ export function BrandCampaignsTab({
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<CampaignTypeFilter>("all");
+  const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
   const { isAdmin, loading: adminLoading } = useAdminCheck();
 
   // Show beta gate for non-admin users with inactive subscription
@@ -280,50 +284,66 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <CreateCampaignTypeDialog brandId={brandId} onSelectClipping={() => {
-          if (subscriptionStatus === "active") {
-            setCreateCampaignOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }} onSelectManaged={() => {
-          if (subscriptionStatus === "active") {
-            setCreateBountyOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }} onSelectBoost={() => {
-          if (subscriptionStatus === "active") {
-            setCreateBountyOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }} />
+            <CreateCampaignTypeDialog 
+              brandId={brandId} 
+              open={campaignTypeDialogOpen}
+              onOpenChange={setCampaignTypeDialogOpen}
+              onSelectClipping={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateCampaignOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }} 
+              onSelectManaged={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateBountyOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }} 
+              onSelectBoost={() => {
+                if (subscriptionStatus === "active") {
+                  setCreateBountyOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }} 
+            />
           </div>
 
           {/* Action Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
+            <div 
+              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
+              onClick={() => setSearchParams(prev => { prev.set('tab', 'education'); return prev; })}
+            >
               <div className="p-2 bg-muted rounded-lg">
-                <GraduationCap className="w-5 h-5 text-muted-foreground" />
+                <img src={schoolIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
               </div>
             </div>
-            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
+            <div 
+              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
+              onClick={() => setCampaignTypeDialogOpen(true)}
+            >
               <div className="p-2 bg-muted rounded-lg">
-                <Rocket className="w-5 h-5 text-muted-foreground" />
+                <img src={webStoriesIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
               </div>
             </div>
-            <div className="bg-[#0e0e0e] border border-border rounded-xl p-4 flex items-start gap-3">
+            <div 
+              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
+              onClick={() => setSearchParams(prev => { prev.set('tab', 'blueprints'); return prev; })}
+            >
               <div className="p-2 bg-muted rounded-lg">
-                <Search className="w-5 h-5 text-muted-foreground" />
+                <img src={stickyNoteIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
