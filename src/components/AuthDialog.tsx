@@ -201,7 +201,7 @@ export default function AuthDialog({
   };
   return <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[380px] border-0 bg-[#050505] shadow-2xl p-0">
+        <DialogContent className="sm:max-w-[380px] border-0 bg-[#050505] shadow-2xl p-6">
           <div className="rounded-xl">
             <div className="text-center space-y-4 pb-2 pt-2">
               <div className="flex items-center justify-center gap-2">
