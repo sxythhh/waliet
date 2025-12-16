@@ -3,11 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users, ChevronDown } from "lucide-react";
+import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
+import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
@@ -50,7 +51,7 @@ interface Campaign {
 interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
-type DetailTab = "home" | "videos" | "creators" | "payouts";
+type DetailTab = "home" | "videos" | "applications" | "creators" | "payouts";
 export function BrandCampaignDetailView({
   campaignId
 }: BrandCampaignDetailViewProps) {
@@ -92,7 +93,11 @@ export function BrandCampaignDetailView({
     id: "videos" as DetailTab,
     label: "Videos",
     icon: Video
-  }, ...(isAdmin ? [{
+  }, ...(campaign?.requires_application !== false ? [{
+    id: "applications" as DetailTab,
+    label: "Applications",
+    icon: UserCheck
+  }] : []), ...(isAdmin ? [{
     id: "creators" as DetailTab,
     label: "Creators",
     icon: Users
@@ -168,9 +173,19 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" && campaign.brand_id ? <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} /> : activeDetailTab === "videos" && campaign.brand_id ? <div className="p-4 py-0">
+          {activeDetailTab === "home" && campaign.brand_id ? (
+            <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} />
+          ) : activeDetailTab === "videos" && campaign.brand_id ? (
+            <div className="p-4 py-0">
               <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} timeframe={timeframe} />
-            </div> : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />}
+            </div>
+          ) : activeDetailTab === "applications" ? (
+            <CampaignApplicationsView campaignId={campaignId} />
+          ) : activeDetailTab === "creators" ? (
+            <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" />
+          ) : (
+            <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
+          )}
         </div>
       </div>
     </div>;
