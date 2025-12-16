@@ -18,7 +18,7 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
   console.log(`Fetching TikTok profile for: ${username}`);
   
   const response = await fetch(
-    `https://tiktok-api23.p.rapidapi.com/api/user/info?uniqueId=${encodeURIComponent(username)}`,
+    `https://tiktok-api23.p.rapidapi.com/api/user/info-with-region?uniqueId=${encodeURIComponent(username)}`,
     {
       method: 'GET',
       headers: {
@@ -57,6 +57,7 @@ async function verifyTikTok(username: string, verificationCode: string, rapidApi
       avatar: user.avatarMedium,
       followerCount: data.userInfo.stats?.followerCount || 0,
       isVerified: user.verified,
+      region: user.language || null,
     },
   };
 }
