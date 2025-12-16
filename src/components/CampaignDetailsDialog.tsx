@@ -46,6 +46,7 @@ interface Campaign {
   campaign_update?: string | null;
   campaign_update_at?: string | null;
   payout_day_of_week?: number | null;
+  blueprint_id?: string | null;
 }
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
@@ -129,9 +130,34 @@ export function CampaignDetailsDialog({
     views: number;
     amount: number;
   } | null>(null);
+  const [blueprintContent, setBlueprintContent] = useState<string | null>(null);
   const {
     resolvedTheme
   } = useTheme();
+
+  // Fetch blueprint content if campaign has a blueprint_id
+  useEffect(() => {
+    const fetchBlueprintContent = async () => {
+      if (!campaign?.blueprint_id || !open) {
+        setBlueprintContent(null);
+        return;
+      }
+
+      const { data: blueprint } = await supabase
+        .from('blueprints')
+        .select('content')
+        .eq('id', campaign.blueprint_id)
+        .single();
+
+      if (blueprint?.content) {
+        setBlueprintContent(blueprint.content);
+      } else {
+        setBlueprintContent(null);
+      }
+    };
+
+    fetchBlueprintContent();
+  }, [campaign?.blueprint_id, open]);
 
   // Fetch latest view metrics from Shortimize data
   useEffect(() => {
@@ -347,21 +373,32 @@ export function CampaignDetailsDialog({
         </div>
 
         {/* Description with gradient + read more */}
-        {campaign.description && <div className="mb-4">
+        {(blueprintContent || campaign.description) && <div className="mb-4">
             <div className="relative">
-              <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.3px'
-          }}>
-                {renderDescriptionWithLinks(campaign.description)}
-              </div>
-              {!showFullDescription && campaign.description.length > 200 && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
+              {blueprintContent ? (
+                <div 
+                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all prose prose-sm dark:prose-invert max-w-none ${showFullDescription ? '' : 'max-h-[100px]'}`} 
+                  style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: blueprintContent }}
+                />
+              ) : (
+                <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>
+                  {renderDescriptionWithLinks(campaign.description!)}
+                </div>
+              )}
+              {!showFullDescription && ((blueprintContent && blueprintContent.length > 200) || (campaign.description && campaign.description.length > 200)) && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
             </div>
-            {campaign.description.length > 200 && <div className="flex justify-center mt-2">
+            {((blueprintContent && blueprintContent.length > 200) || (campaign.description && campaign.description.length > 200)) && <div className="flex justify-center mt-2">
                 <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none" style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.3px'
-          }}>
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                   {showFullDescription ? 'Show less' : 'Show more'}
                 </button>
               </div>}
