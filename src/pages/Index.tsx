@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, ChevronDown } from "lucide-react";
+import { LogOut, ChevronDown, FileText, Megaphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -52,24 +52,42 @@ export default function Index() {
                 <NavigationMenu>
                   <NavigationMenuList>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-white/10 font-inter tracking-[-0.5px] text-sm">
+                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-white/10 font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-white/10">
                         Product
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-48 p-2 bg-[#1a1a1a] border border-white/10 rounded-lg">
+                        <div className="w-64 p-3 bg-[#141414] border border-white/10 rounded-xl shadow-2xl backdrop-blur-xl">
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="block px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-md font-inter tracking-[-0.5px]">
-                              Blueprints
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
+                              <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                                <FileText className="w-4 h-4 text-blue-400" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-white">Blueprints</div>
+                                <div className="text-xs text-white/50">Campaign templates & briefs</div>
+                              </div>
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="block px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-md font-inter tracking-[-0.5px]">
-                              Campaigns
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
+                              <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                                <Megaphone className="w-4 h-4 text-purple-400" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-white">Campaigns</div>
+                                <div className="text-xs text-white/50">RPM-based creator programs</div>
+                              </div>
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="block px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-md font-inter tracking-[-0.5px]">
-                              Boosts
+                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-lg font-inter tracking-[-0.5px] transition-colors group">
+                              <div className="p-2 rounded-lg bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                                <Zap className="w-4 h-4 text-amber-400" />
+                              </div>
+                              <div>
+                                <div className="font-medium text-white">Boosts</div>
+                                <div className="text-xs text-white/50">Fixed-rate video bounties</div>
+                              </div>
                             </Link>
                           </NavigationMenuLink>
                         </div>
