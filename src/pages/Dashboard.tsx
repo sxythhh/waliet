@@ -37,6 +37,7 @@ export default function Dashboard() {
     id: string;
     name: string;
     slug: string;
+    subscription_status: string | null;
   } | null>(null);
   const navigate = useNavigate();
   const currentTab = searchParams.get("tab") || "campaigns";
@@ -61,7 +62,7 @@ export default function Dashboard() {
   const fetchBrandBySlug = async (slug: string) => {
     const {
       data
-    } = await supabase.from("brands").select("id, name, slug").eq("slug", slug).single();
+    } = await supabase.from("brands").select("id, name, slug, subscription_status").eq("slug", slug).single();
     if (data) {
       setCurrentBrand(data);
     }
@@ -104,18 +105,32 @@ export default function Dashboard() {
     setCampaigns(data || []);
   };
   const renderContent = () => {
-    // Brand mode with selected campaign - show detail view
-    if (isBrandMode && currentBrand && selectedCampaignId) {
-      return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
-    }
-
-    // Brand mode with selected blueprint - show editor
-    if (isBrandMode && currentBrand && selectedBlueprintId) {
-      return <BlueprintEditor blueprintId={selectedBlueprintId} brandId={currentBrand.id} />;
-    }
-
-    // Brand mode tabs
+    // Brand mode - check subscription status first
     if (isBrandMode && currentBrand) {
+      // Show subscription embed if no active plan
+      if (currentBrand.subscription_status !== 'active') {
+        return (
+          <div className="w-full h-full">
+            <iframe
+              src="https://join.virality.gg/page-2"
+              className="w-full h-full border-0"
+              title="Subscribe"
+            />
+          </div>
+        );
+      }
+
+      // Brand mode with selected campaign - show detail view
+      if (selectedCampaignId) {
+        return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
+      }
+
+      // Brand mode with selected blueprint - show editor
+      if (selectedBlueprintId) {
+        return <BlueprintEditor blueprintId={selectedBlueprintId} brandId={currentBrand.id} />;
+      }
+
+      // Brand mode tabs
       switch (currentTab) {
         case "campaigns":
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
