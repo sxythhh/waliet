@@ -131,21 +131,23 @@ export function CampaignDetailsDialog({
     amount: number;
   } | null>(null);
   const [blueprintContent, setBlueprintContent] = useState<string | null>(null);
+  const [blueprintAssets, setBlueprintAssets] = useState<AssetLink[] | null>(null);
   const {
     resolvedTheme
   } = useTheme();
 
-  // Fetch blueprint content if campaign has a blueprint_id
+  // Fetch blueprint content and assets if campaign has a blueprint_id
   useEffect(() => {
-    const fetchBlueprintContent = async () => {
+    const fetchBlueprintData = async () => {
       if (!campaign?.blueprint_id || !open) {
         setBlueprintContent(null);
+        setBlueprintAssets(null);
         return;
       }
 
       const { data: blueprint } = await supabase
         .from('blueprints')
-        .select('content')
+        .select('content, assets')
         .eq('id', campaign.blueprint_id)
         .single();
 
@@ -154,9 +156,15 @@ export function CampaignDetailsDialog({
       } else {
         setBlueprintContent(null);
       }
+
+      if (blueprint?.assets && Array.isArray(blueprint.assets)) {
+        setBlueprintAssets(blueprint.assets as unknown as AssetLink[]);
+      } else {
+        setBlueprintAssets(null);
+      }
     };
 
-    fetchBlueprintContent();
+    fetchBlueprintData();
   }, [campaign?.blueprint_id, open]);
 
   // Fetch latest view metrics from Shortimize data
@@ -503,13 +511,11 @@ export function CampaignDetailsDialog({
               </div>}
           </div>}
 
-        {/* Asset Links Section */}
-        {hasAssetLinks && <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-3" style={{
-          letterSpacing: '-0.5px'
-        }}>Campaign Assets</h4>
+        {/* Asset Links Section - show blueprint assets or campaign assets */}
+        {(blueprintAssets && blueprintAssets.length > 0 ? blueprintAssets : hasAssetLinks ? campaign.asset_links : null) && <div className="mb-4">
+            <h4 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">Campaign Assets</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {campaign.asset_links!.map((link, index) => {
+              {(blueprintAssets && blueprintAssets.length > 0 ? blueprintAssets : campaign.asset_links!).map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
                     {faviconUrl && <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
@@ -518,7 +524,7 @@ export function CampaignDetailsDialog({
                 }} />
                       </div>}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs sm:text-sm truncate">{link.label}</p>
+                      <p className="font-medium font-inter tracking-[-0.3px] text-xs sm:text-sm truncate">{link.label}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
