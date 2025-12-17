@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { format, addDays, isAfter, nextDay, previousDay, isBefore, startOfDay } from "date-fns";
+import { useState } from "react";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Trash2, ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle } from "lucide-react";
+import { Trash2, ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle, History, ChevronDown, ChevronUp } from "lucide-react";
 import demographicsIcon from "@/assets/demographics-icon.svg";
 
 interface DemographicSubmission {
@@ -41,27 +41,8 @@ export function DemographicStatusCard({
   const [viewingSubmission, setViewingSubmission] = useState<DemographicSubmission | null>(null);
   const [deletingSubmission, setDeletingSubmission] = useState<DemographicSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [campaignPayoutDays, setCampaignPayoutDays] = useState<number[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const { toast } = useToast();
-
-  // Fetch payout days from connected campaigns
-  useEffect(() => {
-    const fetchCampaignPayoutDays = async () => {
-      if (campaignIds.length === 0) return;
-      
-      const { data } = await supabase
-        .from('campaigns')
-        .select('payout_day_of_week')
-        .in('id', campaignIds);
-      
-      if (data) {
-        const days = data.map(c => c.payout_day_of_week ?? 2); // Default to Tuesday
-        setCampaignPayoutDays([...new Set(days)]);
-      }
-    };
-    
-    fetchCampaignPayoutDays();
-  }, [campaignIds]);
 
   // Sort submissions by submitted_at descending to ensure latest is always first
   const sortedSubmissions = [...submissions].sort((a, b) => 
@@ -69,83 +50,19 @@ export function DemographicStatusCard({
   );
   const latestSubmission = sortedSubmissions[0];
   const status = latestSubmission?.status;
+  const historicalSubmissions = sortedSubmissions.slice(1);
 
-  // Get next occurrence of a day of week (0=Sunday, 6=Saturday)
-  const getNextDayOfWeek = (dayOfWeek: number, fromDate: Date = new Date()): Date => {
-    const today = startOfDay(fromDate);
-    const todayDay = today.getDay();
-    
-    if (todayDay === dayOfWeek) {
-      return today;
-    }
-    
-    const daysUntil = (dayOfWeek - todayDay + 7) % 7;
-    return addDays(today, daysUntil || 7);
-  };
-
-  // Calculate demographic due date: 1 day before payout day OR on payout day
-  const getDemographicDueDate = (): Date | null => {
-    if (campaignPayoutDays.length === 0) return null;
-    
-    const now = startOfDay(new Date());
-    let nearestDue: Date | null = null;
-    
-    for (const payoutDay of campaignPayoutDays) {
-      // Due date is 1 day before payout day
-      const dueDay = (payoutDay - 1 + 7) % 7;
-      let nextDue = getNextDayOfWeek(dueDay);
-      
-      // If due date is today or in the past for this week, also consider it valid
-      if (isBefore(nextDue, now)) {
-        nextDue = addDays(nextDue, 7);
-      }
-      
-      if (!nearestDue || isBefore(nextDue, nearestDue)) {
-        nearestDue = nextDue;
-      }
-    }
-    
-    return nearestDue;
-  };
-
-  // Calculate if user can submit based on business rules
+  // Calculate if user can submit - only blocked if pending
   const getSubmissionAvailability = () => {
     if (!latestSubmission) {
-      return { canSubmit: true, reason: null as string | null, nextDate: getDemographicDueDate() };
+      return { canSubmit: true, reason: null as string | null };
     }
 
     if (status === 'pending') {
-      return { canSubmit: false, reason: 'Review in progress', nextDate: null };
+      return { canSubmit: false, reason: 'Review in progress' };
     }
 
-    if (status === 'rejected') {
-      return { canSubmit: true, reason: null, nextDate: null };
-    }
-
-    if (status === 'approved') {
-      const now = startOfDay(new Date());
-      const nextDueDate = getDemographicDueDate();
-      
-      // If no campaign payout days configured, allow submission anytime
-      if (!nextDueDate) {
-        return { canSubmit: true, reason: null, nextDate: null };
-      }
-      
-      // If due date has passed or is today, allow submission immediately
-      if (!isAfter(nextDueDate, now)) {
-        return { canSubmit: true, reason: null, nextDate: nextDueDate };
-      }
-      
-      // Calculate days until submission is allowed
-      const daysLeft = Math.ceil((nextDueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return {
-        canSubmit: false,
-        reason: `Next submission in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
-        nextDate: nextDueDate,
-      };
-    }
-
-    return { canSubmit: true, reason: null, nextDate: getDemographicDueDate() };
+    return { canSubmit: true, reason: null };
   };
 
   const availability = getSubmissionAvailability();
@@ -222,7 +139,6 @@ export function DemographicStatusCard({
   };
 
   const statusConfig = getStatusConfig(status || 'required');
-  const StatusIcon = statusConfig.icon;
 
   return (
     <>
@@ -240,7 +156,7 @@ export function DemographicStatusCard({
           )}
         </div>
 
-        {/* Submission Date Info */}
+        {/* Latest Submission Info */}
         {latestSubmission && (
           <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
             <div className="flex items-center gap-1.5">
@@ -248,7 +164,7 @@ export function DemographicStatusCard({
               <span>{format(new Date(latestSubmission.submitted_at), "MMM d, yyyy")}</span>
               {latestSubmission.screenshot_url && (
                 <button 
-                  onClick={() => window.open(latestSubmission.screenshot_url!, '_blank')}
+                  onClick={() => setViewingSubmission(latestSubmission)}
                   className="text-primary hover:underline ml-1"
                 >
                   View
@@ -263,12 +179,55 @@ export function DemographicStatusCard({
                 </button>
               )}
             </div>
-            {status === 'approved' && availability.nextDate && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground/60">Due:</span>
-                <span>{format(availability.nextDate, "MMM d, yyyy")}</span>
-              </div>
-            )}
+          </div>
+        )}
+
+        {/* History Toggle */}
+        {historicalSubmissions.length > 0 && (
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+          >
+            <History className="h-3 w-3" />
+            <span>{historicalSubmissions.length} previous submission{historicalSubmissions.length !== 1 ? 's' : ''}</span>
+            {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+        )}
+
+        {/* Historical Submissions */}
+        {showHistory && historicalSubmissions.length > 0 && (
+          <div className="space-y-1 pl-2 border-l border-border/50">
+            {historicalSubmissions.map((submission) => {
+              const subStatus = getStatusConfig(submission.status);
+              return (
+                <div 
+                  key={submission.id} 
+                  className="flex items-center justify-between text-[10px] text-muted-foreground py-0.5"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="secondary" className={`text-[9px] px-1 py-0 border-0 ${subStatus.color}`}>
+                      {subStatus.label}
+                    </Badge>
+                    <span>{format(new Date(submission.submitted_at), "MMM d, yyyy")}</span>
+                    {submission.score && submission.status === 'approved' && (
+                      <span className="font-medium">{submission.score}%</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {submission.screenshot_url && (
+                      <button 
+                        onClick={() => setViewingSubmission(submission)}
+                        className="text-primary hover:underline"
+                      >
+                        View
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 

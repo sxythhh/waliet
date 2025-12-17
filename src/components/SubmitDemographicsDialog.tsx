@@ -71,45 +71,19 @@ export function SubmitDemographicsDialog({
         return;
       }
 
-      // Check if user can submit based on business rules:
-      // - 30 days from reviewed_at if approved
-      // - Can resubmit immediately if rejected
-      // - Cannot resubmit while pending
+      // Check if there's a pending submission - cannot submit while one is pending
       const {
-        data: lastSubmission,
-        error: queryError
-      } = await supabase.from('demographic_submissions').select('submitted_at, reviewed_at, status').eq('social_account_id', socialAccountId).order('submitted_at', {
-        ascending: false
-      }).limit(1).maybeSingle();
-      if (lastSubmission) {
-        // Cannot submit while pending
-        if (lastSubmission.status === 'pending') {
-          toast({
-            variant: "destructive",
-            title: "Review in Progress",
-            description: "Your previous submission is still being reviewed"
-          });
-          setUploading(false);
-          return;
-        }
-
-        // 30 days from reviewed_at if approved
-        if (lastSubmission.status === 'approved' && lastSubmission.reviewed_at) {
-          const reviewedDate = new Date(lastSubmission.reviewed_at);
-          const nextSubmitDate = new Date(reviewedDate);
-          nextSubmitDate.setDate(nextSubmitDate.getDate() + 30);
-          if (new Date() < nextSubmitDate) {
-            const daysLeft = Math.ceil((nextSubmitDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-            toast({
-              variant: "destructive",
-              title: "Too Soon",
-              description: `You can submit again in ${daysLeft} day(s)`
-            });
-            setUploading(false);
-            return;
-          }
-        }
-        // If rejected, can resubmit immediately - no check needed
+        data: pendingSubmission
+      } = await supabase.from('demographic_submissions').select('status').eq('social_account_id', socialAccountId).eq('status', 'pending').limit(1).maybeSingle();
+      
+      if (pendingSubmission) {
+        toast({
+          variant: "destructive",
+          title: "Review in Progress",
+          description: "Your previous submission is still being reviewed"
+        });
+        setUploading(false);
+        return;
       }
 
       // Upload video with progress simulation
