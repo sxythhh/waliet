@@ -293,7 +293,7 @@ export default function Blog() {
       // Blog List View
       <>
             {/* Hero Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 py-[60px]">
               <div className="text-center max-w-3xl mx-auto">
                 <h1 className="text-5xl md:text-6xl font-inter tracking-[-1px] font-semibold text-white mb-6">
                   Blog
