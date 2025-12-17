@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { LogOut, CheckCircle, ChevronRight, ExternalLink, Check } from "lucide-react";
+import { LogOut, ChevronRight, ExternalLink, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,8 @@ import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
 import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 import arrowBackIcon from "@/assets/arrow-back-icon.svg";
+import checkboxChecked from "@/assets/checkbox-checked.svg";
+import checkboxUnchecked from "@/assets/checkbox-unchecked.svg";
 import DOMPurify from "dompurify";
 import { VideoEmbed } from "@/components/VideoEmbed";
 import { Progress } from "@/components/ui/progress";
@@ -378,11 +380,15 @@ export default function PublicCourseDetail() {
                       size="sm"
                       onClick={() => toggleModuleCompletion(selectedModule.id)}
                       className={completedModules.has(selectedModule.id) 
-                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30" 
-                        : "border-white/10 text-white/80 hover:bg-white/5"
+                        ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-0" 
+                        : "text-foreground hover:bg-muted border-0"
                       }
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <img 
+                        src={completedModules.has(selectedModule.id) ? checkboxChecked : checkboxUnchecked} 
+                        alt="" 
+                        className="w-5 h-5 mr-2" 
+                      />
                       {completedModules.has(selectedModule.id) ? 'Completed' : 'Mark Complete'}
                     </Button>
                   </div>
