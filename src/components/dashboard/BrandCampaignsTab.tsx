@@ -13,7 +13,7 @@ import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialo
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
-import schoolIcon from "@/assets/school-icon.svg";
+import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -320,7 +320,7 @@ export function BrandCampaignsTab({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
             <div 
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
-              onClick={() => setSearchParams(prev => { prev.set('tab', 'education'); return prev; })}
+              onClick={() => navigate('/resources')}
             >
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={schoolIcon} alt="" className="w-5 h-5" />
