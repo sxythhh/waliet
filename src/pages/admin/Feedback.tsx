@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { AdminSidebar } from "@/components/AdminSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
@@ -160,9 +158,7 @@ export default function Feedback() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <AdminSidebar />
-      <main className="flex-1 p-6 md:p-8 overflow-auto">
+    <div className="p-6 md:p-8 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -274,9 +270,8 @@ export default function Feedback() {
                 </Card>
               ))
             )}
-          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
