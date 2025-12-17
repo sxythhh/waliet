@@ -117,6 +117,7 @@ export default function AdminUsers() {
   const [hasSocialAccount, setHasSocialAccount] = useState<boolean | null>(null);
   const [signupTimeframe, setSignupTimeframe] = useState<string>("all");
   const [hasApprovedDemographics, setHasApprovedDemographics] = useState<boolean | null>(null);
+  const [hasBrandRole, setHasBrandRole] = useState<boolean | null>(null);
   const [minBalance, setMinBalance] = useState<string>("");
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,7 +181,7 @@ export default function AdminUsers() {
       filterUsers();
       setCurrentPage(1); // Reset to first page when filters change
     }
-  }, [debouncedSearchQuery, selectedCampaign, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, minBalance, initialLoadComplete]);
+  }, [debouncedSearchQuery, selectedCampaign, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, hasBrandRole, minBalance, initialLoadComplete]);
   const fetchData = async () => {
     setLoading(true);
 
@@ -311,6 +312,7 @@ export default function AdminUsers() {
                                  (minEarnings && parseFloat(minEarnings) > 0) ||
                                  hasSocialAccount !== null ||
                                  hasApprovedDemographics !== null ||
+                                 hasBrandRole !== null ||
                                  selectedCampaign !== "all";
     
     query = query.order("created_at", { ascending: false });
@@ -411,6 +413,30 @@ export default function AdminUsers() {
           account.demographic_submissions?.some(sub => sub.status === 'approved')
         )
       );
+    }
+
+    // Brand role filter (post-query filter)
+    if (hasBrandRole !== null) {
+      // Get users with brand role or brand membership
+      const { data: brandRoleUsers } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "brand");
+      
+      const { data: brandMemberUsers } = await supabase
+        .from("brand_members")
+        .select("user_id");
+      
+      const brandUserIds = new Set([
+        ...(brandRoleUsers?.map(r => r.user_id) || []),
+        ...(brandMemberUsers?.map(m => m.user_id) || [])
+      ]);
+      
+      if (hasBrandRole === true) {
+        filtered = filtered.filter(user => brandUserIds.has(user.id));
+      } else {
+        filtered = filtered.filter(user => !brandUserIds.has(user.id));
+      }
     }
 
     // Minimum earnings filter (post-query filter since wallets is a relation)
@@ -1470,6 +1496,19 @@ export default function AdminUsers() {
                   onClick={() => setHasApprovedDemographics(hasApprovedDemographics === true ? false : hasApprovedDemographics === false ? null : true)}
                 >
                   Demographics {hasApprovedDemographics === true ? "Yes" : hasApprovedDemographics === false ? "No" : ""}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
+                    hasBrandRole === true ? "bg-purple-500/20 text-purple-400" : 
+                    hasBrandRole === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
+                  )}
+                  onClick={() => setHasBrandRole(hasBrandRole === true ? false : hasBrandRole === false ? null : true)}
+                >
+                  Brand {hasBrandRole === true ? "Yes" : hasBrandRole === false ? "No" : ""}
                 </Button>
               </div>
 
