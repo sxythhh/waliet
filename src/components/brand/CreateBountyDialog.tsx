@@ -203,23 +203,12 @@ export function CreateBountyDialog({
     setCurrentStep(1);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
           <div>
             <h2 className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">New Boost</h2>
             <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {STEPS.map((step, index) => <div key={step.id} className="flex items-center gap-2">
-                <button type="button" onClick={() => step.id <= currentStep && setCurrentStep(step.id)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all font-inter tracking-[-0.5px] ${currentStep === step.id ? "bg-primary text-primary-foreground" : currentStep > step.id ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${currentStep > step.id ? "bg-primary text-primary-foreground" : "bg-current/20"}`}>
-                    {currentStep > step.id ? <Check className="w-2.5 h-2.5" /> : step.id}
-                  </span>
-                  <span className="hidden sm:inline">{step.label}</span>
-                </button>
-                {index < STEPS.length - 1 && <div className={`w-8 h-px ${currentStep > step.id ? "bg-primary" : "bg-border"}`} />}
-              </div>)}
           </div>
         </div>
 
