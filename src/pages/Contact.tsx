@@ -16,7 +16,7 @@ import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
 import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 
-export default function New() {
+export default function Contact() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
@@ -127,9 +127,9 @@ export default function New() {
 
       {/* Embedded Content */}
       <iframe
-        src="https://join.virality.gg/new"
+        src="https://join.virality.gg/contact"
         className="flex-1 w-full border-0 mt-14"
-        title="New"
+        title="Contact"
       />
 
       {/* Auth Dialog */}

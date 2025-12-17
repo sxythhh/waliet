@@ -50,6 +50,7 @@ import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
+import Contact from "./pages/Contact";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import Resources from "./pages/Resources";
 
@@ -131,6 +132,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/new" element={<New />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/blog" element={<Resources />} />
             <Route path="/course/:id" element={<PublicCourseDetail />} />
