@@ -518,13 +518,26 @@ export function CampaignDetailsDialog({
               {(blueprintAssets && blueprintAssets.length > 0 ? blueprintAssets : campaign.asset_links!).map((link, index) => {
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
-                    {faviconUrl && <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
-                        <img src={faviconUrl} alt="" className="w-6 h-6 object-contain" onError={e => {
-                  e.currentTarget.style.display = 'none';
-                }} />
-                      </div>}
+                    <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
+                      {faviconUrl ? (
+                        <img 
+                          src={faviconUrl} 
+                          alt="" 
+                          className="w-6 h-6 object-contain" 
+                          onError={e => {
+                            const parent = e.currentTarget.parentElement;
+                            if (parent) {
+                              e.currentTarget.style.display = 'none';
+                              const fallback = parent.querySelector('.fallback-icon');
+                              if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                            }
+                          }} 
+                        />
+                      ) : null}
+                      <Link2 className="fallback-icon w-4 h-4 text-muted-foreground" style={{ display: faviconUrl ? 'none' : 'flex' }} />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium font-inter tracking-[-0.3px] text-xs sm:text-sm truncate">{link.label}</p>
+                      <p className="font-medium font-inter tracking-[-0.3px] text-xs sm:text-sm truncate">{link.label || 'Asset Link'}</p>
                       <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{link.url}</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
