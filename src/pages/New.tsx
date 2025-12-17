@@ -127,9 +127,9 @@ export default function New() {
 
       {/* Embedded Content */}
       <iframe
-        src="https://join.virality.gg/new"
+        src="https://join.virality.gg/contact"
         className="flex-1 w-full border-0 mt-14"
-        title="New"
+        title="Contact"
       />
 
       {/* Auth Dialog */}
