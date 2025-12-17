@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,6 +47,8 @@ interface BlogPost {
   is_published: boolean;
   published_at: string | null;
   created_at: string;
+  tags: string[] | null;
+  content_type: string | null;
 }
 
 interface Course {
@@ -109,7 +111,10 @@ export default function Resources() {
     image_url: "",
     read_time: "",
     is_published: false,
+    tags: [] as string[],
+    content_type: "guide",
   });
+  const [newTag, setNewTag] = useState("");
 
   // Courses state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -369,7 +374,10 @@ export default function Resources() {
       image_url: "",
       read_time: "",
       is_published: false,
+      tags: [],
+      content_type: "guide",
     });
+    setNewTag("");
     setBlogDialogOpen(true);
   };
 
@@ -385,7 +393,10 @@ export default function Resources() {
       image_url: post.image_url || "",
       read_time: post.read_time || "",
       is_published: post.is_published,
+      tags: post.tags || [],
+      content_type: post.content_type || "guide",
     });
+    setNewTag("");
     setBlogDialogOpen(true);
   };
 
@@ -409,6 +420,8 @@ export default function Resources() {
       read_time: blogFormData.read_time || null,
       is_published: blogFormData.is_published,
       published_at: blogFormData.is_published ? new Date().toISOString() : null,
+      tags: blogFormData.tags.length > 0 ? blogFormData.tags : null,
+      content_type: blogFormData.content_type || "guide",
     };
 
     if (editingPost) {
@@ -1071,6 +1084,27 @@ export default function Resources() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label className="font-inter tracking-[-0.5px]">Content Type *</Label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "guide", label: "Guide" },
+                    { value: "case_study", label: "Case Study" },
+                    { value: "news", label: "News" },
+                  ].map((type) => (
+                    <Button
+                      key={type.value}
+                      type="button"
+                      variant={blogFormData.content_type === type.value ? "default" : "outline"}
+                      size="sm"
+                      className="font-inter tracking-[-0.5px] flex-1"
+                      onClick={() => setBlogFormData({ ...blogFormData, content_type: type.value })}
+                    >
+                      {type.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label className="font-inter tracking-[-0.5px]">Category</Label>
                 <Input
                   value={blogFormData.category}
@@ -1079,6 +1113,60 @@ export default function Resources() {
                   className="font-inter tracking-[-0.5px]"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Tags</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add a tag..."
+                  className="font-inter tracking-[-0.5px]"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newTag.trim()) {
+                      e.preventDefault();
+                      if (!blogFormData.tags.includes(newTag.trim())) {
+                        setBlogFormData({ ...blogFormData, tags: [...blogFormData.tags, newTag.trim()] });
+                      }
+                      setNewTag("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="font-inter tracking-[-0.5px]"
+                  onClick={() => {
+                    if (newTag.trim() && !blogFormData.tags.includes(newTag.trim())) {
+                      setBlogFormData({ ...blogFormData, tags: [...blogFormData.tags, newTag.trim()] });
+                      setNewTag("");
+                    }
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+              {blogFormData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {blogFormData.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="font-inter tracking-[-0.5px] gap-1">
+                      {tag}
+                      <X
+                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                        onClick={() => setBlogFormData({ 
+                          ...blogFormData, 
+                          tags: blogFormData.tags.filter((_, i) => i !== index) 
+                        })}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="font-inter tracking-[-0.5px]">Read Time</Label>
                 <Input
@@ -1088,9 +1176,6 @@ export default function Resources() {
                   className="font-inter tracking-[-0.5px]"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="font-inter tracking-[-0.5px]">Author</Label>
                 <Input
@@ -1100,15 +1185,16 @@ export default function Resources() {
                   className="font-inter tracking-[-0.5px]"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="font-inter tracking-[-0.5px]">Image URL</Label>
-                <Input
-                  value={blogFormData.image_url}
-                  onChange={(e) => setBlogFormData({ ...blogFormData, image_url: e.target.value })}
-                  placeholder="https://..."
-                  className="font-inter tracking-[-0.5px]"
-                />
-              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Image URL</Label>
+              <Input
+                value={blogFormData.image_url}
+                onChange={(e) => setBlogFormData({ ...blogFormData, image_url: e.target.value })}
+                placeholder="https://..."
+                className="font-inter tracking-[-0.5px]"
+              />
             </div>
 
             <div className="space-y-2">
