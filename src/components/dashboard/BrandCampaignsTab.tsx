@@ -310,7 +310,13 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} className="font-inter tracking-[-0.5px]">
+            <Button onClick={() => {
+              if (subscriptionStatus === "active") {
+                setCampaignTypeDialogOpen(true);
+              } else {
+                setSubscriptionGateOpen(true);
+              }
+            }} className="font-inter tracking-[-0.5px]">
               <Plus className="w-4 h-4 mr-2" />
               Create Campaign
             </Button>
@@ -358,7 +364,13 @@ export function BrandCampaignsTab({
             </div>
             <div 
               className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
-              onClick={() => setCampaignTypeDialogOpen(true)}
+              onClick={() => {
+                if (subscriptionStatus === "active") {
+                  setCampaignTypeDialogOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }}
             >
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={webStoriesIcon} alt="" className="w-5 h-5" />
