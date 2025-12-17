@@ -15,6 +15,7 @@ import {
 import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
 import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
+import arrowBackIcon from "@/assets/arrow-back-icon.svg";
 
 interface BlogPost {
   id: string;
@@ -198,9 +199,10 @@ export default function Blog() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <button 
               onClick={() => setSelectedPost(null)}
-              className="flex items-center gap-2 text-white/60 hover:text-white mb-8 font-inter tracking-[-0.5px] text-sm transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 mb-8 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/80 hover:text-white font-inter tracking-[-0.5px] text-sm transition-all"
             >
-              ← Back to all posts
+              <img src={arrowBackIcon} alt="" className="w-4 h-4" />
+              All posts
             </button>
             
             <article>
