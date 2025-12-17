@@ -37,6 +37,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminBrands from "./pages/admin/Brands";
 import AdminWallets from "./pages/admin/Wallets";
 import AdminResources from "./pages/admin/Resources";
+import AdminFeedback from "./pages/admin/Feedback";
 import { DiscordOAuthCallback } from "./components/DiscordOAuthCallback";
 import { XOAuthCallback } from "./components/XOAuthCallback";
 import Leaderboard from "./pages/Leaderboard";
@@ -152,6 +153,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+            <Route path="/admin/feedback" element={<AdminLayout><AdminFeedback /></AdminLayout>} />
             <Route path="/admin/resources" element={<AdminLayout><AdminResources /></AdminLayout>} />
             <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
             <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
