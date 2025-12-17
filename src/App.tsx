@@ -52,8 +52,9 @@ import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
 import BlueprintDetail from "./pages/BlueprintDetail";
-import Blog from "./pages/Blog";
+import Resources from "./pages/Resources";
 import AdminBlogPosts from "./pages/admin/BlogPosts";
+import PublicCourseDetail from "./pages/PublicCourseDetail";
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
@@ -131,7 +132,9 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/new" element={<New />} />
-            <Route path="/blog" element={<Blog />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/blog" element={<Resources />} />
+            <Route path="/course/:id" element={<PublicCourseDetail />} />
             <Route path="/support" element={<Support />} />
             <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
             <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />

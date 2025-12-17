@@ -93,8 +93,8 @@ export default function Index() {
                   </NavigationMenuList>
                 </NavigationMenu>
                 
-                <Link to="/blog" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
-                  Blog
+                <Link to="/resources" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
+                  Resources
                 </Link>
                 
                 <Link to="/new" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
