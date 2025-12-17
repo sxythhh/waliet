@@ -618,205 +618,135 @@ export function CampaignCreationWizard({
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
                 {/* Step 1: Budget & Targeting */}
                 {currentStep === 1 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Left Column - Budget */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                          <TrendingUp className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-foreground">Budget</h3>
-                      </div>
+                  <div className="space-y-5">
+                    <FormField
+                      control={form.control}
+                      name="is_infinite_budget"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Unlimited Budget</FormLabel>
+                            <p className="text-xs text-muted-foreground">No cap on spending</p>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
+                    {!watchedValues.is_infinite_budget && (
                       <FormField
                         control={form.control}
-                        name="is_infinite_budget"
+                        name="budget"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Total Budget</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input type="number" placeholder="10,000" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="rpm_rate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
+                            <span className="text-xs text-muted-foreground">per 1K views</span>
+                          </div>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                              <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Content Niche</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
+                                <SelectValue placeholder="Select a niche (optional)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {CAMPAIGN_NICHES.map((niche) => (
+                                <SelectItem key={niche.id} value={niche.id}>
+                                  {niche.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="is_private"
                         render={({ field }) => (
                           <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                            <div className="space-y-0.5">
-                              <FormLabel className="text-sm text-foreground cursor-pointer">Unlimited Budget</FormLabel>
-                              <p className="text-xs text-muted-foreground">No cap on spending</p>
-                            </div>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Private</FormLabel>
                             <FormControl>
                               <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                           </FormItem>
                         )}
                       />
-
-                      {!watchedValues.is_infinite_budget && (
-                        <FormField
-                          control={form.control}
-                          name="budget"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Total Budget</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                  <Input type="number" placeholder="10,000" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
                       <FormField
                         control={form.control}
-                        name="rpm_rate"
+                        name="requires_application"
                         render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center justify-between">
-                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">CPM Rate</FormLabel>
-                              <span className="text-xs text-muted-foreground">per 1K views</span>
-                            </div>
+                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Applications</FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
-                              </div>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
 
-                    {/* Right Column - Platforms & Access */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                          <Target className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-foreground">Targeting</h3>
-                      </div>
-
+                    {watchedValues.is_private && (
                       <FormField
                         control={form.control}
-                        name="allowed_platforms"
+                        name="access_code"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Platforms</FormLabel>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Access Code</FormLabel>
                             <FormControl>
-                              <div className="flex gap-2">
-                                {[
-                                  { id: "tiktok", label: "TikTok", logo: tiktokLogo },
-                                  { id: "instagram", label: "Instagram", logo: instagramLogo },
-                                  { id: "youtube", label: "YouTube", logo: youtubeLogo }
-                                ].map(platform => {
-                                  const isSelected = field.value.includes(platform.id);
-                                  return (
-                                    <button
-                                      key={platform.id}
-                                      type="button"
-                                      onClick={() => {
-                                        const newValue = isSelected
-                                          ? field.value.filter(p => p !== platform.id)
-                                          : [...field.value, platform.id];
-                                        field.onChange(newValue);
-                                      }}
-                                      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
-                                        isSelected
-                                          ? "bg-primary/10 ring-1 ring-primary/30"
-                                          : "bg-muted/30 hover:bg-muted/50"
-                                      }`}
-                                    >
-                                      <img src={platform.logo} alt={platform.label} className="w-5 h-5 object-contain" />
-                                      <span className="text-xs font-medium text-foreground">{platform.label}</span>
-                                      {isSelected && (
-                                        <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                                          <Check className="w-2.5 h-2.5 text-white" />
-                                        </div>
-                                      )}
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                              <Input placeholder="BRAND2024" className="h-10 bg-muted/30 border-0 uppercase focus:ring-1 focus:ring-primary/30" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    )}
 
-                      <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Content Niche</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ""}>
-                              <FormControl>
-                                <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
-                                  <SelectValue placeholder="Select a niche (optional)" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {CAMPAIGN_NICHES.map((niche) => (
-                                  <SelectItem key={niche.id} value={niche.id}>
-                                    {niche.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <FormField
-                          control={form.control}
-                          name="is_private"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                              <FormLabel className="text-xs text-foreground cursor-pointer font-inter tracking-[-0.5px]">Private</FormLabel>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="requires_application"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                              <FormLabel className="text-xs text-foreground cursor-pointer font-inter tracking-[-0.5px]">Applications</FormLabel>
-                              <FormControl>
-                                <Switch checked={field.value} onCheckedChange={field.onChange} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {watchedValues.is_private && (
-                        <FormField
-                          control={form.control}
-                          name="access_code"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Access Code</FormLabel>
-                              <FormControl>
-                                <Input placeholder="BRAND2024" className="h-10 bg-muted/30 border-0 uppercase focus:ring-1 focus:ring-primary/30" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-
-                    {/* Application Questions - Full Width */}
+                    {/* Application Questions */}
                     {watchedValues.requires_application && (
-                      <div className="md:col-span-2 pt-2">
+                      <div className="pt-2">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
-                            <Eye className="w-3.5 h-3.5 text-primary" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-foreground">Application Questions</h3>
+                          <span className="text-sm font-inter tracking-[-0.5px] text-foreground">Application Questions</span>
                           <span className="text-xs text-muted-foreground">({(form.watch("application_questions")?.length || 0)}/5)</span>
                         </div>
                         
