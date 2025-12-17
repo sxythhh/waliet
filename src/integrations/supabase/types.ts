@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          author: string
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean
+          published_at: string | null
+          read_time: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          category?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          published_at?: string | null
+          read_time?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          published_at?: string | null
+          read_time?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       blueprint_templates: {
         Row: {
           assets: Json | null

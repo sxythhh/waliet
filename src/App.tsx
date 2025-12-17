@@ -53,6 +53,7 @@ import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import Blog from "./pages/Blog";
+import AdminBlogPosts from "./pages/admin/BlogPosts";
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
@@ -152,6 +153,7 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
             <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
             <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
+            <Route path="/admin/blog" element={<AdminLayout><AdminBlogPosts /></AdminLayout>} />
             <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
             <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
             <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
