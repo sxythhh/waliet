@@ -234,7 +234,7 @@ export function CreateBountyDialog({
                   </div>
                 </div>}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 {/* Left Column - Compensation */}
                 <div className="space-y-5">
                   <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
