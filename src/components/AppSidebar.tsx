@@ -85,10 +85,6 @@ const brandMenuItems = [{
   tab: "creators",
   icon: null as any
 }, {
-  title: "Education",
-  tab: "education",
-  icon: null as any
-}, {
   title: "Settings",
   tab: "profile",
   icon: CircleUser
