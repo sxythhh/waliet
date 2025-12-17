@@ -124,10 +124,12 @@ export function DemographicStatusCard({
 
     if (status === 'approved') {
       const now = startOfDay(new Date());
-      const reviewedDate = startOfDay(new Date(latestSubmission.reviewed_at || latestSubmission.submitted_at));
+      const nextDueDate = getDemographicDueDate();
       
-      // Calculate next due date: 7 days from when demographics were reviewed/approved
-      const nextDueDate = addDays(reviewedDate, 7);
+      // If no campaign payout days configured, allow submission anytime
+      if (!nextDueDate) {
+        return { canSubmit: true, reason: null, nextDate: null };
+      }
       
       // If due date has passed or is today, allow submission immediately
       if (!isAfter(nextDueDate, now)) {
