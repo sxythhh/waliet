@@ -20,6 +20,7 @@ import privateCampaignIcon from "@/assets/private-campaign-icon.svg";
 import discordWhiteIcon from "@/assets/discord-white-icon.webp";
 import settingsCinematicIcon from "@/assets/settings-cinematic-icon.svg";
 import creditCardIcon from "@/assets/credit-card-icon.svg";
+import schoolIcon from "@/assets/school-icon.svg";
 import { Button } from "@/components/ui/button";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -657,14 +658,14 @@ export function CampaignsTab({
           </div>
         </button>
         
-        <button onClick={() => setAddAccountDialogOpen(true)} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
+        <button onClick={() => navigate('/resources')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
           <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
-            <img src={settingsCinematicIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
+            <img src={schoolIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Connect Accounts </h3>
+            <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Start Learning</h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Link the social media accounts where you post content to join opportunities       
+              Go through our creator training resources to get familiar with how to earn from opportunities
             </p>
           </div>
         </button>
