@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogOut, ArrowRight, Calendar, Clock, User, List } from "lucide-react";
+import { LogOut, ArrowRight, Calendar, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -285,7 +285,7 @@ export default function Blog() {
               {/* Floating Table of Contents Menu */}
               {tableOfContents.length > 0 && (
                 <div className="fixed bottom-6 right-6 z-50">
-                  <div className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl">
+                  <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl">
                     {!isAuthenticated && (
                       <div className="mb-4 pb-4 border-b border-white/10">
                         <p className="text-white/60 text-xs font-inter tracking-[-0.5px] mb-2">
@@ -302,12 +302,9 @@ export default function Blog() {
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-2 mb-3">
-                      <List className="w-4 h-4 text-white/60" />
-                      <span className="text-xs font-inter tracking-[-0.5px] text-white/60 uppercase">
-                        Contents
-                      </span>
-                    </div>
+                    <span className="text-xs font-inter tracking-[-0.5px] text-white/60 uppercase mb-3 block">
+                      Contents
+                    </span>
                     
                     <nav className="space-y-1.5">
                       {tableOfContents.map((item) => (
