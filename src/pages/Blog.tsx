@@ -30,7 +30,7 @@ export default function Blog() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [tocExpanded, setTocExpanded] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({
@@ -255,12 +255,8 @@ const [loading, setLoading] = useState(true);
               {tableOfContents.length > 0 && <div className="fixed bottom-6 right-6 z-50">
                   {/* Mobile: Collapsible */}
                   <div className="md:hidden">
-                    {tocExpanded ? (
-                      <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-                        <button 
-                          onClick={() => setTocExpanded(false)}
-                          className="absolute top-3 right-3 text-white/60 hover:text-white p-1"
-                        >
+                    {tocExpanded ? <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <button onClick={() => setTocExpanded(false)} className="absolute top-3 right-3 text-white/60 hover:text-white p-1">
                           <X className="w-4 h-4" />
                         </button>
                         
@@ -269,19 +265,16 @@ const [loading, setLoading] = useState(true);
                         </span>
                         
                         <nav className="space-y-1.5">
-                          {tableOfContents.map(item => <button key={item.id} onClick={() => { scrollToHeading(item.id); setTocExpanded(false); }} className="block w-full text-left text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors">
+                          {tableOfContents.map(item => <button key={item.id} onClick={() => {
+                    scrollToHeading(item.id);
+                    setTocExpanded(false);
+                  }} className="block w-full text-left text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors">
                               {item.text}
                             </button>)}
                         </nav>
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => setTocExpanded(true)}
-                        className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full p-3 shadow-2xl hover:bg-black/60 transition-colors"
-                      >
+                      </div> : <button onClick={() => setTocExpanded(true)} className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full p-3 shadow-2xl hover:bg-black/60 transition-colors">
                         <List className="w-5 h-5 text-white/80" />
-                      </button>
-                    )}
+                      </button>}
                   </div>
                   
                   {/* Desktop: Always visible */}
@@ -326,16 +319,7 @@ const [loading, setLoading] = useState(true);
       // Blog List View
       <>
             {/* Hero Section */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 py-[60px]">
-              <div className="text-center max-w-3xl mx-auto">
-                <h1 className="text-5xl md:text-6xl font-inter tracking-[-1px] font-semibold text-white mb-6">
-                  Blog
-                </h1>
-                <p className="text-lg text-white/50 font-inter tracking-[-0.5px]">
-                  Industry trends, creator tips, and the latest from Virality.
-                </p>
-              </div>
-            </div>
+            
 
             {/* Blog Grid */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -350,9 +334,7 @@ const [loading, setLoading] = useState(true);
                   {blogPosts.map(post => <article key={post.id} className="group cursor-pointer bg-[#111] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-all hover:shadow-lg hover:shadow-black/20" onClick={() => setSelectedPost(post)}>
                       {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity" />}
                       <div className="p-5">
-                        {post.category && <span className="inline-block px-2 py-0.5 bg-white/10 text-white/80 rounded-full text-xs font-inter tracking-[-0.5px] mb-3">
-                            {post.category}
-                          </span>}
+                        {post.category}
                         <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
                           {post.title}
                         </h2>
