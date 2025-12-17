@@ -157,8 +157,13 @@ export function CampaignDetailsDialog({
         setBlueprintContent(null);
       }
 
-      if (blueprint?.assets && Array.isArray(blueprint.assets)) {
-        setBlueprintAssets(blueprint.assets as unknown as AssetLink[]);
+      if (blueprint?.assets && Array.isArray(blueprint.assets) && blueprint.assets.length > 0) {
+        // Map blueprint assets from {notes, link} to {label, url} format
+        const mappedAssets = blueprint.assets.map((asset: any) => ({
+          label: asset.notes || asset.label || 'Asset Link',
+          url: asset.link || asset.url || ''
+        })).filter((asset: AssetLink) => asset.url);
+        setBlueprintAssets(mappedAssets.length > 0 ? mappedAssets : null);
       } else {
         setBlueprintAssets(null);
       }
