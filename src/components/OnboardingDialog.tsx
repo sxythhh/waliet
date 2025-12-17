@@ -249,6 +249,12 @@ export function OnboardingDialog({
               user_id: userId,
               role: "owner"
             });
+            
+            // Add brand role to user_roles
+            await supabase.from("user_roles").insert({
+              user_id: userId,
+              role: "brand"
+            });
           }
           onOpenChange(false);
           navigate("/dashboard");
