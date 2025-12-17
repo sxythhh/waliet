@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, Check, Gift, Pencil, CheckCircle2, Circle } from "lucide-react";
+import quizIcon from "@/assets/quiz-icon.svg";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -262,7 +263,15 @@ export function ReferralsTab(): JSX.Element {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-        
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 text-muted-foreground hover:text-foreground"
+          onClick={() => window.open('https://join.virality.gg/affiliate', '_blank')}
+        >
+          <img src={quizIcon} alt="" className="w-5 h-5" />
+          How Referrals Work
+        </Button>
       </div>
 
       <div className="space-y-8">
