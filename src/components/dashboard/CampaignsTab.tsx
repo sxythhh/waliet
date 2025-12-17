@@ -708,9 +708,7 @@ export function CampaignsTab({
               platforms: campaign.allowed_platforms || [],
               slug: campaign.slug,
               guidelines: (campaign as any).guidelines || null,
-              application_questions: Array.isArray((campaign as any).application_questions)
-                ? ((campaign as any).application_questions as string[])
-                : [],
+              application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
               requires_application: (campaign as any).requires_application,
               is_infinite_budget: campaign.is_infinite_budget,
               blueprint_id: (campaign as any).blueprint_id || null
@@ -959,7 +957,7 @@ export function CampaignsTab({
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogContent className="sm:max-w-sm border-0 p-[5px] overflow-hidden bg-background">
         <div className="p-6 pb-4 py-0 px-0">
-          <DialogHeader className="space-y-1.5">
+          <DialogHeader className="space-y-1.5 px-[10px] py-[10px]">
             <DialogTitle className="text-base font-semibold" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
