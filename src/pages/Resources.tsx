@@ -430,7 +430,7 @@ export default function Resources() {
                     <Link
                       key={course.id}
                       to={`/course/${course.id}`}
-                      className="group cursor-pointer bg-[#111] border border-emerald-500/20 rounded-xl overflow-hidden hover:border-emerald-500/40 transition-all hover:shadow-lg hover:shadow-emerald-500/5"
+                      className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all"
                     >
                       {course.banner_url ? (
                         <div className="relative">
@@ -458,7 +458,7 @@ export default function Resources() {
                             {course.module_count} lessons
                           </span>
                         </div>
-                        <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 group-hover:text-emerald-400 transition-colors line-clamp-2">
+                        <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 line-clamp-2">
                           {course.title}
                         </h2>
                         {course.description && (
@@ -474,7 +474,7 @@ export default function Resources() {
                   {(filter === 'all' || filter === 'articles') && blogPosts.map(post => (
                     <article
                       key={post.id}
-                      className="group cursor-pointer bg-[#111] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-all hover:shadow-lg hover:shadow-black/20"
+                      className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all"
                       onClick={() => setSelectedPost(post)}
                     >
                       {post.image_url && (
@@ -497,7 +497,7 @@ export default function Resources() {
                             </span>
                           )}
                         </div>
-                        <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                        <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 line-clamp-2">
                           {post.title}
                         </h2>
                         {post.excerpt && (
