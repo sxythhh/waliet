@@ -303,10 +303,10 @@ export default function PublicCourseDetail() {
           </div>
 
           {/* Course Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Module List - Sidebar */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
-              <div className="bg-[#111] border border-white/5 rounded-xl p-4 sticky top-20">
+            <div className="lg:col-span-1 order-1 lg:order-1">
+              <div className="bg-[#111] rounded-xl p-4 sticky top-20">
                 <h3 className="text-white font-inter tracking-[-0.5px] font-medium mb-4">
                   Course Content
                 </h3>
@@ -345,7 +345,7 @@ export default function PublicCourseDetail() {
             </div>
 
             {/* Module Content - Main */}
-            <div className="lg:col-span-2 order-1 lg:order-2">
+            <div className="lg:col-span-2 order-2 lg:order-2">
               {selectedModule ? (
                 <div className="space-y-6">
                   {/* Video Embed */}
@@ -397,7 +397,7 @@ export default function PublicCourseDetail() {
 
                   {/* Assets */}
                   {selectedModule.assets && selectedModule.assets.length > 0 && (
-                    <div className="border-t border-white/10 pt-6 mt-6">
+                    <div className="pt-6 mt-6">
                       <h4 className="text-white font-inter tracking-[-0.5px] font-medium mb-4">
                         Resources & Assets
                       </h4>
@@ -408,7 +408,7 @@ export default function PublicCourseDetail() {
                             href={asset.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-white/80 hover:text-white transition-colors"
+                            className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition-colors"
                           >
                             <ExternalLink className="w-4 h-4 flex-shrink-0" />
                             <span className="font-inter tracking-[-0.5px] text-sm">
@@ -421,7 +421,7 @@ export default function PublicCourseDetail() {
                   )}
 
                   {/* Navigation Buttons */}
-                  <div className="flex items-center justify-between pt-6 border-t border-white/10">
+                  <div className="flex items-center justify-between pt-6">
                     {modules.findIndex(m => m.id === selectedModule.id) > 0 && (
                       <Button
                         variant="ghost"
