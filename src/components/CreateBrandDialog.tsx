@@ -134,8 +134,8 @@ export function CreateBrandDialog({
       setLogoPreview(null);
       onSuccess?.();
 
-      // Navigate to the new brand workspace
-      navigate(`/dashboard?workspace=${slug}`);
+      // Redirect to pricing page
+      window.location.href = "https://joinvirality.com";
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {
