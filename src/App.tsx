@@ -34,10 +34,9 @@ import AdminOverview from "./pages/admin/Overview";
 import AdminPayouts from "./pages/admin/Payouts";
 import AdminTransactions from "./pages/admin/Transactions";
 import AdminUsers from "./pages/admin/Users";
-import AdminCourses from "./pages/admin/Courses";
 import AdminBrands from "./pages/admin/Brands";
 import AdminWallets from "./pages/admin/Wallets";
-import AdminTemplates from "./pages/admin/Templates";
+import AdminResources from "./pages/admin/Resources";
 import { DiscordOAuthCallback } from "./components/DiscordOAuthCallback";
 import { XOAuthCallback } from "./components/XOAuthCallback";
 import Leaderboard from "./pages/Leaderboard";
@@ -53,7 +52,7 @@ import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import Resources from "./pages/Resources";
-import AdminBlogPosts from "./pages/admin/BlogPosts";
+
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 const queryClient = new QueryClient();
 
@@ -151,12 +150,10 @@ const App = () => <QueryClientProvider client={queryClient}>
             <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
             <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
             <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-            <Route path="/admin/templates" element={<AdminLayout><AdminTemplates /></AdminLayout>} />
+            <Route path="/admin/resources" element={<AdminLayout><AdminResources /></AdminLayout>} />
             <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
             <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
-            <Route path="/admin/courses" element={<AdminLayout><AdminCourses /></AdminLayout>} />
             <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
-            <Route path="/admin/blog" element={<AdminLayout><AdminBlogPosts /></AdminLayout>} />
             <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
             <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
             <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
