@@ -678,7 +678,7 @@ export function CampaignsTab({
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Manage Payouts </h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Set up your wallet and cash out your earnings
+              Set up your wallet, payment details, and cash out your earnings.
             </p>
           </div>
         </button>
