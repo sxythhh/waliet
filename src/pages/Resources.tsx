@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogOut, ArrowRight, Calendar, Clock, User, X, List, Play, BookOpen } from "lucide-react";
+import { LogOut, ArrowRight, Calendar, Clock, User, X, List, BookOpen, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -374,8 +374,8 @@ export default function Resources() {
                           <img src={course.banner_url} alt={course.title} className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                           <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/90 text-white rounded-full text-xs font-inter tracking-[-0.5px]">
-                              <Play className="w-3 h-3" />
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-white rounded-full text-xs font-inter tracking-[-0.5px] bg-primary">
+                              <Folder className="w-3 h-3" />
                               Course
                             </span>
                           </div>
