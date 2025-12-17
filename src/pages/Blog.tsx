@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { LogOut, ArrowRight, Calendar, Clock, User } from "lucide-react";
+import { LogOut, ArrowRight, Calendar, Clock, User, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
 import {
@@ -27,6 +27,11 @@ interface BlogPost {
   image_url: string | null;
   read_time: string | null;
   published_at: string | null;
+}
+
+interface TableOfContentsItem {
+  id: string;
+  text: string;
 }
 
 export default function Blog() {
@@ -62,6 +67,28 @@ export default function Blog() {
     fetchPosts();
   }, []);
 
+  const tableOfContents = useMemo<TableOfContentsItem[]>(() => {
+    if (!selectedPost) return [];
+    const headings: TableOfContentsItem[] = [];
+    selectedPost.content.split('\n\n').forEach((paragraph, index) => {
+      if (paragraph.startsWith('## ')) {
+        const text = paragraph.replace('## ', '');
+        headings.push({
+          id: `heading-${index}`,
+          text
+        });
+      }
+    });
+    return headings;
+  }, [selectedPost]);
+
+  const scrollToHeading = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -70,7 +97,6 @@ export default function Blog() {
       day: 'numeric'
     });
   };
-
   return (
     <div className="h-screen flex flex-col bg-[#0a0a0a]">
       {/* Navigation Bar */}
@@ -216,9 +242,11 @@ export default function Blog() {
               <div className="prose prose-invert prose-lg max-w-none">
                 {selectedPost.content.split('\n\n').map((paragraph, index) => {
                   if (paragraph.startsWith('## ')) {
+                    const text = paragraph.replace('## ', '');
+                    const headingId = `heading-${index}`;
                     return (
-                      <h2 key={index} className="text-xl font-inter tracking-[-0.5px] font-semibold text-white mt-8 mb-4">
-                        {paragraph.replace('## ', '')}
+                      <h2 key={index} id={headingId} className="text-xl font-inter tracking-[-0.5px] font-semibold text-white mt-8 mb-4 scroll-mt-20">
+                        {text}
                       </h2>
                     );
                   }
@@ -253,6 +281,48 @@ export default function Blog() {
                   );
                 })}
               </div>
+
+              {/* Floating Table of Contents Menu */}
+              {tableOfContents.length > 0 && (
+                <div className="fixed bottom-6 right-6 z-50">
+                  <div className="bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl">
+                    {!isAuthenticated && (
+                      <div className="mb-4 pb-4 border-b border-white/10">
+                        <p className="text-white/60 text-xs font-inter tracking-[-0.5px] mb-2">
+                          Start earning as a creator
+                        </p>
+                        <Button 
+                          onClick={() => setShowAuthDialog(true)}
+                          size="sm"
+                          className="w-full font-inter tracking-[-0.5px] bg-primary hover:bg-primary/90"
+                        >
+                          Sign Up Free
+                          <ArrowRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-2 mb-3">
+                      <List className="w-4 h-4 text-white/60" />
+                      <span className="text-xs font-inter tracking-[-0.5px] text-white/60 uppercase">
+                        Contents
+                      </span>
+                    </div>
+                    
+                    <nav className="space-y-1.5">
+                      {tableOfContents.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => scrollToHeading(item.id)}
+                          className="block w-full text-left text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors"
+                        >
+                          {item.text}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                </div>
+              )}
 
               {/* CTA at bottom of article */}
               <div className="mt-12 p-8 bg-gradient-to-br from-primary/20 via-[#1a1a1a] to-[#0f0f0f] border border-primary/20 rounded-2xl">
