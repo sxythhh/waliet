@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
-  home_url: z.string().trim().url("Please enter a valid URL").optional().or(z.literal("")),
+  home_url: z.string().trim().max(255).optional().or(z.literal("")),
   description: z.string().trim().max(500).optional()
 });
 type BrandFormValues = z.infer<typeof brandSchema>;
