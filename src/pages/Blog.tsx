@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogOut, ArrowRight, Calendar, Clock, User } from "lucide-react";
+import { LogOut, ArrowRight, Calendar, Clock, User, X, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +30,8 @@ export default function Blog() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
+  const [tocExpanded, setTocExpanded] = useState(false);
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -252,7 +253,39 @@ export default function Blog() {
 
               {/* Floating Table of Contents Menu */}
               {tableOfContents.length > 0 && <div className="fixed bottom-6 right-6 z-50">
-                  <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl">
+                  {/* Mobile: Collapsible */}
+                  <div className="md:hidden">
+                    {tocExpanded ? (
+                      <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <button 
+                          onClick={() => setTocExpanded(false)}
+                          className="absolute top-3 right-3 text-white/60 hover:text-white p-1"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                        
+                        <span className="text-xs font-inter tracking-[-0.5px] text-white/60 uppercase mb-3 block">
+                          Contents
+                        </span>
+                        
+                        <nav className="space-y-1.5">
+                          {tableOfContents.map(item => <button key={item.id} onClick={() => { scrollToHeading(item.id); setTocExpanded(false); }} className="block w-full text-left text-sm font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-white/5 rounded-lg px-2 py-1.5 transition-colors">
+                              {item.text}
+                            </button>)}
+                        </nav>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setTocExpanded(true)}
+                        className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-full p-3 shadow-2xl hover:bg-black/60 transition-colors"
+                      >
+                        <List className="w-5 h-5 text-white/80" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Desktop: Always visible */}
+                  <div className="hidden md:block bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 max-w-xs shadow-2xl">
                     {!isAuthenticated && <div className="mb-4 pb-4 border-b border-white/10">
                         <p className="text-white/60 text-xs font-inter tracking-[-0.5px] mb-2">
                           Start earning as a creator
