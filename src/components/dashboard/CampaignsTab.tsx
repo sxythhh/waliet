@@ -666,7 +666,7 @@ export function CampaignsTab({
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-foreground dark:text-white font-inter tracking-[-0.5px]">Start Learning</h3>
             <p className="text-xs text-neutral-500 mt-0.5 font-inter tracking-[-0.3px] leading-relaxed">
-              Go through our creator training resources to learn how to earn from opportunities
+              Go through our creator training resources to learn how to earn from opportunities.
             </p>
           </div>
         </button>
