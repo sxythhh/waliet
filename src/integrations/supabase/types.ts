@@ -46,6 +46,7 @@ export type Database = {
           author: string
           category: string | null
           content: string
+          content_type: string | null
           created_at: string
           created_by: string | null
           excerpt: string | null
@@ -55,6 +56,7 @@ export type Database = {
           published_at: string | null
           read_time: string | null
           slug: string
+          tags: string[] | null
           title: string
           updated_at: string
         }
@@ -62,6 +64,7 @@ export type Database = {
           author?: string
           category?: string | null
           content: string
+          content_type?: string | null
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
@@ -71,6 +74,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           slug: string
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
@@ -78,6 +82,7 @@ export type Database = {
           author?: string
           category?: string | null
           content?: string
+          content_type?: string | null
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
@@ -87,6 +92,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           slug?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
