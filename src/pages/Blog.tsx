@@ -343,19 +343,14 @@ export default function Blog() {
           // Blog List View
           <>
             {/* Hero Section */}
-            <div className="bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] border-b border-white/5">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-                <div className="max-w-2xl">
-                  <span className="inline-block px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-inter tracking-[-0.5px] mb-4">
-                    The Virality Blog
-                  </span>
-                  <h1 className="text-4xl md:text-5xl font-inter tracking-[-0.5px] font-semibold text-white mb-4">
-                    Insights for creators and brands
-                  </h1>
-                  <p className="text-lg text-white/60 font-inter tracking-[-0.5px]">
-                    Industry trends, creator tips, and the latest from Virality.
-                  </p>
-                </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+              <div className="text-center max-w-3xl mx-auto">
+                <h1 className="text-5xl md:text-6xl font-inter tracking-[-1px] font-semibold text-white mb-6">
+                  Blog
+                </h1>
+                <p className="text-lg text-white/50 font-inter tracking-[-0.5px]">
+                  Industry trends, creator tips, and the latest from Virality.
+                </p>
               </div>
             </div>
 
