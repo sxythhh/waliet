@@ -267,7 +267,7 @@ export function ReferralsTab(): JSX.Element {
         <Button
           variant="ghost"
           size="sm"
-          className="group gap-2 text-muted-foreground hover:text-foreground"
+          className="group gap-2 text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
           onClick={() => window.open('https://join.virality.gg/affiliate', '_blank')}
         >
           <img src={quizIcon} alt="" className="w-5 h-5 group-hover:hidden" />
