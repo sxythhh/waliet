@@ -1036,8 +1036,8 @@ export function ProfileTab() {
                       
                       {/* Demographics Section - Right Side */}
                       <div className="flex-shrink-0 w-full sm:w-40">
-                        {!demographicStatus || demographicStatus === 'rejected' ?
-                  // Required/Rejected State - Compact Alert
+                        {demographicSubmissions.length === 0 ?
+                  // No Submissions - Show Required State
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors" onClick={() => {
                     setSelectedAccountForDemographics({
                       id: account.id,
@@ -1056,7 +1056,7 @@ export function ProfileTab() {
                         fontFamily: 'Inter',
                         letterSpacing: '-0.3px'
                       }}>
-                                {demographicStatus === 'rejected' ? 'Resubmit' : 'Required'}
+                                Required
                               </span>
                               <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{
                         fontFamily: 'Inter',
@@ -1064,7 +1064,7 @@ export function ProfileTab() {
                       }}>Tap to submit</span>
                             </div>
                           </div> :
-                  // Has Submission - Show Status Card
+                  // Has Submissions - Always Show Status Card with History
                   <DemographicStatusCard 
                     accountId={account.id} 
                     platform={account.platform} 
