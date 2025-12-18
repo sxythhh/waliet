@@ -1056,7 +1056,7 @@ export function ProfileTab() {
                         fontFamily: 'Inter',
                         letterSpacing: '-0.3px'
                       }}>
-                                Required
+                                Demographics Required
                               </span>
                               <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{
                         fontFamily: 'Inter',
