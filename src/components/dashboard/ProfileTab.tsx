@@ -202,7 +202,8 @@ export function ProfileTab() {
 
     // Fetch social accounts with their connected campaigns through the junction table
     const {
-      data: accounts
+      data: accounts,
+      error
     } = await supabase.from("social_accounts").select(`
         *,
         demographic_submissions(
@@ -217,7 +218,20 @@ export function ProfileTab() {
       `).eq("user_id", session.user.id).order("connected_at", {
       ascending: false
     });
+    
+    if (error) {
+      console.error('Error fetching social accounts:', error);
+      return;
+    }
     if (accounts) {
+      console.log('Fetched social accounts:', accounts.length, 'accounts');
+      // Log demographic submissions for debugging
+      accounts.forEach(acc => {
+        if (acc.demographic_submissions?.length) {
+          console.log(`Account ${acc.username}: ${acc.demographic_submissions.length} demographic submissions`);
+        }
+      });
+      
       // Fetch connected campaigns for each account
       const accountsWithCampaigns = await Promise.all(accounts.map(async account => {
         const {
@@ -865,7 +879,10 @@ export function ProfileTab() {
             </div> : <div className="space-y-3">
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
-            const demographicSubmissions = account.demographic_submissions || [];
+            // Sort demographic submissions by submitted_at descending to ensure latest is first
+            const demographicSubmissions = [...(account.demographic_submissions || [])].sort(
+              (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+            );
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
             return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">

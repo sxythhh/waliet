@@ -1100,6 +1100,7 @@ export default function AdminUsers() {
 
   // Demographics functions
   const fetchSubmissions = async () => {
+    console.log('Fetching demographic submissions...');
     const {
       data,
       error
@@ -1118,14 +1119,22 @@ export default function AdminUsers() {
       `).order("submitted_at", {
       ascending: false
     });
+    
     if (error) {
+      console.error('Error fetching demographic submissions:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to fetch submissions"
       });
     } else {
-      setSubmissions(data || []);
+      console.log('Fetched demographic submissions:', data?.length || 0, 'submissions');
+      // Filter out any submissions where social_accounts is null (orphaned records)
+      const validSubmissions = (data || []).filter(sub => sub.social_accounts !== null);
+      if (validSubmissions.length !== (data || []).length) {
+        console.warn('Filtered out', (data || []).length - validSubmissions.length, 'orphaned submissions');
+      }
+      setSubmissions(validSubmissions);
     }
   };
   const handleReview = async (status?: "approved" | "rejected") => {
