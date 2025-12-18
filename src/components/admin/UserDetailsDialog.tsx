@@ -15,6 +15,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import discordIcon from "@/assets/discord-white-icon.webp";
+
 interface UserProfile {
   id: string;
   username: string;
@@ -161,13 +162,17 @@ export function UserDetailsDialog({
       fetchExistingBan();
     }
   }, [open, user?.id]);
+
   const fetchExistingBan = async () => {
     if (!user?.id) return;
     setLoadingBan(true);
-    const {
-      data,
-      error
-    } = await supabase.from("ip_bans").select("*").eq("user_id", user.id).eq("is_active", true).maybeSingle();
+    const { data, error } = await supabase
+      .from("ip_bans")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle();
+    
     if (!error && data) {
       setExistingBan(data);
     } else {
@@ -175,21 +180,21 @@ export function UserDetailsDialog({
     }
     setLoadingBan(false);
   };
+
   const handleIpBan = async () => {
     if (!user?.id) return;
     setIsBanning(true);
     try {
       // Insert IP ban record (IP address will be captured on next login attempt)
-      const {
-        error
-      } = await supabase.from("ip_bans").insert({
+      const { error } = await supabase.from("ip_bans").insert({
         user_id: user.id,
-        ip_address: "pending",
-        // Will be updated when user tries to access
+        ip_address: "pending", // Will be updated when user tries to access
         reason: ipBanReason || "Banned by admin",
         is_active: true
       });
+
       if (error) throw error;
+
       toast({
         title: "User Banned",
         description: "User has been IP banned successfully"
@@ -207,16 +212,18 @@ export function UserDetailsDialog({
       setIsBanning(false);
     }
   };
+
   const handleUnban = async () => {
     if (!existingBan?.id) return;
     setIsBanning(true);
     try {
-      const {
-        error
-      } = await supabase.from("ip_bans").update({
-        is_active: false
-      }).eq("id", existingBan.id);
+      const { error } = await supabase
+        .from("ip_bans")
+        .update({ is_active: false })
+        .eq("id", existingBan.id);
+
       if (error) throw error;
+
       toast({
         title: "User Unbanned",
         description: "IP ban has been removed"
@@ -233,19 +240,16 @@ export function UserDetailsDialog({
       setIsBanning(false);
     }
   };
+
   const handleImpersonateUser = async () => {
     if (!user?.id) return;
     setIsImpersonating(true);
     try {
       // Call edge function to generate impersonation link
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke("impersonate-user", {
-        body: {
-          userId: user.id
-        }
+      const { data, error } = await supabase.functions.invoke("impersonate-user", {
+        body: { userId: user.id }
       });
+
       if (error) throw error;
       if (!data?.magicLink) throw new Error("No magic link received");
 
@@ -255,7 +259,7 @@ export function UserDetailsDialog({
         title: "Impersonating User",
         description: `Signing in as ${user.username}...`
       });
-
+      
       // Navigate to the magic link
       window.location.href = data.magicLink;
     } catch (error: any) {
@@ -426,34 +430,44 @@ export function UserDetailsDialog({
         {/* Header Section */}
         <div className="p-6 pb-0">
           <div className="flex items-center gap-4">
-            {user.avatar_url ? <img src={user.avatar_url} alt={user.username} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" /> : <div className="h-14 w-14 rounded-full bg-[#1a1a1a] flex items-center justify-center ring-2 ring-[#2a2a2a]">
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt={user.username} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" />
+            ) : (
+              <div className="h-14 w-14 rounded-full bg-[#1a1a1a] flex items-center justify-center ring-2 ring-[#2a2a2a]">
                 <span className="text-xl font-semibold text-muted-foreground uppercase">
                   {user.username?.charAt(0) || '?'}
                 </span>
-              </div>}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-semibold text-foreground truncate" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.5px'
-              }}>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
                   {user.username}
                 </h2>
-                {user.discord_id && <Badge variant="outline" className="bg-[#5865F2] text-white border-0 px-2 py-0.5">
+                {user.discord_id && (
+                  <Badge variant="outline" className="bg-[#5865F2] text-white border-0 px-2 py-0.5">
                     <img src={discordIcon} alt="Discord" className="w-3 h-3 mr-1 brightness-0 invert" />
                     {user.discord_username || "Connected"}
-                  </Badge>}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                 {user.full_name && <span>{user.full_name}</span>}
-                {user.phone_number && <>
+                {user.phone_number && (
+                  <>
                     {user.full_name && <span className="text-[#2a2a2a]">•</span>}
                     <span>{user.phone_number}</span>
-                  </>}
-                {user.created_at && <>
+                  </>
+                )}
+                {user.created_at && (
+                  <>
                     {(user.full_name || user.phone_number) && <span className="text-[#2a2a2a]">•</span>}
                     <span>Joined {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
-                  </>}
+                  </>
+                )}
               </div>
             </div>
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-0 px-2 py-1">
@@ -465,9 +479,7 @@ export function UserDetailsDialog({
           {/* Stats Row */}
           <div className="grid grid-cols-3 gap-3 mt-5">
             <div className="bg-[#111] rounded-lg p-3">
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-              letterSpacing: '-0.5px'
-            }}>Balance</span>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Balance</span>
               <p className="text-lg font-semibold text-green-400 mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
@@ -476,9 +488,7 @@ export function UserDetailsDialog({
               </p>
             </div>
             <div className="bg-[#111] rounded-lg p-3">
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-              letterSpacing: '-0.5px'
-            }}>Earned</span>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Earned</span>
               <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
@@ -487,9 +497,7 @@ export function UserDetailsDialog({
               </p>
             </div>
             <div className="bg-[#111] rounded-lg p-3">
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-              letterSpacing: '-0.5px'
-            }}>Withdrawn</span>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Withdrawn</span>
               <p className="text-lg font-semibold text-foreground mt-1" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
@@ -528,13 +536,13 @@ export function UserDetailsDialog({
                   Loading...
                 </div> : socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Link2 className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm font-inter" style={{
-                letterSpacing: '-0.5px'
-              }}>No connected accounts</p>
+                  <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No connected accounts</p>
                 </div> : <div className="space-y-3">
                   {socialAccounts.map(account => {
                 // Sort submissions by date descending
-                const sortedSubmissions = [...(account.demographic_submissions || [])].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
+                const sortedSubmissions = [...(account.demographic_submissions || [])].sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                );
                 const latestDemographic = sortedSubmissions[0];
                 const demographicStatus = latestDemographic?.status;
                 const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
@@ -547,57 +555,78 @@ export function UserDetailsDialog({
                 return <div key={account.id} className="p-4 rounded-lg bg-[#111] group">
                         <div className="flex items-start gap-3">
                           {/* Avatar or Platform Icon */}
-                          {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover shrink-0" /> : <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center shrink-0">
+                          {account.avatar_url ? (
+                            <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center shrink-0">
                               {getPlatformIconElement(account.platform)}
-                            </div>}
+                            </div>
+                          )}
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline truncate font-inter" style={{
-                          letterSpacing: '-0.5px'
-                        }}>
+                              <a href={account.account_link} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline truncate font-inter" style={{ letterSpacing: '-0.5px' }}>
                                 @{account.username}
                               </a>
-                              {getPlatformIconElement(account.platform) && <span className="shrink-0">{getPlatformIconElement(account.platform)}</span>}
+                              {getPlatformIconElement(account.platform) && (
+                                <span className="shrink-0">{getPlatformIconElement(account.platform)}</span>
+                              )}
                             </div>
                             
                             {/* Followers and Campaign */}
-                            
+                            <div className="flex items-center gap-3 mt-1">
+                              {account.follower_count && (
+                                <span className="text-xs text-muted-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
+                                  {formatFollowers(account.follower_count)} followers
+                                </span>
+                              )}
+                              {linkedCampaign && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-[#1a1a1a]">
+                                  {linkedCampaign.title}
+                                </Badge>
+                              )}
+                            </div>
                             
                             {/* Demographic Status */}
                             <div className="flex items-center gap-2 mt-2">
-                              {!latestDemographic ? <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
+                              {!latestDemographic ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
                                   No Demographics
-                                </Badge> : demographicStatus === 'approved' ? <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer" onClick={() => onEditScore?.(account)}>
+                                </Badge>
+                              ) : demographicStatus === 'approved' ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer" onClick={() => onEditScore?.(account)}>
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   T1: {latestDemographic.tier1_percentage}%
-                                </Badge> : demographicStatus === 'pending' ? <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-400">
+                                </Badge>
+                              ) : demographicStatus === 'pending' ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-400">
                                   <AlertCircle className="h-3 w-3 mr-1" />
                                   Pending Review
-                                </Badge> : demographicStatus === 'rejected' ? <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
+                                </Badge>
+                              ) : demographicStatus === 'rejected' ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
                                   <XCircle className="h-3 w-3 mr-1" />
                                   Rejected
-                                </Badge> : null}
+                                </Badge>
+                              ) : null}
                               
-                              {sortedSubmissions.length > 1 && <span className="text-[10px] text-muted-foreground font-inter" style={{
-                          letterSpacing: '-0.3px'
-                        }}>
+                              {sortedSubmissions.length > 1 && (
+                                <span className="text-[10px] text-muted-foreground font-inter" style={{ letterSpacing: '-0.3px' }}>
                                   ({sortedSubmissions.length} submissions)
-                                </span>}
+                                </span>
+                              )}
                             </div>
                             
                             {/* Bio excerpt */}
-                            {account.bio && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>
+                            {account.bio && (
+                              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 font-inter" style={{ letterSpacing: '-0.5px' }}>
                                 {account.bio}
-                              </p>}
+                              </p>
+                            )}
                           </div>
 
                           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {linkedCampaign && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }} onClick={() => {
+                            {linkedCampaign && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive font-inter" style={{ letterSpacing: '-0.5px' }} onClick={() => {
                         const campaignId = account.social_account_campaigns?.[0]?.campaigns?.id;
                         if (campaignId) handleUnlinkAccount(account.id, campaignId);
                       }} disabled={unlinkingAccountId === account.id}>
@@ -701,9 +730,7 @@ export function UserDetailsDialog({
                   Loading...
                 </div> : transactions.length === 0 ? <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Clock className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm font-inter" style={{
-                letterSpacing: '-0.5px'
-              }}>No transactions</p>
+                  <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No transactions</p>
                 </div> : <div className="space-y-3">
                   {transactions.map(transaction => {
                 const metadata = transaction.metadata as any;
@@ -713,21 +740,28 @@ export function UserDetailsDialog({
                         {/* Header Row */}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter capitalize ${transaction.type === 'earning' ? 'bg-green-500/10 text-green-400' : transaction.type === 'withdrawal' ? 'bg-orange-500/10 text-orange-400' : transaction.type === 'referral' ? 'bg-purple-500/10 text-purple-400' : transaction.type === 'balance_correction' ? 'bg-red-500/10 text-red-400' : 'bg-muted text-muted-foreground'}`} style={{
-                        letterSpacing: '-0.5px'
-                      }}>
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter capitalize ${
+                              transaction.type === 'earning' ? 'bg-green-500/10 text-green-400' :
+                              transaction.type === 'withdrawal' ? 'bg-orange-500/10 text-orange-400' :
+                              transaction.type === 'referral' ? 'bg-purple-500/10 text-purple-400' :
+                              transaction.type === 'balance_correction' ? 'bg-red-500/10 text-red-400' :
+                              'bg-muted text-muted-foreground'
+                            }`} style={{ letterSpacing: '-0.5px' }}>
                               {transaction.type.replace('_', ' ')}
                             </Badge>
-                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter ${transaction.status === 'completed' ? 'bg-green-500/10 text-green-400' : transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-400' : transaction.status === 'rejected' ? 'bg-red-500/10 text-red-400' : 'bg-muted text-muted-foreground'}`} style={{
-                        letterSpacing: '-0.5px'
-                      }}>
+                            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 h-5 border-0 font-inter ${
+                              transaction.status === 'completed' ? 'bg-green-500/10 text-green-400' : 
+                              transaction.status === 'pending' ? 'bg-orange-500/10 text-orange-400' : 
+                              transaction.status === 'rejected' ? 'bg-red-500/10 text-red-400' : 
+                              'bg-muted text-muted-foreground'
+                            }`} style={{ letterSpacing: '-0.5px' }}>
                               {transaction.status}
                             </Badge>
                           </div>
                           <p className={`text-base font-semibold tabular-nums ${transaction.amount < 0 ? 'text-red-400' : 'text-green-400'}`} style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.5px'
+                      }}>
                               {transaction.amount < 0 ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                             </p>
                         </div>
@@ -736,18 +770,16 @@ export function UserDetailsDialog({
                         <div className="grid grid-cols-2 gap-3">
                           {/* Transaction ID */}
                           <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Transaction ID</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Transaction ID</span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <p className="text-xs font-mono text-foreground truncate">{transaction.id.slice(0, 8)}...</p>
-                              <button onClick={() => {
-                          navigator.clipboard.writeText(transaction.id);
-                          toast({
-                            title: "Copied",
-                            description: "Transaction ID copied to clipboard"
-                          });
-                        }} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors">
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(transaction.id);
+                                  toast({ title: "Copied", description: "Transaction ID copied to clipboard" });
+                                }}
+                                className="p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                              >
                                 <Copy className="h-3 w-3" />
                               </button>
                             </div>
@@ -755,71 +787,67 @@ export function UserDetailsDialog({
                           
                           {/* Date */}
                           <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Date</span>
-                            <p className="text-xs text-foreground mt-0.5 font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Date</span>
+                            <p className="text-xs text-foreground mt-0.5 font-inter" style={{ letterSpacing: '-0.5px' }}>
                               {format(new Date(transaction.created_at), "MMM d, yyyy · HH:mm")}
                             </p>
                           </div>
                           
                           {/* Campaign (if applicable) */}
-                          {metadata?.campaign_name && <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Campaign</span>
+                          {metadata?.campaign_name && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Campaign</span>
                               <div className="flex items-center gap-1.5 mt-0.5">
-                                {metadata.campaign_logo_url && <img src={metadata.campaign_logo_url} alt="" className="h-3.5 w-3.5 rounded object-cover" />}
-                                <p className="text-xs text-foreground truncate font-inter" style={{
-                          letterSpacing: '-0.5px'
-                        }}>{metadata.campaign_name}</p>
+                                {metadata.campaign_logo_url && (
+                                  <img src={metadata.campaign_logo_url} alt="" className="h-3.5 w-3.5 rounded object-cover" />
+                                )}
+                                <p className="text-xs text-foreground truncate font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.campaign_name}</p>
                               </div>
-                            </div>}
+                            </div>
+                          )}
                           
                           {/* Account (if applicable) */}
-                          {metadata?.account_username && <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Account</span>
+                          {metadata?.account_username && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Account</span>
                               <div className="flex items-center gap-1.5 mt-0.5">
                                 {metadata.platform && getPlatformIconElement(metadata.platform)}
-                                <a href={metadata.account_link || `https://${metadata.platform === 'tiktok' ? 'tiktok.com/@' : metadata.platform === 'instagram' ? 'instagram.com/' : metadata.platform === 'youtube' ? 'youtube.com/@' : 'x.com/'}${metadata.account_username}`} target="_blank" rel="noopener noreferrer" className="text-xs text-foreground truncate font-inter hover:underline cursor-pointer" style={{
-                          letterSpacing: '-0.5px'
-                        }}>
+                                <a 
+                                  href={metadata.account_link || `https://${metadata.platform === 'tiktok' ? 'tiktok.com/@' : metadata.platform === 'instagram' ? 'instagram.com/' : metadata.platform === 'youtube' ? 'youtube.com/@' : 'x.com/'}${metadata.account_username}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-foreground truncate font-inter hover:underline cursor-pointer" 
+                                  style={{ letterSpacing: '-0.5px' }}
+                                >
                                   @{metadata.account_username}
                                 </a>
                               </div>
-                            </div>}
+                            </div>
+                          )}
                           
                           {/* Payout Method (for withdrawals) */}
-                          {isWithdrawal && metadata?.payout_method && <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Payout Method</span>
-                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>{metadata.payout_method}</p>
-                            </div>}
+                          {isWithdrawal && metadata?.payout_method && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Payout Method</span>
+                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.payout_method}</p>
+                            </div>
+                          )}
                           
                           {/* Network (for crypto withdrawals) */}
-                          {isWithdrawal && metadata?.network && <div className="bg-[#0a0a0a] rounded-lg p-2.5">
-                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>Network</span>
-                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{
-                        letterSpacing: '-0.5px'
-                      }}>{metadata.network}</p>
-                            </div>}
+                          {isWithdrawal && metadata?.network && (
+                            <div className="bg-[#0a0a0a] rounded-lg p-2.5">
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-inter" style={{ letterSpacing: '-0.5px' }}>Network</span>
+                              <p className="text-xs text-foreground mt-0.5 capitalize font-inter" style={{ letterSpacing: '-0.5px' }}>{metadata.network}</p>
+                            </div>
+                          )}
                         </div>
                         
                         {/* Description (if exists) */}
-                        {transaction.description && <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
-                            <p className="text-xs text-muted-foreground font-inter" style={{
-                      letterSpacing: '-0.5px'
-                    }}>{transaction.description}</p>
-                          </div>}
+                        {transaction.description && (
+                          <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
+                            <p className="text-xs text-muted-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>{transaction.description}</p>
+                          </div>
+                        )}
                       </div>;
               })}
                 </div>}
@@ -836,13 +864,23 @@ export function UserDetailsDialog({
                     <img src={discordIcon} alt="Discord" className="w-4 h-4" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord Connection</span>
                   </div>
-                  {user.discord_id ? <div className="flex items-center gap-3">
-                      {user.discord_avatar && <img src={`https://cdn.discordapp.com/avatars/${user.discord_id}/${user.discord_avatar}.png`} alt="Discord Avatar" className="w-8 h-8 rounded-full" />}
+                  {user.discord_id ? (
+                    <div className="flex items-center gap-3">
+                      {user.discord_avatar && (
+                        <img 
+                          src={`https://cdn.discordapp.com/avatars/${user.discord_id}/${user.discord_avatar}.png`} 
+                          alt="Discord Avatar" 
+                          className="w-8 h-8 rounded-full"
+                        />
+                      )}
                       <div>
                         <p className="text-sm font-medium">{user.discord_username || "Connected"}</p>
                         <p className="text-xs text-muted-foreground">ID: {user.discord_id}</p>
                       </div>
-                    </div> : <p className="text-sm text-muted-foreground">Not connected</p>}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Not connected</p>
+                  )}
                 </div>
 
                 {/* Trust Score */}
@@ -876,23 +914,48 @@ export function UserDetailsDialog({
                     <Ban className="w-4 h-4 text-red-500" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">IP Ban</span>
                   </div>
-                  {loadingBan ? <p className="text-sm text-muted-foreground">Loading...</p> : existingBan ? <div className="space-y-3">
+                  {loadingBan ? (
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  ) : existingBan ? (
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Badge variant="destructive" className="border-0">Banned</Badge>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(existingBan.banned_at), "MMM d, yyyy")}
                         </span>
                       </div>
-                      {existingBan.reason && <p className="text-xs text-muted-foreground">Reason: {existingBan.reason}</p>}
-                      <Button variant="outline" size="sm" className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" onClick={handleUnban} disabled={isBanning}>
+                      {existingBan.reason && (
+                        <p className="text-xs text-muted-foreground">Reason: {existingBan.reason}</p>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" 
+                        onClick={handleUnban}
+                        disabled={isBanning}
+                      >
                         {isBanning ? "Removing..." : "Remove Ban"}
                       </Button>
-                    </div> : <div className="space-y-3">
-                      <Input placeholder="Ban reason (optional)" value={ipBanReason} onChange={e => setIpBanReason(e.target.value)} className="bg-[#0a0a0a] border-0" />
-                      <Button variant="destructive" size="sm" className="w-full" onClick={handleIpBan} disabled={isBanning}>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <Input 
+                        placeholder="Ban reason (optional)" 
+                        value={ipBanReason} 
+                        onChange={e => setIpBanReason(e.target.value)}
+                        className="bg-[#0a0a0a] border-0"
+                      />
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="w-full" 
+                        onClick={handleIpBan}
+                        disabled={isBanning}
+                      >
                         {isBanning ? "Banning..." : "Ban User"}
                       </Button>
-                    </div>}
+                    </div>
+                  )}
                 </div>
 
                 {/* Impersonate User */}
@@ -904,7 +967,13 @@ export function UserDetailsDialog({
                   <p className="text-xs text-muted-foreground mb-3">
                     Sign in as this user to view their dashboard
                   </p>
-                  <Button variant="outline" size="sm" className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" onClick={handleImpersonateUser} disabled={isImpersonating}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" 
+                    onClick={handleImpersonateUser}
+                    disabled={isImpersonating}
+                  >
                     {isImpersonating ? "Signing in..." : "View as User"}
                   </Button>
                 </div>
