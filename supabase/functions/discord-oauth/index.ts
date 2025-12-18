@@ -13,6 +13,8 @@ serve(async (req) => {
 
   try {
     const { code, userId, action, redirectUri } = await req.json();
+    
+    console.log('Discord OAuth request:', { action, userId, hasCode: !!code, redirectUri });
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -63,6 +65,12 @@ serve(async (req) => {
     const DISCORD_CLIENT_SECRET = Deno.env.get('DISCORD_CLIENT_SECRET');
     const REDIRECT_URI = redirectUri;
 
+    console.log('Token exchange params:', { 
+      hasClientId: !!DISCORD_CLIENT_ID, 
+      hasClientSecret: !!DISCORD_CLIENT_SECRET,
+      redirectUri: REDIRECT_URI 
+    });
+
     // Exchange code for access token
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -81,10 +89,12 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
       console.error('Discord token exchange failed:', errorData);
-      throw new Error('Failed to exchange authorization code');
+      console.error('Response status:', tokenResponse.status);
+      throw new Error(`Failed to exchange authorization code: ${errorData}`);
     }
 
     const { access_token, refresh_token, expires_in } = await tokenResponse.json();
+    console.log('Token exchange successful');
 
     // Calculate token expiration
     const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
@@ -101,6 +111,7 @@ serve(async (req) => {
     }
 
     const discordUser = await userResponse.json();
+    console.log('Discord user fetched:', discordUser.username);
 
     // Store encrypted tokens in secure table using RPC
     const { error: tokenStoreError } = await supabaseClient.rpc('upsert_discord_tokens', {
