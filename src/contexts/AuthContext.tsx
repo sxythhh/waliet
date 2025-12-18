@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,35 +27,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const updateAuthState = useCallback((newSession: Session | null) => {
+    setSession(newSession);
+    setUser(newSession?.user ?? null);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // If the stored refresh token is invalid (e.g. "refresh_token_not_found"), Supabase emits TOKEN_REFRESH_FAILED.
-        // In that case, force a clean sign-out so the app doesn't get stuck in a broken auth state.
-        if ((event as unknown as string) === 'TOKEN_REFRESH_FAILED') {
-          void supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setLoading(false);
+      (event, currentSession) => {
+        // Only sign out if the user explicitly signed out or session is truly invalid
+        if (event === 'SIGNED_OUT') {
+          updateAuthState(null);
           return;
         }
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        // For all other events (including TOKEN_REFRESHED, SIGNED_IN, etc.), update state
+        if (currentSession) {
+          updateAuthState(currentSession);
+        } else if (event === 'INITIAL_SESSION' && !currentSession) {
+          // No session on initial load - that's fine, user isn't logged in
+          updateAuthState(null);
+        }
+        // Don't sign out on TOKEN_REFRESH_FAILED - let the session persist
+        // The next API call will handle re-auth if truly needed
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      updateAuthState(existingSession);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [updateAuthState]);
 
   return (
     <AuthContext.Provider value={{ session, user, loading }}>
