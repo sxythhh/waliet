@@ -34,7 +34,7 @@ interface Module {
 
 export default function PublicCourseDetail() {
   const { id } = useParams<{ id: string }>();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -157,78 +157,12 @@ export default function PublicCourseDetail() {
 
   const progressPercentage = modules.length > 0 ? (completedModules.size / modules.length) * 100 : 0;
 
-  // Show loading while checking auth
-  if (loading || isAuthenticated === null) {
+  if (loading) {
     return (
       <div className="h-screen flex flex-col bg-[#0a0a0a]">
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-white/60">Loading course...</div>
         </div>
-      </div>
-    );
-  }
-
-  // Auth gate - show signup prompt when not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="h-screen flex flex-col bg-[#0a0a0a]">
-        {/* Navigation Bar */}
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14">
-              <Link to="/" className="flex items-center gap-2">
-                <img alt="Virality" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-                <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
-              </Link>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-transparent hover:text-foreground px-[10px] rounded-3xl text-white/80" onClick={() => setShowAuthDialog(true)}>
-                  Sign In
-                </Button>
-                <Button size="sm" onClick={() => setShowAuthDialog(true)} className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl">
-                  Create Account
-                </Button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        {/* Auth Gate Content */}
-        <main className="flex-1 flex items-center justify-center px-4">
-          <div className="max-w-md w-full text-center">
-            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-            </div>
-            <h1 className="text-2xl font-inter tracking-[-0.5px] font-semibold text-white mb-3">
-              Sign up to access this course
-            </h1>
-            <p className="text-white/60 font-inter tracking-[-0.5px] mb-8">
-              Create a free account to unlock all courses, track your progress, and start learning.
-            </p>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => setShowAuthDialog(true)} 
-                className="w-full font-inter tracking-[-0.5px] bg-primary hover:bg-primary/90 h-11"
-              >
-                Create Free Account
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowAuthDialog(true)} 
-                className="w-full font-inter tracking-[-0.5px] h-11 border-white/10 text-white hover:bg-white/5"
-              >
-                Sign In
-              </Button>
-            </div>
-            <Link to="/resources" className="inline-flex items-center gap-2 mt-6 text-sm text-white/50 hover:text-white/70 font-inter tracking-[-0.5px]">
-              <img src={arrowBackIcon} alt="" className="w-4 h-4" />
-              Back to Resources
-            </Link>
-          </div>
-        </main>
-
-        <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
       </div>
     );
   }
