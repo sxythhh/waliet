@@ -1114,7 +1114,14 @@ export default function AdminUsers() {
           avatar_url,
           follower_count,
           bio,
-          account_link
+          account_link,
+          profiles:user_id (
+            id,
+            username,
+            full_name,
+            avatar_url,
+            email
+          )
         )
       `).order("submitted_at", {
       ascending: false
@@ -2171,16 +2178,48 @@ export default function AdminUsers() {
                       const hasAvatar = !!account.avatar_url;
                       const followerCount = account.follower_count || 0;
                       const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : new Date(submission.submitted_at);
-                      const nextSubmissionDate = new Date(reviewedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-                      const daysUntilNext = Math.ceil((nextSubmissionDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-                      const isOverdue = daysUntilNext < 0;
-                      const isDueSoon = daysUntilNext <= 7 && daysUntilNext >= 0;
+                      const profile = (account as any).profiles;
+                      
+                      // Get all submissions for this account to show history
+                      const accountSubmissions = submissions.filter(
+                        s => s.social_accounts?.id === account.id
+                      );
+                      const hasHistory = accountSubmissions.length > 1;
                       
                       return (
                         <div 
                           key={submission.id} 
                           className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all"
                         >
+                          {/* Owner Info */}
+                          {profile && (
+                            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50">
+                              {profile.avatar_url ? (
+                                <img 
+                                  src={profile.avatar_url} 
+                                  alt={profile.username}
+                                  className="w-6 h-6 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                                  <span className="text-xs font-semibold text-muted-foreground">
+                                    {(profile.full_name || profile.username || '?').charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium font-inter tracking-[-0.5px] truncate">
+                                  {profile.full_name || profile.username}
+                                </p>
+                                {profile.email && (
+                                  <p className="text-[10px] text-muted-foreground truncate">
+                                    {profile.email}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
                           {/* Header with avatar and account info */}
                           <a 
                             href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
@@ -2238,21 +2277,16 @@ export default function AdminUsers() {
                             </div>
                           </div>
 
-                          {/* Stats Row */}
-                          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-inter tracking-[-0.5px]">
+                          {/* Stats Row - Just reviewed date */}
+                          <div className="mt-3 text-xs font-inter tracking-[-0.5px]">
                             <div className="bg-muted/30 rounded-lg p-2">
                               <p className="text-muted-foreground text-[10px]">Reviewed</p>
                               <p className="font-medium">
                                 {reviewedDate.toLocaleDateString('en-US', {
                                   month: 'short',
-                                  day: 'numeric'
+                                  day: 'numeric',
+                                  year: 'numeric'
                                 })}
-                              </p>
-                            </div>
-                            <div className={`rounded-lg p-2 ${isOverdue ? 'bg-destructive/10' : isDueSoon ? 'bg-amber-500/10' : 'bg-muted/30'}`}>
-                              <p className="text-muted-foreground text-[10px]">Next Update</p>
-                              <p className={`font-medium ${isOverdue ? 'text-destructive' : isDueSoon ? 'text-amber-500' : ''}`}>
-                                {isOverdue ? 'Overdue' : daysUntilNext === 0 ? 'Today' : `${daysUntilNext}d`}
                               </p>
                             </div>
                           </div>
@@ -2271,51 +2305,47 @@ export default function AdminUsers() {
                             </p>
                           )}
                           
-                          {/* Actions */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full mt-3 text-xs font-inter tracking-[-0.5px] text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            onClick={async () => {
-                              if (!confirm(`Require new demographic submission for @${submission.social_accounts.username}? This will:\n\n• Reset their demographics score to 0\n• Archive current submission as 'rejected'\n• Require them to submit new demographics\n\nContinue?`)) return;
-                              
-                              try {
-                                const { error: updateError } = await supabase
-                                  .from('demographic_submissions')
-                                  .update({ 
-                                    status: 'rejected',
-                                    admin_notes: 'Submission reset - new demographics required',
-                                    reviewed_at: new Date().toISOString(),
-                                    reviewed_by: (await supabase.auth.getUser()).data.user?.id
-                                  })
-                                  .eq('id', submission.id);
-
-                                if (updateError) throw updateError;
-
-                                const { error: profileError } = await supabase
-                                  .from('profiles')
-                                  .update({ demographics_score: 0 })
-                                  .eq('id', submission.social_accounts.user_id);
-
-                                if (profileError) throw profileError;
-
-                                toast({
-                                  title: "Success",
-                                  description: "Demographics reset successfully"
-                                });
-                                fetchSubmissions();
-                              } catch (error: any) {
-                                console.error('Error resetting demographics:', error);
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to reset demographics",
-                                  variant: "destructive"
-                                });
-                              }
-                            }}
-                          >
-                            Require New Submission
-                          </Button>
+                          {/* Submission History */}
+                          {hasHistory && (
+                            <div className="mt-3 pt-3 border-t border-border/50">
+                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-2">
+                                {accountSubmissions.length} total submissions
+                              </p>
+                              <div className="space-y-1.5 max-h-24 overflow-y-auto">
+                                {accountSubmissions.map((sub, idx) => (
+                                  <div 
+                                    key={sub.id} 
+                                    className={`flex items-center justify-between text-[10px] font-inter tracking-[-0.5px] p-1.5 rounded ${sub.id === submission.id ? 'bg-primary/10' : 'bg-muted/20'}`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${
+                                        sub.status === 'approved' ? 'bg-emerald-500' : 
+                                        sub.status === 'rejected' ? 'bg-destructive' : 'bg-amber-500'
+                                      }`} />
+                                      <span className="text-muted-foreground">
+                                        {new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">T1: {sub.tier1_percentage}%</span>
+                                      {sub.score !== null && <span className="text-muted-foreground">Score: {sub.score}</span>}
+                                      {sub.screenshot_url && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openReviewDialog(sub);
+                                          }}
+                                          className="text-primary hover:underline"
+                                        >
+                                          View
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
