@@ -394,7 +394,7 @@ export function CampaignsTab({
           platform,
           username
         )
-      `).in("campaign_id", campaignIds).eq("social_accounts.user_id", user.id).eq("status", "active");
+      `).in("campaign_id", campaignIds).eq("user_id", user.id).eq("status", "active");
 
     // Group social accounts by campaign_id
     const accountsByCampaign = new Map<string, Array<{
