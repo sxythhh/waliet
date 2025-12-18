@@ -161,17 +161,16 @@ export function ManageCampaignsDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
       
-      // Check for existing disconnected record
+      // Check for any existing record (regardless of status)
       const { data: existingRecord } = await supabase
         .from("social_account_campaigns")
-        .select("id")
+        .select("id, status")
         .eq("social_account_id", accountId)
         .eq("campaign_id", campaignId)
-        .eq("status", "disconnected")
         .maybeSingle();
       
       if (existingRecord) {
-        // Reactivate existing record
+        // Update existing record to active
         const { error } = await supabase
           .from("social_account_campaigns")
           .update({ 
