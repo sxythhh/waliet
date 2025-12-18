@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown, UserPlus } from "lucide-react";
+import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -165,6 +165,11 @@ export default function AdminUsers() {
   const [demoPlatformFilter, setDemoPlatformFilter] = useState<string>("all");
   const [demoSortOrder, setDemoSortOrder] = useState<'asc' | 'desc'>('desc');
   const [demoScoreFilter, setDemoScoreFilter] = useState<string>("all"); // all, high (70+), medium (40-69), low (<40)
+  
+  // Pagination for approved/rejected
+  const [approvedPage, setApprovedPage] = useState(1);
+  const [rejectedPage, setRejectedPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
   
   const {
     toast
@@ -2291,8 +2296,11 @@ export default function AdminUsers() {
                   No approved submissions
                 </div>
               ) : (
+                <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {approvedSubmissions.map(submission => {
+                  {approvedSubmissions
+                    .slice((approvedPage - 1) * ITEMS_PER_PAGE, approvedPage * ITEMS_PER_PAGE)
+                    .map(submission => {
                       const account = submission.social_accounts;
                       const hasAvatar = !!account.avatar_url;
                       const followerCount = account.follower_count || 0;
@@ -2469,6 +2477,40 @@ export default function AdminUsers() {
                       );
                     })}
                   </div>
+                  {/* Pagination */}
+                  {approvedSubmissions.length > ITEMS_PER_PAGE && (
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                        Showing {((approvedPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(approvedPage * ITEMS_PER_PAGE, approvedSubmissions.length)} of {approvedSubmissions.length}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setApprovedPage(p => Math.max(1, p - 1))}
+                          disabled={approvedPage === 1}
+                          className="text-xs font-inter tracking-[-0.5px]"
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                          Page {approvedPage} of {Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setApprovedPage(p => Math.min(Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE), p + 1))}
+                          disabled={approvedPage >= Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE)}
+                          className="text-xs font-inter tracking-[-0.5px]"
+                        >
+                          Next
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
 
@@ -2479,8 +2521,11 @@ export default function AdminUsers() {
                   No rejected submissions
                 </div>
               ) : (
+                <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {rejectedSubmissions.map(submission => {
+                  {rejectedSubmissions
+                    .slice((rejectedPage - 1) * ITEMS_PER_PAGE, rejectedPage * ITEMS_PER_PAGE)
+                    .map(submission => {
                     const account = submission.social_accounts;
                     const hasAvatar = !!account.avatar_url;
                     const followerCount = account.follower_count || 0;
@@ -2583,6 +2628,40 @@ export default function AdminUsers() {
                     );
                   })}
                 </div>
+                  {/* Pagination */}
+                  {rejectedSubmissions.length > ITEMS_PER_PAGE && (
+                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                        Showing {((rejectedPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(rejectedPage * ITEMS_PER_PAGE, rejectedSubmissions.length)} of {rejectedSubmissions.length}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRejectedPage(p => Math.max(1, p - 1))}
+                          disabled={rejectedPage === 1}
+                          className="text-xs font-inter tracking-[-0.5px]"
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" />
+                          Previous
+                        </Button>
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                          Page {rejectedPage} of {Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setRejectedPage(p => Math.min(Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE), p + 1))}
+                          disabled={rejectedPage >= Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE)}
+                          className="text-xs font-inter tracking-[-0.5px]"
+                        >
+                          Next
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </TabsContent>
           </Tabs>
