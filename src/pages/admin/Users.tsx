@@ -127,6 +127,7 @@ export default function AdminUsers() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
   const [approvedSortOrder, setApprovedSortOrder] = useState<'asc' | 'desc'>('asc'); // asc = soonest first, desc = latest first
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
@@ -1354,10 +1355,10 @@ export default function AdminUsers() {
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList className="bg-muted/30 border-0 p-1 h-auto">
           <TabsTrigger value="users" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
-            Users ({stats.totalUsers})
+            Users/Accounts ({stats.totalUsers})
           </TabsTrigger>
-          <TabsTrigger value="demographics" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
-            Demographics ({pendingSubmissions.length} pending)
+          <TabsTrigger value="submissions" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
+            Submissions ({submissions.length})
           </TabsTrigger>
         </TabsList>
 
@@ -2031,169 +2032,97 @@ export default function AdminUsers() {
       <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onEditScore={openEditScoreFromSocialAccount} />
         </TabsContent>
 
-        {/* Demographics Tab */}
-        <TabsContent value="demographics" className="space-y-6">
-          {/* Demographics Tabs */}
-          <Tabs defaultValue="pending" className="space-y-4">
-            <TabsList className="bg-muted/30 border-0 p-1 h-auto">
-              <TabsTrigger value="pending" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                Pending ({pendingSubmissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="approved" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-500 px-4 py-2 gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Approved ({approvedSubmissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive px-4 py-2 gap-1.5">
-                <XCircle className="w-3.5 h-3.5" />
-                Rejected ({rejectedSubmissions.length})
-              </TabsTrigger>
-            </TabsList>
+        {/* Submissions Tab */}
+        <TabsContent value="submissions" className="space-y-4">
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Filter:</span>
+            <div className="flex gap-1">
+              {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+                <Button
+                  key={status}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSubmissionStatusFilter(status)}
+                  className={cn(
+                    "h-8 px-3 text-xs font-inter tracking-[-0.5px] capitalize",
+                    submissionStatusFilter === status 
+                      ? status === 'pending' ? "bg-amber-500/20 text-amber-500"
+                        : status === 'approved' ? "bg-emerald-500/20 text-emerald-500"
+                        : status === 'rejected' ? "bg-destructive/20 text-destructive"
+                        : "bg-card text-foreground"
+                      : "bg-card/50 hover:bg-card"
+                  )}
+                >
+                  {status === 'all' ? 'All' : status}
+                  <span className="ml-1.5 text-[10px] opacity-70">
+                    ({status === 'all' ? submissions.length 
+                      : status === 'pending' ? pendingSubmissions.length
+                      : status === 'approved' ? approvedSubmissions.length
+                      : rejectedSubmissions.length})
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
 
-            {/* Pending Submissions */}
-            <TabsContent value="pending" className="space-y-4">
-              {pendingSubmissions.length === 0 ? <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No pending submissions
-                </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {pendingSubmissions.map(submission => {
+          {/* Submissions Table */}
+          <div className="rounded-xl border bg-card/50 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="font-inter tracking-[-0.5px]">Account</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px]">Owner</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px]">T1 %</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px]">Score</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px]">Status</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px]">Submitted</TableHead>
+                  <TableHead className="font-inter tracking-[-0.5px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {submissions
+                  .filter(s => submissionStatusFilter === 'all' || s.status === submissionStatusFilter)
+                  .map((submission) => {
                     const account = submission.social_accounts;
-                    const followerCount = account.follower_count || 0;
+                    const profile = (account as any).profiles;
                     const hasAvatar = !!account.avatar_url;
                     
                     return (
-                      <div 
-                        key={submission.id} 
-                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all cursor-pointer"
-                        onClick={() => openReviewDialog(submission)}
-                      >
-                        <div className="flex items-start gap-3">
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            {hasAvatar ? (
-                              <img 
-                                src={account.avatar_url!} 
-                                alt={account.username}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                <span className="text-lg font-semibold text-muted-foreground">
-                                  {account.username.charAt(0).toUpperCase()}
-                                </span>
+                      <TableRow key={submission.id} className="cursor-pointer" onClick={() => openReviewDialog(submission)}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex-shrink-0">
+                              {hasAvatar ? (
+                                <img 
+                                  src={account.avatar_url!} 
+                                  alt={account.username}
+                                  className="w-9 h-9 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                                  <span className="text-sm font-semibold text-muted-foreground">
+                                    {account.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-background flex items-center justify-center">
+                                {getPlatformIcon(account.platform)}
                               </div>
-                            )}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                              {getPlatformIcon(account.platform)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm font-inter tracking-[-0.5px]">@{account.username}</p>
+                              {account.follower_count && (
+                                <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
+                                  {account.follower_count.toLocaleString()} followers
+                                </p>
+                              )}
                             </div>
                           </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate">
-                              @{account.username}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No follower data'}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
-                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
-
-                          {/* Review Button */}
-                          <Button 
-                            size="sm" 
-                            className="h-8 text-xs font-inter tracking-[-0.5px] opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={e => {
-                              e.stopPropagation();
-                              openReviewDialog(submission);
-                            }}
-                          >
-                            Review
-                          </Button>
-                        </div>
-
-                        {/* Bio preview */}
-                        {account.bio && (
-                          <p className="text-xs text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
-                            {account.bio}
-                          </p>
-                        )}
-
-                        {/* Tier 1 percentage badge */}
-                        <div className="mt-3 flex items-center gap-2">
-                          <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
-                            Tier 1: {submission.tier1_percentage}%
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px] text-amber-500 border-amber-500/30">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Pending
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>}
-            </TabsContent>
-
-            {/* Approved Submissions */}
-            <TabsContent value="approved" className="space-y-4">
-              {approvedSubmissions.length === 0 ? (
-                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No approved submissions
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setApprovedSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                      className="gap-2 text-xs font-inter tracking-[-0.5px]"
-                    >
-                      {approvedSortOrder === 'asc' ? (
-                        <>
-                          <ArrowUp className="h-3.5 w-3.5" />
-                          Soonest First
-                        </>
-                      ) : (
-                        <>
-                          <ArrowDown className="h-3.5 w-3.5" />
-                          Latest First
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {approvedSubmissions.map(submission => {
-                      const account = submission.social_accounts;
-                      const hasAvatar = !!account.avatar_url;
-                      const followerCount = account.follower_count || 0;
-                      const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : new Date(submission.submitted_at);
-                      const profile = (account as any).profiles;
-                      
-                      // Get all submissions for this account to show history
-                      const accountSubmissions = submissions.filter(
-                        s => s.social_accounts?.id === account.id
-                      );
-                      const hasHistory = accountSubmissions.length > 1;
-                      
-                      return (
-                        <div 
-                          key={submission.id} 
-                          className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all"
-                        >
-                          {/* Owner Info */}
-                          {profile && (
-                            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50">
+                        </TableCell>
+                        <TableCell>
+                          {profile ? (
+                            <div className="flex items-center gap-2">
                               {profile.avatar_url ? (
                                 <img 
                                   src={profile.avatar_url} 
@@ -2207,285 +2136,116 @@ export default function AdminUsers() {
                                   </span>
                                 </div>
                               )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium font-inter tracking-[-0.5px] truncate">
-                                  {profile.full_name || profile.username}
-                                </p>
+                              <div>
+                                <p className="text-sm font-inter tracking-[-0.5px]">{profile.full_name || profile.username}</p>
                                 {profile.email && (
-                                  <p className="text-[10px] text-muted-foreground truncate">
-                                    {profile.email}
-                                  </p>
+                                  <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{profile.email}</p>
                                 )}
                               </div>
                             </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
                           )}
-                          
-                          {/* Header with avatar and account info */}
-                          <a 
-                            href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-                          >
-                            {/* Avatar */}
-                            <div className="relative flex-shrink-0">
-                              {hasAvatar ? (
-                                <img 
-                                  src={account.avatar_url!} 
-                                  alt={account.username}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                  <span className="text-lg font-semibold text-muted-foreground">
-                                    {account.username.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                                {getPlatformIcon(account.platform)}
-                              </div>
-                            </div>
-
-                            {/* Account Info */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
-                                @{account.username}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                  {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
-                                </span>
-                              </div>
-                            </div>
-                          </a>
-
-                          {/* Score Display */}
-                          <div 
-                            className="mt-4 bg-emerald-500/10 rounded-lg p-3 cursor-pointer hover:bg-emerald-500/15 transition-colors"
-                            onClick={() => openEditScoreDialog(submission)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Demographics Score</p>
-                                <p className="text-2xl font-bold font-inter tracking-[-0.5px] text-emerald-500">{submission.score}</p>
-                              </div>
-                              <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 text-[10px] font-inter tracking-[-0.5px]">
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Approved
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Stats Row - Just reviewed date */}
-                          <div className="mt-3 text-xs font-inter tracking-[-0.5px]">
-                            <div className="bg-muted/30 rounded-lg p-2">
-                              <p className="text-muted-foreground text-[10px]">Reviewed</p>
-                              <p className="font-medium">
-                                {reviewedDate.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Bio Preview */}
-                          {account.bio && (
-                            <p className="text-[11px] text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
-                              {account.bio}
-                            </p>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">{submission.tier1_percentage}%</span>
+                        </TableCell>
+                        <TableCell>
+                          {submission.score !== null ? (
+                            <span className="font-mono text-sm font-medium">{submission.score}</span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
                           )}
-
-                          {/* Admin Notes */}
-                          {submission.admin_notes && (
-                            <p className="text-[11px] text-muted-foreground/70 mt-2 line-clamp-1 italic font-inter tracking-[-0.5px]">
-                              Note: {submission.admin_notes}
-                            </p>
-                          )}
-                          
-                          {/* Submission History */}
-                          {hasHistory && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
-                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-2">
-                                {accountSubmissions.length} total submissions
-                              </p>
-                              <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                                {accountSubmissions.map((sub, idx) => (
-                                  <div 
-                                    key={sub.id} 
-                                    className={`flex items-center justify-between text-[10px] font-inter tracking-[-0.5px] p-1.5 rounded ${sub.id === submission.id ? 'bg-primary/10' : 'bg-muted/20'}`}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className={`w-1.5 h-1.5 rounded-full ${
-                                        sub.status === 'approved' ? 'bg-emerald-500' : 
-                                        sub.status === 'rejected' ? 'bg-destructive' : 'bg-amber-500'
-                                      }`} />
-                                      <span className="text-muted-foreground">
-                                        {new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">T1: {sub.tier1_percentage}%</span>
-                                      {sub.score !== null && <span className="text-muted-foreground">Score: {sub.score}</span>}
-                                      {sub.screenshot_url && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            openReviewDialog(sub);
-                                          }}
-                                          className="text-primary hover:underline"
-                                        >
-                                          View
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </TabsContent>
-
-            {/* Rejected Submissions */}
-            <TabsContent value="rejected" className="space-y-4">
-              {rejectedSubmissions.length === 0 ? (
-                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No rejected submissions
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {rejectedSubmissions.map(submission => {
-                    const account = submission.social_accounts;
-                    const hasAvatar = !!account.avatar_url;
-                    const followerCount = account.follower_count || 0;
-                    
-                    return (
-                      <div 
-                        key={submission.id} 
-                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all opacity-75 hover:opacity-100"
-                      >
-                        {/* Header with avatar and account info */}
-                        <a 
-                          href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-                        >
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            {hasAvatar ? (
-                              <img 
-                                src={account.avatar_url!} 
-                                alt={account.username}
-                                className="w-12 h-12 rounded-full object-cover grayscale"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                <span className="text-lg font-semibold text-muted-foreground">
-                                  {account.username.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={submission.status === 'approved' ? 'default' : submission.status === 'rejected' ? 'destructive' : 'secondary'}
+                            className={cn(
+                              "text-[10px] font-inter tracking-[-0.5px] capitalize",
+                              submission.status === 'approved' && "bg-emerald-500/20 text-emerald-500",
+                              submission.status === 'pending' && "bg-amber-500/20 text-amber-500",
+                              submission.status === 'rejected' && "bg-destructive/20 text-destructive"
                             )}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                              {getPlatformIcon(account.platform)}
-                            </div>
-                          </div>
-
-                          {/* Account Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
-                              @{account.username}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
-                              </span>
-                            </div>
-                          </div>
-                        </a>
-
-                        {/* Rejected Status */}
-                        <div className="mt-4 bg-destructive/10 rounded-lg p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Status</p>
-                              <p className="text-sm font-medium font-inter tracking-[-0.5px] text-destructive">Rejected</p>
-                            </div>
-                            <Badge className="bg-destructive/20 text-destructive hover:bg-destructive/30 text-[10px] font-inter tracking-[-0.5px]">
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Rejected
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Stats Row */}
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-inter tracking-[-0.5px]">
-                          <div className="bg-muted/30 rounded-lg p-2">
-                            <p className="text-muted-foreground text-[10px]">Submitted</p>
-                            <p className="font-medium">
-                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </p>
-                          </div>
-                          <div className="bg-muted/30 rounded-lg p-2">
-                            <p className="text-muted-foreground text-[10px]">Tier 1</p>
-                            <p className="font-medium">{submission.tier1_percentage}%</p>
-                          </div>
-                        </div>
-
-                        {/* Admin Notes */}
-                        {submission.admin_notes && (
-                          <p className="text-[11px] text-muted-foreground/70 mt-3 line-clamp-2 italic font-inter tracking-[-0.5px]">
-                            Reason: {submission.admin_notes}
-                          </p>
-                        )}
-
-                        {/* View Submission Button */}
-                        {submission.screenshot_url && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full mt-3 text-xs font-inter tracking-[-0.5px]"
-                            onClick={() => openReviewDialog(submission)}
                           >
-                            View Submission
-                          </Button>
-                        )}
-                      </div>
+                            {submission.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                            {submission.status === 'approved' && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                            {submission.status === 'rejected' && <XCircle className="w-3 h-3 mr-1" />}
+                            {submission.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                            {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {submission.status === 'pending' ? (
+                            <Button 
+                              size="sm" 
+                              className="h-7 text-xs font-inter tracking-[-0.5px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReviewDialog(submission);
+                              }}
+                            >
+                              Review
+                            </Button>
+                          ) : submission.status === 'approved' ? (
+                            <Button 
+                              variant="ghost"
+                              size="sm" 
+                              className="h-7 text-xs font-inter tracking-[-0.5px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditScoreDialog(submission);
+                              }}
+                            >
+                              Edit Score
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost"
+                              size="sm" 
+                              className="h-7 text-xs font-inter tracking-[-0.5px]"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReviewDialog(submission);
+                              }}
+                            >
+                              View
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                {submissions.filter(s => submissionStatusFilter === 'all' || s.status === submissionStatusFilter).length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
+                      No {submissionStatusFilter === 'all' ? '' : submissionStatusFilter} submissions found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           {/* Review Dialog */}
-          <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-            <DialogContent className="max-w-md bg-card border-0">
-              <DialogHeader className="pb-2">
-                <DialogTitle className="text-lg font-inter tracking-[-0.5px]">Review Demographic Submission</DialogTitle>
+          <Dialog open={!!selectedSubmission} onOpenChange={open => !open && setSelectedSubmission(null)}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="font-inter tracking-[-0.5px]">Review Demographic Submission</DialogTitle>
+                <DialogDescription className="font-inter tracking-[-0.5px]">
+                  Review the demographic data submitted by this creator
+                </DialogDescription>
               </DialogHeader>
-
               {selectedSubmission && (
                 <div className="space-y-4">
-                  {/* Account Info in Dialog */}
-                  <a 
-                    href={selectedSubmission.social_accounts.account_link || `https://${selectedSubmission.social_accounts.platform}.com/@${selectedSubmission.social_accounts.username}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
-                  >
-                    {/* Avatar in dialog */}
+                  <a href={selectedSubmission.social_accounts.account_link || `https://${selectedSubmission.social_accounts.platform}.com/@${selectedSubmission.social_accounts.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg group hover:bg-muted/50 transition-colors">
                     <div className="relative flex-shrink-0">
                       {selectedSubmission.social_accounts.avatar_url ? (
                         <img 
@@ -2495,7 +2255,7 @@ export default function AdminUsers() {
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-base font-semibold text-muted-foreground">
+                          <span className="text-sm font-semibold text-muted-foreground">
                             {selectedSubmission.social_accounts.username.charAt(0).toUpperCase()}
                           </span>
                         </div>
