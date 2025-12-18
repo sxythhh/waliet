@@ -126,7 +126,7 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
-  const [approvedSortOrder, setApprovedSortOrder] = useState<'asc' | 'desc'>('asc'); // asc = soonest first, desc = latest first
+  
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
@@ -159,6 +159,13 @@ export default function AdminUsers() {
   const [selectedSocialAccountForAdd, setSelectedSocialAccountForAdd] = useState<string>("");
   const [addingToCampaign, setAddingToCampaign] = useState(false);
   const [addReferralDialogOpen, setAddReferralDialogOpen] = useState(false);
+  
+  // Demographics filters
+  const [demoSearchQuery, setDemoSearchQuery] = useState("");
+  const [demoPlatformFilter, setDemoPlatformFilter] = useState<string>("all");
+  const [demoSortOrder, setDemoSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [demoScoreFilter, setDemoScoreFilter] = useState<string>("all"); // all, high (70+), medium (40-69), low (<40)
+  
   const {
     toast
   } = useToast();
@@ -1321,13 +1328,46 @@ export default function AdminUsers() {
         {status}
       </Badge>;
   };
-  const pendingSubmissions = submissions.filter(s => s.status === "pending" && s.social_accounts);
-  const approvedSubmissions = submissions.filter(s => s.status === "approved" && s.social_accounts).sort((a, b) => {
-    const dateA = new Date(a.submitted_at).getTime() + 7 * 24 * 60 * 60 * 1000;
-    const dateB = new Date(b.submitted_at).getTime() + 7 * 24 * 60 * 60 * 1000;
-    return approvedSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-  });
-  const rejectedSubmissions = submissions.filter(s => s.status === "rejected" && s.social_accounts);
+  // Apply filters to submissions
+  const filterSubmissions = (subs: DemographicSubmission[]) => {
+    return subs.filter(s => {
+      if (!s.social_accounts) return false;
+      
+      // Platform filter
+      if (demoPlatformFilter !== "all" && s.social_accounts.platform !== demoPlatformFilter) return false;
+      
+      // Search filter
+      if (demoSearchQuery) {
+        const query = demoSearchQuery.toLowerCase();
+        const matchesUsername = s.social_accounts.username.toLowerCase().includes(query);
+        const profile = (s.social_accounts as any).profiles;
+        const matchesEmail = profile?.email?.toLowerCase().includes(query);
+        const matchesFullName = profile?.full_name?.toLowerCase().includes(query);
+        if (!matchesUsername && !matchesEmail && !matchesFullName) return false;
+      }
+      
+      // Score filter (only for approved submissions with scores)
+      if (demoScoreFilter !== "all" && s.status === "approved" && s.score !== null) {
+        if (demoScoreFilter === "high" && s.score < 70) return false;
+        if (demoScoreFilter === "medium" && (s.score < 40 || s.score >= 70)) return false;
+        if (demoScoreFilter === "low" && s.score >= 40) return false;
+      }
+      
+      return true;
+    });
+  };
+  
+  const sortSubmissions = (subs: DemographicSubmission[]) => {
+    return [...subs].sort((a, b) => {
+      const dateA = new Date(a.submitted_at).getTime();
+      const dateB = new Date(b.submitted_at).getTime();
+      return demoSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  };
+  
+  const pendingSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "pending")));
+  const approvedSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "approved")));
+  const rejectedSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "rejected")));
   const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
   const stats = {
     totalUsers: totalUserCount,
@@ -2033,6 +2073,106 @@ export default function AdminUsers() {
 
         {/* Demographics Tab */}
         <TabsContent value="demographics" className="space-y-6">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search username, email..."
+                value={demoSearchQuery}
+                onChange={(e) => setDemoSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm font-inter tracking-[-0.5px]"
+              />
+            </div>
+            
+            {/* Platform Filter */}
+            <div className="flex items-center gap-1.5">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'tiktok', label: 'TikTok', icon: tiktokLogo },
+                { value: 'instagram', label: 'Instagram', icon: instagramLogo },
+                { value: 'youtube', label: 'YouTube', icon: youtubeLogo },
+              ].map((platform) => (
+                <Button
+                  key={platform.value}
+                  variant={demoPlatformFilter === platform.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setDemoPlatformFilter(platform.value)}
+                  className={cn(
+                    "h-8 px-3 text-xs font-inter tracking-[-0.5px] gap-1.5",
+                    demoPlatformFilter === platform.value && "bg-primary text-primary-foreground"
+                  )}
+                >
+                  {platform.icon && (
+                    <img src={platform.icon} alt={platform.label} className="h-3.5 w-3.5" />
+                  )}
+                  {platform.value === 'all' ? 'All Platforms' : platform.label}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Score Filter (for approved) */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Score:</span>
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'high', label: '70+', color: 'text-emerald-500' },
+                { value: 'medium', label: '40-69', color: 'text-amber-500' },
+                { value: 'low', label: '<40', color: 'text-destructive' },
+              ].map((scoreOption) => (
+                <Button
+                  key={scoreOption.value}
+                  variant={demoScoreFilter === scoreOption.value ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setDemoScoreFilter(scoreOption.value)}
+                  className={cn(
+                    "h-7 px-2 text-xs font-inter tracking-[-0.5px]",
+                    demoScoreFilter !== scoreOption.value && scoreOption.color
+                  )}
+                >
+                  {scoreOption.label}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Sort Order */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDemoSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+              className="h-8 gap-1.5 text-xs font-inter tracking-[-0.5px] ml-auto"
+            >
+              {demoSortOrder === 'asc' ? (
+                <>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                  Oldest First
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                  Newest First
+                </>
+              )}
+            </Button>
+            
+            {/* Clear Filters */}
+            {(demoSearchQuery || demoPlatformFilter !== 'all' || demoScoreFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDemoSearchQuery("");
+                  setDemoPlatformFilter("all");
+                  setDemoScoreFilter("all");
+                }}
+                className="h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+          
           {/* Demographics Tabs */}
           <Tabs defaultValue="pending" className="space-y-4">
             <TabsList className="bg-muted/30 border-0 p-1 h-auto">
@@ -2151,29 +2291,8 @@ export default function AdminUsers() {
                   No approved submissions
                 </div>
               ) : (
-                <>
-                  <div className="flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setApprovedSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                      className="gap-2 text-xs font-inter tracking-[-0.5px]"
-                    >
-                      {approvedSortOrder === 'asc' ? (
-                        <>
-                          <ArrowUp className="h-3.5 w-3.5" />
-                          Soonest First
-                        </>
-                      ) : (
-                        <>
-                          <ArrowDown className="h-3.5 w-3.5" />
-                          Latest First
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {approvedSubmissions.map(submission => {
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {approvedSubmissions.map(submission => {
                       const account = submission.social_accounts;
                       const hasAvatar = !!account.avatar_url;
                       const followerCount = account.follower_count || 0;
@@ -2350,7 +2469,6 @@ export default function AdminUsers() {
                       );
                     })}
                   </div>
-                </>
               )}
             </TabsContent>
 
