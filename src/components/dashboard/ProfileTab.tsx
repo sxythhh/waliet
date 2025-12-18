@@ -320,11 +320,25 @@ export function ProfileTab() {
       return;
     }
 
-    // Check if already linked
-    const {
-      data: existing
-    } = await supabase.from("social_account_campaigns").select("id").eq("social_account_id", selectedAccountForLinking.id).eq("campaign_id", campaignId).eq("status", "active").single();
-    if (existing) {
+    // Check if a record already exists (active or disconnected)
+    const { data: existingRecord, error: existingError } = await supabase
+      .from("social_account_campaigns")
+      .select("id, status")
+      .eq("social_account_id", selectedAccountForLinking.id)
+      .eq("campaign_id", campaignId)
+      .maybeSingle();
+
+    if (existingError) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to check existing link"
+      });
+      setLinkingCampaign(false);
+      return;
+    }
+
+    if (existingRecord?.status === "active") {
       toast({
         variant: "destructive",
         title: "Already linked",
@@ -333,14 +347,22 @@ export function ProfileTab() {
       setLinkingCampaign(false);
       return;
     }
-    const {
-      error
-    } = await supabase.from("social_account_campaigns").insert({
-      social_account_id: selectedAccountForLinking.id,
-      campaign_id: campaignId,
-      user_id: session.user.id,
-      status: "active"
-    });
+
+    const { error } = existingRecord
+      ? await supabase
+          .from("social_account_campaigns")
+          .update({
+            status: "active",
+            disconnected_at: null
+          })
+          .eq("id", existingRecord.id)
+      : await supabase.from("social_account_campaigns").insert({
+          social_account_id: selectedAccountForLinking.id,
+          campaign_id: campaignId,
+          user_id: session.user.id,
+          status: "active"
+        });
+
     if (error) {
       toast({
         variant: "destructive",
