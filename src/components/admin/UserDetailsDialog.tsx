@@ -428,7 +428,7 @@ export function UserDetailsDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 gap-0 bg-[#0a0a0a] border-0 overflow-hidden">
         {/* Header Section */}
-        <div className="">
+        <div className="p-6 pb-0">
           <div className="flex items-center gap-4">
             {user.avatar_url ? (
               <img src={user.avatar_url} alt={user.username} className="h-14 w-14 rounded-full object-cover ring-2 ring-[#2a2a2a]" />
@@ -539,7 +539,11 @@ export function UserDetailsDialog({
                   <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No connected accounts</p>
                 </div> : <div className="space-y-3">
                   {socialAccounts.map(account => {
-                const latestDemographic = account.demographic_submissions?.[0];
+                // Sort submissions by date descending
+                const sortedSubmissions = [...(account.demographic_submissions || [])].sort(
+                  (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+                );
+                const latestDemographic = sortedSubmissions[0];
                 const demographicStatus = latestDemographic?.status;
                 const linkedCampaign = account.social_account_campaigns?.[0]?.campaigns;
                 const formatFollowers = (count: number | null | undefined) => {
@@ -567,12 +571,9 @@ export function UserDetailsDialog({
                               {getPlatformIconElement(account.platform) && (
                                 <span className="shrink-0">{getPlatformIconElement(account.platform)}</span>
                               )}
-                              {demographicStatus === 'approved' && <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />}
-                              {demographicStatus === 'rejected' && <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0" />}
-                              {demographicStatus === 'pending' && <AlertCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />}
                             </div>
                             
-                            {/* Followers and Bio */}
+                            {/* Followers and Campaign */}
                             <div className="flex items-center gap-3 mt-1">
                               {account.follower_count && (
                                 <span className="text-xs text-muted-foreground font-inter" style={{ letterSpacing: '-0.5px' }}>
@@ -584,10 +585,35 @@ export function UserDetailsDialog({
                                   {linkedCampaign.title}
                                 </Badge>
                               )}
-                              {latestDemographic?.status === 'approved' && (
+                            </div>
+                            
+                            {/* Demographic Status */}
+                            <div className="flex items-center gap-2 mt-2">
+                              {!latestDemographic ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
+                                  No Demographics
+                                </Badge>
+                              ) : demographicStatus === 'approved' ? (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 cursor-pointer" onClick={() => onEditScore?.(account)}>
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
                                   T1: {latestDemographic.tier1_percentage}%
                                 </Badge>
+                              ) : demographicStatus === 'pending' ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-400">
+                                  <AlertCircle className="h-3 w-3 mr-1" />
+                                  Pending Review
+                                </Badge>
+                              ) : demographicStatus === 'rejected' ? (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-400">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Rejected
+                                </Badge>
+                              ) : null}
+                              
+                              {sortedSubmissions.length > 1 && (
+                                <span className="text-[10px] text-muted-foreground font-inter" style={{ letterSpacing: '-0.3px' }}>
+                                  ({sortedSubmissions.length} submissions)
+                                </span>
                               )}
                             </div>
                             
