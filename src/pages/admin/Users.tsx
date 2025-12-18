@@ -149,6 +149,8 @@ export default function AdminUsers() {
   const [adminNotes, setAdminNotes] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
   const [updating, setUpdating] = useState(false);
+  const [inlineScores, setInlineScores] = useState<Record<string, string>>({});
+  const [processingSubmission, setProcessingSubmission] = useState<string | null>(null);
   const [editScoreDialogOpen, setEditScoreDialogOpen] = useState(false);
   const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
   const [editScore, setEditScore] = useState("");
@@ -1229,6 +1231,74 @@ export default function AdminUsers() {
     setAdminNotes(submission.admin_notes || "");
     setReviewStatus(submission.status as "approved" | "rejected" || "approved");
   };
+  
+  const handleInlineReview = async (submission: DemographicSubmission, status: "approved" | "rejected") => {
+    const scoreValue = parseInt(inlineScores[submission.id] || "0");
+    
+    // Only validate score if approving
+    if (status === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Score",
+        description: "Score must be between 0 and 100"
+      });
+      return;
+    }
+    
+    setProcessingSubmission(submission.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      
+      const updateData: any = {
+        status: status,
+        score: status === "approved" ? scoreValue : null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: session.user.id
+      };
+      
+      if (status === "approved") {
+        updateData.tier1_percentage = scoreValue;
+      }
+      
+      const { error: updateError } = await supabase
+        .from("demographic_submissions")
+        .update(updateData)
+        .eq("id", submission.id);
+      
+      if (updateError) throw updateError;
+      
+      if (status === "approved") {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ demographics_score: scoreValue })
+          .eq("id", submission.social_accounts.user_id);
+        if (profileError) throw profileError;
+      }
+      
+      toast({
+        title: "Success",
+        description: `Submission ${status === "approved" ? "approved" : "rejected"}`
+      });
+      
+      // Clear the inline score
+      setInlineScores(prev => {
+        const next = { ...prev };
+        delete next[submission.id];
+        return next;
+      });
+      
+      fetchSubmissions();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update submission"
+      });
+    } finally {
+      setProcessingSubmission(null);
+    }
+  };
   const openEditScoreDialog = (submission: DemographicSubmission) => {
     setEditingSubmission(submission);
     setEditScore(submission.score?.toString() || "");
@@ -2197,53 +2267,97 @@ export default function AdminUsers() {
 
             {/* Pending Submissions */}
             <TabsContent value="pending" className="space-y-4">
-              {pendingSubmissions.length === 0 ? <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
+              {pendingSubmissions.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
                   No pending submissions
-                </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                </div>
+              ) : (
+                <div className="space-y-3">
                   {pendingSubmissions.map(submission => {
                     const account = submission.social_accounts;
                     const followerCount = account.follower_count || 0;
                     const hasAvatar = !!account.avatar_url;
+                    const isProcessing = processingSubmission === submission.id;
                     
                     return (
                       <div 
                         key={submission.id} 
-                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all cursor-pointer"
-                        onClick={() => openReviewDialog(submission)}
+                        className="bg-card/50 hover:bg-card rounded-xl p-4 transition-all"
                       >
-                        <div className="flex items-start gap-3">
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            {hasAvatar ? (
-                              <img 
-                                src={account.avatar_url!} 
-                                alt={account.username}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
+                        <div className="flex gap-4">
+                          {/* Video Section - Left Side */}
+                          <div className="w-[280px] flex-shrink-0">
+                            {submission.screenshot_url ? (
+                              <div className="rounded-lg overflow-hidden bg-black aspect-[9/16] max-h-[320px]">
+                                <video 
+                                  src={submission.screenshot_url} 
+                                  controls 
+                                  className="w-full h-full object-contain"
+                                  preload="metadata"
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
+                              </div>
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                <span className="text-lg font-semibold text-muted-foreground">
-                                  {account.username.charAt(0).toUpperCase()}
-                                </span>
+                              <div className="rounded-lg bg-muted/30 aspect-[9/16] max-h-[320px] flex items-center justify-center">
+                                <div className="text-center text-muted-foreground">
+                                  <ImageIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                  <p className="text-xs font-inter tracking-[-0.5px]">No video</p>
+                                </div>
                               </div>
                             )}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                              {getPlatformIcon(account.platform)}
-                            </div>
                           </div>
 
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate">
-                              @{account.username}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No follower data'}
-                              </span>
+                          {/* Info & Actions Section - Right Side */}
+                          <div className="flex-1 flex flex-col">
+                            {/* Account Header */}
+                            <a 
+                              href={account.account_link || `https://${account.platform}.com/@${account.username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                            >
+                              <div className="relative flex-shrink-0">
+                                {hasAvatar ? (
+                                  <img 
+                                    src={account.avatar_url!} 
+                                    alt={account.username}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                    <span className="text-sm font-semibold text-muted-foreground">
+                                      {account.username.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
+                                  {getPlatformIcon(account.platform)}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate hover:underline">
+                                  @{account.username}
+                                </h3>
+                                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                                  {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No follower data'}
+                                </p>
+                              </div>
+                            </a>
+
+                            {/* Meta Info */}
+                            <div className="mt-3 flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
+                                Tier 1: {submission.tier1_percentage}%
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px] text-amber-500 border-amber-500/30">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Pending
+                              </Badge>
                             </div>
-                            <p className="text-[11px] text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
-                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
+
+                            <p className="text-[11px] text-muted-foreground mt-2 font-inter tracking-[-0.5px]">
+                              Submitted {new Date(submission.submitted_at).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric',
@@ -2251,42 +2365,61 @@ export default function AdminUsers() {
                                 minute: '2-digit'
                               })}
                             </p>
+
+                            {/* Bio preview */}
+                            {account.bio && (
+                              <p className="text-xs text-muted-foreground mt-2 line-clamp-2 font-inter tracking-[-0.5px]">
+                                {account.bio}
+                              </p>
+                            )}
+
+                            {/* Score Input & Actions */}
+                            <div className="mt-auto pt-4 space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Label className="text-xs font-inter tracking-[-0.5px] text-muted-foreground whitespace-nowrap">
+                                  Score (0-100)
+                                </Label>
+                                <Input 
+                                  type="number" 
+                                  min="0" 
+                                  max="100"
+                                  value={inlineScores[submission.id] || submission.tier1_percentage.toString()}
+                                  onChange={e => setInlineScores(prev => ({ ...prev, [submission.id]: e.target.value }))}
+                                  placeholder="Score"
+                                  className="h-9 w-24 text-sm font-inter tracking-[-0.5px]"
+                                  onClick={e => e.stopPropagation()}
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  onClick={() => handleInlineReview(submission, "rejected")}
+                                  disabled={isProcessing}
+                                  className="flex-1 font-inter tracking-[-0.5px]"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1.5" />
+                                  Reject
+                                </Button>
+                                <Button 
+                                  size="sm"
+                                  onClick={() => handleInlineReview(submission, "approved")}
+                                  disabled={isProcessing}
+                                  className="flex-1 font-inter tracking-[-0.5px]"
+                                >
+                                  <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                                  {isProcessing ? "..." : "Approve"}
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-
-                          {/* Review Button */}
-                          <Button 
-                            size="sm" 
-                            className="h-8 text-xs font-inter tracking-[-0.5px] opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={e => {
-                              e.stopPropagation();
-                              openReviewDialog(submission);
-                            }}
-                          >
-                            Review
-                          </Button>
-                        </div>
-
-                        {/* Bio preview */}
-                        {account.bio && (
-                          <p className="text-xs text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
-                            {account.bio}
-                          </p>
-                        )}
-
-                        {/* Tier 1 percentage badge */}
-                        <div className="mt-3 flex items-center gap-2">
-                          <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
-                            Tier 1: {submission.tier1_percentage}%
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px] text-amber-500 border-amber-500/30">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Pending
-                          </Badge>
                         </div>
                       </div>
                     );
                   })}
-                </div>}
+                </div>
+              )}
             </TabsContent>
 
             {/* Approved Submissions */}
