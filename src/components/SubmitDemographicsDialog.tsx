@@ -164,6 +164,12 @@ export function SubmitDemographicsDialog({
       // Reset form
       setVideoFile(null);
       onOpenChange(false);
+      
+      // Delay to ensure database write is fully committed before refreshing
+      // This prevents race conditions where the query returns stale data
+      console.log('Demographic submission successful, waiting before refresh...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Refreshing social accounts...');
       onSuccess();
     } catch (error: any) {
       toast({
