@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
     console.log('Fetching transactions for campaign:', campaignId);
 
     // Fetch transactions for this campaign (exclude reverted transactions)
+    // Include both 'earning' and 'balance_correction' types to show manual budget adjustments
     const { data: transactions, error: transactionsError } = await supabase
       .from('wallet_transactions')
       .select(`
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
         created_at,
         created_by
       `)
-      .eq('type', 'earning')
+      .in('type', ['earning', 'balance_correction'])
       .neq('status', 'reverted')
       .order('created_at', { ascending: false });
 
