@@ -271,7 +271,7 @@ export function ProfileTab() {
     if (!session) return;
     const {
       data
-    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))").eq("creator_id", session.user.id);
+    } = await supabase.from("campaign_submissions").select("campaign_id, campaigns(id, title, brand_name, brand_logo_url, brands(logo_url))").eq("creator_id", session.user.id).eq("status", "approved");
     if (data) {
       // Deduplicate campaigns by ID
       const uniqueCampaignsMap = new Map();
