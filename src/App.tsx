@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { HelmetProvider } from "react-helmet-async";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
@@ -114,63 +115,68 @@ function AdminLayout({
       <main className="flex-1 overflow-auto">{children}</main>
     </div>;
 }
-const App = () => <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
-            <Route path="/x/callback" element={<XOAuthCallback />} />
-            <Route path="/brand-auth" element={<BrandAuth />} />
-            <Route path="/apply" element={<Apply />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/creator-terms" element={<CreatorTerms />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/new" element={<New />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/blog" element={<Resources />} />
-            <Route path="/course/:id" element={<PublicCourseDetail />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
-            <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-            <Route path="/boost/:id" element={<PublicBounty />} />
-            <Route path="/blueprint/:id" element={<BlueprintDetail />} />
-            {/* Boost dashboard is now part of /dashboard?boost=:id */}
-            <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
-            <Route path="/join/:slug" element={<JoinRedirect />} />
-            <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
-            <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
-            <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
-            <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
-            <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
-            <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
-            <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
-            <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-            <Route path="/admin/feedback" element={<AdminLayout><AdminFeedback /></AdminLayout>} />
-            <Route path="/admin/resources" element={<AdminLayout><AdminResources /></AdminLayout>} />
-            <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
-            <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
-            <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
-            <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-            <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-            <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
-            <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
-            <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
-            <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
-            <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="/:username" element={<PublicProfile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>;
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+              <Route path="/x/callback" element={<XOAuthCallback />} />
+              <Route path="/brand-auth" element={<BrandAuth />} />
+              <Route path="/apply" element={<Apply />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/creator-terms" element={<CreatorTerms />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/new" element={<New />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/blog" element={<Resources />} />
+              <Route path="/course/:id" element={<PublicCourseDetail />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
+              <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
+              <Route path="/boost/:id" element={<PublicBounty />} />
+              <Route path="/blueprint/:id" element={<BlueprintDetail />} />
+              {/* Boost dashboard is now part of /dashboard?boost=:id */}
+              <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
+              <Route path="/join/:slug" element={<JoinRedirect />} />
+              <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
+              <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
+              <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
+              <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
+              <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
+              <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
+              <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
+              <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+              <Route path="/admin/feedback" element={<AdminLayout><AdminFeedback /></AdminLayout>} />
+              <Route path="/admin/resources" element={<AdminLayout><AdminResources /></AdminLayout>} />
+              <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
+              <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
+              <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
+              <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
+              <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
+              <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
+              <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
+              <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
+              <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
+              <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/:username" element={<PublicProfile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
+);
+
 export default App;
