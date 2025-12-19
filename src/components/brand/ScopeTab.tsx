@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Eye, ChevronUp, X, Plus } from "lucide-react";
+import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,7 +60,8 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
     views: 0
   });
   const [addingVideo, setAddingVideo] = useState(false);
-  const [activeTab, setActiveTab] = useState<"content" | "campaigns">("content");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     fetchVideos();
@@ -306,27 +307,166 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
       {/* Header */}
       <div className="px-6 py-4 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-3">
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-3 py-2 bg-[#141414] border border-[#252525] rounded-lg text-sm text-white hover:bg-[#1a1a1a] transition-colors">
-                <Filter className="w-4 h-4 text-neutral-400" />
-                <span className="text-neutral-400">Sort by</span>
-                <span className="font-medium capitalize">{sortBy}</span>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-[#141414] border-[#252525]">
-              <DropdownMenuItem onClick={() => setSortBy("examples")} className="text-white hover:bg-[#1f1f1f]">
-                Examples
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("recent")} className="text-white hover:bg-[#1f1f1f]">
-                Recent
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("views")} className="text-white hover:bg-[#1f1f1f]">
-                Views
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Sort Dropdown - Expandable Menu Style */}
+          <div className="relative">
+            <button 
+              onClick={() => setSortMenuOpen(!sortMenuOpen)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#141414] border border-[#252525] rounded-xl text-sm text-white hover:bg-[#1a1a1a] transition-colors"
+            >
+              <Filter className="w-4 h-4 text-neutral-400" />
+              <span className="text-neutral-400">Sort by</span>
+              <span className="font-semibold capitalize">{sortBy}</span>
+            </button>
+            
+            {sortMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-[#141414] border border-[#252525] rounded-xl shadow-xl z-50 overflow-hidden">
+                {/* CTA Outcome */}
+                <button 
+                  onClick={() => setExpandedCategory(expandedCategory === 'cta' ? null : 'cta')}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <MonitorPlay className="w-5 h-5 text-neutral-400" />
+                    <span className="text-white font-medium">CTA Outcome</span>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'cta' ? 'rotate-90' : ''}`} />
+                </button>
+                {expandedCategory === 'cta' && (
+                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                    {['Examples', 'Recent', 'Views'].map(option => (
+                      <button 
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option.toLowerCase() as any);
+                          setSortMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Format */}
+                <button 
+                  onClick={() => setExpandedCategory(expandedCategory === 'format' ? null : 'format')}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                >
+                  <div className="flex items-center gap-3">
+                    <PlaySquare className="w-5 h-5 text-neutral-400" />
+                    <span className="text-white font-medium">Format</span>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'format' ? 'rotate-90' : ''}`} />
+                </button>
+                {expandedCategory === 'format' && (
+                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                    {['Examples', 'Recent', 'Views'].map(option => (
+                      <button 
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option.toLowerCase() as any);
+                          setSortMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Platform */}
+                <button 
+                  onClick={() => setExpandedCategory(expandedCategory === 'platform' ? null : 'platform')}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-neutral-400" />
+                    <span className="text-white font-medium">Platform</span>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'platform' ? 'rotate-90' : ''}`} />
+                </button>
+                {expandedCategory === 'platform' && (
+                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                    {['Examples', 'Recent', 'Views'].map(option => (
+                      <button 
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option.toLowerCase() as any);
+                          setSortMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Content Style */}
+                <button 
+                  onClick={() => setExpandedCategory(expandedCategory === 'style' ? null : 'style')}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-neutral-400" />
+                    <span className="text-white font-medium">Content Style</span>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'style' ? 'rotate-90' : ''}`} />
+                </button>
+                {expandedCategory === 'style' && (
+                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                    {['Examples', 'Recent', 'Views'].map(option => (
+                      <button 
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option.toLowerCase() as any);
+                          setSortMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Target Audience */}
+                <button 
+                  onClick={() => setExpandedCategory(expandedCategory === 'audience' ? null : 'audience')}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                >
+                  <div className="flex items-center gap-3">
+                    <Users className="w-5 h-5 text-neutral-400" />
+                    <span className="text-white font-medium">Target Audience</span>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'audience' ? 'rotate-90' : ''}`} />
+                </button>
+                {expandedCategory === 'audience' && (
+                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                    {['Examples', 'Recent', 'Views'].map(option => (
+                      <button 
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option.toLowerCase() as any);
+                          setSortMenuOpen(false);
+                          setExpandedCategory(null);
+                        }}
+                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Search */}
           <div className="flex-1 max-w-md relative">
@@ -350,30 +490,6 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
             <Plus className="w-4 h-4 mr-2" />
             Add Video
           </Button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex items-center gap-6 mt-4">
-          <button
-            onClick={() => setActiveTab("content")}
-            className={`text-sm font-medium pb-2 border-b-2 transition-colors ${
-              activeTab === "content" 
-                ? "text-white border-white" 
-                : "text-neutral-500 border-transparent hover:text-neutral-300"
-            }`}
-          >
-            Content
-          </button>
-          <button
-            onClick={() => setActiveTab("campaigns")}
-            className={`text-sm font-medium pb-2 border-b-2 transition-colors ${
-              activeTab === "campaigns" 
-                ? "text-white border-white" 
-                : "text-neutral-500 border-transparent hover:text-neutral-300"
-            }`}
-          >
-            Campaigns
-          </button>
         </div>
       </div>
 
