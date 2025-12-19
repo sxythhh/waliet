@@ -68,7 +68,7 @@ const creatorMenuItems = [{
   tab: "wallet",
   icon: Dock
 }, {
-  title: "Discover",
+  title: "Marketplace",
   tab: "discover",
   icon: Compass
 }, {
