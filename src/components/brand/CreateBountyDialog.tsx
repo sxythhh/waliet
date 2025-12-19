@@ -68,7 +68,8 @@ export function CreateBountyDialog({
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
     blueprint_embed_url: "",
     is_private: false,
-    application_questions: [] as string[]
+    application_questions: [] as string[],
+    content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts"
   });
   const [newQuestion, setNewQuestion] = useState("");
   useEffect(() => {
@@ -166,7 +167,8 @@ export function CreateBountyDialog({
         blueprint_embed_url: formData.blueprint_embed_url || null,
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
         is_private: formData.is_private,
-        application_questions: formData.application_questions.length > 0 ? formData.application_questions : null
+        application_questions: formData.application_questions.length > 0 ? formData.application_questions : null,
+        content_distribution: formData.content_distribution
       });
       if (error) throw error;
       toast.success("Boost created successfully!");
@@ -194,7 +196,8 @@ export function CreateBountyDialog({
       payment_schedule: "monthly",
       blueprint_embed_url: "",
       is_private: false,
-      application_questions: []
+      application_questions: [],
+      content_distribution: "creators_own_page"
     });
     setNewQuestion("");
     setBannerFile(null);
@@ -397,6 +400,35 @@ export function CreateBountyDialog({
                       })} disabled={date => formData.start_date ? date < formData.start_date : false} initialFocus />
                         </PopoverContent>
                       </Popover>
+                    </div>
+                  </div>
+
+                  {/* Content Distribution */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Distribution</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div
+                        onClick={() => setFormData({ ...formData, content_distribution: "creators_own_page" })}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          formData.content_distribution === "creators_own_page"
+                            ? "border-primary bg-primary/5"
+                            : "border-transparent bg-muted/50 hover:bg-muted/70"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
+                        <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
+                      </div>
+                      <div
+                        onClick={() => setFormData({ ...formData, content_distribution: "branded_accounts" })}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                          formData.content_distribution === "branded_accounts"
+                            ? "border-primary bg-primary/5"
+                            : "border-transparent bg-muted/50 hover:bg-muted/70"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
+                        <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
+                      </div>
                     </div>
                   </div>
                 </div>
