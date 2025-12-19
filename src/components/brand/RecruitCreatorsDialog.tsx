@@ -319,9 +319,13 @@ export function RecruitCreatorsDialog({
                     <p className="text-sm text-muted-foreground mb-5 font-inter tracking-[-0.5px]">
                       Subscribe to browse and message creators for your campaigns
                     </p>
-                    <Button onClick={() => setSubscriptionGateOpen(true)} className="px-6 font-inter tracking-[-0.5px] border-t border-t-[#3672ea] rounded-xl">
-                      Upgrade Now
-                    </Button>
+                    <button 
+                      onClick={() => setSubscriptionGateOpen(true)} 
+                      className="py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
+                    >
+                      <img src={vpnKeyIcon} alt="" className="h-4 w-4" />
+                      Upgrade Plan
+                    </button>
                   </div>
                 </div>
               </div>}
