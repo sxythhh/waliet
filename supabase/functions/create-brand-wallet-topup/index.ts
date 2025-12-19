@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount, return_url } = await req.json();
+    const { brand_id, amount, return_url, setup_intent_id } = await req.json();
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -87,6 +87,65 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // If returning from a setup intent redirect, finalize by fetching the setup intent,
+    // saving the payment method, and charging immediately.
+    if (setup_intent_id) {
+      console.log(`Finalizing topup via setup_intent_id: ${setup_intent_id}`);
+
+      const setupIntentRes = await fetch(`https://api.whop.com/api/v1/setup_intents/${setup_intent_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const setupIntentText = await setupIntentRes.text();
+      console.log('Setup intent fetch status:', setupIntentRes.status);
+      console.log('Setup intent fetch response:', setupIntentText);
+
+      if (!setupIntentRes.ok) {
+        return new Response(JSON.stringify({
+          error: 'Failed to retrieve setup intent',
+          details: setupIntentText,
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const setupIntentRaw = JSON.parse(setupIntentText);
+      // Whop APIs sometimes wrap the object in { data: ... }
+      const setupIntent = setupIntentRaw?.data ?? setupIntentRaw;
+
+      const pmId = setupIntent?.payment_method?.id;
+      const memberId = setupIntent?.member?.id;
+
+      if (!pmId) {
+        // Return 200 with an explicit error field so the client can show a helpful message
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Payment method not found on setup intent',
+          details: setupIntentText,
+          needs_payment_method: true,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      await supabase
+        .from('brands')
+        .update({ whop_payment_method_id: pmId, whop_member_id: memberId ?? null })
+        .eq('id', brand_id);
+
+      // Use the saved payment method for the charge below
+      (brand as any).whop_payment_method_id = pmId;
+      (brand as any).whop_member_id = memberId ?? null;
+
+      console.log(`Saved payment method from setup intent: ${pmId}`);
     }
 
     console.log(`Processing topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
