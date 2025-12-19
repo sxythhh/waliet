@@ -516,8 +516,27 @@ export function AppSidebar() {
                 </button>;
           })}
           </div>
-
         </nav>
+
+        {/* Swap to Business CTA - Only show in creator mode */}
+        {isCreatorMode && !isCollapsed && (
+          <div className="px-2 pb-2">
+            <div className="rounded-lg bg-[#1a1a1a] p-3">
+              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
+                Swap to Business
+              </p>
+              <p className="font-['Geist'] text-[11px] tracking-[-0.5px] text-[#6f6f6f] mb-2">
+                Advanced analytics, unlimited campaigns, and priority support.
+              </p>
+              <button 
+                className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" 
+                onClick={() => setShowCreateBrandDialog(true)}
+              >
+                Create Workspace
+              </button>
+            </div>
+          </div>
+        )}
 
 
         {/* User Profile Section */}
