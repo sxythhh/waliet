@@ -70,23 +70,26 @@ export function AddBrandFundsDialog({
         body: { 
           brand_id: brandId, 
           amount,
-          return_url: `${window.location.origin}/dashboard?workspace=${brandId}&tab=profile`
         },
       });
 
       if (error) throw error;
 
-      if (data?.checkout_url) {
-        window.open(data.checkout_url, '_blank');
-        toast.success('Opening payment page...');
+      if (data?.needs_payment_method) {
+        toast.error('No payment method on file. Please add a payment method in your payout settings first.');
+        return;
+      }
+
+      if (data?.success) {
+        toast.success(`Successfully added ${formatCurrency(amount)} to your wallet!`);
         onOpenChange(false);
         onSuccess?.();
-      } else {
-        throw new Error('No checkout URL returned');
+      } else if (data?.error) {
+        throw new Error(data.error);
       }
     } catch (error) {
       console.error('Error creating top-up:', error);
-      toast.error('Failed to create payment. Please try again.');
+      toast.error('Failed to add funds. Please try again.');
     } finally {
       setLoading(false);
     }
