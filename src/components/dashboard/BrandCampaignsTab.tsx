@@ -482,7 +482,7 @@ export function BrandCampaignsTab({
 
           {/* Empty State */}
           {campaigns.length === 0 && bounties.length === 0 && <div className="py-16 px-4 items-center justify-center flex flex-col">
-              <div className="w-12 h-12 rounded-full mb-4 bg-[#1f1f1f]/0 flex-col flex items-center justify-center">
+              <div className="w-12 h-12 mb-4 flex-col flex items-center justify-center bg-[#161313] rounded-md">
                 <img src={webStoriesIcon} alt="" className="w-6 h-6 opacity-50" />
               </div>
               <p className="text-sm font-inter tracking-[-0.3px] text-primary-foreground">
