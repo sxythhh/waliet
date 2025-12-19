@@ -75,10 +75,18 @@ export function AddBrandFundsDialog({
 
       if (error) throw error;
 
-      if (data?.needs_payment_method) {
-        toast.error('No payment method on file. Please add a payment method in your payout settings first.');
-        return;
-      }
+       if (data?.needs_payment_method) {
+         if (data?.setup_checkout_url) {
+           toast.message('Add a payment method to continue', {
+             description: 'You’ll be redirected to securely save a card, then you can retry your top-up.',
+           });
+           window.location.href = data.setup_checkout_url;
+           return;
+         }
+
+         toast.error('No payment method on file. Please add a payment method first.');
+         return;
+       }
 
       if (data?.success) {
         toast.success(`Successfully added ${formatCurrency(amount)} to your wallet!`);

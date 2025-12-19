@@ -86,13 +86,16 @@ serve(async (req) => {
     console.log(`Creating topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
     
     // First, get the company's payment methods
-    const paymentMethodsResponse = await fetch(`https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const paymentMethodsResponse = await fetch(
+      `https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     const paymentMethodsText = await paymentMethodsResponse.text();
     console.log('Payment methods response status:', paymentMethodsResponse.status);
@@ -100,27 +103,78 @@ serve(async (req) => {
 
     if (!paymentMethodsResponse.ok) {
       console.error('Failed to get payment methods:', paymentMethodsText);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to get payment methods',
-        details: paymentMethodsText
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({
+          error: 'Failed to get payment methods',
+          details: paymentMethodsText,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const paymentMethodsData = JSON.parse(paymentMethodsText);
     const paymentMethods = paymentMethodsData.data || paymentMethodsData;
-    
+
+    // If no payment method exists, create a Setup checkout so the user can add one.
     if (!paymentMethods || paymentMethods.length === 0) {
-      return new Response(JSON.stringify({ 
-        error: 'No payment method on file. Please add a payment method first.',
-        needs_payment_method: true
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const redirectUrl = return_url || 'https://example.com';
+      console.log('No payment method on file. Creating setup checkout configuration. redirect_url:', redirectUrl);
+
+      const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_id: brand.whop_company_id,
+          mode: 'setup',
+          currency: 'usd',
+          redirect_url: redirectUrl,
+          metadata: {
+            brand_id,
+            user_id: user.id,
+            purpose: 'wallet_payment_method_setup',
+          },
+        }),
       });
+
+      const setupCheckoutText = await setupCheckoutRes.text();
+      console.log('Setup checkout response status:', setupCheckoutRes.status);
+      console.log('Setup checkout response:', setupCheckoutText);
+
+      if (!setupCheckoutRes.ok) {
+        return new Response(
+          JSON.stringify({
+            error: 'No payment method on file, and failed to start payment method setup',
+            details: setupCheckoutText,
+            needs_payment_method: true,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const setupCheckoutData = JSON.parse(setupCheckoutText);
+      return new Response(
+        JSON.stringify({
+          error: 'No payment method on file. Please add a payment method first.',
+          needs_payment_method: true,
+          setup_checkout_url: setupCheckoutData.purchase_url || setupCheckoutData.url || setupCheckoutData.checkout_url,
+          setup_checkout_id: setupCheckoutData.id,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
 
     // Use the first payment method
     const paymentMethodId = paymentMethods[0].id;
