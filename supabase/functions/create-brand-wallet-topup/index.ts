@@ -88,9 +88,9 @@ serve(async (req) => {
     
     const baseReturnUrl = return_url || `https://virality.gg/dashboard?workspace=${brand.slug}&tab=profile`;
     
-    // Create a checkout configuration using Whop's checkout API
-    // Note: Using v5 API with correct field structure
-    const checkoutResponse = await fetch('https://api.whop.com/api/v5/checkout_sessions', {
+    // Create a checkout configuration using Whop's checkout configuration API
+    // Docs: https://docs.whop.com/api-reference/checkout-configurations/create-checkout-configuration
+    const checkoutResponse = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
@@ -98,19 +98,20 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         company_id: brand.whop_company_id,
+        mode: 'payment',
         plan: {
-          company_id: brand.whop_company_id,
-          initial_price: amount,
-          plan_type: 'one_time',
-          currency: 'usd',
           visibility: 'hidden',
+          plan_type: 'one_time',
+          release_method: 'buy_now',
+          currency: 'usd',
+          initial_price: amount,
         },
-        redirect_url: `${baseReturnUrl}&topup=success`,
         metadata: {
           brand_id: brand_id,
           type: 'wallet_topup',
           user_id: user.id,
         },
+        redirect_url: `${baseReturnUrl}&topup=success`,
       }),
     });
 
