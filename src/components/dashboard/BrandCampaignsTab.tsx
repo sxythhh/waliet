@@ -10,7 +10,6 @@ import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizar
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BoostDetailView } from "@/components/brand/BoostDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
-
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
@@ -76,18 +75,19 @@ export function BrandCampaignsTab({
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<CampaignTypeFilter>("all");
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
-  const { isAdmin, loading: adminLoading } = useAdminCheck();
+  const {
+    isAdmin,
+    loading: adminLoading
+  } = useAdminCheck();
 
   // Show beta gate for non-admin users with inactive subscription
   const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
-
   const handleBackToCreator = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("workspace", "creator");
     newParams.delete("tab");
     setSearchParams(newParams);
   };
-
   useEffect(() => {
     fetchBrandData();
   }, [brandId]);
@@ -253,11 +253,9 @@ export function BrandCampaignsTab({
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-
   return <div className={`relative ${selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}`}>
       {/* Beta Gate Overlay for non-admin users with inactive subscription */}
-      {showBetaGate && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
+      {showBetaGate && <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-background/80">
           <div className="text-center space-y-6 max-w-md mx-auto px-6">
             <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
               <img src="/beta-shield-icon.svg" alt="Beta" className="h-8 w-8" />
@@ -270,15 +268,11 @@ export function BrandCampaignsTab({
                 Come back soon.
               </p>
             </div>
-            <Button 
-              onClick={handleBackToCreator}
-              className="px-6"
-            >
+            <Button onClick={handleBackToCreator} className="px-6">
               Back to Creator Dashboard
             </Button>
           </div>
-        </div>
-      )}
+        </div>}
 
       {selectedBoostId ? <BoostDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
@@ -286,54 +280,40 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <Button 
-              onClick={() => {
-                if (subscriptionStatus === "active") {
-                  setCampaignTypeDialogOpen(true);
-                } else {
-                  setSubscriptionGateOpen(true);
-                }
-              }} 
-              size="sm"
-              className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]"
-            >
+            <Button onClick={() => {
+          if (subscriptionStatus === "active") {
+            setCampaignTypeDialogOpen(true);
+          } else {
+            setSubscriptionGateOpen(true);
+          }
+        }} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
               <Plus className="h-4 w-4" />
               Create Campaign
             </Button>
-            <CreateCampaignTypeDialog 
-              brandId={brandId} 
-              open={campaignTypeDialogOpen}
-              onOpenChange={setCampaignTypeDialogOpen}
-              onSelectClipping={() => {
-                if (subscriptionStatus === "active") {
-                  setCreateCampaignOpen(true);
-                } else {
-                  setSubscriptionGateOpen(true);
-                }
-              }} 
-              onSelectManaged={() => {
-                if (subscriptionStatus === "active") {
-                  setCreateBountyOpen(true);
-                } else {
-                  setSubscriptionGateOpen(true);
-                }
-              }} 
-              onSelectBoost={() => {
-                if (subscriptionStatus === "active") {
-                  setCreateBountyOpen(true);
-                } else {
-                  setSubscriptionGateOpen(true);
-                }
-              }} 
-            />
+            <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
+          if (subscriptionStatus === "active") {
+            setCreateCampaignOpen(true);
+          } else {
+            setSubscriptionGateOpen(true);
+          }
+        }} onSelectManaged={() => {
+          if (subscriptionStatus === "active") {
+            setCreateBountyOpen(true);
+          } else {
+            setSubscriptionGateOpen(true);
+          }
+        }} onSelectBoost={() => {
+          if (subscriptionStatus === "active") {
+            setCreateBountyOpen(true);
+          } else {
+            setSubscriptionGateOpen(true);
+          }
+        }} />
           </div>
 
           {/* Action Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div 
-              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
-              onClick={() => navigate('/resources')}
-            >
+            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={schoolIcon} alt="" className="w-5 h-5" />
               </div>
@@ -342,16 +322,13 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
               </div>
             </div>
-            <div 
-              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
-              onClick={() => {
-                if (subscriptionStatus === "active") {
-                  setCampaignTypeDialogOpen(true);
-                } else {
-                  setSubscriptionGateOpen(true);
-                }
-              }}
-            >
+            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => {
+          if (subscriptionStatus === "active") {
+            setCampaignTypeDialogOpen(true);
+          } else {
+            setSubscriptionGateOpen(true);
+          }
+        }}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={webStoriesIcon} alt="" className="w-5 h-5" />
               </div>
@@ -360,10 +337,10 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
               </div>
             </div>
-            <div 
-              className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors"
-              onClick={() => setSearchParams(prev => { prev.set('tab', 'blueprints'); return prev; })}
-            >
+            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
+          prev.set('tab', 'blueprints');
+          return prev;
+        })}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={stickyNoteIcon} alt="" className="w-5 h-5" />
               </div>
@@ -389,68 +366,40 @@ export function BrandCampaignsTab({
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                   {/* Type Filter */}
                   <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
-                    {(["all", "campaigns", "boosts"] as CampaignTypeFilter[]).map(filter => (
-                      <button
-                        key={filter}
-                        onClick={() => setTypeFilter(filter)}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
-                          typeFilter === filter
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
+                    {(["all", "campaigns", "boosts"] as CampaignTypeFilter[]).map(filter => <button key={filter} onClick={() => setTypeFilter(filter)} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${typeFilter === filter ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {filter}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                   {/* Status Filter */}
                   <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
-                    {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => (
-                      <button
-                        key={filter}
-                        onClick={() => setStatusFilter(filter)}
-                        className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${
-                          statusFilter === filter
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
+                    {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${statusFilter === filter ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {filter}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Combined and sorted list */}
-                {[
-                  ...campaigns
-                    .filter(c => typeFilter === "all" || typeFilter === "campaigns")
-                    .filter(c => statusFilter === "all" || c.status === statusFilter)
-                    .map(c => ({ ...c, type: "campaign" as const })),
-                  ...bounties
-                    .filter(b => typeFilter === "all" || typeFilter === "boosts")
-                    .filter(b => statusFilter === "all" || b.status === statusFilter)
-                    .map(b => ({ ...b, type: "boost" as const }))
-                ]
-                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                  .map(item => {
-                    if (item.type === "campaign") {
-                      const campaign = item as Campaign & { type: "campaign" };
-                      const usedBudget = Number(campaign.budget_used || 0);
-                      const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
-                      return (
-                        <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
+                {[...campaigns.filter(c => typeFilter === "all" || typeFilter === "campaigns").filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
+            ...c,
+            type: "campaign" as const
+          })), ...bounties.filter(b => typeFilter === "all" || typeFilter === "boosts").filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
+            ...b,
+            type: "boost" as const
+          }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(item => {
+            if (item.type === "campaign") {
+              const campaign = item as Campaign & {
+                type: "campaign";
+              };
+              const usedBudget = Number(campaign.budget_used || 0);
+              const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
+              return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
                           <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            {campaign.banner_url ? (
-                              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                            {campaign.banner_url ? <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
                                 <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
                                   No Banner
                                 </span>
-                              </div>
-                            )}
+                              </div>}
                             <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium font-['Inter'] tracking-[-0.5px] rounded-full bg-background/80 backdrop-blur-sm text-foreground">
                               Campaign
                             </span>
@@ -465,15 +414,21 @@ export function BrandCampaignsTab({
                               <div className="flex items-baseline justify-between">
                                 <div className="flex items-baseline gap-1.5">
                                   <span className="text-base font-bold tabular-nums">
-                                    ${Math.ceil(usedBudget).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    ${Math.ceil(usedBudget).toLocaleString(undefined, {
+                            maximumFractionDigits: 0
+                          })}
                                   </span>
                                   <span className="text-xs text-muted-foreground font-semibold">
-                                    / ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    / ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, {
+                            maximumFractionDigits: 0
+                          })}
                                   </span>
                                 </div>
                               </div>
                               <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border-t border-[#e0e0e0] dark:border-[#262626]">
-                                <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{ width: `${budgetPercentage}%` }} />
+                                <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                        width: `${budgetPercentage}%`
+                      }} />
                               </div>
                               <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
                                 <span>{budgetPercentage.toFixed(0)}% used</span>
@@ -481,23 +436,19 @@ export function BrandCampaignsTab({
                               </div>
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    } else {
-                      const bounty = item as BountyCampaign & { type: "boost" };
-                      const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                      return (
-                        <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => setSelectedBoostId(bounty.id)}>
+                        </Card>;
+            } else {
+              const bounty = item as BountyCampaign & {
+                type: "boost";
+              };
+              const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+              return <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => setSelectedBoostId(bounty.id)}>
                           <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            {bounty.banner_url ? (
-                              <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            {bounty.banner_url ? <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                                 <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
                                   No Banner
                                 </span>
-                              </div>
-                            )}
+                              </div>}
                             <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-medium font-['Inter'] tracking-[-0.5px] rounded-full bg-primary/80 backdrop-blur-sm text-primary-foreground">
                               Boost
                             </span>
@@ -523,24 +474,21 @@ export function BrandCampaignsTab({
                               </div>
                             </div>
                           </CardContent>
-                        </Card>
-                      );
-                    }
-                  })}
+                        </Card>;
+            }
+          })}
               </div>
             </div>}
 
           {/* Empty State */}
-          {campaigns.length === 0 && bounties.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 px-4">
-              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+          {campaigns.length === 0 && bounties.length === 0 && <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#1f1f1f]/0">
                 <img src={webStoriesIcon} alt="" className="w-6 h-6 opacity-50" />
               </div>
               <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">
                 This brand has no campaigns or boosts
               </p>
-            </div>
-          )}
+            </div>}
         </>}
 
 
@@ -569,10 +517,6 @@ export function BrandCampaignsTab({
       </AlertDialog>
 
       {/* Subscription Gate Dialog */}
-      <SubscriptionGateDialog 
-        brandId={brandId} 
-        open={subscriptionGateOpen} 
-        onOpenChange={setSubscriptionGateOpen} 
-      />
+      <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
     </div>;
 }
