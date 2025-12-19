@@ -483,13 +483,13 @@ export function BrandCampaignsTab({
             </div>}
 
           {/* Empty State */}
-          {campaigns.length === 0 && bounties.length === 0 && <div className="py-16 px-4 items-center justify-center flex flex-col">
-              <img src={emptyCampaignsImg} alt="" className="w-24 h-24 mb-4" />
-              <p className="text-lg font-inter font-medium tracking-[-0.3px] text-primary-foreground mb-2">
+          {campaigns.length === 0 && bounties.length === 0 && <div className="py-12 px-4 items-center justify-center flex flex-col">
+              <img src={emptyCampaignsImg} alt="" className="w-24 h-24 mb-3" />
+              <p className="text-lg font-inter font-medium tracking-[-0.3px] text-primary-foreground mb-1">
                 No campaigns yet
               </p>
-              <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-6">
-                Start hiring creators to post content for your brand, product, and more.
+              <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
+                Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
               </p>
               <div className="flex gap-3">
                 <Button
