@@ -29,6 +29,8 @@ import educationActive from "@/assets/education-active.svg";
 import scopeInactive from "@/assets/scope-inactive.svg";
 import scopeActive from "@/assets/scope-active.svg";
 import nutFillIcon from "@/assets/nut-fill.svg";
+import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
+import personEditIcon from "@/assets/person-edit-icon.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -443,9 +445,9 @@ export function AppSidebar() {
                             setWorkspaceOpen(false);
                             handleTabClick('profile');
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]"
                         >
-                          <Settings className="w-3.5 h-3.5" />
+                          <img src={settingsFilledIcon} alt="" className="w-3.5 h-3.5" />
                           <span>Settings</span>
                         </button>
                         <button
@@ -453,9 +455,9 @@ export function AppSidebar() {
                             setWorkspaceOpen(false);
                             setInviteMemberOpen(true);
                           }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]"
                         >
-                          <UserPlus className="w-3.5 h-3.5" />
+                          <img src={personEditIcon} alt="" className="w-3.5 h-3.5" />
                           <span>Invite</span>
                         </button>
                       </div>
