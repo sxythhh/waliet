@@ -1,9 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Check, Zap, Rocket, ArrowLeft } from "lucide-react";
+import { WhopCheckoutEmbed } from "@whop/checkout/react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Check, Zap, Rocket, Loader2 } from "lucide-react";
 
 interface SubscriptionGateDialogProps {
   brandId: string;
@@ -14,6 +15,7 @@ interface SubscriptionGateDialogProps {
 const PLANS = [
   {
     key: 'starter',
+    whopPlanId: 'plan_DU4ba3ik2UHVZ',
     name: 'Starter',
     price: 99,
     description: 'Perfect for getting started with creator campaigns',
@@ -27,6 +29,7 @@ const PLANS = [
   },
   {
     key: 'growth',
+    whopPlanId: 'plan_JSWLvDSLsSde4',
     name: 'Growth',
     price: 249,
     description: 'Scale your creator program with advanced features',
@@ -48,52 +51,73 @@ export function SubscriptionGateDialog({
   open,
   onOpenChange
 }: SubscriptionGateDialogProps) {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
 
-  const handleSelectPlan = async (planKey: string) => {
-    if (!brandId) {
-      toast.error("Brand ID is required");
-      return;
-    }
+  const returnUrl = `${window.location.origin}${window.location.pathname}?subscription=success`;
 
-    setLoading(planKey);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please log in to continue");
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-        body: {
-          brand_id: brandId,
-          plan_key: planKey,
-          return_url: `${window.location.origin}${window.location.pathname}?subscription=success`,
-        },
-      });
-
-      if (error) {
-        console.error('Checkout error:', error);
-        toast.error("Failed to create checkout");
-        return;
-      }
-
-      if (data?.checkout_url) {
-        window.open(data.checkout_url, '_blank');
-        onOpenChange(false);
-        toast.success("Checkout opened in new tab");
-      } else {
-        toast.error("No checkout URL returned");
-      }
-    } catch (err) {
-      console.error('Error creating checkout:', err);
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(null);
-    }
+  const handleComplete = (planId: string, receiptId: string) => {
+    console.log("Checkout complete:", { planId, receiptId });
+    toast.success("Subscription activated!");
+    onOpenChange(false);
+    // Reload to refresh subscription status
+    window.location.reload();
   };
 
+  const handleBack = () => {
+    setSelectedPlan(null);
+  };
+
+  // Show embedded checkout if a plan is selected
+  if (selectedPlan) {
+    return (
+      <Dialog open={open} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setSelectedPlan(null);
+        }
+        onOpenChange(isOpen);
+      }}>
+        <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden max-h-[90vh]">
+          <DialogHeader className="p-6 pb-4 border-b border-border">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleBack}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle className="text-xl font-semibold tracking-tight">
+                Subscribe to {selectedPlan.name}
+              </DialogTitle>
+            </div>
+            <p className="text-muted-foreground text-sm mt-1 ml-11">
+              ${selectedPlan.price}/month
+            </p>
+          </DialogHeader>
+          
+          <div className="p-6 min-h-[400px] overflow-y-auto">
+            <WhopCheckoutEmbed
+              planId={selectedPlan.whopPlanId}
+              returnUrl={returnUrl}
+              theme="system"
+              onComplete={handleComplete}
+              fallback={
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              }
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Show plan selection
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] p-0 gap-0 overflow-hidden">
@@ -110,7 +134,6 @@ export function SubscriptionGateDialog({
           <div className="grid md:grid-cols-2 gap-4">
             {PLANS.map((plan) => {
               const Icon = plan.icon;
-              const isLoading = loading === plan.key;
               
               return (
                 <div
@@ -154,19 +177,11 @@ export function SubscriptionGateDialog({
                   </ul>
                   
                   <Button
-                    onClick={() => handleSelectPlan(plan.key)}
-                    disabled={!!loading}
-                    className={`w-full ${plan.popular ? '' : 'variant-outline'}`}
+                    onClick={() => setSelectedPlan(plan)}
+                    className="w-full"
                     variant={plan.popular ? 'default' : 'outline'}
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Creating checkout...
-                      </>
-                    ) : (
-                      `Get ${plan.name}`
-                    )}
+                    Get {plan.name}
                   </Button>
                 </div>
               );
