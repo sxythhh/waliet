@@ -311,28 +311,28 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
           <div className="relative">
             <button 
               onClick={() => setSortMenuOpen(!sortMenuOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#141414] border border-[#252525] rounded-xl text-sm text-white hover:bg-[#1a1a1a] transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#0d0d0d] rounded-xl text-[13px] text-white hover:bg-[#141414] transition-colors font-['Inter'] tracking-[-0.5px]"
             >
-              <Filter className="w-4 h-4 text-neutral-400" />
-              <span className="text-neutral-400">Sort by</span>
+              <Filter className="w-4 h-4 text-neutral-500" />
+              <span className="text-neutral-500">Sort by</span>
               <span className="font-semibold capitalize">{sortBy}</span>
             </button>
             
             {sortMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-[#141414] border border-[#252525] rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-[#0d0d0d] rounded-xl shadow-2xl z-50 overflow-hidden font-['Inter'] tracking-[-0.5px]">
                 {/* CTA Outcome */}
                 <button 
                   onClick={() => setExpandedCategory(expandedCategory === 'cta' ? null : 'cta')}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <MonitorPlay className="w-5 h-5 text-neutral-400" />
-                    <span className="text-white font-medium">CTA Outcome</span>
+                    <MonitorPlay className="w-[18px] h-[18px] text-neutral-500" />
+                    <span className="text-white text-[13px] font-medium">CTA Outcome</span>
                   </div>
-                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'cta' ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-neutral-500 transition-transform ${expandedCategory === 'cta' ? 'rotate-90' : ''}`} />
                 </button>
                 {expandedCategory === 'cta' && (
-                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                  <div className="bg-[#080808]">
                     {['Examples', 'Recent', 'Views'].map(option => (
                       <button 
                         key={option}
@@ -341,7 +341,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                           setSortMenuOpen(false);
                           setExpandedCategory(null);
                         }}
-                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                        className="w-full text-left px-10 py-2 text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-white transition-colors"
                       >
                         {option}
                       </button>
@@ -352,16 +352,16 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                 {/* Format */}
                 <button 
                   onClick={() => setExpandedCategory(expandedCategory === 'format' ? null : 'format')}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <PlaySquare className="w-5 h-5 text-neutral-400" />
-                    <span className="text-white font-medium">Format</span>
+                    <PlaySquare className="w-[18px] h-[18px] text-neutral-500" />
+                    <span className="text-white text-[13px] font-medium">Format</span>
                   </div>
-                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'format' ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-neutral-500 transition-transform ${expandedCategory === 'format' ? 'rotate-90' : ''}`} />
                 </button>
                 {expandedCategory === 'format' && (
-                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                  <div className="bg-[#080808]">
                     {['Examples', 'Recent', 'Views'].map(option => (
                       <button 
                         key={option}
@@ -370,7 +370,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                           setSortMenuOpen(false);
                           setExpandedCategory(null);
                         }}
-                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                        className="w-full text-left px-10 py-2 text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-white transition-colors"
                       >
                         {option}
                       </button>
@@ -381,16 +381,16 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                 {/* Platform */}
                 <button 
                   onClick={() => setExpandedCategory(expandedCategory === 'platform' ? null : 'platform')}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Globe className="w-5 h-5 text-neutral-400" />
-                    <span className="text-white font-medium">Platform</span>
+                    <Globe className="w-[18px] h-[18px] text-neutral-500" />
+                    <span className="text-white text-[13px] font-medium">Platform</span>
                   </div>
-                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'platform' ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-neutral-500 transition-transform ${expandedCategory === 'platform' ? 'rotate-90' : ''}`} />
                 </button>
                 {expandedCategory === 'platform' && (
-                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                  <div className="bg-[#080808]">
                     {['Examples', 'Recent', 'Views'].map(option => (
                       <button 
                         key={option}
@@ -399,7 +399,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                           setSortMenuOpen(false);
                           setExpandedCategory(null);
                         }}
-                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                        className="w-full text-left px-10 py-2 text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-white transition-colors"
                       >
                         {option}
                       </button>
@@ -410,16 +410,16 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                 {/* Content Style */}
                 <button 
                   onClick={() => setExpandedCategory(expandedCategory === 'style' ? null : 'style')}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-neutral-400" />
-                    <span className="text-white font-medium">Content Style</span>
+                    <Sparkles className="w-[18px] h-[18px] text-neutral-500" />
+                    <span className="text-white text-[13px] font-medium">Content Style</span>
                   </div>
-                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'style' ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-neutral-500 transition-transform ${expandedCategory === 'style' ? 'rotate-90' : ''}`} />
                 </button>
                 {expandedCategory === 'style' && (
-                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                  <div className="bg-[#080808]">
                     {['Examples', 'Recent', 'Views'].map(option => (
                       <button 
                         key={option}
@@ -428,7 +428,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                           setSortMenuOpen(false);
                           setExpandedCategory(null);
                         }}
-                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                        className="w-full text-left px-10 py-2 text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-white transition-colors"
                       >
                         {option}
                       </button>
@@ -439,16 +439,16 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                 {/* Target Audience */}
                 <button 
                   onClick={() => setExpandedCategory(expandedCategory === 'audience' ? null : 'audience')}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1f1f1f] transition-colors border-t border-[#1f1f1f]"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-neutral-400" />
-                    <span className="text-white font-medium">Target Audience</span>
+                    <Users className="w-[18px] h-[18px] text-neutral-500" />
+                    <span className="text-white text-[13px] font-medium">Target Audience</span>
                   </div>
-                  <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCategory === 'audience' ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-neutral-500 transition-transform ${expandedCategory === 'audience' ? 'rotate-90' : ''}`} />
                 </button>
                 {expandedCategory === 'audience' && (
-                  <div className="bg-[#0f0f0f] border-t border-[#252525]">
+                  <div className="bg-[#080808]">
                     {['Examples', 'Recent', 'Views'].map(option => (
                       <button 
                         key={option}
@@ -457,7 +457,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                           setSortMenuOpen(false);
                           setExpandedCategory(null);
                         }}
-                        className="w-full text-left px-10 py-2.5 text-sm text-neutral-300 hover:bg-[#1a1a1a] hover:text-white transition-colors"
+                        className="w-full text-left px-10 py-2 text-[12px] text-neutral-400 hover:bg-[#121212] hover:text-white transition-colors"
                       >
                         {option}
                       </button>
