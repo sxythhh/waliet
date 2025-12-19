@@ -478,7 +478,7 @@ export function AppSidebar() {
                   
                   {/* Search */}
                   <div className="px-3 pb-2">
-                    <div className="flex items-center gap-2 px-2.5 py-2 bg-[#0f0f0f] border border-[#1a1a1a] rounded-md">
+                    <div className="flex items-center gap-2 px-2.5 py-2 bg-[#0f0f0f] rounded-md">
                       <Search className="w-4 h-4 text-neutral-500" />
                       <input type="text" placeholder="Type to filter..." className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 outline-none" value={workspaceSearch} onChange={e => setWorkspaceSearch(e.target.value)} />
                     </div>
