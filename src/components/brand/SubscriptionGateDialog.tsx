@@ -22,17 +22,19 @@ interface Feature {
   tooltip?: string;
 }
 
-const PLANS = [
+export const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
     price: 99,
     description: 'For teams just getting started',
+    limits: { boosts: 1, hires: 10 },
     features: [
-      { text: 'Up to 3 active campaigns', tooltip: 'Run up to 3 creator campaigns simultaneously' },
-      { text: 'Basic analytics', tooltip: 'View essential metrics like views, engagement, and earnings' },
-      { text: 'Email support', tooltip: 'Get help via email within 24 hours' },
-      { text: 'Creator discovery', tooltip: 'Browse and recruit creators from our network' },
+      { text: '1 boost (post)', tooltip: 'Create 1 active boost campaign' },
+      { text: '1-10 Hires', tooltip: 'Hire up to 10 creators' },
+      { text: 'Creator Payments', tooltip: 'Pay creators directly through the platform' },
+      { text: 'Creator management tool', tooltip: 'Manage all your creators in one place' },
+      { text: 'Performance analytics dashboard', tooltip: 'Track campaign performance and ROI' },
     ] as Feature[],
   },
   {
@@ -40,13 +42,13 @@ const PLANS = [
     name: 'Growth',
     price: 249,
     description: 'For scaling creator programs',
+    limits: { boosts: 3, hires: 30 },
     features: [
-      { text: 'Unlimited campaigns' },
-      { text: 'Advanced analytics', tooltip: 'Deep insights with custom reports, cohort analysis, and ROI tracking' },
-      { text: 'Priority support', tooltip: 'Get responses within 4 hours with dedicated support' },
-      { text: 'Creator recruitment', tooltip: 'AI-powered creator matching and outreach tools' },
-      { text: 'Custom blueprints', tooltip: 'Create branded content guidelines and templates' },
-      { text: 'Team collaboration', tooltip: 'Invite unlimited team members with role-based permissions' },
+      { text: '3 boosts', tooltip: 'Create up to 3 active boost campaigns' },
+      { text: 'Up to 30 Hires', tooltip: 'Hire up to 30 creators' },
+      { text: 'Creator Payments', tooltip: 'Pay creators directly through the platform' },
+      { text: 'Creator management tool', tooltip: 'Manage all your creators in one place' },
+      { text: 'Performance analytics dashboard', tooltip: 'Track campaign performance and ROI' },
     ] as Feature[],
     popular: true,
   },
@@ -55,13 +57,15 @@ const PLANS = [
     name: 'Enterprise',
     price: null,
     description: 'For large-scale operations',
+    limits: { boosts: Infinity, hires: Infinity },
     features: [
-      { text: 'Everything in Growth' },
-      { text: 'Dedicated account manager', tooltip: 'Your personal point of contact for strategy and support' },
-      { text: 'Custom integrations', tooltip: 'Connect with your existing tools and workflows via API' },
-      { text: 'SLA guarantees', tooltip: '99.9% uptime with contractual service level agreements' },
-      { text: 'White-label options', tooltip: 'Remove Virality branding for a seamless experience' },
-      { text: 'Volume discounts', tooltip: 'Special pricing based on your campaign volume' },
+      { text: 'Unlimited Boosts', tooltip: 'Create unlimited boost campaigns' },
+      { text: 'Unlimited Hires', tooltip: 'Hire unlimited creators' },
+      { text: 'Content Campaigns', tooltip: 'Run full-scale content campaigns' },
+      { text: 'Creator Payments', tooltip: 'Pay creators directly through the platform' },
+      { text: 'Creator management tool', tooltip: 'Manage all your creators in one place' },
+      { text: 'Performance analytics dashboard', tooltip: 'Track campaign performance and ROI' },
+      { text: 'White-glove campaign execution', tooltip: 'From start to scale with dedicated support' },
     ] as Feature[],
   },
 ];
