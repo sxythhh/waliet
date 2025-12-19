@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     // Handle setup_intent.succeeded - save payment method and create topup
     if (action === "setup_intent.succeeded") {
       const setupIntent = data;
-      const paymentMethodId = setupIntent.payment_method?.id;
+      const setupIntentPaymentTokenId = setupIntent.payment_method?.id;
       const memberId = setupIntent.member?.id;
       const companyId = setupIntent.company?.id;
       const metadata = setupIntent.metadata || {};
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       const requestedAmount = metadata.amount;
       const userId = metadata.user_id;
 
-      console.log(`Setup intent succeeded - brand_id: ${brandId}, member_id: ${memberId}, payment_method_id: ${paymentMethodId}, amount: ${requestedAmount}`);
+      console.log(`Setup intent succeeded - brand_id: ${brandId}, member_id: ${memberId}, setup_intent_payment_method_id: ${setupIntentPaymentTokenId}, amount: ${requestedAmount}`);
 
       if (!brandId) {
         console.error("No brand_id in setup intent metadata");
@@ -77,9 +77,46 @@ Deno.serve(async (req) => {
         });
       }
 
+      if (!memberId) {
+        console.error("No member id in setup intent");
+        return new Response(JSON.stringify({ error: "No member id in setup intent" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Create-payment requires payment_method_id like "pmt_..." (not the setup intent token "payt_...")
+      let paymentMethodId: string | null = null;
+      if (setupIntentPaymentTokenId && setupIntentPaymentTokenId.startsWith("pmt_")) {
+        paymentMethodId = setupIntentPaymentTokenId;
+      } else {
+        const url = new URL("https://api.whop.com/api/v1/payment_methods");
+        url.searchParams.set("member_id", memberId);
+        url.searchParams.set("first", "5");
+        url.searchParams.set("direction", "desc");
+
+        const pmRes = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${whopApiKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const pmText = await pmRes.text();
+        console.log("Payment methods list status:", pmRes.status);
+        console.log("Payment methods list response:", pmText);
+
+        if (pmRes.ok) {
+          const pmParsed = JSON.parse(pmText);
+          const methods = pmParsed?.data ?? [];
+          paymentMethodId = methods?.[0]?.id ?? null;
+        }
+      }
+
       if (!paymentMethodId) {
-        console.error("No payment method in setup intent");
-        return new Response(JSON.stringify({ error: "No payment method in setup intent" }), {
+        console.error("Could not resolve a chargeable payment method for member");
+        return new Response(JSON.stringify({ error: "No chargeable payment method found" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

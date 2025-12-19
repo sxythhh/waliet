@@ -6,6 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function resolveWhopPaymentMethodId(opts: {
+  whopApiKey: string;
+  memberId: string;
+  // Setup intents return payment_method.id like "payt_..." (a token),
+  // but payments.create requires a payment method id like "pmt_...".
+  setupIntentPaymentMethodId?: string | null;
+}): Promise<string | null> {
+  const { whopApiKey, memberId, setupIntentPaymentMethodId } = opts;
+
+  // If it already looks like a payment method id, use it.
+  if (setupIntentPaymentMethodId && setupIntentPaymentMethodId.startsWith('pmt_')) {
+    return setupIntentPaymentMethodId;
+  }
+
+  const url = new URL('https://api.whop.com/api/v1/payment_methods');
+  url.searchParams.set('member_id', memberId);
+  url.searchParams.set('first', '5');
+  url.searchParams.set('direction', 'desc');
+
+  const res = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${whopApiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const text = await res.text();
+  console.log('Whop payment_methods.list status:', res.status);
+  console.log('Whop payment_methods.list response:', text);
+
+  if (!res.ok) return null;
+
+  const parsed = JSON.parse(text);
+  const methods = parsed?.data ?? [];
+  const best = methods?.[0];
+  return best?.id ?? null;
+}
+
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -120,14 +160,31 @@ serve(async (req) => {
       // Whop APIs sometimes wrap the object in { data: ... }
       const setupIntent = setupIntentRaw?.data ?? setupIntentRaw;
 
-      const pmId = setupIntent?.payment_method?.id;
+      const setupIntentPaymentTokenId = setupIntent?.payment_method?.id;
       const memberId = setupIntent?.member?.id;
 
-      if (!pmId) {
-        // Return 200 with an explicit error field so the client can show a helpful message
+      if (!memberId) {
         return new Response(JSON.stringify({
           success: false,
-          error: 'Payment method not found on setup intent',
+          error: 'Member not found on setup intent',
+          details: setupIntentText,
+          needs_payment_method: true,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const pmtId = await resolveWhopPaymentMethodId({
+        whopApiKey,
+        memberId,
+        setupIntentPaymentMethodId: setupIntentPaymentTokenId,
+      });
+
+      if (!pmtId) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Could not resolve a chargeable payment method for this member',
           details: setupIntentText,
           needs_payment_method: true,
         }), {
@@ -138,14 +195,14 @@ serve(async (req) => {
 
       await supabase
         .from('brands')
-        .update({ whop_payment_method_id: pmId, whop_member_id: memberId ?? null })
+        .update({ whop_payment_method_id: pmtId, whop_member_id: memberId })
         .eq('id', brand_id);
 
       // Use the saved payment method for the charge below
-      (brand as any).whop_payment_method_id = pmId;
-      (brand as any).whop_member_id = memberId ?? null;
+      (brand as any).whop_payment_method_id = pmtId;
+      (brand as any).whop_member_id = memberId;
 
-      console.log(`Saved payment method from setup intent: ${pmId}`);
+      console.log(`Saved chargeable payment method: ${pmtId}`);
     }
 
     console.log(`Processing topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
