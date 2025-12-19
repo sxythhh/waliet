@@ -4,22 +4,13 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
 import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
-
 export default function Index() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -37,9 +28,7 @@ export default function Index() {
     });
     return () => subscription.unsubscribe();
   }, []);
-
-  return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0a0a0a]">
+  return <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0a0a0a]">
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,7 +36,7 @@ export default function Index() {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <img alt="Virality" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-                <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
+                <span className="font-clash font-semibold text-white text-sm">VIRALITY</span>
               </div>
               
               {/* Nav Items */}
@@ -104,30 +93,26 @@ export default function Index() {
             </div>
 
             <div className="flex items-center gap-2">
-              {isAuthenticated ? (
-                <>
+              {isAuthenticated ? <>
                   <Link to="/dashboard">
                     <Button size="sm" className="font-inter tracking-[-0.3px] font-medium bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4f89ff] text-white">
                       Dashboard
                     </Button>
                   </Link>
                   <Button variant="ghost" size="sm" onClick={async () => {
-                    await supabase.auth.signOut();
-                  }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl">
+                await supabase.auth.signOut();
+              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>
-                </>
-              ) : (
-                <>
+                </> : <>
                   <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-transparent hover:text-foreground px-[10px] rounded-3xl" onClick={() => setShowAuthDialog(true)}>
                     Sign In
                   </Button>
                   <Button size="sm" onClick={() => setShowAuthDialog(true)} className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl">
                     Create Account
                   </Button>
-                </>
-              )}
+                </>}
             </div>
           </div>
         </div>
@@ -140,6 +125,5 @@ export default function Index() {
 
       {/* Auth Dialog */}
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
-    </div>
-  );
+    </div>;
 }
