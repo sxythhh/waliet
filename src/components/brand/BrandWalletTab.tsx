@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, ExternalLink, AlertCircle, CheckCircle2, Wallet } from "lucide-react";
+import { Plus, ArrowUpRight, Wallet as WalletIcon } from "lucide-react";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
+import { EmbeddedPayoutPortal } from "./EmbeddedPayoutPortal";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 
 interface BrandWalletTabProps {
@@ -40,8 +42,8 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
+  const [payoutPortalOpen, setPayoutPortalOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
-  const [openingPortal, setOpeningPortal] = useState(false);
 
   const fetchWalletData = async () => {
     try {
@@ -147,28 +149,6 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     }
   };
 
-  const handleOpenPayoutPortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('get-brand-payout-portal', {
-        body: { 
-          brand_id: brandId,
-          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=account`
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening payout portal:', error);
-      toast.error('Failed to open payout portal');
-    } finally {
-      setOpeningPortal(false);
-    }
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -274,13 +254,12 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                onClick={handleOpenPayoutPortal}
-                disabled={openingPortal}
+                onClick={() => setPayoutPortalOpen(true)}
                 className="text-neutral-400 hover:text-white hover:bg-white/5 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
-                <ExternalLink className="w-4 h-4 mr-1.5" />
-                {openingPortal ? 'Opening...' : 'Withdraw'}
+                <WalletIcon className="w-4 h-4 mr-1.5" />
+                Withdraw
               </Button>
               <Button
                 onClick={() => setAllocateOpen(true)}
@@ -378,6 +357,21 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
           fetchTransactions();
         }}
       />
+
+      {/* Embedded Payout Portal Dialog */}
+      <Dialog open={payoutPortalOpen} onOpenChange={setPayoutPortalOpen}>
+        <DialogContent className="max-w-3xl h-[700px] p-0 bg-[#0a0a0a] border-[#1f1f1f]">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-white">Payout Portal</DialogTitle>
+          </DialogHeader>
+          <div className="px-6 pb-6 h-full overflow-hidden">
+            <EmbeddedPayoutPortal
+              brandId={brandId}
+              redirectUrl={`${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
