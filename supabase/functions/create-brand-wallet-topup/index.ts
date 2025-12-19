@@ -88,7 +88,7 @@ serve(async (req) => {
     
     const baseReturnUrl = return_url || `https://virality.gg/dashboard?workspace=${brand.slug}&tab=profile`;
     
-    const whopResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+    const whopResponse = await fetch('https://api.whop.com/api/v1/account_links', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
@@ -96,7 +96,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         company_id: brand.whop_company_id,
-        use_case: 'balance_topup',
+        use_case: 'payouts_portal',
         return_url: `${baseReturnUrl}&topup=success`,
         refresh_url: `${baseReturnUrl}&topup=refresh`,
       }),
@@ -109,43 +109,12 @@ serve(async (req) => {
     if (!whopResponse.ok) {
       console.error('Whop API error:', responseText);
       
-      // If balance_topup is not supported, try payouts_portal as fallback
-      // which includes balance management
-      const fallbackResponse = await fetch('https://api.whop.com/api/v5/account_links', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${whopApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          company_id: brand.whop_company_id,
-          use_case: 'payouts_portal',
-          return_url: `${baseReturnUrl}&topup=success`,
-          refresh_url: `${baseReturnUrl}&topup=refresh`,
-        }),
-      });
-
-      if (!fallbackResponse.ok) {
-        const fallbackError = await fallbackResponse.text();
-        console.error('Fallback Whop API error:', fallbackError);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to create top-up link', 
-          details: responseText,
-          fallback_details: fallbackError 
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      const fallbackData = await fallbackResponse.json();
-      console.log('Fallback account link created:', fallbackData);
-
+      // If payouts_portal is not supported for some reason, return the original error
       return new Response(JSON.stringify({ 
-        checkout_url: fallbackData.url,
-        expires_at: fallbackData.expires_at,
-        use_case: 'payouts_portal'
+        error: 'Failed to create top-up link', 
+        details: responseText
       }), {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -175,7 +144,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       checkout_url: accountLinkData.url,
       expires_at: accountLinkData.expires_at,
-      use_case: 'balance_topup'
+      use_case: 'payouts_portal'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
