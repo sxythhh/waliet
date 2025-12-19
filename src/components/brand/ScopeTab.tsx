@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2 } from "lucide-react";
+import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Volume2, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,7 @@ interface ScopeVideo {
   username: string | null;
   avatar_url: string | null;
   video_url: string;
+  file_url: string | null;
   thumbnail_url: string | null;
   views: number;
   caption: string | null;
@@ -57,9 +58,11 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
     username: "",
     caption: "",
     thumbnail_url: "",
-    views: 0
+    views: 0,
+    file: null as File | null
   });
   const [addingVideo, setAddingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<{ category: string; value: string }[]>([]);
@@ -217,11 +220,35 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
     setAddingVideo(true);
     try {
+      let fileUrl = null;
+      
+      // Upload video file if provided
+      if (newVideo.file) {
+        const fileExt = newVideo.file.name.split('.').pop();
+        const fileName = `${brandId}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('scope-videos')
+          .upload(fileName, newVideo.file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from('scope-videos')
+          .getPublicUrl(fileName);
+          
+        fileUrl = urlData.publicUrl;
+      }
+
       const { error } = await supabase
         .from('scope_videos')
         .insert({
           brand_id: brandId,
-          video_url: newVideo.video_url,
+          video_url: newVideo.video_url || fileUrl || '',
+          file_url: fileUrl,
           platform: newVideo.platform,
           username: newVideo.username || null,
           caption: newVideo.caption || null,
@@ -239,7 +266,8 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
         username: "",
         caption: "",
         thumbnail_url: "",
-        views: 0
+        views: 0,
+        file: null
       });
       fetchVideos();
     } catch (error) {
@@ -609,21 +637,68 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
               Add a video reference to your scope library
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4 mt-4 font-['Inter'] tracking-[-0.5px]">
+            {/* Video File Upload */}
             <div className="space-y-2">
-              <Label className="text-white">Video URL *</Label>
+              <Label className="text-white text-[13px]">Upload Video</Label>
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#252525] rounded-lg cursor-pointer bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
+                {newVideo.file ? (
+                  <div className="flex items-center gap-2 text-white">
+                    <Upload className="w-4 h-4 text-[#2060df]" />
+                    <span className="text-sm truncate max-w-[200px]">{newVideo.file.name}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setNewVideo(prev => ({ ...prev, file: null }));
+                      }}
+                      className="p-1 hover:bg-[#252525] rounded"
+                    >
+                      <X className="w-3 h-3 text-neutral-400" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                    <Upload className="w-6 h-6 text-neutral-500 mb-1" />
+                    <p className="text-xs text-neutral-500">Click to upload video</p>
+                    <p className="text-[10px] text-neutral-600 mt-0.5">MP4, MOV, WebM</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setNewVideo(prev => ({ ...prev, file }));
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[#252525]" />
+              <span className="text-[11px] text-neutral-500">or add by URL</span>
+              <div className="flex-1 h-px bg-[#252525]" />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-white text-[13px]">Video URL</Label>
               <Input
                 placeholder="https://tiktok.com/@user/video/..."
                 value={newVideo.video_url}
                 onChange={e => setNewVideo(prev => ({ ...prev, video_url: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white"
+                className="bg-[#141414] border-[#252525] text-white text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white">Platform</Label>
+              <Label className="text-white text-[13px]">Platform</Label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-3 py-2 bg-[#141414] border border-[#252525] rounded-md text-white">
+                  <button className="w-full flex items-center justify-between px-3 py-2 bg-[#141414] border border-[#252525] rounded-md text-white text-sm">
                     <span className="capitalize">{newVideo.platform}</span>
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -633,7 +708,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                     <DropdownMenuItem
                       key={platform}
                       onClick={() => setNewVideo(prev => ({ ...prev, platform }))}
-                      className="text-white hover:bg-[#1f1f1f] capitalize"
+                      className="text-white hover:bg-[#1f1f1f] capitalize text-sm"
                     >
                       {platform}
                     </DropdownMenuItem>
@@ -642,49 +717,34 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
               </DropdownMenu>
             </div>
             <div className="space-y-2">
-              <Label className="text-white">Username</Label>
+              <Label className="text-white text-[13px]">Username</Label>
               <Input
                 placeholder="@username"
                 value={newVideo.username}
                 onChange={e => setNewVideo(prev => ({ ...prev, username: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white"
+                className="bg-[#141414] border-[#252525] text-white text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white">Thumbnail URL</Label>
-              <Input
-                placeholder="https://..."
-                value={newVideo.thumbnail_url}
-                onChange={e => setNewVideo(prev => ({ ...prev, thumbnail_url: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white">Views</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={newVideo.views}
-                onChange={e => setNewVideo(prev => ({ ...prev, views: parseInt(e.target.value) || 0 }))}
-                className="bg-[#141414] border-[#252525] text-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white">Caption</Label>
+              <Label className="text-white text-[13px]">Caption</Label>
               <Textarea
                 placeholder="Video caption or description..."
                 value={newVideo.caption}
                 onChange={e => setNewVideo(prev => ({ ...prev, caption: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white resize-none"
-                rows={3}
+                className="bg-[#141414] border-[#252525] text-white resize-none text-sm"
+                rows={2}
               />
             </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setAddVideoOpen(false)} className="border-[#252525] text-white hover:bg-[#1f1f1f]">
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setAddVideoOpen(false)} className="border-[#252525] text-white hover:bg-[#1f1f1f] text-sm">
                 Cancel
               </Button>
-              <Button onClick={handleAddVideo} disabled={addingVideo} className="bg-[#2060df] hover:bg-[#1a50c8]">
-                {addingVideo ? 'Adding...' : 'Add Video'}
+              <Button 
+                onClick={handleAddVideo} 
+                disabled={addingVideo || (!newVideo.video_url && !newVideo.file)} 
+                className="bg-[#2060df] hover:bg-[#1a50c8] text-sm"
+              >
+                {addingVideo ? 'Uploading...' : 'Add Video'}
               </Button>
             </div>
           </div>
@@ -719,18 +779,21 @@ function ScopeVideoCard({
   savingToBlueprint
 }: ScopeVideoCardProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const hasSavedBlueprints = savedBlueprints.length > 0;
+  const hasPlayableVideo = !!video.file_url;
 
   return (
-    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col">
+    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px]">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-2">
           {getPlatformIcon(video.platform)}
           {video.username ? (
-            <span className="text-sm font-medium text-white truncate max-w-[100px]">{video.username}</span>
+            <span className="text-[13px] font-medium text-white truncate max-w-[100px]">{video.username}</span>
           ) : (
-            <span className="text-sm text-neutral-500">Unavailable</span>
+            <span className="text-[13px] text-neutral-500">Unavailable</span>
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -740,20 +803,50 @@ function ScopeVideoCard({
           >
             <Link2 className="w-4 h-4 text-neutral-500" />
           </button>
-          <a
-            href={video.video_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 rounded-md hover:bg-[#1f1f1f] transition-colors"
-          >
-            <ExternalLink className="w-4 h-4 text-neutral-500" />
-          </a>
+          {video.video_url && (
+            <a
+              href={video.video_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-md hover:bg-[#1f1f1f] transition-colors"
+            >
+              <ExternalLink className="w-4 h-4 text-neutral-500" />
+            </a>
+          )}
         </div>
       </div>
 
-      {/* Thumbnail */}
+      {/* Video/Thumbnail */}
       <div className="relative aspect-[9/16] bg-[#141414]">
-        {video.thumbnail_url ? (
+        {hasPlayableVideo ? (
+          <>
+            <video
+              src={video.file_url!}
+              className="w-full h-full object-cover"
+              muted={isMuted}
+              loop
+              playsInline
+              autoPlay={isPlaying}
+              onMouseEnter={(e) => {
+                setIsPlaying(true);
+                (e.target as HTMLVideoElement).play();
+              }}
+              onMouseLeave={(e) => {
+                setIsPlaying(false);
+                (e.target as HTMLVideoElement).pause();
+                (e.target as HTMLVideoElement).currentTime = 0;
+              }}
+            />
+            {/* Play overlay when not playing */}
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
+                  <Play className="w-6 h-6 text-white fill-white ml-1" />
+                </div>
+              </div>
+            )}
+          </>
+        ) : video.thumbnail_url ? (
           <img
             src={video.thumbnail_url}
             alt=""
@@ -769,25 +862,27 @@ function ScopeVideoCard({
         {video.views > 0 && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md">
             <Eye className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs font-medium text-white">{formatViews(video.views)}</span>
+            <span className="text-[11px] font-medium text-white">{formatViews(video.views)}</span>
           </div>
         )}
 
-        {/* Play button overlay */}
-        <a 
-          href={video.video_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30"
-        >
-          <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
-            <Play className="w-6 h-6 text-white fill-white ml-1" />
-          </div>
-        </a>
+        {/* Play button overlay for URL-only videos */}
+        {!hasPlayableVideo && (
+          <a 
+            href={video.video_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30"
+          >
+            <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
+              <Play className="w-6 h-6 text-white fill-white ml-1" />
+            </div>
+          </a>
+        )}
 
         {/* Bottom controls */}
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          {/* Progress dots */}
+          {/* Progress indicator */}
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-[#2060df]" />
             <div className="w-8 h-0.5 bg-neutral-600 rounded-full overflow-hidden">
@@ -796,9 +891,23 @@ function ScopeVideoCard({
             <div className="w-2 h-2 rounded-full bg-[#2060df]" />
           </div>
           {/* Mute button */}
-          <button className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm">
-            <VolumeX className="w-4 h-4 text-white" />
-          </button>
+          {hasPlayableVideo && (
+            <button 
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4 text-white" />
+              ) : (
+                <Volume2 className="w-4 h-4 text-white" />
+              )}
+            </button>
+          )}
+          {!hasPlayableVideo && (
+            <button className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm">
+              <VolumeX className="w-4 h-4 text-white" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -807,7 +916,7 @@ function ScopeVideoCard({
         <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <button
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                 hasSavedBlueprints
                   ? "bg-[#2060df] text-white hover:bg-[#1a50c8]"
                   : "bg-[#141414] text-neutral-400 border border-[#252525] hover:bg-[#1a1a1a] hover:text-white"
@@ -826,9 +935,9 @@ function ScopeVideoCard({
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-[200px] bg-[#141414] border-[#252525]">
+          <DropdownMenuContent align="center" className="w-[200px] bg-[#141414] border-[#252525] font-['Inter'] tracking-[-0.5px]">
             {blueprints.length === 0 ? (
-              <div className="px-3 py-4 text-center text-sm text-neutral-500">
+              <div className="px-3 py-4 text-center text-[13px] text-neutral-500">
                 No blueprints yet
               </div>
             ) : (
@@ -870,7 +979,7 @@ function ScopeVideoCard({
       {/* Caption */}
       {video.caption && (
         <div className="px-3 pb-3">
-          <p className="text-sm text-neutral-400 line-clamp-4 leading-relaxed">
+          <p className="text-[13px] text-neutral-400 line-clamp-4 leading-relaxed">
             {video.caption}
           </p>
         </div>
