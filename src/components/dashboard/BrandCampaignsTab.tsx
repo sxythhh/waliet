@@ -481,11 +481,11 @@ export function BrandCampaignsTab({
             </div>}
 
           {/* Empty State */}
-          {campaigns.length === 0 && bounties.length === 0 && <div className="flex flex-col items-center justify-center py-16 px-4">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-[#1f1f1f]/0">
+          {campaigns.length === 0 && bounties.length === 0 && <div className="py-16 px-4 items-center justify-center flex flex-col">
+              <div className="w-12 h-12 rounded-full mb-4 bg-[#1f1f1f]/0 flex-col flex items-center justify-center">
                 <img src={webStoriesIcon} alt="" className="w-6 h-6 opacity-50" />
               </div>
-              <p className="text-muted-foreground text-sm font-inter tracking-[-0.3px]">
+              <p className="text-sm font-inter tracking-[-0.3px] text-primary-foreground">
                 This brand has no campaigns or boosts
               </p>
             </div>}
