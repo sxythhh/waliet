@@ -165,7 +165,15 @@ export function CreateBrandDialog({
                   Create Brand
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
-                  Create and customize your brand workspace to manage your campaigns with your team. 
+                  Create and customize your brand workspace to manage your campaigns with your team.{" "}
+                  <a 
+                    href="https://join.virality.gg/new" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground hover:underline"
+                  >
+                    Learn more
+                  </a>
                 </p>
               </DialogHeader>
             </div>
