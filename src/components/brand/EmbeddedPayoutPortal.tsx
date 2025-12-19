@@ -16,33 +16,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const elements = loadWhopElements();
 
-// Appearance configuration using CSS variables for theming
+// Dark mode appearance configuration using theme property
 const appearance: WhopElementsOptions['appearance'] = {
+  theme: {
+    appearance: 'dark',
+    accentColor: 'blue',
+    grayColor: 'slate',
+  },
   classes: {
     '.Button': { 
       height: '44px', 
       'border-radius': '10px',
-      'background-color': 'hsl(var(--primary))',
-      color: 'hsl(var(--primary-foreground))',
       'font-weight': '500',
-    },
-    '.Button:hover': { 
-      'background-color': 'hsl(var(--primary) / 0.9)',
-    },
-    '.Button:disabled': { 
-      'background-color': 'hsl(var(--muted))',
-      color: 'hsl(var(--muted-foreground))',
-    },
-    '.Container': { 
-      'border-radius': '12px', 
-      'background-color': 'hsl(var(--background))',
-      'border-color': 'hsl(var(--border))',
-      color: 'hsl(var(--foreground))',
-    },
-    '.Card': {
-      'background-color': 'hsl(var(--card))',
-      'border-color': 'hsl(var(--border))',
-      color: 'hsl(var(--card-foreground))',
     },
   },
 };
