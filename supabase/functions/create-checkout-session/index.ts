@@ -100,17 +100,8 @@ serve(async (req) => {
       },
     };
 
-    // For setup mode, we don't need a plan - just setting up payment method
-    if (mode === 'setup') {
-      // Setup mode for saving a payment method
-      checkoutPayload.plan = {
-        company_id: brand.whop_company_id,
-        plan_type: 'one_time',
-        initial_price: 0, // Free for setup
-        currency: 'usd',
-      };
-    } else if (mode === 'payment' && amount) {
-      // Payment mode for actual charge
+    // Only add plan for payment mode, not for setup mode
+    if (mode === 'payment' && amount) {
       checkoutPayload.plan = {
         company_id: brand.whop_company_id,
         plan_type: 'one_time',
