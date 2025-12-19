@@ -86,12 +86,23 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     setSettingUp(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-brand-company', {
-        body: { brand_id: brandId },
+        body: { 
+          brand_id: brandId,
+          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=complete`,
+          refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=refresh`
+        },
       });
 
       if (error) throw error;
 
-      toast.success('Wallet set up successfully!');
+      // If we get an onboarding URL, redirect the user there
+      if (data?.onboarding_url) {
+        window.open(data.onboarding_url, '_blank');
+        toast.success('Opening wallet setup...');
+      } else if (data?.company_id) {
+        toast.success('Wallet set up successfully!');
+      }
+      
       await fetchWalletData();
     } catch (error) {
       console.error('Error setting up wallet:', error);
