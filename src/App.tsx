@@ -55,16 +55,31 @@ import New from "./pages/New";
 import Contact from "./pages/Contact";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import Resources from "./pages/Resources";
+import BrandPublicPage from "./pages/BrandPublicPage";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
+import { getSubdomainSlug } from "./utils/subdomain";
 const queryClient = new QueryClient();
 
 // Redirect /join/:slug to discover page with campaign slug param
 function JoinRedirect() {
-  const {
-    slug
-  } = useParams();
+  const { slug } = useParams();
   return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
+}
+
+// Handle subdomain routing for brand pages
+function SubdomainHandler({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const subdomainSlug = getSubdomainSlug();
+
+  useEffect(() => {
+    if (subdomainSlug) {
+      // Redirect to brand public page
+      navigate(`/b/${subdomainSlug}`, { replace: true });
+    }
+  }, [subdomainSlug, navigate]);
+
+  return <>{children}</>;
 }
 function DashboardLayout({
   children
@@ -123,8 +138,10 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
+            <SubdomainHandler>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/b/:slug" element={<BrandPublicPage />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
@@ -168,10 +185,11 @@ const App = () => (
               <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
               <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
               <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="/:username" element={<PublicProfile />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="/:username" element={<PublicProfile />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SubdomainHandler>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
