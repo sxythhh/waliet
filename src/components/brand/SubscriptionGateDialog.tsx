@@ -207,11 +207,14 @@ export function SubscriptionGateDialog({
                       ))}
                     </ul>
                     
-                    <Button
+                    <button
                       onClick={() => handleSelectPlan(plan.key)}
                       disabled={!!loading}
-                      className="w-full tracking-[-0.5px]"
-                      variant={plan.popular ? 'default' : 'outline'}
+                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none ${
+                        plan.popular 
+                          ? 'bg-[#1f60dd] border-t border-[#4b85f7] text-white hover:bg-[#1a50c8]' 
+                          : 'bg-muted/50 text-foreground hover:bg-muted'
+                      }`}
                     >
                       {isLoading ? (
                         <>
@@ -223,7 +226,7 @@ export function SubscriptionGateDialog({
                       ) : (
                         `Get ${plan.name}`
                       )}
-                    </Button>
+                    </button>
                   </div>
                 );
               })}
