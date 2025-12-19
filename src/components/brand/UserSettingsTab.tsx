@@ -834,7 +834,7 @@ export function UserSettingsTab() {
           {/* Brand Wallet Section */}
           {isBrandMode && brand && <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />}
 
-          <Spacer />
+          
 
           {/* Legal Business Name */}
           <div className="space-y-2">
@@ -847,7 +847,7 @@ export function UserSettingsTab() {
           })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
           </div>
 
-          <Spacer />
+          
 
           {/* Billing Address */}
           <div className="space-y-2">
@@ -860,7 +860,7 @@ export function UserSettingsTab() {
           })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
-          <Spacer />
+          
 
           {/* Save Button */}
           <Button onClick={handleSave} disabled={saving} className="w-full h-11 tracking-[-0.5px]">

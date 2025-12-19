@@ -350,10 +350,10 @@ export function BrandWalletTab({
 
       {/* Transaction History */}
       <Card className="border-border">
-        <CardHeader>
+        <CardHeader className="px-0">
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="py-0 px-0">
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-neutral-400">No transactions yet</p>
             </div> : <div className="space-y-3">
