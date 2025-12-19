@@ -1,17 +1,17 @@
 /**
  * Extract brand slug from subdomain if present
  * e.g., catalyst.virality.gg → "catalyst"
+ * Only works on virality.gg domain
  */
 export const getSubdomainSlug = (): string | null => {
   const host = window.location.hostname;
   const parts = host.split('.');
   
-  // Check for subdomain patterns like: brand.virality.gg or brand.domain.com
-  // Must have at least 3 parts (subdomain.domain.tld)
-  if (parts.length >= 3) {
+  // Only detect subdomains on virality.gg
+  if (parts.length === 3 && parts[1] === 'virality' && parts[2] === 'gg') {
     const subdomain = parts[0];
     // Ignore common subdomains that aren't brand slugs
-    const ignoredSubdomains = ['www', 'app', 'api', 'admin', 'staging', 'dev', 'localhost'];
+    const ignoredSubdomains = ['www', 'app', 'api', 'admin', 'staging', 'dev'];
     if (!ignoredSubdomains.includes(subdomain.toLowerCase())) {
       return subdomain;
     }
