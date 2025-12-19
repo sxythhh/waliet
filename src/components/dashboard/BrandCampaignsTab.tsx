@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
-import emptyCampaignsImg from "@/assets/empty-campaigns.png";
+import emptyCampaignsImg from "@/assets/empty-campaigns-new.png";
 import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -494,15 +494,14 @@ export function BrandCampaignsTab({
               <div className="flex gap-3">
                 <Button
                   onClick={() => setCreateCampaignOpen(true)}
-                  className="bg-white text-black hover:bg-white/90 font-inter text-sm"
+                  className="bg-white text-black hover:bg-white/90 font-inter text-sm tracking-[-0.5px]"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
                   Create Campaign
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => navigate('/resources')}
-                  className="bg-[#2a2a2a] border-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-inter text-sm"
+                  className="bg-[#2a2a2a] border-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-inter text-sm tracking-[-0.5px]"
                 >
                   Learn more
                 </Button>
