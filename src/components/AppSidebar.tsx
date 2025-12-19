@@ -286,14 +286,9 @@ export function AppSidebar() {
               <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
-                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
-                      <Avatar className="w-4 h-4">
-                        <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                        <AvatarFallback className="bg-[#1f1f1f] text-[8px] text-neutral-400">
-                          {getInitial()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm">Creator</span>
+                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                      <img src={swapHorizIcon} alt="" className="w-4 h-4" />
+                      <span className="text-sm">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
                       {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-white' : 'text-neutral-400 hover:bg-[#141414]'}`}>
@@ -309,11 +304,11 @@ export function AppSidebar() {
                 
                 {/* Quick Links */}
                 <div className="space-y-0.5">
-                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Support</span>
                   </button>
-                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <div className="flex items-center gap-3">
                       <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
                       <span className="text-sm font-inter tracking-[-0.5px]">Discord</span>
@@ -323,14 +318,14 @@ export function AppSidebar() {
                   <button onClick={() => {
                   setFeedbackType("feature");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
                   </button>
                   <button onClick={() => {
                   setFeedbackType("bug");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-neutral-400 hover:bg-[#141414] hover:text-white transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
                   </button>
@@ -338,11 +333,11 @@ export function AppSidebar() {
 
                 {/* Theme & Logout */}
                 <div className="pt-1 flex items-center gap-2">
-                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-white transition-colors">
+                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-foreground transition-colors">
                     {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                     <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                   </button>
-                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-neutral-400 hover:text-red-400 transition-colors">
+                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-red-400 transition-colors">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Log out</span>
                   </button>
@@ -417,7 +412,7 @@ export function AppSidebar() {
                       </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                           <img src={storefrontIcon} alt="" className="w-3.5 h-3.5" />
                         </div>}
-                    <p className="font-medium text-white truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
+                    <p className="font-medium text-foreground truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -486,15 +481,15 @@ export function AppSidebar() {
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[3px]">
                     {/* Creator Dashboard */}
-                    {("switch to creator".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                             <img src={swapHorizIcon} alt="" className="w-4 h-4" />
                           </div>
-                          <span className="text-[13px] font-medium text-white">Switch to creator</span>
+                          <span className="text-[13px] font-medium text-foreground">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                         </div>
-                        {isCreatorMode && <Check className="w-4 h-4 text-neutral-400" />}
-                      </button>}
+                        {isCreatorMode && <Check className="w-4 h-4 text-muted-foreground" />}
+                      </button> : null}
                     
                     {/* Admin brands */}
                     {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
