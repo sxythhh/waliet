@@ -64,10 +64,14 @@ export function AddBrandFundsDialog({
     setLoading(true);
 
     try {
+      const processingFee = (amount * 0.03) + 0.30;
+      const totalAmount = amount + processingFee;
+
       const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
         body: { 
           brand_id: brandId, 
           amount,
+          total_amount: totalAmount,
           return_url: window.location.href,
         },
       });
@@ -108,6 +112,8 @@ export function AddBrandFundsDialog({
   };
 
   const finalAmount = getFinalAmount();
+  const processingFee = finalAmount > 0 ? (finalAmount * 0.03) + 0.30 : 0;
+  const totalCharged = finalAmount + processingFee;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -176,19 +182,64 @@ export function AddBrandFundsDialog({
 
           {/* Summary */}
           {finalAmount > 0 && (
-            <div className="pt-2 space-y-2">
+            <div className="pt-2 space-y-3">
               <div className="flex justify-between items-center">
                 <span 
                   className="text-sm text-neutral-500 tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
-                  New balance
+                  Deposit Amount
                 </span>
                 <span 
                   className="text-sm text-white font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
-                  {formatCurrency(currentBalance + finalAmount)}
+                  {formatCurrency(finalAmount)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span 
+                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  Payment Processor
+                </span>
+                <span 
+                  className="text-sm text-neutral-400 font-medium tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {formatCurrency(processingFee)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-neutral-800">
+                <span 
+                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  Total Charged
+                </span>
+                <span 
+                  className="text-sm text-white font-medium tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {formatCurrency(totalCharged)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span 
+                  className="text-sm text-emerald-400 tracking-[-0.3px] flex items-center gap-1.5"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  You will receive
+                </span>
+                <span 
+                  className="text-sm text-emerald-400 font-medium tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {formatCurrency(finalAmount)}
                 </span>
               </div>
             </div>

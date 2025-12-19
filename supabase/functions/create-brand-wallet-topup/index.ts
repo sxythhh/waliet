@@ -61,7 +61,10 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount, return_url, transaction_id } = await req.json();
+    const { brand_id, amount, total_amount, return_url, transaction_id } = await req.json();
+    
+    // Use total_amount (includes processing fee) for billing, amount for crediting wallet
+    const chargeAmount = total_amount || amount;
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -145,8 +148,9 @@ serve(async (req) => {
     // If no payment method exists, create a payment checkout so user pays + saves their card
     if (!paymentMethods || paymentMethods.length === 0) {
       const redirectUrl = sanitizeRedirectUrl(return_url);
-      const topupAmount = amount || 1; // default to $1 if not provided
-      console.log('No payment method on file. Creating payment checkout. redirect_url:', redirectUrl, 'amount:', topupAmount);
+      const topupAmount = chargeAmount || 1; // default to $1 if not provided
+      const creditAmount = amount || 1;
+      console.log('No payment method on file. Creating payment checkout. redirect_url:', redirectUrl, 'charge amount:', topupAmount, 'credit amount:', creditAmount);
 
       // Record a pending "top up intent" so we can finalize after returning from checkout
       const { data: intentTx, error: intentError } = await supabase
@@ -154,13 +158,15 @@ serve(async (req) => {
         .insert({
           brand_id: brand_id,
           type: 'topup',
-          amount: topupAmount,
+          amount: creditAmount, // Credit the original amount (without fee)
           status: 'pending',
           description: 'Wallet top-up initiated',
           metadata: {
             user_id: user.id,
             initiated_at: new Date().toISOString(),
             flow: 'checkout_payment_method',
+            charge_amount: topupAmount,
+            credit_amount: creditAmount,
           },
           created_by: user.id,
         })
@@ -202,6 +208,7 @@ serve(async (req) => {
             user_id: user.id,
             purpose: 'wallet_topup',
             amount: topupAmount,
+            credit_amount: creditAmount,
             topup_intent_id: intentTx.id,
           },
         }),
@@ -239,7 +246,8 @@ serve(async (req) => {
           checkout_url: checkoutData.purchase_url || checkoutData.url || checkoutData.checkout_url,
           checkout_id: checkoutData.id,
           transaction_id: intentTx.id,
-          amount: topupAmount,
+          amount: creditAmount,
+          charge_amount: topupAmount,
           message: 'Redirecting to complete payment.',
         }),
         {
@@ -263,7 +271,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amount,
+        amount: chargeAmount, // Charge the total amount including fee
         company_id: brand.whop_company_id,
         currency: 'usd',
         payment_method_id: paymentMethodId,
