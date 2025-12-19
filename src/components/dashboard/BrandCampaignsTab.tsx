@@ -9,6 +9,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BoostDetailView } from "@/components/brand/BoostDetailView";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
@@ -252,31 +253,6 @@ export function BrandCampaignsTab({
   const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
   const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
-  // If subscription gate is open, show pricing page instead
-  if (subscriptionGateOpen) {
-    return (
-      <div className="h-full w-full flex flex-col">
-        <div className="flex items-center gap-3 px-4 sm:px-6 md:px-8 py-4 border-b border-border">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setSubscriptionGateOpen(false)}
-            className="font-inter tracking-[-0.5px]"
-          >
-            ← Back
-          </Button>
-          <h1 className="text-lg font-semibold font-inter tracking-[-0.5px]">Choose Your Plan</h1>
-        </div>
-        <div className="flex-1">
-          <iframe 
-            src="https://joinvirality.com/pickplan-4" 
-            className="w-full h-full border-0" 
-            title="Pick Plan" 
-          />
-        </div>
-      </div>
-    );
-  }
 
   return <div className={`relative ${selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}`}>
       {/* Beta Gate Overlay for non-admin users with inactive subscription */}
@@ -582,5 +558,12 @@ export function BrandCampaignsTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Subscription Gate Dialog */}
+      <SubscriptionGateDialog 
+        brandId={brandId} 
+        open={subscriptionGateOpen} 
+        onOpenChange={setSubscriptionGateOpen} 
+      />
     </div>;
 }
