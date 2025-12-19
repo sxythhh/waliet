@@ -28,6 +28,7 @@ import {
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
+import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -104,6 +105,8 @@ export function UserSettingsTab() {
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -673,10 +676,41 @@ export function UserSettingsTab() {
                 )}
               </div>
               
+              {/* Upgrade/Subscribe buttons for users without active subscription */}
+              {brand.subscription_status !== 'active' && (
+                <div className="pt-4 space-y-3">
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Choose a plan to get started</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-start"
+                      onClick={() => {
+                        setSelectedCheckoutPlan({ id: 'starter', name: 'Starter' });
+                        setShowCheckoutDialog(true);
+                      }}
+                    >
+                      <span className="font-medium tracking-[-0.5px]">Starter</span>
+                      <span className="text-xs text-muted-foreground">$99/month</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-start"
+                      onClick={() => {
+                        setSelectedCheckoutPlan({ id: 'growth', name: 'Growth' });
+                        setShowCheckoutDialog(true);
+                      }}
+                    >
+                      <span className="font-medium tracking-[-0.5px]">Growth</span>
+                      <span className="text-xs text-muted-foreground">$249/month</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               {brand.whop_membership_id && (
                 <div className="pt-2 border-t border-border/50">
                   <a 
-                    href="https://whop.com/billing/manage/"
+                    href={`https://whop.com/billing/manage/${brand.whop_membership_id}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline tracking-[-0.5px]"
@@ -686,6 +720,21 @@ export function UserSettingsTab() {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Subscription Checkout Dialog */}
+          {selectedCheckoutPlan && brand && (
+            <SubscriptionCheckoutDialog
+              open={showCheckoutDialog}
+              onOpenChange={setShowCheckoutDialog}
+              planId={selectedCheckoutPlan.id}
+              planName={selectedCheckoutPlan.name}
+              brandId={brand.slug}
+              onComplete={() => {
+                fetchBrand();
+                toast.success("Subscription activated!");
+              }}
+            />
           )}
 
           <Spacer />
