@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount, return_url } = await req.json();
+    const { brand_id, amount, return_url, setup_intent_id } = await req.json();
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -82,46 +82,86 @@ serve(async (req) => {
       });
     }
 
-    // Create a topup for the brand to add funds
-    console.log(`Creating topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
+    console.log(`Processing topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
     
-    // First, get the company's payment methods
-    const paymentMethodsResponse = await fetch(
-      `https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${whopApiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    let paymentMethodId: string | null = null;
 
-    const paymentMethodsText = await paymentMethodsResponse.text();
-    console.log('Payment methods response status:', paymentMethodsResponse.status);
-    console.log('Payment methods response:', paymentMethodsText);
-
-    if (!paymentMethodsResponse.ok) {
-      console.error('Failed to get payment methods:', paymentMethodsText);
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to get payment methods',
-          details: paymentMethodsText,
-        }),
+    // If setup_intent_id is provided, retrieve it to get the payment method
+    if (setup_intent_id) {
+      console.log(`Retrieving setup intent: ${setup_intent_id}`);
+      
+      const setupIntentResponse = await fetch(
+        `https://api.whop.com/api/v1/setup_intents/${setup_intent_id}`,
         {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${whopApiKey}`,
+            'Content-Type': 'application/json',
+          },
         }
       );
+
+      const setupIntentText = await setupIntentResponse.text();
+      console.log('Setup intent response status:', setupIntentResponse.status);
+      console.log('Setup intent response:', setupIntentText);
+
+      if (setupIntentResponse.ok) {
+        const setupIntentData = JSON.parse(setupIntentText);
+        if (setupIntentData.payment_method?.id) {
+          paymentMethodId = setupIntentData.payment_method.id;
+          console.log(`Got payment method from setup intent: ${paymentMethodId}`);
+        } else {
+          console.log('Setup intent has no payment method attached');
+        }
+      } else {
+        console.error('Failed to retrieve setup intent:', setupIntentText);
+      }
     }
 
-    const paymentMethodsData = JSON.parse(paymentMethodsText);
-    const paymentMethods = paymentMethodsData.data || paymentMethodsData;
+    // If we still don't have a payment method, check existing ones
+    if (!paymentMethodId) {
+      const paymentMethodsResponse = await fetch(
+        `https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${whopApiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const paymentMethodsText = await paymentMethodsResponse.text();
+      console.log('Payment methods response status:', paymentMethodsResponse.status);
+      console.log('Payment methods response:', paymentMethodsText);
+
+      if (!paymentMethodsResponse.ok) {
+        console.error('Failed to get payment methods:', paymentMethodsText);
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to get payment methods',
+            details: paymentMethodsText,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const paymentMethodsData = JSON.parse(paymentMethodsText);
+      const paymentMethods = paymentMethodsData.data || paymentMethodsData;
+
+      if (paymentMethods && paymentMethods.length > 0) {
+        paymentMethodId = paymentMethods[0].id;
+        console.log(`Using existing payment method: ${paymentMethodId}`);
+      }
+    }
 
     // If no payment method exists, create a setup checkout so user can save their payment method
-    if (!paymentMethods || paymentMethods.length === 0) {
+    if (!paymentMethodId) {
       const redirectUrl = return_url || 'https://example.com';
-      console.log('No payment method on file. Creating setup checkout. redirect_url:', redirectUrl);
+      console.log('No payment method found. Creating setup checkout. redirect_url:', redirectUrl);
 
       // Create a setup checkout - this saves the payment method for future use
       const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
@@ -178,13 +218,9 @@ serve(async (req) => {
       );
     }
 
+    // We have a payment method, create the topup
+    console.log(`Creating topup with payment method: ${paymentMethodId}, amount: $${amount}`);
 
-    // Use the first payment method
-    const paymentMethodId = paymentMethods[0].id;
-    console.log(`Using payment method: ${paymentMethodId}`);
-
-    // Create the topup using Whop's topups API
-    // Docs: https://docs.whop.com/api-reference/topups/create-topup
     const checkoutResponse = await fetch('https://api.whop.com/api/v1/topups', {
       method: 'POST',
       headers: {
