@@ -75,8 +75,10 @@ export function AddBrandFundsDialog({
       if (error) throw error;
 
       if (data?.needs_payment_method && data?.checkout_url) {
-        toast.message('Redirecting to complete payment', {
-          description: "You'll save a payment method for future top-ups.",
+        // Store the intended amount so we can charge it after payment method is saved
+        sessionStorage.setItem(`pending_topup_${brandId}`, JSON.stringify({ amount }));
+        toast.message('Redirecting to save payment method', {
+          description: "We'll charge your card after you save it.",
         });
         window.location.href = data.checkout_url;
         return;

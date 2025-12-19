@@ -114,19 +114,55 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     const setupIntentId = searchParams.get('setup_intent_id');
     const status = searchParams.get('status');
 
-    // Whop redirects back with checkout_status/status params; we use this to guide the user.
+    // Whop redirects back with checkout_status/status params after saving payment method
     if ((checkoutStatus === 'success' || status === 'success') && setupIntentId) {
-      toast.success('Payment method saved. You can add funds now.');
-      setAddFundsOpen(true);
-
-      // Clean up URL params so refresh doesn't re-trigger
+      // Clean up URL params first
       searchParams.delete('checkout_status');
       searchParams.delete('status');
       searchParams.delete('setup_intent_id');
       searchParams.delete('state_id');
       setSearchParams(searchParams, { replace: true });
+
+      // Check if there's a pending top-up amount to charge
+      const pendingTopupData = sessionStorage.getItem(`pending_topup_${brandId}`);
+      if (pendingTopupData) {
+        const { amount } = JSON.parse(pendingTopupData);
+        sessionStorage.removeItem(`pending_topup_${brandId}`);
+        
+        // Auto-charge the saved payment method
+        const chargeTopup = async () => {
+          toast.loading('Charging your saved payment method...', { id: 'topup-charge' });
+          try {
+            const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
+              body: { brand_id: brandId, amount, return_url: window.location.href },
+            });
+            
+            if (error) throw error;
+            
+            if (data?.success && !data?.needs_payment_method) {
+              toast.success(`Successfully added $${amount} to your wallet!`, { id: 'topup-charge' });
+              fetchWalletData();
+              fetchTransactions();
+            } else if (data?.error) {
+              throw new Error(data.error);
+            } else {
+              toast.error('Payment method not found. Please try again.', { id: 'topup-charge' });
+              setAddFundsOpen(true);
+            }
+          } catch (error) {
+            console.error('Error charging top-up:', error);
+            toast.error('Failed to charge. Please try again.', { id: 'topup-charge' });
+            setAddFundsOpen(true);
+          }
+        };
+        
+        chargeTopup();
+      } else {
+        toast.success('Payment method saved. You can add funds now.');
+        setAddFundsOpen(true);
+      }
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, brandId]);
 
   useEffect(() => {
     const loadData = async () => {
