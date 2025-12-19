@@ -37,7 +37,7 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id } = await req.json();
+    const { brand_id, return_url, refresh_url } = await req.json();
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -75,18 +75,53 @@ serve(async (req) => {
       });
     }
 
-    // If brand already has a Whop company, return it
+    // If brand already has a Whop company, return onboarding link for that company
     if (brand.whop_company_id) {
       console.log(`Brand ${brand_id} already has Whop company: ${brand.whop_company_id}`);
+      
+      // Create an account link for the existing company
+      const linkResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_id: brand.whop_company_id,
+          use_case: 'account_onboarding',
+          return_url: return_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account`,
+          refresh_url: refresh_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account`,
+        }),
+      });
+
+      if (!linkResponse.ok) {
+        const errorText = await linkResponse.text();
+        console.error('Whop account link error:', errorText);
+        return new Response(JSON.stringify({ 
+          company_id: brand.whop_company_id,
+          already_exists: true,
+          error: 'Could not create onboarding link'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const linkData = await linkResponse.json();
       return new Response(JSON.stringify({ 
         company_id: brand.whop_company_id,
-        already_exists: true 
+        already_exists: true,
+        onboarding_url: linkData.url,
+        expires_at: linkData.expires_at
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get user email for Whop company
+    // For new brands without a Whop company, we need to use the Platform Connect flow
+    // First, create an account link that will create the company during onboarding
+    console.log(`Creating Whop onboarding link for brand: ${brand.name}`);
+    
+    // Get user email for the account
     const { data: profile } = await supabase
       .from('profiles')
       .select('email')
@@ -95,55 +130,62 @@ serve(async (req) => {
 
     const email = profile?.email || user.email;
 
-    // Create Whop connected company
-    console.log(`Creating Whop company for brand: ${brand.name}`);
-    
-    const whopResponse = await fetch('https://api.whop.com/api/v5/companies', {
+    // Use account_links with account_onboarding to create company during onboarding
+    // This is the recommended flow for Platform Connect
+    const accountLinkResponse = await fetch('https://api.whop.com/api/v5/account_links', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        use_case: 'account_onboarding',
         email: email,
-        title: brand.name,
-        route: brand.slug,
+        return_url: return_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account?onboarding=complete`,
+        refresh_url: refresh_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account?onboarding=refresh`,
         metadata: {
           brand_id: brand_id,
-          virality_brand: true,
-          created_at: new Date().toISOString()
+          brand_name: brand.name,
+          brand_slug: brand.slug
         }
       }),
     });
 
-    if (!whopResponse.ok) {
-      const errorText = await whopResponse.text();
-      console.error('Whop API error:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to create Whop company', details: errorText }), {
+    const responseText = await accountLinkResponse.text();
+    console.log('Whop account_links response status:', accountLinkResponse.status);
+    console.log('Whop account_links response:', responseText);
+
+    if (!accountLinkResponse.ok) {
+      console.error('Whop account_links error:', responseText);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to create onboarding link', 
+        details: responseText,
+        status: accountLinkResponse.status
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const whopCompany = await whopResponse.json();
-    console.log('Whop company created:', whopCompany);
+    const accountLinkData = JSON.parse(responseText);
+    console.log('Whop account link created:', accountLinkData);
 
-    // Update brand with Whop company ID
-    const { error: updateError } = await supabase
-      .from('brands')
-      .update({ whop_company_id: whopCompany.id })
-      .eq('id', brand_id);
+    // If the response includes a company_id, save it
+    if (accountLinkData.company_id) {
+      const { error: updateError } = await supabase
+        .from('brands')
+        .update({ whop_company_id: accountLinkData.company_id })
+        .eq('id', brand_id);
 
-    if (updateError) {
-      console.error('Error updating brand:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to save company ID' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      if (updateError) {
+        console.error('Error updating brand with company_id:', updateError);
+      }
     }
 
     return new Response(JSON.stringify({ 
-      company_id: whopCompany.id,
+      onboarding_url: accountLinkData.url,
+      company_id: accountLinkData.company_id || null,
+      expires_at: accountLinkData.expires_at,
       already_exists: false 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
