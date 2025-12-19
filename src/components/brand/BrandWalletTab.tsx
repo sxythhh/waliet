@@ -80,7 +80,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   useEffect(() => {
     const onboardingStatus = searchParams.get('onboarding');
     const status = searchParams.get('status');
-    
+
     if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success')) {
       // Update the brand's onboarding status
       const updateOnboardingStatus = async () => {
@@ -89,24 +89,44 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
             .from('brands')
             .update({ whop_onboarding_complete: true })
             .eq('id', brandId);
-          
+
           toast.success('Verification completed successfully!');
-          
+
           // Clean up URL params
           searchParams.delete('onboarding');
           searchParams.delete('status');
           setSearchParams(searchParams, { replace: true });
-          
+
           // Refresh wallet data
           await fetchWalletData();
         } catch (error) {
           console.error('Error updating onboarding status:', error);
         }
       };
-      
+
       updateOnboardingStatus();
     }
   }, [searchParams, brandId]);
+
+  // Handle returning from payment method setup / checkout
+  useEffect(() => {
+    const checkoutStatus = searchParams.get('checkout_status');
+    const setupIntentId = searchParams.get('setup_intent_id');
+    const status = searchParams.get('status');
+
+    // Whop redirects back with checkout_status/status params; we use this to guide the user.
+    if ((checkoutStatus === 'success' || status === 'success') && setupIntentId) {
+      toast.success('Payment method saved. You can add funds now.');
+      setAddFundsOpen(true);
+
+      // Clean up URL params so refresh doesn't re-trigger
+      searchParams.delete('checkout_status');
+      searchParams.delete('status');
+      searchParams.delete('setup_intent_id');
+      searchParams.delete('state_id');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const loadData = async () => {
