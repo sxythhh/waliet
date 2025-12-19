@@ -77,3 +77,21 @@ verify_jwt = true
 
 [functions.sync-campaign-account-videos]
 verify_jwt = true
+
+[functions.create-brand-company]
+verify_jwt = true
+
+[functions.get-brand-onboarding-link]
+verify_jwt = true
+
+[functions.get-brand-payout-portal]
+verify_jwt = true
+
+[functions.get-brand-balance]
+verify_jwt = true
+
+[functions.create-brand-wallet-topup]
+verify_jwt = true
+
+[functions.allocate-brand-budget]
+verify_jwt = true
