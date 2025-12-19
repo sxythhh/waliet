@@ -618,7 +618,7 @@ export function UserSettingsTab() {
                   {/* New partner application */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                         <UserPlus className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
@@ -638,7 +638,7 @@ export function UserSettingsTab() {
                   {/* New partner sale */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                         <DollarSign className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
@@ -658,7 +658,7 @@ export function UserSettingsTab() {
                   {/* New message from partner */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                         <MessageCircle className="h-5 w-5 text-muted-foreground" />
                       </div>
                       <div>
