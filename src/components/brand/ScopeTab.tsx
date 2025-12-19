@@ -19,6 +19,8 @@ import stickyNoteGrey from "@/assets/sticky-note-grey.svg";
 import stickyNoteWhite from "@/assets/sticky-note-white.svg";
 import { useTheme } from "@/components/ThemeProvider";
 import { ScopeVideoCard } from "./ScopeVideoCard";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ScopeVideo {
   id: string;
@@ -51,6 +53,7 @@ interface ScopeTabProps {
 
 export function ScopeTab({ brandId }: ScopeTabProps) {
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [videos, setVideos] = useState<ScopeVideo[]>([]);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +66,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<{ category: string; value: string }[]>([]);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -319,6 +323,22 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
   // Show subscription gate if not subscribed
   if (!loading && subscriptionStatus !== "active") {
+    // On mobile, show the subscription gate dialog instead of iframe
+    if (isMobile) {
+      return (
+        <>
+          <div className="h-full w-full flex items-center justify-center p-6">
+            <p className="text-muted-foreground text-center">Upgrade your plan to access Scope.</p>
+          </div>
+          <SubscriptionGateDialog 
+            brandId={brandId} 
+            open={true} 
+            onOpenChange={() => {}} 
+          />
+        </>
+      );
+    }
+    
     return (
       <div className="h-full w-full">
         <iframe 
