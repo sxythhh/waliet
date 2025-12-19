@@ -414,7 +414,7 @@ export function AppSidebar() {
                       </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                           <Building2 className="w-3.5 h-3.5 text-neutral-400" />
                         </div>}
-                    <p className="font-medium text-white truncate max-w-[120px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
+                    <p className="font-medium text-white truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
                 </button>
