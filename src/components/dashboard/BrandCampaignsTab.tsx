@@ -19,6 +19,7 @@ import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useTheme } from "@/components/ThemeProvider";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
 type CampaignTypeFilter = "all" | "campaigns" | "boosts";
 interface Campaign {
@@ -80,6 +81,7 @@ export function BrandCampaignsTab({
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
+  const { theme } = useTheme();
 
   // Show beta gate for non-admin users with inactive subscription
   const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
@@ -315,8 +317,8 @@ export function BrandCampaignsTab({
           {/* Action Cards and Embed - Only show if not subscribed */}
           {subscriptionStatus !== "active" && <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
-                <div className="p-2 bg-muted rounded-lg shrink-0">
+              <div className="bg-muted/50 dark:bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-muted dark:hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
+                <div className="p-2 bg-background dark:bg-muted rounded-lg shrink-0">
                   <img src={schoolIcon} alt="" className="w-5 h-5" />
                 </div>
                 <div>
@@ -324,14 +326,14 @@ export function BrandCampaignsTab({
                   <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
                 </div>
               </div>
-              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => {
+              <div className="bg-muted/50 dark:bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-muted dark:hover:bg-[#151515] transition-colors" onClick={() => {
             if (subscriptionStatus === "active") {
               setCampaignTypeDialogOpen(true);
             } else {
               setSubscriptionGateOpen(true);
             }
           }}>
-                <div className="p-2 bg-muted rounded-lg shrink-0">
+                <div className="p-2 bg-background dark:bg-muted rounded-lg shrink-0">
                   <img src={webStoriesIcon} alt="" className="w-5 h-5" />
                 </div>
                 <div>
@@ -339,11 +341,11 @@ export function BrandCampaignsTab({
                   <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
                 </div>
               </div>
-              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
+              <div className="bg-muted/50 dark:bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-muted dark:hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
             prev.set('tab', 'scope');
             return prev;
           })}>
-                <div className="p-2 bg-muted rounded-lg shrink-0">
+                <div className="p-2 bg-background dark:bg-muted rounded-lg shrink-0">
                   <img src={scopeIcon} alt="" className="w-5 h-5" />
                 </div>
                 <div>
@@ -353,9 +355,11 @@ export function BrandCampaignsTab({
               </div>
             </div>
 
-            <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
-              <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
-            </div>
+            {theme === 'dark' && (
+              <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
+                <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+              </div>
+            )}
           </>}
 
           {/* Combined Campaigns & Boosts Grid */}
