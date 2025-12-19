@@ -7,6 +7,7 @@ import { Trash2, Shield, User, Crown } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { InviteMemberDialog } from "./InviteMemberDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import personAddIcon from "@/assets/person-add-icon.svg";
 interface Member {
   id: string;
   user_id: string;
@@ -157,9 +158,10 @@ export function TeamMembersTab({
             Invite and manage team members
           </p>
         </div>
-        {canManageTeam && <Button onClick={() => setInviteDialogOpen(true)} size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground tracking-[-0.5px]">
+        {canManageTeam && <button onClick={() => setInviteDialogOpen(true)} className="py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-2">
+            <img src={personAddIcon} alt="" className="h-4 w-4" />
             Invite
-          </Button>}
+          </button>}
       </div>
 
       {/* Active Members */}
