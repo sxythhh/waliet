@@ -325,31 +325,31 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       )}
 
       {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-[#111111] to-[#0a0a0a] border-[#1a1a1a] overflow-hidden">
+      <Card className="border-border overflow-hidden">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-medium text-neutral-400 flex items-center gap-2">
+          <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
             <img src="/src/assets/credit-card-filled-icon.svg" alt="" className="w-5 h-5 opacity-60" />
             Wallet Balance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <p className="text-5xl font-semibold text-white tracking-tight">
+              <p className="text-5xl font-semibold text-foreground tracking-tight">
                 {formatCurrency(walletData?.balance || 0)}
               </p>
               {(walletData?.pending_balance || 0) > 0 && (
-                <p className="text-sm text-neutral-500 mt-2">
+                <p className="text-sm text-muted-foreground mt-2">
                   + {formatCurrency(walletData.pending_balance)} pending
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Button
                 variant="ghost"
                 onClick={handleOpenPayoutPortal}
                 disabled={openingPortal}
-                className="text-neutral-400 hover:text-white hover:bg-white/5 font-normal tracking-[-0.5px]"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <WalletIcon className="w-4 h-4 mr-1.5" />
@@ -359,7 +359,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
                 onClick={() => setAllocateOpen(true)}
                 disabled={(walletData?.balance || 0) <= 0}
                 variant="ghost"
-                className="text-neutral-400 hover:text-white hover:bg-white/5 font-normal tracking-[-0.5px]"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <ArrowUpRight className="w-4 h-4 mr-1.5" />
@@ -367,7 +367,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
               </Button>
               <Button
                 onClick={() => setAddFundsOpen(true)}
-                className="bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] ml-2"
+                className="bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <Plus className="w-4 h-4 mr-1.5" />
@@ -379,9 +379,9 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       </Card>
 
       {/* Transaction History */}
-      <Card className="bg-[#0f0f0f] border-[#1f1f1f]">
+      <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-lg text-white">Transaction History</CardTitle>
+          <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
