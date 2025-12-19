@@ -2407,7 +2407,7 @@ export type Database = {
       scope_videos: {
         Row: {
           avatar_url: string | null
-          brand_id: string
+          brand_id: string | null
           caption: string | null
           created_at: string
           file_url: string | null
@@ -2423,7 +2423,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          brand_id: string
+          brand_id?: string | null
           caption?: string | null
           created_at?: string
           file_url?: string | null
@@ -2439,7 +2439,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
-          brand_id?: string
+          brand_id?: string | null
           caption?: string | null
           created_at?: string
           file_url?: string | null
