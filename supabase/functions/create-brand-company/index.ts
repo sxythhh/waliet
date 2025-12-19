@@ -117,9 +117,18 @@ serve(async (req) => {
       });
     }
 
-    // For new brands without a Whop company, we need to use the Platform Connect flow
-    // First, create an account link that will create the company during onboarding
-    console.log(`Creating Whop onboarding link for brand: ${brand.name}`);
+    // For new brands without a Whop company, we need to:
+    // 1. First create a Company via the companies API
+    // 2. Then create an account_link for onboarding
+    console.log(`Creating Whop company for brand: ${brand.name}`);
+    
+    const parentCompanyId = Deno.env.get('WHOP_PARENT_COMPANY_ID');
+    if (!parentCompanyId) {
+      return new Response(JSON.stringify({ error: 'WHOP_PARENT_COMPANY_ID not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     // Get user email for the account
     const { data: profile } = await supabase
@@ -130,8 +139,55 @@ serve(async (req) => {
 
     const email = profile?.email || user.email;
 
-    // Use account_links with account_onboarding to create company during onboarding
-    // This is the recommended flow for Platform Connect
+    // Step 1: Create a Company for this connected account
+    const companyResponse = await fetch('https://api.whop.com/api/v1/companies', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whopApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        parent_company_id: parentCompanyId,
+        title: brand.name,
+        metadata: {
+          brand_id: brand_id,
+          brand_slug: brand.slug
+        }
+      }),
+    });
+
+    const companyResponseText = await companyResponse.text();
+    console.log('Whop create company response status:', companyResponse.status);
+    console.log('Whop create company response:', companyResponseText);
+
+    if (!companyResponse.ok) {
+      console.error('Whop create company error:', companyResponseText);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to create Whop company', 
+        details: companyResponseText,
+        status: companyResponse.status
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const companyData = JSON.parse(companyResponseText);
+    const newCompanyId = companyData.id;
+    console.log('Whop company created:', newCompanyId);
+
+    // Save the company ID to the brand
+    const { error: updateError } = await supabase
+      .from('brands')
+      .update({ whop_company_id: newCompanyId })
+      .eq('id', brand_id);
+
+    if (updateError) {
+      console.error('Error updating brand with company_id:', updateError);
+    }
+
+    // Step 2: Create an account_link for onboarding
     const accountLinkResponse = await fetch('https://api.whop.com/api/v1/account_links', {
       method: 'POST',
       headers: {
@@ -139,27 +195,22 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        company_id: newCompanyId,
         use_case: 'account_onboarding',
-        email: email,
-        return_url: return_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account?onboarding=complete`,
-        refresh_url: refresh_url || `${supabaseUrl.replace('.supabase.co', '')}/brand/${brand.slug}/account?onboarding=refresh`,
-        metadata: {
-          brand_id: brand_id,
-          brand_name: brand.name,
-          brand_slug: brand.slug
-        }
+        return_url: return_url || `https://virality.gg/brand/${brand.slug}/account?onboarding=complete`,
+        refresh_url: refresh_url || `https://virality.gg/brand/${brand.slug}/account?onboarding=refresh`,
       }),
     });
 
-    const responseText = await accountLinkResponse.text();
+    const linkResponseText = await accountLinkResponse.text();
     console.log('Whop account_links response status:', accountLinkResponse.status);
-    console.log('Whop account_links response:', responseText);
+    console.log('Whop account_links response:', linkResponseText);
 
     if (!accountLinkResponse.ok) {
-      console.error('Whop account_links error:', responseText);
+      console.error('Whop account_links error:', linkResponseText);
       return new Response(JSON.stringify({ 
         error: 'Failed to create onboarding link', 
-        details: responseText,
+        details: linkResponseText,
         status: accountLinkResponse.status
       }), {
         status: 500,
@@ -167,24 +218,12 @@ serve(async (req) => {
       });
     }
 
-    const accountLinkData = JSON.parse(responseText);
+    const accountLinkData = JSON.parse(linkResponseText);
     console.log('Whop account link created:', accountLinkData);
-
-    // If the response includes a company_id, save it
-    if (accountLinkData.company_id) {
-      const { error: updateError } = await supabase
-        .from('brands')
-        .update({ whop_company_id: accountLinkData.company_id })
-        .eq('id', brand_id);
-
-      if (updateError) {
-        console.error('Error updating brand with company_id:', updateError);
-      }
-    }
 
     return new Response(JSON.stringify({ 
       onboarding_url: accountLinkData.url,
-      company_id: accountLinkData.company_id || null,
+      company_id: newCompanyId,
       expires_at: accountLinkData.expires_at,
       already_exists: false 
     }), {
