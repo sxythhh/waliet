@@ -727,6 +727,7 @@ export type Database = {
       brands: {
         Row: {
           account_url: string | null
+          app_store_url: string | null
           assets_url: string | null
           brand_type: string | null
           business_details: Json | null
@@ -737,7 +738,9 @@ export type Database = {
           discord_webhook_url: string | null
           home_url: string | null
           id: string
+          instagram_handle: string | null
           is_active: boolean
+          linkedin_handle: string | null
           logo_url: string | null
           name: string
           notify_new_application: boolean | null
@@ -752,7 +755,9 @@ export type Database = {
           subscription_plan: string | null
           subscription_started_at: string | null
           subscription_status: string | null
+          tiktok_handle: string | null
           updated_at: string
+          website_url: string | null
           whop_company_id: string | null
           whop_manage_url: string | null
           whop_membership_id: string | null
@@ -760,6 +765,7 @@ export type Database = {
         }
         Insert: {
           account_url?: string | null
+          app_store_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
           business_details?: Json | null
@@ -770,7 +776,9 @@ export type Database = {
           discord_webhook_url?: string | null
           home_url?: string | null
           id?: string
+          instagram_handle?: string | null
           is_active?: boolean
+          linkedin_handle?: string | null
           logo_url?: string | null
           name: string
           notify_new_application?: boolean | null
@@ -785,7 +793,9 @@ export type Database = {
           subscription_plan?: string | null
           subscription_started_at?: string | null
           subscription_status?: string | null
+          tiktok_handle?: string | null
           updated_at?: string
+          website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
           whop_membership_id?: string | null
@@ -793,6 +803,7 @@ export type Database = {
         }
         Update: {
           account_url?: string | null
+          app_store_url?: string | null
           assets_url?: string | null
           brand_type?: string | null
           business_details?: Json | null
@@ -803,7 +814,9 @@ export type Database = {
           discord_webhook_url?: string | null
           home_url?: string | null
           id?: string
+          instagram_handle?: string | null
           is_active?: boolean
+          linkedin_handle?: string | null
           logo_url?: string | null
           name?: string
           notify_new_application?: boolean | null
@@ -818,7 +831,9 @@ export type Database = {
           subscription_plan?: string | null
           subscription_started_at?: string | null
           subscription_status?: string | null
+          tiktok_handle?: string | null
           updated_at?: string
+          website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
           whop_membership_id?: string | null
