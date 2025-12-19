@@ -417,17 +417,17 @@ export function UserSettingsTab() {
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
-              {/* Avatar Section */}
+              {/* Icon Section */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                  Avatar
+                  Icon
                 </Label>
                 <div className="flex items-center gap-4">
                   {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-16 h-16 rounded-xl object-cover" /> : <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                       {brand.name?.[0]?.toUpperCase() || "B"}
                     </div>}
                   <label className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors cursor-pointer">
-                    {uploadingAvatar ? "Uploading..." : "Change avatar"}
+                    {uploadingAvatar ? "Uploading..." : "Change icon"}
                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
                   </label>
                 </div>
