@@ -160,8 +160,25 @@ serve(async (req) => {
 
     // If no payment method exists, create a setup checkout so user can save their payment method
     if (!paymentMethodId) {
-      const redirectUrl = return_url || 'https://example.com';
-      console.log('No payment method found. Creating setup checkout. redirect_url:', redirectUrl);
+      // Clean the redirect URL - remove __lovable_token which is very long and causes 500 errors
+      let cleanRedirectUrl = return_url || 'https://example.com';
+      try {
+        const urlObj = new URL(cleanRedirectUrl);
+        // Keep only essential params
+        const workspace = urlObj.searchParams.get('workspace');
+        const tab = urlObj.searchParams.get('tab') || 'profile';
+        
+        // Build clean URL without the token
+        urlObj.search = '';
+        if (workspace) urlObj.searchParams.set('workspace', workspace);
+        urlObj.searchParams.set('tab', tab);
+        
+        cleanRedirectUrl = urlObj.toString();
+      } catch (e) {
+        console.log('Could not parse redirect URL, using as-is');
+      }
+      
+      console.log('No payment method found. Creating setup checkout. clean redirect_url:', cleanRedirectUrl);
 
       // Create a setup checkout - this saves the payment method for future use
       const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
@@ -174,7 +191,7 @@ serve(async (req) => {
           company_id: brand.whop_company_id,
           mode: 'setup',
           currency: 'usd',
-          redirect_url: redirectUrl,
+          redirect_url: cleanRedirectUrl,
           metadata: {
             brand_id,
             user_id: user.id,
