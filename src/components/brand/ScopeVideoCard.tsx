@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link2, ExternalLink, Play, VolumeX, Volume2, Eye, X, Download, Trash2 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
@@ -80,8 +80,26 @@ export function ScopeVideoCard({
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const hasSavedBlueprints = savedBlueprints.length > 0;
   const hasPlayableVideo = !!video.file_url;
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const percentage = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(percentage || 0);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (videoRef.current) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const percentage = clickX / rect.width;
+      videoRef.current.currentTime = percentage * videoRef.current.duration;
+    }
+  };
 
   const handleCopy = () => {
     if (copyToClipboard && video.video_url) {
@@ -136,20 +154,23 @@ export function ScopeVideoCard({
         {hasPlayableVideo ? (
           <>
             <video
+              ref={videoRef}
               src={video.file_url!}
               className="w-full h-full object-cover"
               muted={isMuted}
               loop
               playsInline
               autoPlay={isPlaying}
-              onMouseEnter={(e) => {
+              onTimeUpdate={handleTimeUpdate}
+              onMouseEnter={() => {
                 setIsPlaying(true);
-                (e.target as HTMLVideoElement).play();
+                videoRef.current?.play();
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={() => {
                 setIsPlaying(false);
-                (e.target as HTMLVideoElement).pause();
-                (e.target as HTMLVideoElement).currentTime = 0;
+                videoRef.current?.pause();
+                if (videoRef.current) videoRef.current.currentTime = 0;
+                setProgress(0);
               }}
             />
             {/* Play overlay when not playing */}
@@ -158,8 +179,7 @@ export function ScopeVideoCard({
                 className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer"
                 onClick={() => {
                   setIsPlaying(true);
-                  const videoEl = document.querySelector(`video[src="${video.file_url}"]`) as HTMLVideoElement;
-                  if (videoEl) videoEl.play();
+                  videoRef.current?.play();
                 }}
               >
                 <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
@@ -203,33 +223,40 @@ export function ScopeVideoCard({
         )}
 
         {/* Bottom controls */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          {/* Progress indicator */}
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-[#2060df]" />
-            <div className="w-8 h-0.5 bg-neutral-600 rounded-full overflow-hidden">
-              <div className="w-1/3 h-full bg-neutral-400" />
-            </div>
-            <div className="w-2 h-2 rounded-full bg-[#2060df]" />
-          </div>
-          {/* Mute button */}
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col">
+          {/* Progress bar */}
           {hasPlayableVideo && (
-            <button 
-              onClick={() => setIsMuted(!isMuted)}
-              className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
+            <div 
+              className="w-full h-1 bg-white/20 cursor-pointer group"
+              onClick={handleProgressClick}
             >
-              {isMuted ? (
+              <div 
+                className="h-full bg-[#2060df] transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          {/* Controls row */}
+          <div className="flex items-center justify-end px-3 py-2">
+            {/* Mute button */}
+            {hasPlayableVideo && (
+              <button 
+                onClick={() => setIsMuted(!isMuted)}
+                className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-white" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-white" />
+                )}
+              </button>
+            )}
+            {!hasPlayableVideo && (
+              <button className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm">
                 <VolumeX className="w-4 h-4 text-white" />
-              ) : (
-                <Volume2 className="w-4 h-4 text-white" />
-              )}
-            </button>
-          )}
-          {!hasPlayableVideo && (
-            <button className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm">
-              <VolumeX className="w-4 h-4 text-white" />
-            </button>
-          )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
