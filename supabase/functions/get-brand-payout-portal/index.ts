@@ -87,7 +87,7 @@ serve(async (req) => {
     
     const baseUrl = return_url?.split('?')[0] || 'https://virality.gg/dashboard';
     
-    const whopResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+    const whopResponse = await fetch('https://api.whop.com/api/v1/account_links', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,

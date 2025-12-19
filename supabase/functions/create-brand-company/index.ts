@@ -80,7 +80,7 @@ serve(async (req) => {
       console.log(`Brand ${brand_id} already has Whop company: ${brand.whop_company_id}`);
       
       // Create an account link for the existing company
-      const linkResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+      const linkResponse = await fetch('https://api.whop.com/api/v1/account_links', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
@@ -132,7 +132,7 @@ serve(async (req) => {
 
     // Use account_links with account_onboarding to create company during onboarding
     // This is the recommended flow for Platform Connect
-    const accountLinkResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+    const accountLinkResponse = await fetch('https://api.whop.com/api/v1/account_links', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
