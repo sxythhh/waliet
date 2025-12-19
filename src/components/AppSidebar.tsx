@@ -271,6 +271,16 @@ export function AppSidebar() {
           <span className="font-geist font-bold tracking-tighter-custom text-base text-white">VIRALITY</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* Upgrade Plan Button - Mobile */}
+          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && (
+            <button 
+              onClick={() => setSubscriptionGateOpen(true)}
+              className="py-1.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-1.5"
+            >
+              <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
+              Upgrade
+            </button>
+          )}
           <Popover>
             <PopoverTrigger asChild>
               <button className="cursor-pointer">
