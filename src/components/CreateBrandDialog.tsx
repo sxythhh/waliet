@@ -164,8 +164,8 @@ export function CreateBrandDialog({
                 <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
                   Create Brand
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                  Create and customize your brand workspace.
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
+                  Create and customize your brand workspace to manage your campaigns with your team. 
                 </p>
               </DialogHeader>
             </div>
