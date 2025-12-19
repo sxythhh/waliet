@@ -82,48 +82,75 @@ serve(async (req) => {
       });
     }
 
-    // Create a checkout configuration for the brand to add funds
-    // This uses the direct charge approach where we charge the connected account
-    console.log(`Creating checkout for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
+    // Create a topup for the brand to add funds
+    console.log(`Creating topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
     
-    const baseReturnUrl = return_url || `https://virality.gg/dashboard?workspace=${brand.slug}&tab=profile`;
+    // First, get the company's payment methods
+    const paymentMethodsResponse = await fetch(`https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${whopApiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const paymentMethodsText = await paymentMethodsResponse.text();
+    console.log('Payment methods response status:', paymentMethodsResponse.status);
+    console.log('Payment methods response:', paymentMethodsText);
+
+    if (!paymentMethodsResponse.ok) {
+      console.error('Failed to get payment methods:', paymentMethodsText);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to get payment methods',
+        details: paymentMethodsText
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const paymentMethodsData = JSON.parse(paymentMethodsText);
+    const paymentMethods = paymentMethodsData.data || paymentMethodsData;
     
-    // Create a checkout configuration using Whop's checkout configuration API
-    // Docs: https://docs.whop.com/api-reference/checkout-configurations/create-checkout-configuration
-    const checkoutResponse = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+    if (!paymentMethods || paymentMethods.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'No payment method on file. Please add a payment method first.',
+        needs_payment_method: true
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Use the first payment method
+    const paymentMethodId = paymentMethods[0].id;
+    console.log(`Using payment method: ${paymentMethodId}`);
+
+    // Create the topup using Whop's topups API
+    // Docs: https://docs.whop.com/api-reference/topups/create-topup
+    const checkoutResponse = await fetch('https://api.whop.com/api/v1/topups', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        amount: amount,
         company_id: brand.whop_company_id,
-        mode: 'payment',
-        plan: {
-          visibility: 'hidden',
-          plan_type: 'one_time',
-          release_method: 'buy_now',
-          currency: 'usd',
-          initial_price: amount,
-        },
-        metadata: {
-          brand_id: brand_id,
-          type: 'wallet_topup',
-          user_id: user.id,
-        },
-        redirect_url: `${baseReturnUrl}&topup=success`,
+        currency: 'usd',
+        payment_method_id: paymentMethodId,
       }),
     });
 
     const responseText = await checkoutResponse.text();
-    console.log('Whop checkout response status:', checkoutResponse.status);
-    console.log('Whop checkout response:', responseText);
+    console.log('Whop topup response status:', checkoutResponse.status);
+    console.log('Whop topup response:', responseText);
 
     if (!checkoutResponse.ok) {
       console.error('Whop API error:', responseText);
       
       return new Response(JSON.stringify({ 
-        error: 'Failed to create checkout', 
+        error: 'Failed to create topup', 
         details: responseText
       }), {
         status: 500,
@@ -131,22 +158,23 @@ serve(async (req) => {
       });
     }
 
-    const checkoutData = JSON.parse(responseText);
-    console.log('Checkout created:', checkoutData);
+    const topupData = JSON.parse(responseText);
+    console.log('Topup created:', topupData);
 
-    // Record the pending transaction
-    if (amount && amount >= 100) {
+    // Record the transaction (topup is processed immediately)
+    if (amount && amount >= 1) {
       await supabase
         .from('brand_wallet_transactions')
         .insert({
           brand_id: brand_id,
           type: 'topup',
           amount: amount,
-          status: 'pending',
+          status: topupData.status === 'paid' ? 'completed' : 'pending',
           description: `Wallet top-up: $${amount}`,
+          whop_payment_id: topupData.id,
           metadata: {
             user_id: user.id,
-            checkout_id: checkoutData.id,
+            payment_id: topupData.id,
             initiated_at: new Date().toISOString()
           },
           created_by: user.id
@@ -154,8 +182,10 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      checkout_url: checkoutData.purchase_url || checkoutData.url,
-      checkout_id: checkoutData.id,
+      success: true,
+      payment_id: topupData.id,
+      status: topupData.status,
+      amount: topupData.total,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
