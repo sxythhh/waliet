@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, ArrowRight, Check, Lock, FileText, Plus, X, HelpCircle } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Lock, FileText, Plus, X, HelpCircle, Wallet } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -51,6 +51,8 @@ export function CreateBountyDialog({
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
+  const [availableBalance, setAvailableBalance] = useState<number>(0);
+  const [loadingBalance, setLoadingBalance] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get selected blueprint
@@ -72,6 +74,32 @@ export function CreateBountyDialog({
     content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts"
   });
   const [newQuestion, setNewQuestion] = useState("");
+
+  // Fetch brand's available balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (open && brandId) {
+        setLoadingBalance(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          
+          const { data, error } = await supabase.functions.invoke('get-brand-balance', {
+            body: { brand_id: brandId }
+          });
+          
+          if (error) throw error;
+          setAvailableBalance(data?.balance || 0);
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+        } finally {
+          setLoadingBalance(false);
+        }
+      }
+    };
+    fetchBalance();
+  }, [open, brandId]);
+
   useEffect(() => {
     if (open && brandId) {
       fetchBlueprints();
@@ -118,6 +146,17 @@ export function CreateBountyDialog({
         toast.error("Please fill in all required fields");
         return;
       }
+      
+      // Calculate total cost and validate against balance
+      const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+      const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+      const totalBudgetNeeded = monthlyRetainer * maxCreators;
+      
+      if (totalBudgetNeeded > availableBalance) {
+        toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+        return;
+      }
+      
       setCurrentStep(2);
     }
   };
@@ -238,6 +277,21 @@ export function CreateBountyDialog({
                 </div>}
 
               <div className="space-y-6">
+                {/* Available Balance Display */}
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Wallet className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Available Balance</p>
+                      <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
+                        {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Left Column - Compensation */}
                 <div className="space-y-5">
                   <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
@@ -312,6 +366,29 @@ export function CreateBountyDialog({
                       </span>
                     </div>
                   </div>
+
+                  {/* Total Budget Needed */}
+                  {(() => {
+                    const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+                    const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+                    const totalBudget = monthlyRetainer * maxCreators;
+                    const exceedsBalance = totalBudget > availableBalance;
+                    return (
+                      <div className={`p-4 rounded-xl ${exceedsBalance ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted/30'}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Total budget needed</span>
+                          <div className="text-right">
+                            <span className={`text-lg font-semibold font-geist tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
+                              ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            {exceedsBalance && (
+                              <p className="text-xs text-destructive mt-0.5">Exceeds available balance</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Right Column - Settings & Dates */}

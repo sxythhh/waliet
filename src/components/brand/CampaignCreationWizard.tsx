@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -167,10 +167,37 @@ export function CampaignCreationWizard({
   const [isAdjustingBudget, setIsAdjustingBudget] = useState(false);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(campaign?.blueprint_id || initialBlueprintId || null);
+  const [availableBalance, setAvailableBalance] = useState<number>(0);
+  const [loadingBalance, setLoadingBalance] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
   } = useAdminCheck();
+
+  // Fetch brand's available balance
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (open && brandId) {
+        setLoadingBalance(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          
+          const { data, error } = await supabase.functions.invoke('get-brand-balance', {
+            body: { brand_id: brandId }
+          });
+          
+          if (error) throw error;
+          setAvailableBalance(data?.balance || 0);
+        } catch (error) {
+          console.error('Error fetching balance:', error);
+        } finally {
+          setLoadingBalance(false);
+        }
+      }
+    };
+    fetchBalance();
+  }, [open, brandId]);
 
   // Initialize manual budget used with current value
   useEffect(() => {
@@ -372,7 +399,19 @@ export function CampaignCreationWizard({
   const handleNext = async () => {
     if (currentStep === 1) {
       const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
-      if (isValid) setCurrentStep(2);
+      if (!isValid) return;
+      
+      // Validate budget doesn't exceed available balance (for new campaigns only)
+      const values = form.getValues();
+      if (!isEditMode && !values.is_infinite_budget) {
+        const budgetValue = parseFloat(values.budget || "0");
+        if (budgetValue > availableBalance) {
+          toast.error(`Budget cannot exceed available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+          return;
+        }
+      }
+      
+      setCurrentStep(2);
     }
   };
   const handleBack = () => {
@@ -595,6 +634,21 @@ export function CampaignCreationWizard({
                 {/* Step 1: Budget & Targeting */}
                 {currentStep === 1 && (
                   <div className="space-y-5">
+                    {/* Available Balance Display */}
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Wallet className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Available Balance</p>
+                          <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
+                            {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <FormField
                       control={form.control}
                       name="is_infinite_budget"
@@ -615,18 +669,33 @@ export function CampaignCreationWizard({
                       <FormField
                         control={form.control}
                         name="budget"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Total Budget</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input type="number" placeholder="10,000" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                        render={({ field }) => {
+                          const budgetValue = parseFloat(field.value || "0");
+                          const exceedsBalance = budgetValue > availableBalance;
+                          return (
+                            <FormItem>
+                              <div className="flex items-center justify-between">
+                                <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Total Budget</FormLabel>
+                                {exceedsBalance && (
+                                  <span className="text-xs text-destructive font-inter">Exceeds available balance</span>
+                                )}
                               </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="10,000" 
+                                    className={`pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 ${exceedsBalance ? 'ring-1 ring-destructive' : ''}`} 
+                                    max={availableBalance}
+                                    {...field} 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                     )}
 
