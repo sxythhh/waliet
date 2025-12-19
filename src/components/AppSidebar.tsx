@@ -32,6 +32,7 @@ import nutFillIcon from "@/assets/nut-fill.svg";
 import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
 import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
+import storefrontIcon from "@/assets/storefront-icon.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -412,7 +413,7 @@ export function AppSidebar() {
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                         <img src={swapHorizIcon} alt="" className="w-3.5 h-3.5" />
                       </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
-                          <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+                          <img src={storefrontIcon} alt="" className="w-3.5 h-3.5" />
                         </div>}
                     <p className="font-medium text-white truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
                   </div>
