@@ -340,207 +340,205 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
     <div className="h-full flex flex-col bg-[#0a0a0a]">
       {/* Header */}
       <div className="px-6 py-4 border-b border-[#1a1a1a]">
-        <div className="flex items-center gap-2">
-          {/* Sort Dropdown - Expandable Menu Style */}
-          <div className="relative">
-            <button 
-              onClick={() => setSortMenuOpen(!sortMenuOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#0d0d0d] rounded-xl text-[13px] text-white hover:bg-[#141414] transition-colors font-['Inter'] tracking-[-0.5px]"
-            >
-              <Filter className="w-4 h-4 text-neutral-500" />
-              <span className="text-neutral-500">Sort by</span>
-              <span className="font-semibold capitalize">{sortBy}</span>
-            </button>
-            
-            {sortMenuOpen && (
-              <div 
-                className={`absolute top-full left-0 mt-2 bg-[#0d0d0d] rounded-xl shadow-2xl z-50 overflow-hidden font-['Inter'] tracking-[-0.5px] transition-all duration-200 ease-out ${
-                  expandedCategory ? 'w-48' : 'w-64'
-                }`}
+        <div className="flex items-center gap-3">
+          {/* Sort & Filters Group */}
+          <div className="flex items-center bg-[#0d0d0d] rounded-xl font-['Inter'] tracking-[-0.5px]">
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setSortMenuOpen(!sortMenuOpen)}
+                className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-white hover:bg-[#141414] rounded-xl transition-colors"
               >
-                {!expandedCategory ? (
-                  <div className="animate-fade-in">
-                    {/* Main Categories */}
-                    <button 
-                      onClick={() => setExpandedCategory('cta')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <MonitorPlay className="w-[18px] h-[18px] text-neutral-500" />
-                        <span className="text-white text-[13px] font-medium">CTA Outcome</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-500" />
-                    </button>
+                <Filter className="w-4 h-4 text-neutral-500" />
+                <span className="text-neutral-500">Sort by</span>
+                <span className="font-semibold capitalize">{sortBy}</span>
+              </button>
+              
+              {sortMenuOpen && (
+                <div 
+                  className={`absolute top-full left-0 mt-2 bg-[#0d0d0d] rounded-xl shadow-2xl z-50 overflow-hidden font-['Inter'] tracking-[-0.5px] transition-all duration-200 ease-out ${
+                    expandedCategory ? 'w-48' : 'w-64'
+                  }`}
+                >
+                  {!expandedCategory ? (
+                    <div className="animate-fade-in">
+                      {/* Main Categories */}
+                      <button 
+                        onClick={() => setExpandedCategory('cta')}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <MonitorPlay className="w-[18px] h-[18px] text-neutral-500" />
+                          <span className="text-white text-[13px] font-medium">CTA Outcome</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-500" />
+                      </button>
 
-                    <button 
-                      onClick={() => setExpandedCategory('format')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <PlaySquare className="w-[18px] h-[18px] text-neutral-500" />
-                        <span className="text-white text-[13px] font-medium">Format</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-500" />
-                    </button>
+                      <button 
+                        onClick={() => setExpandedCategory('format')}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <PlaySquare className="w-[18px] h-[18px] text-neutral-500" />
+                          <span className="text-white text-[13px] font-medium">Format</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-500" />
+                      </button>
 
-                    <button 
-                      onClick={() => setExpandedCategory('platform')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-[18px] h-[18px] text-neutral-500" />
-                        <span className="text-white text-[13px] font-medium">Platform</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-500" />
-                    </button>
+                      <button 
+                        onClick={() => setExpandedCategory('platform')}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Globe className="w-[18px] h-[18px] text-neutral-500" />
+                          <span className="text-white text-[13px] font-medium">Platform</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-500" />
+                      </button>
 
-                    <button 
-                      onClick={() => setExpandedCategory('style')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="w-[18px] h-[18px] text-neutral-500" />
-                        <span className="text-white text-[13px] font-medium">Content Style</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-500" />
-                    </button>
+                      <button 
+                        onClick={() => setExpandedCategory('style')}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Sparkles className="w-[18px] h-[18px] text-neutral-500" />
+                          <span className="text-white text-[13px] font-medium">Content Style</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-500" />
+                      </button>
 
-                    <button 
-                      onClick={() => setExpandedCategory('audience')}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Users className="w-[18px] h-[18px] text-neutral-500" />
-                        <span className="text-white text-[13px] font-medium">Target Audience</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-neutral-500" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="animate-fade-in">
-                    {/* Sub-menu with back button */}
-                    <button 
-                      onClick={() => setExpandedCategory(null)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161616] transition-colors"
-                    >
-                      <ArrowLeft className="w-4 h-4 text-neutral-500" />
-                      <span className="text-neutral-400 text-[13px]">Back</span>
-                    </button>
+                      <button 
+                        onClick={() => setExpandedCategory('audience')}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Users className="w-[18px] h-[18px] text-neutral-500" />
+                          <span className="text-white text-[13px] font-medium">Target Audience</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="animate-fade-in">
+                      {/* Sub-menu with back button */}
+                      <button 
+                        onClick={() => setExpandedCategory(null)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161616] transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4 text-neutral-500" />
+                        <span className="text-neutral-400 text-[13px]">Back</span>
+                      </button>
 
-                    {/* Category-specific filters */}
-                    {expandedCategory === 'cta' && (
-                      <>
-                        {['Sign Up', 'Download App', 'Visit Website', 'Purchase', 'Follow'].map((option, i) => (
-                          <button 
-                            key={option}
-                            onClick={() => addFilter('cta', option)}
-                            className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                      {/* Category-specific filters */}
+                      {expandedCategory === 'cta' && (
+                        <>
+                          {['Sign Up', 'Download App', 'Visit Website', 'Purchase', 'Follow'].map((option) => (
+                            <button 
+                              key={option}
+                              onClick={() => addFilter('cta', option)}
+                              className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                    {expandedCategory === 'format' && (
-                      <>
-                        {['Talking Head', 'Voiceover', 'Skit', 'Tutorial', 'Review', 'Unboxing'].map((option, i) => (
-                          <button 
-                            key={option}
-                            onClick={() => addFilter('format', option)}
-                            className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                      {expandedCategory === 'format' && (
+                        <>
+                          {['Talking Head', 'Voiceover', 'Skit', 'Tutorial', 'Review', 'Unboxing'].map((option) => (
+                            <button 
+                              key={option}
+                              onClick={() => addFilter('format', option)}
+                              className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                    {expandedCategory === 'platform' && (
-                      <>
-                        {['TikTok', 'Instagram', 'YouTube', 'X'].map((option, i) => (
-                          <button 
-                            key={option}
-                            onClick={() => addFilter('platform', option)}
-                            className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                      {expandedCategory === 'platform' && (
+                        <>
+                          {['TikTok', 'Instagram', 'YouTube', 'X'].map((option) => (
+                            <button 
+                              key={option}
+                              onClick={() => addFilter('platform', option)}
+                              className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                    {expandedCategory === 'style' && (
-                      <>
-                        {['Comedic', 'Educational', 'Lifestyle', 'Professional', 'Casual'].map((option, i) => (
-                          <button 
-                            key={option}
-                            onClick={() => addFilter('style', option)}
-                            className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </>
-                    )}
+                      {expandedCategory === 'style' && (
+                        <>
+                          {['Comedic', 'Educational', 'Lifestyle', 'Professional', 'Casual'].map((option) => (
+                            <button 
+                              key={option}
+                              onClick={() => addFilter('style', option)}
+                              className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                    {expandedCategory === 'audience' && (
-                      <>
-                        {['Gen Z', 'Millennials', 'Parents', 'Professionals', 'Students'].map((option, i) => (
-                          <button 
-                            key={option}
-                            onClick={() => addFilter('audience', option)}
-                            className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
-                            style={{ animationDelay: `${i * 30}ms` }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
+                      {expandedCategory === 'audience' && (
+                        <>
+                          {['Gen Z', 'Millennials', 'Parents', 'Professionals', 'Students'].map((option) => (
+                            <button 
+                              key={option}
+                              onClick={() => addFilter('audience', option)}
+                              className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Active Filter Chips - Inside the group */}
+            {activeFilters.map((filter, index) => {
+              const IconComponent = getCategoryIcon(filter.category);
+              return (
+                <div 
+                  key={`${filter.category}-${filter.value}`}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#2060df] rounded-lg text-[13px] text-white mr-1"
+                >
+                  <IconComponent className="w-4 h-4 text-white/70" />
+                  <span className="border-l border-white/20 pl-2">{filter.value}</span>
+                  <button 
+                    onClick={() => removeFilter(index)}
+                    className="ml-1 hover:bg-white/10 rounded p-0.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+
+            {/* Clear All Filters Button - Inside the group */}
+            {activeFilters.length > 0 && (
+              <button
+                onClick={clearAllFilters}
+                className="p-2 hover:bg-[#161616] rounded-lg transition-colors mr-1"
+                title="Clear all filters"
+              >
+                <Trash2 className="w-4 h-4 text-neutral-500 hover:text-white transition-colors" />
+              </button>
             )}
           </div>
 
-          {/* Active Filter Chips */}
-          {activeFilters.map((filter, index) => {
-            const IconComponent = getCategoryIcon(filter.category);
-            return (
-              <div 
-                key={`${filter.category}-${filter.value}`}
-                className="flex items-center gap-2 px-3 py-2 bg-[#2060df] rounded-lg text-[13px] text-white font-['Inter'] tracking-[-0.5px] animate-fade-in"
-              >
-                <IconComponent className="w-4 h-4 text-white/70" />
-                <span className="border-l border-white/20 pl-2">{filter.value}</span>
-                <button 
-                  onClick={() => removeFilter(index)}
-                  className="ml-1 hover:bg-white/10 rounded p-0.5 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            );
-          })}
-
-          {/* Clear All Filters Button */}
-          {activeFilters.length > 0 && (
-            <button
-              onClick={clearAllFilters}
-              className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
-              title="Clear all filters"
-            >
-              <Trash2 className="w-4 h-4 text-neutral-500 hover:text-white transition-colors" />
-            </button>
-          )}
-
           {/* Search */}
-          <div className="flex-1 max-w-md relative ml-2">
+          <div className="flex-1 max-w-md relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <Input
               placeholder="Scope the algorithm.."
