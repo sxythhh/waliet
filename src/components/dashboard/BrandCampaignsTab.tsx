@@ -16,6 +16,7 @@ import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
+import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
@@ -338,11 +339,11 @@ export function BrandCampaignsTab({
               </div>
             </div>
             <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
-          prev.set('tab', 'blueprints');
+          prev.set('tab', 'scope');
           return prev;
         })}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
-                <img src={stickyNoteIcon} alt="" className="w-5 h-5" />
+                <img src={scopeIcon} alt="" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
