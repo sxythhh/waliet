@@ -6,6 +6,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function sanitizeRedirectUrl(input: string | undefined | null) {
+  const fallback = 'https://example.com';
+  if (!input) return fallback;
+
+  try {
+    const url = new URL(input);
+
+    // Remove Lovable-specific auth token + transient params (can make URL extremely long)
+    url.searchParams.delete('__lovable_token');
+    url.searchParams.delete('state_id');
+
+    const sanitized = url.toString();
+
+    // Defensive: keep under common URL limits for third-party services
+    if (sanitized.length > 1900) {
+      return `${url.origin}${url.pathname}`;
+    }
+
+    return sanitized;
+  } catch {
+    return fallback;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -120,7 +144,7 @@ serve(async (req) => {
 
     // If no payment method exists, create a setup checkout so user can save their payment method
     if (!paymentMethods || paymentMethods.length === 0) {
-      const redirectUrl = return_url || 'https://example.com';
+      const redirectUrl = sanitizeRedirectUrl(return_url);
       console.log('No payment method on file. Creating setup checkout. redirect_url:', redirectUrl);
 
       // Create a setup checkout - this saves the payment method for future use
