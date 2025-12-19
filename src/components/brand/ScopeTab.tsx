@@ -280,7 +280,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
           <Skeleton className="h-10 w-40" />
           <Skeleton className="h-10 flex-1 max-w-md" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <Skeleton key={i} className="h-[420px] rounded-xl" />
           ))}
@@ -292,7 +292,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   return (
     <div className="h-full flex flex-col bg-[#0a0a0a]">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[#1a1a1a]">
+      <div className="px-6 py-4">
         <div className="flex items-center gap-3">
           {/* Sort & Filters Group */}
           <div className={`flex items-center bg-[#0d0d0d] rounded-xl font-['Inter'] tracking-[-0.5px] transition-colors ${
@@ -520,7 +520,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
             <p className="text-neutral-500 text-sm">Videos will appear here once added by an admin</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-4">
             {filteredVideos.map(video => (
               <ScopeVideoCard
                 key={video.id}
@@ -575,13 +575,13 @@ function ScopeVideoCard({
   const hasPlayableVideo = !!video.file_url;
 
   return (
-    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px]">
+    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px] min-w-0">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
           {getPlatformIcon(video.platform)}
           {video.username ? (
-            <span className="text-[13px] font-medium text-white truncate max-w-[100px]">{video.username}</span>
+            <span className="text-[12px] sm:text-[13px] font-medium text-white truncate max-w-[80px] sm:max-w-[100px]">{video.username}</span>
           ) : (
             <span className="text-[13px] text-neutral-500">Unavailable</span>
           )}
