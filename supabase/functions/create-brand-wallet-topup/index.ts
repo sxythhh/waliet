@@ -151,33 +151,43 @@ serve(async (req) => {
     console.log(`Processing topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
     console.log(`Saved payment method: ${brand.whop_payment_method_id || 'none'}`);
 
-    // If brand has a saved payment method, use it directly
-    if (brand.whop_payment_method_id) {
-      console.log(`Using saved payment method: ${brand.whop_payment_method_id}`);
+    // If brand has a saved payment method and member_id, use the payments API
+    if (brand.whop_payment_method_id && brand.whop_member_id) {
+      console.log(`Using saved payment method: ${brand.whop_payment_method_id}, member: ${brand.whop_member_id}`);
 
-      const topupResponse = await fetch('https://api.whop.com/api/v1/topups', {
+      // Use payments.create API which works with member-scoped payment methods
+      const paymentResponse = await fetch('https://api.whop.com/api/v1/payments', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: amount,
           company_id: brand.whop_company_id,
-          currency: 'usd',
+          member_id: brand.whop_member_id,
           payment_method_id: brand.whop_payment_method_id,
+          plan: {
+            initial_price: amount,
+            currency: 'usd',
+            plan_type: 'one_time',
+          },
+          metadata: {
+            type: 'brand_wallet_topup',
+            brand_id: brand_id,
+            user_id: user.id,
+          },
         }),
       });
 
-      const responseText = await topupResponse.text();
-      console.log('Whop topup response status:', topupResponse.status);
-      console.log('Whop topup response:', responseText);
+      const responseText = await paymentResponse.text();
+      console.log('Whop payment response status:', paymentResponse.status);
+      console.log('Whop payment response:', responseText);
 
-      if (!topupResponse.ok) {
-        console.error('Whop topup API error:', responseText);
+      if (!paymentResponse.ok) {
+        console.error('Whop payment API error:', responseText);
         
         // If payment method is invalid, clear it and prompt for new one
-        if (topupResponse.status === 400 || topupResponse.status === 422) {
+        if (paymentResponse.status === 400 || paymentResponse.status === 404 || paymentResponse.status === 422) {
           console.log('Payment method may be invalid, clearing saved method');
           await supabase
             .from('brands')
@@ -195,8 +205,8 @@ serve(async (req) => {
         });
       }
 
-      const topupData = JSON.parse(responseText);
-      console.log('Topup created:', topupData);
+      const paymentData = JSON.parse(responseText);
+      console.log('Payment created:', paymentData);
 
       // Record the transaction
       await supabase
@@ -205,12 +215,12 @@ serve(async (req) => {
           brand_id: brand_id,
           type: 'topup',
           amount: amount,
-          status: topupData.status === 'paid' ? 'completed' : 'pending',
+          status: paymentData.status === 'paid' ? 'completed' : 'pending',
           description: `Wallet top-up: $${amount}`,
-          whop_payment_id: topupData.id,
+          whop_payment_id: paymentData.id,
           metadata: {
             user_id: user.id,
-            payment_id: topupData.id,
+            payment_id: paymentData.id,
             initiated_at: new Date().toISOString()
           },
           created_by: user.id
@@ -218,9 +228,9 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({ 
         success: true,
-        payment_id: topupData.id,
-        status: topupData.status,
-        amount: topupData.total,
+        payment_id: paymentData.id,
+        status: paymentData.status,
+        amount: amount,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
