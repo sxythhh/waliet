@@ -1,7 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
-import { PayoutsSession } from '@whop/embedded-components-react-js';
+import {
+  Elements,
+  PayoutsSession,
+  BalanceElement,
+  WithdrawButtonElement,
+  WithdrawalsElement,
+} from '@whop/embedded-components-react-js';
+import { loadWhopElements } from '@whop/embedded-components-vanilla-js';
+import type { WhopElementsOptions } from '@whop/embedded-components-vanilla-js/types';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+
+const elements = loadWhopElements();
+
+const appearance: WhopElementsOptions['appearance'] = {
+  classes: {
+    '.Button': { height: '40px', 'border-radius': '8px' },
+    '.Button:disabled': { 'background-color': '#333' },
+    '.Container': { 'border-radius': '12px', 'background-color': '#111' },
+  },
+};
 
 interface EmbeddedPayoutPortalProps {
   brandId: string;
@@ -68,13 +86,26 @@ export function EmbeddedPayoutPortal({ brandId, redirectUrl }: EmbeddedPayoutPor
   }
 
   return (
-    <div className="h-[600px] w-full">
-      <PayoutsSession
-        token={getToken}
-        companyId={companyId}
-        redirectUrl={redirectUrl}
-        currency="USD"
-      />
+    <div className="h-[550px] w-full">
+      <Elements appearance={appearance} elements={elements}>
+        <PayoutsSession
+          token={getToken}
+          companyId={companyId}
+          redirectUrl={redirectUrl}
+        >
+          <section className="flex flex-col gap-4 p-4">
+            <div className="h-24 w-full relative">
+              <BalanceElement fallback={<div className="animate-pulse bg-neutral-800 h-full rounded-lg" />} />
+            </div>
+            <div className="h-10 w-full relative">
+              <WithdrawButtonElement fallback={<div className="animate-pulse bg-neutral-800 h-full rounded-lg" />} />
+            </div>
+            <div className="w-full">
+              <WithdrawalsElement fallback={<div className="animate-pulse bg-neutral-800 h-32 rounded-lg" />} />
+            </div>
+          </section>
+        </PayoutsSession>
+      </Elements>
     </div>
   );
 }
