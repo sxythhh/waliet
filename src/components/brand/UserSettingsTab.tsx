@@ -17,7 +17,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
-
 interface Brand {
   id: string;
   name: string;
@@ -35,7 +34,6 @@ interface Brand {
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
 }
-
 export function UserSettingsTab() {
   const navigate = useNavigate();
   const {
@@ -62,32 +60,28 @@ export function UserSettingsTab() {
     billing_address: "",
     legal_business_name: ""
   });
-  
+
   // Integration states
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const [slackWebhookUrl, setSlackWebhookUrl] = useState("");
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
   const [savingIntegrations, setSavingIntegrations] = useState(false);
   const [showShortimizeKey, setShowShortimizeKey] = useState(false);
-
   useEffect(() => {
     fetchProfile();
   }, []);
-
   useEffect(() => {
     if (isBrandMode && currentBrand?.id) {
       fetchBrand();
     }
   }, [isBrandMode, currentBrand?.id]);
-
   const fetchBrand = async () => {
     if (!currentBrand?.id) return;
     try {
-      const { data, error } = await supabase
-        .from("brands")
-        .select("*")
-        .eq("id", currentBrand.id)
-        .single();
+      const {
+        data,
+        error
+      } = await supabase.from("brands").select("*").eq("id", currentBrand.id).single();
       if (error) throw error;
       setBrand(data);
       setEditedBrandName(data?.name || "");
@@ -101,21 +95,17 @@ export function UserSettingsTab() {
       console.error("Error fetching brand:", error);
     }
   };
-
   const handleSaveIntegrations = async () => {
     if (!brand?.id) return;
-    
     try {
       setSavingIntegrations(true);
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          shortimize_api_key: shortimizeApiKey || null,
-          slack_webhook_url: slackWebhookUrl || null,
-          discord_webhook_url: discordWebhookUrl || null
-        })
-        .eq("id", brand.id);
-      
+      const {
+        error
+      } = await supabase.from("brands").update({
+        shortimize_api_key: shortimizeApiKey || null,
+        slack_webhook_url: slackWebhookUrl || null,
+        discord_webhook_url: discordWebhookUrl || null
+      }).eq("id", brand.id);
       if (error) throw error;
       toast.success("Integrations saved");
       fetchBrand();
@@ -126,27 +116,23 @@ export function UserSettingsTab() {
       setSavingIntegrations(false);
     }
   };
-
   const handleSaveBrand = async () => {
     if (!brand?.id) return;
-    
+
     // Validate slug format
     const slugRegex = /^[a-z0-9-]+$/;
     if (!slugRegex.test(editedSlug)) {
       toast.error("URL can only contain lowercase letters, numbers, and hyphens");
       return;
     }
-    
     try {
       setSavingBrand(true);
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          name: editedBrandName,
-          slug: editedSlug
-        })
-        .eq("id", brand.id);
-      
+      const {
+        error
+      } = await supabase.from("brands").update({
+        name: editedBrandName,
+        slug: editedSlug
+      }).eq("id", brand.id);
       if (error) throw error;
       toast.success("Brand settings saved");
       fetchBrand();
@@ -162,19 +148,16 @@ export function UserSettingsTab() {
       setSavingBrand(false);
     }
   };
-
   const handleUpdatePlan = async () => {
     if (!brand?.id) return;
     try {
       setSavingPlan(true);
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          subscription_plan: selectedPlan || null,
-          subscription_status: selectedStatus
-        })
-        .eq("id", brand.id);
-      
+      const {
+        error
+      } = await supabase.from("brands").update({
+        subscription_plan: selectedPlan || null,
+        subscription_status: selectedStatus
+      }).eq("id", brand.id);
       if (error) throw error;
       toast.success("Subscription plan updated");
       fetchBrand();
@@ -185,34 +168,31 @@ export function UserSettingsTab() {
       setSavingPlan(false);
     }
   };
-
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !brand?.id) return;
-
     try {
       setUploadingAvatar(true);
       const fileExt = file.name.split('.').pop();
       const fileName = `${brand.id}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('brands')
-        .update({ logo_url: publicUrl })
-        .eq('id', brand.id);
-
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        error: updateError
+      } = await supabase.from('brands').update({
+        logo_url: publicUrl
+      }).eq('id', brand.id);
       if (updateError) throw updateError;
-
       toast.success("Avatar updated successfully");
       fetchBrand();
       refreshBrands();
@@ -223,20 +203,22 @@ export function UserSettingsTab() {
       setUploadingAvatar(false);
     }
   };
-
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
       }
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      const {
+        data: profileData,
+        error
+      } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (error) throw error;
       if (profileData) {
         setProfile({
@@ -251,19 +233,21 @@ export function UserSettingsTab() {
       setLoading(false);
     }
   };
-
   const handleSave = async () => {
     try {
       setSaving(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          billing_address: profile.billing_address,
-          legal_business_name: profile.legal_business_name
-        } as any)
-        .eq("id", user.id);
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        billing_address: profile.billing_address,
+        legal_business_name: profile.legal_business_name
+      } as any).eq("id", user.id);
       if (error) throw error;
       toast.success("Settings updated successfully");
     } catch (error) {
@@ -273,17 +257,13 @@ export function UserSettingsTab() {
       setSaving(false);
     }
   };
-
   const handleBrandCreated = () => {
     refreshBrands();
     setShowCreateBrandDialog(false);
   };
-
   const Spacer = () => <div className="h-6" />;
-
   if (loading) {
-    return (
-      <div className="p-4 space-y-6 max-w-xl mx-auto">
+    return <div className="p-4 space-y-6 max-w-xl mx-auto">
         {/* Header Skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-24 rounded-lg" />
@@ -343,12 +323,9 @@ export function UserSettingsTab() {
           </div>
           <Skeleton className="h-9 w-full rounded-lg" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="p-4 space-y-6 max-w-xl mx-auto">
+  return <div className="p-4 space-y-6 max-w-xl mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
@@ -360,51 +337,26 @@ export function UserSettingsTab() {
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center gap-6 border-b border-border">
-          {["general", "integrations", "team", "billing"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${
-                activeTab === tab
-                  ? "border-[#1f60dd] text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
+          {["general", "integrations", "team", "billing"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+            </button>)}
         </div>
 
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
-          {isBrandMode && brand && (
-            <>
+          {isBrandMode && brand && <>
               {/* Avatar Section */}
               <div className="space-y-3">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                   Avatar
                 </Label>
                 <div className="flex items-center gap-4">
-                  {brand.logo_url ? (
-                    <img 
-                      src={brand.logo_url} 
-                      alt={brand.name} 
-                      className="w-16 h-16 rounded-xl object-cover" 
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
+                  {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-16 h-16 rounded-xl object-cover" /> : <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
                       {brand.name?.[0]?.toUpperCase() || "B"}
-                    </div>
-                  )}
+                    </div>}
                   <label className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors cursor-pointer">
                     {uploadingAvatar ? "Uploading..." : "Change avatar"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                    />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
                   </label>
                 </div>
                 <p className="text-xs text-muted-foreground tracking-[-0.5px]">
@@ -419,11 +371,7 @@ export function UserSettingsTab() {
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                   Brand name
                 </Label>
-                <Input 
-                  value={editedBrandName} 
-                  onChange={(e) => setEditedBrandName(e.target.value)}
-                  className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                />
+                <Input value={editedBrandName} onChange={e => setEditedBrandName(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
               </div>
 
               <Spacer />
@@ -434,11 +382,7 @@ export function UserSettingsTab() {
                   Public URL
                 </Label>
                 <div className="flex items-center">
-                  <Input 
-                    value={editedSlug} 
-                    onChange={(e) => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" 
-                  />
+                  <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
                   <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
                     .virality.gg
                   </span>
@@ -448,36 +392,25 @@ export function UserSettingsTab() {
               <Spacer />
 
               {/* Save Button */}
-              <Button 
-                onClick={handleSaveBrand} 
-                disabled={savingBrand || (editedBrandName === brand.name && editedSlug === brand.slug)}
-                className="w-full h-11 tracking-[-0.5px]"
-              >
+              <Button onClick={handleSaveBrand} disabled={savingBrand || editedBrandName === brand.name && editedSlug === brand.slug} className="w-full h-11 tracking-[-0.5px]">
                 {savingBrand ? "Saving..." : "Save Changes"}
               </Button>
 
               <Spacer />
 
               {/* Website URL */}
-              {brand.home_url && (
-                <>
+              {brand.home_url && <>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                       Website
                     </Label>
-                    <Input 
-                      value={brand.home_url} 
-                      readOnly
-                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                    />
+                    <Input value={brand.home_url} readOnly className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
                   </div>
                   <Spacer />
-                </>
-              )}
+                </>}
 
               {/* Admin: Subscription Plan Management */}
-              {isAdmin && (
-                <div className="space-y-4 p-4 rounded-xl bg-amber-500/10">
+              {isAdmin && <div className="space-y-4 p-4 rounded-xl bg-amber-500/10">
                   <div className="flex items-center gap-2">
                     <Crown className="h-4 w-4 text-amber-500" />
                     <h3 className="text-sm font-medium tracking-[-0.5px]">Admin: Subscription Plan</h3>
@@ -515,24 +448,16 @@ export function UserSettingsTab() {
                     </div>
                   </div>
                   
-                  <Button 
-                    onClick={handleUpdatePlan} 
-                    disabled={savingPlan}
-                    size="sm"
-                    className="w-full"
-                  >
+                  <Button onClick={handleUpdatePlan} disabled={savingPlan} size="sm" className="w-full">
                     {savingPlan ? "Updating..." : "Update Plan"}
                   </Button>
-                </div>
-              )}
-            </>
-          )}
+                </div>}
+            </>}
         </TabsContent>
 
         {/* Integrations Tab */}
         <TabsContent value="integrations" className="mt-6 space-y-6">
-          {isBrandMode && brand && (
-            <>
+          {isBrandMode && brand && <>
               {/* Shortimize API Key */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">
                 <div className="flex items-center gap-3">
@@ -547,18 +472,8 @@ export function UserSettingsTab() {
                     API Key
                   </Label>
                   <div className="relative">
-                    <Input 
-                      type={showShortimizeKey ? "text" : "password"}
-                      value={shortimizeApiKey} 
-                      onChange={(e) => setShortimizeApiKey(e.target.value)}
-                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" 
-                      placeholder="Enter your Shortimize API key" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowShortimizeKey(!showShortimizeKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
+                    <Input type={showShortimizeKey ? "text" : "password"} value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Shortimize API key" />
+                    <button type="button" onClick={() => setShowShortimizeKey(!showShortimizeKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -568,7 +483,7 @@ export function UserSettingsTab() {
               {/* Slack Webhook */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">
                 <div className="flex items-center gap-3">
-                  <img src={slackLogo} alt="Slack" className="w-10 h-10 rounded-lg object-contain" />
+                  <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Slack</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
@@ -578,13 +493,7 @@ export function UserSettingsTab() {
                   <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                     Webhook URL
                   </Label>
-                  <Input 
-                    type="url"
-                    value={slackWebhookUrl} 
-                    onChange={(e) => setSlackWebhookUrl(e.target.value)}
-                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                    placeholder="https://hooks.slack.com/services/..." 
-                  />
+                  <Input type="url" value={slackWebhookUrl} onChange={e => setSlackWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://hooks.slack.com/services/..." />
                 </div>
               </div>
 
@@ -601,33 +510,20 @@ export function UserSettingsTab() {
                   <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
                     Webhook URL
                   </Label>
-                  <Input 
-                    type="url"
-                    value={discordWebhookUrl} 
-                    onChange={(e) => setDiscordWebhookUrl(e.target.value)}
-                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                    placeholder="https://discord.com/api/webhooks/..." 
-                  />
+                  <Input type="url" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://discord.com/api/webhooks/..." />
                 </div>
               </div>
 
               {/* Save Button */}
-              <Button 
-                onClick={handleSaveIntegrations} 
-                disabled={savingIntegrations}
-                className="w-full h-11 tracking-[-0.5px]"
-              >
+              <Button onClick={handleSaveIntegrations} disabled={savingIntegrations} className="w-full h-11 tracking-[-0.5px]">
                 {savingIntegrations ? "Saving..." : "Save Integrations"}
               </Button>
-            </>
-          )}
+            </>}
         </TabsContent>
 
         {/* Team Tab */}
         <TabsContent value="team" className="mt-6">
-          {isBrandMode && brand && (
-            <TeamMembersTab brandId={brand.id} />
-          )}
+          {isBrandMode && brand && <TeamMembersTab brandId={brand.id} />}
         </TabsContent>
 
         {/* Billing Tab */}
@@ -637,15 +533,10 @@ export function UserSettingsTab() {
             <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
               Legal Business Name
             </Label>
-            <Input 
-              value={profile.legal_business_name} 
-              onChange={e => setProfile({
-                ...profile,
-                legal_business_name: e.target.value
-              })}
-              className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-              placeholder="Company Name LLC" 
-            />
+            <Input value={profile.legal_business_name} onChange={e => setProfile({
+            ...profile,
+            legal_business_name: e.target.value
+          })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
           </div>
 
           <Spacer />
@@ -655,36 +546,22 @@ export function UserSettingsTab() {
             <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
               Billing Address
             </Label>
-            <Input 
-              value={profile.billing_address} 
-              onChange={e => setProfile({
-                ...profile,
-                billing_address: e.target.value
-              })}
-              className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-              placeholder="123 Main St, City, State, ZIP" 
-            />
+            <Input value={profile.billing_address} onChange={e => setProfile({
+            ...profile,
+            billing_address: e.target.value
+          })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
           <Spacer />
 
           {/* Save Button */}
-          <Button 
-            onClick={handleSave} 
-            disabled={saving} 
-            className="w-full h-11 tracking-[-0.5px]"
-          >
+          <Button onClick={handleSave} disabled={saving} className="w-full h-11 tracking-[-0.5px]">
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </TabsContent>
       </Tabs>
 
       {/* Create Brand Dialog */}
-      <CreateBrandDialog 
-        open={showCreateBrandDialog} 
-        onOpenChange={setShowCreateBrandDialog} 
-        onSuccess={handleBrandCreated} 
-      />
-    </div>
-  );
+      <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} onSuccess={handleBrandCreated} />
+    </div>;
 }
