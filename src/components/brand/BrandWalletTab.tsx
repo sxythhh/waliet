@@ -108,34 +108,69 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     }
   }, [searchParams, brandId]);
 
-  // Handle returning from payment checkout
+  // Handle returning from checkout
   useEffect(() => {
     const checkoutStatus = searchParams.get('checkout_status');
-    const setupIntentId = searchParams.get('setup_intent_id');
-    const membershipId = searchParams.get('membership_id');
     const status = searchParams.get('status');
 
-    // Whop redirects back with checkout_status/status params after payment
-    const isSuccess = checkoutStatus === 'success' || status === 'success';
-    const hasPaymentIndicator = setupIntentId || membershipId;
-    
-    if (isSuccess && hasPaymentIndicator) {
-      // Clean up URL params first
-      searchParams.delete('checkout_status');
-      searchParams.delete('status');
-      searchParams.delete('setup_intent_id');
-      searchParams.delete('membership_id');
-      searchParams.delete('state_id');
-      setSearchParams(searchParams, { replace: true });
+    // Different Whop flows return different identifiers
+    const setupIntentId = searchParams.get('setup_intent_id');
+    const membershipId = searchParams.get('membership_id');
+    const paymentId = searchParams.get('payment_id');
+    const receiptId = searchParams.get('receipt_id');
 
-      // Clear any pending topup data since payment is complete
-      sessionStorage.removeItem(`pending_topup_${brandId}`);
-      
-      toast.success('Payment completed! Your wallet has been topped up.');
+    const isSuccess = checkoutStatus === 'success' || status === 'success';
+    const hasReturnId = setupIntentId || membershipId || paymentId || receiptId;
+
+    if (!isSuccess || !hasReturnId) return;
+
+    // Clean up URL params first
+    searchParams.delete('checkout_status');
+    searchParams.delete('status');
+    searchParams.delete('setup_intent_id');
+    searchParams.delete('membership_id');
+    searchParams.delete('payment_id');
+    searchParams.delete('receipt_id');
+    searchParams.delete('state_id');
+    setSearchParams(searchParams, { replace: true });
+
+    const pendingTopupData = sessionStorage.getItem(`pending_topup_${brandId}`);
+    if (!pendingTopupData) {
+      toast.success('Checkout completed.');
       fetchWalletData();
       fetchTransactions();
+      return;
     }
-  }, [searchParams, setSearchParams, brandId]);
+
+    const { amount } = JSON.parse(pendingTopupData);
+    sessionStorage.removeItem(`pending_topup_${brandId}`);
+
+    const finalizeTopup = async () => {
+      toast.loading('Finalizing top-up...', { id: 'topup-finalize' });
+      try {
+        const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
+        const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
+          body: { brand_id: brandId, amount, return_url: returnUrl },
+        });
+
+        if (error) throw error;
+
+        if (data?.success && !data?.needs_payment_method) {
+          toast.success('Wallet topped up successfully!', { id: 'topup-finalize' });
+          fetchWalletData();
+          fetchTransactions();
+          return;
+        }
+
+        toast.error('Could not finalize top-up. Please try again.', { id: 'topup-finalize' });
+      } catch (e) {
+        console.error('Error finalizing top-up:', e);
+        toast.error('Failed to finalize top-up.', { id: 'topup-finalize' });
+      }
+    };
+
+    finalizeTopup();
+  }, [searchParams, setSearchParams, brandId, brandSlug]);
 
   useEffect(() => {
     const loadData = async () => {
