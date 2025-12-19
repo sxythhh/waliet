@@ -308,13 +308,13 @@ export function BrandWalletTab({
 
       {/* Balance Card */}
       <Card className="border-border overflow-hidden">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 px-0">
           <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
             
             Wallet Balance
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <div className="flex flex-col gap-4">
             <div>
               <p className="text-4xl sm:text-5xl font-semibold text-foreground tracking-tight">
