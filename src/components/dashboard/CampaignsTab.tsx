@@ -948,7 +948,16 @@ export function CampaignsTab({
                   </Button>
                 </div>}
               
-              {isEnded && !isPending}
+              {isEnded && !isPending && <div className="mt-auto pt-2">
+                  <Button variant="ghost" size="sm" onClick={e => {
+                    e.stopPropagation();
+                    setSelectedCampaignId(campaign.id);
+                    setLeaveCampaignDialogOpen(true);
+                  }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
+                      <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                      Leave Campaign
+                  </Button>
+                </div>}
             </CardContent>
           </Card>;
         })}
