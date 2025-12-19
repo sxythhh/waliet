@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import {
   Tooltip,
   TooltipContent,
@@ -93,7 +94,7 @@ function FeatureItem({ feature }: { feature: Feature }) {
                 if (window.matchMedia?.("(hover: none)").matches) setOpen((v) => !v);
               }}
             >
-              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <img src={checkCircleIcon} alt="" className="h-4 w-4 flex-shrink-0" />
               <span className="border-b border-dotted border-muted-foreground/40">
                 {feature.text}
               </span>
@@ -109,7 +110,7 @@ function FeatureItem({ feature }: { feature: Feature }) {
 
   return (
     <li className="flex items-center gap-2 text-sm tracking-[-0.5px]">
-      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+      <img src={checkCircleIcon} alt="" className="h-4 w-4 flex-shrink-0" />
       <span>{feature.text}</span>
     </li>
   );
