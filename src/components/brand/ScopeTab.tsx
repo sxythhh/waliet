@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft } from "lucide-react";
+import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,6 +62,40 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   const [addingVideo, setAddingVideo] = useState(false);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [activeFilters, setActiveFilters] = useState<{ category: string; value: string }[]>([]);
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'cta': return MonitorPlay;
+      case 'format': return PlaySquare;
+      case 'platform': return Globe;
+      case 'style': return Sparkles;
+      case 'audience': return Users;
+      default: return Filter;
+    }
+  };
+
+  const addFilter = (category: string, value: string) => {
+    // Check if this category already has a filter, replace it
+    const existingIndex = activeFilters.findIndex(f => f.category === category);
+    if (existingIndex >= 0) {
+      const newFilters = [...activeFilters];
+      newFilters[existingIndex] = { category, value };
+      setActiveFilters(newFilters);
+    } else {
+      setActiveFilters([...activeFilters, { category, value }]);
+    }
+    setSortMenuOpen(false);
+    setExpandedCategory(null);
+  };
+
+  const removeFilter = (index: number) => {
+    setActiveFilters(activeFilters.filter((_, i) => i !== index));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters([]);
+  };
 
   useEffect(() => {
     fetchVideos();
@@ -306,7 +340,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
     <div className="h-full flex flex-col bg-[#0a0a0a]">
       {/* Header */}
       <div className="px-6 py-4 border-b border-[#1a1a1a]">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Sort Dropdown - Expandable Menu Style */}
           <div className="relative">
             <button 
@@ -399,10 +433,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         {['Sign Up', 'Download App', 'Visit Website', 'Purchase', 'Follow'].map((option, i) => (
                           <button 
                             key={option}
-                            onClick={() => {
-                              setSortMenuOpen(false);
-                              setExpandedCategory(null);
-                            }}
+                            onClick={() => addFilter('cta', option)}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
                             style={{ animationDelay: `${i * 30}ms` }}
                           >
@@ -417,10 +448,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         {['Talking Head', 'Voiceover', 'Skit', 'Tutorial', 'Review', 'Unboxing'].map((option, i) => (
                           <button 
                             key={option}
-                            onClick={() => {
-                              setSortMenuOpen(false);
-                              setExpandedCategory(null);
-                            }}
+                            onClick={() => addFilter('format', option)}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
                             style={{ animationDelay: `${i * 30}ms` }}
                           >
@@ -435,10 +463,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         {['TikTok', 'Instagram', 'YouTube', 'X'].map((option, i) => (
                           <button 
                             key={option}
-                            onClick={() => {
-                              setSortMenuOpen(false);
-                              setExpandedCategory(null);
-                            }}
+                            onClick={() => addFilter('platform', option)}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
                             style={{ animationDelay: `${i * 30}ms` }}
                           >
@@ -453,10 +478,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         {['Comedic', 'Educational', 'Lifestyle', 'Professional', 'Casual'].map((option, i) => (
                           <button 
                             key={option}
-                            onClick={() => {
-                              setSortMenuOpen(false);
-                              setExpandedCategory(null);
-                            }}
+                            onClick={() => addFilter('style', option)}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
                             style={{ animationDelay: `${i * 30}ms` }}
                           >
@@ -471,10 +493,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         {['Gen Z', 'Millennials', 'Parents', 'Professionals', 'Students'].map((option, i) => (
                           <button 
                             key={option}
-                            onClick={() => {
-                              setSortMenuOpen(false);
-                              setExpandedCategory(null);
-                            }}
+                            onClick={() => addFilter('audience', option)}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
                             style={{ animationDelay: `${i * 30}ms` }}
                           >
@@ -489,8 +508,39 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
             )}
           </div>
 
+          {/* Active Filter Chips */}
+          {activeFilters.map((filter, index) => {
+            const IconComponent = getCategoryIcon(filter.category);
+            return (
+              <div 
+                key={`${filter.category}-${filter.value}`}
+                className="flex items-center gap-2 px-3 py-2 bg-[#2060df] rounded-lg text-[13px] text-white font-['Inter'] tracking-[-0.5px] animate-fade-in"
+              >
+                <IconComponent className="w-4 h-4 text-white/70" />
+                <span className="border-l border-white/20 pl-2">{filter.value}</span>
+                <button 
+                  onClick={() => removeFilter(index)}
+                  className="ml-1 hover:bg-white/10 rounded p-0.5 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            );
+          })}
+
+          {/* Clear All Filters Button */}
+          {activeFilters.length > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="p-2 hover:bg-[#1a1a1a] rounded-lg transition-colors"
+              title="Clear all filters"
+            >
+              <Trash2 className="w-4 h-4 text-neutral-500 hover:text-white transition-colors" />
+            </button>
+          )}
+
           {/* Search */}
-          <div className="flex-1 max-w-md relative">
+          <div className="flex-1 max-w-md relative ml-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <Input
               placeholder="Scope the algorithm.."
