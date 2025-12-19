@@ -310,14 +310,18 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <Button onClick={() => {
-              if (subscriptionStatus === "active") {
-                setCampaignTypeDialogOpen(true);
-              } else {
-                setSubscriptionGateOpen(true);
-              }
-            }} className="font-inter tracking-[-0.5px]">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button 
+              onClick={() => {
+                if (subscriptionStatus === "active") {
+                  setCampaignTypeDialogOpen(true);
+                } else {
+                  setSubscriptionGateOpen(true);
+                }
+              }} 
+              size="sm"
+              className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]"
+            >
+              <Plus className="h-4 w-4" />
               Create Campaign
             </Button>
             <CreateCampaignTypeDialog 
