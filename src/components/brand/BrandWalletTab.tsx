@@ -129,12 +129,12 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         const { amount } = JSON.parse(pendingTopupData);
         sessionStorage.removeItem(`pending_topup_${brandId}`);
         
-        // Auto-charge the saved payment method
+        // Auto-charge the saved payment method using the setup_intent_id to get the payment method
         const chargeTopup = async () => {
           toast.loading('Charging your saved payment method...', { id: 'topup-charge' });
           try {
             const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
-              body: { brand_id: brandId, amount, return_url: window.location.href },
+              body: { brand_id: brandId, amount, return_url: window.location.href, setup_intent_id: setupIntentId },
             });
             
             if (error) throw error;
