@@ -147,7 +147,6 @@ export function BlueprintsTab({
     setSelectedBlueprintId(blueprintId);
     setTypeDialogOpen(true);
   };
-  
   const handleSelectClipping = (blueprintId?: string) => {
     setTypeDialogOpen(false);
     if (blueprintId) {
@@ -155,47 +154,41 @@ export function BlueprintsTab({
     }
     setCreateCampaignOpen(true);
   };
-  
   const handleSelectBoost = () => {
     setTypeDialogOpen(false);
     setCreateBoostOpen(true);
   };
-
   const handleSelectTemplate = async (template: any) => {
-    const { data, error } = await supabase
-      .from("blueprints")
-      .insert({
-        brand_id: brandId,
-        title: template.title || "Untitled",
-        content: template.content,
-        platforms: template.platforms,
-        hooks: template.hooks,
-        talking_points: template.talking_points,
-        dos_and_donts: template.dos_and_donts,
-        call_to_action: template.call_to_action,
-        hashtags: template.hashtags,
-        brand_voice: template.brand_voice,
-        target_personas: template.target_personas,
-        assets: template.assets,
-        example_videos: template.example_videos,
-        content_guidelines: template.content_guidelines,
-      })
-      .select()
-      .single();
-
+    const {
+      data,
+      error
+    } = await supabase.from("blueprints").insert({
+      brand_id: brandId,
+      title: template.title || "Untitled",
+      content: template.content,
+      platforms: template.platforms,
+      hooks: template.hooks,
+      talking_points: template.talking_points,
+      dos_and_donts: template.dos_and_donts,
+      call_to_action: template.call_to_action,
+      hashtags: template.hashtags,
+      brand_voice: template.brand_voice,
+      target_personas: template.target_personas,
+      assets: template.assets,
+      example_videos: template.example_videos,
+      content_guidelines: template.content_guidelines
+    }).select().single();
     if (error) {
       console.error("Error creating blueprint from template:", error);
       toast.error("Failed to create blueprint");
       return;
     }
-
     setTemplateSelectorOpen(false);
     setSearchParams(prev => {
       prev.set("blueprint", data.id);
       return prev;
     });
   };
-
   const getPlatformIcon = (platform: string) => {
     const isDark = resolvedTheme === 'dark';
     switch (platform?.toLowerCase()) {
@@ -215,8 +208,7 @@ export function BlueprintsTab({
     return stripped.length > 0 ? stripped.slice(0, 180) : null;
   };
   if (loading) {
-    return (
-      <div className="p-6 space-y-6 animate-fade-in">
+    return <div className="p-6 space-y-6 animate-fade-in">
         {/* Header Skeleton */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
@@ -228,12 +220,9 @@ export function BlueprintsTab({
         
         {/* Blueprint Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {[1, 2, 3].map((i) => (
-            <div 
-              key={i} 
-              className="rounded-xl border border-border/30 bg-card/20 overflow-hidden"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
+          {[1, 2, 3].map(i => <div key={i} className="rounded-xl border border-border/30 bg-card/20 overflow-hidden" style={{
+          animationDelay: `${i * 100}ms`
+        }}>
               {/* Content Preview Skeleton */}
               <div className="p-5 min-h-[120px] border-b border-border/20 space-y-3">
                 <Skeleton className="h-3 w-full rounded-md" />
@@ -262,32 +251,24 @@ export function BlueprintsTab({
                   <Skeleton className="h-3 w-12 rounded-md" />
                 </div>
               </div>
-            </div>
-          ))}
+            </div>)}
         </div>
-      </div>
-    );
+      </div>;
   }
   return <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Blueprints</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Create and manage your campaign briefs
-          </p>
+          
         </div>
-        <Button 
-          onClick={() => {
-            if (subscriptionStatus === "active") {
-              setTemplateSelectorOpen(true);
-            } else {
-              setSubscriptionGateOpen(true);
-            }
-          }} 
-          size="sm" 
-          className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]"
-        >
+        <Button onClick={() => {
+        if (subscriptionStatus === "active") {
+          setTemplateSelectorOpen(true);
+        } else {
+          setSubscriptionGateOpen(true);
+        }
+      }} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
@@ -360,31 +341,14 @@ export function BlueprintsTab({
       })}
         </div>}
 
-      <CreateCampaignTypeDialog 
-        open={typeDialogOpen} 
-        onOpenChange={setTypeDialogOpen}
-        brandId={brandId}
-        defaultBlueprintId={selectedBlueprintId || undefined}
-        onSelectClipping={handleSelectClipping}
-        onSelectManaged={handleSelectClipping}
-        onSelectBoost={handleSelectBoost}
-      />
+      <CreateCampaignTypeDialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen} brandId={brandId} defaultBlueprintId={selectedBlueprintId || undefined} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} />
 
       {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
       
       {brandInfo && <CreateBountyDialog brandId={brandId} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
 
-      <TemplateSelector
-        open={templateSelectorOpen}
-        onOpenChange={setTemplateSelectorOpen}
-        onSelectTemplate={handleSelectTemplate}
-        onStartBlank={createBlueprint}
-      />
+      <TemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelectTemplate={handleSelectTemplate} onStartBlank={createBlueprint} />
 
-      <SubscriptionGateDialog 
-        brandId={brandId} 
-        open={subscriptionGateOpen} 
-        onOpenChange={setSubscriptionGateOpen} 
-      />
+      <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
     </div>;
 }
