@@ -740,6 +740,9 @@ export type Database = {
           is_active: boolean
           logo_url: string | null
           name: string
+          notify_new_application: boolean | null
+          notify_new_message: boolean | null
+          notify_new_sale: boolean | null
           renewal_date: string | null
           shortimize_api_key: string | null
           show_account_tab: boolean
@@ -770,6 +773,9 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name: string
+          notify_new_application?: boolean | null
+          notify_new_message?: boolean | null
+          notify_new_sale?: boolean | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
@@ -800,6 +806,9 @@ export type Database = {
           is_active?: boolean
           logo_url?: string | null
           name?: string
+          notify_new_application?: boolean | null
+          notify_new_message?: boolean | null
+          notify_new_sale?: boolean | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean

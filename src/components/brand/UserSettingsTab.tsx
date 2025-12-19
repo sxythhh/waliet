@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload, Crown, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Upload, Crown, Check, Eye, EyeOff, Trash2, UserPlus, DollarSign, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -68,6 +69,9 @@ interface Brand {
   shortimize_api_key: string | null;
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
+  notify_new_application: boolean;
+  notify_new_sale: boolean;
+  notify_new_message: boolean;
 }
 export function UserSettingsTab() {
   const navigate = useNavigate();
@@ -107,6 +111,12 @@ export function UserSettingsTab() {
   const [deleting, setDeleting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  
+  // Notification preferences
+  const [notifyNewApplication, setNotifyNewApplication] = useState(true);
+  const [notifyNewSale, setNotifyNewSale] = useState(true);
+  const [notifyNewMessage, setNotifyNewMessage] = useState(true);
+  const [savingNotifications, setSavingNotifications] = useState(false);
   const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   useEffect(() => {
     fetchProfile();
@@ -132,8 +142,33 @@ export function UserSettingsTab() {
       setShortimizeApiKey(data?.shortimize_api_key || "");
       setSlackWebhookUrl(data?.slack_webhook_url || "");
       setDiscordWebhookUrl(data?.discord_webhook_url || "");
+      setNotifyNewApplication(data?.notify_new_application ?? true);
+      setNotifyNewSale(data?.notify_new_sale ?? true);
+      setNotifyNewMessage(data?.notify_new_message ?? true);
     } catch (error) {
       console.error("Error fetching brand:", error);
+    }
+  };
+  
+  const handleSaveNotifications = async () => {
+    if (!brand?.id) return;
+    try {
+      setSavingNotifications(true);
+      const { error } = await supabase
+        .from("brands")
+        .update({
+          notify_new_application: notifyNewApplication,
+          notify_new_sale: notifyNewSale,
+          notify_new_message: notifyNewMessage,
+        })
+        .eq("id", brand.id);
+      if (error) throw error;
+      toast.success("Notification preferences saved");
+    } catch (error) {
+      console.error("Error saving notifications:", error);
+      toast.error("Failed to save notification preferences");
+    } finally {
+      setSavingNotifications(false);
     }
   };
   const handleSaveIntegrations = async () => {
@@ -475,6 +510,76 @@ export function UserSettingsTab() {
               <Button onClick={handleSaveBrand} disabled={savingBrand || editedBrandName === brand.name && editedSlug === brand.slug} className="w-full h-11 tracking-[-0.5px]">
                 {savingBrand ? "Saving..." : "Save Changes"}
               </Button>
+
+              <Spacer />
+
+              {/* Notification Preferences */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                  Notifications
+                </Label>
+                <div className="rounded-xl border border-border/50 divide-y divide-border/50">
+                  {/* New partner application */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                        <UserPlus className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={notifyNewApplication}
+                      onCheckedChange={(checked) => {
+                        setNotifyNewApplication(checked);
+                        handleSaveNotifications();
+                      }}
+                    />
+                  </div>
+
+                  {/* New partner sale */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                        <DollarSign className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New creator sale</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new sale is made in your program.</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={notifyNewSale}
+                      onCheckedChange={(checked) => {
+                        setNotifyNewSale(checked);
+                        handleSaveNotifications();
+                      }}
+                    />
+                  </div>
+
+                  {/* New message from partner */}
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center">
+                        <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={notifyNewMessage}
+                      onCheckedChange={(checked) => {
+                        setNotifyNewMessage(checked);
+                        handleSaveNotifications();
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
 
               <Spacer />
 
