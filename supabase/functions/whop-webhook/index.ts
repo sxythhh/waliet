@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const webhookSecret = Deno.env.get("WHOP_WEBHOOK_SECRET") || "";
+    const whopApiKey = Deno.env.get("WHOP_API_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const rawBody = await req.text();
@@ -54,6 +55,125 @@ Deno.serve(async (req) => {
     const { type, data } = payload;
     // Also support legacy "action" field for backwards compatibility
     const action = type || payload.action;
+
+    // Handle setup_intent.succeeded - save payment method and create topup
+    if (action === "setup_intent.succeeded") {
+      const setupIntent = data;
+      const paymentMethodId = setupIntent.payment_method?.id;
+      const memberId = setupIntent.member?.id;
+      const companyId = setupIntent.company?.id;
+      const metadata = setupIntent.metadata || {};
+      const brandId = metadata.brand_id;
+      const requestedAmount = metadata.amount;
+      const userId = metadata.user_id;
+
+      console.log(`Setup intent succeeded - brand_id: ${brandId}, member_id: ${memberId}, payment_method_id: ${paymentMethodId}, amount: ${requestedAmount}`);
+
+      if (!brandId) {
+        console.error("No brand_id in setup intent metadata");
+        return new Response(JSON.stringify({ error: "Missing brand_id in metadata" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!paymentMethodId) {
+        console.error("No payment method in setup intent");
+        return new Response(JSON.stringify({ error: "No payment method in setup intent" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Save payment method to brand record for future charges
+      const { error: updateError } = await supabase
+        .from("brands")
+        .update({
+          whop_member_id: memberId,
+          whop_payment_method_id: paymentMethodId,
+        })
+        .eq("id", brandId);
+
+      if (updateError) {
+        console.error("Error saving payment method to brand:", updateError);
+        throw updateError;
+      }
+
+      console.log(`Saved payment method ${paymentMethodId} to brand ${brandId}`);
+
+      // If an amount was requested, create the topup now
+      if (requestedAmount && Number(requestedAmount) > 0) {
+        console.log(`Creating topup for $${requestedAmount} using payment method ${paymentMethodId}`);
+
+        const topupResponse = await fetch("https://api.whop.com/api/v1/topups", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${whopApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: Number(requestedAmount),
+            company_id: companyId,
+            currency: "usd",
+            payment_method_id: paymentMethodId,
+          }),
+        });
+
+        const topupText = await topupResponse.text();
+        console.log("Topup response status:", topupResponse.status);
+        console.log("Topup response:", topupText);
+
+        if (!topupResponse.ok) {
+          console.error("Failed to create topup:", topupText);
+          // Still return success for webhook - payment method was saved
+          return new Response(JSON.stringify({ 
+            success: true, 
+            type: "setup_intent.succeeded",
+            payment_method_saved: true,
+            topup_error: topupText,
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const topupData = JSON.parse(topupText);
+        console.log("Topup created:", topupData);
+
+        // Record the transaction
+        const { error: txError } = await supabase
+          .from("brand_wallet_transactions")
+          .insert({
+            brand_id: brandId,
+            type: "topup",
+            amount: Number(requestedAmount),
+            status: topupData.status === "paid" ? "completed" : "pending",
+            description: `Wallet top-up: $${requestedAmount}`,
+            whop_payment_id: topupData.id,
+            metadata: {
+              user_id: userId,
+              payment_id: topupData.id,
+              initiated_via: "webhook",
+              initiated_at: new Date().toISOString(),
+            },
+            created_by: userId,
+          });
+
+        if (txError) {
+          console.error("Error recording transaction:", txError);
+        }
+
+        console.log(`Brand ${brandId} wallet topped up with $${requestedAmount}`);
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true, 
+        type: "setup_intent.succeeded",
+        payment_method_saved: true,
+        topup_created: !!requestedAmount,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Handle payment.succeeded events
     if (action === "payment.succeeded") {

@@ -37,10 +37,17 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount, return_url, setup_intent_id } = await req.json();
+    const { brand_id, amount, return_url } = await req.json();
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!amount || amount < 1) {
+      return new Response(JSON.stringify({ error: 'amount must be at least $1' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -61,10 +68,10 @@ serve(async (req) => {
       });
     }
 
-    // Get brand with Whop company ID
+    // Get brand with Whop company ID and saved payment method
     const { data: brand, error: brandError } = await supabase
       .from('brands')
-      .select('id, name, slug, whop_company_id')
+      .select('id, name, slug, whop_company_id, whop_member_id, whop_payment_method_id')
       .eq('id', brand_id)
       .single();
 
@@ -83,196 +90,56 @@ serve(async (req) => {
     }
 
     console.log(`Processing topup for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
-    
-    let paymentMethodId: string | null = null;
+    console.log(`Saved payment method: ${brand.whop_payment_method_id || 'none'}`);
 
-    // If setup_intent_id is provided, retrieve it to get the payment method
-    if (setup_intent_id) {
-      console.log(`Retrieving setup intent: ${setup_intent_id}`);
-      
-      const setupIntentResponse = await fetch(
-        `https://api.whop.com/api/v1/setup_intents/${setup_intent_id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${whopApiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    // If brand has a saved payment method, use it directly
+    if (brand.whop_payment_method_id) {
+      console.log(`Using saved payment method: ${brand.whop_payment_method_id}`);
 
-      const setupIntentText = await setupIntentResponse.text();
-      console.log('Setup intent response status:', setupIntentResponse.status);
-      console.log('Setup intent response:', setupIntentText);
-
-      if (setupIntentResponse.ok) {
-        const setupIntentData = JSON.parse(setupIntentText);
-        if (setupIntentData.payment_method?.id) {
-          paymentMethodId = setupIntentData.payment_method.id;
-          console.log(`Got payment method from setup intent: ${paymentMethodId}`);
-        } else {
-          console.log('Setup intent has no payment method attached');
-        }
-      } else {
-        console.error('Failed to retrieve setup intent:', setupIntentText);
-      }
-    }
-
-    // If we still don't have a payment method, check existing ones
-    if (!paymentMethodId) {
-      const paymentMethodsResponse = await fetch(
-        `https://api.whop.com/api/v1/payment_methods?company_id=${brand.whop_company_id}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${whopApiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const paymentMethodsText = await paymentMethodsResponse.text();
-      console.log('Payment methods response status:', paymentMethodsResponse.status);
-      console.log('Payment methods response:', paymentMethodsText);
-
-      if (!paymentMethodsResponse.ok) {
-        console.error('Failed to get payment methods:', paymentMethodsText);
-        return new Response(
-          JSON.stringify({
-            error: 'Failed to get payment methods',
-            details: paymentMethodsText,
-          }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      const paymentMethodsData = JSON.parse(paymentMethodsText);
-      const paymentMethods = paymentMethodsData.data || paymentMethodsData;
-
-      if (paymentMethods && paymentMethods.length > 0) {
-        paymentMethodId = paymentMethods[0].id;
-        console.log(`Using existing payment method: ${paymentMethodId}`);
-      }
-    }
-
-    // If no payment method exists, create a setup checkout so user can save their payment method
-    if (!paymentMethodId) {
-      // Clean the redirect URL - remove __lovable_token which is very long and causes 500 errors
-      let cleanRedirectUrl = return_url || 'https://example.com';
-      try {
-        const urlObj = new URL(cleanRedirectUrl);
-        // Keep only essential params
-        const workspace = urlObj.searchParams.get('workspace');
-        const tab = urlObj.searchParams.get('tab') || 'profile';
-        
-        // Build clean URL without the token
-        urlObj.search = '';
-        if (workspace) urlObj.searchParams.set('workspace', workspace);
-        urlObj.searchParams.set('tab', tab);
-        
-        cleanRedirectUrl = urlObj.toString();
-      } catch (e) {
-        console.log('Could not parse redirect URL, using as-is');
-      }
-      
-      console.log('No payment method found. Creating setup checkout. clean redirect_url:', cleanRedirectUrl);
-
-      // Create a setup checkout - this saves the payment method for future use
-      const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+      const topupResponse = await fetch('https://api.whop.com/api/v1/topups', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          amount: amount,
           company_id: brand.whop_company_id,
-          mode: 'setup',
           currency: 'usd',
-          redirect_url: cleanRedirectUrl,
-          metadata: {
-            brand_id,
-            user_id: user.id,
-            purpose: 'wallet_payment_method_setup',
-          },
+          payment_method_id: brand.whop_payment_method_id,
         }),
       });
 
-      const setupCheckoutText = await setupCheckoutRes.text();
-      console.log('Setup checkout response status:', setupCheckoutRes.status);
-      console.log('Setup checkout response:', setupCheckoutText);
+      const responseText = await topupResponse.text();
+      console.log('Whop topup response status:', topupResponse.status);
+      console.log('Whop topup response:', responseText);
 
-      if (!setupCheckoutRes.ok) {
-        return new Response(
-          JSON.stringify({
-            error: 'Failed to create setup checkout',
-            details: setupCheckoutText,
-            needs_payment_method: true,
-          }),
-          {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
+      if (!topupResponse.ok) {
+        console.error('Whop topup API error:', responseText);
+        
+        // If payment method is invalid, clear it and prompt for new one
+        if (topupResponse.status === 400 || topupResponse.status === 422) {
+          console.log('Payment method may be invalid, clearing saved method');
+          await supabase
+            .from('brands')
+            .update({ whop_payment_method_id: null, whop_member_id: null })
+            .eq('id', brand_id);
+        }
+        
+        return new Response(JSON.stringify({ 
+          error: 'Failed to charge saved payment method', 
+          details: responseText,
+          needs_payment_method: true,
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
-      const setupCheckoutData = JSON.parse(setupCheckoutText);
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          needs_payment_method: true,
-          checkout_url: setupCheckoutData.purchase_url || setupCheckoutData.url || setupCheckoutData.checkout_url,
-          checkout_id: setupCheckoutData.id,
-          message: 'Redirecting to save your payment method.',
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+      const topupData = JSON.parse(responseText);
+      console.log('Topup created:', topupData);
 
-    // We have a payment method, create the topup
-    console.log(`Creating topup with payment method: ${paymentMethodId}, amount: $${amount}`);
-
-    const checkoutResponse = await fetch('https://api.whop.com/api/v1/topups', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: amount,
-        company_id: brand.whop_company_id,
-        currency: 'usd',
-        payment_method_id: paymentMethodId,
-      }),
-    });
-
-    const responseText = await checkoutResponse.text();
-    console.log('Whop topup response status:', checkoutResponse.status);
-    console.log('Whop topup response:', responseText);
-
-    if (!checkoutResponse.ok) {
-      console.error('Whop API error:', responseText);
-      
-      return new Response(JSON.stringify({ 
-        error: 'Failed to create topup', 
-        details: responseText
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const topupData = JSON.parse(responseText);
-    console.log('Topup created:', topupData);
-
-    // Record the transaction (topup is processed immediately)
-    if (amount && amount >= 1) {
+      // Record the transaction
       await supabase
         .from('brand_wallet_transactions')
         .insert({
@@ -289,16 +156,93 @@ serve(async (req) => {
           },
           created_by: user.id
         });
+
+      return new Response(JSON.stringify({ 
+        success: true,
+        payment_id: topupData.id,
+        status: topupData.status,
+        amount: topupData.total,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ 
-      success: true,
-      payment_id: topupData.id,
-      status: topupData.status,
-      amount: topupData.total,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // No saved payment method - create a setup checkout
+    // Clean the redirect URL - remove __lovable_token which is very long and causes 500 errors
+    let cleanRedirectUrl = return_url || 'https://example.com';
+    try {
+      const urlObj = new URL(cleanRedirectUrl);
+      // Keep only essential params
+      const workspace = urlObj.searchParams.get('workspace');
+      const tab = urlObj.searchParams.get('tab') || 'profile';
+      
+      // Build clean URL without the token
+      urlObj.search = '';
+      if (workspace) urlObj.searchParams.set('workspace', workspace);
+      urlObj.searchParams.set('tab', tab);
+      
+      cleanRedirectUrl = urlObj.toString();
+    } catch (e) {
+      console.log('Could not parse redirect URL, using as-is');
+    }
+    
+    console.log('No saved payment method. Creating setup checkout with amount in metadata.');
+    console.log('Redirect URL:', cleanRedirectUrl);
+
+    // Create a setup checkout - include amount in metadata so webhook can charge after saving
+    const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${whopApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        company_id: brand.whop_company_id,
+        mode: 'setup',
+        currency: 'usd',
+        redirect_url: cleanRedirectUrl,
+        metadata: {
+          brand_id,
+          user_id: user.id,
+          amount: amount, // Include the amount so webhook can create the topup
+          purpose: 'wallet_payment_method_setup',
+        },
+      }),
     });
+
+    const setupCheckoutText = await setupCheckoutRes.text();
+    console.log('Setup checkout response status:', setupCheckoutRes.status);
+    console.log('Setup checkout response:', setupCheckoutText);
+
+    if (!setupCheckoutRes.ok) {
+      return new Response(
+        JSON.stringify({
+          error: 'Failed to create setup checkout',
+          details: setupCheckoutText,
+          needs_payment_method: true,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const setupCheckoutData = JSON.parse(setupCheckoutText);
+    
+    return new Response(
+      JSON.stringify({
+        success: true,
+        needs_payment_method: true,
+        checkout_url: setupCheckoutData.purchase_url || setupCheckoutData.url || setupCheckoutData.checkout_url,
+        checkout_id: setupCheckoutData.id,
+        message: 'Redirecting to save your payment method. Your wallet will be topped up after saving.',
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
 
   } catch (error: unknown) {
     console.error('Error in create-brand-wallet-topup:', error);
