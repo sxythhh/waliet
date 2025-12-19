@@ -763,8 +763,10 @@ export type Database = {
           website_url: string | null
           whop_company_id: string | null
           whop_manage_url: string | null
+          whop_member_id: string | null
           whop_membership_id: string | null
           whop_onboarding_complete: boolean | null
+          whop_payment_method_id: string | null
         }
         Insert: {
           account_url?: string | null
@@ -801,8 +803,10 @@ export type Database = {
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
+          whop_member_id?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
+          whop_payment_method_id?: string | null
         }
         Update: {
           account_url?: string | null
@@ -839,8 +843,10 @@ export type Database = {
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
+          whop_member_id?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
+          whop_payment_method_id?: string | null
         }
         Relationships: []
       }
