@@ -44,6 +44,16 @@ interface ExampleVideo {
   url: string;
   description: string;
 }
+interface SavedScopeVideo {
+  id: string;
+  scope_video_id: string;
+  video_url: string | null;
+  file_url: string | null;
+  thumbnail_url: string | null;
+  caption: string | null;
+  username: string | null;
+  platform: string;
+}
 interface Blueprint {
   id: string;
   brand_id: string;
@@ -111,6 +121,7 @@ export function BlueprintEditor({
   const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [savedScopeVideos, setSavedScopeVideos] = useState<SavedScopeVideo[]>([]);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
@@ -127,7 +138,24 @@ export function BlueprintEditor({
   }, [blueprintId, brandId]);
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    const [blueprintRes, brandRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single()]);
+    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([
+      supabase.from("blueprints").select("*").eq("id", blueprintId).single(), 
+      supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single(),
+      supabase.from("scope_video_saves")
+        .select(`
+          id,
+          scope_video_id,
+          scope_videos (
+            video_url,
+            file_url,
+            thumbnail_url,
+            caption,
+            username,
+            platform
+          )
+        `)
+        .eq("blueprint_id", blueprintId)
+    ]);
     if (blueprintRes.error) {
       console.error("Error fetching blueprint:", blueprintRes.error);
       toast.error("Failed to load blueprint");
@@ -160,6 +188,22 @@ export function BlueprintEditor({
     if (brandRes.data) {
       setBrand(brandRes.data);
     }
+    
+    // Process saved scope videos
+    if (scopeVideosRes.data) {
+      const videos = scopeVideosRes.data.map((save: any) => ({
+        id: save.id,
+        scope_video_id: save.scope_video_id,
+        video_url: save.scope_videos?.video_url,
+        file_url: save.scope_videos?.file_url,
+        thumbnail_url: save.scope_videos?.thumbnail_url,
+        caption: save.scope_videos?.caption,
+        username: save.scope_videos?.username,
+        platform: save.scope_videos?.platform
+      }));
+      setSavedScopeVideos(videos);
+    }
+    
     setLoading(false);
   };
   const saveBlueprint = useCallback(debounce(async (updates: Partial<Blueprint>) => {
@@ -468,6 +512,19 @@ export function BlueprintEditor({
       example_videos: newVideos
     });
   };
+  const removeSavedScopeVideo = async (saveId: string) => {
+    const { error } = await supabase
+      .from("scope_video_saves")
+      .delete()
+      .eq("id", saveId);
+    if (error) {
+      console.error("Error removing saved scope video:", error);
+      toast.error("Failed to remove video");
+      return;
+    }
+    setSavedScopeVideos(prev => prev.filter(v => v.id !== saveId));
+    toast.success("Video removed");
+  };
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -597,7 +654,8 @@ export function BlueprintEditor({
           status: "unfilled"
         };
       case "example_videos":
-        return blueprint.example_videos.length > 0 ? {
+        const totalVideos = blueprint.example_videos.length + savedScopeVideos.length;
+        return totalVideos > 0 ? {
           status: "filled"
         } : {
           status: "unfilled"
@@ -832,14 +890,59 @@ export function BlueprintEditor({
                     </div>
                   </div>}
               </div>
-              {blueprint.example_videos.length > 0 && <div className="space-y-2">
-                  {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+              {/* Saved Scope Videos */}
+              {savedScopeVideos.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">From Scope</p>
+                  {savedScopeVideos.map((video) => (
+                    <div key={video.id} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                       <div className="flex items-start gap-3">
-                        {video.url && <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
+                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
+                          {video.file_url ? (
+                            <video src={video.file_url} className="w-full h-full object-cover" muted preload="metadata" />
+                          ) : video.thumbnail_url ? (
+                            <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Video className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
+                            {video.caption || video.username || 'Scope video'}
+                          </p>
+                          <p className="text-xs text-muted-foreground capitalize">{video.platform}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => removeSavedScopeVideo(video.id)} 
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Manual Example Videos */}
+              {blueprint.example_videos.length > 0 && (
+                <div className="space-y-2">
+                  {savedScopeVideos.length > 0 && (
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">Uploaded</p>
+                  )}
+                  {blueprint.example_videos.map((video, index) => (
+                    <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+                      <div className="flex items-start gap-3">
+                        {video.url && (
+                          <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
                             <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
-                      (e.target as HTMLVideoElement).style.display = 'none';
-                    }} />
-                          </div>}
+                              (e.target as HTMLVideoElement).style.display = 'none';
+                            }} />
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
                         </div>
@@ -847,8 +950,10 @@ export function BlueprintEditor({
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </BlueprintSection>;
       case "target_personas":
