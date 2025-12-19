@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Volume2, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2, Upload } from "lucide-react";
+import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Volume2, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2, Upload, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,10 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 import instagramLogo from "@/assets/instagram-logo-new.png";
 import youtubeLogo from "@/assets/youtube-logo-new.png";
+import stickyNoteGrey from "@/assets/sticky-note-grey.svg";
+import stickyNoteWhite from "@/assets/sticky-note-white.svg";
 import { useTheme } from "@/components/ThemeProvider";
 
 interface ScopeVideo {
@@ -778,7 +781,8 @@ function ScopeVideoCard({
   copyToClipboard,
   savingToBlueprint
 }: ScopeVideoCardProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const hasSavedBlueprints = savedBlueprints.length > 0;
@@ -787,7 +791,7 @@ function ScopeVideoCard({
   return (
     <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-[#1a1a1a]">
+      <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
           {getPlatformIcon(video.platform)}
           {video.username ? (
@@ -912,69 +916,110 @@ function ScopeVideoCard({
       </div>
 
       {/* Save to Blueprint Button */}
-      <div className="px-3 py-2.5 border-t border-[#1a1a1a]">
-        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-          <DropdownMenuTrigger asChild>
-            <button
-              className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                hasSavedBlueprints
-                  ? "bg-[#2060df] text-white hover:bg-[#1a50c8]"
-                  : "bg-[#141414] text-neutral-400 border border-[#252525] hover:bg-[#1a1a1a] hover:text-white"
-              }`}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="3" y1="9" x2="21" y2="9"/>
-                <line x1="9" y1="21" x2="9" y2="9"/>
-              </svg>
-              <span>Save to Blueprint</span>
-              {dropdownOpen ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-[200px] bg-[#141414] border-[#252525] font-['Inter'] tracking-[-0.5px]">
+      <div className="px-3 py-2.5">
+        <button
+          onClick={() => setSheetOpen(true)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+            hasSavedBlueprints || isHovered
+              ? "bg-[#2060df] text-white"
+              : "bg-[#141414] text-neutral-400"
+          }`}
+        >
+          <img 
+            src={hasSavedBlueprints || isHovered ? stickyNoteWhite : stickyNoteGrey} 
+            alt="" 
+            className="w-4 h-4"
+          />
+          <span>Save to Blueprint</span>
+        </button>
+      </div>
+
+      {/* Blueprint Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent 
+          side="bottom" 
+          className="bg-[#0a0a0a] border-t border-[#1a1a1a] rounded-t-2xl max-h-[50vh] font-['Inter'] tracking-[-0.5px]"
+        >
+          <div className="w-12 h-1 bg-neutral-600 rounded-full mx-auto mb-4" />
+          
+          {/* Header */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center gap-2 text-white">
+              <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-white" />
+              </div>
+              <span className="text-[13px] font-medium">Adding Scope Content</span>
+            </div>
+            <div className="px-3 py-1 bg-[#2060df] rounded-md text-white text-[12px] font-medium">
+              Your Blueprints
+            </div>
+            <Download className="w-4 h-4 text-white" />
+          </div>
+
+          {/* Available Blueprints */}
+          <div className="space-y-4 max-h-[calc(50vh-120px)] overflow-y-auto px-4">
+            <h3 className="text-center text-white text-[14px] font-medium">Available Blueprints</h3>
+            
             {blueprints.length === 0 ? (
-              <div className="px-3 py-4 text-center text-[13px] text-neutral-500">
+              <div className="text-center py-8 text-neutral-500 text-[13px]">
                 No blueprints yet
               </div>
             ) : (
-              blueprints.map(blueprint => {
-                const isSaved = savedBlueprints.includes(blueprint.id);
-                return (
-                  <DropdownMenuItem
-                    key={blueprint.id}
-                    onClick={() => onSaveToBlueprint(blueprint.id)}
-                    disabled={savingToBlueprint}
-                    className={`flex items-center justify-between text-white hover:bg-[#1f1f1f] ${
-                      isSaved ? "bg-[#1a1a1a]" : ""
-                    }`}
-                  >
-                    <span className="truncate">{blueprint.title || 'Untitled'}</span>
-                    {isSaved && (
-                      <div className="w-4 h-4 rounded bg-[#2060df] flex items-center justify-center ml-2">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                          <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+              <div className="space-y-2">
+                {blueprints.map(blueprint => {
+                  const isSaved = savedBlueprints.includes(blueprint.id);
+                  return (
+                    <button
+                      key={blueprint.id}
+                      onClick={() => {
+                        onSaveToBlueprint(blueprint.id);
+                      }}
+                      disabled={savingToBlueprint}
+                      className={`w-full p-4 rounded-lg border transition-colors text-left ${
+                        isSaved 
+                          ? "border-[#2060df] bg-[#2060df]/10" 
+                          : "border-[#252525] bg-[#141414] hover:bg-[#1a1a1a]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded flex items-center justify-center text-[11px] font-medium ${
+                          isSaved ? "bg-[#2060df] text-white" : "bg-[#252525] text-neutral-400"
+                        }`}>
+                          {(blueprint.title || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <span className={`text-[13px] font-medium ${isSaved ? "text-white" : "text-neutral-300"}`}>
+                          {blueprint.title || 'Untitled'}
+                        </span>
+                        {isSaved && (
+                          <div className="ml-auto w-5 h-5 rounded-full bg-[#2060df] flex items-center justify-center">
+                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })
+                    </button>
+                  );
+                })}
+              </div>
             )}
-            <DropdownMenuSeparator className="bg-[#252525]" />
-            <DropdownMenuItem
-              onClick={onDelete}
-              className="text-red-400 hover:bg-red-500/10 hover:text-red-400"
+
+            {/* Delete option */}
+            <button
+              onClick={() => {
+                setSheetOpen(false);
+                onDelete();
+              }}
+              className="w-full flex items-center justify-center gap-2 py-3 text-red-400 hover:text-red-300 transition-colors"
             >
-              <X className="w-4 h-4 mr-2" />
-              Remove from library
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+              <X className="w-4 h-4" />
+              <span className="text-[13px]">Remove from library</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Caption */}
       {video.caption && (
