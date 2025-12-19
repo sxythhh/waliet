@@ -519,20 +519,6 @@ export function AppSidebar() {
 
         </nav>
 
-        {/* Upgrade CTA - Only show in brand workspace, when not collapsed, and when not subscribed */}
-        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== 'active' && <div className="px-3 mb-2">
-            <div className="rounded-lg bg-[#1a1a1a] p-3">
-              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
-                Unlock more features
-              </p>
-              <p className="font-['Geist'] text-[12px] tracking-[-0.5px] text-[#6f6f6f] mb-3">
-                Get access to advanced analytics, unlimited campaigns, and priority support.
-              </p>
-              <button className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" onClick={() => setSubscriptionGateOpen(true)}>
-                Upgrade Plan
-              </button>
-            </div>
-          </div>}
 
         {/* User Profile Section */}
         <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
