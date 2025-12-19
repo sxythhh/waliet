@@ -18,17 +18,22 @@ Deno.serve(async (req) => {
     const payload = await req.json();
     console.log("Whop webhook received:", JSON.stringify(payload));
 
-    const { action, data } = payload;
+    // Whop uses "type" field in webhook payload
+    const { type, data } = payload;
+    // Also support legacy "action" field for backwards compatibility
+    const action = type || payload.action;
 
-    // Handle payment events for brand wallet top-ups
+    // Handle payment.succeeded events
     if (action === "payment.succeeded") {
       const payment = data;
       const metadata = payment.metadata || {};
-      const type = metadata.type;
+      const paymentType = metadata.type;
+      const brandId = metadata.brand_id;
+
+      console.log(`Payment succeeded - type: ${paymentType}, brand_id: ${brandId}, plan: ${payment.plan?.id}`);
 
       // Handle brand wallet top-up
-      if (type === "brand_wallet_topup") {
-        const brandId = metadata.brand_id;
+      if (paymentType === "brand_wallet_topup") {
         const amount = metadata.amount;
 
         console.log(`Processing brand wallet top-up: ${brandId} for $${amount}`);
@@ -52,6 +57,66 @@ Deno.serve(async (req) => {
         console.log(`Brand ${brandId} wallet top-up of $${amount} completed`);
 
         return new Response(JSON.stringify({ success: true, type: "brand_wallet_topup" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Handle subscription payment (brand plan purchase)
+      if (paymentType === "subscription" && brandId) {
+        const planId = payment.plan?.id;
+        const productId = payment.product?.id;
+        const productTitle = payment.product?.title;
+        const membershipId = payment.membership?.id;
+        const amount = payment.total || payment.usd_total;
+
+        console.log(`Processing subscription payment for brand ${brandId}: plan=${planId}, product=${productTitle}, amount=${amount}`);
+
+        // Determine subscription plan name from plan_id or product title
+        // You can customize this mapping based on your Whop plan IDs
+        let subscriptionPlan = planId || productTitle || "active";
+
+        // Update brand subscription
+        const { error: updateError } = await supabase
+          .from("brands")
+          .update({
+            subscription_plan: subscriptionPlan,
+            subscription_status: "active",
+            whop_membership_id: membershipId,
+            subscription_started_at: new Date().toISOString(),
+          })
+          .eq("id", brandId);
+
+        if (updateError) {
+          console.error("Error updating brand subscription:", updateError);
+          throw updateError;
+        }
+
+        console.log(`Brand ${brandId} subscription updated to plan: ${subscriptionPlan}`);
+
+        return new Response(JSON.stringify({ success: true, type: "subscription", plan: subscriptionPlan }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Handle generic payment with brand_id (fallback)
+      if (brandId && payment.plan?.id) {
+        console.log(`Processing generic payment for brand ${brandId}`);
+
+        const { error: updateError } = await supabase
+          .from("brands")
+          .update({
+            subscription_plan: payment.plan.id,
+            subscription_status: "active",
+            whop_membership_id: payment.membership?.id,
+            subscription_started_at: new Date().toISOString(),
+          })
+          .eq("id", brandId);
+
+        if (updateError) {
+          console.error("Error updating brand:", updateError);
+        }
+
+        return new Response(JSON.stringify({ success: true, type: "payment" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
