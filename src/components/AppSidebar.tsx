@@ -1,7 +1,8 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus } from "lucide-react";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { InviteMemberDialog } from "@/components/brand/InviteMemberDialog";
 import { useNavigate, useSearchParams, useLocation, Link } from "react-router-dom";
 import newLogo from "@/assets/new-logo.png";
 import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
@@ -128,6 +129,8 @@ export function AppSidebar() {
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<"feature" | "bug">("feature");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [currentBrandMemberCount, setCurrentBrandMemberCount] = useState<number>(0);
+  const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
 
   // Get current brand ID for subscription dialog
@@ -158,6 +161,9 @@ export function AppSidebar() {
             data
           } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+          // Fetch member count
+          const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", brandFromAll.id);
+          setCurrentBrandMemberCount(count || 0);
         } else if (brandFromMembership) {
           setCurrentBrandName(brandFromMembership.brands.name);
           setCurrentBrandLogo(brandFromMembership.brands.logo_url);
@@ -166,9 +172,13 @@ export function AppSidebar() {
             data
           } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
+          // Fetch member count
+          const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", brandFromMembership.brand_id);
+          setCurrentBrandMemberCount(count || 0);
         }
       } else {
         setCurrentBrandSubscriptionStatus(null);
+        setCurrentBrandMemberCount(0);
       }
     };
     fetchCurrentBrandInfo();
@@ -411,6 +421,47 @@ export function AppSidebar() {
               </PopoverTrigger>
               <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
+                  {/* Current Workspace Details - Only show when in brand mode */}
+                  {!isCreatorMode && currentBrandId && (
+                    <div className="p-3 border-b border-[#1a1a1a]">
+                      <div className="flex items-center gap-3 mb-3">
+                        {currentBrandLogo ? (
+                          <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
+                            <span className="text-sm font-medium text-neutral-400 uppercase">{currentBrandName?.charAt(0)}</span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[13px] font-medium text-white truncate max-w-[160px]">{currentBrandName}</p>
+                          <p className="text-[11px] text-neutral-500">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setWorkspaceOpen(false);
+                            handleTabClick('profile');
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                          <span>Settings</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setWorkspaceOpen(false);
+                            setInviteMemberOpen(true);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>Invite</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
                     <span className="text-[11px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Workspaces</span>
@@ -649,5 +700,20 @@ export function AppSidebar() {
     }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
+      <InviteMemberDialog 
+        open={inviteMemberOpen} 
+        onOpenChange={setInviteMemberOpen} 
+        brandId={currentBrandId} 
+        onInviteSent={() => {
+          // Refresh member count
+          const fetchMemberCount = async () => {
+            if (currentBrandId) {
+              const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", currentBrandId);
+              setCurrentBrandMemberCount(count || 0);
+            }
+          };
+          fetchMemberCount();
+        }} 
+      />
     </>;
 }
