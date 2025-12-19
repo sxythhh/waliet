@@ -54,18 +54,6 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   const [selectedVideo, setSelectedVideo] = useState<ScopeVideo | null>(null);
   const [savingToBlueprint, setSavingToBlueprint] = useState<string | null>(null);
   const [savedVideoBlueprints, setSavedVideoBlueprints] = useState<Record<string, string[]>>({});
-  const [addVideoOpen, setAddVideoOpen] = useState(false);
-  const [newVideo, setNewVideo] = useState({
-    video_url: "",
-    platform: "tiktok",
-    username: "",
-    caption: "",
-    thumbnail_url: "",
-    views: 0,
-    file: null as File | null
-  });
-  const [addingVideo, setAddingVideo] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<{ category: string; value: string }[]>([]);
@@ -212,72 +200,6 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
       toast.error('Failed to save to blueprint');
     } finally {
       setSavingToBlueprint(null);
-    }
-  };
-
-  const handleAddVideo = async () => {
-    if (!newVideo.video_url) {
-      toast.error('Please enter a video URL');
-      return;
-    }
-
-    setAddingVideo(true);
-    try {
-      let fileUrl = null;
-      
-      // Upload video file if provided
-      if (newVideo.file) {
-        const fileExt = newVideo.file.name.split('.').pop();
-        const fileName = `${brandId}/${Date.now()}.${fileExt}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('scope-videos')
-          .upload(fileName, newVideo.file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-        
-        const { data: urlData } = supabase.storage
-          .from('scope-videos')
-          .getPublicUrl(fileName);
-          
-        fileUrl = urlData.publicUrl;
-      }
-
-      const { error } = await supabase
-        .from('scope_videos')
-        .insert({
-          brand_id: brandId,
-          video_url: newVideo.video_url || fileUrl || '',
-          file_url: fileUrl,
-          platform: newVideo.platform,
-          username: newVideo.username || null,
-          caption: newVideo.caption || null,
-          thumbnail_url: newVideo.thumbnail_url || null,
-          views: newVideo.views || 0
-        });
-
-      if (error) throw error;
-
-      toast.success('Video added to library');
-      setAddVideoOpen(false);
-      setNewVideo({
-        video_url: "",
-        platform: "tiktok",
-        username: "",
-        caption: "",
-        thumbnail_url: "",
-        views: 0,
-        file: null
-      });
-      fetchVideos();
-    } catch (error) {
-      console.error('Error adding video:', error);
-      toast.error('Failed to add video');
-    } finally {
-      setAddingVideo(false);
     }
   };
 
@@ -584,16 +506,6 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 text-sm">/</div>
           </div>
 
-          {/* Add Video Button */}
-          <Button 
-            onClick={() => setAddVideoOpen(true)}
-            variant="outline" 
-            size="sm" 
-            className="bg-[#141414] border-[#252525] text-white hover:bg-[#1f1f1f]"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Video
-          </Button>
         </div>
       </div>
 
@@ -605,11 +517,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
               <Play className="w-8 h-8 text-neutral-500" />
             </div>
             <h3 className="text-lg font-medium text-white mb-2">No videos yet</h3>
-            <p className="text-neutral-500 text-sm mb-4">Add videos to your scope library to use as references</p>
-            <Button onClick={() => setAddVideoOpen(true)} className="bg-[#2060df] hover:bg-[#1a50c8]">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Video
-            </Button>
+            <p className="text-neutral-500 text-sm">Videos will appear here once added by an admin</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
@@ -631,128 +539,6 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
         )}
       </div>
 
-      {/* Add Video Dialog */}
-      <Dialog open={addVideoOpen} onOpenChange={setAddVideoOpen}>
-        <DialogContent className="bg-[#0a0a0a] border-[#252525] max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-white">Add Video to Library</DialogTitle>
-            <DialogDescription className="text-neutral-500">
-              Add a video reference to your scope library
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-4 font-['Inter'] tracking-[-0.5px]">
-            {/* Video File Upload */}
-            <div className="space-y-2">
-              <Label className="text-white text-[13px]">Upload Video</Label>
-              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#252525] rounded-lg cursor-pointer bg-[#141414] hover:bg-[#1a1a1a] transition-colors">
-                {newVideo.file ? (
-                  <div className="flex items-center gap-2 text-white">
-                    <Upload className="w-4 h-4 text-[#2060df]" />
-                    <span className="text-sm truncate max-w-[200px]">{newVideo.file.name}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setNewVideo(prev => ({ ...prev, file: null }));
-                      }}
-                      className="p-1 hover:bg-[#252525] rounded"
-                    >
-                      <X className="w-3 h-3 text-neutral-400" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center pt-2 pb-3">
-                    <Upload className="w-6 h-6 text-neutral-500 mb-1" />
-                    <p className="text-xs text-neutral-500">Click to upload video</p>
-                    <p className="text-[10px] text-neutral-600 mt-0.5">MP4, MOV, WebM</p>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setNewVideo(prev => ({ ...prev, file }));
-                    }
-                  }}
-                />
-              </label>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-[#252525]" />
-              <span className="text-[11px] text-neutral-500">or add by URL</span>
-              <div className="flex-1 h-px bg-[#252525]" />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-white text-[13px]">Video URL</Label>
-              <Input
-                placeholder="https://tiktok.com/@user/video/..."
-                value={newVideo.video_url}
-                onChange={e => setNewVideo(prev => ({ ...prev, video_url: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white text-[13px]">Platform</Label>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="w-full flex items-center justify-between px-3 py-2 bg-[#141414] border border-[#252525] rounded-md text-white text-sm">
-                    <span className="capitalize">{newVideo.platform}</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-[#141414] border-[#252525]">
-                  {['tiktok', 'instagram', 'youtube', 'x'].map(platform => (
-                    <DropdownMenuItem
-                      key={platform}
-                      onClick={() => setNewVideo(prev => ({ ...prev, platform }))}
-                      className="text-white hover:bg-[#1f1f1f] capitalize text-sm"
-                    >
-                      {platform}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white text-[13px]">Username</Label>
-              <Input
-                placeholder="@username"
-                value={newVideo.username}
-                onChange={e => setNewVideo(prev => ({ ...prev, username: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white text-[13px]">Caption</Label>
-              <Textarea
-                placeholder="Video caption or description..."
-                value={newVideo.caption}
-                onChange={e => setNewVideo(prev => ({ ...prev, caption: e.target.value }))}
-                className="bg-[#141414] border-[#252525] text-white resize-none text-sm"
-                rows={2}
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setAddVideoOpen(false)} className="border-[#252525] text-white hover:bg-[#1f1f1f] text-sm">
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleAddVideo} 
-                disabled={addingVideo || (!newVideo.video_url && !newVideo.file)} 
-                className="bg-[#2060df] hover:bg-[#1a50c8] text-sm"
-              >
-                {addingVideo ? 'Uploading...' : 'Add Video'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
