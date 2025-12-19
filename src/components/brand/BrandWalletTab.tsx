@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Wallet, Plus, ArrowUpRight, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, ArrowUpRight, ExternalLink, AlertCircle, CheckCircle2, Wallet } from "lucide-react";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
+import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 
 interface BrandWalletTabProps {
   brandId: string;
@@ -185,27 +186,26 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   if (!walletData?.has_whop_company) {
     return (
       <div className="space-y-6">
-        <Card className="bg-[#0f0f0f] border-[#1f1f1f]">
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-[#2060df]/10 flex items-center justify-center mx-auto mb-4">
-                <Wallet className="w-8 h-8 text-[#2060df]" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Set Up Your Brand Wallet</h3>
-              <p className="text-neutral-400 mb-6 max-w-md mx-auto">
-                Create a dedicated wallet for your brand to manage campaign budgets, 
-                receive funds, and process withdrawals.
-              </p>
-              <Button 
-                onClick={handleSetupWallet} 
-                disabled={settingUp}
-                className="bg-[#2060df] hover:bg-[#1a50c0]"
-              >
-                {settingUp ? 'Setting up...' : 'Set Up Wallet'}
-              </Button>
+        <div className="pt-6">
+          <div className="text-center py-12">
+            <div className="w-14 h-14 rounded-full bg-[#1f60dd]/10 flex items-center justify-center mx-auto mb-4">
+              <img src={creditCardIcon} alt="" className="w-6 h-6 invert-0 brightness-0 opacity-60" style={{ filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)' }} />
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Set Up Your Brand Wallet</h3>
+            <p className="text-sm text-muted-foreground tracking-[-0.5px] mb-6 max-w-sm mx-auto">
+              Create a dedicated wallet for your brand to manage campaign budgets, 
+              receive funds, and process withdrawals.
+            </p>
+            <button 
+              onClick={handleSetupWallet} 
+              disabled={settingUp}
+              className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <img src={creditCardIcon} alt="" className="w-4 h-4" />
+              {settingUp ? 'Setting up...' : 'Set Up Wallet'}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
