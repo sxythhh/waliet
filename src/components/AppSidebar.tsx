@@ -521,9 +521,9 @@ export function AppSidebar() {
 
         {/* Upgrade Plan Button */}
         {!isCollapsed && (
-          <div className="px-2 py-2">
+          <div className="px-2 py-1">
             <button 
-              className="w-full py-2.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
             >
               <img src={nutFillIcon} alt="" className="h-4 w-4" />
               Upgrade Plan
