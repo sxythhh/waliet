@@ -625,12 +625,12 @@ export function UserSettingsTab() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
                 {brand.subscription_status === 'active' && (
-                  <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-600 rounded-full">
+                  <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
                     Active
                   </span>
                 )}
                 {brand.subscription_status !== 'active' && (
-                  <span className="px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded-full">
+                  <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
                     {brand.subscription_status || 'Inactive'}
                   </span>
                 )}
@@ -676,36 +676,6 @@ export function UserSettingsTab() {
                 )}
               </div>
               
-              {/* Upgrade/Subscribe buttons for users without active subscription */}
-              {brand.subscription_status !== 'active' && (
-                <div className="pt-4 space-y-3">
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Choose a plan to get started</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex flex-col items-start"
-                      onClick={() => {
-                        setSelectedCheckoutPlan({ id: 'starter', name: 'Starter' });
-                        setShowCheckoutDialog(true);
-                      }}
-                    >
-                      <span className="font-medium tracking-[-0.5px]">Starter</span>
-                      <span className="text-xs text-muted-foreground">$99/month</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex flex-col items-start"
-                      onClick={() => {
-                        setSelectedCheckoutPlan({ id: 'growth', name: 'Growth' });
-                        setShowCheckoutDialog(true);
-                      }}
-                    >
-                      <span className="font-medium tracking-[-0.5px]">Growth</span>
-                      <span className="text-xs text-muted-foreground">$249/month</span>
-                    </Button>
-                  </div>
-                </div>
-              )}
               
               {brand.whop_membership_id && (
                 <div className="pt-2 border-t border-border/50">
