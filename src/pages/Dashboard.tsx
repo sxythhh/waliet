@@ -120,6 +120,11 @@ export default function Dashboard() {
   const { isAdmin } = useAdminCheck();
 
   const renderContent = () => {
+    // Brand mode - show loading state while fetching brand data
+    if (isBrandMode && !currentBrand) {
+      return <div className="flex-1" />;
+    }
+
     // Brand mode - check subscription status first (admins bypass paywall)
     if (isBrandMode && currentBrand) {
       // Show subscription embed if no active plan (unless admin or on settings page)
