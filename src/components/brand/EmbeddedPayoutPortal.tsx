@@ -16,33 +16,33 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const elements = loadWhopElements();
 
-// Dark mode appearance configuration
+// Appearance configuration using CSS variables for theming
 const appearance: WhopElementsOptions['appearance'] = {
   classes: {
     '.Button': { 
       height: '44px', 
       'border-radius': '10px',
-      'background-color': '#2060df',
-      color: '#ffffff',
+      'background-color': 'hsl(var(--primary))',
+      color: 'hsl(var(--primary-foreground))',
       'font-weight': '500',
     },
     '.Button:hover': { 
-      'background-color': '#1850b8',
+      'background-color': 'hsl(var(--primary) / 0.9)',
     },
     '.Button:disabled': { 
-      'background-color': '#333333',
-      color: '#666666',
+      'background-color': 'hsl(var(--muted))',
+      color: 'hsl(var(--muted-foreground))',
     },
     '.Container': { 
       'border-radius': '12px', 
-      'background-color': '#0a0a0a',
-      'border-color': '#1f1f1f',
-      color: '#ffffff',
+      'background-color': 'hsl(var(--background))',
+      'border-color': 'hsl(var(--border))',
+      color: 'hsl(var(--foreground))',
     },
     '.Card': {
-      'background-color': '#111111',
-      'border-color': '#1f1f1f',
-      color: '#ffffff',
+      'background-color': 'hsl(var(--card))',
+      'border-color': 'hsl(var(--border))',
+      color: 'hsl(var(--card-foreground))',
     },
   },
 };
@@ -94,69 +94,69 @@ function PayoutPortalContent({ brandId, companyId, redirectUrl }: { brandId: str
       companyId={companyId}
       redirectUrl={redirectUrl}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-4">
         {/* Balance Section */}
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#111111] p-4">
+        <div className="rounded-xl border border-border bg-card p-4">
           <div className="h-24 w-full relative">
-            <BalanceElement fallback={<div className="animate-pulse bg-neutral-800 h-full rounded-lg" />} />
+            <BalanceElement fallback={<div className="animate-pulse bg-muted h-full rounded-lg" />} />
           </div>
           <div className="h-12 w-full relative mt-4">
-            <WithdrawButtonElement fallback={<div className="animate-pulse bg-neutral-800 h-full rounded-lg" />} />
+            <WithdrawButtonElement fallback={<div className="animate-pulse bg-muted h-full rounded-lg" />} />
           </div>
         </div>
 
         {/* Withdrawals History */}
-        <div className="rounded-xl border border-[#1f1f1f] bg-[#111111] p-4">
-          <WithdrawalsElement fallback={<div className="animate-pulse bg-neutral-800 h-32 rounded-lg" />} />
+        <div className="rounded-xl border border-border bg-card p-4">
+          <WithdrawalsElement fallback={<div className="animate-pulse bg-muted h-32 rounded-lg" />} />
         </div>
 
         {/* Account Settings */}
         <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <div className="rounded-xl border border-[#1f1f1f] bg-[#111111]">
+          <div className="rounded-xl border border-border bg-card">
             <CollapsibleTrigger asChild>
-              <button className="flex items-center justify-between w-full p-4 hover:bg-white/5 rounded-xl transition-colors">
+              <button className="flex items-center justify-between w-full p-4 hover:bg-muted/50 rounded-xl transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
-                    <Settings className="w-5 h-5 text-neutral-400" />
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-white">Account Settings</p>
-                    <p className="text-sm text-neutral-500">Manage your payout account</p>
+                    <p className="font-medium text-foreground">Account Settings</p>
+                    <p className="text-sm text-muted-foreground">Manage your payout account</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-neutral-400">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <span className="text-sm">{settingsOpen ? 'Hide' : 'Show'}</span>
                   {settingsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </div>
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="px-4 pb-4 grid grid-cols-2 gap-3">
+              <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   onClick={handleChangeCountry}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors text-left"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <Globe className="w-5 h-5 text-blue-400" />
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-blue-400">Change Country</p>
-                    <p className="text-sm text-neutral-500">Update your payout region</p>
+                    <p className="font-medium text-primary">Change Country</p>
+                    <p className="text-sm text-muted-foreground">Update your payout region</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-blue-400 -rotate-90" />
+                  <ChevronDown className="w-4 h-4 text-primary -rotate-90" />
                 </button>
                 <button
                   onClick={handleResetAccount}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 transition-colors text-left"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                    <RotateCcw className="w-5 h-5 text-red-400" />
+                  <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <RotateCcw className="w-5 h-5 text-destructive" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-red-400">Reset Account</p>
-                    <p className="text-sm text-neutral-500">Start fresh with a new setup</p>
+                    <p className="font-medium text-destructive">Reset Account</p>
+                    <p className="text-sm text-muted-foreground">Start fresh with a new setup</p>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-red-400 -rotate-90" />
+                  <ChevronDown className="w-4 h-4 text-destructive -rotate-90" />
                 </button>
               </div>
             </CollapsibleContent>
@@ -199,15 +199,15 @@ export function EmbeddedPayoutPortal({ brandId, redirectUrl }: EmbeddedPayoutPor
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[500px]">
-        <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
+      <div className="flex items-center justify-center h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error || !companyId) {
     return (
-      <div className="flex items-center justify-center h-[500px] text-neutral-400">
+      <div className="flex items-center justify-center h-[400px] text-muted-foreground p-4">
         <p>{error || 'Unable to load payout portal'}</p>
       </div>
     );
