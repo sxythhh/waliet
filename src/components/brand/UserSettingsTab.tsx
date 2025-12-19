@@ -5,7 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Crown, Check, Eye, EyeOff, Trash2, UserPlus, DollarSign, MessageCircle } from "lucide-react";
+import { Upload, Crown, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import framePersonIcon from "@/assets/frame-person-notification-icon.svg";
+import stackedInboxIcon from "@/assets/stacked-inbox-icon.svg";
+import mailNotificationIcon from "@/assets/mail-notification-icon.svg";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -619,7 +622,7 @@ export function UserSettingsTab() {
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <UserPlus className="h-5 w-5 text-muted-foreground" />
+                        <img src={framePersonIcon} alt="" className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
@@ -635,15 +638,15 @@ export function UserSettingsTab() {
                     />
                   </div>
 
-                  {/* New partner sale */}
+                  {/* New boost submission */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <DollarSign className="h-5 w-5 text-muted-foreground" />
+                        <img src={stackedInboxIcon} alt="" className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New creator sale</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new sale is made in your program.</p>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
                       </div>
                     </div>
                     <Switch
@@ -659,7 +662,7 @@ export function UserSettingsTab() {
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                        <img src={mailNotificationIcon} alt="" className="h-5 w-5" />
                       </div>
                       <div>
                         <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
