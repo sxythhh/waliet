@@ -553,7 +553,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                   className="flex items-center gap-2 px-3 py-2 bg-[#2060df] rounded-lg text-[13px] text-white mr-1"
                 >
                   <img src={iconSrc} alt="" className="w-4 h-4 brightness-0 invert opacity-70" />
-                  <span className="border-l border-white/20 pl-2">{filter.value}</span>
+                  <span>{filter.value}</span>
                   <button 
                     onClick={() => removeFilter(index)}
                     className="ml-1 hover:bg-white/10 rounded p-0.5 transition-colors"
