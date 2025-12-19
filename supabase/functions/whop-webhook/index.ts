@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
             subscription_plan: subscriptionPlan,
             subscription_status: "active",
             whop_membership_id: membershipId,
+            whop_manage_url: payment.membership?.manage_url || null,
             subscription_started_at: new Date().toISOString(),
           })
           .eq("id", brandId);
@@ -140,6 +141,7 @@ Deno.serve(async (req) => {
             subscription_plan: payment.plan.id,
             subscription_status: "active",
             whop_membership_id: payment.membership?.id,
+            whop_manage_url: payment.membership?.manage_url || null,
             subscription_started_at: new Date().toISOString(),
           })
           .eq("id", brandId);
@@ -218,6 +220,7 @@ Deno.serve(async (req) => {
           subscription_plan: membership.plan_id,
           subscription_status: "active",
           whop_membership_id: membership.id,
+          whop_manage_url: membership.manage_url || null,
           subscription_started_at: new Date().toISOString(),
           subscription_expires_at: membership.renewal_period_end || null,
         })
