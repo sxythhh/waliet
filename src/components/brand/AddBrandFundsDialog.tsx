@@ -2,10 +2,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Wallet, CreditCard, AlertCircle } from "lucide-react";
 
 interface AddBrandFundsDialogProps {
   open: boolean;
@@ -15,7 +13,7 @@ interface AddBrandFundsDialogProps {
   onSuccess?: () => void;
 }
 
-const PRESET_AMOUNTS = [500, 1000, 2500, 5000, 10000];
+const PRESET_AMOUNTS = [100, 500, 1000, 2500, 5000];
 
 export function AddBrandFundsDialog({
   open,
@@ -24,7 +22,7 @@ export function AddBrandFundsDialog({
   currentBalance,
   onSuccess,
 }: AddBrandFundsDialogProps) {
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(1000);
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(500);
   const [customAmount, setCustomAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -58,8 +56,8 @@ export function AddBrandFundsDialog({
   const handleAddFunds = async () => {
     const amount = getFinalAmount();
 
-    if (amount < 100) {
-      toast.error('Minimum top-up amount is $100');
+    if (amount <= 0) {
+      toast.error('Please enter a valid amount');
       return;
     }
 
@@ -76,18 +74,18 @@ export function AddBrandFundsDialog({
 
       if (error) throw error;
 
-       if (data?.needs_payment_method) {
-         if (data?.setup_checkout_url) {
-           toast.message('Add a payment method to continue', {
-             description: 'You’ll be redirected to securely save a card, then you can retry your top-up.',
-           });
-           window.location.href = data.setup_checkout_url;
-           return;
-         }
+      if (data?.needs_payment_method) {
+        if (data?.setup_checkout_url) {
+          toast.message('Add a payment method to continue', {
+            description: "You'll be redirected to securely save a card, then you can retry your top-up.",
+          });
+          window.location.href = data.setup_checkout_url;
+          return;
+        }
 
-         toast.error('No payment method on file. Please add a payment method first.');
-         return;
-       }
+        toast.error('No payment method on file. Please add a payment method first.');
+        return;
+      }
 
       if (data?.success) {
         toast.success(`Successfully added ${formatCurrency(amount)} to your wallet!`);
@@ -108,69 +106,83 @@ export function AddBrandFundsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f0f0f] border-[#1f1f1f] text-white max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-[#2060df]" />
-            Add Funds to Wallet
+      <DialogContent className="bg-[#0a0a0a] border-0 text-white max-w-sm p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-4">
+          <DialogTitle 
+            className="text-lg font-semibold tracking-[-0.5px]"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            Add Funds
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 pt-2">
+        <div className="px-6 pb-6 space-y-5">
           {/* Current Balance */}
-          <div className="bg-[#1a1a1a] rounded-lg p-4">
-            <p className="text-sm text-neutral-400 mb-1">Current Balance</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(currentBalance)}</p>
-          </div>
-
-          {/* Amount Selection */}
           <div>
-            <Label className="text-neutral-300 mb-3 block">Select Amount</Label>
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              {PRESET_AMOUNTS.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => handlePresetClick(amount)}
-                  className={`py-3 px-4 rounded-lg text-sm font-medium transition-all ${
-                    selectedAmount === amount
-                      ? 'bg-[#2060df] text-white'
-                      : 'bg-[#1a1a1a] text-neutral-300 hover:bg-[#252525]'
-                  }`}
-                >
-                  {formatCurrency(amount)}
-                </button>
-              ))}
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">$</span>
-                <Input
-                  type="number"
-                  placeholder="Custom"
-                  value={customAmount}
-                  onChange={(e) => handleCustomAmountChange(e.target.value)}
-                  className="pl-7 bg-[#1a1a1a] border-[#2a2a2a] text-white h-full"
-                />
-              </div>
-            </div>
+            <p 
+              className="text-xs text-neutral-500 mb-1 tracking-[-0.3px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              Current Balance
+            </p>
+            <p 
+              className="text-3xl font-semibold text-white tracking-[-0.5px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              {formatCurrency(currentBalance)}
+            </p>
           </div>
 
-          {/* Minimum Warning */}
-          {finalAmount > 0 && finalAmount < 100 && (
-            <div className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-400/10 rounded-lg p-3">
-              <AlertCircle className="w-4 h-4" />
-              <span>Minimum top-up amount is $100</span>
-            </div>
-          )}
+          {/* Preset Amounts */}
+          <div className="flex flex-wrap gap-2">
+            {PRESET_AMOUNTS.map((amount) => (
+              <button
+                key={amount}
+                onClick={() => handlePresetClick(amount)}
+                className={`px-4 py-2 rounded-full text-sm font-medium tracking-[-0.3px] transition-colors ${
+                  selectedAmount === amount
+                    ? 'bg-white text-black'
+                    : 'bg-[#1a1a1a] text-neutral-400 hover:text-white'
+                }`}
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                {formatCurrency(amount)}
+              </button>
+            ))}
+          </div>
+
+          {/* Custom Amount */}
+          <div className="relative">
+            <span 
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              $
+            </span>
+            <Input
+              type="number"
+              placeholder="Enter amount"
+              value={customAmount}
+              onChange={(e) => handleCustomAmountChange(e.target.value)}
+              className="pl-8 h-12 bg-[#111] border-0 text-white text-sm tracking-[-0.3px] placeholder:text-neutral-600 focus-visible:ring-0 focus-visible:ring-offset-0"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            />
+          </div>
 
           {/* Summary */}
-          {finalAmount >= 100 && (
-            <div className="bg-[#1a1a1a] rounded-lg p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-neutral-400">Amount to add</span>
-                <span className="text-white font-medium">{formatCurrency(finalAmount)}</span>
-              </div>
-              <div className="flex justify-between text-sm border-t border-[#2a2a2a] pt-2 mt-2">
-                <span className="text-neutral-400">New balance</span>
-                <span className="text-green-400 font-medium">
+          {finalAmount > 0 && (
+            <div className="pt-2 space-y-2">
+              <div className="flex justify-between items-center">
+                <span 
+                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  New balance
+                </span>
+                <span 
+                  className="text-sm text-white font-medium tracking-[-0.3px]"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
                   {formatCurrency(currentBalance + finalAmount)}
                 </span>
               </div>
@@ -178,20 +190,21 @@ export function AddBrandFundsDialog({
           )}
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="flex-1 border-[#2a2a2a] text-white hover:bg-[#1a1a1a]"
+              className="flex-1 h-11 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] font-medium tracking-[-0.5px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Cancel
             </Button>
             <Button
               onClick={handleAddFunds}
-              disabled={loading || finalAmount < 100}
-              className="flex-1 bg-[#2060df] hover:bg-[#1a50c0]"
+              disabled={loading || finalAmount <= 0}
+              className="flex-1 h-11 bg-white text-black hover:bg-neutral-200 font-medium tracking-[-0.5px]"
+              style={{ fontFamily: 'Inter, sans-serif' }}
             >
-              <CreditCard className="w-4 h-4 mr-2" />
               {loading ? 'Processing...' : `Add ${formatCurrency(finalAmount)}`}
             </Button>
           </div>
