@@ -312,53 +312,51 @@ export function BrandCampaignsTab({
         }} />
           </div>
 
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
-              <div className="p-2 bg-muted rounded-lg shrink-0">
-                <img src={schoolIcon} alt="" className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
-              </div>
-            </div>
-            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => {
-          if (subscriptionStatus === "active") {
-            setCampaignTypeDialogOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }}>
-              <div className="p-2 bg-muted rounded-lg shrink-0">
-                <img src={webStoriesIcon} alt="" className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
-              </div>
-            </div>
-            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
-          prev.set('tab', 'scope');
-          return prev;
-        })}>
-              <div className="p-2 bg-muted rounded-lg shrink-0">
-                <img src={scopeIcon} alt="" className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Spy on your competitor's Viral videos through our curated content library</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Subscription Required CTA and Embed - Only show if not subscribed */}
+          {/* Action Cards and Embed - Only show if not subscribed */}
           {subscriptionStatus !== "active" && <>
-              
-              <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
-                <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
+                <div className="p-2 bg-muted rounded-lg shrink-0">
+                  <img src={schoolIcon} alt="" className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
+                </div>
               </div>
-            </>}
+              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => {
+            if (subscriptionStatus === "active") {
+              setCampaignTypeDialogOpen(true);
+            } else {
+              setSubscriptionGateOpen(true);
+            }
+          }}>
+                <div className="p-2 bg-muted rounded-lg shrink-0">
+                  <img src={webStoriesIcon} alt="" className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
+                </div>
+              </div>
+              <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
+            prev.set('tab', 'scope');
+            return prev;
+          })}>
+                <div className="p-2 bg-muted rounded-lg shrink-0">
+                  <img src={scopeIcon} alt="" className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Spy on your competitor's Viral videos through our curated content library</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
+              <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+            </div>
+          </>}
 
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4">
