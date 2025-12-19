@@ -706,7 +706,7 @@ export function DiscoverTab() {
                           borderTop: '1px solid #3c8544',
                           borderRadius: '20px'
                         }}>
-                              <img src={checkCircleIcon} alt="" className="h-2.5 w-2.5" />
+                              <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
                               Active
                             </span>}
                           </div>
