@@ -99,7 +99,7 @@ export function UserSettingsTab() {
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("wallet");
   const [editedBrandName, setEditedBrandName] = useState("");
   const [editedSlug, setEditedSlug] = useState("");
   const [savingBrand, setSavingBrand] = useState(false);
@@ -470,7 +470,7 @@ export function UserSettingsTab() {
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center gap-6 border-b border-border">
-          {["general", "integrations", "team", "billing"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          {["wallet", "general", "integrations", "team"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>)}
         </div>
@@ -830,8 +830,8 @@ export function UserSettingsTab() {
           {isBrandMode && brand && <TeamMembersTab brandId={brand.id} />}
         </TabsContent>
 
-        {/* Billing Tab */}
-        <TabsContent value="billing" className="mt-6 space-y-6">
+        {/* Wallet Tab */}
+        <TabsContent value="wallet" className="mt-6 space-y-6">
           {/* Subscription Info */}
           {isBrandMode && brand && (
             <div className="space-y-4">
