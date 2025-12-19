@@ -477,79 +477,6 @@ export function UserSettingsTab() {
                   <Spacer />
                 </>}
 
-              {/* Subscription Info - Visible to all users */}
-              <div className="space-y-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
-                  </div>
-                  {brand.subscription_status === 'active' && (
-                    <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-600 rounded-full">
-                      Active
-                    </span>
-                  )}
-                  {brand.subscription_status !== 'active' && (
-                    <span className="px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded-full">
-                      {brand.subscription_status || 'Inactive'}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Current Plan</p>
-                    <p className="text-sm font-medium tracking-[-0.5px]">
-                      {brand.subscription_plan 
-                        ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan
-                        : 'No plan'
-                      }
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Price</p>
-                    <p className="text-sm font-medium tracking-[-0.5px]">
-                      {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan]
-                        ? `$${PLAN_PRICES[brand.subscription_plan]}/month`
-                        : '—'
-                      }
-                    </p>
-                  </div>
-                  
-                  {brand.subscription_started_at && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Started</p>
-                      <p className="text-sm font-medium tracking-[-0.5px]">
-                        {new Date(brand.subscription_started_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {brand.subscription_expires_at && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Renews</p>
-                      <p className="text-sm font-medium tracking-[-0.5px]">
-                        {new Date(brand.subscription_expires_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                
-                {brand.whop_membership_id && (
-                  <div className="pt-2 border-t border-border/50">
-                    <a 
-                      href="https://whop.com/billing/manage/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline tracking-[-0.5px]"
-                    >
-                      Manage billing →
-                    </a>
-                  </div>
-                )}
-              </div>
-              <Spacer />
 
               {/* Admin: Subscription Plan Management */}
               {isAdmin && <div className="space-y-4 p-4 rounded-xl bg-amber-500/10">
@@ -689,6 +616,80 @@ export function UserSettingsTab() {
 
         {/* Billing Tab */}
         <TabsContent value="billing" className="mt-6 space-y-6">
+          {/* Subscription Info */}
+          {isBrandMode && brand && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
+                {brand.subscription_status === 'active' && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-green-500/10 text-green-600 rounded-full">
+                    Active
+                  </span>
+                )}
+                {brand.subscription_status !== 'active' && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground rounded-full">
+                    {brand.subscription_status || 'Inactive'}
+                  </span>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Current Plan</p>
+                  <p className="text-sm font-medium tracking-[-0.5px]">
+                    {brand.subscription_plan 
+                      ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan
+                      : 'No plan'
+                    }
+                  </p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Price</p>
+                  <p className="text-sm font-medium tracking-[-0.5px]">
+                    {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan]
+                      ? `$${PLAN_PRICES[brand.subscription_plan]}/month`
+                      : '—'
+                    }
+                  </p>
+                </div>
+                
+                {brand.subscription_started_at && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Started</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">
+                      {new Date(brand.subscription_started_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                
+                {brand.subscription_expires_at && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Renews</p>
+                    <p className="text-sm font-medium tracking-[-0.5px]">
+                      {new Date(brand.subscription_expires_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {brand.whop_membership_id && (
+                <div className="pt-2 border-t border-border/50">
+                  <a 
+                    href="https://whop.com/billing/manage/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline tracking-[-0.5px]"
+                  >
+                    Manage billing →
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          <Spacer />
+
           {/* Brand Wallet Section */}
           {isBrandMode && brand && (
             <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />
