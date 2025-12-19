@@ -656,7 +656,14 @@ function ScopeVideoCard({
             />
             {/* Play overlay when not playing */}
             {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div 
+                className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer"
+                onClick={() => {
+                  setIsPlaying(true);
+                  const videoEl = document.querySelector(`video[src="${video.file_url}"]`) as HTMLVideoElement;
+                  if (videoEl) videoEl.play();
+                }}
+              >
                 <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
                   <Play className="w-6 h-6 text-white fill-white ml-1" />
                 </div>
