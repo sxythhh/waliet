@@ -118,26 +118,13 @@ serve(async (req) => {
     const paymentMethodsData = JSON.parse(paymentMethodsText);
     const paymentMethods = paymentMethodsData.data || paymentMethodsData;
 
-    // If no payment method exists, create a payment checkout to charge and save the payment method
+    // If no payment method exists, create a setup checkout so user can save their payment method
     if (!paymentMethods || paymentMethods.length === 0) {
-      if (!amount || amount < 1) {
-        return new Response(
-          JSON.stringify({
-            error: 'No payment method on file. Please enter an amount to add funds and save your payment method.',
-            needs_payment_method: true,
-          }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
       const redirectUrl = return_url || 'https://example.com';
-      console.log('No payment method on file. Creating payment checkout for first top-up. Amount:', amount, 'redirect_url:', redirectUrl);
+      console.log('No payment method on file. Creating setup checkout. redirect_url:', redirectUrl);
 
-      // Create a payment checkout - this will charge the amount AND save the payment method
-      const paymentCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+      // Create a setup checkout - this saves the payment method for future use
+      const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
@@ -145,28 +132,26 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           company_id: brand.whop_company_id,
-          mode: 'payment',
+          mode: 'setup',
           currency: 'usd',
-          amount: amount,
           redirect_url: redirectUrl,
           metadata: {
             brand_id,
             user_id: user.id,
-            purpose: 'wallet_topup_first',
-            amount: amount,
+            purpose: 'wallet_payment_method_setup',
           },
         }),
       });
 
-      const paymentCheckoutText = await paymentCheckoutRes.text();
-      console.log('Payment checkout response status:', paymentCheckoutRes.status);
-      console.log('Payment checkout response:', paymentCheckoutText);
+      const setupCheckoutText = await setupCheckoutRes.text();
+      console.log('Setup checkout response status:', setupCheckoutRes.status);
+      console.log('Setup checkout response:', setupCheckoutText);
 
-      if (!paymentCheckoutRes.ok) {
+      if (!setupCheckoutRes.ok) {
         return new Response(
           JSON.stringify({
-            error: 'Failed to create payment checkout',
-            details: paymentCheckoutText,
+            error: 'Failed to create setup checkout',
+            details: setupCheckoutText,
             needs_payment_method: true,
           }),
           {
@@ -176,34 +161,15 @@ serve(async (req) => {
         );
       }
 
-      const paymentCheckoutData = JSON.parse(paymentCheckoutText);
+      const setupCheckoutData = JSON.parse(setupCheckoutText);
       
-      // Record the pending transaction
-      await supabase
-        .from('brand_wallet_transactions')
-        .insert({
-          brand_id: brand_id,
-          type: 'topup',
-          amount: amount,
-          status: 'pending',
-          description: `Wallet top-up: $${amount} (first payment)`,
-          whop_payment_id: paymentCheckoutData.id,
-          metadata: {
-            user_id: user.id,
-            checkout_id: paymentCheckoutData.id,
-            initiated_at: new Date().toISOString(),
-            is_first_topup: true,
-          },
-          created_by: user.id
-        });
-
       return new Response(
         JSON.stringify({
           success: true,
           needs_payment_method: true,
-          checkout_url: paymentCheckoutData.purchase_url || paymentCheckoutData.url || paymentCheckoutData.checkout_url,
-          checkout_id: paymentCheckoutData.id,
-          message: 'Redirecting to complete your first top-up and save payment method.',
+          checkout_url: setupCheckoutData.purchase_url || setupCheckoutData.url || setupCheckoutData.checkout_url,
+          checkout_id: setupCheckoutData.id,
+          message: 'Redirecting to save your payment method.',
         }),
         {
           status: 200,
