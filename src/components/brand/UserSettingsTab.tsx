@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
+import shortimizeLogo from "@/assets/shortimize-logo.png";
 
 interface Brand {
   id: string;
@@ -535,9 +536,7 @@ export function UserSettingsTab() {
               {/* Shortimize API Key */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                    S
-                  </div>
+                  <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Shortimize</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Connect to track video analytics</p>
