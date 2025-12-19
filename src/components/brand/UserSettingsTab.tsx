@@ -641,7 +641,7 @@ export function UserSettingsTab() {
 
               {/* Danger Zone - Delete Workspace */}
               <Spacer />
-              <div className="space-y-4 p-4 rounded-xl border border-destructive/30 bg-destructive/5">
+              <div className="space-y-4 p-4 rounded-xl bg-destructive/5">
                 <div className="space-y-1">
                   <h3 className="text-sm font-medium tracking-[-0.5px] text-destructive">Danger Zone</h3>
                   <p className="text-xs text-muted-foreground tracking-[-0.5px]">
@@ -890,7 +890,7 @@ export function UserSettingsTab() {
           <AlertDialogFooter>
             <AlertDialogCancel 
               onClick={() => setDeleteConfirmEmail("")}
-              className="tracking-[-0.5px]"
+              className="tracking-[-0.5px] border-0 hover:bg-muted hover:text-foreground"
             >
               Cancel
             </AlertDialogCancel>
