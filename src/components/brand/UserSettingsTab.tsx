@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload, Crown, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Upload, Crown, Check, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -14,16 +14,6 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
@@ -77,10 +67,6 @@ export function UserSettingsTab() {
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
   const [savingIntegrations, setSavingIntegrations] = useState(false);
   const [showShortimizeKey, setShowShortimizeKey] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
-  const [deleting, setDeleting] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -229,7 +215,6 @@ export function UserSettingsTab() {
         navigate("/auth");
         return;
       }
-      setUserEmail(user.email || "");
       const {
         data: profileData,
         error
@@ -246,36 +231,6 @@ export function UserSettingsTab() {
       toast.error("Failed to load profile");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDeleteWorkspace = async () => {
-    if (!brand?.id || deleteConfirmEmail !== userEmail) {
-      toast.error("Please enter your email correctly to confirm");
-      return;
-    }
-
-    try {
-      setDeleting(true);
-      
-      // Delete the brand (this will cascade delete related data)
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", brand.id);
-
-      if (error) throw error;
-
-      toast.success("Workspace deleted successfully");
-      setShowDeleteDialog(false);
-      setDeleteConfirmEmail("");
-      refreshBrands();
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Error deleting workspace:", error);
-      toast.error("Failed to delete workspace");
-    } finally {
-      setDeleting(false);
     }
   };
   const handleSave = async () => {
@@ -497,25 +452,6 @@ export function UserSettingsTab() {
                     {savingPlan ? "Updating..." : "Update Plan"}
                   </Button>
                 </div>}
-
-              {/* Danger Zone - Delete Workspace */}
-              <Spacer />
-              <div className="space-y-4 p-4 rounded-xl border border-destructive/30 bg-destructive/5">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium tracking-[-0.5px] text-destructive">Danger Zone</h3>
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                    Once you delete a workspace, there is no going back. Please be certain.
-                  </p>
-                </div>
-                <Button 
-                  variant="destructive" 
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="w-full h-10 tracking-[-0.5px]"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Workspace
-                </Button>
-              </div>
             </>}
         </TabsContent>
 
@@ -564,7 +500,7 @@ export function UserSettingsTab() {
               {/* Discord Webhook */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">
                 <div className="flex items-center gap-3">
-                  <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
+                  <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover border-black/0" />
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Discord</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
@@ -627,45 +563,5 @@ export function UserSettingsTab() {
 
       {/* Create Brand Dialog */}
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} onSuccess={handleBrandCreated} />
-
-      {/* Delete Workspace Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="tracking-[-0.5px]">Delete Workspace</AlertDialogTitle>
-            <AlertDialogDescription className="tracking-[-0.5px]">
-              This action cannot be undone. This will permanently delete the workspace
-              <span className="font-semibold text-foreground"> {brand?.name}</span> and all of its data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-2 py-2">
-            <Label className="text-sm text-muted-foreground tracking-[-0.5px]">
-              Type your email <span className="font-medium text-foreground">{userEmail}</span> to confirm
-            </Label>
-            <Input
-              value={deleteConfirmEmail}
-              onChange={(e) => setDeleteConfirmEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="h-11 tracking-[-0.5px]"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setDeleteConfirmEmail("")}
-              className="tracking-[-0.5px]"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteWorkspace}
-              disabled={deleting || deleteConfirmEmail !== userEmail}
-              className="tracking-[-0.5px]"
-            >
-              {deleting ? "Deleting..." : "Delete Workspace"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>;
 }
