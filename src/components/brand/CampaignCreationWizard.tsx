@@ -57,6 +57,7 @@ const campaignSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   campaign_type: z.string().optional(),
   category: z.string().optional(),
+  content_distribution: z.enum(["creators_own_page", "branded_accounts"]).default("creators_own_page"),
   is_infinite_budget: z.boolean().default(false),
   budget: z.string().optional(),
   rpm_rate: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
@@ -101,6 +102,7 @@ interface Campaign {
   description: string | null;
   campaign_type?: string | null;
   category?: string | null;
+  content_distribution?: string | null;
   budget: number;
   budget_used?: number;
   rpm_rate: number;
@@ -240,6 +242,7 @@ export function CampaignCreationWizard({
       description: campaign?.description || "",
       campaign_type: campaign?.campaign_type || "clipping",
       category: campaign?.category || "",
+      content_distribution: (campaign?.content_distribution as "creators_own_page" | "branded_accounts") || "creators_own_page",
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
       rpm_rate: campaign?.rpm_rate?.toString() || "5",
@@ -277,6 +280,7 @@ export function CampaignCreationWizard({
         description: campaign?.description || "",
         campaign_type: campaign?.campaign_type || "clipping",
         category: campaign?.category || "",
+        content_distribution: (campaign?.content_distribution as "creators_own_page" | "branded_accounts") || "creators_own_page",
         is_infinite_budget: campaign?.is_infinite_budget || false,
         budget: campaign?.budget?.toString() || "",
         rpm_rate: campaign?.rpm_rate?.toString() || "5",
@@ -392,6 +396,7 @@ export function CampaignCreationWizard({
         description: values.description || null,
         campaign_type: values.campaign_type || "clipping",
         category: values.category || null,
+        content_distribution: values.content_distribution || "creators_own_page",
         is_infinite_budget: values.is_infinite_budget,
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
         rpm_rate: Number(values.rpm_rate) || 5,
@@ -451,6 +456,7 @@ export function CampaignCreationWizard({
           description: values.description || null,
           campaign_type: values.campaign_type || "clipping",
           category: values.category || null,
+          content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
@@ -491,6 +497,7 @@ export function CampaignCreationWizard({
           description: values.description || null,
           campaign_type: values.campaign_type || "clipping",
           category: values.category || null,
+          content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           rpm_rate: Number(values.rpm_rate) || 5,
@@ -663,6 +670,44 @@ export function CampaignCreationWizard({
                               ))}
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Content Distribution */}
+                    <FormField
+                      control={form.control}
+                      name="content_distribution"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Content Distribution</FormLabel>
+                          <FormControl>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div
+                                onClick={() => field.onChange("creators_own_page")}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                  field.value === "creators_own_page"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
+                              </div>
+                              <div
+                                onClick={() => field.onChange("branded_accounts")}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                  field.value === "branded_accounts"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
+                              </div>
+                            </div>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

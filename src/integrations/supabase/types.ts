@@ -389,6 +389,7 @@ export type Database = {
           brand_id: string
           budget: number | null
           budget_used: number | null
+          content_distribution: string | null
           content_style_requirements: string
           created_at: string
           description: string | null
@@ -413,6 +414,7 @@ export type Database = {
           brand_id: string
           budget?: number | null
           budget_used?: number | null
+          content_distribution?: string | null
           content_style_requirements: string
           created_at?: string
           description?: string | null
@@ -437,6 +439,7 @@ export type Database = {
           brand_id?: string
           budget?: number | null
           budget_used?: number | null
+          content_distribution?: string | null
           content_style_requirements?: string
           created_at?: string
           description?: string | null
@@ -1340,6 +1343,7 @@ export type Database = {
           campaign_update: string | null
           campaign_update_at: string | null
           category: string | null
+          content_distribution: string | null
           created_at: string | null
           description: string | null
           discord_guild_id: string | null
@@ -1379,6 +1383,7 @@ export type Database = {
           campaign_update?: string | null
           campaign_update_at?: string | null
           category?: string | null
+          content_distribution?: string | null
           created_at?: string | null
           description?: string | null
           discord_guild_id?: string | null
@@ -1418,6 +1423,7 @@ export type Database = {
           campaign_update?: string | null
           campaign_update_at?: string | null
           category?: string | null
+          content_distribution?: string | null
           created_at?: string | null
           description?: string | null
           discord_guild_id?: string | null
