@@ -656,7 +656,7 @@ export function AppSidebar() {
                     <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-[#1f1f1f]/[0.51]">
+                <div className="hidden flex items-center gap-0.5 p-0.5 rounded-md bg-[#1f1f1f]/[0.51]">
                   <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
                     <Sun className="w-4 h-4" />
                   </button>
