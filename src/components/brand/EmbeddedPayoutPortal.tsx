@@ -82,17 +82,12 @@ function PayoutPortalContent({ brandId, companyId, redirectUrl }: { brandId: str
       <div className="flex flex-col gap-4 p-4">
         {/* Balance Section */}
         <div className="rounded-xl border border-border bg-card p-4">
-          <div className="h-24 w-full relative">
+          <div className="h-28 w-full relative">
             <BalanceElement fallback={<div className="animate-pulse bg-muted h-full rounded-lg" />} />
           </div>
           <div className="h-12 w-full relative mt-4">
             <WithdrawButtonElement fallback={<div className="animate-pulse bg-muted h-full rounded-lg" />} />
           </div>
-        </div>
-
-        {/* Withdrawals History */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <WithdrawalsElement fallback={<div className="animate-pulse bg-muted h-32 rounded-lg" />} />
         </div>
 
         {/* Account Settings */}
