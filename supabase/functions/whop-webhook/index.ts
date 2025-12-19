@@ -1,9 +1,28 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, whop-signature",
 };
+
+// Verify Whop webhook signature
+function verifySignature(payload: string, signature: string | null, secret: string): boolean {
+  if (!signature) {
+    console.warn("No signature provided, skipping verification");
+    return true; // Allow unsigned webhooks during development
+  }
+  
+  try {
+    const hmac = createHmac("sha256", secret);
+    hmac.update(payload);
+    const expectedSignature = hmac.digest("hex");
+    return signature === expectedSignature || signature === `sha256=${expectedSignature}`;
+  } catch (err) {
+    console.error("Signature verification error:", err);
+    return false;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -13,9 +32,22 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const webhookSecret = Deno.env.get("WHOP_WEBHOOK_SECRET") || "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const payload = await req.json();
+    const rawBody = await req.text();
+    const signature = req.headers.get("whop-signature");
+    
+    // Verify signature if secret is configured
+    if (webhookSecret && !verifySignature(rawBody, signature, webhookSecret)) {
+      console.error("Invalid webhook signature");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = JSON.parse(rawBody);
     console.log("Whop webhook received:", JSON.stringify(payload));
 
     // Whop uses "type" field in webhook payload
