@@ -25,6 +25,8 @@ import referralsInactive from "@/assets/referrals-inactive.svg";
 import referralsActive from "@/assets/referrals-active.svg";
 import educationInactive from "@/assets/education-inactive.svg";
 import educationActive from "@/assets/education-active.svg";
+import scopeInactive from "@/assets/scope-inactive.svg";
+import scopeActive from "@/assets/scope-active.svg";
 import nutFillIcon from "@/assets/nut-fill.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -80,6 +82,10 @@ const brandMenuItems = [{
 }, {
   title: "Blueprints",
   tab: "blueprints",
+  icon: null as any
+}, {
+  title: "Scope",
+  tab: "scope",
   icon: null as any
 }, {
   title: "Creators",
@@ -351,6 +357,9 @@ export function AppSidebar() {
                 </div> : item.tab === "blueprints" ? <div className="relative h-6 w-6">
                   <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={blueprintsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                </div> : item.tab === "scope" ? <div className="relative h-6 w-6">
+                  <img src={scopeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={scopeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "creators" ? <div className="relative h-6 w-6">
                   <img src={creatorsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={creatorsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -503,6 +512,9 @@ export function AppSidebar() {
                     </div> : item.tab === "blueprints" ? <div className="relative h-[24px] w-[24px]">
                       <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={blueprintsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "scope" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={scopeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={scopeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
                       <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
