@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X, Play, Link2, Video } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X, Play, Link2, Video, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +80,7 @@ interface ScopeVideo {
   platform: string;
   username: string | null;
   video_url: string;
+  file_url: string | null;
   thumbnail_url: string | null;
   views: number;
   caption: string | null;
@@ -157,7 +158,8 @@ export default function Resources() {
     thumbnail_url: "",
     views: 0,
     caption: "",
-    is_example: false
+    is_example: false,
+    file: null as File | null
   });
   const [scopeSaving, setScopeSaving] = useState(false);
 
@@ -607,7 +609,8 @@ export default function Resources() {
       thumbnail_url: "",
       views: 0,
       caption: "",
-      is_example: false
+      is_example: false,
+      file: null
     });
     setScopeDialogOpen(true);
   };
@@ -622,57 +625,86 @@ export default function Resources() {
       thumbnail_url: video.thumbnail_url || "",
       views: video.views || 0,
       caption: video.caption || "",
-      is_example: false
+      is_example: false,
+      file: null
     });
     setScopeDialogOpen(true);
   };
 
   const handleSaveScope = async () => {
-    if (!scopeFormData.video_url || !scopeFormData.brand_id) {
-      toast.error("Brand and video URL are required");
+    if (!scopeFormData.brand_id) {
+      toast.error("Please select a brand");
+      return;
+    }
+    
+    if (!scopeFormData.video_url && !scopeFormData.file) {
+      toast.error("Please provide a video URL or upload a file");
       return;
     }
 
     setScopeSaving(true);
 
-    const scopeData = {
-      brand_id: scopeFormData.brand_id,
-      platform: scopeFormData.platform,
-      username: scopeFormData.username || null,
-      video_url: scopeFormData.video_url,
-      thumbnail_url: scopeFormData.thumbnail_url || null,
-      views: scopeFormData.views || 0,
-      caption: scopeFormData.caption || null,
-      is_example: scopeFormData.is_example
-    };
+    try {
+      let fileUrl = null;
+      
+      // Upload video file if provided
+      if (scopeFormData.file) {
+        const fileExt = scopeFormData.file.name.split('.').pop();
+        const fileName = `${scopeFormData.brand_id}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('scope-videos')
+          .upload(fileName, scopeFormData.file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-    if (editingScopeVideo) {
-      const { error } = await supabase
-        .from("scope_videos")
-        .update(scopeData)
-        .eq("id", editingScopeVideo.id);
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from('scope-videos')
+          .getPublicUrl(fileName);
+          
+        fileUrl = urlData.publicUrl;
+      }
 
-      if (error) {
-        toast.error("Failed to update scope video");
-      } else {
+      const scopeData = {
+        brand_id: scopeFormData.brand_id,
+        platform: scopeFormData.platform,
+        username: scopeFormData.username || null,
+        video_url: scopeFormData.video_url || fileUrl || '',
+        file_url: fileUrl,
+        thumbnail_url: scopeFormData.thumbnail_url || null,
+        views: scopeFormData.views || 0,
+        caption: scopeFormData.caption || null,
+        is_example: scopeFormData.is_example
+      };
+
+      if (editingScopeVideo) {
+        const { error } = await supabase
+          .from("scope_videos")
+          .update(scopeData)
+          .eq("id", editingScopeVideo.id);
+
+        if (error) throw error;
         toast.success("Scope video updated");
-        fetchScopeVideos();
-        setScopeDialogOpen(false);
-      }
-    } else {
-      const { error } = await supabase
-        .from("scope_videos")
-        .insert(scopeData);
-
-      if (error) {
-        toast.error("Failed to add scope video");
       } else {
+        const { error } = await supabase
+          .from("scope_videos")
+          .insert(scopeData);
+
+        if (error) throw error;
         toast.success("Scope video added");
-        fetchScopeVideos();
-        setScopeDialogOpen(false);
       }
+      
+      fetchScopeVideos();
+      setScopeDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving scope video:', error);
+      toast.error("Failed to save scope video");
+    } finally {
+      setScopeSaving(false);
     }
-    setScopeSaving(false);
   };
 
   const deleteScopeVideo = async (id: string) => {
@@ -1577,8 +1609,55 @@ export default function Resources() {
               </Select>
             </div>
 
+            {/* Video File Upload */}
             <div className="space-y-2">
-              <Label className="font-inter tracking-[-0.5px]">Video URL *</Label>
+              <Label className="font-inter tracking-[-0.5px]">Upload Video</Label>
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/50 hover:bg-muted transition-colors">
+                {scopeFormData.file ? (
+                  <div className="flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-primary" />
+                    <span className="text-sm truncate max-w-[200px]">{scopeFormData.file.name}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setScopeFormData({ ...scopeFormData, file: null });
+                      }}
+                      className="p-1 hover:bg-muted rounded"
+                    >
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                    <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                    <p className="text-xs text-muted-foreground">Click to upload video</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">MP4, MOV, WebM</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setScopeFormData({ ...scopeFormData, file });
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-[11px] text-muted-foreground">or add by URL</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Video URL</Label>
               <Input
                 value={scopeFormData.video_url}
                 onChange={(e) => setScopeFormData({ ...scopeFormData, video_url: e.target.value })}
