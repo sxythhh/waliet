@@ -160,7 +160,7 @@ export function SubscriptionGateDialog({
             </p>
           </DialogHeader>
           
-          <div className="p-[5px]">
+          <div className="p-[10px]">
             <div className="grid md:grid-cols-3 gap-6">
               {PLANS.map((plan) => {
                 const isLoading = loading === plan.key;
