@@ -67,19 +67,27 @@ export function AddBrandFundsDialog({
 
     try {
       const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
-        body: { brand_id: brandId, amount },
+        body: { 
+          brand_id: brandId, 
+          amount,
+          return_url: `${window.location.origin}/dashboard?workspace=${brandId}&tab=profile`
+        },
       });
 
       if (error) throw error;
 
       if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
+        window.open(data.checkout_url, '_blank');
+        toast.success('Opening payment page...');
+        onOpenChange(false);
+        onSuccess?.();
       } else {
         throw new Error('No checkout URL returned');
       }
     } catch (error) {
       console.error('Error creating top-up:', error);
       toast.error('Failed to create payment. Please try again.');
+    } finally {
       setLoading(false);
     }
   };

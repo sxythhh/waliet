@@ -37,17 +37,10 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount } = await req.json();
+    const { brand_id, amount, return_url } = await req.json();
 
-    if (!brand_id || !amount) {
-      return new Response(JSON.stringify({ error: 'brand_id and amount are required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (amount < 100) {
-      return new Response(JSON.stringify({ error: 'Minimum top-up amount is $100' }), {
+    if (!brand_id) {
+      return new Response(JSON.stringify({ error: 'brand_id is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -83,16 +76,19 @@ serve(async (req) => {
     }
 
     if (!brand.whop_company_id) {
-      return new Response(JSON.stringify({ error: 'Brand does not have a Whop company. Set one up first.' }), {
+      return new Response(JSON.stringify({ error: 'Brand does not have a wallet set up. Please set up your wallet first.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Create checkout configuration for the brand's company
-    console.log(`Creating top-up checkout for brand ${brand.name}, amount: $${amount}`);
+    // Use account_links to create a hosted topup flow
+    // This allows connected accounts to add funds via Whop's hosted UI
+    console.log(`Creating topup link for brand ${brand.name} (company: ${brand.whop_company_id})`);
     
-    const whopResponse = await fetch('https://api.whop.com/api/v5/checkout_configurations', {
+    const baseReturnUrl = return_url || `https://virality.gg/dashboard?workspace=${brand.slug}&tab=profile`;
+    
+    const whopResponse = await fetch('https://api.whop.com/api/v5/account_links', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
@@ -100,53 +96,86 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         company_id: brand.whop_company_id,
-        plan: {
-          initial_price: amount * 100, // Whop uses cents
-          plan_type: 'one_time',
-          visibility: 'hidden',
-        },
-        metadata: {
-          type: 'brand_wallet_topup',
-          brand_id: brand_id,
-          amount: amount,
-          user_id: user.id,
-          created_at: new Date().toISOString()
-        },
-        redirect_url: `https://virality.gg/dashboard?workspace=${brand.slug}&tab=account&topup=success`,
+        use_case: 'balance_topup',
+        return_url: `${baseReturnUrl}&topup=success`,
+        refresh_url: `${baseReturnUrl}&topup=refresh`,
       }),
     });
 
+    const responseText = await whopResponse.text();
+    console.log('Whop account_links response status:', whopResponse.status);
+    console.log('Whop account_links response:', responseText);
+
     if (!whopResponse.ok) {
-      const errorText = await whopResponse.text();
-      console.error('Whop API error:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to create checkout', details: errorText }), {
-        status: 500,
+      console.error('Whop API error:', responseText);
+      
+      // If balance_topup is not supported, try payouts_portal as fallback
+      // which includes balance management
+      const fallbackResponse = await fetch('https://api.whop.com/api/v5/account_links', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${whopApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_id: brand.whop_company_id,
+          use_case: 'payouts_portal',
+          return_url: `${baseReturnUrl}&topup=success`,
+          refresh_url: `${baseReturnUrl}&topup=refresh`,
+        }),
+      });
+
+      if (!fallbackResponse.ok) {
+        const fallbackError = await fallbackResponse.text();
+        console.error('Fallback Whop API error:', fallbackError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to create top-up link', 
+          details: responseText,
+          fallback_details: fallbackError 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const fallbackData = await fallbackResponse.json();
+      console.log('Fallback account link created:', fallbackData);
+
+      return new Response(JSON.stringify({ 
+        checkout_url: fallbackData.url,
+        expires_at: fallbackData.expires_at,
+        use_case: 'payouts_portal'
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const checkoutConfig = await whopResponse.json();
-    console.log('Checkout configuration created:', checkoutConfig);
+    const accountLinkData = JSON.parse(responseText);
+    console.log('Account link created:', accountLinkData);
 
-    // Create pending transaction record
-    await supabase
-      .from('brand_wallet_transactions')
-      .insert({
-        brand_id: brand_id,
-        type: 'topup',
-        amount: amount,
-        status: 'pending',
-        description: `Wallet top-up: $${amount}`,
-        metadata: {
-          checkout_config_id: checkoutConfig.id,
-          user_id: user.id
-        },
-        created_by: user.id
-      });
+    // If amount was provided, we could record a pending transaction
+    // But since we're using hosted flow, the actual amount will be determined by user
+    if (amount && amount >= 100) {
+      await supabase
+        .from('brand_wallet_transactions')
+        .insert({
+          brand_id: brand_id,
+          type: 'topup',
+          amount: amount,
+          status: 'pending',
+          description: `Wallet top-up initiated`,
+          metadata: {
+            user_id: user.id,
+            initiated_at: new Date().toISOString()
+          },
+          created_by: user.id
+        });
+    }
 
     return new Response(JSON.stringify({ 
-      checkout_url: checkoutConfig.purchase_url || checkoutConfig.url,
-      checkout_id: checkoutConfig.id
+      checkout_url: accountLinkData.url,
+      expires_at: accountLinkData.expires_at,
+      use_case: 'balance_topup'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
