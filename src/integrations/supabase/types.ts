@@ -751,6 +751,7 @@ export type Database = {
           subscription_status: string | null
           updated_at: string
           whop_company_id: string | null
+          whop_manage_url: string | null
           whop_membership_id: string | null
           whop_onboarding_complete: boolean | null
         }
@@ -780,6 +781,7 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string
           whop_company_id?: string | null
+          whop_manage_url?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
         }
@@ -809,6 +811,7 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string
           whop_company_id?: string | null
+          whop_manage_url?: string | null
           whop_membership_id?: string | null
           whop_onboarding_complete?: boolean | null
         }

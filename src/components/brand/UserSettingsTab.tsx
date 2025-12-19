@@ -64,6 +64,7 @@ interface Brand {
   subscription_started_at: string | null;
   subscription_expires_at: string | null;
   whop_membership_id: string | null;
+  whop_manage_url: string | null;
   shortimize_api_key: string | null;
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
@@ -677,10 +678,10 @@ export function UserSettingsTab() {
               </div>
               
               
-              {brand.whop_membership_id && (
+              {brand.whop_manage_url && (
                 <div className="pt-2 border-t border-border/50">
                   <a 
-                    href={`https://whop.com/billing/manage/${brand.whop_membership_id?.replace('mem_', 'mber_')}/`}
+                    href={brand.whop_manage_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline tracking-[-0.5px]"
