@@ -10,6 +10,7 @@ import { CampaignCreationWizard } from "./CampaignCreationWizard";
 import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "./CreateBountyDialog";
 import { TemplateSelector } from "./TemplateSelector";
+import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -44,6 +45,8 @@ export function BlueprintsTab({
   const [createBoostOpen, setCreateBoostOpen] = useState(false);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
+  const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [brandInfo, setBrandInfo] = useState<{
     name: string;
     logoUrl?: string;
@@ -78,12 +81,13 @@ export function BlueprintsTab({
   const fetchBrandInfo = async () => {
     const {
       data
-    } = await supabase.from("brands").select("name, logo_url").eq("id", brandId).single();
+    } = await supabase.from("brands").select("name, logo_url, subscription_status").eq("id", brandId).single();
     if (data) {
       setBrandInfo({
         name: data.name,
         logoUrl: data.logo_url || undefined
       });
+      setSubscriptionStatus(data.subscription_status);
     }
   };
   const fetchBlueprints = async () => {
@@ -273,7 +277,17 @@ export function BlueprintsTab({
             Create and manage your campaign briefs
           </p>
         </div>
-        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5">
+        <Button 
+          onClick={() => {
+            if (subscriptionStatus === "active") {
+              setTemplateSelectorOpen(true);
+            } else {
+              setSubscriptionGateOpen(true);
+            }
+          }} 
+          size="sm" 
+          className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]"
+        >
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
@@ -365,6 +379,12 @@ export function BlueprintsTab({
         onOpenChange={setTemplateSelectorOpen}
         onSelectTemplate={handleSelectTemplate}
         onStartBlank={createBlueprint}
+      />
+
+      <SubscriptionGateDialog 
+        brandId={brandId} 
+        open={subscriptionGateOpen} 
+        onOpenChange={setSubscriptionGateOpen} 
       />
     </div>;
 }
