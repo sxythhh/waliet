@@ -142,40 +142,46 @@ serve(async (req) => {
     const paymentMethodsData = JSON.parse(paymentMethodsText);
     const paymentMethods = paymentMethodsData.data || paymentMethodsData;
 
-    // If no payment method exists, create a setup checkout so user can save their payment method
+    // If no payment method exists, create a payment checkout so user pays + saves their card
     if (!paymentMethods || paymentMethods.length === 0) {
       const redirectUrl = sanitizeRedirectUrl(return_url);
-      console.log('No payment method on file. Creating setup checkout. redirect_url:', redirectUrl);
+      const topupAmount = amount || 1; // default to $1 if not provided
+      console.log('No payment method on file. Creating payment checkout. redirect_url:', redirectUrl, 'amount:', topupAmount);
 
-      // Create a setup checkout - this saves the payment method for future use
-      const setupCheckoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
+      // Create a payment checkout with an inline plan for the topup amount
+      const checkoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${whopApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          company_id: brand.whop_company_id,
-          mode: 'setup',
-          currency: 'usd',
+          plan: {
+            company_id: brand.whop_company_id,
+            currency: 'usd',
+            initial_price: topupAmount,
+            plan_type: 'one_time',
+            visibility: 'hidden',
+          },
           redirect_url: redirectUrl,
           metadata: {
             brand_id,
             user_id: user.id,
-            purpose: 'wallet_payment_method_setup',
+            purpose: 'wallet_topup',
+            amount: topupAmount,
           },
         }),
       });
 
-      const setupCheckoutText = await setupCheckoutRes.text();
-      console.log('Setup checkout response status:', setupCheckoutRes.status);
-      console.log('Setup checkout response:', setupCheckoutText);
+      const checkoutText = await checkoutRes.text();
+      console.log('Checkout response status:', checkoutRes.status);
+      console.log('Checkout response:', checkoutText);
 
-      if (!setupCheckoutRes.ok) {
+      if (!checkoutRes.ok) {
         return new Response(
           JSON.stringify({
-            error: 'Failed to create setup checkout',
-            details: setupCheckoutText,
+            error: 'Failed to create checkout',
+            details: checkoutText,
             needs_payment_method: true,
           }),
           {
@@ -185,15 +191,15 @@ serve(async (req) => {
         );
       }
 
-      const setupCheckoutData = JSON.parse(setupCheckoutText);
+      const checkoutData = JSON.parse(checkoutText);
       
       return new Response(
         JSON.stringify({
           success: true,
           needs_payment_method: true,
-          checkout_url: setupCheckoutData.purchase_url || setupCheckoutData.url || setupCheckoutData.checkout_url,
-          checkout_id: setupCheckoutData.id,
-          message: 'Redirecting to save your payment method.',
+          checkout_url: checkoutData.purchase_url || checkoutData.url || checkoutData.checkout_url,
+          checkout_id: checkoutData.id,
+          message: 'Redirecting to complete payment.',
         }),
         {
           status: 200,
