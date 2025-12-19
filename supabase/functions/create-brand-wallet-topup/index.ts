@@ -61,7 +61,7 @@ serve(async (req) => {
       });
     }
 
-    const { brand_id, amount, return_url } = await req.json();
+    const { brand_id, amount, return_url, transaction_id } = await req.json();
 
     if (!brand_id) {
       return new Response(JSON.stringify({ error: 'brand_id is required' }), {
@@ -148,6 +148,39 @@ serve(async (req) => {
       const topupAmount = amount || 1; // default to $1 if not provided
       console.log('No payment method on file. Creating payment checkout. redirect_url:', redirectUrl, 'amount:', topupAmount);
 
+      // Record a pending "top up intent" so we can finalize after returning from checkout
+      const { data: intentTx, error: intentError } = await supabase
+        .from('brand_wallet_transactions')
+        .insert({
+          brand_id: brand_id,
+          type: 'topup',
+          amount: topupAmount,
+          status: 'pending',
+          description: 'Wallet top-up initiated',
+          metadata: {
+            user_id: user.id,
+            initiated_at: new Date().toISOString(),
+            flow: 'checkout_payment_method',
+          },
+          created_by: user.id,
+        })
+        .select('id')
+        .single();
+
+      if (intentError) {
+        console.error('Failed to record top-up intent:', intentError);
+        return new Response(
+          JSON.stringify({
+            error: 'Failed to record top-up intent',
+            details: intentError.message,
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       // Create a payment checkout with an inline plan for the topup amount
       const checkoutRes = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
         method: 'POST',
@@ -169,6 +202,7 @@ serve(async (req) => {
             user_id: user.id,
             purpose: 'wallet_topup',
             amount: topupAmount,
+            topup_intent_id: intentTx.id,
           },
         }),
       });
@@ -178,6 +212,11 @@ serve(async (req) => {
       console.log('Checkout response:', checkoutText);
 
       if (!checkoutRes.ok) {
+        await supabase
+          .from('brand_wallet_transactions')
+          .update({ status: 'failed', description: 'Wallet top-up checkout failed' })
+          .eq('id', intentTx.id);
+
         return new Response(
           JSON.stringify({
             error: 'Failed to create checkout',
@@ -192,13 +231,15 @@ serve(async (req) => {
       }
 
       const checkoutData = JSON.parse(checkoutText);
-      
+
       return new Response(
         JSON.stringify({
           success: true,
           needs_payment_method: true,
           checkout_url: checkoutData.purchase_url || checkoutData.url || checkoutData.checkout_url,
           checkout_id: checkoutData.id,
+          transaction_id: intentTx.id,
+          amount: topupAmount,
           message: 'Redirecting to complete payment.',
         }),
         {
@@ -248,24 +289,42 @@ serve(async (req) => {
     const topupData = JSON.parse(responseText);
     console.log('Topup created:', topupData);
 
-    // Record the transaction (topup is processed immediately)
+    // Record / update the transaction (topup is processed immediately)
     if (amount && amount >= 1) {
-      await supabase
-        .from('brand_wallet_transactions')
-        .insert({
-          brand_id: brand_id,
-          type: 'topup',
-          amount: amount,
-          status: topupData.status === 'paid' ? 'completed' : 'pending',
-          description: `Wallet top-up: $${amount}`,
-          whop_payment_id: topupData.id,
-          metadata: {
-            user_id: user.id,
-            payment_id: topupData.id,
-            initiated_at: new Date().toISOString()
-          },
-          created_by: user.id
-        });
+      if (transaction_id) {
+        await supabase
+          .from('brand_wallet_transactions')
+          .update({
+            status: topupData.status === 'paid' ? 'completed' : 'pending',
+            description: `Wallet top-up: $${amount}`,
+            whop_payment_id: topupData.id,
+            metadata: {
+              user_id: user.id,
+              payment_id: topupData.id,
+              finalized_at: new Date().toISOString(),
+              previous_flow: 'checkout_payment_method',
+            },
+          })
+          .eq('id', transaction_id)
+          .eq('brand_id', brand_id);
+      } else {
+        await supabase
+          .from('brand_wallet_transactions')
+          .insert({
+            brand_id: brand_id,
+            type: 'topup',
+            amount: amount,
+            status: topupData.status === 'paid' ? 'completed' : 'pending',
+            description: `Wallet top-up: $${amount}`,
+            whop_payment_id: topupData.id,
+            metadata: {
+              user_id: user.id,
+              payment_id: topupData.id,
+              initiated_at: new Date().toISOString(),
+            },
+            created_by: user.id,
+          });
+      }
     }
 
     return new Response(JSON.stringify({ 
