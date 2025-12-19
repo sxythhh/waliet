@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link2, ExternalLink, Play, VolumeX, Volume2, Eye, X, Download, Trash2 } from "lucide-react";
+import { Link2, ExternalLink, Play, VolumeX, Volume2, Eye, X, Download, Trash2, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import xLogoLight from "@/assets/x-logo-light.png";
@@ -108,7 +108,7 @@ export function ScopeVideoCard({
   };
 
   return (
-    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px] min-w-0 hover:bg-[#0f0f0f] hover:border-[#252525] transition-colors">
+    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-transparent flex flex-col font-['Inter'] tracking-[-0.5px] min-w-0 hover:bg-[#0f0f0f] transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
@@ -280,12 +280,12 @@ export function ScopeVideoCard({
 
       {/* Save to Blueprint Button - Only in scope mode */}
       {mode === "scope" && onSaveToBlueprint && (
-        <div className="px-3 py-2.5">
+        <div className="px-2 py-1.5">
           <button
             onClick={() => setSheetOpen(true)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+            className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
               hasSavedBlueprints || isHovered
                 ? "bg-[#2060df] text-white"
                 : "bg-[#141414] text-neutral-400"
@@ -297,6 +297,7 @@ export function ScopeVideoCard({
               className="w-4 h-4"
             />
             <span>Save to Blueprint</span>
+            <ChevronDown className={`w-3.5 h-3.5 ${hasSavedBlueprints || isHovered ? 'text-white/70' : 'text-neutral-500'}`} />
           </button>
         </div>
       )}
