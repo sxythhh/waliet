@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
+import emptyCampaignsImg from "@/assets/empty-campaigns-new.png";
 import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -483,12 +484,28 @@ export function BrandCampaignsTab({
 
           {/* Empty State */}
           {campaigns.length === 0 && bounties.length === 0 && <div className="py-16 px-4 items-center justify-center flex flex-col">
-              <div className="w-12 h-12 mb-4 flex-col flex items-center justify-center bg-[#161313] rounded-md">
-                <img alt="" className="w-6 h-6 opacity-50" src="/lovable-uploads/ada3e883-4e08-4993-aefc-9a75baecec5c.png" />
-              </div>
-              <p className="text-sm font-inter tracking-[-0.3px] text-primary-foreground opacity-100">
-                This brand has no campaigns or boosts
+              <img src={emptyCampaignsImg} alt="" className="w-24 h-24 mb-4" />
+              <p className="text-lg font-inter font-medium tracking-[-0.3px] text-primary-foreground mb-2">
+                No campaigns yet
               </p>
+              <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-6">
+                Start hiring creators to post content for your brand, product, and more.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setCreateCampaignOpen(true)}
+                  className="bg-white text-black hover:bg-white/90 font-inter text-sm tracking-[-0.5px]"
+                >
+                  Create Campaign
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/resources')}
+                  className="bg-[#2a2a2a] border-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-inter text-sm tracking-[-0.5px]"
+                >
+                  Learn more
+                </Button>
+              </div>
             </div>}
         </>}
 
