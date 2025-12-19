@@ -342,12 +342,16 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
       <div className="px-6 py-4 border-b border-[#1a1a1a]">
         <div className="flex items-center gap-3">
           {/* Sort & Filters Group */}
-          <div className="flex items-center bg-[#0d0d0d] rounded-xl font-['Inter'] tracking-[-0.5px]">
+          <div className={`flex items-center bg-[#0d0d0d] rounded-xl font-['Inter'] tracking-[-0.5px] transition-colors ${
+            activeFilters.length > 0 ? 'hover:bg-[#141414]' : ''
+          }`}>
             {/* Sort Dropdown */}
             <div className="relative">
               <button 
                 onClick={() => setSortMenuOpen(!sortMenuOpen)}
-                className="flex items-center gap-2 px-4 py-2.5 text-[13px] text-white hover:bg-[#141414] rounded-xl transition-colors"
+                className={`flex items-center gap-2 px-4 py-2.5 text-[13px] text-white rounded-xl transition-colors ${
+                  activeFilters.length === 0 ? 'hover:bg-[#141414]' : ''
+                }`}
               >
                 <Filter className="w-4 h-4 text-neutral-500" />
                 <span className="text-neutral-500">Sort by</span>
