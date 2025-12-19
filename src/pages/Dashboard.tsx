@@ -110,8 +110,8 @@ export default function Dashboard() {
   const renderContent = () => {
     // Brand mode - check subscription status first (admins bypass paywall)
     if (isBrandMode && currentBrand) {
-      // Show subscription embed if no active plan (unless admin)
-      if (currentBrand.subscription_status !== 'active' && !isAdmin) {
+      // Show subscription embed if no active plan (unless admin or on settings page)
+      if (currentBrand.subscription_status !== 'active' && !isAdmin && currentTab !== 'profile') {
         return (
           <iframe
             src="https://join.virality.gg/page-2"
