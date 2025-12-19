@@ -940,34 +940,39 @@ function ScopeVideoCard({
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent 
           side="bottom" 
-          className="bg-[#0a0a0a] border-t border-[#1a1a1a] rounded-t-2xl max-h-[50vh] font-['Inter'] tracking-[-0.5px]"
+          className="p-0 border-0 bg-transparent max-h-[60vh] font-['Inter'] tracking-[-0.5px]"
         >
-          <div className="w-12 h-1 bg-neutral-600 rounded-full mx-auto mb-4" />
-          
-          {/* Header */}
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="flex items-center gap-2 text-white">
-              <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
-                <div className="w-2 h-2 rounded-full bg-white" />
+          {/* Blue Header Bar */}
+          <div className="bg-[#2060df] rounded-t-3xl px-6 py-4">
+            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2 text-white">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="4" />
+                  <line x1="12" y1="2" x2="12" y2="6" />
+                  <line x1="12" y1="18" x2="12" y2="22" />
+                  <line x1="2" y1="12" x2="6" y2="12" />
+                  <line x1="18" y1="12" x2="22" y2="12" />
+                </svg>
+                <span className="text-[14px] font-medium">Adding Scope Content</span>
               </div>
-              <span className="text-[13px] font-medium">Adding Scope Content</span>
+              <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-[13px] font-medium">
+                Your Blueprints
+              </div>
+              <Download className="w-5 h-5 text-white cursor-pointer hover:opacity-80 transition-opacity" />
             </div>
-            <div className="px-3 py-1 bg-[#2060df] rounded-md text-white text-[12px] font-medium">
-              Your Blueprints
-            </div>
-            <Download className="w-4 h-4 text-white" />
           </div>
 
-          {/* Available Blueprints */}
-          <div className="space-y-4 max-h-[calc(50vh-120px)] overflow-y-auto px-4">
-            <h3 className="text-center text-white text-[14px] font-medium">Available Blueprints</h3>
+          {/* Dark Content Area */}
+          <div className="bg-[#0f0f0f] px-6 py-6 max-h-[calc(60vh-80px)] overflow-y-auto">
+            <h3 className="text-center text-white text-[15px] font-semibold mb-5">Available Blueprints</h3>
             
             {blueprints.length === 0 ? (
-              <div className="text-center py-8 text-neutral-500 text-[13px]">
+              <div className="text-center py-10 text-neutral-500 text-[14px]">
                 No blueprints yet
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3 max-w-2xl mx-auto">
                 {blueprints.map(blueprint => {
                   const isSaved = savedBlueprints.includes(blueprint.id);
                   return (
@@ -977,46 +982,57 @@ function ScopeVideoCard({
                         onSaveToBlueprint(blueprint.id);
                       }}
                       disabled={savingToBlueprint}
-                      className={`w-full p-4 rounded-lg border transition-colors text-left ${
+                      className={`w-full p-4 rounded-xl transition-all text-left ${
                         isSaved 
-                          ? "border-[#2060df] bg-[#2060df]/10" 
-                          : "border-[#252525] bg-[#141414] hover:bg-[#1a1a1a]"
+                          ? "bg-[#1a1a1a] border-l-4 border-l-[#2060df]" 
+                          : "bg-[#1a1a1a] border-l-4 border-l-transparent hover:border-l-[#2060df]/50"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded flex items-center justify-center text-[11px] font-medium ${
-                          isSaved ? "bg-[#2060df] text-white" : "bg-[#252525] text-neutral-400"
-                        }`}>
-                          {(blueprint.title || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <span className={`text-[13px] font-medium ${isSaved ? "text-white" : "text-neutral-300"}`}>
-                          {blueprint.title || 'Untitled'}
-                        </span>
-                        {isSaved && (
-                          <div className="ml-auto w-5 h-5 rounded-full bg-[#2060df] flex items-center justify-center">
-                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </div>
-                        )}
-                      </div>
+                      <p className="text-[13px] text-neutral-300 leading-relaxed">
+                        {blueprint.title || `Untitled Blueprint`}
+                      </p>
                     </button>
                   );
                 })}
               </div>
             )}
 
+            {/* New Blueprint Section */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <h4 className="text-white text-[14px] font-semibold mb-4">New Blueprint</h4>
+              <div className="flex items-center gap-2">
+                {blueprints.slice(0, 3).map((blueprint, index) => (
+                  <div 
+                    key={blueprint.id}
+                    className="w-8 h-8 rounded-lg bg-[#252525] flex items-center justify-center text-[12px] font-medium text-white"
+                  >
+                    {(blueprint.title || 'U').charAt(0).toUpperCase()}
+                  </div>
+                ))}
+                {blueprints.length === 0 && (
+                  <div className="w-8 h-8 rounded-lg bg-[#252525] flex items-center justify-center text-[12px] font-medium text-neutral-400">
+                    +
+                  </div>
+                )}
+                <span className="text-[13px] text-neutral-400 ml-2">
+                  {blueprints.length > 0 ? blueprints[0]?.title || 'Untitled' : 'Create new'}
+                </span>
+              </div>
+            </div>
+
             {/* Delete option */}
-            <button
-              onClick={() => {
-                setSheetOpen(false);
-                onDelete();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 text-red-400 hover:text-red-300 transition-colors"
-            >
-              <X className="w-4 h-4" />
-              <span className="text-[13px]">Remove from library</span>
-            </button>
+            <div className="mt-8 pt-4 border-t border-[#252525] max-w-2xl mx-auto">
+              <button
+                onClick={() => {
+                  setSheetOpen(false);
+                  onDelete();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 text-red-400 hover:text-red-300 transition-colors text-[13px]"
+              >
+                <X className="w-4 h-4" />
+                <span>Remove from library</span>
+              </button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
