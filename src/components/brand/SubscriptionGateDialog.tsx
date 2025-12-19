@@ -1,10 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { Check, Zap, Rocket, ArrowLeft } from "lucide-react";
-import { WhopCheckoutEmbed } from "@whop/checkout/react";
+import { useState, useEffect, useRef } from "react";
+import { Check, Zap, Rocket, ArrowLeft, Loader2 } from "lucide-react";
+import { WhopCheckoutEmbed, useCheckoutEmbedControls } from "@whop/checkout/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SubscriptionGateDialogProps {
   brandId: string;
@@ -52,8 +53,37 @@ export function SubscriptionGateDialog({
   onOpenChange
 }: SubscriptionGateDialogProps) {
   const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const checkoutRef = useCheckoutEmbedControls();
 
   const returnUrl = `${window.location.origin}${window.location.pathname}?subscription=success`;
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || null);
+        
+        // Fetch profile for name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, username')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserName(profile.full_name || profile.username || null);
+        }
+      }
+    };
+    
+    if (open) {
+      fetchUserData();
+    }
+  }, [open]);
 
   const handleComplete = (planId: string, receiptId: string) => {
     console.log("Checkout complete:", { planId, receiptId });
@@ -67,12 +97,25 @@ export function SubscriptionGateDialog({
     setSelectedPlan(null);
   };
 
+  const handleCustomSubmit = async () => {
+    if (!checkoutRef.current) return;
+    
+    setIsSubmitting(true);
+    try {
+      await checkoutRef.current.submit();
+    } catch (error) {
+      console.error("Submit error:", error);
+      setIsSubmitting(false);
+    }
+  };
+
   // Show embedded checkout if a plan is selected
   if (selectedPlan) {
     return (
       <Dialog open={open} onOpenChange={(isOpen) => {
         if (!isOpen) {
           setSelectedPlan(null);
+          setIsSubmitting(false);
         }
         onOpenChange(isOpen);
       }}>
@@ -96,14 +139,20 @@ export function SubscriptionGateDialog({
             </p>
           </DialogHeader>
           
-          <div className="p-6 min-h-[400px] overflow-y-auto">
+          <div className="px-6 pb-6 pt-0 min-h-[400px] overflow-y-auto">
             <WhopCheckoutEmbed
+              ref={checkoutRef}
               planId={selectedPlan.whopPlanId}
               returnUrl={returnUrl}
               theme="system"
               onComplete={handleComplete}
+              hideAddressForm
+              prefill={{
+                email: userEmail || undefined,
+                address: userName ? { name: userName } : undefined,
+              }}
               fallback={
-                <div className="space-y-4">
+                <div className="space-y-4 pt-6">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
@@ -111,6 +160,24 @@ export function SubscriptionGateDialog({
                 </div>
               }
             />
+            
+            {/* Custom Submit Button */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                onClick={handleCustomSubmit}
+                disabled={isSubmitting}
+                className="w-full h-11"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Subscribe for $${selectedPlan.price}/month`
+                )}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
