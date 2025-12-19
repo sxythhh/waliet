@@ -519,8 +519,8 @@ export function AppSidebar() {
           </div>
         </nav>
 
-        {/* Upgrade Plan Button */}
-        {!isCollapsed && (
+        {/* Upgrade Plan Button - Only show in brand workspace */}
+        {!isCreatorMode && !isCollapsed && (
           <div className="px-2 py-1">
             <button 
               className="w-full py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
