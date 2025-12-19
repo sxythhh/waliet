@@ -150,7 +150,18 @@ export function ScopeVideoCard({
       </div>
 
       {/* Video/Thumbnail */}
-      <div className="relative aspect-[9/16] bg-[#141414]">
+      <div 
+        className="relative aspect-[9/16] bg-[#141414]"
+        onMouseEnter={() => {
+          if (hasPlayableVideo) {
+            setIsPlaying(true);
+            videoRef.current?.play();
+          }
+        }}
+        onMouseLeave={() => {
+          // Don't pause video - keep it playing
+        }}
+      >
         {hasPlayableVideo ? (
           <>
             <video
@@ -160,17 +171,15 @@ export function ScopeVideoCard({
               muted={isMuted}
               loop
               playsInline
-              autoPlay={isPlaying}
               onTimeUpdate={handleTimeUpdate}
-              onMouseEnter={() => {
-                setIsPlaying(true);
-                videoRef.current?.play();
-              }}
-              onMouseLeave={() => {
-                setIsPlaying(false);
-                videoRef.current?.pause();
-                if (videoRef.current) videoRef.current.currentTime = 0;
-                setProgress(0);
+              onClick={() => {
+                if (isPlaying) {
+                  videoRef.current?.pause();
+                  setIsPlaying(false);
+                } else {
+                  videoRef.current?.play();
+                  setIsPlaying(true);
+                }
               }}
             />
             {/* Play overlay when not playing */}
@@ -182,8 +191,8 @@ export function ScopeVideoCard({
                   videoRef.current?.play();
                 }}
               >
-                <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
-                  <Play className="w-6 h-6 text-white fill-white ml-1" />
+                <div className="w-10 h-10 rounded-full bg-[#2060df] flex items-center justify-center">
+                  <Play className="w-4 h-4 text-white fill-white ml-0.5" />
                 </div>
               </div>
             )}
@@ -216,47 +225,56 @@ export function ScopeVideoCard({
             rel="noopener noreferrer"
             className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30"
           >
-            <div className="w-14 h-14 rounded-full bg-[#2060df] flex items-center justify-center">
-              <Play className="w-6 h-6 text-white fill-white ml-1" />
+            <div className="w-10 h-10 rounded-full bg-[#2060df] flex items-center justify-center">
+              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
             </div>
           </a>
         )}
 
         {/* Bottom controls */}
-        <div className="absolute bottom-0 left-0 right-0 flex flex-col">
-          {/* Progress bar */}
-          {hasPlayableVideo && (
-            <div 
-              className="w-full h-1 bg-white/20 cursor-pointer group"
-              onClick={handleProgressClick}
-            >
-              <div 
-                className="h-full bg-[#2060df] transition-all duration-100"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          )}
-          {/* Controls row */}
-          <div className="flex items-center justify-end px-3 py-2">
-            {/* Mute button */}
+        <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
+          {/* Controls row with mute button */}
+          <div className="flex items-center justify-end mb-1.5">
             {hasPlayableVideo && (
               <button 
-                onClick={() => setIsMuted(!isMuted)}
-                className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newMuted = !isMuted;
+                  setIsMuted(newMuted);
+                  if (videoRef.current) {
+                    videoRef.current.muted = newMuted;
+                  }
+                }}
+                className="p-1.5 rounded-md bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-colors"
               >
                 {isMuted ? (
-                  <VolumeX className="w-4 h-4 text-white" />
+                  <VolumeX className="w-3.5 h-3.5 text-white" />
                 ) : (
-                  <Volume2 className="w-4 h-4 text-white" />
+                  <Volume2 className="w-3.5 h-3.5 text-white" />
                 )}
               </button>
             )}
             {!hasPlayableVideo && (
-              <button className="p-1.5 rounded-md bg-black/40 backdrop-blur-sm">
-                <VolumeX className="w-4 h-4 text-white" />
+              <button className="p-1.5 rounded-md bg-black/50 backdrop-blur-sm">
+                <VolumeX className="w-3.5 h-3.5 text-white" />
               </button>
             )}
           </div>
+          {/* Progress bar */}
+          {hasPlayableVideo && (
+            <div 
+              className="w-full h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProgressClick(e);
+              }}
+            >
+              <div 
+                className="h-full bg-[#2060df] rounded-full transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
