@@ -12,6 +12,7 @@ import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
+import { BrandWalletTab } from "./BrandWalletTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -591,7 +592,14 @@ export function UserSettingsTab() {
         </TabsContent>
 
         {/* Billing Tab */}
-        <TabsContent value="billing" className="mt-6 space-y-0">
+        <TabsContent value="billing" className="mt-6 space-y-6">
+          {/* Brand Wallet Section */}
+          {isBrandMode && brand && (
+            <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />
+          )}
+
+          <Spacer />
+
           {/* Legal Business Name */}
           <div className="space-y-2">
             <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
