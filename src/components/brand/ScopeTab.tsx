@@ -319,9 +319,13 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
             </button>
             
             {sortMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-[#0d0d0d] rounded-xl shadow-2xl z-50 overflow-hidden font-['Inter'] tracking-[-0.5px]">
+              <div 
+                className={`absolute top-full left-0 mt-2 bg-[#0d0d0d] rounded-xl shadow-2xl z-50 overflow-hidden font-['Inter'] tracking-[-0.5px] transition-all duration-200 ease-out ${
+                  expandedCategory ? 'w-48' : 'w-64'
+                }`}
+              >
                 {!expandedCategory ? (
-                  <>
+                  <div className="animate-fade-in">
                     {/* Main Categories */}
                     <button 
                       onClick={() => setExpandedCategory('cta')}
@@ -377,13 +381,13 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                       </div>
                       <ChevronRight className="w-4 h-4 text-neutral-500" />
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="animate-fade-in">
                     {/* Sub-menu with back button */}
                     <button 
                       onClick={() => setExpandedCategory(null)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161616] transition-colors border-b border-[#1a1a1a]"
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#161616] transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4 text-neutral-500" />
                       <span className="text-neutral-400 text-[13px]">Back</span>
@@ -392,7 +396,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                     {/* Category-specific filters */}
                     {expandedCategory === 'cta' && (
                       <>
-                        {['Sign Up', 'Download App', 'Visit Website', 'Purchase', 'Follow'].map(option => (
+                        {['Sign Up', 'Download App', 'Visit Website', 'Purchase', 'Follow'].map((option, i) => (
                           <button 
                             key={option}
                             onClick={() => {
@@ -400,6 +404,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                               setExpandedCategory(null);
                             }}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            style={{ animationDelay: `${i * 30}ms` }}
                           >
                             {option}
                           </button>
@@ -409,7 +414,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
                     {expandedCategory === 'format' && (
                       <>
-                        {['Talking Head', 'Voiceover', 'Skit', 'Tutorial', 'Review', 'Unboxing'].map(option => (
+                        {['Talking Head', 'Voiceover', 'Skit', 'Tutorial', 'Review', 'Unboxing'].map((option, i) => (
                           <button 
                             key={option}
                             onClick={() => {
@@ -417,6 +422,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                               setExpandedCategory(null);
                             }}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            style={{ animationDelay: `${i * 30}ms` }}
                           >
                             {option}
                           </button>
@@ -426,7 +432,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
                     {expandedCategory === 'platform' && (
                       <>
-                        {['TikTok', 'Instagram', 'YouTube', 'X'].map(option => (
+                        {['TikTok', 'Instagram', 'YouTube', 'X'].map((option, i) => (
                           <button 
                             key={option}
                             onClick={() => {
@@ -434,6 +440,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                               setExpandedCategory(null);
                             }}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            style={{ animationDelay: `${i * 30}ms` }}
                           >
                             {option}
                           </button>
@@ -443,7 +450,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
                     {expandedCategory === 'style' && (
                       <>
-                        {['Comedic', 'Educational', 'Lifestyle', 'Professional', 'Casual'].map(option => (
+                        {['Comedic', 'Educational', 'Lifestyle', 'Professional', 'Casual'].map((option, i) => (
                           <button 
                             key={option}
                             onClick={() => {
@@ -451,6 +458,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                               setExpandedCategory(null);
                             }}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            style={{ animationDelay: `${i * 30}ms` }}
                           >
                             {option}
                           </button>
@@ -460,7 +468,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
                     {expandedCategory === 'audience' && (
                       <>
-                        {['Gen Z', 'Millennials', 'Parents', 'Professionals', 'Students'].map(option => (
+                        {['Gen Z', 'Millennials', 'Parents', 'Professionals', 'Students'].map((option, i) => (
                           <button 
                             key={option}
                             onClick={() => {
@@ -468,13 +476,14 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                               setExpandedCategory(null);
                             }}
                             className="w-full text-left px-4 py-3 text-[13px] text-white hover:bg-[#161616] transition-colors"
+                            style={{ animationDelay: `${i * 30}ms` }}
                           >
                             {option}
                           </button>
                         ))}
                       </>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             )}
