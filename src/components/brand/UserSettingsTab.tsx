@@ -72,6 +72,11 @@ interface Brand {
   notify_new_application: boolean;
   notify_new_sale: boolean;
   notify_new_message: boolean;
+  instagram_handle: string | null;
+  linkedin_handle: string | null;
+  tiktok_handle: string | null;
+  website_url: string | null;
+  app_store_url: string | null;
 }
 export function UserSettingsTab() {
   const navigate = useNavigate();
@@ -117,6 +122,14 @@ export function UserSettingsTab() {
   const [notifyNewSale, setNotifyNewSale] = useState(true);
   const [notifyNewMessage, setNotifyNewMessage] = useState(true);
   const [savingNotifications, setSavingNotifications] = useState(false);
+  
+  // Social media states
+  const [instagramHandle, setInstagramHandle] = useState("");
+  const [linkedinHandle, setLinkedinHandle] = useState("");
+  const [tiktokHandle, setTiktokHandle] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [appStoreUrl, setAppStoreUrl] = useState("");
+  
   const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
   useEffect(() => {
     fetchProfile();
@@ -145,6 +158,11 @@ export function UserSettingsTab() {
       setNotifyNewApplication(data?.notify_new_application ?? true);
       setNotifyNewSale(data?.notify_new_sale ?? true);
       setNotifyNewMessage(data?.notify_new_message ?? true);
+      setInstagramHandle(data?.instagram_handle || "");
+      setLinkedinHandle(data?.linkedin_handle || "");
+      setTiktokHandle(data?.tiktok_handle || "");
+      setWebsiteUrl(data?.website_url || "");
+      setAppStoreUrl(data?.app_store_url || "");
     } catch (error) {
       console.error("Error fetching brand:", error);
     }
@@ -207,7 +225,12 @@ export function UserSettingsTab() {
         error
       } = await supabase.from("brands").update({
         name: editedBrandName,
-        slug: editedSlug
+        slug: editedSlug,
+        instagram_handle: instagramHandle || null,
+        linkedin_handle: linkedinHandle || null,
+        tiktok_handle: tiktokHandle || null,
+        website_url: websiteUrl || null,
+        app_store_url: appStoreUrl || null
       }).eq("id", brand.id);
       if (error) throw error;
       toast.success("Brand settings saved");
@@ -506,8 +529,81 @@ export function UserSettingsTab() {
 
               <Spacer />
 
+              {/* Social Media Section */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                  Social Media
+                </Label>
+                
+                {/* Instagram */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Instagram</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input 
+                      value={instagramHandle} 
+                      onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} 
+                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
+                      placeholder="Add your Instagram handle" 
+                    />
+                  </div>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">LinkedIn</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input 
+                      value={linkedinHandle} 
+                      onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} 
+                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
+                      placeholder="Add your LinkedIn handle" 
+                    />
+                  </div>
+                </div>
+
+                {/* TikTok */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">TikTok</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input 
+                      value={tiktokHandle} 
+                      onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} 
+                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
+                      placeholder="Add your TikTok handle" 
+                    />
+                  </div>
+                </div>
+
+                {/* Website */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
+                  <Input 
+                    value={websiteUrl} 
+                    onChange={e => setWebsiteUrl(e.target.value)} 
+                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
+                    placeholder="https://yourwebsite.com" 
+                  />
+                </div>
+
+                {/* App Store URL */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">App Store URL</Label>
+                  <Input 
+                    value={appStoreUrl} 
+                    onChange={e => setAppStoreUrl(e.target.value)} 
+                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
+                    placeholder="Add a link to your App Store" 
+                  />
+                </div>
+              </div>
+
+              <Spacer />
+
               {/* Save Button */}
-              <Button onClick={handleSaveBrand} disabled={savingBrand || editedBrandName === brand.name && editedSlug === brand.slug} className="w-full h-11 tracking-[-0.5px]">
+              <Button onClick={handleSaveBrand} disabled={savingBrand} className="w-full h-11 tracking-[-0.5px]">
                 {savingBrand ? "Saving..." : "Save Changes"}
               </Button>
 
