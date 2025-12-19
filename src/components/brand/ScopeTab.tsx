@@ -57,6 +57,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [activeFilters, setActiveFilters] = useState<{ category: string; value: string }[]>([]);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -94,7 +95,19 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
   useEffect(() => {
     fetchVideos();
     fetchBlueprints();
+    fetchSubscriptionStatus();
   }, [brandId]);
+
+  const fetchSubscriptionStatus = async () => {
+    const { data } = await supabase
+      .from("brands")
+      .select("subscription_status")
+      .eq("id", brandId)
+      .single();
+    if (data) {
+      setSubscriptionStatus(data.subscription_status);
+    }
+  };
 
   useEffect(() => {
     if (videos.length > 0) {
@@ -272,6 +285,19 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
     });
+
+  // Show subscription gate if not subscribed
+  if (!loading && subscriptionStatus !== "active") {
+    return (
+      <div className="h-full w-full">
+        <iframe 
+          src="https://join.virality.gg/page-2" 
+          className="w-full h-full border-0"
+          title="Upgrade Plan"
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
