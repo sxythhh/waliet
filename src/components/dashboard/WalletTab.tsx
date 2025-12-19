@@ -1488,7 +1488,7 @@ export function WalletTab() {
           }
         }}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 rounded-[6px] border-border bg-background hover:bg-background px-4 py-2 h-auto">
+              <Button variant="outline" className="gap-2 rounded-[9px] border-border bg-background hover:bg-background px-4 py-2 h-auto">
                 <SlidersHorizontal className="h-4 w-4" />
                 <span className="font-medium">Filter</span>
                 <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
