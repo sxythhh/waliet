@@ -50,6 +50,7 @@
     "@types/dompurify": "^3.2.0",
     "@whop/checkout": "^0.0.49",
     "@whop/embedded-components-react-js": "^0.0.4",
+    "@whop/embedded-components-vanilla-js": "^0.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
