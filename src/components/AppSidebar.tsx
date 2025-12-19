@@ -221,6 +221,11 @@ export function AppSidebar() {
     return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
   };
   const handleTabClick = (tab: string) => {
+    // If clicking scope without an active subscription, show upgrade popup
+    if (tab === "scope" && !isCreatorMode && currentBrandSubscriptionStatus !== "active") {
+      setSubscriptionGateOpen(true);
+      return;
+    }
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
     // Clear blueprint and campaign params when switching tabs
