@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon, X } from "lucide-react";
+import { Plus, ArrowUpRight, Wallet as WalletIcon } from "lucide-react";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
-import { EmbeddedPayoutPortal } from "./EmbeddedPayoutPortal";
+import { WithdrawDialog } from "./WithdrawDialog";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 
 interface BrandWalletTabProps {
@@ -42,7 +42,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
-  const [showPayoutPortal, setShowPayoutPortal] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const fetchWalletData = async () => {
     try {
@@ -220,8 +220,8 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     }
   };
 
-  const handleOpenPayoutPortal = () => {
-    setShowPayoutPortal(true);
+  const handleOpenWithdraw = () => {
+    setWithdrawOpen(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -305,43 +305,18 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />
       )}
 
-      {/* Embedded Payout Portal */}
-      {showPayoutPortal && (
-        <Card className="border-border overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border">
-            <CardTitle className="text-base font-medium tracking-[-0.5px]">
-              Payout Portal
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPayoutPortal(false)}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            <EmbeddedPayoutPortal
-              brandId={brandId}
-              redirectUrl={`${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&verification=complete`}
-            />
-          </CardContent>
-        </Card>
-      )}
-
       {/* Balance Card */}
       <Card className="border-border overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
-            <img src="/src/assets/credit-card-filled-icon.svg" alt="" className="w-5 h-5 opacity-60" />
+            <img src={creditCardIcon} alt="" className="w-5 h-5 opacity-60" />
             Wallet Balance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="flex flex-col gap-4">
             <div>
-              <p className="text-5xl font-semibold text-foreground tracking-tight">
+              <p className="text-4xl sm:text-5xl font-semibold text-foreground tracking-tight">
                 {formatCurrency(walletData?.balance || 0)}
               </p>
               {(walletData?.pending_balance || 0) > 0 && (
@@ -350,11 +325,11 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
                 </p>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-1">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="ghost"
-                onClick={handleOpenPayoutPortal}
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
+                onClick={handleOpenWithdraw}
+                className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <WalletIcon className="w-4 h-4 mr-1.5" />
@@ -364,7 +339,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
                 onClick={() => setAllocateOpen(true)}
                 disabled={(walletData?.balance || 0) <= 0}
                 variant="ghost"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
+                className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <ArrowUpRight className="w-4 h-4 mr-1.5" />
@@ -372,7 +347,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
               </Button>
               <Button
                 onClick={() => setAddFundsOpen(true)}
-                className="bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]"
+                className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <Plus className="w-4 h-4 mr-1.5" />
@@ -455,6 +430,13 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
           fetchWalletData();
           fetchTransactions();
         }}
+      />
+
+      <WithdrawDialog
+        open={withdrawOpen}
+        onOpenChange={setWithdrawOpen}
+        brandId={brandId}
+        brandSlug={brandSlug}
       />
     </div>
   );
