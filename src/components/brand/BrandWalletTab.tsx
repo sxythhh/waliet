@@ -357,7 +357,7 @@ export function BrandWalletTab({
           {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-neutral-400">No transactions yet</p>
             </div> : <div className="space-y-3">
-              {transactions.map(tx => <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[#1f1f1f] last:border-0">
+              {transactions.map(tx => <div key={tx.id} className="flex items-center justify-between py-3 border-b last:border-0 border-[#1f1f1f]/0">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                       {tx.amount > 0 ? <Plus className="w-4 h-4 text-green-400" /> : <ArrowUpRight className="w-4 h-4 text-red-400" />}
