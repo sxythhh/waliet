@@ -70,6 +70,7 @@ export function AddBrandFundsDialog({
         body: { 
           brand_id: brandId, 
           amount,
+          return_url: window.location.href,
         },
       });
 
