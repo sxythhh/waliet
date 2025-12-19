@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ interface Transaction {
 }
 
 export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -73,6 +75,38 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       console.error('Error fetching transactions:', error);
     }
   };
+
+  // Check for onboarding completion from URL params
+  useEffect(() => {
+    const onboardingStatus = searchParams.get('onboarding');
+    const status = searchParams.get('status');
+    
+    if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success')) {
+      // Update the brand's onboarding status
+      const updateOnboardingStatus = async () => {
+        try {
+          await supabase
+            .from('brands')
+            .update({ whop_onboarding_complete: true })
+            .eq('id', brandId);
+          
+          toast.success('Verification completed successfully!');
+          
+          // Clean up URL params
+          searchParams.delete('onboarding');
+          searchParams.delete('status');
+          setSearchParams(searchParams, { replace: true });
+          
+          // Refresh wallet data
+          await fetchWalletData();
+        } catch (error) {
+          console.error('Error updating onboarding status:', error);
+        }
+      };
+      
+      updateOnboardingStatus();
+    }
+  }, [searchParams, brandId]);
 
   useEffect(() => {
     const loadData = async () => {

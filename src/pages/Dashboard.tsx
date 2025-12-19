@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignsTab } from "@/components/dashboard/CampaignsTab";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
@@ -72,6 +73,38 @@ export default function Dashboard() {
       setCurrentBrand(null);
     }
   }, [workspace, isBrandMode]);
+
+  // Handle brand onboarding completion from URL params
+  useEffect(() => {
+    const onboardingStatus = searchParams.get('onboarding');
+    const status = searchParams.get('status');
+    
+    if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success') && currentBrand) {
+      const updateOnboardingStatus = async () => {
+        try {
+          const { error } = await supabase
+            .from('brands')
+            .update({ whop_onboarding_complete: true })
+            .eq('id', currentBrand.id);
+          
+          if (!error) {
+            toast.success('Verification completed successfully!');
+          }
+          
+          // Clean up URL params
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('onboarding');
+          newParams.delete('status');
+          setSearchParams(newParams, { replace: true });
+        } catch (error) {
+          console.error('Error updating onboarding status:', error);
+        }
+      };
+      
+      updateOnboardingStatus();
+    }
+  }, [searchParams, currentBrand]);
+
   const fetchBrandBySlug = async (slug: string) => {
     const {
       data
