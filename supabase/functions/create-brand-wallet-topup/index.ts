@@ -82,13 +82,14 @@ serve(async (req) => {
       });
     }
 
-    // Use account_links to create a hosted topup flow
-    // This allows connected accounts to add funds via Whop's hosted UI
-    console.log(`Creating topup link for brand ${brand.name} (company: ${brand.whop_company_id})`);
+    // Create a checkout configuration for the brand to add funds
+    // This uses the direct charge approach where we charge the connected account
+    console.log(`Creating checkout for brand ${brand.name} (company: ${brand.whop_company_id}), amount: $${amount}`);
     
     const baseReturnUrl = return_url || `https://virality.gg/dashboard?workspace=${brand.slug}&tab=profile`;
     
-    const whopResponse = await fetch('https://api.whop.com/api/v1/account_links', {
+    // Create a checkout configuration using Whop's checkout API
+    const checkoutResponse = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${whopApiKey}`,
@@ -96,22 +97,28 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         company_id: brand.whop_company_id,
-        use_case: 'payouts_portal',
-        return_url: `${baseReturnUrl}&topup=success`,
-        refresh_url: `${baseReturnUrl}&topup=refresh`,
+        plan: {
+          initial_price: amount,
+          plan_type: 'one_time',
+        },
+        metadata: {
+          brand_id: brand_id,
+          type: 'wallet_topup',
+          user_id: user.id,
+        },
+        redirect_url: `${baseReturnUrl}&topup=success`,
       }),
     });
 
-    const responseText = await whopResponse.text();
-    console.log('Whop account_links response status:', whopResponse.status);
-    console.log('Whop account_links response:', responseText);
+    const responseText = await checkoutResponse.text();
+    console.log('Whop checkout response status:', checkoutResponse.status);
+    console.log('Whop checkout response:', responseText);
 
-    if (!whopResponse.ok) {
+    if (!checkoutResponse.ok) {
       console.error('Whop API error:', responseText);
       
-      // If payouts_portal is not supported for some reason, return the original error
       return new Response(JSON.stringify({ 
-        error: 'Failed to create top-up link', 
+        error: 'Failed to create checkout', 
         details: responseText
       }), {
         status: 500,
@@ -119,11 +126,10 @@ serve(async (req) => {
       });
     }
 
-    const accountLinkData = JSON.parse(responseText);
-    console.log('Account link created:', accountLinkData);
+    const checkoutData = JSON.parse(responseText);
+    console.log('Checkout created:', checkoutData);
 
-    // If amount was provided, we could record a pending transaction
-    // But since we're using hosted flow, the actual amount will be determined by user
+    // Record the pending transaction
     if (amount && amount >= 100) {
       await supabase
         .from('brand_wallet_transactions')
@@ -132,9 +138,10 @@ serve(async (req) => {
           type: 'topup',
           amount: amount,
           status: 'pending',
-          description: `Wallet top-up initiated`,
+          description: `Wallet top-up: $${amount}`,
           metadata: {
             user_id: user.id,
+            checkout_id: checkoutData.id,
             initiated_at: new Date().toISOString()
           },
           created_by: user.id
@@ -142,9 +149,8 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      checkout_url: accountLinkData.url,
-      expires_at: accountLinkData.expires_at,
-      use_case: 'payouts_portal'
+      checkout_url: checkoutData.purchase_url || checkoutData.url,
+      checkout_id: checkoutData.id,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
