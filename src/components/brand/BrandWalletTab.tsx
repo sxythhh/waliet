@@ -142,43 +142,43 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       return;
     }
 
-    const { amount } = JSON.parse(pendingTopupData);
-    sessionStorage.removeItem(`pending_topup_${brandId}`);
+     const { amount, transactionId } = JSON.parse(pendingTopupData) as {
+       amount: number;
+       transactionId?: string;
+     };
+     sessionStorage.removeItem(`pending_topup_${brandId}`);
 
-    // Payment was already made on Whop's checkout – record the transaction
-    const recordTransaction = async () => {
-      toast.loading('Recording top-up...', { id: 'topup-record' });
-      try {
-        const whopPaymentId = paymentId || receiptId || membershipId || setupIntentId;
+     const finalizeTopup = async () => {
+       toast.loading('Finalizing top-up...', { id: 'topup-finalize' });
+       try {
+         const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
+         const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
+           body: {
+             brand_id: brandId,
+             amount,
+             return_url: returnUrl,
+             transaction_id: transactionId,
+           },
+         });
 
-        const { error } = await supabase
-          .from('brand_wallet_transactions')
-          .insert({
-            brand_id: brandId,
-            type: 'topup',
-            amount: amount,
-            status: 'completed',
-            description: `Wallet top-up: $${amount}`,
-            whop_payment_id: whopPaymentId,
-            metadata: {
-              source: 'checkout_redirect',
-              recorded_at: new Date().toISOString(),
-            },
-          });
+         if (error) throw error;
 
-        if (error) throw error;
+         if (data?.success && !data?.needs_payment_method) {
+           toast.success(`Added $${amount} to your wallet!`, { id: 'topup-finalize' });
+           fetchWalletData();
+           fetchTransactions();
+           return;
+         }
 
-        toast.success(`Added $${amount} to your wallet!`, { id: 'topup-record' });
-        fetchWalletData();
-        fetchTransactions();
-      } catch (e) {
-        console.error('Error recording top-up:', e);
-        toast.error('Failed to record top-up.', { id: 'topup-record' });
-      }
-    };
+         toast.error('Could not finalize top-up. Please try again.', { id: 'topup-finalize' });
+       } catch (e) {
+         console.error('Error finalizing top-up:', e);
+         toast.error('Failed to finalize top-up.', { id: 'topup-finalize' });
+       }
+     };
 
-    recordTransaction();
-  }, [searchParams, setSearchParams, brandId]);
+    finalizeTopup();
+  }, [searchParams, setSearchParams, brandId, brandSlug]);
 
   useEffect(() => {
     const loadData = async () => {
