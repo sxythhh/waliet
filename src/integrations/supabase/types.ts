@@ -650,6 +650,80 @@ export type Database = {
           },
         ]
       }
+      brand_wallet_transactions: {
+        Row: {
+          amount: number
+          boost_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          status: string | null
+          type: string
+          whop_payment_id: string | null
+        }
+        Insert: {
+          amount: number
+          boost_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          type: string
+          whop_payment_id?: string | null
+        }
+        Update: {
+          amount?: number
+          boost_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string | null
+          type?: string
+          whop_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_wallet_transactions_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_wallet_transactions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_wallet_transactions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_wallet_transactions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           account_url: string | null
@@ -676,7 +750,9 @@ export type Database = {
           subscription_started_at: string | null
           subscription_status: string | null
           updated_at: string
+          whop_company_id: string | null
           whop_membership_id: string | null
+          whop_onboarding_complete: boolean | null
         }
         Insert: {
           account_url?: string | null
@@ -703,7 +779,9 @@ export type Database = {
           subscription_started_at?: string | null
           subscription_status?: string | null
           updated_at?: string
+          whop_company_id?: string | null
           whop_membership_id?: string | null
+          whop_onboarding_complete?: boolean | null
         }
         Update: {
           account_url?: string | null
@@ -730,7 +808,9 @@ export type Database = {
           subscription_started_at?: string | null
           subscription_status?: string | null
           updated_at?: string
+          whop_company_id?: string | null
           whop_membership_id?: string | null
+          whop_onboarding_complete?: boolean | null
         }
         Relationships: []
       }

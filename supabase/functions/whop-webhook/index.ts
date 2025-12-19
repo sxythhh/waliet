@@ -20,6 +20,43 @@ Deno.serve(async (req) => {
 
     const { action, data } = payload;
 
+    // Handle payment events for brand wallet top-ups
+    if (action === "payment.succeeded") {
+      const payment = data;
+      const metadata = payment.metadata || {};
+      const type = metadata.type;
+
+      // Handle brand wallet top-up
+      if (type === "brand_wallet_topup") {
+        const brandId = metadata.brand_id;
+        const amount = metadata.amount;
+
+        console.log(`Processing brand wallet top-up: ${brandId} for $${amount}`);
+
+        // Update pending transaction to completed
+        const { error: txError } = await supabase
+          .from("brand_wallet_transactions")
+          .update({
+            status: "completed",
+            whop_payment_id: payment.id,
+          })
+          .eq("brand_id", brandId)
+          .eq("type", "topup")
+          .eq("status", "pending")
+          .eq("amount", amount);
+
+        if (txError) {
+          console.error("Error updating transaction:", txError);
+        }
+
+        console.log(`Brand ${brandId} wallet top-up of $${amount} completed`);
+
+        return new Response(JSON.stringify({ success: true, type: "brand_wallet_topup" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Handle membership events
     if (action === "membership.went_valid" || action === "membership.created") {
       const membership = data;
@@ -116,6 +153,30 @@ Deno.serve(async (req) => {
         }
 
         console.log(`Brand ${brandId} subscription deactivated`);
+      }
+    }
+
+    // Handle account onboarding completion
+    if (action === "account.updated") {
+      const account = data;
+      
+      // Check if onboarding is complete
+      if (account.payouts_enabled) {
+        // Find brand by whop_company_id
+        const { data: brand, error: brandError } = await supabase
+          .from("brands")
+          .select("id")
+          .eq("whop_company_id", account.id)
+          .single();
+
+        if (!brandError && brand) {
+          await supabase
+            .from("brands")
+            .update({ whop_onboarding_complete: true })
+            .eq("id", brand.id);
+
+          console.log(`Brand ${brand.id} onboarding marked complete`);
+        }
       }
     }
 
