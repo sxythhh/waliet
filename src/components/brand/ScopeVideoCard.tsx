@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { Link2, ExternalLink, Play, VolumeX, Volume2, Eye, X, Download, Trash2 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import xLogoLight from "@/assets/x-logo-light.png";
-import instagramLogo from "@/assets/instagram-logo-new.png";
-import youtubeLogo from "@/assets/youtube-logo-new.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 import stickyNoteGrey from "@/assets/sticky-note-grey.svg";
 import stickyNoteWhite from "@/assets/sticky-note-white.svg";
 
@@ -108,7 +108,7 @@ export function ScopeVideoCard({
   };
 
   return (
-    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px] min-w-0">
+    <div className="bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1a1a1a] flex flex-col font-['Inter'] tracking-[-0.5px] min-w-0 hover:bg-[#0f0f0f] hover:border-[#252525] transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5">
         <div className="flex items-center gap-2">
