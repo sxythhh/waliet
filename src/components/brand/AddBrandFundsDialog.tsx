@@ -75,8 +75,10 @@ export function AddBrandFundsDialog({
       if (error) throw error;
 
       if (data?.needs_payment_method && data?.checkout_url) {
+        // Store the amount so we can finalize the top-up after returning from checkout
+        sessionStorage.setItem(`pending_topup_${brandId}`, JSON.stringify({ amount }));
         toast.message('Redirecting to checkout', {
-          description: "Complete your payment to add funds.",
+          description: 'Complete your payment to add funds.',
         });
         window.location.href = data.checkout_url;
         return;
