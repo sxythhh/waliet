@@ -2410,6 +2410,7 @@ export type Database = {
           brand_id: string
           caption: string | null
           created_at: string
+          file_url: string | null
           id: string
           is_example: boolean | null
           platform: string
@@ -2425,6 +2426,7 @@ export type Database = {
           brand_id: string
           caption?: string | null
           created_at?: string
+          file_url?: string | null
           id?: string
           is_example?: boolean | null
           platform?: string
@@ -2440,6 +2442,7 @@ export type Database = {
           brand_id?: string
           caption?: string | null
           created_at?: string
+          file_url?: string | null
           id?: string
           is_example?: boolean | null
           platform?: string
