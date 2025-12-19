@@ -53,6 +53,8 @@ serve(async (req) => {
 
     const { brand_id, plan_key, return_url } = await req.json();
 
+    console.log('Request params:', { brand_id, plan_key, return_url, user_id: user.id });
+
     if (!brand_id || !plan_key) {
       return new Response(JSON.stringify({ error: 'brand_id and plan_key are required' }), {
         status: 400,
@@ -77,8 +79,10 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
+    console.log('Member check:', { memberData, memberError, brand_id, user_id: user.id });
+
     if (memberError || !memberData) {
-      return new Response(JSON.stringify({ error: 'Not authorized for this brand' }), {
+      return new Response(JSON.stringify({ error: 'Not authorized for this brand', details: memberError?.message }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
