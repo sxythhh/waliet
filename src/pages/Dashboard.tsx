@@ -20,6 +20,7 @@ import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
+import { ScopeTab } from "@/components/brand/ScopeTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -137,6 +138,8 @@ export default function Dashboard() {
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
+        case "scope":
+          return <ScopeTab brandId={currentBrand.id} />;
         case "creators":
           return <CreatorsTab brandId={currentBrand.id} />;
         case "education":

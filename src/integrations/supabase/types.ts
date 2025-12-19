@@ -2365,6 +2365,101 @@ export type Database = {
           },
         ]
       }
+      scope_video_saves: {
+        Row: {
+          blueprint_id: string
+          created_at: string
+          id: string
+          saved_by: string | null
+          scope_video_id: string
+        }
+        Insert: {
+          blueprint_id: string
+          created_at?: string
+          id?: string
+          saved_by?: string | null
+          scope_video_id: string
+        }
+        Update: {
+          blueprint_id?: string
+          created_at?: string
+          id?: string
+          saved_by?: string | null
+          scope_video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scope_video_saves_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scope_video_saves_scope_video_id_fkey"
+            columns: ["scope_video_id"]
+            isOneToOne: false
+            referencedRelation: "scope_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scope_videos: {
+        Row: {
+          avatar_url: string | null
+          brand_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          is_example: boolean | null
+          platform: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          updated_at: string
+          username: string | null
+          video_url: string
+          views: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          brand_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_example?: boolean | null
+          platform?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          username?: string | null
+          video_url: string
+          views?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          brand_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          is_example?: boolean | null
+          platform?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          username?: string | null
+          video_url?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scope_videos_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_audit_log: {
         Row: {
           action: string
