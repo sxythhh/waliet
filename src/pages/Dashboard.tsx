@@ -49,6 +49,17 @@ export default function Dashboard() {
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
   useEffect(() => {
+    // Restore last workspace from localStorage if no workspace is set in URL
+    const urlWorkspace = searchParams.get("workspace");
+    const lastWorkspace = localStorage.getItem("lastWorkspace");
+    
+    if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("workspace", lastWorkspace);
+      newParams.set("tab", searchParams.get("tab") || "campaigns");
+      setSearchParams(newParams, { replace: true });
+    }
+    
     checkAuth();
     fetchCampaigns();
   }, []);
