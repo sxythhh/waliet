@@ -19,16 +19,7 @@ import { TeamMembersTab } from "./TeamMembersTab";
 import { BrandWalletTab } from "./BrandWalletTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
@@ -42,16 +33,14 @@ const PLAN_DISPLAY_NAMES: Record<string, string> = {
   'growth': 'Growth',
   'pro': 'Pro',
   'enterprise': 'Enterprise',
-  'free': 'Free',
+  'free': 'Free'
 };
-
 const PLAN_PRICES: Record<string, number> = {
   'plan_DU4ba3ik2UHVZ': 99,
   'plan_JSWLvDSLsSde4': 249,
   'starter': 99,
-  'growth': 249,
+  'growth': 249
 };
-
 interface Brand {
   id: string;
   name: string;
@@ -119,21 +108,23 @@ export function UserSettingsTab() {
   const [deleting, setDeleting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
-  
+
   // Notification preferences
   const [notifyNewApplication, setNotifyNewApplication] = useState(true);
   const [notifyNewSale, setNotifyNewSale] = useState(true);
   const [notifyNewMessage, setNotifyNewMessage] = useState(true);
   const [savingNotifications, setSavingNotifications] = useState(false);
-  
+
   // Social media states
   const [instagramHandle, setInstagramHandle] = useState("");
   const [linkedinHandle, setLinkedinHandle] = useState("");
   const [tiktokHandle, setTiktokHandle] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [appStoreUrl, setAppStoreUrl] = useState("");
-  
-  const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{ id: string; name: string } | null>(null);
+  const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -170,19 +161,17 @@ export function UserSettingsTab() {
       console.error("Error fetching brand:", error);
     }
   };
-  
   const handleSaveNotifications = async () => {
     if (!brand?.id) return;
     try {
       setSavingNotifications(true);
-      const { error } = await supabase
-        .from("brands")
-        .update({
-          notify_new_application: notifyNewApplication,
-          notify_new_sale: notifyNewSale,
-          notify_new_message: notifyNewMessage,
-        })
-        .eq("id", brand.id);
+      const {
+        error
+      } = await supabase.from("brands").update({
+        notify_new_application: notifyNewApplication,
+        notify_new_sale: notifyNewSale,
+        notify_new_message: notifyNewMessage
+      }).eq("id", brand.id);
       if (error) throw error;
       toast.success("Notification preferences saved");
     } catch (error) {
@@ -336,24 +325,19 @@ export function UserSettingsTab() {
       setLoading(false);
     }
   };
-
   const handleDeleteWorkspace = async () => {
     if (!brand?.id || deleteConfirmEmail !== userEmail) {
       toast.error("Please enter your email correctly to confirm");
       return;
     }
-
     try {
       setDeleting(true);
-      
+
       // Delete the brand (this will cascade delete related data)
-      const { error } = await supabase
-        .from("brands")
-        .delete()
-        .eq("id", brand.id);
-
+      const {
+        error
+      } = await supabase.from("brands").delete().eq("id", brand.id);
       if (error) throw error;
-
       toast.success("Workspace deleted successfully");
       setShowDeleteDialog(false);
       setDeleteConfirmEmail("");
@@ -520,12 +504,7 @@ export function UserSettingsTab() {
                     .virality.gg
                   </span>
                 </div>
-                <a
-                  href={`/b/${brand.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline tracking-[-0.5px]"
-                >
+                <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
                   Preview public page →
                 </a>
               </div>
@@ -543,12 +522,7 @@ export function UserSettingsTab() {
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Instagram</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input 
-                      value={instagramHandle} 
-                      onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} 
-                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
-                      placeholder="Add your Instagram handle" 
-                    />
+                    <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
                   </div>
                 </div>
 
@@ -557,12 +531,7 @@ export function UserSettingsTab() {
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">LinkedIn</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input 
-                      value={linkedinHandle} 
-                      onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} 
-                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
-                      placeholder="Add your LinkedIn handle" 
-                    />
+                    <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
                   </div>
                 </div>
 
@@ -571,35 +540,20 @@ export function UserSettingsTab() {
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">TikTok</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input 
-                      value={tiktokHandle} 
-                      onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} 
-                      className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" 
-                      placeholder="Add your TikTok handle" 
-                    />
+                    <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
                   </div>
                 </div>
 
                 {/* Website */}
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
-                  <Input 
-                    value={websiteUrl} 
-                    onChange={e => setWebsiteUrl(e.target.value)} 
-                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                    placeholder="https://yourwebsite.com" 
-                  />
+                  <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
                 </div>
 
                 {/* App Store URL */}
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">App Store URL</Label>
-                  <Input 
-                    value={appStoreUrl} 
-                    onChange={e => setAppStoreUrl(e.target.value)} 
-                    className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" 
-                    placeholder="Add a link to your App Store" 
-                  />
+                  <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
                 </div>
               </div>
 
@@ -629,13 +583,10 @@ export function UserSettingsTab() {
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
                       </div>
                     </div>
-                    <Switch
-                      checked={notifyNewApplication}
-                      onCheckedChange={(checked) => {
-                        setNotifyNewApplication(checked);
-                        handleSaveNotifications();
-                      }}
-                    />
+                    <Switch checked={notifyNewApplication} onCheckedChange={checked => {
+                  setNotifyNewApplication(checked);
+                  handleSaveNotifications();
+                }} />
                   </div>
 
                   {/* New boost submission */}
@@ -649,13 +600,10 @@ export function UserSettingsTab() {
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
                       </div>
                     </div>
-                    <Switch
-                      checked={notifyNewSale}
-                      onCheckedChange={(checked) => {
-                        setNotifyNewSale(checked);
-                        handleSaveNotifications();
-                      }}
-                    />
+                    <Switch checked={notifyNewSale} onCheckedChange={checked => {
+                  setNotifyNewSale(checked);
+                  handleSaveNotifications();
+                }} />
                   </div>
 
                   {/* New message from partner */}
@@ -669,13 +617,10 @@ export function UserSettingsTab() {
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
                       </div>
                     </div>
-                    <Switch
-                      checked={notifyNewMessage}
-                      onCheckedChange={(checked) => {
-                        setNotifyNewMessage(checked);
-                        handleSaveNotifications();
-                      }}
-                    />
+                    <Switch checked={notifyNewMessage} onCheckedChange={checked => {
+                  setNotifyNewMessage(checked);
+                  handleSaveNotifications();
+                }} />
                   </div>
                 </div>
               </div>
@@ -747,11 +692,7 @@ export function UserSettingsTab() {
                     Once you delete a workspace, there is no going back. Please be certain.
                   </p>
                 </div>
-                <Button 
-                  variant="destructive" 
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="w-full h-10 tracking-[-0.5px]"
-                >
+                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full h-10 tracking-[-0.5px]">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Workspace
                 </Button>
@@ -833,99 +774,65 @@ export function UserSettingsTab() {
         {/* Wallet Tab */}
         <TabsContent value="wallet" className="mt-6 space-y-6">
           {/* Subscription Info */}
-          {isBrandMode && brand && (
-            <div className="space-y-4">
+          {isBrandMode && brand && <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
-                {brand.subscription_status === 'active' && (
-                  <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
+                {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
                     Active
-                  </span>
-                )}
-                {brand.subscription_status !== 'active' && (
-                  <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
+                  </span>}
+                {brand.subscription_status !== 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
                     {brand.subscription_status || 'Inactive'}
-                  </span>
-                )}
+                  </span>}
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground tracking-[-0.5px]">Current Plan</p>
                   <p className="text-sm font-medium tracking-[-0.5px]">
-                    {brand.subscription_plan 
-                      ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan
-                      : 'No plan'
-                    }
+                    {brand.subscription_plan ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan : 'No plan'}
                   </p>
                 </div>
                 
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground tracking-[-0.5px]">Price</p>
                   <p className="text-sm font-medium tracking-[-0.5px]">
-                    {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan]
-                      ? `$${PLAN_PRICES[brand.subscription_plan]}/month`
-                      : '—'
-                    }
+                    {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan] ? `$${PLAN_PRICES[brand.subscription_plan]}/month` : '—'}
                   </p>
                 </div>
                 
-                {brand.subscription_started_at && (
-                  <div className="space-y-1">
+                {brand.subscription_started_at && <div className="space-y-1">
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Started</p>
                     <p className="text-sm font-medium tracking-[-0.5px]">
                       {new Date(brand.subscription_started_at).toLocaleDateString()}
                     </p>
-                  </div>
-                )}
+                  </div>}
                 
-                {brand.subscription_expires_at && (
-                  <div className="space-y-1">
+                {brand.subscription_expires_at && <div className="space-y-1">
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Renews</p>
                     <p className="text-sm font-medium tracking-[-0.5px]">
                       {new Date(brand.subscription_expires_at).toLocaleDateString()}
                     </p>
-                  </div>
-                )}
+                  </div>}
               </div>
               
               
-              {brand.whop_manage_url && (
-                <div className="pt-2 border-t border-border/50">
-                  <a 
-                    href={brand.whop_manage_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline tracking-[-0.5px]"
-                  >
+              {brand.whop_manage_url && <div className="pt-2 border-t border-border/50">
+                  <a href={brand.whop_manage_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
                     Manage billing →
                   </a>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           {/* Subscription Checkout Dialog */}
-          {selectedCheckoutPlan && brand && (
-            <SubscriptionCheckoutDialog
-              open={showCheckoutDialog}
-              onOpenChange={setShowCheckoutDialog}
-              planId={selectedCheckoutPlan.id}
-              planName={selectedCheckoutPlan.name}
-              brandId={brand.slug}
-              onComplete={() => {
-                fetchBrand();
-                toast.success("Subscription activated!");
-              }}
-            />
-          )}
+          {selectedCheckoutPlan && brand && <SubscriptionCheckoutDialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog} planId={selectedCheckoutPlan.id} planName={selectedCheckoutPlan.name} brandId={brand.slug} onComplete={() => {
+          fetchBrand();
+          toast.success("Subscription activated!");
+        }} />}
 
-          <Spacer />
+          
 
           {/* Brand Wallet Section */}
-          {isBrandMode && brand && (
-            <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />
-          )}
+          {isBrandMode && brand && <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />}
 
           <Spacer />
 
@@ -979,26 +886,13 @@ export function UserSettingsTab() {
             <Label className="text-sm text-muted-foreground tracking-[-0.5px]">
               Type your email <span className="font-medium text-foreground">{userEmail}</span> to confirm
             </Label>
-            <Input
-              value={deleteConfirmEmail}
-              onChange={(e) => setDeleteConfirmEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="h-11 tracking-[-0.5px]"
-            />
+            <Input value={deleteConfirmEmail} onChange={e => setDeleteConfirmEmail(e.target.value)} placeholder="Enter your email" className="h-11 tracking-[-0.5px]" />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setDeleteConfirmEmail("")}
-              className="tracking-[-0.5px] border-0 hover:bg-muted hover:text-foreground"
-            >
+            <AlertDialogCancel onClick={() => setDeleteConfirmEmail("")} className="tracking-[-0.5px] border-0 hover:bg-muted hover:text-foreground">
               Cancel
             </AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteWorkspace}
-              disabled={deleting || deleteConfirmEmail !== userEmail}
-              className="tracking-[-0.5px]"
-            >
+            <Button variant="destructive" onClick={handleDeleteWorkspace} disabled={deleting || deleteConfirmEmail !== userEmail} className="tracking-[-0.5px]">
               {deleting ? "Deleting..." : "Delete Workspace"}
             </Button>
           </AlertDialogFooter>

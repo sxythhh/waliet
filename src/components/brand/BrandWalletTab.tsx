@@ -11,12 +11,10 @@ import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
 import { WithdrawDialog } from "./WithdrawDialog";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
-
 interface BrandWalletTabProps {
   brandId: string;
   brandSlug: string;
 }
-
 interface WalletData {
   balance: number;
   pending_balance: number;
@@ -24,7 +22,6 @@ interface WalletData {
   has_whop_company: boolean;
   onboarding_complete: boolean;
 }
-
 interface Transaction {
   id: string;
   type: string;
@@ -33,8 +30,10 @@ interface Transaction {
   description: string | null;
   created_at: string;
 }
-
-export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
+export function BrandWalletTab({
+  brandId,
+  brandSlug
+}: BrandWalletTabProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData | null>(null);
@@ -43,16 +42,22 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
-
   const fetchWalletData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) return;
-
-      const { data, error } = await supabase.functions.invoke('get-brand-balance', {
-        body: { brand_id: brandId },
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('get-brand-balance', {
+        body: {
+          brand_id: brandId
+        }
       });
-
       if (error) throw error;
       setWalletData(data);
     } catch (error) {
@@ -60,16 +65,14 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       toast.error('Failed to load wallet data');
     }
   };
-
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('brand_wallet_transactions')
-        .select('*')
-        .eq('brand_id', brandId)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
+      const {
+        data,
+        error
+      } = await supabase.from('brand_wallet_transactions').select('*').eq('brand_id', brandId).order('created_at', {
+        ascending: false
+      }).limit(20);
       if (error) throw error;
       setTransactions((data || []) as Transaction[]);
     } catch (error) {
@@ -81,22 +84,21 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   useEffect(() => {
     const onboardingStatus = searchParams.get('onboarding');
     const status = searchParams.get('status');
-
     if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success')) {
       // Update the brand's onboarding status
       const updateOnboardingStatus = async () => {
         try {
-          await supabase
-            .from('brands')
-            .update({ whop_onboarding_complete: true })
-            .eq('id', brandId);
-
+          await supabase.from('brands').update({
+            whop_onboarding_complete: true
+          }).eq('id', brandId);
           toast.success('Verification completed successfully!');
 
           // Clean up URL params
           searchParams.delete('onboarding');
           searchParams.delete('status');
-          setSearchParams(searchParams, { replace: true });
+          setSearchParams(searchParams, {
+            replace: true
+          });
 
           // Refresh wallet data
           await fetchWalletData();
@@ -104,7 +106,6 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
           console.error('Error updating onboarding status:', error);
         }
       };
-
       updateOnboardingStatus();
     }
   }, [searchParams, brandId]);
@@ -119,10 +120,8 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     const membershipId = searchParams.get('membership_id');
     const paymentId = searchParams.get('payment_id');
     const receiptId = searchParams.get('receipt_id');
-
     const isSuccess = checkoutStatus === 'success' || status === 'success';
     const hasReturnId = setupIntentId || membershipId || paymentId || receiptId;
-
     if (!isSuccess || !hasReturnId) return;
 
     // Clean up URL params first
@@ -133,8 +132,9 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     searchParams.delete('payment_id');
     searchParams.delete('receipt_id');
     searchParams.delete('state_id');
-    setSearchParams(searchParams, { replace: true });
-
+    setSearchParams(searchParams, {
+      replace: true
+    });
     const pendingTopupData = sessionStorage.getItem(`pending_topup_${brandId}`);
     if (!pendingTopupData) {
       toast.success('Checkout completed.');
@@ -142,45 +142,52 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       fetchTransactions();
       return;
     }
-
-     const { amount, transactionId } = JSON.parse(pendingTopupData) as {
-       amount: number;
-       transactionId?: string;
-     };
-     sessionStorage.removeItem(`pending_topup_${brandId}`);
-
-     const finalizeTopup = async () => {
-       toast.loading('Finalizing top-up...', { id: 'topup-finalize' });
-       try {
-         const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
-         const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
-           body: {
-             brand_id: brandId,
-             amount,
-             return_url: returnUrl,
-             transaction_id: transactionId,
-           },
-         });
-
-         if (error) throw error;
-
-         if (data?.success && !data?.needs_payment_method) {
-           toast.success(`Added $${amount} to your wallet!`, { id: 'topup-finalize' });
-           fetchWalletData();
-           fetchTransactions();
-           return;
-         }
-
-         toast.error('Could not finalize top-up. Please try again.', { id: 'topup-finalize' });
-       } catch (e) {
-         console.error('Error finalizing top-up:', e);
-         toast.error('Failed to finalize top-up.', { id: 'topup-finalize' });
-       }
-     };
-
+    const {
+      amount,
+      transactionId
+    } = JSON.parse(pendingTopupData) as {
+      amount: number;
+      transactionId?: string;
+    };
+    sessionStorage.removeItem(`pending_topup_${brandId}`);
+    const finalizeTopup = async () => {
+      toast.loading('Finalizing top-up...', {
+        id: 'topup-finalize'
+      });
+      try {
+        const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('create-brand-wallet-topup', {
+          body: {
+            brand_id: brandId,
+            amount,
+            return_url: returnUrl,
+            transaction_id: transactionId
+          }
+        });
+        if (error) throw error;
+        if (data?.success && !data?.needs_payment_method) {
+          toast.success(`Added $${amount} to your wallet!`, {
+            id: 'topup-finalize'
+          });
+          fetchWalletData();
+          fetchTransactions();
+          return;
+        }
+        toast.error('Could not finalize top-up. Please try again.', {
+          id: 'topup-finalize'
+        });
+      } catch (e) {
+        console.error('Error finalizing top-up:', e);
+        toast.error('Failed to finalize top-up.', {
+          id: 'topup-finalize'
+        });
+      }
+    };
     finalizeTopup();
   }, [searchParams, setSearchParams, brandId, brandSlug]);
-
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -189,18 +196,19 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     };
     loadData();
   }, [brandId]);
-
   const handleSetupWallet = async () => {
     setSettingUp(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-brand-company', {
-        body: { 
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-brand-company', {
+        body: {
           brand_id: brandId,
           return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=complete`,
           refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=refresh`
-        },
+        }
       });
-
       if (error) throw error;
 
       // If we get an onboarding URL, redirect the user there
@@ -210,7 +218,6 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       } else if (data?.company_id) {
         toast.success('Wallet set up successfully!');
       }
-      
       await fetchWalletData();
     } catch (error) {
       console.error('Error setting up wallet:', error);
@@ -219,97 +226,91 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
       setSettingUp(false);
     }
   };
-
   const handleOpenWithdraw = () => {
     setWithdrawOpen(true);
   };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'USD'
     }).format(amount);
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     });
   };
-
   const getTransactionTypeLabel = (type: string) => {
     switch (type) {
-      case 'topup': return 'Top Up';
-      case 'withdrawal': return 'Withdrawal';
-      case 'campaign_allocation': return 'Campaign Funding';
-      case 'boost_allocation': return 'Boost Funding';
-      case 'refund': return 'Refund';
-      default: return type;
+      case 'topup':
+        return 'Top Up';
+      case 'withdrawal':
+        return 'Withdrawal';
+      case 'campaign_allocation':
+        return 'Campaign Funding';
+      case 'boost_allocation':
+        return 'Boost Funding';
+      case 'refund':
+        return 'Refund';
+      default:
+        return type;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'text-green-400';
-      case 'pending': return 'text-yellow-400';
-      case 'failed': return 'text-red-400';
-      default: return 'text-neutral-400';
+      case 'completed':
+        return 'text-green-400';
+      case 'pending':
+        return 'text-yellow-400';
+      case 'failed':
+        return 'text-red-400';
+      default:
+        return 'text-neutral-400';
     }
   };
-
   if (loading) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         <Skeleton className="h-40 w-full bg-[#1a1a1a]" />
         <Skeleton className="h-64 w-full bg-[#1a1a1a]" />
-      </div>
-    );
+      </div>;
   }
 
   // Show setup prompt if no Whop company
   if (!walletData?.has_whop_company) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         <div className="pt-6">
           <div className="text-center py-12">
             <div className="w-14 h-14 rounded-full bg-[#1f60dd]/10 flex items-center justify-center mx-auto mb-4">
-              <img src={creditCardIcon} alt="" className="w-6 h-6 invert-0 brightness-0 opacity-60" style={{ filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)' }} />
+              <img src={creditCardIcon} alt="" className="w-6 h-6 invert-0 brightness-0 opacity-60" style={{
+              filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)'
+            }} />
             </div>
             <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Set Up Your Brand Wallet</h3>
             <p className="text-sm text-muted-foreground tracking-[-0.5px] mb-6 max-w-sm mx-auto">
               Create a dedicated wallet for your brand to manage campaign budgets, 
               receive funds, and process withdrawals.
             </p>
-            <button 
-              onClick={handleSetupWallet} 
-              disabled={settingUp}
-              className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
-            >
+            <button onClick={handleSetupWallet} disabled={settingUp} className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none">
               <img src={creditCardIcon} alt="" className="w-4 h-4" />
               {settingUp ? 'Setting up...' : 'Set Up Wallet'}
             </button>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Onboarding Card - Show if not complete */}
-      {!walletData.onboarding_complete && (
-        <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />
-      )}
+      {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
 
       {/* Balance Card */}
       <Card className="border-border overflow-hidden">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
-            <img src={creditCardIcon} alt="" className="w-5 h-5 opacity-60" />
+            
             Wallet Balance
           </CardTitle>
         </CardHeader>
@@ -319,37 +320,26 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
               <p className="text-4xl sm:text-5xl font-semibold text-foreground tracking-tight">
                 {formatCurrency(walletData?.balance || 0)}
               </p>
-              {(walletData?.pending_balance || 0) > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
+              {(walletData?.pending_balance || 0) > 0 && <p className="text-sm text-muted-foreground mt-2">
                   + {formatCurrency(walletData.pending_balance)} pending
-                </p>
-              )}
+                </p>}
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                variant="ghost"
-                onClick={handleOpenWithdraw}
-                className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
+              <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>
                 <WalletIcon className="w-4 h-4 mr-1.5" />
                 Withdraw
               </Button>
-              <Button
-                onClick={() => setAllocateOpen(true)}
-                disabled={(walletData?.balance || 0) <= 0}
-                variant="ghost"
-                className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
+              <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>
                 <ArrowUpRight className="w-4 h-4 mr-1.5" />
                 Fund Campaign
               </Button>
-              <Button
-                onClick={() => setAddFundsOpen(true)}
-                className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
+              <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>
                 <Plus className="w-4 h-4 mr-1.5" />
                 Add Funds
               </Button>
@@ -364,26 +354,13 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
-          {transactions.length === 0 ? (
-            <div className="text-center py-8">
+          {transactions.length === 0 ? <div className="text-center py-8">
               <p className="text-neutral-400">No transactions yet</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {transactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  className="flex items-center justify-between py-3 border-b border-[#1f1f1f] last:border-0"
-                >
+            </div> : <div className="space-y-3">
+              {transactions.map(tx => <div key={tx.id} className="flex items-center justify-between py-3 border-b border-[#1f1f1f] last:border-0">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      tx.amount > 0 ? 'bg-green-500/10' : 'bg-red-500/10'
-                    }`}>
-                      {tx.amount > 0 ? (
-                        <Plus className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <ArrowUpRight className="w-4 h-4 text-red-400" />
-                      )}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      {tx.amount > 0 ? <Plus className="w-4 h-4 text-green-400" /> : <ArrowUpRight className="w-4 h-4 text-red-400" />}
                     </div>
                     <div>
                       <p className="text-white font-medium">
@@ -402,42 +379,22 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
                       {tx.status}
                     </p>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </CardContent>
       </Card>
 
       {/* Dialogs */}
-      <AddBrandFundsDialog
-        open={addFundsOpen}
-        onOpenChange={setAddFundsOpen}
-        brandId={brandId}
-        currentBalance={walletData?.balance || 0}
-        onSuccess={() => {
-          fetchWalletData();
-          fetchTransactions();
-        }}
-      />
+      <AddBrandFundsDialog open={addFundsOpen} onOpenChange={setAddFundsOpen} brandId={brandId} currentBalance={walletData?.balance || 0} onSuccess={() => {
+      fetchWalletData();
+      fetchTransactions();
+    }} />
 
-      <AllocateBudgetDialog
-        open={allocateOpen}
-        onOpenChange={setAllocateOpen}
-        brandId={brandId}
-        availableBalance={walletData?.balance || 0}
-        onSuccess={() => {
-          fetchWalletData();
-          fetchTransactions();
-        }}
-      />
+      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} availableBalance={walletData?.balance || 0} onSuccess={() => {
+      fetchWalletData();
+      fetchTransactions();
+    }} />
 
-      <WithdrawDialog
-        open={withdrawOpen}
-        onOpenChange={setWithdrawOpen}
-        brandId={brandId}
-        brandSlug={brandSlug}
-      />
-    </div>
-  );
+      <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} brandId={brandId} brandSlug={brandSlug} />
+    </div>;
 }
