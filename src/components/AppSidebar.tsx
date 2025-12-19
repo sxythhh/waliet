@@ -236,6 +236,8 @@ export function AppSidebar() {
       newParams.set("workspace", newWorkspace);
       newParams.set("tab", "campaigns");
     }
+    // Save workspace preference to localStorage
+    localStorage.setItem("lastWorkspace", newWorkspace);
     setSearchParams(newParams);
     setWorkspaceOpen(false);
   };
@@ -593,8 +595,8 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* Swap to Business CTA - Only show in creator mode */}
-        {isCreatorMode && !isCollapsed && (
+        {/* Swap to Business CTA - Only show in creator mode if user has no workspaces */}
+        {isCreatorMode && !isCollapsed && brandMemberships.length === 0 && !isAdmin && (
           <div className="px-2 pb-2">
             <div className="rounded-lg bg-[#1a1a1a] p-3">
               <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
