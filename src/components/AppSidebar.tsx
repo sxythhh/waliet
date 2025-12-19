@@ -31,6 +31,7 @@ import scopeActive from "@/assets/scope-active.svg";
 import nutFillIcon from "@/assets/nut-fill.svg";
 import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
+import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -485,15 +486,12 @@ export function AppSidebar() {
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[3px]">
                     {/* Creator Dashboard */}
-                    {("creator dashboard".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {("switch to creator".includes(workspaceSearch.toLowerCase()) || workspaceSearch === "") && <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                         <div className="flex items-center gap-2.5">
-                          <Avatar className="w-7 h-7">
-                            <AvatarImage src={avatarUrl || undefined} />
-                            <AvatarFallback className="bg-[#1a1a1a] text-[11px] text-neutral-400">
-                              {displayName?.charAt(0)?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-[13px] font-medium text-white">Creator Dashboard</span>
+                          <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                            <img src={swapHorizIcon} alt="" className="w-4 h-4" />
+                          </div>
+                          <span className="text-[13px] font-medium text-white">Switch to creator</span>
                         </div>
                         {isCreatorMode && <Check className="w-4 h-4 text-neutral-400" />}
                       </button>}
