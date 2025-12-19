@@ -67,15 +67,33 @@ const PLANS = [
 ];
 
 function FeatureItem({ feature }: { feature: Feature }) {
+  const [open, setOpen] = useState(false);
+
   if (feature.tooltip) {
     return (
-      <Tooltip>
+      <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
-          <li className="flex items-center gap-2 text-sm tracking-[-0.5px] cursor-help">
-            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-            <span className="border-b border-dotted border-muted-foreground/40">
-              {feature.text}
-            </span>
+          <li>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 text-left text-sm tracking-[-0.5px]"
+              onPointerDown={(e) => {
+                // On mobile/touch, toggle tooltip on tap
+                if (e.pointerType === "touch") {
+                  e.preventDefault();
+                  setOpen((v) => !v);
+                }
+              }}
+              onClick={() => {
+                // Fallback for browsers that don't provide pointerType reliably
+                if (window.matchMedia?.("(hover: none)").matches) setOpen((v) => !v);
+              }}
+            >
+              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+              <span className="border-b border-dotted border-muted-foreground/40">
+                {feature.text}
+              </span>
+            </button>
           </li>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-[200px] text-xs">
@@ -150,7 +168,7 @@ export function SubscriptionGateDialog({
   return (
     <TooltipProvider delayDuration={200}>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[900px] p-0 gap-0 overflow-hidden">
+        <DialogContent className="sm:max-w-[900px] p-0 gap-0 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain">
           <DialogHeader className="p-8 pb-2">
             <DialogTitle className="text-2xl font-semibold tracking-[-0.5px]">
               Choose your plan
