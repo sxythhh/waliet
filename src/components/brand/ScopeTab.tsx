@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Volume2, Eye, ChevronUp, X, Plus, ChevronRight, MonitorPlay, PlaySquare, Globe, Sparkles, Users, ArrowLeft, Trash2, Upload, Download } from "lucide-react";
+import { Search, Filter, ChevronDown, Link2, ExternalLink, Play, VolumeX, Volume2, Eye, ChevronUp, X, Plus, ChevronRight, ArrowLeft, Trash2, Upload, Download } from "lucide-react";
+import playForWorkIcon from "@/assets/play-for-work-icon.svg";
+import videoLibraryScopeIcon from "@/assets/video-library-scope-icon.svg";
+import joystickIcon from "@/assets/joystick-icon.svg";
+import contentCutIcon from "@/assets/content-cut-icon.svg";
+import globeIcon from "@/assets/globe-icon.svg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,12 +75,12 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'cta': return MonitorPlay;
-      case 'format': return PlaySquare;
-      case 'platform': return Globe;
-      case 'style': return Sparkles;
-      case 'audience': return Users;
-      default: return Filter;
+      case 'cta': return playForWorkIcon;
+      case 'format': return videoLibraryScopeIcon;
+      case 'platform': return joystickIcon;
+      case 'style': return contentCutIcon;
+      case 'audience': return globeIcon;
+      default: return playForWorkIcon;
     }
   };
 
@@ -402,7 +407,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <MonitorPlay className="w-[18px] h-[18px] text-neutral-500" />
+                          <img src={playForWorkIcon} alt="" className="w-[18px] h-[18px]" />
                           <span className="text-white text-[13px] font-medium">CTA Outcome</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -413,7 +418,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <PlaySquare className="w-[18px] h-[18px] text-neutral-500" />
+                          <img src={videoLibraryScopeIcon} alt="" className="w-[18px] h-[18px]" />
                           <span className="text-white text-[13px] font-medium">Format</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -424,7 +429,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Globe className="w-[18px] h-[18px] text-neutral-500" />
+                          <img src={joystickIcon} alt="" className="w-[18px] h-[18px]" />
                           <span className="text-white text-[13px] font-medium">Platform</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -435,7 +440,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Sparkles className="w-[18px] h-[18px] text-neutral-500" />
+                          <img src={contentCutIcon} alt="" className="w-[18px] h-[18px]" />
                           <span className="text-white text-[13px] font-medium">Content Style</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -446,7 +451,7 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
                         className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#161616] transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <Users className="w-[18px] h-[18px] text-neutral-500" />
+                          <img src={globeIcon} alt="" className="w-[18px] h-[18px]" />
                           <span className="text-white text-[13px] font-medium">Target Audience</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-neutral-500" />
@@ -541,13 +546,13 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
             {/* Active Filter Chips - Inside the group */}
             {activeFilters.map((filter, index) => {
-              const IconComponent = getCategoryIcon(filter.category);
+              const iconSrc = getCategoryIcon(filter.category);
               return (
                 <div 
                   key={`${filter.category}-${filter.value}`}
                   className="flex items-center gap-2 px-3 py-2 bg-[#2060df] rounded-lg text-[13px] text-white mr-1"
                 >
-                  <IconComponent className="w-4 h-4 text-white/70" />
+                  <img src={iconSrc} alt="" className="w-4 h-4 brightness-0 invert opacity-70" />
                   <span className="border-l border-white/20 pl-2">{filter.value}</span>
                   <button 
                     onClick={() => removeFilter(index)}
