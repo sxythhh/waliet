@@ -72,7 +72,9 @@ interface BountyCampaign {
   };
 }
 export function DiscoverTab() {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,10 @@ export function DiscoverTab() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'campaigns' | 'boosts'>('all');
   const [nicheFilter, setNicheFilter] = useState<string | null>(null);
   const [browseFilter, setBrowseFilter] = useState<string | null>(null);
-  const [userBrand, setUserBrand] = useState<{ id: string; slug: string } | null>(null);
+  const [userBrand, setUserBrand] = useState<{
+    id: string;
+    slug: string;
+  } | null>(null);
   const [createCampaignDialogOpen, setCreateCampaignDialogOpen] = useState(false);
   const [createBrandDialogOpen, setCreateBrandDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -108,15 +113,15 @@ export function DiscoverTab() {
   useEffect(() => {
     const fetchUserBrand = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from("brand_members")
-        .select("brand_id, brands(id, slug)")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      
+      const {
+        data,
+        error
+      } = await supabase.from("brand_members").select("brand_id, brands(id, slug)").eq("user_id", user.id).limit(1).maybeSingle();
       if (!error && data?.brands) {
-        setUserBrand({ id: (data.brands as any).id, slug: (data.brands as any).slug });
+        setUserBrand({
+          id: (data.brands as any).id,
+          slug: (data.brands as any).slug
+        });
       }
     };
     fetchUserBrand();
@@ -477,20 +482,7 @@ export function DiscoverTab() {
             </button>
 
             {/* Create Campaign Button */}
-            <Button 
-              onClick={() => {
-                if (userBrand) {
-                  setCreateCampaignDialogOpen(true);
-                } else {
-                  setCreateBrandDialogOpen(true);
-                }
-              }}
-              className="gap-2 font-geist tracking-[-0.5px] transition-shadow duration-300 ease-in-out hover:shadow-[0_0_0_3px_rgba(0,85,255,0.55)] border-t border-[#d0d0d0] dark:border-[#4b85f7] ml-auto"
-              size="sm"
-            >
-              <Plus className="h-4 w-4" />
-              Create Campaign
-            </Button>
+            
           </div>
 
           {/* Expanded Filters */}
@@ -871,29 +863,17 @@ export function DiscoverTab() {
       <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} />
       
       {/* Create Campaign Dialog */}
-      <CreateCampaignTypeDialog
-        open={createCampaignDialogOpen}
-        onOpenChange={setCreateCampaignDialogOpen}
-        brandId={userBrand?.id}
-        onSelectClipping={(blueprintId) => {
-          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
-        }}
-        onSelectManaged={(blueprintId) => {
-          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
-        }}
-        onSelectBoost={() => {
-          navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createBoost=true`);
-        }}
-      />
+      <CreateCampaignTypeDialog open={createCampaignDialogOpen} onOpenChange={setCreateCampaignDialogOpen} brandId={userBrand?.id} onSelectClipping={blueprintId => {
+      navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
+    }} onSelectManaged={blueprintId => {
+      navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createCampaign=true${blueprintId ? `&blueprintId=${blueprintId}` : ''}`);
+    }} onSelectBoost={() => {
+      navigate(`/dashboard?workspace=${userBrand?.slug}&tab=campaigns&createBoost=true`);
+    }} />
       
       {/* Create Brand Dialog */}
-      <CreateBrandDialog
-        open={createBrandDialogOpen}
-        onOpenChange={setCreateBrandDialogOpen}
-        hideTrigger
-        onSuccess={() => {
-          setCreateBrandDialogOpen(false);
-        }}
-      />
+      <CreateBrandDialog open={createBrandDialogOpen} onOpenChange={setCreateBrandDialogOpen} hideTrigger onSuccess={() => {
+      setCreateBrandDialogOpen(false);
+    }} />
     </div>;
 }
