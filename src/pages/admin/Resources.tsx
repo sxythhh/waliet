@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X, Play, Link2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -65,7 +66,26 @@ interface Module {
   order_index: number;
 }
 
-type ResourceType = "templates" | "blog" | "courses";
+type ResourceType = "templates" | "blog" | "courses" | "scope";
+
+interface Brand {
+  id: string;
+  name: string;
+  logo_url: string | null;
+}
+
+interface ScopeVideo {
+  id: string;
+  brand_id: string;
+  platform: string;
+  username: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  views: number;
+  caption: string | null;
+  created_at: string;
+  brands?: { name: string; logo_url: string | null };
+}
 
 export default function Resources() {
   const [activeTab, setActiveTab] = useState<ResourceType>("templates");
@@ -123,12 +143,32 @@ export default function Resources() {
   const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
 
+  // Scope state
+  const [scopeVideos, setScopeVideos] = useState<ScopeVideo[]>([]);
+  const [scopeLoading, setScopeLoading] = useState(true);
+  const [scopeDialogOpen, setScopeDialogOpen] = useState(false);
+  const [editingScopeVideo, setEditingScopeVideo] = useState<ScopeVideo | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [scopeFormData, setScopeFormData] = useState({
+    brand_id: "",
+    platform: "tiktok",
+    username: "",
+    video_url: "",
+    thumbnail_url: "",
+    views: 0,
+    caption: "",
+    is_example: false
+  });
+  const [scopeSaving, setScopeSaving] = useState(false);
+
   const platforms = ["tiktok", "instagram", "youtube", "x"];
 
   useEffect(() => {
     fetchTemplates();
     fetchPosts();
     fetchCourses();
+    fetchBrands();
+    fetchScopeVideos();
   }, []);
 
   // ===================== TEMPLATES =====================
@@ -527,6 +567,130 @@ export default function Resources() {
     }
   };
 
+  // ===================== SCOPE VIDEOS =====================
+  const fetchBrands = async () => {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id, name, logo_url")
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching brands:", error);
+    } else {
+      setBrands(data || []);
+    }
+  };
+
+  const fetchScopeVideos = async () => {
+    setScopeLoading(true);
+    const { data, error } = await supabase
+      .from("scope_videos")
+      .select("*, brands(name, logo_url)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching scope videos:", error);
+      toast.error("Failed to load scope videos");
+    } else {
+      setScopeVideos(data || []);
+    }
+    setScopeLoading(false);
+  };
+
+  const openCreateScopeDialog = () => {
+    setEditingScopeVideo(null);
+    setScopeFormData({
+      brand_id: brands[0]?.id || "",
+      platform: "tiktok",
+      username: "",
+      video_url: "",
+      thumbnail_url: "",
+      views: 0,
+      caption: "",
+      is_example: false
+    });
+    setScopeDialogOpen(true);
+  };
+
+  const openEditScopeDialog = (video: ScopeVideo) => {
+    setEditingScopeVideo(video);
+    setScopeFormData({
+      brand_id: video.brand_id,
+      platform: video.platform,
+      username: video.username || "",
+      video_url: video.video_url,
+      thumbnail_url: video.thumbnail_url || "",
+      views: video.views || 0,
+      caption: video.caption || "",
+      is_example: false
+    });
+    setScopeDialogOpen(true);
+  };
+
+  const handleSaveScope = async () => {
+    if (!scopeFormData.video_url || !scopeFormData.brand_id) {
+      toast.error("Brand and video URL are required");
+      return;
+    }
+
+    setScopeSaving(true);
+
+    const scopeData = {
+      brand_id: scopeFormData.brand_id,
+      platform: scopeFormData.platform,
+      username: scopeFormData.username || null,
+      video_url: scopeFormData.video_url,
+      thumbnail_url: scopeFormData.thumbnail_url || null,
+      views: scopeFormData.views || 0,
+      caption: scopeFormData.caption || null,
+      is_example: scopeFormData.is_example
+    };
+
+    if (editingScopeVideo) {
+      const { error } = await supabase
+        .from("scope_videos")
+        .update(scopeData)
+        .eq("id", editingScopeVideo.id);
+
+      if (error) {
+        toast.error("Failed to update scope video");
+      } else {
+        toast.success("Scope video updated");
+        fetchScopeVideos();
+        setScopeDialogOpen(false);
+      }
+    } else {
+      const { error } = await supabase
+        .from("scope_videos")
+        .insert(scopeData);
+
+      if (error) {
+        toast.error("Failed to add scope video");
+      } else {
+        toast.success("Scope video added");
+        fetchScopeVideos();
+        setScopeDialogOpen(false);
+      }
+    }
+    setScopeSaving(false);
+  };
+
+  const deleteScopeVideo = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this scope video?")) return;
+
+    const { error } = await supabase
+      .from("scope_videos")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Failed to delete scope video");
+    } else {
+      toast.success("Scope video deleted");
+      fetchScopeVideos();
+    }
+  };
+
   const handleCreateResource = () => {
     if (activeTab === "templates") {
       openCreateTemplateDialog();
@@ -535,6 +699,8 @@ export default function Resources() {
     } else if (activeTab === "courses") {
       setEditingCourseId(null);
       setCourseDialogOpen(true);
+    } else if (activeTab === "scope") {
+      openCreateScopeDialog();
     }
   };
 
@@ -543,6 +709,7 @@ export default function Resources() {
       case "templates": return "New Template";
       case "blog": return "New Post";
       case "courses": return "Manage Courses";
+      case "scope": return "Add Video";
       default: return "Create";
     }
   };
@@ -581,6 +748,10 @@ export default function Resources() {
             <TabsTrigger value="courses" className="rounded-full px-4 gap-2 data-[state=active]:bg-[#1C1C1C]">
               <GraduationCap className="h-4 w-4" />
               Courses
+            </TabsTrigger>
+            <TabsTrigger value="scope" className="rounded-full px-4 gap-2 data-[state=active]:bg-[#1C1C1C]">
+              <Video className="h-4 w-4" />
+              Scope
             </TabsTrigger>
           </TabsList>
 
@@ -813,6 +984,120 @@ export default function Resources() {
                         </ul>
                       </div>
                     )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Scope Tab */}
+          <TabsContent value="scope" className="mt-6">
+            {scopeLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} className="h-64 rounded-xl" />
+                ))}
+              </div>
+            ) : scopeVideos.length === 0 ? (
+              <Card className="p-12 text-center border-border/50 bg-card/30">
+                <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground font-inter tracking-[-0.5px]">
+                  No scope videos yet. Add videos to brand scope libraries.
+                </p>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {scopeVideos.map(video => (
+                  <Card key={video.id} className="group border-border/50 bg-card/30 hover:bg-card/50 transition-colors overflow-hidden">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video bg-muted/30">
+                      {video.thumbnail_url ? (
+                        <img
+                          src={video.thumbnail_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Play className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                      )}
+                      {video.views > 0 && (
+                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-black/60 px-2 py-0.5 rounded text-xs text-white">
+                          <Eye className="w-3 h-3" />
+                          {video.views.toLocaleString()}
+                        </div>
+                      )}
+                      <a
+                        href={video.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-[#2060df] flex items-center justify-center">
+                          <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                        </div>
+                      </a>
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {video.brands?.logo_url ? (
+                            <img src={video.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                          ) : (
+                            <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
+                              {video.brands?.name?.[0] || 'B'}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium truncate max-w-[100px]">{video.brands?.name}</span>
+                        </div>
+                        <Badge variant="outline" className="capitalize text-xs">
+                          {video.platform}
+                        </Badge>
+                      </div>
+                      
+                      {video.username && (
+                        <p className="text-sm text-muted-foreground">@{video.username}</p>
+                      )}
+                      
+                      {video.caption && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{video.caption}</p>
+                      )}
+                      
+                      <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(video.created_at).toLocaleDateString()}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigator.clipboard.writeText(video.video_url).then(() => toast.success('Copied!'))}
+                            className="h-7 w-7"
+                          >
+                            <Link2 className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditScopeDialog(video)}
+                            className="h-7 w-7"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteScopeVideo(video.id)}
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -1253,6 +1538,136 @@ export default function Resources() {
         }} 
         initialExpandedCourseId={editingCourseId}
       />
+
+      {/* Scope Video Dialog */}
+      <Dialog open={scopeDialogOpen} onOpenChange={setScopeDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px]">
+              {editingScopeVideo ? "Edit Scope Video" : "Add Scope Video"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Brand *</Label>
+              <Select
+                value={scopeFormData.brand_id}
+                onValueChange={(value) => setScopeFormData({ ...scopeFormData, brand_id: value })}
+              >
+                <SelectTrigger className="font-inter tracking-[-0.5px]">
+                  <SelectValue placeholder="Select a brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map(brand => (
+                    <SelectItem key={brand.id} value={brand.id} className="font-inter tracking-[-0.5px]">
+                      <div className="flex items-center gap-2">
+                        {brand.logo_url ? (
+                          <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" />
+                        ) : (
+                          <div className="w-4 h-4 rounded bg-muted flex items-center justify-center text-[8px]">
+                            {brand.name[0]}
+                          </div>
+                        )}
+                        {brand.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Video URL *</Label>
+              <Input
+                value={scopeFormData.video_url}
+                onChange={(e) => setScopeFormData({ ...scopeFormData, video_url: e.target.value })}
+                placeholder="https://tiktok.com/@user/video/..."
+                className="font-inter tracking-[-0.5px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-inter tracking-[-0.5px]">Platform</Label>
+                <Select
+                  value={scopeFormData.platform}
+                  onValueChange={(value) => setScopeFormData({ ...scopeFormData, platform: value })}
+                >
+                  <SelectTrigger className="font-inter tracking-[-0.5px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platforms.map(platform => (
+                      <SelectItem key={platform} value={platform} className="capitalize font-inter tracking-[-0.5px]">
+                        {platform}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="font-inter tracking-[-0.5px]">Username</Label>
+                <Input
+                  value={scopeFormData.username}
+                  onChange={(e) => setScopeFormData({ ...scopeFormData, username: e.target.value })}
+                  placeholder="@username"
+                  className="font-inter tracking-[-0.5px]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Thumbnail URL</Label>
+              <Input
+                value={scopeFormData.thumbnail_url}
+                onChange={(e) => setScopeFormData({ ...scopeFormData, thumbnail_url: e.target.value })}
+                placeholder="https://..."
+                className="font-inter tracking-[-0.5px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Views</Label>
+              <Input
+                type="number"
+                value={scopeFormData.views}
+                onChange={(e) => setScopeFormData({ ...scopeFormData, views: parseInt(e.target.value) || 0 })}
+                className="font-inter tracking-[-0.5px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Caption</Label>
+              <Textarea
+                value={scopeFormData.caption}
+                onChange={(e) => setScopeFormData({ ...scopeFormData, caption: e.target.value })}
+                placeholder="Video caption or description..."
+                rows={3}
+                className="font-inter tracking-[-0.5px]"
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={scopeFormData.is_example}
+                onCheckedChange={(checked) => setScopeFormData({ ...scopeFormData, is_example: checked })}
+              />
+              <Label className="font-inter tracking-[-0.5px]">Mark as example</Label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setScopeDialogOpen(false)} className="font-inter tracking-[-0.5px]">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveScope} disabled={scopeSaving} className="font-inter tracking-[-0.5px]">
+              {scopeSaving ? "Saving..." : editingScopeVideo ? "Save Changes" : "Add Video"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
