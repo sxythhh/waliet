@@ -101,43 +101,53 @@ Deno.serve(async (req) => {
 
       console.log(`Saved payment method ${paymentMethodId} to brand ${brandId}`);
 
-      // If an amount was requested, create the topup now
-      if (requestedAmount && Number(requestedAmount) > 0) {
-        console.log(`Creating topup for $${requestedAmount} using payment method ${paymentMethodId}`);
+      // If an amount was requested, create the payment now using the payments API
+      // (topups API doesn't work with member-scoped payment methods)
+      if (requestedAmount && Number(requestedAmount) > 0 && memberId) {
+        console.log(`Creating payment for $${requestedAmount} using payment method ${paymentMethodId}, member ${memberId}`);
 
-        const topupResponse = await fetch("https://api.whop.com/api/v1/topups", {
+        const paymentResponse = await fetch("https://api.whop.com/api/v1/payments", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${whopApiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            amount: Number(requestedAmount),
             company_id: companyId,
-            currency: "usd",
+            member_id: memberId,
             payment_method_id: paymentMethodId,
+            plan: {
+              initial_price: Number(requestedAmount),
+              currency: "usd",
+              plan_type: "one_time",
+            },
+            metadata: {
+              type: "brand_wallet_topup",
+              brand_id: brandId,
+              user_id: userId,
+            },
           }),
         });
 
-        const topupText = await topupResponse.text();
-        console.log("Topup response status:", topupResponse.status);
-        console.log("Topup response:", topupText);
+        const paymentText = await paymentResponse.text();
+        console.log("Payment response status:", paymentResponse.status);
+        console.log("Payment response:", paymentText);
 
-        if (!topupResponse.ok) {
-          console.error("Failed to create topup:", topupText);
+        if (!paymentResponse.ok) {
+          console.error("Failed to create payment:", paymentText);
           // Still return success for webhook - payment method was saved
           return new Response(JSON.stringify({ 
             success: true, 
             type: "setup_intent.succeeded",
             payment_method_saved: true,
-            topup_error: topupText,
+            payment_error: paymentText,
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        const topupData = JSON.parse(topupText);
-        console.log("Topup created:", topupData);
+        const paymentData = JSON.parse(paymentText);
+        console.log("Payment created:", paymentData);
 
         // Record the transaction
         const { error: txError } = await supabase
@@ -146,12 +156,12 @@ Deno.serve(async (req) => {
             brand_id: brandId,
             type: "topup",
             amount: Number(requestedAmount),
-            status: topupData.status === "paid" ? "completed" : "pending",
+            status: paymentData.status === "paid" ? "completed" : "pending",
             description: `Wallet top-up: $${requestedAmount}`,
-            whop_payment_id: topupData.id,
+            whop_payment_id: paymentData.id,
             metadata: {
               user_id: userId,
-              payment_id: topupData.id,
+              payment_id: paymentData.id,
               initiated_via: "webhook",
               initiated_at: new Date().toISOString(),
             },
