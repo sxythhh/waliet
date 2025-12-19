@@ -14,7 +14,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersTab } from "@/components/brand/TeamMembersTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
-import { BrandWalletTab } from "@/components/brand/BrandWalletTab";
 import { Skeleton } from "@/components/ui/skeleton";
 export default function BrandAccount() {
   const {
@@ -77,11 +76,8 @@ export default function BrandAccount() {
         
         <h1 className="text-3xl font-bold text-white mb-6">Account</h1>
         
-        <Tabs defaultValue="wallet" className="w-full">
+        <Tabs defaultValue="invoices" className="w-full">
           <TabsList className="bg-black border-white/10">
-            <TabsTrigger value="wallet" className="data-[state=active]:bg-[#191919]">
-              Wallet
-            </TabsTrigger>
             <TabsTrigger value="invoices" className="data-[state=active]:bg-[#191919]">
               Invoices
             </TabsTrigger>
@@ -92,10 +88,6 @@ export default function BrandAccount() {
               User
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="wallet" className="mt-6">
-            <BrandWalletTab brandId={brandId} brandSlug={slug || ''} />
-          </TabsContent>
 
           <TabsContent value="invoices" className="mt-6">
             {accountUrl ? <div className="w-full bg-[#191919] rounded-lg overflow-hidden" style={{
