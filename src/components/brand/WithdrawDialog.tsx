@@ -18,7 +18,11 @@ export function WithdrawDialog({ open, onOpenChange, brandId, brandSlug }: Withd
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] border-[#1f1f1f] text-white max-w-md p-0 gap-0 overflow-hidden">
+      <DialogContent 
+        className="bg-[#0a0a0a] border-[#1f1f1f] text-white max-w-md p-0 gap-0 overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-lg font-semibold tracking-[-0.5px]">
             Withdraw
