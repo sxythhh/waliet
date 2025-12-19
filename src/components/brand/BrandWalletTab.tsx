@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon } from "lucide-react";
+import { Plus, ArrowUpRight, Wallet as WalletIcon, X } from "lucide-react";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
+import { EmbeddedPayoutPortal } from "./EmbeddedPayoutPortal";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 
 interface BrandWalletTabProps {
@@ -41,7 +42,7 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
-  const [openingPortal, setOpeningPortal] = useState(false);
+  const [showPayoutPortal, setShowPayoutPortal] = useState(false);
 
   const fetchWalletData = async () => {
     try {
@@ -219,28 +220,8 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
     }
   };
 
-  const handleOpenPayoutPortal = async () => {
-    setOpeningPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('get-brand-payout-portal', {
-        body: {
-          brand_id: brandId,
-          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`,
-          refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening payout portal:', error);
-      toast.error('Failed to open payout portal');
-    } finally {
-      setOpeningPortal(false);
-    }
+  const handleOpenPayoutPortal = () => {
+    setShowPayoutPortal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -324,6 +305,31 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
         <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />
       )}
 
+      {/* Embedded Payout Portal */}
+      {showPayoutPortal && (
+        <Card className="border-border overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border">
+            <CardTitle className="text-base font-medium tracking-[-0.5px]">
+              Payout Portal
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowPayoutPortal(false)}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <EmbeddedPayoutPortal
+              brandId={brandId}
+              redirectUrl={`${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&verification=complete`}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Balance Card */}
       <Card className="border-border overflow-hidden">
         <CardHeader className="pb-3">
@@ -348,12 +354,11 @@ export function BrandWalletTab({ brandId, brandSlug }: BrandWalletTabProps) {
               <Button
                 variant="ghost"
                 onClick={handleOpenPayoutPortal}
-                disabled={openingPortal}
                 className="text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
                 <WalletIcon className="w-4 h-4 mr-1.5" />
-                {openingPortal ? 'Opening...' : 'Withdraw'}
+                Withdraw
               </Button>
               <Button
                 onClick={() => setAllocateOpen(true)}
