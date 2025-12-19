@@ -2409,12 +2409,16 @@ export type Database = {
           avatar_url: string | null
           brand_id: string | null
           caption: string | null
+          content_style: string | null
           created_at: string
+          cta_outcome: string | null
           file_url: string | null
+          format: string | null
           id: string
           is_example: boolean | null
           platform: string
           tags: string[] | null
+          target_audience: string | null
           thumbnail_url: string | null
           updated_at: string
           username: string | null
@@ -2425,12 +2429,16 @@ export type Database = {
           avatar_url?: string | null
           brand_id?: string | null
           caption?: string | null
+          content_style?: string | null
           created_at?: string
+          cta_outcome?: string | null
           file_url?: string | null
+          format?: string | null
           id?: string
           is_example?: boolean | null
           platform?: string
           tags?: string[] | null
+          target_audience?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           username?: string | null
@@ -2441,12 +2449,16 @@ export type Database = {
           avatar_url?: string | null
           brand_id?: string | null
           caption?: string | null
+          content_style?: string | null
           created_at?: string
+          cta_outcome?: string | null
           file_url?: string | null
+          format?: string | null
           id?: string
           is_example?: boolean | null
           platform?: string
           tags?: string[] | null
+          target_audience?: string | null
           thumbnail_url?: string | null
           updated_at?: string
           username?: string | null

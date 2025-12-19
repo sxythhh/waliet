@@ -34,6 +34,10 @@ interface ScopeVideo {
   tags: string[];
   is_example: boolean;
   created_at: string;
+  cta_outcome: string | null;
+  format: string | null;
+  content_style: string | null;
+  target_audience: string | null;
 }
 
 interface Blueprint {
@@ -268,13 +272,38 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
   const filteredVideos = videos
     .filter(video => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        video.username?.toLowerCase().includes(query) ||
-        video.caption?.toLowerCase().includes(query) ||
-        video.platform?.toLowerCase().includes(query)
-      );
+      // Apply search query filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          video.username?.toLowerCase().includes(query) ||
+          video.caption?.toLowerCase().includes(query) ||
+          video.platform?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+      
+      // Apply active filters
+      for (const filter of activeFilters) {
+        switch (filter.category) {
+          case 'cta':
+            if (video.cta_outcome?.toLowerCase() !== filter.value.toLowerCase()) return false;
+            break;
+          case 'format':
+            if (video.format?.toLowerCase() !== filter.value.toLowerCase()) return false;
+            break;
+          case 'platform':
+            if (video.platform?.toLowerCase() !== filter.value.toLowerCase()) return false;
+            break;
+          case 'style':
+            if (video.content_style?.toLowerCase() !== filter.value.toLowerCase()) return false;
+            break;
+          case 'audience':
+            if (video.target_audience?.toLowerCase() !== filter.value.toLowerCase()) return false;
+            break;
+        }
+      }
+      
+      return true;
     })
     .sort((a, b) => {
       switch (sortBy) {
