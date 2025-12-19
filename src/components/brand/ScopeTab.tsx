@@ -117,10 +117,11 @@ export function ScopeTab({ brandId }: ScopeTabProps) {
 
   const fetchVideos = async () => {
     try {
+      // Fetch both brand-specific videos AND global videos (brand_id is null)
       const { data, error } = await supabase
         .from('scope_videos')
         .select('*')
-        .eq('brand_id', brandId)
+        .or(`brand_id.eq.${brandId},brand_id.is.null`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

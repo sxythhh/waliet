@@ -76,7 +76,7 @@ interface Brand {
 
 interface ScopeVideo {
   id: string;
-  brand_id: string;
+  brand_id: string | null;
   platform: string;
   username: string | null;
   video_url: string;
@@ -85,7 +85,7 @@ interface ScopeVideo {
   views: number;
   caption: string | null;
   created_at: string;
-  brands?: { name: string; logo_url: string | null };
+  brands?: { name: string; logo_url: string | null } | null;
 }
 
 export default function Resources() {
@@ -602,7 +602,7 @@ export default function Resources() {
   const openCreateScopeDialog = () => {
     setEditingScopeVideo(null);
     setScopeFormData({
-      brand_id: brands[0]?.id || "",
+      brand_id: "", // Empty means global
       platform: "tiktok",
       username: "",
       video_url: "",
@@ -618,7 +618,7 @@ export default function Resources() {
   const openEditScopeDialog = (video: ScopeVideo) => {
     setEditingScopeVideo(video);
     setScopeFormData({
-      brand_id: video.brand_id,
+      brand_id: video.brand_id || "",
       platform: video.platform,
       username: video.username || "",
       video_url: video.video_url,
@@ -632,10 +632,7 @@ export default function Resources() {
   };
 
   const handleSaveScope = async () => {
-    if (!scopeFormData.brand_id) {
-      toast.error("Please select a brand");
-      return;
-    }
+    // brand_id can be empty for global videos - no validation needed
     
     if (!scopeFormData.video_url && !scopeFormData.file) {
       toast.error("Please provide a video URL or upload a file");
@@ -650,7 +647,8 @@ export default function Resources() {
       // Upload video file if provided
       if (scopeFormData.file) {
         const fileExt = scopeFormData.file.name.split('.').pop();
-        const fileName = `${scopeFormData.brand_id}/${Date.now()}.${fileExt}`;
+        const folderName = scopeFormData.brand_id || 'global';
+        const fileName = `${folderName}/${Date.now()}.${fileExt}`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('scope-videos')
@@ -669,7 +667,7 @@ export default function Resources() {
       }
 
       const scopeData = {
-        brand_id: scopeFormData.brand_id,
+        brand_id: scopeFormData.brand_id || null,
         platform: scopeFormData.platform,
         username: scopeFormData.username || null,
         video_url: scopeFormData.video_url || fileUrl || '',
@@ -1076,14 +1074,22 @@ export default function Resources() {
                     <div className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          {video.brands?.logo_url ? (
-                            <img src={video.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                          {video.brand_id ? (
+                            video.brands?.logo_url ? (
+                              <img src={video.brands.logo_url} alt="" className="w-5 h-5 rounded object-cover" />
+                            ) : (
+                              <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
+                                {video.brands?.name?.[0] || 'B'}
+                              </div>
+                            )
                           ) : (
-                            <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
-                              {video.brands?.name?.[0] || 'B'}
+                            <div className="w-5 h-5 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[8px] text-white font-medium">
+                              G
                             </div>
                           )}
-                          <span className="text-sm font-medium truncate max-w-[100px]">{video.brands?.name}</span>
+                          <span className="text-sm font-medium truncate max-w-[100px]">
+                            {video.brand_id ? video.brands?.name : 'Global'}
+                          </span>
                         </div>
                         <Badge variant="outline" className="capitalize text-xs">
                           {video.platform}
@@ -1582,15 +1588,23 @@ export default function Resources() {
 
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label className="font-inter tracking-[-0.5px]">Brand *</Label>
+              <Label className="font-inter tracking-[-0.5px]">Brand (leave empty for global)</Label>
               <Select
                 value={scopeFormData.brand_id}
-                onValueChange={(value) => setScopeFormData({ ...scopeFormData, brand_id: value })}
+                onValueChange={(value) => setScopeFormData({ ...scopeFormData, brand_id: value === "global" ? "" : value })}
               >
                 <SelectTrigger className="font-inter tracking-[-0.5px]">
-                  <SelectValue placeholder="Select a brand" />
+                  <SelectValue placeholder="Global (all brands)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="global" className="font-inter tracking-[-0.5px]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-[8px] text-white">
+                        G
+                      </div>
+                      Global (all brands)
+                    </div>
+                  </SelectItem>
                   {brands.map(brand => (
                     <SelectItem key={brand.id} value={brand.id} className="font-inter tracking-[-0.5px]">
                       <div className="flex items-center gap-2">
