@@ -234,26 +234,65 @@ Deno.serve(async (req) => {
       console.log(`Brand ${brandId} subscription activated`);
     }
 
-    // Handle cancellation/expiration
-    if (action === "membership.went_invalid" || action === "membership.cancelled") {
+    // Handle cancellation/expiration/deactivation
+    if (action === "membership.went_invalid" || action === "membership.cancelled" || action === "membership.deactivated") {
       const membership = data;
       const metadata = membership.metadata || {};
       const brandId = metadata.brand_id;
+
+      console.log(`Processing membership deactivation - action: ${action}, brand_id: ${brandId}, membership_id: ${membership.id}`);
 
       if (brandId) {
         const { error: updateError } = await supabase
           .from("brands")
           .update({
             subscription_status: "inactive",
+            subscription_plan: null,
+            subscription_expires_at: new Date().toISOString(),
           })
           .eq("id", brandId);
 
         if (updateError) {
           console.error("Error deactivating brand subscription:", updateError);
+        } else {
+          console.log(`Brand ${brandId} subscription deactivated and plan removed`);
         }
+      } else {
+        // Try to find brand by whop_membership_id if no metadata
+        const membershipId = membership.id;
+        if (membershipId) {
+          console.log(`No brand_id in metadata, searching by whop_membership_id: ${membershipId}`);
+          
+          const { data: brand, error: findError } = await supabase
+            .from("brands")
+            .select("id")
+            .eq("whop_membership_id", membershipId)
+            .single();
 
-        console.log(`Brand ${brandId} subscription deactivated`);
+          if (!findError && brand) {
+            const { error: updateError } = await supabase
+              .from("brands")
+              .update({
+                subscription_status: "inactive",
+                subscription_plan: null,
+                subscription_expires_at: new Date().toISOString(),
+              })
+              .eq("id", brand.id);
+
+            if (updateError) {
+              console.error("Error deactivating brand subscription:", updateError);
+            } else {
+              console.log(`Brand ${brand.id} subscription deactivated via membership_id lookup`);
+            }
+          } else {
+            console.warn(`Could not find brand for membership ${membershipId}`);
+          }
+        }
       }
+
+      return new Response(JSON.stringify({ success: true, type: "membership_deactivated" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Handle account onboarding completion
