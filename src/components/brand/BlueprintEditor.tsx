@@ -17,6 +17,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
+import { ScopeVideoCard } from "@/components/brand/ScopeVideoCard";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -892,39 +893,26 @@ export function BlueprintEditor({
               </div>
               {/* Saved Scope Videos */}
               {savedScopeVideos.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">From Scope</p>
-                  {savedScopeVideos.map((video) => (
-                    <div key={video.id} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
-                      <div className="flex items-start gap-3">
-                        <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
-                          {video.file_url ? (
-                            <video src={video.file_url} className="w-full h-full object-cover" muted preload="metadata" />
-                          ) : video.thumbnail_url ? (
-                            <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Video className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
-                            {video.caption || video.username || 'Scope video'}
-                          </p>
-                          <p className="text-xs text-muted-foreground capitalize">{video.platform}</p>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => removeSavedScopeVideo(video.id)} 
-                          className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {savedScopeVideos.map((video) => (
+                      <ScopeVideoCard
+                        key={video.id}
+                        video={{
+                          id: video.id,
+                          platform: video.platform,
+                          username: video.username,
+                          video_url: video.video_url,
+                          file_url: video.file_url,
+                          thumbnail_url: video.thumbnail_url,
+                          caption: video.caption
+                        }}
+                        mode="blueprint"
+                        onRemove={() => removeSavedScopeVideo(video.id)}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
               {/* Manual Example Videos */}
