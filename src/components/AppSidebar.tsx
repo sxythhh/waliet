@@ -25,6 +25,7 @@ import referralsInactive from "@/assets/referrals-inactive.svg";
 import referralsActive from "@/assets/referrals-active.svg";
 import educationInactive from "@/assets/education-inactive.svg";
 import educationActive from "@/assets/education-active.svg";
+import nutFillIcon from "@/assets/nut-fill.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -517,6 +518,18 @@ export function AppSidebar() {
           })}
           </div>
         </nav>
+
+        {/* Upgrade Plan Button */}
+        {!isCollapsed && (
+          <div className="px-2 py-2">
+            <button 
+              className="w-full py-2.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
+            >
+              <img src={nutFillIcon} alt="" className="h-4 w-4" />
+              Upgrade Plan
+            </button>
+          </div>
+        )}
 
         {/* Swap to Business CTA - Only show in creator mode */}
         {isCreatorMode && !isCollapsed && (
