@@ -680,7 +680,7 @@ export function UserSettingsTab() {
               {brand.whop_membership_id && (
                 <div className="pt-2 border-t border-border/50">
                   <a 
-                    href={`https://whop.com/billing/manage/${brand.whop_membership_id}/`}
+                    href={`https://whop.com/billing/manage/${brand.whop_membership_id?.replace('mem_', 'mber_')}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline tracking-[-0.5px]"
