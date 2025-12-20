@@ -147,7 +147,7 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-y-auto">
       <Helmet>
         <title>{post.title} | Virality</title>
         <meta name="description" content={post.excerpt || `Read ${post.title} on Virality`} />
