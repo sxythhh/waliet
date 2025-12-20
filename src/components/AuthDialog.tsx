@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,9 @@ export default function AuthDialog({
     if (signInError) {
       if (signInError.message.includes("Invalid login credentials")) {
         // Try to sign up - if user exists, it means wrong password
+        // Get stored UTM params
+        const utmParams = getStoredUtmParams();
+        
         const {
           data: signUpData,
           error: signUpError
@@ -79,7 +83,15 @@ export default function AuthDialog({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: utmParams ? {
+              utm_source: utmParams.utm_source,
+              utm_medium: utmParams.utm_medium,
+              utm_campaign: utmParams.utm_campaign,
+              utm_content: utmParams.utm_content,
+              utm_term: utmParams.utm_term,
+              signup_url: utmParams.signup_url
+            } : undefined
           }
         });
         setLoading(false);
@@ -100,6 +112,7 @@ export default function AuthDialog({
           }
         } else if (signUpData.user) {
           await trackReferral(signUpData.user.id);
+          clearStoredUtmParams();
           toast({
             title: "Account created!",
             description: "Let's set up your profile."
