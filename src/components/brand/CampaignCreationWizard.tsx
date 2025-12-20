@@ -542,6 +542,9 @@ export function CampaignCreationWizard({
           const randomSuffix = Math.random().toString(36).substring(2, 10);
           return `${baseSlug}-${randomSuffix}`;
         })();
+        
+        const budgetAmount = values.is_infinite_budget ? 0 : Number(values.budget) || 0;
+        
         const insertData = {
           title: values.title,
           description: values.description || null,
@@ -549,7 +552,7 @@ export function CampaignCreationWizard({
           category: values.category || null,
           content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
-          budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
+          budget: budgetAmount,
           rpm_rate: Number(values.rpm_rate) || 5,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
@@ -564,21 +567,35 @@ export function CampaignCreationWizard({
           brand_id: brandId,
           brand_name: brandName,
           brand_logo_url: brandData?.logo_url || null,
-          status: subscriptionStatus === 'active' ? "active" : "draft",
+          status: "draft", // Always start as draft - admin must activate
           slug: slug,
           is_featured: false,
           blueprint_id: selectedBlueprintId || initialBlueprintId || null
         };
         const {
+          data: newCampaign,
           error
-        } = await supabase.from("campaigns").insert(insertData);
+        } = await supabase.from("campaigns").insert(insertData).select().single();
         if (error) throw error;
         
-        if (subscriptionStatus === 'active') {
-          toast.success("Campaign created and launched!");
-        } else {
-          toast.success("Campaign saved as draft. Activate your subscription to launch it.");
+        // Allocate budget from Virality balance if budget > 0
+        if (budgetAmount > 0 && newCampaign) {
+          const { error: allocateError } = await supabase.functions.invoke('allocate-brand-budget', {
+            body: {
+              brand_id: brandId,
+              campaign_id: newCampaign.id,
+              amount: budgetAmount
+            }
+          });
+          
+          if (allocateError) {
+            console.error('Error allocating budget:', allocateError);
+            // Don't fail campaign creation, but notify user
+            toast.warning("Campaign created but budget allocation failed. Please add budget manually.");
+          }
         }
+        
+        toast.success("Campaign created as draft. An admin will review and activate it.");
       }
 
       // Save shortimize API key to brand if admin
