@@ -55,6 +55,7 @@ import New from "./pages/New";
 import Contact from "./pages/Contact";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import Resources from "./pages/Resources";
+import BlogPost from "./pages/BlogPost";
 import BrandPublicPage from "./pages/BrandPublicPage";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
@@ -156,6 +157,7 @@ const App = () => (
               <Route path="/contact" element={<Contact />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/blog" element={<Resources />} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/course/:id" element={<PublicCourseDetail />} />
               <Route path="/support" element={<Support />} />
               <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
