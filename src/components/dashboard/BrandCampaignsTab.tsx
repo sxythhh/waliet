@@ -82,8 +82,8 @@ export function BrandCampaignsTab({
     loading: adminLoading
   } = useAdminCheck();
 
-  // Show beta gate for non-admin users with inactive subscription
-  const showBetaGate = !adminLoading && !isAdmin && subscriptionStatus !== "active";
+  // Removed beta gate - brands without subscription can create drafts
+  const showBetaGate = false;
   const handleBackToCreator = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("workspace", "creator");
@@ -282,34 +282,16 @@ export function BrandCampaignsTab({
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
             </div>
-            <Button onClick={() => {
-          if (subscriptionStatus === "active") {
-            setCampaignTypeDialogOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
               <Plus className="h-4 w-4" />
               Create Campaign
             </Button>
             <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
-          if (subscriptionStatus === "active") {
-            setCreateCampaignOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
+          setCreateCampaignOpen(true);
         }} onSelectManaged={() => {
-          if (subscriptionStatus === "active") {
-            setCreateBountyOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
+          setCreateBountyOpen(true);
         }} onSelectBoost={() => {
-          if (subscriptionStatus === "active") {
-            setCreateBountyOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
+          setCreateBountyOpen(true);
         }} />
           </div>
 
@@ -324,13 +306,7 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
               </div>
             </div>
-            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => {
-          if (subscriptionStatus === "active") {
-            setCampaignTypeDialogOpen(true);
-          } else {
-            setSubscriptionGateOpen(true);
-          }
-        }}>
+            <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setCampaignTypeDialogOpen(true)}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={webStoriesIcon} alt="" className="w-5 h-5" />
               </div>

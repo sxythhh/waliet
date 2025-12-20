@@ -52,6 +52,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [formData, setFormData] = useState<BountyData>({
     title: "",
     description: "",
@@ -92,14 +93,22 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       if (data.start_date) setStartDate(new Date(data.start_date));
       if (data.end_date) setEndDate(new Date(data.end_date));
       
-      // Fetch blueprints for the brand
+      // Fetch blueprints and subscription status for the brand
       if (data.brand_id) {
-        const { data: bpData } = await supabase
-          .from('blueprints')
-          .select('id, title')
-          .eq('brand_id', data.brand_id)
-          .order('created_at', { ascending: false });
+        const [{ data: bpData }, { data: brandData }] = await Promise.all([
+          supabase
+            .from('blueprints')
+            .select('id, title')
+            .eq('brand_id', data.brand_id)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('brands')
+            .select('subscription_status')
+            .eq('id', data.brand_id)
+            .single()
+        ]);
         setBlueprints(bpData || []);
+        setSubscriptionStatus(brandData?.subscription_status || null);
       }
     } catch (error: any) {
       console.error("Error fetching bounty:", error);
@@ -364,19 +373,37 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
               {/* Status */}
               <div className="space-y-2">
                 <Label style={labelStyle} className="text-xs text-muted-foreground">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger className="border-0 bg-muted/50 h-11" style={inputStyle}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft" style={inputStyle}>Draft</SelectItem>
-                    <SelectItem value="active" style={inputStyle}>Active</SelectItem>
-                    <SelectItem value="ended" style={inputStyle}>Ended</SelectItem>
-                  </SelectContent>
-                </Select>
+                {formData.status === 'draft' && subscriptionStatus !== 'active' ? (
+                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <p className="text-sm font-medium" style={labelStyle}>Draft Mode</p>
+                    <p className="text-xs text-muted-foreground" style={labelStyle}>
+                      Activate your subscription to launch this boost.
+                    </p>
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) => {
+                      // Prevent changing to active if no subscription
+                      if (value === 'active' && subscriptionStatus !== 'active') {
+                        toast.error('Activate your subscription to launch this boost');
+                        return;
+                      }
+                      setFormData({ ...formData, status: value });
+                    }}
+                  >
+                    <SelectTrigger className="border-0 bg-muted/50 h-11" style={inputStyle}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft" style={inputStyle}>Draft</SelectItem>
+                      <SelectItem value="active" style={inputStyle} disabled={subscriptionStatus !== 'active'}>
+                        Active {subscriptionStatus !== 'active' && '(Subscription required)'}
+                      </SelectItem>
+                      <SelectItem value="ended" style={inputStyle}>Ended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* Private Toggle */}
