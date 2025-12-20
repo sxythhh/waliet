@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X, Play, Link2, Video, Upload } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, X, Play, Link2, Video, Upload, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface BlueprintTemplate {
   id: string;
@@ -122,6 +123,8 @@ export default function Resources() {
   const [blogDialogOpen, setBlogDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [blogSaving, setBlogSaving] = useState(false);
+  const [blogImageUploading, setBlogImageUploading] = useState(false);
+  const blogImageInputRef = useRef<HTMLInputElement>(null);
   const [blogFormData, setBlogFormData] = useState({
     title: "",
     slug: "",
@@ -493,6 +496,38 @@ export default function Resources() {
       }
     }
     setBlogSaving(false);
+  };
+
+  const handleBlogImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBlogImageUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `blog-images/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('course-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-images')
+        .getPublicUrl(fileName);
+
+      setBlogFormData(prev => ({ ...prev, image_url: publicUrl }));
+      toast.success('Image uploaded');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setBlogImageUploading(false);
+      if (blogImageInputRef.current) {
+        blogImageInputRef.current.value = '';
+      }
+    }
   };
 
   const handleDeletePost = async (id: string) => {
@@ -1511,13 +1546,48 @@ export default function Resources() {
             </div>
 
             <div className="space-y-2">
-              <Label className="font-inter tracking-[-0.5px]">Image URL</Label>
-              <Input
-                value={blogFormData.image_url}
-                onChange={(e) => setBlogFormData({ ...blogFormData, image_url: e.target.value })}
-                placeholder="https://..."
-                className="font-inter tracking-[-0.5px]"
-              />
+              <Label className="font-inter tracking-[-0.5px]">Cover Image</Label>
+              {blogFormData.image_url ? (
+                <div className="relative">
+                  <img 
+                    src={blogFormData.image_url} 
+                    alt="Cover" 
+                    className="w-full h-40 object-cover rounded-lg border border-border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-7 w-7"
+                    onClick={() => setBlogFormData({ ...blogFormData, image_url: "" })}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/50 hover:bg-muted transition-colors">
+                  {blogImageUploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">Uploading...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Click to upload cover image</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">PNG, JPG, WebP</p>
+                    </div>
+                  )}
+                  <input
+                    ref={blogImageInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleBlogImageUpload}
+                    disabled={blogImageUploading}
+                  />
+                </label>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -1532,14 +1602,14 @@ export default function Resources() {
             </div>
 
             <div className="space-y-2">
-              <Label className="font-inter tracking-[-0.5px]">Content * (Markdown supported)</Label>
-              <Textarea
-                value={blogFormData.content}
-                onChange={(e) => setBlogFormData({ ...blogFormData, content: e.target.value })}
-                placeholder="Write your blog post content here..."
-                rows={12}
-                className="font-inter tracking-[-0.5px] font-mono text-sm"
-              />
+              <Label className="font-inter tracking-[-0.5px]">Content *</Label>
+              <div className="border border-border rounded-lg overflow-hidden bg-muted/30">
+                <RichTextEditor
+                  content={blogFormData.content}
+                  onChange={(content) => setBlogFormData({ ...blogFormData, content })}
+                  placeholder="Write your blog post content here..."
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
