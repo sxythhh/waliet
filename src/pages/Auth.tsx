@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +70,9 @@ export default function Auth() {
     if (signInError) {
       // If sign in fails, try to sign up
       if (signInError.message.includes("Invalid login credentials")) {
+        // Get stored UTM params
+        const utmParams = getStoredUtmParams();
+        
         const {
           data: signUpData,
           error: signUpError
@@ -76,7 +80,15 @@ export default function Auth() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: utmParams ? {
+              utm_source: utmParams.utm_source,
+              utm_medium: utmParams.utm_medium,
+              utm_campaign: utmParams.utm_campaign,
+              utm_content: utmParams.utm_content,
+              utm_term: utmParams.utm_term,
+              signup_url: utmParams.signup_url
+            } : undefined
           }
         });
         setLoading(false);
@@ -88,6 +100,7 @@ export default function Auth() {
           });
         } else if (signUpData.user) {
           await trackReferral(signUpData.user.id);
+          clearStoredUtmParams();
           toast({
             title: "Welcome to Virality!",
             description: "Your account has been created successfully."

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +58,9 @@ export default function BrandAuth() {
     }
     setLoading(true);
     try {
+      // Get stored UTM params
+      const utmParams = getStoredUtmParams();
+      
       const {
         error
       } = await supabase.auth.signUp({
@@ -67,7 +71,15 @@ export default function BrandAuth() {
           data: {
             full_name: formData.firstName,
             phone_number: formData.phoneNumber,
-            account_type: 'brand'
+            account_type: 'brand',
+            ...(utmParams ? {
+              utm_source: utmParams.utm_source,
+              utm_medium: utmParams.utm_medium,
+              utm_campaign: utmParams.utm_campaign,
+              utm_content: utmParams.utm_content,
+              utm_term: utmParams.utm_term,
+              signup_url: utmParams.signup_url
+            } : {})
           }
         }
       });
@@ -78,6 +90,7 @@ export default function BrandAuth() {
           variant: "destructive"
         });
       } else {
+        clearStoredUtmParams();
         toast({
           title: "Success",
           description: "Brand account created successfully! Please check your email to confirm your account."
