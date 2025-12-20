@@ -115,7 +115,7 @@ export default function BlogPostPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="h-[100dvh] bg-background overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Skeleton className="h-8 w-32 mb-8" />
           <Skeleton className="h-12 w-3/4 mb-4" />
@@ -133,7 +133,7 @@ export default function BlogPostPage() {
 
   if (notFound || !post) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="h-[100dvh] bg-background overflow-y-auto flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-foreground mb-4">Article not found</h1>
           <p className="text-muted-foreground mb-6">The article you're looking for doesn't exist or has been removed.</p>
@@ -147,7 +147,7 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-y-auto">
+    <div className="h-[100dvh] bg-background overflow-y-auto">
       <Helmet>
         <title>{post.title} | Virality</title>
         <meta name="description" content={post.excerpt || `Read ${post.title} on Virality`} />
