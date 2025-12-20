@@ -158,18 +158,8 @@ export default function Dashboard() {
       return <div className="flex-1" />;
     }
 
-    // Brand mode - check subscription status first (admins bypass paywall)
+    // Brand mode
     if (isBrandMode && currentBrand) {
-      // Show subscription embed if no active plan (unless admin or on settings page)
-      if (currentBrand.subscription_status !== 'active' && !isAdmin && currentTab !== 'profile') {
-        return (
-          <iframe
-            src="https://join.virality.gg/page-2"
-            className="w-full h-full border-0"
-            title="Subscribe"
-          />
-        );
-      }
 
       // Brand mode with selected campaign - show detail view
       if (selectedCampaignId) {
