@@ -193,13 +193,13 @@ export function ScopeVideoCard({
       </div>
 
       {/* Save to Blueprint Button - Only in scope mode */}
-      {mode === "scope" && onSaveToBlueprint && <div className="px-2 py-1.5">
+      {mode === "scope" && onSaveToBlueprint ? <div className="px-2 py-1.5">
           <button onClick={() => setSheetOpen(true)} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${hasSavedBlueprints || isHovered ? "bg-[#2060df] text-white" : "bg-[#141414] text-neutral-400"}`}>
             <img src={hasSavedBlueprints || isHovered ? stickyNoteWhite : stickyNoteGrey} alt="" className="w-4 h-4" />
             <span>Save to Blueprint</span>
             <ChevronDown className={`w-3.5 h-3.5 ${hasSavedBlueprints || isHovered ? 'text-white/70' : 'text-neutral-500'}`} />
           </button>
-        </div>}
+        </div> : null}
 
       {/* Blueprint Sheet */}
       {mode === "scope" && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
