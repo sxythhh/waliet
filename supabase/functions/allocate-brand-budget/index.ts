@@ -75,7 +75,7 @@ serve(async (req) => {
       });
     }
 
-    // Get brand with Whop company ID
+    // Get brand
     const { data: brand, error: brandError } = await supabase
       .from('brands')
       .select('id, whop_company_id')
@@ -89,34 +89,36 @@ serve(async (req) => {
       });
     }
 
-    if (!brand.whop_company_id) {
-      return new Response(JSON.stringify({ error: 'Brand does not have a wallet set up' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Calculate Virality balance from brand_wallet_transactions
+    const { data: transactions, error: txError } = await supabase
+      .from('brand_wallet_transactions')
+      .select('type, amount, status')
+      .eq('brand_id', brand_id);
+
+    if (txError) {
+      console.error('Error fetching transactions:', txError);
     }
 
-    // Verify brand has sufficient balance
-    console.log(`Checking balance for company: ${brand.whop_company_id}`);
-    
-    const balanceResponse = await fetch(`https://api.whop.com/api/v5/ledger_accounts/${brand.whop_company_id}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const viralityBalance = (transactions || []).reduce((acc, tx) => {
+      if (tx.status !== 'completed') return acc;
+      const txAmount = Number(tx.amount) || 0;
+      // Credit types add to balance
+      if (['topup', 'refund', 'admin_credit'].includes(tx.type)) {
+        return acc + txAmount;
+      }
+      // Debit types subtract from balance
+      if (['withdrawal', 'campaign_allocation', 'boost_allocation', 'admin_debit', 'transfer_to_withdraw'].includes(tx.type)) {
+        return acc - txAmount;
+      }
+      return acc;
+    }, 0);
 
-    let currentBalance = 0;
-    if (balanceResponse.ok) {
-      const ledgerData = await balanceResponse.json();
-      currentBalance = ledgerData.balance || 0;
-    }
+    console.log(`Virality balance for brand ${brand_id}: $${viralityBalance}`);
 
-    if (currentBalance < amount) {
+    if (viralityBalance < amount) {
       return new Response(JSON.stringify({ 
-        error: 'Insufficient balance',
-        current_balance: currentBalance,
+        error: 'Insufficient Virality balance',
+        current_balance: viralityBalance,
         requested_amount: amount
       }), {
         status: 400,
@@ -154,19 +156,19 @@ serve(async (req) => {
         });
       }
 
-      // Log transaction
+      // Log transaction (debit from Virality balance)
       await supabase
         .from('brand_wallet_transactions')
         .insert({
           brand_id: brand_id,
           type: 'campaign_allocation',
-          amount: -amount, // Negative because it's leaving the wallet
+          amount: amount, // Positive amount, type indicates it's a debit
           status: 'completed',
           campaign_id: campaign_id,
           description: `Budget allocated to campaign: ${campaign.title}`,
           metadata: {
-            previous_balance: currentBalance,
-            new_balance: currentBalance - amount
+            previous_balance: viralityBalance,
+            new_balance: viralityBalance - amount
           },
           created_by: user.id
         });
@@ -202,19 +204,19 @@ serve(async (req) => {
         });
       }
 
-      // Log transaction
+      // Log transaction (debit from Virality balance)
       await supabase
         .from('brand_wallet_transactions')
         .insert({
           brand_id: brand_id,
           type: 'boost_allocation',
-          amount: -amount,
+          amount: amount, // Positive amount, type indicates it's a debit
           status: 'completed',
           boost_id: boost_id,
           description: `Budget allocated to boost: ${boost.title}`,
           metadata: {
-            previous_balance: currentBalance,
-            new_balance: currentBalance - amount
+            previous_balance: viralityBalance,
+            new_balance: viralityBalance - amount
           },
           created_by: user.id
         });
@@ -225,7 +227,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true,
       allocated_amount: amount,
-      remaining_balance: currentBalance - amount
+      remaining_balance: viralityBalance - amount
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
