@@ -17,6 +17,8 @@ interface BrandWalletTabProps {
 }
 interface WalletData {
   balance: number;
+  virality_balance: number;
+  withdraw_balance: number;
   pending_balance: number;
   currency: string;
   has_whop_company: boolean;
@@ -306,47 +308,71 @@ export function BrandWalletTab({
       {/* Onboarding Card - Show if not complete */}
       {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
 
-      {/* Balance Card */}
-      <Card className="border-border overflow-hidden">
-        <CardHeader className="pb-3 px-0">
-          <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
-            
-            Wallet Balance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-0">
-          <div className="flex flex-col gap-4">
-            <div>
-              <p className="text-4xl sm:text-5xl font-semibold text-foreground tracking-tight">
-                {formatCurrency(walletData?.balance || 0)}
+      {/* Balance Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Virality Balance Card */}
+        <Card className="border-border overflow-hidden">
+          <CardHeader className="pb-2 px-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Virality Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-0">
+            <p className="text-3xl font-semibold text-foreground tracking-tight">
+              {formatCurrency(walletData?.virality_balance || 0)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Available for campaigns
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Withdraw Balance Card */}
+        <Card className="border-border overflow-hidden">
+          <CardHeader className="pb-2 px-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Withdraw Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-0">
+            <p className="text-3xl font-semibold text-foreground tracking-tight">
+              {formatCurrency(walletData?.withdraw_balance || 0)}
+            </p>
+            {(walletData?.pending_balance || 0) > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                + {formatCurrency(walletData.pending_balance)} pending
               </p>
-              {(walletData?.pending_balance || 0) > 0 && <p className="text-sm text-muted-foreground mt-2">
-                  + {formatCurrency(walletData.pending_balance)} pending
-                </p>}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>
-                <WalletIcon className="w-4 h-4 mr-1.5" />
-                Withdraw
-              </Button>
-              <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>
-                <ArrowUpRight className="w-4 h-4 mr-1.5" />
-                Fund Campaign
-              </Button>
-              <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>
-                <Plus className="w-4 h-4 mr-1.5" />
-                Add Funds
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            )}
+            {(walletData?.pending_balance || 0) === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Available to withdraw
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button variant="ghost" onClick={handleOpenWithdraw} disabled={(walletData?.withdraw_balance || 0) <= 0} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          <WalletIcon className="w-4 h-4 mr-1.5" />
+          Withdraw
+        </Button>
+        <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          <ArrowUpRight className="w-4 h-4 mr-1.5" />
+          Fund Campaign
+        </Button>
+        <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]" style={{
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          <Plus className="w-4 h-4 mr-1.5" />
+          Add Funds
+        </Button>
+      </div>
 
       {/* Transaction History */}
       <Card className="border-border">
