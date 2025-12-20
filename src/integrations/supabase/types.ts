@@ -1979,6 +1979,7 @@ export type Database = {
           referral_earnings: number | null
           referral_tier: Database["public"]["Enums"]["referral_tier"] | null
           referred_by: string | null
+          signup_url: string | null
           successful_referrals: number | null
           tier_bonus_claimed_at: Json | null
           total_earnings: number | null
@@ -1991,6 +1992,11 @@ export type Database = {
           twitter_username: string | null
           updated_at: string | null
           username: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
           views_score: number | null
         }
         Insert: {
@@ -2025,6 +2031,7 @@ export type Database = {
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          signup_url?: string | null
           successful_referrals?: number | null
           tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
@@ -2037,6 +2044,11 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string | null
           username: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           views_score?: number | null
         }
         Update: {
@@ -2071,6 +2083,7 @@ export type Database = {
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          signup_url?: string | null
           successful_referrals?: number | null
           tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
@@ -2083,6 +2096,11 @@ export type Database = {
           twitter_username?: string | null
           updated_at?: string | null
           username?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           views_score?: number | null
         }
         Relationships: []

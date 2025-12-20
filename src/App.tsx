@@ -12,6 +12,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useUtmTracking } from "@/hooks/useUtmTracking";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Discover from "./pages/Discover";
@@ -61,6 +62,12 @@ import BrandPublicPage from "./pages/BrandPublicPage";
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 import { getSubdomainSlug } from "./utils/subdomain";
 const queryClient = new QueryClient();
+
+// Component to track UTM params on app load
+function UtmTracker() {
+  useUtmTracking();
+  return null;
+}
 
 // Redirect /join/:slug to discover page with campaign slug param
 function JoinRedirect() {
@@ -139,6 +146,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <UtmTracker />
             <SubdomainHandler>
               <Routes>
                 <Route path="/" element={<Index />} />
