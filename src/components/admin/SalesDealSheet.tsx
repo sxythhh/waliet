@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ManageRoadmapDialog } from "@/components/admin/ManageRoadmapDialog";
+import { EditBrandSubscriptionDialog } from "@/components/admin/EditBrandSubscriptionDialog";
+import { AdjustBrandWalletDialog } from "@/components/admin/AdjustBrandWalletDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarDays, ExternalLink, Trash2, Users, CreditCard, Globe, User, Crown, Power, Pencil, Map } from "lucide-react";
+import { CalendarDays, ExternalLink, Trash2, Users, CreditCard, Globe, User, Crown, Power, Pencil, Map, Wallet } from "lucide-react";
 
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 
@@ -77,6 +79,7 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
   const [brandOwner, setBrandOwner] = useState<BrandOwner | null>(null);
   const [memberCount, setMemberCount] = useState(0);
   const [campaignCount, setCampaignCount] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     if (deal?.brands?.id && open) {
@@ -118,6 +121,23 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
       .select("*", { count: "exact", head: true })
       .eq("brand_id", deal.brands.id);
     setCampaignCount(campaigns || 0);
+
+    // Fetch wallet balance
+    const { data: txData } = await supabase
+      .from("brand_wallet_transactions")
+      .select("type, amount, status")
+      .eq("brand_id", deal.brands.id);
+
+    const calculatedBalance = (txData || []).reduce((acc, tx) => {
+      if (tx.status !== "completed") return acc;
+      const txAmount = Number(tx.amount) || 0;
+      if (["deposit", "topup", "refund", "admin_credit"].includes(tx.type)) {
+        return acc + txAmount;
+      } else {
+        return acc - txAmount;
+      }
+    }, 0);
+    setWalletBalance(calculatedBalance);
   };
 
   const toggleBrandActive = async () => {
@@ -260,9 +280,18 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
 
             {/* Subscription Section */}
             <div className="bg-muted/30 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <CreditCard className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Subscription</span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Subscription</span>
+                </div>
+                <EditBrandSubscriptionDialog
+                  brandId={deal.brands.id}
+                  currentStatus={deal.brands.subscription_status || null}
+                  currentPlan={deal.brands.subscription_plan || null}
+                  currentExpiresAt={deal.brands.subscription_expires_at || null}
+                  onSuccess={onUpdate}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
@@ -277,6 +306,26 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 </div>
                 {getSubscriptionBadge()}
               </div>
+            </div>
+
+            {/* Wallet Section */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-emerald-500" />
+                  <span className="text-sm font-medium">Wallet</span>
+                </div>
+                <AdjustBrandWalletDialog
+                  brandId={deal.brands.id}
+                  brandName={deal.brands.name}
+                  onSuccess={() => {
+                    fetchBrandContext();
+                    onUpdate?.();
+                  }}
+                />
+              </div>
+              <p className="text-2xl font-semibold">${walletBalance.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">Available Balance</p>
             </div>
 
             {/* Description */}
