@@ -641,7 +641,7 @@ export function CampaignCreationWizard({
                           <Wallet className="w-5 h-5 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Available Balance</p>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Virality Balance</p>
                           <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
                             {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                           </p>

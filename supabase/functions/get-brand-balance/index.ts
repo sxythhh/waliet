@@ -105,6 +105,8 @@ serve(async (req) => {
       // Brand hasn't set up their Whop company yet - return local balance only
       return new Response(JSON.stringify({ 
         balance: localBalance,
+        virality_balance: localBalance,
+        withdraw_balance: 0,
         pending_balance: 0,
         currency: 'usd',
         has_whop_company: false
@@ -132,6 +134,8 @@ serve(async (req) => {
       if (whopResponse.status === 404) {
         return new Response(JSON.stringify({ 
           balance: localBalance,
+          virality_balance: localBalance,
+          withdraw_balance: 0,
           pending_balance: 0,
           currency: 'usd',
           has_whop_company: true,
@@ -150,11 +154,13 @@ serve(async (req) => {
     const ledgerData = await whopResponse.json();
     console.log('Whop ledger data:', ledgerData);
 
-    // Combine Whop balance with local wallet balance
-    const totalBalance = (ledgerData.balance || 0) + localBalance;
+    const whopBalance = ledgerData.balance || 0;
+    const totalBalance = whopBalance + localBalance;
 
     return new Response(JSON.stringify({ 
       balance: totalBalance,
+      virality_balance: localBalance,
+      withdraw_balance: whopBalance,
       pending_balance: ledgerData.pending_balance || 0,
       currency: ledgerData.currency || 'usd',
       has_whop_company: true,
