@@ -153,10 +153,11 @@ export function AllocateBudgetDialog({
         </DialogHeader>
 
         <div className="space-y-6 pt-2">
-          {/* Available Balance */}
+          {/* Virality Balance */}
           <div className="bg-[#1a1a1a] rounded-lg p-4">
-            <p className="text-sm text-neutral-400 mb-1">Available Balance</p>
+            <p className="text-sm text-neutral-400 mb-1">Virality Balance</p>
             <p className="text-2xl font-bold text-white">{formatCurrency(availableBalance)}</p>
+            <p className="text-xs text-neutral-500 mt-1">Available for campaign funding</p>
           </div>
 
           {/* Type Selection */}
