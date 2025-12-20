@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon } from "lucide-react";
+import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight } from "lucide-react";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
 import { WithdrawDialog } from "./WithdrawDialog";
+import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 interface BrandWalletTabProps {
   brandId: string;
@@ -44,6 +46,8 @@ export function BrandWalletTab({
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const { isAdmin } = useAdminCheck();
   const fetchWalletData = async () => {
     try {
       const {
@@ -353,19 +357,27 @@ export function BrandWalletTab({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
         <Button variant="ghost" onClick={handleOpenWithdraw} disabled={(walletData?.withdraw_balance || 0) <= 0} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
           <WalletIcon className="w-4 h-4 mr-1.5" />
           Withdraw
         </Button>
-        <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+        <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.virality_balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
           <ArrowUpRight className="w-4 h-4 mr-1.5" />
           Fund Campaign
         </Button>
+        {isAdmin && (
+          <Button onClick={() => setTransferOpen(true)} disabled={(walletData?.virality_balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+            fontFamily: 'Inter, sans-serif'
+          }}>
+            <ArrowRight className="w-4 h-4 mr-1.5" />
+            Transfer to Withdraw
+          </Button>
+        )}
         <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
@@ -416,11 +428,24 @@ export function BrandWalletTab({
       fetchTransactions();
     }} />
 
-      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} availableBalance={walletData?.balance || 0} onSuccess={() => {
+      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} availableBalance={walletData?.virality_balance || 0} onSuccess={() => {
       fetchWalletData();
       fetchTransactions();
     }} />
 
       <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} brandId={brandId} brandSlug={brandSlug} />
+
+      {isAdmin && (
+        <TransferToWithdrawDialog 
+          open={transferOpen} 
+          onOpenChange={setTransferOpen} 
+          brandId={brandId} 
+          viralityBalance={walletData?.virality_balance || 0} 
+          onSuccess={() => {
+            fetchWalletData();
+            fetchTransactions();
+          }} 
+        />
+      )}
     </div>;
 }
