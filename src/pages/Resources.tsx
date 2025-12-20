@@ -186,55 +186,53 @@ export default function Resources() {
               </Link>
               
               <NavigationMenu className="hidden md:flex">
-                <NavigationMenuList className="gap-1">
+                <NavigationMenuList>
                   <NavigationMenuItem>
-                    <NavigationMenuTrigger className="font-inter tracking-[-0.5px] text-white/70 hover:text-white hover:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-white">
-                      For Brands
+                    <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-transparent font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-transparent">
+                      Platform
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <div className="w-[400px] p-4 bg-[#0f0f0f] border border-white/10 rounded-xl">
+                      <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl">
                         <NavigationMenuLink asChild>
-                          <Link to="/apply" className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                            <img src={blueprintsMenuIcon} alt="" className="w-8 h-8 mt-0.5" />
+                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                            <img src={blueprintsMenuIcon} alt="" className="w-5 h-5" />
                             <div>
-                              <p className="font-inter tracking-[-0.5px] font-medium text-white">Blueprints</p>
-                              <p className="text-sm text-white/50 font-inter tracking-[-0.5px]">Create structured content guidelines</p>
+                              <div className="font-medium text-white">Blueprints</div>
+                              <div className="text-xs text-white/50">Campaign templates & briefs</div>
                             </div>
                           </Link>
                         </NavigationMenuLink>
                         <NavigationMenuLink asChild>
-                          <Link to="/apply" className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                            <img src={campaignsMenuIcon} alt="" className="w-8 h-8 mt-0.5" />
+                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                            <img src={campaignsMenuIcon} alt="" className="w-5 h-5" />
                             <div>
-                              <p className="font-inter tracking-[-0.5px] font-medium text-white">UGC Campaigns</p>
-                              <p className="text-sm text-white/50 font-inter tracking-[-0.5px]">Launch RPM-based creator campaigns</p>
+                              <div className="font-medium text-white">Campaigns</div>
+                              <div className="text-xs text-white/50">RPM-based creator programs</div>
                             </div>
                           </Link>
                         </NavigationMenuLink>
                         <NavigationMenuLink asChild>
-                          <Link to="/apply" className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                            <img src={boostsMenuIcon} alt="" className="w-8 h-8 mt-0.5" />
+                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                            <img src={boostsMenuIcon} alt="" className="w-5 h-5" />
                             <div>
-                              <p className="font-inter tracking-[-0.5px] font-medium text-white">Boosts</p>
-                              <p className="text-sm text-white/50 font-inter tracking-[-0.5px]">Fixed-fee creator partnerships</p>
+                              <div className="font-medium text-white">Boosts</div>
+                              <div className="text-xs text-white/50">Fixed-rate video bounties</div>
                             </div>
                           </Link>
                         </NavigationMenuLink>
                       </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Link to="/discover" className="px-3 py-2 font-inter tracking-[-0.5px] text-white/70 hover:text-white text-sm">
-                      For Creators
-                    </Link>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <Link to="/resources" className="px-3 py-2 font-inter tracking-[-0.5px] text-white text-sm">
-                      Resources
-                    </Link>
-                  </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
+              
+              <Link to="/resources" className="px-3 py-2 text-sm text-white hover:text-white font-inter tracking-[-0.5px]">
+                Resources
+              </Link>
+              
+              <Link to="/contact" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
+                Contact
+              </Link>
             </div>
             
             <div className="flex items-center gap-3">
