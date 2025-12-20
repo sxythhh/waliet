@@ -53,6 +53,7 @@ export function CreateBountyDialog({
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get selected blueprint
@@ -75,29 +76,39 @@ export function CreateBountyDialog({
   });
   const [newQuestion, setNewQuestion] = useState("");
 
-  // Fetch brand's available balance
+  // Fetch brand's available balance and subscription status
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchBrandData = async () => {
       if (open && brandId) {
         setLoadingBalance(true);
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
+          // Fetch balance
           const { data, error } = await supabase.functions.invoke('get-brand-balance', {
             body: { brand_id: brandId }
           });
           
           if (error) throw error;
-          setAvailableBalance(data?.balance || 0);
+          setAvailableBalance(data?.virality_balance || 0);
+
+          // Fetch subscription status
+          const { data: brandData } = await supabase
+            .from('brands')
+            .select('subscription_status')
+            .eq('id', brandId)
+            .single();
+          
+          setSubscriptionStatus(brandData?.subscription_status || null);
         } catch (error) {
-          console.error('Error fetching balance:', error);
+          console.error('Error fetching brand data:', error);
         } finally {
           setLoadingBalance(false);
         }
       }
     };
-    fetchBalance();
+    fetchBrandData();
   }, [open, brandId]);
 
   useEffect(() => {
@@ -189,6 +200,9 @@ export function CreateBountyDialog({
       // Get platforms from selected blueprint or default to all
       const blueprintPlatforms = selectedBlueprint?.platforms || ['tiktok', 'instagram', 'youtube'];
       const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}`;
+      // Determine status based on subscription
+      const boostStatus = subscriptionStatus === 'active' ? 'active' : 'draft';
+      
       const {
         error
       } = await supabase.from('bounty_campaigns').insert({
@@ -202,7 +216,7 @@ export function CreateBountyDialog({
         start_date: formData.start_date ? format(formData.start_date, 'yyyy-MM-dd') : null,
         end_date: formData.end_date ? format(formData.end_date, 'yyyy-MM-dd') : null,
         banner_url,
-        status: formData.status,
+        status: boostStatus,
         blueprint_embed_url: formData.blueprint_embed_url || null,
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
         is_private: formData.is_private,
@@ -210,7 +224,12 @@ export function CreateBountyDialog({
         content_distribution: formData.content_distribution
       });
       if (error) throw error;
-      toast.success("Boost created successfully!");
+      
+      if (subscriptionStatus === 'active') {
+        toast.success("Boost created and launched!");
+      } else {
+        toast.success("Boost saved as draft. Activate your subscription to launch it.");
+      }
       onSuccess?.();
       onOpenChange(false);
       resetForm();

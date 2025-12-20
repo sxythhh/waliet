@@ -169,34 +169,45 @@ export function CampaignCreationWizard({
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(campaign?.blueprint_id || initialBlueprintId || null);
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
   } = useAdminCheck();
 
-  // Fetch brand's available balance
+  // Fetch brand's available balance and subscription status
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchBrandData = async () => {
       if (open && brandId) {
         setLoadingBalance(true);
         try {
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) return;
           
+          // Fetch balance
           const { data, error } = await supabase.functions.invoke('get-brand-balance', {
             body: { brand_id: brandId }
           });
           
           if (error) throw error;
-          setAvailableBalance(data?.balance || 0);
+          setAvailableBalance(data?.virality_balance || 0);
+
+          // Fetch subscription status
+          const { data: brandData } = await supabase
+            .from('brands')
+            .select('subscription_status')
+            .eq('id', brandId)
+            .single();
+          
+          setSubscriptionStatus(brandData?.subscription_status || null);
         } catch (error) {
-          console.error('Error fetching balance:', error);
+          console.error('Error fetching brand data:', error);
         } finally {
           setLoadingBalance(false);
         }
       }
     };
-    fetchBalance();
+    fetchBrandData();
   }, [open, brandId]);
 
   // Initialize manual budget used with current value
@@ -553,7 +564,7 @@ export function CampaignCreationWizard({
           brand_id: brandId,
           brand_name: brandName,
           brand_logo_url: brandData?.logo_url || null,
-          status: "active",
+          status: subscriptionStatus === 'active' ? "active" : "draft",
           slug: slug,
           is_featured: false,
           blueprint_id: selectedBlueprintId || initialBlueprintId || null
@@ -562,7 +573,12 @@ export function CampaignCreationWizard({
           error
         } = await supabase.from("campaigns").insert(insertData);
         if (error) throw error;
-        toast.success("Campaign created successfully!");
+        
+        if (subscriptionStatus === 'active') {
+          toast.success("Campaign created and launched!");
+        } else {
+          toast.success("Campaign saved as draft. Activate your subscription to launch it.");
+        }
       }
 
       // Save shortimize API key to brand if admin
@@ -1115,29 +1131,68 @@ export function CampaignCreationWizard({
                           />
                         )}
 
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                          <div>
-                            <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Pause Campaign</span>
-                            <p className="text-xs text-muted-foreground">Hide from discover</p>
+                        {/* Launch button for draft campaigns when subscription is active */}
+                        {campaign?.status === 'draft' && (
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
+                            <div>
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">
+                                {subscriptionStatus === 'active' ? 'Ready to Launch' : 'Subscription Required'}
+                              </span>
+                              <p className="text-xs text-muted-foreground">
+                                {subscriptionStatus === 'active' 
+                                  ? 'This campaign is in draft mode. Launch it to make it visible.'
+                                  : 'Activate your subscription to launch this campaign.'}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={subscriptionStatus !== 'active'}
+                              onClick={async () => {
+                                if (!campaign?.id) return;
+                                const { error } = await supabase
+                                  .from('campaigns')
+                                  .update({ status: 'active' })
+                                  .eq('id', campaign.id);
+                                if (error) {
+                                  toast.error('Failed to launch campaign');
+                                } else {
+                                  toast.success('Campaign launched!');
+                                  onSuccess?.();
+                                }
+                              }}
+                              className="gap-1.5"
+                            >
+                              Launch
+                            </Button>
                           </div>
-                          <Switch
-                            checked={campaign?.status === 'paused'}
-                            onCheckedChange={async checked => {
-                              if (!campaign?.id) return;
-                              const newStatus = checked ? 'paused' : 'active';
-                              const { error } = await supabase
-                                .from('campaigns')
-                                .update({ status: newStatus })
-                                .eq('id', campaign.id);
-                              if (error) {
-                                toast.error('Failed to update campaign status');
-                              } else {
-                                toast.success(checked ? 'Campaign paused' : 'Campaign activated');
-                                onSuccess?.();
-                              }
-                            }}
-                          />
-                        </div>
+                        )}
+
+                        {campaign?.status !== 'draft' && (
+                          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                            <div>
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Pause Campaign</span>
+                              <p className="text-xs text-muted-foreground">Hide from discover</p>
+                            </div>
+                            <Switch
+                              checked={campaign?.status === 'paused'}
+                              onCheckedChange={async checked => {
+                                if (!campaign?.id) return;
+                                const newStatus = checked ? 'paused' : 'active';
+                                const { error } = await supabase
+                                  .from('campaigns')
+                                  .update({ status: newStatus })
+                                  .eq('id', campaign.id);
+                                if (error) {
+                                  toast.error('Failed to update campaign status');
+                                } else {
+                                  toast.success(checked ? 'Campaign paused' : 'Campaign activated');
+                                  onSuccess?.();
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
 
                         <div className="flex gap-2">
                           <Button
