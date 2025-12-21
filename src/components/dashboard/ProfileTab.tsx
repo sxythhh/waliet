@@ -140,6 +140,7 @@ export function ProfileTab() {
   } | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [expandedCampaignAccounts, setExpandedCampaignAccounts] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileInfoRef = useRef<HTMLDivElement>(null);
   const connectedAccountsRef = useRef<HTMLDivElement>(null);
@@ -987,41 +988,86 @@ export function ProfileTab() {
                               </button>}
                             
                             {/* Linked Campaigns */}
-                            <div className="space-y-2">
-                              <span className="text-[11px] text-white/50 tracking-wide" style={{
-                          fontFamily: 'Geist',
-                          letterSpacing: '-0.5px'
-                        }}>
-                                Linked Campaigns
-                              </span>
-                              {connectedCampaigns.length > 0 ? <div className="space-y-2">
-                                  {connectedCampaigns.map(({
-                            connection_id,
-                            campaign
-                          }) => <div key={campaign.id} style={{
-                            fontFamily: 'Geist',
-                            letterSpacing: '-0.5px'
-                          }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group/campaign">
-                                      {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
-                                      <span className="text-sm text-white flex-1">{campaign.title}</span>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleUnlinkCampaign(connection_id, campaign.title);
-                                        }}
-                                        className="opacity-0 group-hover/campaign:opacity-100 p-1 rounded hover:bg-white/10 transition-all"
-                                        title="Unlink from campaign"
-                                      >
-                                        <X className="w-3.5 h-3.5 text-white/60 hover:text-white" />
-                                      </button>
-                                    </div>)}
-                                </div> : <p className="text-sm text-white/40 px-1" style={{
-                          fontFamily: 'Geist',
-                          letterSpacing: '-0.5px'
-                        }}>
-                                  No campaigns linked
-                                </p>}
-                            </div>
+                            {(() => {
+                              const INITIAL_DISPLAY_COUNT = 3;
+                              const isExpanded = expandedCampaignAccounts.has(account.id);
+                              const displayedCampaigns = isExpanded 
+                                ? connectedCampaigns 
+                                : connectedCampaigns.slice(0, INITIAL_DISPLAY_COUNT);
+                              const hasMore = connectedCampaigns.length > INITIAL_DISPLAY_COUNT;
+                              
+                              const toggleExpanded = () => {
+                                setExpandedCampaignAccounts(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(account.id)) {
+                                    next.delete(account.id);
+                                  } else {
+                                    next.add(account.id);
+                                  }
+                                  return next;
+                                });
+                              };
+                              
+                              return (
+                                <div className="space-y-2">
+                                  <span className="text-[11px] text-white/50 tracking-wide" style={{
+                                    fontFamily: 'Geist',
+                                    letterSpacing: '-0.5px'
+                                  }}>
+                                    Linked Campaigns ({connectedCampaigns.length})
+                                  </span>
+                                  {connectedCampaigns.length > 0 ? (
+                                    <div className="space-y-2">
+                                      <div className={`space-y-2 ${isExpanded ? 'max-h-40 overflow-y-auto pr-1' : ''}`}>
+                                        {displayedCampaigns.map(({
+                                          connection_id,
+                                          campaign
+                                        }) => (
+                                          <div key={campaign.id} style={{
+                                            fontFamily: 'Geist',
+                                            letterSpacing: '-0.5px'
+                                          }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group/campaign">
+                                            {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
+                                            <span className="text-sm text-white flex-1">{campaign.title}</span>
+                                            <button 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUnlinkCampaign(connection_id, campaign.title);
+                                              }}
+                                              className="opacity-0 group-hover/campaign:opacity-100 p-1 rounded hover:bg-white/10 transition-all"
+                                              title="Unlink from campaign"
+                                            >
+                                              <X className="w-3.5 h-3.5 text-white/60 hover:text-white" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      {hasMore && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleExpanded();
+                                          }}
+                                          className="w-full text-xs text-white/60 hover:text-white py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors"
+                                          style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}
+                                        >
+                                          {isExpanded 
+                                            ? 'Show less' 
+                                            : `Show ${connectedCampaigns.length - INITIAL_DISPLAY_COUNT} more`}
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm text-white/40 px-1" style={{
+                                      fontFamily: 'Geist',
+                                      letterSpacing: '-0.5px'
+                                    }}>
+                                      No campaigns linked
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
                             {/* Actions */}
                             <div className="flex gap-2 pt-1">
