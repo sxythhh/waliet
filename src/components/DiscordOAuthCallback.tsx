@@ -95,9 +95,8 @@ export function DiscordOAuthCallback() {
       // This is authentication flow (not popup)
       try {
         setStatus('loading');
-        // Use the EXACT same redirect URI that was used in the authorization request
-        const redirectUri = 'https://virality.gg/discord/callback';
-        
+        // Must exactly match the redirect_uri used in the initial authorize URL
+        const redirectUri = `${window.location.origin}/discord/callback`;
         // Call the discord-auth function to sign in/up
         const { data, error: functionError } = await supabase.functions.invoke('discord-auth', {
           body: { code, redirectUri }
