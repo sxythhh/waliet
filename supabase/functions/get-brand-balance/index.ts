@@ -152,17 +152,39 @@ serve(async (req) => {
     }
 
     const ledgerData = await whopResponse.json();
-    console.log('Whop ledger data:', ledgerData);
+    console.log('Whop ledger data:', JSON.stringify(ledgerData, null, 2));
 
-    const whopBalance = ledgerData.balance || 0;
+    // Handle both old format (direct balance) and new format (balanceCaches.nodes)
+    let whopBalance = 0;
+    let pendingBalance = 0;
+    let currency = 'usd';
+
+    // Check for new API structure with balanceCaches
+    if (ledgerData.balanceCaches?.nodes?.length > 0) {
+      // Find USD balance or use first available
+      const usdBalance = ledgerData.balanceCaches.nodes.find((n: any) => n.currency === 'usd');
+      const balanceNode = usdBalance || ledgerData.balanceCaches.nodes[0];
+      // Whop returns balance in cents, convert to dollars
+      whopBalance = (balanceNode?.balance || 0) / 100;
+      pendingBalance = (balanceNode?.pendingBalance || 0) / 100;
+      currency = balanceNode?.currency || 'usd';
+    } else if (ledgerData.balance !== undefined) {
+      // Old format - balance might be in cents
+      whopBalance = ledgerData.balance / 100;
+      pendingBalance = (ledgerData.pending_balance || 0) / 100;
+      currency = ledgerData.currency || 'usd';
+    }
+
+    console.log(`Parsed Whop balance: $${whopBalance}, pending: $${pendingBalance}`);
+
     const totalBalance = whopBalance + localBalance;
 
     return new Response(JSON.stringify({ 
       balance: totalBalance,
       virality_balance: localBalance,
       withdraw_balance: whopBalance,
-      pending_balance: ledgerData.pending_balance || 0,
-      currency: ledgerData.currency || 'usd',
+      pending_balance: pendingBalance,
+      currency: currency,
       has_whop_company: true,
       onboarding_complete: brand.whop_onboarding_complete
     }), {
