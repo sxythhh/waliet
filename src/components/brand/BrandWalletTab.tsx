@@ -312,49 +312,22 @@ export function BrandWalletTab({
       {/* Onboarding Card - Show if not complete */}
       {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
 
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Virality Balance Card */}
-        <Card className="border-border overflow-hidden">
-          <CardHeader className="pb-2 px-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Virality Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-3xl font-semibold text-foreground tracking-tight">
-              {formatCurrency(walletData?.virality_balance || 0)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Available for campaigns
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Withdraw Balance Card */}
-        <Card className="border-border overflow-hidden">
-          <CardHeader className="pb-2 px-0">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Withdraw Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-0">
-            <p className="text-3xl font-semibold text-foreground tracking-tight">
-              {formatCurrency(walletData?.withdraw_balance || 0)}
-            </p>
-            {(walletData?.pending_balance || 0) > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                + {formatCurrency(walletData.pending_balance)} pending
-              </p>
-            )}
-            {(walletData?.pending_balance || 0) === 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Available to withdraw
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      {/* Balance Card */}
+      <Card className="border-border overflow-hidden">
+        <CardHeader className="pb-2 px-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            Virality Balance
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-0">
+          <p className="text-3xl font-semibold text-foreground tracking-tight">
+            {formatCurrency(walletData?.virality_balance || 0)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Available for campaigns
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
