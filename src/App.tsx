@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import Discover from "./pages/Discover";
 import CampaignDetail from "./pages/CampaignDetail";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import BrandAuth from "./pages/BrandAuth";
 import Dashboard from "./pages/Dashboard";
 import CampaignJoin from "./pages/CampaignJoin";
@@ -151,12 +152,13 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/b/:slug" element={<BrandPublicPage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
-              <Route path="/x/callback" element={<XOAuthCallback />} />
-              <Route path="/brand-auth" element={<BrandAuth />} />
-              <Route path="/apply" element={<Apply />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+                <Route path="/x/callback" element={<XOAuthCallback />} />
+                <Route path="/brand-auth" element={<BrandAuth />} />
+                <Route path="/apply" element={<Apply />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/creator-terms" element={<CreatorTerms />} />
               <Route path="/terms" element={<Terms />} />
