@@ -89,10 +89,6 @@ const brandMenuItems = [{
   tab: "blueprints",
   icon: null as any
 }, {
-  title: "Scope",
-  tab: "scope",
-  icon: null as any
-}, {
   title: "Creators",
   tab: "creators",
   icon: null as any
