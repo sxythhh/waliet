@@ -54,6 +54,37 @@ export default function Dashboard() {
   const isBrandMode = !isCreatorMode;
 
   const { session, loading: authLoading } = useAuth();
+  const [oauthCompleting, setOauthCompleting] = useState(false);
+
+  // If we land on /dashboard with implicit tokens in the hash (some OAuth setups),
+  // complete the session before applying the auth gate.
+  useEffect(() => {
+    const run = async () => {
+      const hash = window.location.hash || "";
+      if (!hash.includes("access_token=") || !hash.includes("refresh_token=")) return;
+
+      try {
+        setOauthCompleting(true);
+        const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+        const access_token = hashParams.get("access_token");
+        const refresh_token = hashParams.get("refresh_token");
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) throw error;
+        }
+
+        // Remove tokens from URL immediately
+        window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
+      } catch (e: any) {
+        toast.error(e?.message || "Failed to complete sign-in");
+      } finally {
+        setOauthCompleting(false);
+      }
+    };
+
+    run();
+  }, []);
 
   useEffect(() => {
     // Restore last workspace from localStorage if no workspace is set in URL
@@ -71,7 +102,7 @@ export default function Dashboard() {
 
   // Auth gate + initial data load (wait for auth to finish initializing after OAuth redirect)
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || oauthCompleting) return;
 
     if (!session) {
       navigate("/auth", { replace: true });
@@ -104,7 +135,7 @@ export default function Dashboard() {
     };
 
     loadProfile();
-  }, [authLoading, session, navigate, searchParams]);
+  }, [authLoading, oauthCompleting, session, navigate, searchParams]);
 
   // Fetch brand data when workspace changes
   useEffect(() => {
