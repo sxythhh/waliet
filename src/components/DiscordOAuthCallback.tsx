@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -8,9 +8,14 @@ export function DiscordOAuthCallback() {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
     const handleCallback = async () => {
+      // Prevent double processing
+      if (hasProcessed.current) return;
+      hasProcessed.current = true;
+
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
@@ -90,7 +95,8 @@ export function DiscordOAuthCallback() {
       // This is authentication flow (not popup)
       try {
         setStatus('loading');
-        const redirectUri = `${window.location.origin}/discord/callback`;
+        // Use the EXACT same redirect URI that was used in the authorization request
+        const redirectUri = 'https://virality.gg/discord/callback';
         
         // Call the discord-auth function to sign in/up
         const { data, error: functionError } = await supabase.functions.invoke('discord-auth', {
