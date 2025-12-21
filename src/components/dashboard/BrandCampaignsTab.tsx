@@ -296,7 +296,7 @@ export function BrandCampaignsTab({
           </div>
 
           {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
             <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
               <div className="p-2 bg-muted rounded-lg shrink-0">
                 <img src={schoolIcon} alt="" className="w-5 h-5" />
@@ -338,7 +338,7 @@ export function BrandCampaignsTab({
             </>}
 
           {/* Combined Campaigns & Boosts Grid */}
-          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-4">
+          {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
