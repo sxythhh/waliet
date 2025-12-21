@@ -24,46 +24,87 @@ import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { ScopeTab } from "@/components/brand/ScopeTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useAuth } from "@/contexts/AuthContext";
+
+type BrandSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  subscription_status: string | null;
+};
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
   const [privateDialogOpen, setPrivateDialogOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingCard, setShowOnboardingCard] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
-  const { completedCount, markOnboardingComplete } = useOnboardingStatus();
+  const { markOnboardingComplete } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
-  const [currentBrand, setCurrentBrand] = useState<{
-    id: string;
-    name: string;
-    slug: string;
-    subscription_status: string | null;
-  } | null>(null);
+  const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const navigate = useNavigate();
+
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBlueprintId = searchParams.get("blueprint");
+
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
+
+  const { session, loading: authLoading } = useAuth();
+
   useEffect(() => {
     // Restore last workspace from localStorage if no workspace is set in URL
     const urlWorkspace = searchParams.get("workspace");
     const lastWorkspace = localStorage.getItem("lastWorkspace");
-    
+
     if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("workspace", lastWorkspace);
       newParams.set("tab", searchParams.get("tab") || "campaigns");
       setSearchParams(newParams, { replace: true });
     }
-    
-    checkAuth();
-    fetchCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auth gate + initial data load (wait for auth to finish initializing after OAuth redirect)
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!session) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+
+    setUserId(session.user.id);
+
+    const loadProfile = async () => {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      setProfile(profileData);
+
+      // Check if user selected brand during onboarding
+      const pendingBrand = sessionStorage.getItem("pendingBrandCreation");
+      if (pendingBrand === "true") {
+        sessionStorage.removeItem("pendingBrandCreation");
+        setShowCreateBrandDialog(true);
+      }
+
+      // Show onboarding card popup for new users in creator mode
+      const currentWorkspace = searchParams.get("workspace") || "creator";
+      if (profileData && !profileData.onboarding_completed && currentWorkspace === "creator") {
+        setShowOnboardingCard(true);
+      }
+    };
+
+    loadProfile();
+  }, [authLoading, session, navigate, searchParams]);
 
   // Fetch brand data when workspace changes
   useEffect(() => {
@@ -76,81 +117,46 @@ export default function Dashboard() {
 
   // Handle brand onboarding completion from URL params
   useEffect(() => {
-    const onboardingStatus = searchParams.get('onboarding');
-    const status = searchParams.get('status');
-    
-    if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success') && currentBrand) {
+    const onboardingStatus = searchParams.get("onboarding");
+    const status = searchParams.get("status");
+
+    if (onboardingStatus === "complete" && (status === "submitted" || status === "success") && currentBrand) {
       const updateOnboardingStatus = async () => {
         try {
           const { error } = await supabase
-            .from('brands')
+            .from("brands")
             .update({ whop_onboarding_complete: true })
-            .eq('id', currentBrand.id);
-          
+            .eq("id", currentBrand.id);
+
           if (!error) {
-            toast.success('Verification completed successfully!');
+            toast.success("Verification completed successfully!");
           }
-          
+
           // Clean up URL params
           const newParams = new URLSearchParams(searchParams);
-          newParams.delete('onboarding');
-          newParams.delete('status');
+          newParams.delete("onboarding");
+          newParams.delete("status");
           setSearchParams(newParams, { replace: true });
         } catch (error) {
-          console.error('Error updating onboarding status:', error);
+          console.error("Error updating onboarding status:", error);
         }
       };
-      
+
       updateOnboardingStatus();
     }
-  }, [searchParams, currentBrand]);
+  }, [searchParams, currentBrand, setSearchParams]);
 
   const fetchBrandBySlug = async (slug: string) => {
-    const {
-      data
-    } = await supabase.from("brands").select("id, name, slug, subscription_status").eq("slug", slug).single();
+    const { data } = await supabase
+      .from("brands")
+      .select("id, name, slug, subscription_status")
+      .eq("slug", slug)
+      .single();
+
     if (data) {
       setCurrentBrand(data);
     }
   };
-  const checkAuth = async () => {
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
-    setUserId(session.user.id);
-    const {
-      data: profileData
-    } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
-    setProfile(profileData);
-
-    // Check if user selected brand during onboarding
-    const pendingBrand = sessionStorage.getItem('pendingBrandCreation');
-    if (pendingBrand === 'true') {
-      sessionStorage.removeItem('pendingBrandCreation');
-      setShowCreateBrandDialog(true);
-    }
-    
-    // Show onboarding card popup for new users in creator mode
-    const currentWorkspace = searchParams.get("workspace") || "creator";
-    if (profileData && !profileData.onboarding_completed && currentWorkspace === "creator") {
-      setShowOnboardingCard(true);
-    }
-  };
-  const fetchCampaigns = async () => {
-    const {
-      data
-    } = await supabase.from("campaigns").select("*").eq("status", "active").order("created_at", {
-      ascending: false
-    });
-    setCampaigns(data || []);
-  };
-  const { isAdmin } = useAdminCheck();
 
   const renderContent = () => {
     // Brand mode - show loading state while fetching brand data
