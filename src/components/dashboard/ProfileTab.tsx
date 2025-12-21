@@ -915,13 +915,8 @@ export function ProfileTab() {
                       <Popover>
                         <PopoverTrigger asChild>
                           <div className="flex-1 min-w-0 cursor-pointer">
-                            {/* Account Header with Avatar */}
+                            {/* Account Header */}
                             <div className="flex items-center gap-3">
-                              {/* Avatar */}
-                              {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="w-10 h-10 rounded-full object-cover flex-shrink-0 ring-2 ring-border/50 opacity-100" referrerPolicy="no-referrer" crossOrigin="anonymous" /> : <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-semibold text-base">
-                                  {account.username.charAt(0).toUpperCase()}
-                                </div>}
-                              
                               <div className="flex-1 min-w-0">
                                 {/* Username Row */}
                                 <div className="flex items-center gap-2">
