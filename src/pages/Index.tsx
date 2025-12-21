@@ -47,7 +47,7 @@ export default function Index() {
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <img alt="Virality" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-                <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
+                <span className="text-[17px] font-clash font-semibold text-white tracking-[-0.4px] -ml-0.5">VIRALITY</span>
               </div>
               
               {/* Nav Items */}
