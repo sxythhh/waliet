@@ -59,6 +59,7 @@ import BlueprintDetail from "./pages/BlueprintDetail";
 import Resources from "./pages/Resources";
 import BlogPost from "./pages/BlogPost";
 import BrandPublicPage from "./pages/BrandPublicPage";
+import Install from "./pages/Install";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 import { getSubdomainSlug } from "./utils/subdomain";
@@ -170,6 +171,7 @@ const App = () => (
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/course/:id" element={<PublicCourseDetail />} />
               <Route path="/support" element={<Support />} />
+              <Route path="/install" element={<Install />} />
               <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
               <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
               <Route path="/boost/:id" element={<PublicBounty />} />
