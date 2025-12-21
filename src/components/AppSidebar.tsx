@@ -166,7 +166,12 @@ export function AppSidebar() {
           } = await supabase.from("brands").select("subscription_status").eq("id", brandFromAll.id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
           // Fetch member count
-          const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", brandFromAll.id);
+          const {
+            count
+          } = await supabase.from("brand_members").select("id", {
+            count: 'exact',
+            head: true
+          }).eq("brand_id", brandFromAll.id);
           setCurrentBrandMemberCount(count || 0);
         } else if (brandFromMembership) {
           setCurrentBrandName(brandFromMembership.brands.name);
@@ -177,7 +182,12 @@ export function AppSidebar() {
           } = await supabase.from("brands").select("subscription_status").eq("id", brandFromMembership.brand_id).single();
           setCurrentBrandSubscriptionStatus(data?.subscription_status || null);
           // Fetch member count
-          const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", brandFromMembership.brand_id);
+          const {
+            count
+          } = await supabase.from("brand_members").select("id", {
+            count: 'exact',
+            head: true
+          }).eq("brand_id", brandFromMembership.brand_id);
           setCurrentBrandMemberCount(count || 0);
         }
       } else {
@@ -277,15 +287,10 @@ export function AppSidebar() {
         </Link>
         <div className="flex items-center gap-3">
           {/* Upgrade Plan Button - Mobile */}
-          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && (
-            <button 
-              onClick={() => setSubscriptionGateOpen(true)}
-              className="py-1.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-1.5"
-            >
+          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
               Upgrade
-            </button>
-          )}
+            </button>}
           <Popover>
             <PopoverTrigger asChild>
               <button className="cursor-pointer">
@@ -315,8 +320,8 @@ export function AppSidebar() {
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
                       <button onClick={() => {
-                        setShowCreateBrandDialog(true);
-                      }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-[#141414] hover:text-foreground">
+                    setShowCreateBrandDialog(true);
+                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-[#141414] hover:text-foreground">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
@@ -441,45 +446,33 @@ export function AppSidebar() {
               <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Current Workspace Details - Only show when in brand mode */}
-                  {!isCreatorMode && currentBrandId && (
-                    <div className="p-3 border-b border-[#1a1a1a]">
+                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] py-[7px] px-[7px]">
                       <div className="flex items-center gap-3 mb-3">
-                        {currentBrandLogo ? (
-                          <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
+                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
                             <span className="text-sm font-medium text-neutral-400 uppercase">{currentBrandName?.charAt(0)}</span>
-                          </div>
-                        )}
+                          </div>}
                         <div>
                           <p className="text-[13px] font-medium text-white truncate max-w-[160px]">{currentBrandName}</p>
                           <p className="text-[11px] text-neutral-500">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            setWorkspaceOpen(false);
-                            handleTabClick('profile');
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]"
-                        >
+                        <button onClick={() => {
+                    setWorkspaceOpen(false);
+                    handleTabClick('profile');
+                  }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]">
                           <img src={settingsFilledIcon} alt="" className="w-3.5 h-3.5" />
                           <span>Settings</span>
                         </button>
-                        <button
-                          onClick={() => {
-                            setWorkspaceOpen(false);
-                            setInviteMemberOpen(true);
-                          }}
-                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]"
-                        >
+                        <button onClick={() => {
+                    setWorkspaceOpen(false);
+                    setInviteMemberOpen(true);
+                  }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]">
                           <img src={personEditIcon} alt="" className="w-3.5 h-3.5" />
                           <span>Invite</span>
                         </button>
                       </div>
-                    </div>
-                  )}
+                    </div>}
                   
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
@@ -599,21 +592,15 @@ export function AppSidebar() {
         </nav>
 
         {/* Upgrade Plan Button - Only show in brand workspace when not subscribed */}
-        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && (
-          <div className="px-2 py-1">
-            <button 
-              onClick={() => setSubscriptionGateOpen(true)}
-              className="w-full py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2"
-            >
+        {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
+            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2">
               <img src={nutFillIcon} alt="" className="h-4 w-4" />
               Upgrade Plan
             </button>
-          </div>
-        )}
+          </div>}
 
         {/* Swap to Business CTA - Only show in creator mode if user has no workspaces */}
-        {isCreatorMode && !isCollapsed && brandMemberships.length === 0 && !isAdmin && (
-          <div className="px-2 pb-2">
+        {isCreatorMode && !isCollapsed && brandMemberships.length === 0 && !isAdmin && <div className="px-2 pb-2">
             <div className="rounded-lg bg-[#1a1a1a] p-3">
               <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
                 Swap to Business
@@ -621,15 +608,11 @@ export function AppSidebar() {
               <p className="font-['Geist'] text-[11px] tracking-[-0.5px] text-[#6f6f6f] mb-2">
                 Advanced analytics, unlimited campaigns, and priority support.
               </p>
-              <button 
-                className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" 
-                onClick={() => setShowCreateBrandDialog(true)}
-              >
+              <button className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" onClick={() => setShowCreateBrandDialog(true)}>
                 Create Workspace
               </button>
             </div>
-          </div>
-        )}
+          </div>}
 
 
         {/* User Profile Section */}
@@ -717,20 +700,20 @@ export function AppSidebar() {
     }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
-      <InviteMemberDialog 
-        open={inviteMemberOpen} 
-        onOpenChange={setInviteMemberOpen} 
-        brandId={currentBrandId} 
-        onInviteSent={() => {
-          // Refresh member count
-          const fetchMemberCount = async () => {
-            if (currentBrandId) {
-              const { count } = await supabase.from("brand_members").select("id", { count: 'exact', head: true }).eq("brand_id", currentBrandId);
-              setCurrentBrandMemberCount(count || 0);
-            }
-          };
-          fetchMemberCount();
-        }} 
-      />
+      <InviteMemberDialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen} brandId={currentBrandId} onInviteSent={() => {
+      // Refresh member count
+      const fetchMemberCount = async () => {
+        if (currentBrandId) {
+          const {
+            count
+          } = await supabase.from("brand_members").select("id", {
+            count: 'exact',
+            head: true
+          }).eq("brand_id", currentBrandId);
+          setCurrentBrandMemberCount(count || 0);
+        }
+      };
+      fetchMemberCount();
+    }} />
     </>;
 }
