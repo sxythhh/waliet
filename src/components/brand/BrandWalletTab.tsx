@@ -358,7 +358,7 @@ export function BrandWalletTab({
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-        <Button variant="ghost" onClick={handleOpenWithdraw} disabled={(walletData?.withdraw_balance || 0) <= 0} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+        <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
           <WalletIcon className="w-4 h-4 mr-1.5" />
