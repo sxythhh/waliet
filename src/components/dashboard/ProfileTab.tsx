@@ -219,7 +219,6 @@ export function ProfileTab() {
       `).eq("user_id", session.user.id).order("connected_at", {
       ascending: false
     });
-    
     if (error) {
       console.error('Error fetching social accounts:', error);
       return;
@@ -232,7 +231,7 @@ export function ProfileTab() {
           console.log(`Account ${acc.username}: ${acc.demographic_submissions.length} demographic submissions`);
         }
       });
-      
+
       // Fetch connected campaigns for each account
       const accountsWithCampaigns = await Promise.all(accounts.map(async account => {
         const {
@@ -322,13 +321,10 @@ export function ProfileTab() {
     }
 
     // Check if a record already exists (active or disconnected)
-    const { data: existingRecord, error: existingError } = await supabase
-      .from("social_account_campaigns")
-      .select("id, status")
-      .eq("social_account_id", selectedAccountForLinking.id)
-      .eq("campaign_id", campaignId)
-      .maybeSingle();
-
+    const {
+      data: existingRecord,
+      error: existingError
+    } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", selectedAccountForLinking.id).eq("campaign_id", campaignId).maybeSingle();
     if (existingError) {
       toast({
         variant: "destructive",
@@ -338,7 +334,6 @@ export function ProfileTab() {
       setLinkingCampaign(false);
       return;
     }
-
     if (existingRecord?.status === "active") {
       toast({
         variant: "destructive",
@@ -348,22 +343,17 @@ export function ProfileTab() {
       setLinkingCampaign(false);
       return;
     }
-
-    const { error } = existingRecord
-      ? await supabase
-          .from("social_account_campaigns")
-          .update({
-            status: "active",
-            disconnected_at: null
-          })
-          .eq("id", existingRecord.id)
-      : await supabase.from("social_account_campaigns").insert({
-          social_account_id: selectedAccountForLinking.id,
-          campaign_id: campaignId,
-          user_id: session.user.id,
-          status: "active"
-        });
-
+    const {
+      error
+    } = existingRecord ? await supabase.from("social_account_campaigns").update({
+      status: "active",
+      disconnected_at: null
+    }).eq("id", existingRecord.id) : await supabase.from("social_account_campaigns").insert({
+      social_account_id: selectedAccountForLinking.id,
+      campaign_id: campaignId,
+      user_id: session.user.id,
+      status: "active"
+    });
     if (error) {
       toast({
         variant: "destructive",
@@ -904,9 +894,7 @@ export function ProfileTab() {
               {socialAccounts.map(account => {
             const connectedCampaigns = account.connected_campaigns || [];
             // Sort demographic submissions by submitted_at descending to ensure latest is first
-            const demographicSubmissions = [...(account.demographic_submissions || [])].sort(
-              (a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
-            );
+            const demographicSubmissions = [...(account.demographic_submissions || [])].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
             const latestDemographicSubmission = demographicSubmissions[0];
             const demographicStatus = latestDemographicSubmission?.status;
             return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
@@ -930,22 +918,17 @@ export function ProfileTab() {
                             }}>
                                     {account.username}
                                   </span>
-                                  {!account.is_verified && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedAccountForVerification({
-                                          id: account.id,
-                                          platform: account.platform,
-                                          username: account.username
-                                        });
-                                        setShowVerifyAccountDialog(true);
-                                      }}
-                                      className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
-                                    >
+                                  {!account.is_verified && <button onClick={e => {
+                              e.stopPropagation();
+                              setSelectedAccountForVerification({
+                                id: account.id,
+                                platform: account.platform,
+                                username: account.username
+                              });
+                              setShowVerifyAccountDialog(true);
+                            }} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/30 transition-colors">
                                       Verify
-                                    </button>
-                                  )}
+                                    </button>}
                                 </div>
                                 
                                 {/* Stats Row */}
@@ -989,85 +972,64 @@ export function ProfileTab() {
                             
                             {/* Linked Campaigns */}
                             {(() => {
-                              const INITIAL_DISPLAY_COUNT = 3;
-                              const isExpanded = expandedCampaignAccounts.has(account.id);
-                              const displayedCampaigns = isExpanded 
-                                ? connectedCampaigns 
-                                : connectedCampaigns.slice(0, INITIAL_DISPLAY_COUNT);
-                              const hasMore = connectedCampaigns.length > INITIAL_DISPLAY_COUNT;
-                              
-                              const toggleExpanded = () => {
-                                setExpandedCampaignAccounts(prev => {
-                                  const next = new Set(prev);
-                                  if (next.has(account.id)) {
-                                    next.delete(account.id);
-                                  } else {
-                                    next.add(account.id);
-                                  }
-                                  return next;
-                                });
-                              };
-                              
-                              return (
-                                <div className="space-y-2">
+                        const INITIAL_DISPLAY_COUNT = 3;
+                        const isExpanded = expandedCampaignAccounts.has(account.id);
+                        const displayedCampaigns = isExpanded ? connectedCampaigns : connectedCampaigns.slice(0, INITIAL_DISPLAY_COUNT);
+                        const hasMore = connectedCampaigns.length > INITIAL_DISPLAY_COUNT;
+                        const toggleExpanded = () => {
+                          setExpandedCampaignAccounts(prev => {
+                            const next = new Set(prev);
+                            if (next.has(account.id)) {
+                              next.delete(account.id);
+                            } else {
+                              next.add(account.id);
+                            }
+                            return next;
+                          });
+                        };
+                        return <div className="space-y-2">
                                   <span className="text-[11px] text-white/50 tracking-wide" style={{
-                                    fontFamily: 'Geist',
-                                    letterSpacing: '-0.5px'
-                                  }}>
+                            fontFamily: 'Geist',
+                            letterSpacing: '-0.5px'
+                          }}>
                                     Linked Campaigns ({connectedCampaigns.length})
                                   </span>
-                                  {connectedCampaigns.length > 0 ? (
-                                    <div className="space-y-2">
+                                  {connectedCampaigns.length > 0 ? <div className="space-y-2">
                                       <div className={`space-y-2 ${isExpanded ? 'max-h-40 overflow-y-auto pr-1' : ''}`}>
                                         {displayedCampaigns.map(({
-                                          connection_id,
-                                          campaign
-                                        }) => (
-                                          <div key={campaign.id} style={{
-                                            fontFamily: 'Geist',
-                                            letterSpacing: '-0.5px'
-                                          }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group/campaign">
+                                connection_id,
+                                campaign
+                              }) => <div key={campaign.id} style={{
+                                fontFamily: 'Geist',
+                                letterSpacing: '-0.5px'
+                              }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group/campaign">
                                             {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
                                             <span className="text-sm text-white flex-1">{campaign.title}</span>
-                                            <button 
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleUnlinkCampaign(connection_id, campaign.title);
-                                              }}
-                                              className="opacity-0 group-hover/campaign:opacity-100 p-1 rounded hover:bg-white/10 transition-all"
-                                              title="Unlink from campaign"
-                                            >
+                                            <button onClick={e => {
+                                  e.stopPropagation();
+                                  handleUnlinkCampaign(connection_id, campaign.title);
+                                }} className="opacity-0 group-hover/campaign:opacity-100 p-1 rounded hover:bg-white/10 transition-all" title="Unlink from campaign">
                                               <X className="w-3.5 h-3.5 text-white/60 hover:text-white" />
                                             </button>
-                                          </div>
-                                        ))}
+                                          </div>)}
                                       </div>
-                                      {hasMore && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleExpanded();
-                                          }}
-                                          className="w-full text-xs text-white/60 hover:text-white py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors"
-                                          style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}
-                                        >
-                                          {isExpanded 
-                                            ? 'Show less' 
-                                            : `Show ${connectedCampaigns.length - INITIAL_DISPLAY_COUNT} more`}
-                                        </button>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-white/40 px-1" style={{
-                                      fontFamily: 'Geist',
-                                      letterSpacing: '-0.5px'
-                                    }}>
+                                      {hasMore && <button onClick={e => {
+                              e.stopPropagation();
+                              toggleExpanded();
+                            }} className="w-full text-xs text-white/60 hover:text-white py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors" style={{
+                              fontFamily: 'Geist',
+                              letterSpacing: '-0.5px'
+                            }}>
+                                          {isExpanded ? 'Show less' : `Show ${connectedCampaigns.length - INITIAL_DISPLAY_COUNT} more`}
+                                        </button>}
+                                    </div> : <p className="text-sm text-white/40 px-1" style={{
+                            fontFamily: 'Geist',
+                            letterSpacing: '-0.5px'
+                          }}>
                                       No campaigns linked
-                                    </p>
-                                  )}
-                                </div>
-                              );
-                            })()}
+                                    </p>}
+                                </div>;
+                      })()}
 
                             {/* Actions */}
                             <div className="flex gap-2 pt-1">
@@ -1120,7 +1082,7 @@ export function ProfileTab() {
                         fontFamily: 'Inter',
                         letterSpacing: '-0.3px'
                       }}>
-                                Demographics Required
+                                Demographics
                               </span>
                               <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{
                         fontFamily: 'Inter',
@@ -1129,22 +1091,14 @@ export function ProfileTab() {
                             </div>
                           </div> :
                   // Has Submissions - Always Show Status Card with History
-                  <DemographicStatusCard 
-                    accountId={account.id} 
-                    platform={account.platform} 
-                    username={account.username} 
-                    submissions={demographicSubmissions} 
-                    campaignIds={account.connected_campaigns?.map(c => c.campaign.id) || []}
-                    onSubmitNew={() => {
-                      setSelectedAccountForDemographics({
-                        id: account.id,
-                        platform: account.platform,
-                        username: account.username
-                      });
-                      setShowDemographicsDialog(true);
-                    }} 
-                    onRefresh={fetchSocialAccounts} 
-                  />}
+                  <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={account.connected_campaigns?.map(c => c.campaign.id) || []} onSubmitNew={() => {
+                    setSelectedAccountForDemographics({
+                      id: account.id,
+                      platform: account.platform,
+                      username: account.username
+                    });
+                    setShowDemographicsDialog(true);
+                  }} onRefresh={fetchSocialAccounts} />}
                       </div>
                     </div>
                   </div>;
@@ -1508,19 +1462,10 @@ export function ProfileTab() {
       {selectedAccountForDemographics && <SubmitDemographicsDialog open={showDemographicsDialog} onOpenChange={setShowDemographicsDialog} onSuccess={fetchSocialAccounts} socialAccountId={selectedAccountForDemographics.id} platform={selectedAccountForDemographics.platform} username={selectedAccountForDemographics.username} />}
 
       {/* Verify Account Dialog */}
-      {selectedAccountForVerification && (
-        <VerifyAccountDialog
-          open={showVerifyAccountDialog}
-          onOpenChange={(open) => {
-            setShowVerifyAccountDialog(open);
-            if (!open) setSelectedAccountForVerification(null);
-          }}
-          onSuccess={fetchSocialAccounts}
-          accountId={selectedAccountForVerification.id}
-          platform={selectedAccountForVerification.platform}
-          username={selectedAccountForVerification.username}
-        />
-      )}
+      {selectedAccountForVerification && <VerifyAccountDialog open={showVerifyAccountDialog} onOpenChange={open => {
+      setShowVerifyAccountDialog(open);
+      if (!open) setSelectedAccountForVerification(null);
+    }} onSuccess={fetchSocialAccounts} accountId={selectedAccountForVerification.id} platform={selectedAccountForVerification.platform} username={selectedAccountForVerification.username} />}
 
       {/* Link Campaign Dialog */}
       <Dialog open={showLinkCampaignDialog} onOpenChange={open => {
