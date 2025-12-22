@@ -755,6 +755,10 @@ export type Database = {
           show_account_tab: boolean
           slack_webhook_url: string | null
           slug: string
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean | null
+          stripe_onboarding_complete: boolean | null
+          stripe_payouts_enabled: boolean | null
           subscription_expires_at: string | null
           subscription_plan: string | null
           subscription_started_at: string | null
@@ -796,6 +800,10 @@ export type Database = {
           show_account_tab?: boolean
           slack_webhook_url?: string | null
           slug: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_onboarding_complete?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null
           subscription_started_at?: string | null
@@ -837,6 +845,10 @@ export type Database = {
           show_account_tab?: boolean
           slack_webhook_url?: string | null
           slug?: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_onboarding_complete?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null
           subscription_started_at?: string | null

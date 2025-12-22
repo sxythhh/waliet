@@ -20,11 +20,13 @@ interface BrandWalletTabProps {
 interface WalletData {
   balance: number;
   virality_balance: number;
-  withdraw_balance: number;
+  stripe_balance: number;
   pending_balance: number;
   currency: string;
-  has_whop_company: boolean;
+  has_stripe_account: boolean;
   onboarding_complete: boolean;
+  charges_enabled?: boolean;
+  payouts_enabled?: boolean;
 }
 interface Transaction {
   id: string;
@@ -59,7 +61,7 @@ export function BrandWalletTab({
       const {
         data,
         error
-      } = await supabase.functions.invoke('get-brand-balance', {
+      } = await supabase.functions.invoke('get-stripe-connect-balance', {
         body: {
           brand_id: brandId
         }
@@ -86,113 +88,55 @@ export function BrandWalletTab({
     }
   };
 
-  // Check for onboarding completion from URL params
+  // Check for Stripe onboarding completion from URL params
   useEffect(() => {
-    const onboardingStatus = searchParams.get('onboarding');
-    const status = searchParams.get('status');
-    if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success')) {
-      // Update the brand's onboarding status
-      const updateOnboardingStatus = async () => {
-        try {
-          await supabase.from('brands').update({
-            whop_onboarding_complete: true
-          }).eq('id', brandId);
-          toast.success('Verification completed successfully!');
+    const stripeOnboarding = searchParams.get('stripe_onboarding');
+    if (stripeOnboarding === 'complete') {
+      // Refresh wallet data to check if onboarding is complete
+      const checkOnboardingStatus = async () => {
+        toast.success('Stripe Connect setup completed!');
 
-          // Clean up URL params
-          searchParams.delete('onboarding');
-          searchParams.delete('status');
-          setSearchParams(searchParams, {
-            replace: true
-          });
+        // Clean up URL params
+        searchParams.delete('stripe_onboarding');
+        setSearchParams(searchParams, {
+          replace: true
+        });
 
-          // Refresh wallet data
-          await fetchWalletData();
-        } catch (error) {
-          console.error('Error updating onboarding status:', error);
-        }
+        // Refresh wallet data - this will update the brand's stripe status
+        await fetchWalletData();
       };
-      updateOnboardingStatus();
+      checkOnboardingStatus();
+    } else if (stripeOnboarding === 'refresh') {
+      // User needs to restart onboarding
+      searchParams.delete('stripe_onboarding');
+      setSearchParams(searchParams, {
+        replace: true
+      });
+      toast.info('Please complete your Stripe Connect setup');
     }
   }, [searchParams, brandId]);
 
-  // Handle returning from checkout
+  // Handle returning from Stripe deposit checkout
   useEffect(() => {
-    const checkoutStatus = searchParams.get('checkout_status');
-    const status = searchParams.get('status');
-
-    // Different Whop flows return different identifiers
-    const setupIntentId = searchParams.get('setup_intent_id');
-    const membershipId = searchParams.get('membership_id');
-    const paymentId = searchParams.get('payment_id');
-    const receiptId = searchParams.get('receipt_id');
-    const isSuccess = checkoutStatus === 'success' || status === 'success';
-    const hasReturnId = setupIntentId || membershipId || paymentId || receiptId;
-    if (!isSuccess || !hasReturnId) return;
-
-    // Clean up URL params first
-    searchParams.delete('checkout_status');
-    searchParams.delete('status');
-    searchParams.delete('setup_intent_id');
-    searchParams.delete('membership_id');
-    searchParams.delete('payment_id');
-    searchParams.delete('receipt_id');
-    searchParams.delete('state_id');
-    setSearchParams(searchParams, {
-      replace: true
-    });
-    const pendingTopupData = sessionStorage.getItem(`pending_topup_${brandId}`);
-    if (!pendingTopupData) {
-      toast.success('Checkout completed.');
+    const depositStatus = searchParams.get('deposit');
+    
+    if (depositStatus === 'success') {
+      // Clean up URL params
+      searchParams.delete('deposit');
+      setSearchParams(searchParams, {
+        replace: true
+      });
+      
+      toast.success('Deposit successful! Funds will be available shortly.');
       fetchWalletData();
       fetchTransactions();
-      return;
-    }
-    const {
-      amount,
-      transactionId
-    } = JSON.parse(pendingTopupData) as {
-      amount: number;
-      transactionId?: string;
-    };
-    sessionStorage.removeItem(`pending_topup_${brandId}`);
-    const finalizeTopup = async () => {
-      toast.loading('Finalizing top-up...', {
-        id: 'topup-finalize'
+    } else if (depositStatus === 'cancelled') {
+      searchParams.delete('deposit');
+      setSearchParams(searchParams, {
+        replace: true
       });
-      try {
-        const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('create-brand-wallet-topup', {
-          body: {
-            brand_id: brandId,
-            amount,
-            return_url: returnUrl,
-            transaction_id: transactionId
-          }
-        });
-        if (error) throw error;
-        if (data?.success && !data?.needs_payment_method) {
-          toast.success(`Added $${amount} to your wallet!`, {
-            id: 'topup-finalize'
-          });
-          fetchWalletData();
-          fetchTransactions();
-          return;
-        }
-        toast.error('Could not finalize top-up. Please try again.', {
-          id: 'topup-finalize'
-        });
-      } catch (e) {
-        console.error('Error finalizing top-up:', e);
-        toast.error('Failed to finalize top-up.', {
-          id: 'topup-finalize'
-        });
-      }
-    };
-    finalizeTopup();
+      toast.info('Deposit cancelled');
+    }
   }, [searchParams, setSearchParams, brandId, brandSlug]);
   useEffect(() => {
     const loadData = async () => {
@@ -208,26 +152,33 @@ export function BrandWalletTab({
       const {
         data,
         error
-      } = await supabase.functions.invoke('create-brand-company', {
+      } = await supabase.functions.invoke('create-stripe-connect-account', {
         body: {
           brand_id: brandId,
-          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=complete`,
-          refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=refresh`
+          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&stripe_onboarding=complete`,
+          refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&stripe_onboarding=refresh`
         }
       });
       if (error) throw error;
 
+      // If account is already complete, show success
+      if (data?.already_complete) {
+        toast.success('Stripe Connect already set up!');
+        await fetchWalletData();
+        return;
+      }
+
       // If we get an onboarding URL, redirect the user there
       if (data?.onboarding_url) {
         window.open(data.onboarding_url, '_blank');
-        toast.success('Opening wallet setup...');
-      } else if (data?.company_id) {
-        toast.success('Wallet set up successfully!');
+        toast.success('Opening Stripe Connect setup...');
+      } else if (data?.stripe_account_id) {
+        toast.success('Stripe Connect account created!');
       }
       await fetchWalletData();
     } catch (error) {
-      console.error('Error setting up wallet:', error);
-      toast.error('Failed to set up wallet');
+      console.error('Error setting up Stripe Connect:', error);
+      toast.error('Failed to set up Stripe Connect');
     } finally {
       setSettingUp(false);
     }
@@ -285,8 +236,8 @@ export function BrandWalletTab({
       </div>;
   }
 
-  // Show setup prompt if no Whop company
-  if (!walletData?.has_whop_company) {
+  // Show setup prompt if no Stripe Connect account
+  if (!walletData?.has_stripe_account) {
     return <div className="space-y-6">
         <div className="pt-6">
           <div className="text-center py-12">
@@ -295,14 +246,14 @@ export function BrandWalletTab({
               filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)'
             }} />
             </div>
-            <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Set Up Your Brand Wallet</h3>
+            <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Connect Your Stripe Account</h3>
             <p className="text-sm text-muted-foreground tracking-[-0.5px] mb-6 max-w-sm mx-auto">
-              Create a dedicated wallet for your brand to manage campaign budgets, 
-              receive funds, and process withdrawals.
+              Connect your Stripe account to manage campaign budgets, 
+              deposit funds, and process withdrawals.
             </p>
             <button onClick={handleSetupWallet} disabled={settingUp} className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none">
               <img src={creditCardIcon} alt="" className="w-4 h-4" />
-              {settingUp ? 'Setting up...' : 'Set Up Wallet'}
+              {settingUp ? 'Connecting...' : 'Connect Stripe'}
             </button>
           </div>
         </div>
