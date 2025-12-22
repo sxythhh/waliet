@@ -82,24 +82,29 @@ export function CreateBountyDialog({
       if (open && brandId) {
         setLoadingBalance(true);
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: {
+              session
+            }
+          } = await supabase.auth.getSession();
           if (!session) return;
-          
+
           // Fetch balance
-          const { data, error } = await supabase.functions.invoke('get-brand-balance', {
-            body: { brand_id: brandId }
+          const {
+            data,
+            error
+          } = await supabase.functions.invoke('get-brand-balance', {
+            body: {
+              brand_id: brandId
+            }
           });
-          
           if (error) throw error;
           setAvailableBalance(data?.virality_balance || 0);
 
           // Fetch subscription status
-          const { data: brandData } = await supabase
-            .from('brands')
-            .select('subscription_status')
-            .eq('id', brandId)
-            .single();
-          
+          const {
+            data: brandData
+          } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
           setSubscriptionStatus(brandData?.subscription_status || null);
         } catch (error) {
           console.error('Error fetching brand data:', error);
@@ -110,7 +115,6 @@ export function CreateBountyDialog({
     };
     fetchBrandData();
   }, [open, brandId]);
-
   useEffect(() => {
     if (open && brandId) {
       fetchBlueprints();
@@ -157,17 +161,19 @@ export function CreateBountyDialog({
         toast.error("Please fill in all required fields");
         return;
       }
-      
+
       // Calculate total cost and validate against balance
       const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
       const maxCreators = parseInt(formData.max_accepted_creators) || 0;
       const totalBudgetNeeded = monthlyRetainer * maxCreators;
-      
       if (totalBudgetNeeded > availableBalance) {
-        toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', { minimumFractionDigits: 2 })}) exceeds available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+        toast.error(`Total budget ($${totalBudgetNeeded.toLocaleString('en-US', {
+          minimumFractionDigits: 2
+        })}) exceeds available balance of $${availableBalance.toLocaleString('en-US', {
+          minimumFractionDigits: 2
+        })}`);
         return;
       }
-      
       setCurrentStep(2);
     }
   };
@@ -202,7 +208,6 @@ export function CreateBountyDialog({
       const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}`;
       // Determine status based on subscription
       const boostStatus = subscriptionStatus === 'active' ? 'active' : 'draft';
-      
       const {
         error
       } = await supabase.from('bounty_campaigns').insert({
@@ -224,7 +229,6 @@ export function CreateBountyDialog({
         content_distribution: formData.content_distribution
       });
       if (error) throw error;
-      
       if (subscriptionStatus === 'active') {
         toast.success("Boost created and launched!");
       } else {
@@ -274,7 +278,7 @@ export function CreateBountyDialog({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 py-0">
           {/* Step 1: Compensation & Settings */}
           {currentStep === 1 && <div className="space-y-6">
               {/* Selected Blueprint Preview */}
@@ -297,23 +301,11 @@ export function CreateBountyDialog({
 
               <div className="space-y-6">
                 {/* Available Balance Display */}
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Wallet className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Available Balance</p>
-                      <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
-                        {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                
 
                 {/* Left Column - Compensation */}
                 <div className="space-y-5">
-                  <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Compensation</h3>
+                  
 
                   {/* Payment Schedule - First */}
                   <div className="space-y-1.5">
@@ -388,31 +380,30 @@ export function CreateBountyDialog({
 
                   {/* Total Budget Needed */}
                   {(() => {
-                    const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-                    const maxCreators = parseInt(formData.max_accepted_creators) || 0;
-                    const totalBudget = monthlyRetainer * maxCreators;
-                    const exceedsBalance = totalBudget > availableBalance;
-                    return (
-                      <div className={`p-4 rounded-xl ${exceedsBalance ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted/30'}`}>
+                const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+                const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+                const totalBudget = monthlyRetainer * maxCreators;
+                const exceedsBalance = totalBudget > availableBalance;
+                return <div className={`p-4 rounded-xl ${exceedsBalance ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted/30'}`}>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Total budget needed</span>
                           <div className="text-right">
                             <span className={`text-lg font-semibold font-geist tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
-                              ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              ${totalBudget.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
                             </span>
-                            {exceedsBalance && (
-                              <p className="text-xs text-destructive mt-0.5">Exceeds available balance</p>
-                            )}
+                            {exceedsBalance && <p className="text-xs text-destructive mt-0.5">Exceeds available balance</p>}
                           </div>
                         </div>
-                      </div>
-                    );
-                  })()}
+                      </div>;
+              })()}
                 </div>
 
                 {/* Right Column - Settings & Dates */}
                 <div className="space-y-5">
-                  <h3 className="text-sm font-semibold text-foreground font-geist tracking-[-0.5px]">Settings</h3>
+                  
 
                   {/* Blueprint Selection */}
                   <div className="space-y-1.5">
@@ -503,25 +494,17 @@ export function CreateBountyDialog({
                   <div className="space-y-2">
                     <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Distribution</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      <div
-                        onClick={() => setFormData({ ...formData, content_distribution: "creators_own_page" })}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.content_distribution === "creators_own_page"
-                            ? "border-primary bg-primary/5"
-                            : "border-transparent bg-muted/50 hover:bg-muted/70"
-                        }`}
-                      >
+                      <div onClick={() => setFormData({
+                    ...formData,
+                    content_distribution: "creators_own_page"
+                  })} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.content_distribution === "creators_own_page" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                         <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
                         <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
                       </div>
-                      <div
-                        onClick={() => setFormData({ ...formData, content_distribution: "branded_accounts" })}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.content_distribution === "branded_accounts"
-                            ? "border-primary bg-primary/5"
-                            : "border-transparent bg-muted/50 hover:bg-muted/70"
-                        }`}
-                      >
+                      <div onClick={() => setFormData({
+                    ...formData,
+                    content_distribution: "branded_accounts"
+                  })} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.content_distribution === "branded_accounts" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                         <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
                         <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
                       </div>
@@ -559,63 +542,43 @@ export function CreateBountyDialog({
                 </div>
                 
                 {/* Existing Questions */}
-                {formData.application_questions.length > 0 && (
-                  <div className="space-y-2">
-                    {formData.application_questions.map((question, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
+                {formData.application_questions.length > 0 && <div className="space-y-2">
+                    {formData.application_questions.map((question, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
                         <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] shrink-0">Q{index + 1}.</span>
                         <span className="text-sm text-foreground font-inter tracking-[-0.5px] flex-1">{question}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            const updated = formData.application_questions.filter((_, i) => i !== index);
-                            setFormData({ ...formData, application_questions: updated });
-                          }}
-                        >
+                        <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={() => {
+                  const updated = formData.application_questions.filter((_, i) => i !== index);
+                  setFormData({
+                    ...formData,
+                    application_questions: updated
+                  });
+                }}>
                           <X className="h-3.5 w-3.5" />
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
                 
                 {/* Add New Question */}
                 <div className="flex gap-2">
-                  <Input
-                    value={newQuestion}
-                    onChange={(e) => setNewQuestion(e.target.value)}
-                    placeholder="Enter a question for applicants..."
-                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] flex-1"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newQuestion.trim()) {
-                        e.preventDefault();
-                        setFormData({
-                          ...formData,
-                          application_questions: [...formData.application_questions, newQuestion.trim()]
-                        });
-                        setNewQuestion("");
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="h-10 px-3 font-inter tracking-[-0.5px]"
-                    disabled={!newQuestion.trim()}
-                    onClick={() => {
-                      if (newQuestion.trim()) {
-                        setFormData({
-                          ...formData,
-                          application_questions: [...formData.application_questions, newQuestion.trim()]
-                        });
-                        setNewQuestion("");
-                      }
-                    }}
-                  >
+                  <Input value={newQuestion} onChange={e => setNewQuestion(e.target.value)} placeholder="Enter a question for applicants..." className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] flex-1" onKeyDown={e => {
+                if (e.key === 'Enter' && newQuestion.trim()) {
+                  e.preventDefault();
+                  setFormData({
+                    ...formData,
+                    application_questions: [...formData.application_questions, newQuestion.trim()]
+                  });
+                  setNewQuestion("");
+                }
+              }} />
+                  <Button type="button" variant="secondary" size="sm" className="h-10 px-3 font-inter tracking-[-0.5px]" disabled={!newQuestion.trim()} onClick={() => {
+                if (newQuestion.trim()) {
+                  setFormData({
+                    ...formData,
+                    application_questions: [...formData.application_questions, newQuestion.trim()]
+                  });
+                  setNewQuestion("");
+                }
+              }}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
