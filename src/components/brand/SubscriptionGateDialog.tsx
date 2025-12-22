@@ -8,7 +8,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface SubscriptionGateDialogProps {
   brandId: string;
@@ -84,14 +85,12 @@ function FeatureItem({ feature }: { feature: Feature }) {
               type="button"
               className="flex w-full items-center gap-2 text-left text-sm tracking-[-0.5px]"
               onPointerDown={(e) => {
-                // On mobile/touch, toggle tooltip on tap
                 if (e.pointerType === "touch") {
                   e.preventDefault();
                   setOpen((v) => !v);
                 }
               }}
               onClick={() => {
-                // Fallback for browsers that don't provide pointerType reliably
                 if (window.matchMedia?.("(hover: none)").matches) setOpen((v) => !v);
               }}
             >
@@ -123,24 +122,39 @@ export function SubscriptionGateDialog({
   onOpenChange
 }: SubscriptionGateDialogProps) {
   const [isAnnual, setIsAnnual] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<{ key: string; name: string } | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const handleSelectPlan = (planKey: string, planName: string) => {
+  const handleSelectPlan = async (planKey: string) => {
     if (planKey === 'enterprise') {
       window.location.href = 'mailto:sales@virality.gg?subject=Enterprise Plan Inquiry';
       return;
     }
 
-    setSelectedPlan({ key: planKey, name: planName });
-    setCheckoutOpen(true);
-  };
+    setLoadingPlan(planKey);
 
-  const handleCheckoutComplete = () => {
-    setCheckoutOpen(false);
-    onOpenChange(false);
-    // Refresh the page to update subscription status
-    window.location.reload();
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "create-subscription-checkout",
+        {
+          body: {
+            plan_key: planKey,
+            is_annual: isAnnual,
+            brand_id: brandId,
+          },
+        }
+      );
+
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.url) throw new Error("No checkout URL returned");
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
+    } catch (err) {
+      console.error("Error creating checkout session:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
+      setLoadingPlan(null);
+    }
   };
 
   return (
@@ -184,6 +198,7 @@ export function SubscriptionGateDialog({
             <div className="grid md:grid-cols-3 gap-6">
               {PLANS.map((plan) => {
                 const isEnterprise = plan.key === 'enterprise';
+                const isLoading = loadingPlan === plan.key;
                 
                 return (
                   <div
@@ -234,14 +249,24 @@ export function SubscriptionGateDialog({
                     </ul>
                     
                     <button
-                      onClick={() => handleSelectPlan(plan.key, plan.name)}
-                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 ${
+                      onClick={() => handleSelectPlan(plan.key)}
+                      disabled={!!loadingPlan}
+                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
                         plan.popular 
                           ? 'bg-[#1f60dd] border-t border-[#4b85f7] text-white hover:bg-[#1a50c8]' 
                           : 'bg-muted/50 text-foreground hover:bg-muted'
                       }`}
                     >
-                      {isEnterprise ? 'Contact Sales' : `Get ${plan.name}`}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : isEnterprise ? (
+                        'Contact Sales'
+                      ) : (
+                        `Get ${plan.name}`
+                      )}
                     </button>
                   </div>
                 );
@@ -250,18 +275,6 @@ export function SubscriptionGateDialog({
           </div>
         </DialogContent>
       </Dialog>
-
-      {selectedPlan && (
-        <SubscriptionCheckoutDialog
-          open={checkoutOpen}
-          onOpenChange={setCheckoutOpen}
-          planId={selectedPlan.key}
-          planName={selectedPlan.name}
-          brandId={brandId}
-          isAnnual={isAnnual}
-          onComplete={handleCheckoutComplete}
-        />
-      )}
     </TooltipProvider>
   );
 }
