@@ -17,7 +17,7 @@ import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 
 export default function PublicNavbar() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
 
@@ -109,7 +109,9 @@ export default function PublicNavbar() {
             </div>
             
             <div className="flex items-center gap-3">
-              {isAuthenticated ? (
+              {isAuthenticated === null ? (
+                <div className="w-24 h-8" />
+              ) : isAuthenticated ? (
                 <>
                   <Link to="/dashboard">
                     <Button 
