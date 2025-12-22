@@ -224,21 +224,21 @@ export function ApplyToBountySheet({
               {/* Banner Image */}
               {bounty.banner_url && <div className="relative w-full h-48 flex-shrink-0 overflow-hidden bg-muted">
             <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           </div>}
 
         <div className="p-6 space-y-6">
           {/* Header with Brand */}
           <SheetHeader className="space-y-4 text-left">
             <div className="flex items-start gap-3">
-              {bounty.brands?.logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+              {bounty.brands?.logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                   <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
                 </div>}
               <div className="flex-1">
-                <SheetTitle className="text-2xl font-bold text-white mb-1">
+                <SheetTitle className="text-2xl font-bold text-foreground mb-1">
                   {bounty.title}
                 </SheetTitle>
-                <p className="text-sm text-white/60">{bounty.brands?.name}</p>
+                <p className="text-sm text-muted-foreground">{bounty.brands?.name}</p>
               </div>
             </div>
             
@@ -246,28 +246,25 @@ export function ApplyToBountySheet({
 
           {/* Stats Cards - Visual grid layout */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 p-4 ring-1 ring-emerald-500/20">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-              <p className="text-xl font-bold text-emerald-400 font-inter tracking-[-0.5px]">
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className="text-xl font-bold text-foreground font-inter tracking-[-0.5px]">
                 ${bounty.monthly_retainer.toLocaleString()}
               </p>
-              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">Per Month</p>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">Per Month</p>
             </div>
             
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/5 p-4 ring-1 ring-blue-500/20">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-              <p className="text-xl font-bold text-blue-400 font-inter tracking-[-0.5px]">
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className="text-xl font-bold text-foreground font-inter tracking-[-0.5px]">
                 {bounty.videos_per_month}
               </p>
-              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">Videos/Mo</p>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">Videos/Mo</p>
             </div>
             
-            <div className={`relative overflow-hidden rounded-xl p-4 ring-1 ${isFull ? 'bg-white/5 ring-white/10' : 'bg-gradient-to-br from-amber-500/20 to-amber-600/5 ring-amber-500/20'}`}>
-              <div className={`absolute top-0 right-0 w-16 h-16 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 ${isFull ? 'bg-white/5' : 'bg-amber-500/10'}`} />
-              <p className={`text-xl font-bold font-inter tracking-[-0.5px] ${isFull ? 'text-white/40' : 'text-amber-400'}`}>
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className={`text-xl font-bold font-inter tracking-[-0.5px] ${isFull ? 'text-muted-foreground' : 'text-foreground'}`}>
                 {spotsRemaining > 0 ? spotsRemaining : 0}
               </p>
-              <p className="text-[10px] text-white/50 font-medium uppercase tracking-wider mt-1">
+              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">
                 {isFull ? 'Full' : 'Spots Left'}
               </p>
             </div>
@@ -275,11 +272,11 @@ export function ApplyToBountySheet({
 
           {/* Blueprint Details Section */}
           {blueprint && <div className="space-y-3">
-              <div className="rounded-xl bg-white/[0.03] ring-1 ring-white/10 overflow-hidden">
+              <div className="rounded-xl bg-muted/50 overflow-hidden">
                 {/* Blueprint Header */}
-                <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                  <span className="text-xs font-medium text-white/40 uppercase tracking-wider">Content Brief</span>
-                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-inter tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/10" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Content Brief</span>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
                     <ExternalLink className="h-3 w-3 mr-1" />
                     View Full
                   </Button>
@@ -287,16 +284,16 @@ export function ApplyToBountySheet({
                 
                 <div className="p-4 space-y-4">
                   {/* Content Preview */}
-                  {blueprint.content && <div className="text-sm text-white/70 leading-relaxed line-clamp-3 prose prose-invert prose-sm max-w-none [&>*]:m-0" dangerouslySetInnerHTML={{
+                  {blueprint.content && <div className="text-sm text-muted-foreground leading-relaxed line-clamp-3 prose prose-sm max-w-none [&>*]:m-0" dangerouslySetInnerHTML={{
                     __html: blueprint.content
                   }} />}
                   
                   {/* Hooks */}
                   {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && <div className="space-y-2">
-                      <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Suggested Hooks</span>
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Suggested Hooks</span>
                       <div className="space-y-1.5">
-                        {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-white/70 bg-white/[0.03] rounded-lg px-3 py-2">
-                            <span className="text-amber-400 mt-0.5 text-xs">→</span>
+                        {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                            <span className="text-primary mt-0.5 text-xs">→</span>
                             <span className="line-clamp-1">{typeof hook === 'string' ? hook : hook.text}</span>
                           </div>)}
                       </div>
@@ -304,13 +301,13 @@ export function ApplyToBountySheet({
                   
                   {/* Call to Action */}
                   {blueprint.call_to_action && <div className="space-y-1.5">
-                      <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Call to Action</span>
-                      <p className="text-sm text-white/70 bg-emerald-500/10 rounded-lg px-3 py-2 ring-1 ring-emerald-500/20">{blueprint.call_to_action}</p>
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Call to Action</span>
+                      <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">{blueprint.call_to_action}</p>
                     </div>}
                   
                   {/* Hashtags */}
                   {blueprint.hashtags && Array.isArray(blueprint.hashtags) && blueprint.hashtags.length > 0 && <div className="flex flex-wrap gap-1.5">
-                      {blueprint.hashtags.slice(0, 5).map((tag: string, idx: number) => <span key={idx} className="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full">
+                      {blueprint.hashtags.slice(0, 5).map((tag: string, idx: number) => <span key={idx} className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                           #{tag}
                         </span>)}
                     </div>}
@@ -320,24 +317,22 @@ export function ApplyToBountySheet({
 
           {/* Application Form - Show connect prompt if no accounts */}
           {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-5 bg-white/[0.02] rounded-xl">
-                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-5 bg-muted/30 rounded-xl">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
                   <img src={alternateEmailIcon} alt="" className="h-6 w-6 opacity-60" />
                 </div>
                 
                 <div className="space-y-2">
-                  <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-white">
+                  <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-foreground">
                     Connect an account to apply
                   </h3>
-                  <p className="font-['Inter'] tracking-[-0.5px] text-sm text-white/50 max-w-[280px]">
+                  <p className="font-['Inter'] tracking-[-0.5px] text-sm text-muted-foreground max-w-[280px]">
                     Link a social account or Discord to submit your application
                   </p>
                 </div>
                 
                 <div className="flex flex-col gap-2 w-full max-w-[280px]">
-                  <Button onClick={() => setShowAddSocialDialog(true)} className="font-['Inter'] tracking-[-0.5px] bg-[#2060de] hover:bg-[#2060de]/90 text-white w-full" style={{
-                    borderTop: '1px solid #4b85f7'
-                  }}>
+                  <Button onClick={() => setShowAddSocialDialog(true)} className="font-['Inter'] tracking-[-0.5px] w-full">
                     Connect Social Account
                   </Button>
                   <Button onClick={() => {
@@ -360,7 +355,7 @@ export function ApplyToBountySheet({
                       }
                     };
                     window.addEventListener('message', handleMessage);
-                  }} variant="ghost" className="font-['Inter'] tracking-[-0.5px] text-white/60 hover:text-white hover:bg-white/5 w-full gap-2 opacity-100">
+                  }} variant="ghost" className="font-['Inter'] tracking-[-0.5px] text-muted-foreground hover:text-foreground w-full gap-2">
                     <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/db3f044f-3d8c-43ea-9461-09bfff9b41e0.webp" />
                     Connect Discord
                   </Button>
@@ -369,26 +364,26 @@ export function ApplyToBountySheet({
             </div> : <form onSubmit={handleSubmit} className="space-y-5 pt-2">
               {/* Connected Accounts Display */}
               {(socialAccounts.length > 0 || discordConnected) && <div className="space-y-2">
-                  <Label className="text-xs text-white/40 font-['Inter'] tracking-[-0.5px]">Your connected accounts</Label>
+                  <Label className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Your connected accounts</Label>
                   <div className="flex flex-wrap gap-2">
-                    {socialAccounts.map(account => <div key={account.id} className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-md text-xs">
+                    {socialAccounts.map(account => <div key={account.id} className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md text-xs">
                         {account.platform === 'tiktok' && <img src={tiktokLogo} alt="" className="h-3 w-3" />}
                         {account.platform === 'instagram' && <img src={instagramLogo} alt="" className="h-3 w-3" />}
-                        <span className="text-white/80">@{account.username}</span>
+                        <span className="text-foreground">@{account.username}</span>
                       </div>)}
-                    {discordConnected && <div className="flex items-center gap-1.5 px-2 py-1 bg-white/5 rounded-md text-xs">
+                    {discordConnected && <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md text-xs">
                         <img src={discordIcon} alt="" className="h-3 w-3" />
-                        <span className="text-white/80">Discord</span>
+                        <span className="text-foreground">Discord</span>
                       </div>}
                   </div>
                 </div>}
 
               {/* Video Upload Section */}
               <div className="space-y-3">
-                <Label className="text-white font-medium font-['Inter'] tracking-[-0.5px]">
+                <Label className="text-foreground font-medium font-['Inter'] tracking-[-0.5px]">
                   Example Video *
                 </Label>
-                <p className="text-xs text-white/50 font-['Inter'] tracking-[-0.5px]">
+                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                   Show us your content style with a video link or upload
                 </p>
                 
@@ -396,52 +391,50 @@ export function ApplyToBountySheet({
                 {!uploadedVideoFile ? <div className="space-y-3">
                     {/* Upload Button */}
                     <input ref={fileInputRef} type="file" accept="video/*" onChange={e => e.target.files?.[0] && handleVideoUpload(e.target.files[0])} className="hidden" />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
-                      <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60" />
-                      <span className="text-sm text-white/60 group-hover:text-white/80 font-['Inter'] tracking-[-0.5px]">
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-muted/50 hover:bg-muted transition-colors group">
+                      <Upload className="h-8 w-8 text-muted-foreground group-hover:text-foreground" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground font-['Inter'] tracking-[-0.5px]">
                         Click to upload video
                       </span>
-                      <span className="text-xs text-white/30 font-['Inter'] tracking-[-0.5px]">MP4, MOV up to 100MB</span>
+                      <span className="text-xs text-muted-foreground/60 font-['Inter'] tracking-[-0.5px]">MP4, MOV up to 100MB</span>
                     </button>
                     
                     {/* Or divider */}
                     <div className="relative">
                       <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-white/10" />
+                        <span className="w-full border-t border-border" />
                       </div>
                       <div className="relative flex justify-center text-xs">
-                        <span className="bg-[#0a0a0a] px-2 text-white/30 font-['Inter'] tracking-[-0.5px]">or paste URL</span>
+                        <span className="bg-background px-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">or paste URL</span>
                       </div>
                     </div>
                     
                     {/* URL Input */}
                     <div className="relative">
-                      <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                      <Input type="url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="pl-10 bg-white/5 border-transparent text-white placeholder:text-white/30 font-['Inter'] tracking-[-0.5px]" />
+                      <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input type="url" value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=..." className="pl-10 bg-muted/50 border-0 text-foreground placeholder:text-muted-foreground font-['Inter'] tracking-[-0.5px]" />
                     </div>
                   </div> : (/* Video Preview */
-                <div className="relative rounded-lg overflow-hidden bg-black/20">
+                <div className="relative rounded-lg overflow-hidden bg-muted/50">
                     <video src={uploadedVideoPreview || ''} className="w-full max-h-48 object-contain" controls />
-                    <button type="button" onClick={removeUploadedVideo} className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors">
+                    <button type="button" onClick={removeUploadedVideo} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background text-foreground transition-colors">
                       <X className="h-4 w-4" />
                     </button>
                   </div>)}
               </div>
 
               <div>
-                <Label htmlFor="application_text" className="text-white mb-2 block font-['Inter'] tracking-[-0.5px]">
+                <Label htmlFor="application_text" className="text-foreground mb-2 block font-['Inter'] tracking-[-0.5px]">
                   Why are you a good fit? (Optional)
                 </Label>
-                <Textarea id="application_text" value={applicationText} onChange={e => setApplicationText(e.target.value)} placeholder="Tell the brand why you'd be perfect for this boost..." className="bg-white/5 border-transparent text-white placeholder:text-white/30 min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
+                <Textarea id="application_text" value={applicationText} onChange={e => setApplicationText(e.target.value)} placeholder="Tell the brand why you'd be perfect for this boost..." className="bg-muted/50 border-0 text-foreground placeholder:text-muted-foreground min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
               </div>
 
-              <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0a0a0a] py-4 -mx-6 px-6">
-                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 text-white hover:bg-white/5 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-background py-4 -mx-6 px-6">
+                <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting || isFull || isUploading || !videoUrl.trim() && !uploadedVideoFile} className="flex-1 bg-[#2060de] hover:bg-[#2060de]/90 text-white disabled:opacity-50 font-['Inter'] tracking-[-0.5px]" style={{
-                  borderTop: '1px solid #4b85f7'
-                }}>
+                <Button type="submit" disabled={submitting || isFull || isUploading || !videoUrl.trim() && !uploadedVideoFile} className="flex-1 font-['Inter'] tracking-[-0.5px]">
                   {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
                 </Button>
               </div>
