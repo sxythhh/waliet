@@ -918,6 +918,131 @@ export function CampaignCreationWizard({
                         )}
                       </div>
                     )}
+
+                    {/* Budget Section */}
+                    <div className="pt-4 border-t border-border space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="is_infinite_budget"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group"
+                              onClick={() => field.onChange(!field.value)}
+                            >
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                field.value 
+                                  ? "bg-primary border-primary" 
+                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                              )}>
+                                {field.value && (
+                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                                )}
+                              </div>
+                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                Unlimited budget (pay as you go)
+                              </FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      {!watchedValues.is_infinite_budget && (
+                        <FormField
+                          control={form.control}
+                          name="budget"
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="flex items-center justify-between">
+                                <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Budget</FormLabel>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <Wallet className="h-3 w-3" />
+                                  <span>Available: ${loadingBalance ? "..." : availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                                </div>
+                              </div>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                  <Input
+                                    type="number"
+                                    placeholder="1000"
+                                    className="h-10 pl-7 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      <FormField
+                        control={form.control}
+                        name="rpm_rate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate ($ per 1,000 views)</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="5.00"
+                                  className="h-10 pl-7 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
+                                  {...field}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Platforms */}
+                      <FormField
+                        control={form.control}
+                        name="allowed_platforms"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Platforms</FormLabel>
+                            <FormControl>
+                              <div className="flex gap-2">
+                                {[
+                                  { id: "tiktok", logo: tiktokLogo, label: "TikTok" },
+                                  { id: "instagram", logo: instagramLogo, label: "Instagram" },
+                                  { id: "youtube", logo: youtubeLogo, label: "YouTube" },
+                                ].map((platform) => (
+                                  <div
+                                    key={platform.id}
+                                    onClick={() => {
+                                      const current = field.value || [];
+                                      if (current.includes(platform.id)) {
+                                        field.onChange(current.filter((p: string) => p !== platform.id));
+                                      } else {
+                                        field.onChange([...current, platform.id]);
+                                      }
+                                    }}
+                                    className={cn(
+                                      "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all",
+                                      field.value?.includes(platform.id)
+                                        ? "bg-primary/20 ring-1 ring-primary"
+                                        : "bg-muted/30 hover:bg-muted/50"
+                                    )}
+                                  >
+                                    <img src={platform.logo} alt={platform.label} className="w-4 h-4 object-contain" />
+                                    <span className="text-sm text-foreground">{platform.label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 )}
 
