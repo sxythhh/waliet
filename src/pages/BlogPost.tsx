@@ -7,6 +7,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { Helmet } from "react-helmet-async";
 import { Skeleton } from "@/components/ui/skeleton";
 import DOMPurify from "dompurify";
+import PublicNavbar from "@/components/PublicNavbar";
 
 interface BlogPost {
   id: string;
@@ -147,7 +148,7 @@ export default function BlogPostPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-background overflow-y-auto">
+    <div className="h-[100dvh] flex flex-col bg-background">
       <Helmet>
         <title>{post.title} | Virality</title>
         <meta name="description" content={post.excerpt || `Read ${post.title} on Virality`} />
@@ -164,31 +165,15 @@ export default function BlogPostPage() {
         )}
       </Helmet>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link 
-            to="/resources" 
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="font-inter tracking-[-0.5px]">Back to Resources</span>
-          </Link>
-          
-          {!isAuthenticated && (
-            <Button onClick={() => setShowAuthDialog(true)} size="sm" className="font-inter tracking-[-0.5px]">
-              Sign Up Free
-            </Button>
-          )}
-        </div>
-      </header>
+      <PublicNavbar />
 
       {/* Article Content */}
-      <article 
-        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-        itemScope 
-        itemType="https://schema.org/Article"
-      >
+      <main className="flex-1 overflow-y-auto pt-14">
+        <article 
+          className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+          itemScope 
+          itemType="https://schema.org/Article"
+        >
         <header className="mb-8">
           {post.category && (
             <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full mb-4 font-inter tracking-[-0.5px]">
@@ -256,21 +241,26 @@ export default function BlogPostPage() {
           dangerouslySetInnerHTML={{ __html: sanitizedContent }}
         />
 
-        {/* Tags */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="mt-8 pt-8 border-t border-border">
-            <div className="flex flex-wrap gap-2">
-              {post.tags.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full font-inter tracking-[-0.5px]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+        {/* Tags and Back Link */}
+        <div className="mt-8 pt-8 border-t border-border flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {post.tags && post.tags.length > 0 && post.tags.map((tag, index) => (
+              <span 
+                key={index}
+                className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full font-inter tracking-[-0.5px]"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
-        )}
+          <Link 
+            to="/resources" 
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-inter tracking-[-0.5px]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Resources
+          </Link>
+        </div>
 
         {/* CTA at bottom of article */}
         {!isAuthenticated && (
@@ -287,7 +277,8 @@ export default function BlogPostPage() {
             </Button>
           </section>
         )}
-      </article>
+        </article>
+      </main>
 
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </div>
