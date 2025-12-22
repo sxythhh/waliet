@@ -125,6 +125,7 @@ export function AppSidebar() {
   const [workspaceSearch, setWorkspaceSearch] = useState("");
   const [currentBrandName, setCurrentBrandName] = useState<string>("");
   const [currentBrandLogo, setCurrentBrandLogo] = useState<string | null>(null);
+  const [currentBrandColor, setCurrentBrandColor] = useState<string | null>(null);
   const [currentBrandSubscriptionStatus, setCurrentBrandSubscriptionStatus] = useState<string | null>(null);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -158,6 +159,7 @@ export function AppSidebar() {
         if (brandFromAll) {
           setCurrentBrandName(brandFromAll.name);
           setCurrentBrandLogo(brandFromAll.logo_url);
+          setCurrentBrandColor(brandFromAll.brand_color);
           // Fetch subscription status
           const {
             data
@@ -174,6 +176,7 @@ export function AppSidebar() {
         } else if (brandFromMembership) {
           setCurrentBrandName(brandFromMembership.brands.name);
           setCurrentBrandLogo(brandFromMembership.brands.logo_url);
+          setCurrentBrandColor(brandFromMembership.brands.brand_color);
           // Fetch subscription status
           const {
             data
@@ -433,8 +436,8 @@ export function AppSidebar() {
                   <div className="flex items-center gap-2">
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                         <img src={swapHorizIcon} alt="" className="w-3.5 h-3.5" />
-                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
-                          <img src={storefrontIcon} alt="" className="w-3.5 h-3.5" />
+                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}>
+                          <span className="text-[10px] font-semibold text-white">{currentBrandName?.charAt(0).toUpperCase()}</span>
                         </div>}
                     <p className="font-medium text-foreground truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
                   </div>
@@ -446,8 +449,8 @@ export function AppSidebar() {
                   {/* Current Workspace Details - Only show when in brand mode */}
                   {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] py-[7px] px-[7px]">
                       <div className="flex items-center gap-3 mb-3">
-                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-[#1a1a1a] flex items-center justify-center">
-                            <span className="text-sm font-medium text-neutral-400 uppercase">{currentBrandName?.charAt(0)}</span>
+                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}>
+                            <span className="text-sm font-medium text-white uppercase">{currentBrandName?.charAt(0)}</span>
                           </div>}
                         <div>
                           <p className="text-[13px] font-medium text-white truncate max-w-[160px]">{currentBrandName}</p>
