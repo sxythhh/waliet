@@ -56,6 +56,7 @@ import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
 import Contact from "./pages/Contact";
 import BlueprintDetail from "./pages/BlueprintDetail";
+import BlueprintPreview from "./pages/BlueprintPreview";
 import Resources from "./pages/Resources";
 import BlogPost from "./pages/BlogPost";
 import BrandPublicPage from "./pages/BrandPublicPage";
@@ -176,6 +177,7 @@ const App = () => (
               <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
               <Route path="/boost/:id" element={<PublicBounty />} />
               <Route path="/blueprint/:id" element={<BlueprintDetail />} />
+              <Route path="/blueprint/:blueprintId/preview" element={<BlueprintPreview />} />
               {/* Boost dashboard is now part of /dashboard?boost=:id */}
               <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
               <Route path="/join/:slug" element={<JoinRedirect />} />
