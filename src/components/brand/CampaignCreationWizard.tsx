@@ -675,6 +675,59 @@ export function CampaignCreationWizard({
                 {/* Step 1: Budget & Targeting */}
                 {currentStep === 1 && (
                   <div className="space-y-5">
+                    {/* Campaign Name */}
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Banner Upload */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Banner</Label>
+                      {bannerPreview ? (
+                        <div className="relative h-32 rounded-xl overflow-hidden group">
+                          <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={removeBanner}
+                              className="gap-2"
+                            >
+                              <X className="h-4 w-4" />
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => fileInputRef.current?.click()}
+                          className="h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 cursor-pointer flex items-center justify-center transition-colors bg-muted/20"
+                        >
+                          <div className="text-center">
+                            <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">Upload banner image</p>
+                          </div>
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </div>
 
                     <FormField
                       control={form.control}
@@ -739,7 +792,7 @@ export function CampaignCreationWizard({
                       )}
                     />
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-3">
                       <FormField
                         control={form.control}
                         name="is_private"
@@ -759,36 +812,36 @@ export function CampaignCreationWizard({
                                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
                                 )}
                               </div>
-                               <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                 Hide this campaign from the Marketplace
-                               </FormLabel>
-                             </div>
-                           </FormItem>
-                         )}
-                       />
-                       <FormField
-                         control={form.control}
-                         name="requires_application"
-                         render={({ field }) => (
-                           <FormItem>
-                             <div 
-                               className="flex items-center gap-3 cursor-pointer group"
-                               onClick={() => field.onChange(!field.value)}
-                             >
-                               <div className={cn(
-                                 "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                 field.value 
-                                   ? "bg-primary border-primary" 
-                                   : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                               )}>
-                                 {field.value && (
-                                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                                 )}
-                               </div>
-                               <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                 Require creators to submit an application
-                               </FormLabel>
-                             </div>
+                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                Hide this campaign from the Marketplace
+                              </FormLabel>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="requires_application"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group"
+                              onClick={() => field.onChange(!field.value)}
+                            >
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                field.value 
+                                  ? "bg-primary border-primary" 
+                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                              )}>
+                                {field.value && (
+                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                                )}
+                              </div>
+                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                Require creators to submit an application
+                              </FormLabel>
+                            </div>
                           </FormItem>
                         )}
                       />
