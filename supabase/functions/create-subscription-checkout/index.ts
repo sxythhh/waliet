@@ -69,18 +69,18 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
+      success_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile&checkout=success`,
+      cancel_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile`,
       metadata: {
         brand_id,
         user_id: user.id,
         plan_key,
         is_annual: is_annual ? "true" : "false",
       },
-      ui_mode: "embedded",
-      return_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile&checkout=complete`,
     });
 
     return new Response(JSON.stringify({ 
-      clientSecret: session.client_secret,
+      url: session.url,
       sessionId: session.id,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

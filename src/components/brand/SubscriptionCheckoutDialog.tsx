@@ -1,45 +1,32 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useState, useCallback } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout,
-} from "@stripe/react-stripe-js";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-interface SubscriptionCheckoutDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface SubscriptionCheckoutProps {
   planId: string;
   planName: string;
   brandId: string;
   isAnnual?: boolean;
   onComplete?: () => void;
+  children: React.ReactNode;
 }
 
-// Initialize Stripe with dark mode appearance
-const stripePromise = loadStripe("pk_live_51ShzH6DfOdvNUmh7CMsPGMZMGphWS5yTkqMc2PpmfAY63Y6f9CXKzJFAh0JZ3gMopuYWZOaBR0aE4VkAJFNHMqZd00I7C66Fvz");
-
-export function SubscriptionCheckoutDialog({
-  open,
-  onOpenChange,
+export function SubscriptionCheckoutButton({
   planId,
   planName,
   brandId,
   isAnnual = false,
   onComplete,
-}: SubscriptionCheckoutDialogProps) {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  children,
+}: SubscriptionCheckoutProps) {
   const [loading, setLoading] = useState(false);
 
-  const fetchClientSecret = useCallback(async () => {
+  const handleCheckout = async () => {
     setLoading(true);
-    setError(null);
     
     try {
-      const { data, error: fnError } = await supabase.functions.invoke(
+      const { data, error } = await supabase.functions.invoke(
         "create-subscription-checkout",
         {
           body: {
@@ -50,85 +37,36 @@ export function SubscriptionCheckoutDialog({
         }
       );
 
-      if (fnError) throw new Error(fnError.message);
+      if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      if (!data?.clientSecret) throw new Error("No client secret returned");
+      if (!data?.url) throw new Error("No checkout URL returned");
 
-      setClientSecret(data.clientSecret);
+      // Redirect to Stripe checkout
+      window.location.href = data.url;
     } catch (err) {
       console.error("Error creating checkout session:", err);
-      setError(err instanceof Error ? err.message : "Failed to create checkout");
-    } finally {
+      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
       setLoading(false);
     }
-  }, [planId, isAnnual, brandId]);
+  };
 
-  useEffect(() => {
-    if (open && !clientSecret) {
-      fetchClientSecret();
-    }
-  }, [open, clientSecret, fetchClientSecret]);
-
-  useEffect(() => {
-    if (!open) {
-      // Reset state when dialog closes
-      const timer = setTimeout(() => {
-        setClientSecret(null);
-        setError(null);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
-
-  const handleComplete = useCallback(() => {
-    onComplete?.();
-    onOpenChange(false);
-  }, [onComplete, onOpenChange]);
+  if (loading) {
+    return (
+      <button disabled className="w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] bg-muted/50 text-foreground flex items-center justify-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading...
+      </button>
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border-white/10">
-        <DialogHeader>
-          <DialogTitle className="tracking-[-0.5px] text-white">
-            Subscribe to {planName} {isAnnual ? "(Annual)" : "(Monthly)"}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="min-h-[400px]">
-          {loading && (
-            <div className="space-y-4 p-4">
-              <Skeleton className="h-12 w-full bg-white/10" />
-              <Skeleton className="h-12 w-full bg-white/10" />
-              <Skeleton className="h-12 w-full bg-white/10" />
-              <Skeleton className="h-10 w-full bg-white/10" />
-            </div>
-          )}
-          
-          {error && (
-            <div className="p-4 text-red-400 text-center">
-              <p>{error}</p>
-              <button 
-                onClick={fetchClientSecret}
-                className="mt-2 text-sm underline hover:no-underline"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-          
-          {clientSecret && (
-            <EmbeddedCheckoutProvider
-              stripe={stripePromise}
-              options={{
-                clientSecret,
-                onComplete: handleComplete,
-              }}
-            >
-              <EmbeddedCheckout className="stripe-dark-checkout" />
-            </EmbeddedCheckoutProvider>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+    <div onClick={handleCheckout} className="cursor-pointer">
+      {children}
+    </div>
   );
+}
+
+// Keep the old export for backwards compatibility
+export function SubscriptionCheckoutDialog(props: any) {
+  return null;
 }
