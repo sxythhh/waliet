@@ -355,16 +355,14 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
               {/* Private Toggle */}
               <div 
                 onClick={() => setFormData({ ...formData, is_private: !formData.is_private })}
-                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.is_private ? "border-primary bg-primary/5" : "border-transparent bg-muted/30 hover:bg-muted/50"}`}
+                className="flex items-center gap-3 cursor-pointer"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium" style={labelStyle}>Private Boost</p>
-                    <p className="text-xs text-muted-foreground" style={labelStyle}>Only accessible via direct link</p>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${formData.is_private ? "bg-primary" : "bg-muted"}`}>
-                    {formData.is_private && <Check className="w-3 h-3 text-primary-foreground" />}
-                  </div>
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${formData.is_private ? "border-primary bg-primary" : "border-muted-foreground/30"}`}>
+                  {formData.is_private && <Check className="w-3 h-3 text-primary-foreground" />}
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={labelStyle}>Private Boost</p>
+                  <p className="text-xs text-muted-foreground" style={labelStyle}>Only accessible via direct link</p>
                 </div>
               </div>
 
