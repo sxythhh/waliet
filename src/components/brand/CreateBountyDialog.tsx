@@ -409,33 +409,26 @@ export function CreateBountyDialog({
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setFormData({
-                  ...formData,
-                  is_private: !formData.is_private
-                })}>
-                      <div className="flex items-center gap-2.5">
-                        <Lock className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">Private</Label>
-                      </div>
-                      <Switch checked={formData.is_private} onCheckedChange={checked => setFormData({
-                    ...formData,
-                    is_private: checked
-                  })} />
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer group"
+                    onClick={() => setFormData({
+                      ...formData,
+                      is_private: !formData.is_private
+                    })}
+                  >
+                    <div className={cn(
+                      "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200",
+                      formData.is_private 
+                        ? "bg-primary border-primary" 
+                        : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                    )}>
+                      {formData.is_private && (
+                        <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                      )}
                     </div>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setFormData({
-                  ...formData,
-                  status: formData.status === 'active' ? 'draft' : 'active'
-                })}>
-                      <div className="flex items-center gap-2.5">
-                        <Check className="w-4 h-4 text-muted-foreground" />
-                        <Label className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">Active</Label>
-                      </div>
-                      <Switch checked={formData.status === 'active'} onCheckedChange={checked => setFormData({
-                    ...formData,
-                    status: checked ? 'active' : 'draft'
-                  })} />
-                    </div>
+                    <Label className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                      Make this boost private
+                    </Label>
                   </div>
 
                   {/* Date Range */}
