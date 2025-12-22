@@ -235,6 +235,19 @@ export function BrandWalletTab({
         <Skeleton className="h-64 w-full bg-[#1a1a1a]" />
       </div>;
   }
+  // If wallet data failed to load, show a minimal UI
+  if (!walletData) {
+    return <div className="space-y-6">
+      <Card className="border-border">
+        <CardContent className="py-8 text-center">
+          <p className="text-muted-foreground">Unable to load wallet data. Please try again later.</p>
+          <Button onClick={() => { setLoading(true); fetchWalletData().finally(() => setLoading(false)); }} variant="outline" className="mt-4">
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    </div>;
+  }
 
   return <div className="space-y-6">
       {/* Onboarding Card - Show if not complete */}
