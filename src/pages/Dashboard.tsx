@@ -272,14 +272,5 @@ export default function Dashboard() {
       {/* Creator Chat Widget - only show in creator mode */}
       {isCreatorMode && <CreatorChatWidget />}
 
-      {/* Onboarding Card Popup for new users */}
-      <Dialog open={showOnboardingCard} onOpenChange={setShowOnboardingCard}>
-        <DialogContent className="sm:max-w-[440px] p-6 border-0 bg-card rounded-2xl">
-          <OnboardingCard onSelect={() => {
-            markOnboardingComplete();
-            setShowOnboardingCard(false);
-          }} />
-        </DialogContent>
-      </Dialog>
     </div>;
 }
