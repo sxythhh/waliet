@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Crown, Check, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Upload, Crown, Check, Eye, EyeOff, Trash2, ArrowUpRight } from "lucide-react";
 import framePersonIcon from "@/assets/frame-person-notification-icon.svg";
 import stackedInboxIcon from "@/assets/stacked-inbox-icon.svg";
 import mailNotificationIcon from "@/assets/mail-notification-icon.svg";
@@ -566,15 +566,17 @@ export function UserSettingsTab() {
                 <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Public URL
                 </Label>
-                <div className="flex items-center">
-                  <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
-                  <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
-                    .virality.gg
-                  </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-1">
+                    <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
+                    <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
+                      .virality.gg
+                    </span>
+                  </div>
+                  <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                  </a>
                 </div>
-                <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
-                  Preview public page →
-                </a>
               </div>
 
               <Spacer />
