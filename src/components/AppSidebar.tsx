@@ -310,18 +310,18 @@ export function AppSidebar() {
               <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
-                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
                       <img src={swapHorizIcon} alt="" className="w-4 h-4" />
                       <span className="text-sm">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
-                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
                           {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{brand.name}</span>
                         </button>)}
-                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
                           {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
@@ -329,7 +329,7 @@ export function AppSidebar() {
                         </button>)}
                       <button onClick={() => {
                     setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-[#141414] hover:text-foreground">
+                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-foreground hover:bg-[#141414]">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
