@@ -1250,6 +1250,38 @@ export function CampaignCreationWizard({
                           </div>
                         )}
 
+                        {/* RPM Rate Adjustment - Admin Only */}
+                        {isAdmin && (
+                          <div className="rounded-lg bg-muted/20 p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">RPM Rate</span>
+                              <Badge variant="outline" className="text-xs">Admin</Badge>
+                            </div>
+                            <FormField
+                              control={form.control}
+                              name="rpm_rate"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <div className="relative">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                      <Input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="CPM rate"
+                                        className="pl-7 h-9 bg-muted/30 border-0"
+                                        {...field}
+                                      />
+                                    </div>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
+
                         {/* Payout Day - Admin Only */}
                         {isAdmin && (
                           <FormField
