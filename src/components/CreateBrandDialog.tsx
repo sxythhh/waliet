@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Upload } from "lucide-react";
 
 const BRAND_COLORS = [
-  "#8B5CF6", "#6366F1", "#3B82F6", "#0EA5E9", "#14B8A6", 
+  "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
   "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
   "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"
 ];
@@ -193,9 +193,34 @@ export function CreateBrandDialog({
             <div className="px-6 py-5 space-y-5">
               {/* Icon Section */}
               <div className="space-y-3">
-                <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
-                  Brand Icon
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                    Workspace Logo & Colour
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5"
+                    >
+                      <Upload className="h-3 w-3" />
+                      {logoPreview ? 'Change' : 'Upload'}
+                    </Button>
+                    {logoPreview && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={removeLogo} 
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] px-2"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 
                 <div className="flex items-start gap-4">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -214,8 +239,8 @@ export function CreateBrandDialog({
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-2.5">
-                    {/* Color Picker Grid */}
+                  {/* Color Picker Grid */}
+                  <div className="flex-1">
                     <div className="grid grid-cols-7 gap-1.5">
                       {BRAND_COLORS.map((color) => (
                         <button
@@ -226,31 +251,6 @@ export function CreateBrandDialog({
                           onClick={() => setBrandColor(color)}
                         />
                       ))}
-                    </div>
-                    
-                    {/* Upload Buttons Row */}
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => fileInputRef.current?.click()} 
-                        className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5"
-                      >
-                        <Upload className="h-3 w-3" />
-                        {logoPreview ? 'Change' : 'Upload'}
-                      </Button>
-                      {logoPreview && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={removeLogo} 
-                          className="h-7 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] px-2"
-                        >
-                          Remove
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </div>
