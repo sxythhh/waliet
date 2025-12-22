@@ -715,7 +715,7 @@ export function CreatorsTab({
                     setRecruitDialogOpen(true);
                   }
                 }} 
-                className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-gradient-to-r from-[#1f60dd] to-[#4b85f7] text-white hover:from-[#1a50c8] hover:to-[#3d73e5] border-t border-white/20 shadow-md"
+                className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Recruit Creators
