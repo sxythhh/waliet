@@ -222,36 +222,34 @@ export function CreateBrandDialog({
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-3">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
                   {/* Logo Preview or Initials with Color */}
                   <div 
-                    className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm"
+                    className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
                     style={{ backgroundColor: logoPreview ? undefined : brandColor }}
                   >
                     {logoPreview ? (
                       <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-lg font-semibold font-inter">
+                      <span className="text-white text-sm font-semibold font-inter">
                         {getInitials(brandName)}
                       </span>
                     )}
                   </div>
 
-                  {/* Color Picker Grid */}
-                  <div className="flex-1">
-                    <div className="grid grid-cols-7 gap-1.5">
-                      {BRAND_COLORS.map((color) => (
-                        <button
-                          key={color}
-                          type="button"
-                          className={`w-6 h-6 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-1 ring-offset-background ring-white' : 'hover:scale-105 hover:shadow-md'}`}
-                          style={{ backgroundColor: color }}
-                          onClick={() => setBrandColor(color)}
-                        />
-                      ))}
-                    </div>
+                  {/* Color Picker - Inline */}
+                  <div className="flex items-center gap-1">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-5 h-5 rounded-full transition-all flex-shrink-0 ${brandColor === color ? 'ring-1.5 ring-offset-1 ring-offset-background ring-white/80 scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setBrandColor(color)}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
