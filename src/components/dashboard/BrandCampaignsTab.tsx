@@ -421,7 +421,7 @@ export function BrandCampaignsTab({
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
               return <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => setSelectedBoostId(bounty.id)}>
                           <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            {bounty.banner_url ? <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            {bounty.banner_url ? <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
                                 <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
                                   No Banner
                                 </span>
