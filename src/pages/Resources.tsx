@@ -1,14 +1,9 @@
 import { Link } from "react-router-dom";
-import { LogOut, ArrowRight, BookOpen, Folder } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, BookOpen, Folder } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import AuthDialog from "@/components/AuthDialog";
 import { Helmet } from "react-helmet-async";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
-import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
-import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
+import PublicNavbar from "@/components/PublicNavbar";
 
 interface BlogPost {
   id: string;
@@ -35,22 +30,10 @@ interface Course {
 type ResourceFilter = 'all' | 'articles' | 'courses';
 
 export default function Resources() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ResourceFilter>('all');
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsAuthenticated(!!session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -169,117 +152,7 @@ export default function Resources() {
         </script>
       </Helmet>
 
-      {/* Navigation Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2" aria-label="Virality Home">
-                <img 
-                  alt="Virality Logo" 
-                  className="h-6 w-6" 
-                  src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png"
-                  width="24"
-                  height="24"
-                />
-                <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
-              </Link>
-              
-              <NavigationMenu className="hidden md:flex">
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-transparent font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-transparent">
-                      Platform
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl">
-                        <NavigationMenuLink asChild>
-                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                            <img src={blueprintsMenuIcon} alt="" className="w-5 h-5" />
-                            <div>
-                              <div className="font-medium text-white">Blueprints</div>
-                              <div className="text-xs text-white/50">Campaign templates & briefs</div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                            <img src={campaignsMenuIcon} alt="" className="w-5 h-5" />
-                            <div>
-                              <div className="font-medium text-white">Campaigns</div>
-                              <div className="text-xs text-white/50">RPM-based creator programs</div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                            <img src={boostsMenuIcon} alt="" className="w-5 h-5" />
-                            <div>
-                              <div className="font-medium text-white">Boosts</div>
-                              <div className="text-xs text-white/50">Fixed-rate video bounties</div>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-              
-              <Link to="/resources" className="px-3 py-2 text-sm text-white hover:text-white font-inter tracking-[-0.5px]">
-                Resources
-              </Link>
-              
-              <Link to="/contact" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
-                Contact
-              </Link>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {isAuthenticated ? (
-                <>
-                  <Link to="/dashboard">
-                    <Button 
-                      size="sm" 
-                      className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl"
-                    >
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={async () => { await supabase.auth.signOut(); }} 
-                    className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl"
-                    aria-label="Sign out"
-                  >
-                    <LogOut className="h-4 w-4" aria-hidden="true" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="font-geist font-medium tracking-[-0.5px] hover:bg-transparent hover:text-foreground px-[10px] rounded-3xl text-white/80" 
-                    onClick={() => setShowAuthDialog(true)}
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={() => setShowAuthDialog(true)} 
-                    className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl"
-                  >
-                    Create Account
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </nav>
-      </header>
+      <PublicNavbar />
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pt-14">
@@ -387,36 +260,51 @@ export default function Resources() {
               {(filter === 'all' || filter === 'articles') && blogPosts.map(post => (
                 <Link 
                   key={post.id} 
-                  to={`/blog/${post.slug}`}
-                  className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all" 
+                  to={`/blog/${post.slug}`} 
+                  className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all"
                   role="listitem"
                   itemScope 
                   itemType="https://schema.org/Article"
                 >
-                  {post.image_url && (
-                    <img 
-                      src={post.image_url} 
-                      alt={`${post.title} article thumbnail`}
-                      className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
-                      loading="lazy"
-                      itemProp="image"
-                    />
+                  {post.image_url ? (
+                    <div className="relative">
+                      <img 
+                        src={post.image_url} 
+                        alt={`${post.title} article thumbnail`}
+                        className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                        itemProp="image"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      {post.category && (
+                        <div className="absolute bottom-3 left-3">
+                          <span className="inline-block px-2.5 py-1 bg-white/10 text-white/80 rounded-full text-xs font-inter tracking-[-0.5px]" itemProp="articleSection">
+                            {post.category}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-blue-500/20 to-purple-600/10 flex items-center justify-center">
+                      <BookOpen className="w-12 h-12 text-blue-500/50" aria-hidden="true" />
+                    </div>
                   )}
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      {post.category ? (
-                        <span className="inline-block px-2.5 py-1 bg-primary/20 text-primary rounded-full text-xs font-inter tracking-[-0.5px]" itemProp="articleSection">
-                          {post.category}
-                        </span>
-                      ) : (
-                        <span className="inline-block px-2.5 py-1 bg-white/10 text-white/60 rounded-full text-xs font-inter tracking-[-0.5px]">
-                          Article
-                        </span>
+                      {post.published_at && (
+                        <time 
+                          dateTime={formatISODate(post.published_at)} 
+                          className="text-white/40 text-xs font-inter tracking-[-0.5px]"
+                          itemProp="datePublished"
+                        >
+                          {formatDate(post.published_at)}
+                        </time>
                       )}
                       {post.read_time && (
-                        <span className="text-white/40 text-xs font-inter tracking-[-0.5px]">
-                          {post.read_time}
-                        </span>
+                        <>
+                          <span className="text-white/20">·</span>
+                          <span className="text-white/40 text-xs font-inter tracking-[-0.5px]">{post.read_time}</span>
+                        </>
                       )}
                     </div>
                     <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 line-clamp-2" itemProp="headline">
@@ -427,36 +315,36 @@ export default function Resources() {
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 mt-3 text-white/40 text-xs font-inter tracking-[-0.5px]">
-                      <span itemProp="author">{post.author}</span>
-                      <span aria-hidden="true">•</span>
-                      <time dateTime={formatISODate(post.published_at)} itemProp="datePublished">
-                        {formatDate(post.published_at)}
-                      </time>
-                    </div>
+                    <meta itemProp="author" content={post.author} />
                   </div>
                 </Link>
               ))}
             </div>
           )}
 
-          {/* Empty State */}
-          {!loading && (
-            (filter === 'all' && blogPosts.length === 0 && courses.length === 0) ||
-            (filter === 'articles' && blogPosts.length === 0) ||
-            (filter === 'courses' && courses.length === 0)
-          ) && (
-            <div className="text-center py-12">
-              <p className="text-white/50 font-inter tracking-[-0.5px]">
-                No {filter === 'all' ? 'resources' : filter} found yet.
-              </p>
+          {/* Empty States */}
+          {!loading && filter === 'all' && blogPosts.length === 0 && courses.length === 0 && (
+            <div className="text-center py-16">
+              <BookOpen className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-white/60 font-inter tracking-[-0.5px]">No resources available yet</p>
+            </div>
+          )}
+
+          {!loading && filter === 'articles' && blogPosts.length === 0 && (
+            <div className="text-center py-16">
+              <BookOpen className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-white/60 font-inter tracking-[-0.5px]">No articles available yet</p>
+            </div>
+          )}
+
+          {!loading && filter === 'courses' && courses.length === 0 && (
+            <div className="text-center py-16">
+              <Folder className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-white/60 font-inter tracking-[-0.5px]">No courses available yet</p>
             </div>
           )}
         </section>
       </main>
-
-      {/* Auth Dialog */}
-      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </div>
   );
 }
