@@ -269,13 +269,6 @@ export function CreateBountyDialog({
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
-          <div>
-            <h2 className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">New Boost</h2>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
-          </div>
-        </div>
 
         {/* Main Content */}
         <div className="flex-1 overflow-y-auto p-6 py-0">
