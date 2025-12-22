@@ -132,10 +132,10 @@ export function CreateCampaignTypeDialog({
             <div className="space-y-2">
               {/* Clipping Option */}
               <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
+                <div style={{
                   backgroundColor: '#a7751e'
-                }}>
-                  <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
+                }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f59f0a]">
+                  <img alt="Clipping" className="h-5 w-5" src="/lovable-uploads/8d2ade61-92af-42be-a3a4-5fffeb2e4a59.png" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
