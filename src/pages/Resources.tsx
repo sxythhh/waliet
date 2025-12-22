@@ -1,10 +1,28 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Folder } from "lucide-react";
+import { BookOpen, Folder } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import PublicNavbar from "@/components/PublicNavbar";
 
+const ImageWithSkeleton = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  return (
+    <div className="relative w-full h-48">
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-white/5 animate-pulse" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        loading="lazy"
+        onLoad={() => setIsLoaded(true)}
+      />
+    </div>
+  );
+};
 interface BlogPost {
   id: string;
   title: string;
@@ -218,12 +236,10 @@ export default function Resources() {
                 >
                   {course.banner_url ? (
                     <div className="relative">
-                      <img 
+                      <ImageWithSkeleton 
                         src={course.banner_url} 
                         alt={`${course.title} course banner`}
-                        className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
-                        loading="lazy"
-                        itemProp="image"
+                        className="w-full h-48 object-cover group-hover:opacity-90"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute bottom-3 left-3 flex items-center gap-2">
@@ -268,12 +284,10 @@ export default function Resources() {
                 >
                   {post.image_url ? (
                     <div className="relative">
-                      <img 
+                      <ImageWithSkeleton 
                         src={post.image_url} 
                         alt={`${post.title} article thumbnail`}
-                        className="w-full h-48 object-cover group-hover:opacity-90 transition-opacity"
-                        loading="lazy"
-                        itemProp="image"
+                        className="w-full h-48 object-cover group-hover:opacity-90"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       {post.category && (
