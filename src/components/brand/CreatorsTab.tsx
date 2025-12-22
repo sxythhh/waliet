@@ -717,8 +717,8 @@ export function CreatorsTab({
                 }} 
                 className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-gradient-to-r from-[#1f60dd] to-[#4b85f7] text-white hover:from-[#1a50c8] hover:to-[#3d73e5] border-t border-white/20 shadow-md"
               >
-                <Sparkles className="h-3.5 w-3.5" />
-                Upgrade Plan
+                <Plus className="h-3.5 w-3.5" />
+                Recruit Creators
               </Button>
             </div> : filteredConversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
