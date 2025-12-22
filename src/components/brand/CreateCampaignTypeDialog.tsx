@@ -9,7 +9,6 @@ import clippingIcon from "@/assets/clipping-icon.svg";
 import boostIcon from "@/assets/boost-icon.svg";
 import blueprintsIcon from "@/assets/blueprints-inactive.svg";
 import { WhopSetupDialog } from "./WhopSetupDialog";
-
 interface Blueprint {
   id: string;
   title: string;
@@ -43,7 +42,6 @@ export function CreateCampaignTypeDialog({
   const [searchParams, setSearchParams] = useSearchParams();
   const [showWhopSetup, setShowWhopSetup] = useState(false);
   const [pendingBlueprintId, setPendingBlueprintId] = useState<string | undefined>();
-
   useEffect(() => {
     if (defaultBlueprintId) {
       setSelectedBlueprint(defaultBlueprintId);
@@ -77,11 +75,9 @@ export function CreateCampaignTypeDialog({
     setPendingBlueprintId(selectedBlueprint || undefined);
     setShowWhopSetup(true);
   };
-
   const handleWhopSetupComplete = () => {
     onSelectClipping(pendingBlueprintId);
   };
-
   const handleBoostClick = () => {
     setOpen(false);
     onSelectBoost?.();
@@ -96,8 +92,7 @@ export function CreateCampaignTypeDialog({
 
   // If controlled, don't render trigger
   if (controlledOpen !== undefined) {
-    return (
-      <>
+    return <>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="sm:max-w-[440px] bg-background border-none shadow-2xl p-6">
             <div className="space-y-5">
@@ -144,8 +139,8 @@ export function CreateCampaignTypeDialog({
                   {/* Clipping Option */}
                   <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                     <div style={{
-                      backgroundColor: '#a7751e'
-                    }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f59f0a]">
+                    backgroundColor: '#a7751e'
+                  }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f59f0a]">
                       <img alt="Clipping" className="h-5 w-5" src="/lovable-uploads/8d2ade61-92af-42be-a3a4-5fffeb2e4a59.png" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -161,9 +156,9 @@ export function CreateCampaignTypeDialog({
                   {/* Boost Option */}
                   <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                      backgroundColor: '#1ea75e'
-                    }}>
-                      <img alt="Boost" className="h-5 w-5" src="/lovable-uploads/a5e5e0b5-a5aa-4ed7-88da-c3e121539f10.png" />
+                    backgroundColor: '#1ea75e'
+                  }}>
+                      <img alt="Boost" className="h-5 w-5" src="/lovable-uploads/be430657-086b-4599-8bf8-71326f2f0152.png" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
@@ -180,18 +175,9 @@ export function CreateCampaignTypeDialog({
           </DialogContent>
         </Dialog>
 
-        {brandId && (
-          <WhopSetupDialog
-            open={showWhopSetup}
-            onOpenChange={setShowWhopSetup}
-            brandId={brandId}
-            onComplete={handleWhopSetupComplete}
-          />
-        )}
-      </>
-    );
+        {brandId && <WhopSetupDialog open={showWhopSetup} onOpenChange={setShowWhopSetup} brandId={brandId} onComplete={handleWhopSetupComplete} />}
+      </>;
   }
-
   return <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -247,8 +233,8 @@ export function CreateCampaignTypeDialog({
               {/* Clipping Option */}
               <button onClick={handleClippingClick} disabled={!hasBlueprints} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group disabled:opacity-40 disabled:cursor-not-allowed">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#a7751e'
-              }}>
+                  backgroundColor: '#a7751e'
+                }}>
                   <img src={clippingIcon} alt="Clipping" className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -264,8 +250,8 @@ export function CreateCampaignTypeDialog({
               {/* Boost Option */}
               <button onClick={handleBoostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
-                backgroundColor: '#1ea75e'
-              }}>
+                  backgroundColor: '#1ea75e'
+                }}>
                   <img alt="Boost" className="h-5 w-5" src="/lovable-uploads/a5e5e0b5-a5aa-4ed7-88da-c3e121539f10.png" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -283,13 +269,6 @@ export function CreateCampaignTypeDialog({
       </DialogContent>
     </Dialog>
 
-    {brandId && (
-      <WhopSetupDialog
-        open={showWhopSetup}
-        onOpenChange={setShowWhopSetup}
-        brandId={brandId}
-        onComplete={handleWhopSetupComplete}
-      />
-    )}
+    {brandId && <WhopSetupDialog open={showWhopSetup} onOpenChange={setShowWhopSetup} brandId={brandId} onComplete={handleWhopSetupComplete} />}
   </>;
 }
