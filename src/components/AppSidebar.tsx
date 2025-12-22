@@ -275,8 +275,11 @@ export function AppSidebar() {
     if (currentBrandLogo) {
       return <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />;
     }
-    return <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
-        <Building2 className="w-3.5 h-3.5 text-neutral-400" />
+    return <div 
+      className="w-6 h-6 rounded flex items-center justify-center"
+      style={{ backgroundColor: currentBrandColor || '#1f1f1f' }}
+    >
+        <span className="text-[10px] font-semibold text-white uppercase">{currentBrandName?.charAt(0) || 'B'}</span>
       </div>;
   };
   return <>

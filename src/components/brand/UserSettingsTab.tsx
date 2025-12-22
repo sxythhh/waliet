@@ -472,6 +472,15 @@ export function UserSettingsTab() {
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
+              {/* Save Button - Top */}
+              <Button 
+                onClick={handleSaveBrand} 
+                disabled={savingBrand} 
+                className="w-auto h-9 px-6 tracking-[-0.5px] bg-background text-foreground border border-border hover:bg-muted mb-6"
+              >
+                {savingBrand ? "Saving..." : "Save Changes"}
+              </Button>
+
               {/* Icon Section */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
@@ -661,13 +670,6 @@ export function UserSettingsTab() {
                   <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
                 </div>
               </div>
-
-              <Spacer />
-
-              {/* Save Button */}
-              <Button onClick={handleSaveBrand} disabled={savingBrand} className="w-full h-11 tracking-[-0.5px]">
-                {savingBrand ? "Saving..." : "Save Changes"}
-              </Button>
 
               <Spacer />
 
