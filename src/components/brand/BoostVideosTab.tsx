@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Check, X, ExternalLink, ChevronRight, User } from "lucide-react";
+import { Check, X, ExternalLink, ChevronRight } from "lucide-react";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import { SubmissionHeatmap } from "./SubmissionHeatmap";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -247,8 +247,8 @@ export function BoostVideosTab({
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
               {creatorStats.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                  <User className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">No submissions yet</p>
+                  
+                  
                 </div> : creatorStats.map(creator => {
               const progressPercent = creator.approvedThisMonth / videosPerMonth * 100;
               const isSelected = selectedCreator === creator.userId;
