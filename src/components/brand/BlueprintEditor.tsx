@@ -139,11 +139,7 @@ export function BlueprintEditor({
   }, [blueprintId, brandId]);
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([
-      supabase.from("blueprints").select("*").eq("id", blueprintId).single(), 
-      supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single(),
-      supabase.from("scope_video_saves")
-        .select(`
+    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single(), supabase.from("scope_video_saves").select(`
           id,
           scope_video_id,
           scope_videos (
@@ -154,9 +150,7 @@ export function BlueprintEditor({
             username,
             platform
           )
-        `)
-        .eq("blueprint_id", blueprintId)
-    ]);
+        `).eq("blueprint_id", blueprintId)]);
     if (blueprintRes.error) {
       console.error("Error fetching blueprint:", blueprintRes.error);
       toast.error("Failed to load blueprint");
@@ -189,7 +183,7 @@ export function BlueprintEditor({
     if (brandRes.data) {
       setBrand(brandRes.data);
     }
-    
+
     // Process saved scope videos
     if (scopeVideosRes.data) {
       const videos = scopeVideosRes.data.map((save: any) => ({
@@ -204,7 +198,6 @@ export function BlueprintEditor({
       }));
       setSavedScopeVideos(videos);
     }
-    
     setLoading(false);
   };
   const saveBlueprint = useCallback(debounce(async (updates: Partial<Blueprint>) => {
@@ -514,10 +507,9 @@ export function BlueprintEditor({
     });
   };
   const removeSavedScopeVideo = async (saveId: string) => {
-    const { error } = await supabase
-      .from("scope_video_saves")
-      .delete()
-      .eq("id", saveId);
+    const {
+      error
+    } = await supabase.from("scope_video_saves").delete().eq("id", saveId);
     if (error) {
       console.error("Error removing saved scope video:", error);
       toast.error("Failed to remove video");
@@ -892,45 +884,30 @@ export function BlueprintEditor({
                   </div>}
               </div>
               {/* Saved Scope Videos */}
-              {savedScopeVideos.length > 0 && (
-                <div className="space-y-3">
+              {savedScopeVideos.length > 0 && <div className="space-y-3">
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">From Scope</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {savedScopeVideos.map((video) => (
-                      <ScopeVideoCard
-                        key={video.id}
-                        video={{
-                          id: video.id,
-                          platform: video.platform,
-                          username: video.username,
-                          video_url: video.video_url,
-                          file_url: video.file_url,
-                          thumbnail_url: video.thumbnail_url,
-                          caption: video.caption
-                        }}
-                        mode="blueprint"
-                        onRemove={() => removeSavedScopeVideo(video.id)}
-                      />
-                    ))}
+                    {savedScopeVideos.map(video => <ScopeVideoCard key={video.id} video={{
+                  id: video.id,
+                  platform: video.platform,
+                  username: video.username,
+                  video_url: video.video_url,
+                  file_url: video.file_url,
+                  thumbnail_url: video.thumbnail_url,
+                  caption: video.caption
+                }} mode="blueprint" onRemove={() => removeSavedScopeVideo(video.id)} />)}
                   </div>
-                </div>
-              )}
+                </div>}
               {/* Manual Example Videos */}
-              {blueprint.example_videos.length > 0 && (
-                <div className="space-y-2">
-                  {savedScopeVideos.length > 0 && (
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">Uploaded</p>
-                  )}
-                  {blueprint.example_videos.map((video, index) => (
-                    <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+              {blueprint.example_videos.length > 0 && <div className="space-y-2">
+                  {savedScopeVideos.length > 0 && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">Uploaded</p>}
+                  {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                       <div className="flex items-start gap-3">
-                        {video.url && (
-                          <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
+                        {video.url && <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
                             <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
-                              (e.target as HTMLVideoElement).style.display = 'none';
-                            }} />
-                          </div>
-                        )}
+                      (e.target as HTMLVideoElement).style.display = 'none';
+                    }} />
+                          </div>}
                         <div className="flex-1 min-w-0">
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
                         </div>
@@ -938,10 +915,8 @@ export function BlueprintEditor({
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    </div>)}
+                </div>}
             </div>
           </BlueprintSection>;
       case "target_personas":
@@ -983,7 +958,10 @@ export function BlueprintEditor({
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               
               <div className="h-4 w-px bg-border/50 shrink-0" />
-              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => { prev.delete('blueprint'); return prev; })} />}
+              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
+              prev.delete('blueprint');
+              return prev;
+            })} />}
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
@@ -999,40 +977,9 @@ export function BlueprintEditor({
 
           {/* Content */}
           <div className="flex-1 overflow-auto">
-            <div className="max-w-4xl mx-auto p-3 sm:p-6 space-y-3 sm:space-y-4">
+            <div className="max-w-4xl mx-auto p-3 sm:p-6 space-y-3 sm:space-y-4 py-[10px]">
               {/* Modular Details Header */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 sm:py-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h2 className="text-sm sm:text-base font-medium font-inter tracking-[-0.5px] text-foreground">
-                      Modular Details
-                    </h2>
-                    <p className="text-xs sm:text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                      Write free-form or add the sections you need
-                    </p>
-                  </div>
-                </div>
-                <TemplateSelector onSelectTemplate={template => {
-                updateBlueprint({
-                  content: template.content || blueprint.content,
-                  platforms: template.platforms || blueprint.platforms,
-                  hooks: template.hooks || blueprint.hooks,
-                  talking_points: template.talking_points || blueprint.talking_points,
-                  dos_and_donts: template.dos_and_donts || blueprint.dos_and_donts,
-                  call_to_action: template.call_to_action || blueprint.call_to_action,
-                  hashtags: template.hashtags || blueprint.hashtags,
-                  brand_voice: template.brand_voice || blueprint.brand_voice,
-                  target_personas: template.target_personas || blueprint.target_personas,
-                  assets: template.assets || blueprint.assets,
-                  example_videos: template.example_videos || blueprint.example_videos,
-                  content_guidelines: template.content_guidelines || blueprint.content_guidelines
-                });
-                toast.success("Template applied!");
-              }} />
-              </div>
+              
 
               {/* Modular Sections */}
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -1065,15 +1012,7 @@ export function BlueprintEditor({
   </div>
 
       {/* Campaign Type Selection Dialog */}
-      <CreateCampaignTypeDialog
-        open={showCampaignTypeDialog}
-        onOpenChange={setShowCampaignTypeDialog}
-        onSelectClipping={handleSelectClipping}
-        onSelectManaged={handleSelectClipping}
-        onSelectBoost={handleSelectBoost}
-        brandId={brandId}
-        defaultBlueprintId={blueprintId}
-      />
+      <CreateCampaignTypeDialog open={showCampaignTypeDialog} onOpenChange={setShowCampaignTypeDialog} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} brandId={brandId} defaultBlueprintId={blueprintId} />
 
       {/* Campaign Creation Wizard */}
       {showCampaignWizard && <CampaignCreationWizard open={showCampaignWizard} onOpenChange={setShowCampaignWizard} brandId={brandId} brandName={brand?.name || ""} brandLogoUrl={brand?.logo_url || undefined} initialBlueprintId={blueprintId} />}
