@@ -80,6 +80,7 @@ interface Brand {
   id: string;
   name: string;
   logo_url: string | null;
+  brand_color: string | null;
 }
 interface BlueprintEditorProps {
   blueprintId: string;
@@ -139,7 +140,7 @@ export function BlueprintEditor({
   }, [blueprintId, brandId]);
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url").eq("id", brandId).single(), supabase.from("scope_video_saves").select(`
+    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url, brand_color").eq("id", brandId).single(), supabase.from("scope_video_saves").select(`
           id,
           scope_video_id,
           scope_videos (
@@ -958,10 +959,23 @@ export function BlueprintEditor({
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               
               <div className="h-4 w-px bg-border/50 shrink-0" />
-              {brand?.logo_url && <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
-              prev.delete('blueprint');
-              return prev;
-            })} />}
+              {brand?.logo_url ? (
+                <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
+                  prev.delete('blueprint');
+                  return prev;
+                })} />
+              ) : (
+                <div 
+                  className="h-5 w-5 sm:h-6 sm:w-6 rounded flex items-center justify-center text-white text-xs font-semibold shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: brand?.brand_color || '#8B5CF6' }}
+                  onClick={() => setSearchParams(prev => {
+                    prev.delete('blueprint');
+                    return prev;
+                  })}
+                >
+                  {(brand?.name || 'B').charAt(0).toUpperCase()}
+                </div>
+              )}
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
