@@ -280,9 +280,9 @@ export function SubscriptionGateDialog({
                           Loading...
                         </>
                       ) : isEnterprise ? (
-                        "Contact Sales"
+                        'Contact Sales'
                       ) : (
-                        "Start Free Trial"
+                        `Get ${plan.name}`
                       )}
                     </button>
                   </div>
