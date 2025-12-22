@@ -14,7 +14,7 @@ import { Upload } from "lucide-react";
 const BRAND_COLORS = [
   "#8B5CF6", "#6366F1", "#3B82F6", "#0EA5E9", "#14B8A6", 
   "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
-  "#8B5CF6", "#A855F7", "#D946EF", "#F43F5E", "#64748B"
+  "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"
 ];
 
 const brandSchema = z.object({
@@ -190,56 +190,68 @@ export function CreateBrandDialog({
             </div>
 
             {/* Content */}
-            <div className="px-6 py-5 space-y-4">
-              {/* Logo Section */}
-              <div>
+            <div className="px-6 py-5 space-y-5">
+              {/* Icon Section */}
+              <div className="space-y-3">
                 <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
-                  Set an Icon
+                  Brand Icon
                 </label>
-                <div className="flex items-center gap-4 mt-1.5">
+                
+                <div className="flex items-start gap-4">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
                   {/* Logo Preview or Initials with Color */}
                   <div 
-                    className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                    className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center shadow-sm"
                     style={{ backgroundColor: logoPreview ? undefined : brandColor }}
                   >
                     {logoPreview ? (
                       <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-white text-base font-semibold font-inter">
+                      <span className="text-white text-lg font-semibold font-inter">
                         {getInitials(brandName)}
                       </span>
                     )}
                   </div>
 
-                  {/* Color Picker - Inline */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {BRAND_COLORS.map((color, index) => (
-                      <button
-                        key={`${color}-${index}`}
-                        type="button"
-                        className={`w-6 h-6 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-1 ring-offset-background ring-foreground scale-110' : 'hover:scale-110'}`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setBrandColor(color)}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Upload/Remove Buttons */}
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} className="h-8 px-3 text-sm font-inter tracking-[-0.3px] gap-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+                  <div className="flex-1 space-y-3">
+                    {/* Color Picker Grid */}
+                    <div className="grid grid-cols-5 gap-2">
+                      {BRAND_COLORS.map((color) => (
+                        <button
+                          key={color}
+                          type="button"
+                          className={`w-8 h-8 rounded-lg transition-all ${brandColor === color ? 'ring-2 ring-offset-2 ring-offset-background ring-primary' : 'hover:scale-105 hover:shadow-md'}`}
+                          style={{ backgroundColor: color }}
+                          onClick={() => setBrandColor(color)}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Upload Button */}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="h-8 text-xs font-inter tracking-[-0.3px] gap-1.5"
+                    >
                       <Upload className="h-3.5 w-3.5" />
-                      Upload
+                      {logoPreview ? 'Change Image' : 'Upload Image'}
                     </Button>
-                    {logoPreview && <Button type="button" variant="ghost" size="sm" onClick={removeLogo} className="h-8 px-3 text-sm text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]">
+                    {logoPreview && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={removeLogo} 
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] ml-2"
+                      >
                         Remove
-                      </Button>}
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] mt-1.5">
-                  We support PNGs, JPGs and JPEGs under 10MB
-                </p>
               </div>
 
               {/* Name Field */}
