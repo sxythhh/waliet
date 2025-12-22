@@ -21,7 +21,6 @@ import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
-type CampaignTypeFilter = "all" | "campaigns" | "boosts";
 interface Campaign {
   id: string;
   title: string;
@@ -75,7 +74,6 @@ export function BrandCampaignsTab({
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
-  const [typeFilter, setTypeFilter] = useState<CampaignTypeFilter>("all");
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
   const {
     isAdmin,
@@ -341,27 +339,28 @@ export function BrandCampaignsTab({
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                  {/* Type Filter */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
-                    {(["all", "campaigns", "boosts"] as CampaignTypeFilter[]).map(filter => <button key={filter} onClick={() => setTypeFilter(filter)} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${typeFilter === filter ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                        {filter}
-                      </button>)}
-                  </div>
-                  {/* Status Filter */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 p-1 rounded-lg bg-muted/40">
-                    {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium font-['Inter'] tracking-[-0.5px] capitalize rounded-md transition-all ${statusFilter === filter ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                        {filter}
-                      </button>)}
-                  </div>
+                <div className="flex items-center gap-0 border-b border-border">
+                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => (
+                    <button 
+                      key={filter} 
+                      onClick={() => setStatusFilter(filter)} 
+                      className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${
+                        statusFilter === filter 
+                          ? "border-primary text-foreground" 
+                          : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      {filter}
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Combined and sorted list */}
-                {[...campaigns.filter(c => typeFilter === "all" || typeFilter === "campaigns").filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
+                {[...campaigns.filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
             ...c,
             type: "campaign" as const
-          })), ...bounties.filter(b => typeFilter === "all" || typeFilter === "boosts").filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
+          })), ...bounties.filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
             ...b,
             type: "boost" as const
           }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(item => {
