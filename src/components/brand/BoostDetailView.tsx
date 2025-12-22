@@ -767,6 +767,6 @@ export function BoostDetailView({
       fetchBoostData();
     }} />
 
-      <TopUpBalanceDialog open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} boostId={boostId} boostTitle={boost?.title || ""} currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)} />
+      <TopUpBalanceDialog open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} boostId={boostId} boostTitle={boost?.title || ""} currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)} onSuccess={fetchBoostData} />
     </>;
 }

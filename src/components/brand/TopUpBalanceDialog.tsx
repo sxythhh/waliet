@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, Wallet, Loader2 } from "lucide-react";
+import { ArrowRight, AlertCircle, Wallet, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -12,9 +12,8 @@ interface TopUpBalanceDialogProps {
   boostId: string;
   boostTitle: string;
   currentBalance: number;
+  onSuccess?: () => void;
 }
-
-const PRESET_AMOUNTS = [100, 500, 1000, 2500];
 
 export function TopUpBalanceDialog({
   open,
@@ -22,169 +21,227 @@ export function TopUpBalanceDialog({
   boostId,
   boostTitle,
   currentBalance,
+  onSuccess,
 }: TopUpBalanceDialogProps) {
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(500);
-  const [customAmount, setCustomAmount] = useState("");
+  const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
+  const [viralityBalance, setViralityBalance] = useState(0);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
-  const handlePresetClick = (amount: number) => {
-    setSelectedAmount(amount);
-    setCustomAmount("");
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   };
 
-  const handleCustomAmountChange = (value: string) => {
-    setCustomAmount(value);
-    setSelectedAmount(null);
-  };
-
-  const getFinalAmount = () => {
-    if (customAmount) {
-      const parsed = parseFloat(customAmount);
-      return isNaN(parsed) ? 0 : parsed;
+  useEffect(() => {
+    if (open) {
+      fetchViralityBalance();
     }
-    return selectedAmount || 0;
+  }, [open, boostId]);
+
+  const fetchViralityBalance = async () => {
+    setLoadingBalance(true);
+    try {
+      // Get the boost to find the brand_id
+      const { data: boostData, error: boostError } = await supabase
+        .from("bounty_campaigns")
+        .select("brand_id")
+        .eq("id", boostId)
+        .single();
+
+      if (boostError || !boostData) {
+        console.error("Error fetching boost:", boostError);
+        return;
+      }
+
+      // Get the brand's virality balance
+      const { data, error } = await supabase.functions.invoke("get-brand-balance", {
+        body: { brandId: boostData.brand_id },
+      });
+
+      if (error) throw error;
+      setViralityBalance(data?.virality_balance || 0);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    } finally {
+      setLoadingBalance(false);
+    }
   };
 
-  const handleTopUp = async () => {
-    const amount = getFinalAmount();
-    
-    if (amount < 100) {
-      toast.error("Minimum top-up amount is $100");
+  const handleTransfer = async () => {
+    const parsedAmount = parseFloat(amount);
+
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    if (parsedAmount > viralityBalance) {
+      toast.error("Insufficient Virality balance");
       return;
     }
 
     setLoading(true);
-    
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: userData } = await supabase.auth.getUser();
       
-      if (!session) {
-        toast.error("Please sign in to continue");
-        return;
+      // Get the boost to find the brand_id
+      const { data: boostData, error: boostError } = await supabase
+        .from("bounty_campaigns")
+        .select("brand_id, budget")
+        .eq("id", boostId)
+        .single();
+
+      if (boostError || !boostData) {
+        throw new Error("Failed to fetch boost data");
       }
 
-      const { data, error } = await supabase.functions.invoke("create-boost-topup", {
-        body: { boostId, amount },
-      });
+      // Create the transaction record (debit from virality balance)
+      const { error: transactionError } = await supabase
+        .from("brand_wallet_transactions")
+        .insert({
+          brand_id: boostData.brand_id,
+          boost_id: boostId,
+          type: "boost_allocation",
+          amount: -parsedAmount,
+          status: "completed",
+          description: `Funds allocated to boost: ${boostTitle}`,
+          created_by: userData?.user?.id,
+        });
 
-      if (error) {
-        throw error;
-      }
+      if (transactionError) throw transactionError;
 
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      } else {
-        throw new Error("No checkout URL returned");
-      }
-    } catch (error) {
-      console.error("Top-up error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create checkout");
+      // Update the boost budget
+      const { error: updateError } = await supabase
+        .from("bounty_campaigns")
+        .update({
+          budget: (boostData.budget || 0) + parsedAmount,
+        })
+        .eq("id", boostId);
+
+      if (updateError) throw updateError;
+
+      toast.success(`${formatCurrency(parsedAmount)} transferred to boost`);
+      onOpenChange(false);
+      setAmount("");
+      onSuccess?.();
+    } catch (error: any) {
+      console.error("Error transferring funds:", error);
+      toast.error(error.message || "Failed to transfer funds");
     } finally {
       setLoading(false);
     }
   };
 
+  const parsedAmount = parseFloat(amount) || 0;
+  const exceedsBalance = parsedAmount > viralityBalance;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-inter tracking-[-0.5px]">Add Funds to Boost</DialogTitle>
-          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-            Add funds to "{boostTitle}" boost campaign.
-          </p>
+          <DialogTitle className="font-inter tracking-[-0.5px] flex items-center gap-2">
+            <ArrowRight className="h-5 w-5 text-primary" />
+            Transfer to Boost
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
-          {/* Processing fees notice */}
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-amber-500 font-inter tracking-[-0.3px]">Processing fees</p>
-                <p className="text-sm text-amber-500/80 font-inter tracking-[-0.3px]">
-                  Cards incur Stripe's 2.9% + $0.30 fee per top-up.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Current Balance */}
-          <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          {/* Virality Balance */}
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 mb-1">
               <Wallet className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium font-inter tracking-[-0.3px]">Current Balance</span>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Virality Balance</p>
             </div>
-            <span className="text-lg font-semibold font-inter tracking-[-0.5px]">
-              ${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+            {loadingBalance ? (
+              <div className="h-8 w-24 bg-muted animate-pulse rounded" />
+            ) : (
+              <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">
+                {formatCurrency(viralityBalance)}
+              </p>
+            )}
           </div>
 
-          {/* Amount Selection */}
-          <div className="space-y-3">
-            <div>
-              <h3 className="text-sm font-medium font-inter tracking-[-0.3px]">Select amount</h3>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                Pick a quick amount or enter a custom value in USD.
-              </p>
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium font-inter tracking-[-0.3px]">
+              Amount to Transfer
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <Input
+                type="number"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="pl-7 font-inter tracking-[-0.3px] text-lg"
+              />
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {PRESET_AMOUNTS.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => handlePresetClick(amount)}
-                  className={`py-3 px-4 rounded-full text-sm font-medium font-inter tracking-[-0.3px] border transition-all ${
-                    selectedAmount === amount
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border hover:border-primary/50"
-                  }`}
-                >
-                  ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </button>
-              ))}
+          {/* Validation Warning */}
+          {exceedsBalance && parsedAmount > 0 && (
+            <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 rounded-lg p-3">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span className="font-inter tracking-[-0.3px]">Amount exceeds Virality balance</span>
             </div>
+          )}
 
-            <div className="space-y-2">
-              <label className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                Custom amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  min="100"
-                  step="0.01"
-                  placeholder="Enter amount (min $100)"
-                  value={customAmount}
-                  onChange={(e) => handleCustomAmountChange(e.target.value)}
-                  className="pl-7 font-inter tracking-[-0.3px]"
-                />
+          {/* Summary */}
+          {parsedAmount > 0 && !exceedsBalance && (
+            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground font-inter tracking-[-0.3px]">Transferring</span>
+                <span className="font-medium font-inter tracking-[-0.3px]">{formatCurrency(parsedAmount)}</span>
+              </div>
+              <div className="border-t border-border" />
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground font-inter tracking-[-0.3px]">New Boost Balance</span>
+                <span className="font-medium text-emerald-500 font-inter tracking-[-0.3px]">
+                  {formatCurrency(currentBalance + parsedAmount)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground font-inter tracking-[-0.3px]">Remaining Virality Balance</span>
+                <span className="font-medium font-inter tracking-[-0.3px]">
+                  {formatCurrency(viralityBalance - parsedAmount)}
+                </span>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
-              className="flex-1 font-inter tracking-[-0.5px]"
               onClick={() => onOpenChange(false)}
+              className="flex-1 font-inter tracking-[-0.5px]"
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
+              onClick={handleTransfer}
+              disabled={loading || parsedAmount <= 0 || exceedsBalance || loadingBalance}
               className="flex-1 font-inter tracking-[-0.5px]"
-              onClick={handleTopUp}
-              disabled={loading || getFinalAmount() < 100}
             >
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  Transferring...
                 </>
               ) : (
-                `Add $${getFinalAmount().toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                <>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Transfer
+                </>
               )}
             </Button>
           </div>
