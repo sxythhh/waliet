@@ -101,7 +101,7 @@ export default function Index() {
                   </Link>
                   <Button variant="ghost" size="sm" onClick={async () => {
                 await supabase.auth.signOut();
-              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl">
+              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-lg">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>
