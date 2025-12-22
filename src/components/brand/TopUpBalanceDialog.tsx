@@ -60,7 +60,7 @@ export function TopUpBalanceDialog({
 
       // Get the brand's virality balance
       const { data, error } = await supabase.functions.invoke("get-brand-balance", {
-        body: { brandId: boostData.brand_id },
+        body: { brand_id: boostData.brand_id },
       });
 
       if (error) throw error;
