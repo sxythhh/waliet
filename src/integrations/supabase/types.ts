@@ -732,6 +732,7 @@ export type Database = {
           account_url: string | null
           app_store_url: string | null
           assets_url: string | null
+          brand_color: string | null
           brand_type: string | null
           business_details: Json | null
           collection_id: string | null
@@ -772,6 +773,7 @@ export type Database = {
           account_url?: string | null
           app_store_url?: string | null
           assets_url?: string | null
+          brand_color?: string | null
           brand_type?: string | null
           business_details?: Json | null
           collection_id?: string | null
@@ -812,6 +814,7 @@ export type Database = {
           account_url?: string | null
           app_store_url?: string | null
           assets_url?: string | null
+          brand_color?: string | null
           brand_type?: string | null
           business_details?: Json | null
           collection_id?: string | null
