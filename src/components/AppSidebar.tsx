@@ -420,7 +420,7 @@ export function AppSidebar() {
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414] transition-all duration-200`}>
         {/* Logo */}
-        <div className="flex items-center justify-between py-[10px] px-[10px]">
+        <div className="flex items-center justify-between px-[14px] py-[8px]">
           <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover mr-[2px]" />
             {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
