@@ -255,10 +255,7 @@ export function BlueprintsTab({
                           {contentPreview}
                         </p>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-muted-foreground/40">
-                          <FileText className="h-3 w-3" />
-                          <span className="text-xs italic font-inter tracking-[-0.3px]">No content yet</span>
-                        </div>
+                        <span className="text-xs italic text-muted-foreground/40 font-inter tracking-[-0.3px]">No content yet</span>
                       )}
                     </div>
 
@@ -272,7 +269,7 @@ export function BlueprintsTab({
                             {(userInfo?.name || "U").charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-[11px] text-muted-foreground/70 font-inter tracking-[-0.3px]">
+                        <span className="text-[11px] text-foreground font-inter tracking-[-0.3px]">
                           {userInfo?.name || "You"}
                         </span>
                       </div>
