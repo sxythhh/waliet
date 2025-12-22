@@ -93,21 +93,12 @@ export function DiscordLinkDialog({
     }
   };
   if (!isLinked) {
-    return (
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-2xl"
-        onClick={handleLinkDiscord}
-      >
+    return <Button variant="ghost" size="sm" onClick={handleLinkDiscord} className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-md">
         <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" />
         Connect Discord
-      </Button>
-    );
+      </Button>;
   }
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
+  return <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2 font-geist tracking-tight text-destructive hover:text-destructive hover:bg-destructive/10">
           <Unlink className="h-4 w-4" />
@@ -123,8 +114,7 @@ export function DiscordLinkDialog({
         </DialogHeader>
 
         <div className="space-y-4 pt-4">
-          {discordUsername && (
-            <div className="p-4 rounded-lg bg-muted/20 border border-border">
+          {discordUsername && <div className="p-4 rounded-lg bg-muted/20 border border-border">
               <div className="flex items-center gap-3">
                 <img src={discordAvatar || discordIcon} alt="Discord" className="w-12 h-12 rounded-full object-cover" />
                 <div className="flex-1">
@@ -135,10 +125,8 @@ export function DiscordLinkDialog({
                   <Unlink className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
