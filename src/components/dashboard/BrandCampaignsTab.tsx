@@ -332,7 +332,7 @@ export function BrandCampaignsTab({
           {subscriptionStatus !== "active" && <>
               
               <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
-                <iframe src="https://joinvirality.com/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+                <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>
             </>}
 
