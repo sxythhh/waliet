@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, Lock } from "lucide-react";
+import { CalendarIcon, Upload, Check } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -239,60 +239,6 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                 )}
               </div>
 
-              {/* Compensation Row */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <Label style={labelStyle} className="text-xs text-muted-foreground">Monthly ($)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.monthly_retainer}
-                    onChange={(e) => setFormData({ ...formData, monthly_retainer: parseFloat(e.target.value) })}
-                    className="border-0 bg-muted/50 h-11"
-                    style={inputStyle}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label style={labelStyle} className="text-xs text-muted-foreground">Videos/month</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={formData.videos_per_month}
-                    onChange={(e) => setFormData({ ...formData, videos_per_month: parseInt(e.target.value) })}
-                    className="border-0 bg-muted/50 h-11"
-                    style={inputStyle}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label style={labelStyle} className="text-xs text-muted-foreground">Max creators</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={formData.max_accepted_creators}
-                    onChange={(e) => setFormData({ ...formData, max_accepted_creators: parseInt(e.target.value) })}
-                    className="border-0 bg-muted/50 h-11"
-                    style={inputStyle}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Content Requirements */}
-              <div className="space-y-2">
-                <Label style={labelStyle} className="text-xs text-muted-foreground">Content requirements</Label>
-                <Textarea
-                  value={formData.content_style_requirements}
-                  onChange={(e) => setFormData({ ...formData, content_style_requirements: e.target.value })}
-                  placeholder="Describe content style, format, themes..."
-                  className="border-0 bg-muted/50 min-h-[80px] resize-none"
-                  style={inputStyle}
-                  required
-                />
-              </div>
-
               {/* Blueprint */}
               <div className="space-y-2">
                 <Label style={labelStyle} className="text-xs text-muted-foreground">Blueprint</Label>
@@ -408,20 +354,18 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
 
               {/* Private Toggle */}
               <div 
-                className="flex items-center justify-between p-4 rounded-xl bg-muted/30 cursor-pointer"
                 onClick={() => setFormData({ ...formData, is_private: !formData.is_private })}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.is_private ? "border-primary bg-primary/5" : "border-transparent bg-muted/30 hover:bg-muted/50"}`}
               >
-                <div className="flex items-center gap-3">
-                  <Lock className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium" style={labelStyle}>Private</p>
+                    <p className="text-sm font-medium" style={labelStyle}>Private Boost</p>
                     <p className="text-xs text-muted-foreground" style={labelStyle}>Only accessible via direct link</p>
                   </div>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${formData.is_private ? "bg-primary" : "bg-muted"}`}>
+                    {formData.is_private && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </div>
                 </div>
-                <Checkbox
-                  checked={formData.is_private}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_private: checked === true })}
-                />
               </div>
 
               {/* Actions */}
