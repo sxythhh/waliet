@@ -351,10 +351,9 @@ export function BoostDetailView({
             <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline flex items-center gap-2">
-              {boost.title}
-              {boost.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
-                  <Lock className="h-3 w-3 mr-1" />
+            <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2">
+              <span className="hover:underline">{boost.title}</span>
+              {boost.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20 font-inter tracking-[-0.5px]">
                   Private
                 </Badge>}
             </button>
