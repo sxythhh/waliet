@@ -410,16 +410,20 @@ export function CampaignCreationWizard({
   };
   const handleNext = async () => {
     if (currentStep === 1) {
-      const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
+      const formValues = form.getValues();
+      // Only validate budget if not infinite budget
+      const fieldsToValidate: (keyof CampaignFormValues)[] = formValues.is_infinite_budget 
+        ? ["rpm_rate", "allowed_platforms"] 
+        : ["budget", "rpm_rate", "allowed_platforms"];
+      const isValid = await form.trigger(fieldsToValidate);
       if (!isValid) {
         toast.error("Please complete the required fields to continue.");
         return;
       }
 
       // Validate budget doesn't exceed available balance (for new campaigns only)
-      const values = form.getValues();
-      if (!isEditMode && !values.is_infinite_budget) {
-        const budgetValue = parseFloat(values.budget || "0");
+      if (!isEditMode && !formValues.is_infinite_budget) {
+        const budgetValue = parseFloat(formValues.budget || "0");
         if (budgetValue > availableBalance) {
           toast.error(
             `Budget cannot exceed available balance of $${availableBalance.toLocaleString("en-US", {
