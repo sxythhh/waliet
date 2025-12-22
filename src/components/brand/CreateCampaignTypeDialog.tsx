@@ -141,7 +141,7 @@ export function CreateCampaignTypeDialog({
                     <div style={{
                     backgroundColor: '#a7751e'
                   }} className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#f59f0a]">
-                      <img alt="Clipping" className="h-5 w-5" src="/lovable-uploads/8d2ade61-92af-42be-a3a4-5fffeb2e4a59.png" />
+                      <img alt="Clipping" className="h-5 w-5" src="/lovable-uploads/8097e28e-8868-4726-a10e-a43c8d207543.png" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
