@@ -1,8 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import {
@@ -11,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
 
 interface SubscriptionGateDialogProps {
   brandId: string;
@@ -124,54 +122,25 @@ export function SubscriptionGateDialog({
   open,
   onOpenChange
 }: SubscriptionGateDialogProps) {
-  const [loading, setLoading] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ key: string; name: string } | null>(null);
 
-  const handleSelectPlan = async (planKey: string) => {
+  const handleSelectPlan = (planKey: string, planName: string) => {
     if (planKey === 'enterprise') {
       window.location.href = 'mailto:sales@virality.gg?subject=Enterprise Plan Inquiry';
       return;
     }
 
-    if (!brandId) {
-      toast.error("Brand ID is required");
-      return;
-    }
+    setSelectedPlan({ key: planKey, name: planName });
+    setCheckoutOpen(true);
+  };
 
-    setLoading(planKey);
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please log in to continue");
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
-        body: {
-          brand_id: brandId,
-          plan_key: planKey,
-          return_url: `${window.location.origin}${window.location.pathname}?subscription=success`,
-        },
-      });
-
-      if (error) {
-        console.error('Checkout error:', error);
-        toast.error("Failed to create checkout");
-        return;
-      }
-
-      if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
-      } else {
-        toast.error("No checkout URL returned");
-      }
-    } catch (err) {
-      console.error('Error creating checkout:', err);
-      toast.error("Something went wrong");
-    } finally {
-      setLoading(null);
-    }
+  const handleCheckoutComplete = () => {
+    setCheckoutOpen(false);
+    onOpenChange(false);
+    // Refresh the page to update subscription status
+    window.location.reload();
   };
 
   return (
@@ -214,7 +183,6 @@ export function SubscriptionGateDialog({
           <div className="p-[10px]">
             <div className="grid md:grid-cols-3 gap-6">
               {PLANS.map((plan) => {
-                const isLoading = loading === plan.key;
                 const isEnterprise = plan.key === 'enterprise';
                 
                 return (
@@ -266,24 +234,14 @@ export function SubscriptionGateDialog({
                     </ul>
                     
                     <button
-                      onClick={() => handleSelectPlan(plan.key)}
-                      disabled={!!loading}
-                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none ${
+                      onClick={() => handleSelectPlan(plan.key, plan.name)}
+                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 ${
                         plan.popular 
                           ? 'bg-[#1f60dd] border-t border-[#4b85f7] text-white hover:bg-[#1a50c8]' 
                           : 'bg-muted/50 text-foreground hover:bg-muted'
                       }`}
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Loading...
-                        </>
-                      ) : isEnterprise ? (
-                        'Contact Sales'
-                      ) : (
-                        `Get ${plan.name}`
-                      )}
+                      {isEnterprise ? 'Contact Sales' : `Get ${plan.name}`}
                     </button>
                   </div>
                 );
@@ -292,6 +250,18 @@ export function SubscriptionGateDialog({
           </div>
         </DialogContent>
       </Dialog>
+
+      {selectedPlan && (
+        <SubscriptionCheckoutDialog
+          open={checkoutOpen}
+          onOpenChange={setCheckoutOpen}
+          planId={selectedPlan.key}
+          planName={selectedPlan.name}
+          brandId={brandId}
+          isAnnual={isAnnual}
+          onComplete={handleCheckoutComplete}
+        />
+      )}
     </TooltipProvider>
   );
 }

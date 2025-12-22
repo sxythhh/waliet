@@ -1,164 +1,99 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Plan configuration
-const PLANS = {
+// Price configuration
+const PRICES = {
   starter: {
-    plan_id: 'plan_DU4ba3ik2UHVZ',
-    name: 'Starter',
-    price: 99,
+    monthly: "price_1Sh8JMDfOdvNUmh7noyK4Ajr",
+    yearly: "price_1Sh8JMDfOdvNUmh7yQGGG0CM",
   },
   growth: {
-    plan_id: 'plan_JSWLvDSLsSde4',
-    name: 'Growth',
-    price: 249,
+    monthly: "price_1Sh8JeDfOdvNUmh7MHXY4LC8",
+    yearly: "price_1Sh8KGDfOdvNUmh7jJCbNa6Y",
   },
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseClient = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const whopApiKey = Deno.env.get('WHOP_API_KEY')!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("No authorization header");
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data } = await supabaseClient.auth.getUser(token);
+    const user = data.user;
+    if (!user?.email) throw new Error("User not authenticated");
+
+    const { plan_key, is_annual, brand_id } = await req.json();
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (!plan_key || !brand_id) {
+      throw new Error("plan_key and brand_id are required");
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const planPrices = PRICES[plan_key as keyof typeof PRICES];
+    if (!planPrices) {
+      throw new Error("Invalid plan_key");
     }
 
-    const { brand_id, plan_key, return_url } = await req.json();
+    const priceId = is_annual ? planPrices.yearly : planPrices.monthly;
 
-    console.log('Request params:', { brand_id, plan_key, return_url, user_id: user.id });
-
-    if (!brand_id || !plan_key) {
-      return new Response(JSON.stringify({ error: 'brand_id and plan_key are required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Validate plan
-    const plan = PLANS[plan_key as keyof typeof PLANS];
-    if (!plan) {
-      return new Response(JSON.stringify({ error: 'Invalid plan_key. Must be "starter" or "growth"' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check if user is a member of this brand
-    const { data: memberData, error: memberError } = await supabase
-      .from('brand_members')
-      .select('role')
-      .eq('brand_id', brand_id)
-      .eq('user_id', user.id)
-      .single();
-
-    console.log('Member check:', { memberData, memberError, brand_id, user_id: user.id });
-
-    if (memberError || !memberData) {
-      return new Response(JSON.stringify({ error: 'Not authorized for this brand', details: memberError?.message }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get brand details
-    const { data: brand, error: brandError } = await supabase
-      .from('brands')
-      .select('id, name, slug')
-      .eq('id', brand_id)
-      .single();
-
-    if (brandError || !brand) {
-      return new Response(JSON.stringify({ error: 'Brand not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`Creating checkout for brand ${brand.name}, plan: ${plan.name}`);
-
-    // Create checkout configuration with Whop API
-    const checkoutResponse = await fetch('https://api.whop.com/api/v1/checkout_configurations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        plan_id: plan.plan_id,
-        redirect_url: return_url || `https://virality.gg/brand/${brand.slug}?subscription=success`,
-        metadata: {
-          type: 'subscription',
-          brand_id: brand_id,
-          brand_name: brand.name,
-          brand_slug: brand.slug,
-          plan_key: plan_key,
-          plan_name: plan.name,
-        },
-      }),
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+      apiVersion: "2025-08-27.basil",
     });
 
-    const responseText = await checkoutResponse.text();
-    console.log('Whop checkout response status:', checkoutResponse.status);
-    console.log('Whop checkout response:', responseText);
-
-    if (!checkoutResponse.ok) {
-      console.error('Whop checkout error:', responseText);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to create checkout', 
-        details: responseText,
-        status: checkoutResponse.status
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Check for existing customer
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
     }
 
-    const checkoutData = JSON.parse(responseText);
-    console.log('Checkout created:', checkoutData.id);
+    const origin = req.headers.get("origin") || "https://virality.gg";
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      success_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile&checkout=success`,
+      cancel_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile&checkout=cancelled`,
+      metadata: {
+        brand_id,
+        user_id: user.id,
+        plan_key,
+        is_annual: is_annual ? "true" : "false",
+      },
+      ui_mode: "embedded",
+      return_url: `${origin}/dashboard?workspace=${brand_id}&tab=profile&checkout=complete`,
+    });
 
     return new Response(JSON.stringify({ 
-      checkout_url: checkoutData.purchase_url,
-      checkout_id: checkoutData.id,
-      plan: plan.name,
-      price: plan.price,
+      clientSecret: session.client_secret,
+      sessionId: session.id,
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
     });
-
-  } catch (error: unknown) {
-    console.error('Error in create-subscription-checkout:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  } catch (error) {
+    console.error("Error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
