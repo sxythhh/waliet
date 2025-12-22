@@ -389,18 +389,13 @@ export function BoostDetailView({
         {activeTab === "management" && <div className="flex-1 overflow-auto p-6">
             <div className="space-y-6">
               {/* Invite URL Section */}
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+              <div className="rounded-xl p-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Link className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium tracking-[-0.5px]">Invite URL</p>
-                      <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                        {`${window.location.origin}/boost/${boostId}`}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium tracking-[-0.5px]">Invite URL</p>
+                    <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+                      {`${window.location.origin}/boost/${boostId}`}
+                    </p>
                   </div>
                   <Button 
                     variant="ghost" 
