@@ -979,7 +979,7 @@ export function BlueprintEditor({
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
-            })} className="h-8 flex-1 min-w-0 bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] text-sm hover:underline" placeholder="Untitled" />
+            })} className="h-8 flex-1 min-w-0 !bg-transparent border-none focus-visible:ring-0 px-1 text-foreground font-medium font-inter tracking-[-0.5px] text-sm hover:underline" placeholder="Untitled" />
               {saving && <span className="text-xs text-muted-foreground animate-pulse font-inter tracking-[-0.5px] shrink-0">
                   Saving...
                 </span>}
