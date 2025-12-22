@@ -555,64 +555,9 @@ export function UserSettingsTab() {
 
               <Spacer />
 
-              {/* Social Media Section */}
-              <div className="space-y-4">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Social Media
-                </Label>
-                
-                {/* Instagram */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">Instagram</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
-                  </div>
-                </div>
-
-                {/* LinkedIn */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">LinkedIn</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
-                  </div>
-                </div>
-
-                {/* TikTok */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">TikTok</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
-                  </div>
-                </div>
-
-                {/* Website */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">Website</Label>
-                  <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
-                </div>
-
-                {/* App Store URL */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">App Store URL</Label>
-                  <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
-                </div>
-              </div>
-
-              <Spacer />
-
-              {/* Save Button */}
-              <Button onClick={handleSaveBrand} disabled={savingBrand} className="w-full h-11 tracking-[-0.5px]">
-                {savingBrand ? "Saving..." : "Save Changes"}
-              </Button>
-
-              <Spacer />
-
               {/* Notification Preferences */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Notifications
                 </Label>
                 <div className="rounded-xl border border-border/50 divide-y divide-border/50">
@@ -668,6 +613,61 @@ export function UserSettingsTab() {
                   </div>
                 </div>
               </div>
+
+              <Spacer />
+
+              {/* Social Media Section */}
+              <div className="space-y-4">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
+                  Social Media
+                </Label>
+                
+                {/* Instagram */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">Instagram</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
+                  </div>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">LinkedIn</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
+                  </div>
+                </div>
+
+                {/* TikTok */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">TikTok</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                    <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
+                  </div>
+                </div>
+
+                {/* Website */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">Website</Label>
+                  <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
+                </div>
+
+                {/* App Store URL */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">App Store URL</Label>
+                  <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
+                </div>
+              </div>
+
+              <Spacer />
+
+              {/* Save Button */}
+              <Button onClick={handleSaveBrand} disabled={savingBrand} className="w-full h-11 tracking-[-0.5px]">
+                {savingBrand ? "Saving..." : "Save Changes"}
+              </Button>
 
               <Spacer />
 
