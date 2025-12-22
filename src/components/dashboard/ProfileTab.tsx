@@ -1134,10 +1134,10 @@ export function ProfileTab() {
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
             }}>Profile picture</p>
-              <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="gap-2 bg-muted/40 hover:bg-muted/60 rounded-full px-4" style={{
+              <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
-            }}>
+            }} className="gap-2 bg-muted/40 hover:bg-muted/60 px-4 rounded-md">
                 <RefreshCw className="h-4 w-4" />
                 {uploading ? "Uploading..." : "Replace picture"}
               </Button>
