@@ -991,7 +991,7 @@ export function BlueprintEditor({
               >
                 Preview
               </button>
-              <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity">
+              <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-white border border-border text-black font-geist tracking-[-0.5px] text-xs sm:text-sm hover:bg-white/90 transition-opacity">
                 Activate Blueprint
               </button>
             </div>
