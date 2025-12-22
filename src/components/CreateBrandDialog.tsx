@@ -197,12 +197,12 @@ export function CreateBrandDialog({
                   Workspace Logo & Colour
                 </label>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
                   {/* Logo Preview or Initials with Color */}
                   <div 
-                    className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                    className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: logoPreview ? undefined : brandColor }}
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -221,7 +221,7 @@ export function CreateBrandDialog({
                       <button
                         key={color}
                         type="button"
-                        className={`w-5 h-5 rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
+                        className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
                         style={{ backgroundColor: color }}
                         onClick={() => setBrandColor(color)}
                       />
@@ -229,7 +229,7 @@ export function CreateBrandDialog({
                   </div>
 
                   {/* Upload/Remove Buttons */}
-                  <div className="flex items-center gap-1 ml-auto">
+                  <div className="flex items-center gap-1">
                     <Button 
                       type="button" 
                       variant="ghost" 
