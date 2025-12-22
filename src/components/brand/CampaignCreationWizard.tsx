@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
+import { Eye, Target, TrendingUp, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -411,18 +411,25 @@ export function CampaignCreationWizard({
   const handleNext = async () => {
     if (currentStep === 1) {
       const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
-      if (!isValid) return;
-      
+      if (!isValid) {
+        toast.error("Please complete the required fields to continue.");
+        return;
+      }
+
       // Validate budget doesn't exceed available balance (for new campaigns only)
       const values = form.getValues();
       if (!isEditMode && !values.is_infinite_budget) {
         const budgetValue = parseFloat(values.budget || "0");
         if (budgetValue > availableBalance) {
-          toast.error(`Budget cannot exceed available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+          toast.error(
+            `Budget cannot exceed available balance of $${availableBalance.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}`,
+          );
           return;
         }
       }
-      
+
       setCurrentStep(2);
     }
   };
@@ -711,20 +718,20 @@ export function CampaignCreationWizard({
                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
                                 }`}
                               >
-                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
-                                <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
-                              </div>
-                              <div
-                                onClick={() => field.onChange("branded_accounts")}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                  field.value === "branded_accounts"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                }`}
-                              >
-                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
-                                <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
-                              </div>
+                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
+                                 <p className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.5px]">Creators post on their existing accounts</p>
+                               </div>
+                               <div
+                                 onClick={() => field.onChange("branded_accounts")}
+                                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                   field.value === "branded_accounts"
+                                     ? "border-primary bg-primary/5"
+                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                 }`}
+                               >
+                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
+                                 <p className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.5px]">Creators create new branded accounts</p>
+                               </div>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -752,36 +759,36 @@ export function CampaignCreationWizard({
                                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
                                 )}
                               </div>
-                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                Private
-                              </FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="requires_application"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div 
-                              className="flex items-center gap-3 cursor-pointer group"
-                              onClick={() => field.onChange(!field.value)}
-                            >
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                field.value 
-                                  ? "bg-primary border-primary" 
-                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                              )}>
-                                {field.value && (
-                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                                )}
-                              </div>
-                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                Applications
-                              </FormLabel>
-                            </div>
+                               <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                 Hide this campaign from the Marketplace
+                               </FormLabel>
+                             </div>
+                           </FormItem>
+                         )}
+                       />
+                       <FormField
+                         control={form.control}
+                         name="requires_application"
+                         render={({ field }) => (
+                           <FormItem>
+                             <div 
+                               className="flex items-center gap-3 cursor-pointer group"
+                               onClick={() => field.onChange(!field.value)}
+                             >
+                               <div className={cn(
+                                 "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                 field.value 
+                                   ? "bg-primary border-primary" 
+                                   : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                               )}>
+                                 {field.value && (
+                                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                                 )}
+                               </div>
+                               <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                 Require creators to submit an application
+                               </FormLabel>
+                             </div>
                           </FormItem>
                         )}
                       />
