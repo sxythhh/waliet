@@ -529,7 +529,7 @@ export function UserSettingsTab() {
 
               {/* Brand Name */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Brand name
                 </Label>
                 <Input value={editedBrandName} onChange={e => setEditedBrandName(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
@@ -539,7 +539,7 @@ export function UserSettingsTab() {
 
               {/* Public URL */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Public URL
                 </Label>
                 <div className="flex items-center">
@@ -557,13 +557,13 @@ export function UserSettingsTab() {
 
               {/* Social Media Section */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Social Media
                 </Label>
                 
                 {/* Instagram */}
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Instagram</Label>
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">Instagram</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                     <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
@@ -572,7 +572,7 @@ export function UserSettingsTab() {
 
                 {/* LinkedIn */}
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">LinkedIn</Label>
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">LinkedIn</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                     <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
@@ -581,7 +581,7 @@ export function UserSettingsTab() {
 
                 {/* TikTok */}
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">TikTok</Label>
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">TikTok</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                     <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
@@ -590,13 +590,13 @@ export function UserSettingsTab() {
 
                 {/* Website */}
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">Website</Label>
                   <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
                 </div>
 
                 {/* App Store URL */}
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">App Store URL</Label>
+                  <Label className="text-xs text-foreground tracking-[-0.5px]">App Store URL</Label>
                   <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
                 </div>
               </div>
