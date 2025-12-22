@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, AlertCircle, Wallet, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -46,7 +46,6 @@ export function TopUpBalanceDialog({
   const fetchViralityBalance = async () => {
     setLoadingBalance(true);
     try {
-      // Get the boost to find the brand_id
       const { data: boostData, error: boostError } = await supabase
         .from("bounty_campaigns")
         .select("brand_id")
@@ -58,7 +57,6 @@ export function TopUpBalanceDialog({
         return;
       }
 
-      // Get the brand's virality balance
       const { data, error } = await supabase.functions.invoke("get-brand-balance", {
         body: { brand_id: boostData.brand_id },
       });
@@ -90,7 +88,6 @@ export function TopUpBalanceDialog({
     try {
       const { data: userData } = await supabase.auth.getUser();
       
-      // Get the boost to find the brand_id
       const { data: boostData, error: boostError } = await supabase
         .from("bounty_campaigns")
         .select("brand_id, budget")
@@ -101,7 +98,6 @@ export function TopUpBalanceDialog({
         throw new Error("Failed to fetch boost data");
       }
 
-      // Create the transaction record (debit from virality balance)
       const { error: transactionError } = await supabase
         .from("brand_wallet_transactions")
         .insert({
@@ -116,7 +112,6 @@ export function TopUpBalanceDialog({
 
       if (transactionError) throw transactionError;
 
-      // Update the boost budget
       const { error: updateError } = await supabase
         .from("bounty_campaigns")
         .update({
@@ -143,25 +138,26 @@ export function TopUpBalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-inter tracking-[-0.5px] flex items-center gap-2">
-            <ArrowRight className="h-5 w-5 text-primary" />
-            Transfer to Boost
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden">
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="font-inter tracking-[-0.5px] text-lg">
+              Transfer to Boost
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
+              Move funds from your Virality wallet
+            </p>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-5 pt-2">
-          {/* Virality Balance */}
-          <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Virality Balance</p>
-            </div>
+        <div className="p-6 space-y-6">
+          {/* Available Balance */}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] uppercase">Available Balance</p>
             {loadingBalance ? (
-              <div className="h-8 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-9 w-32 bg-muted/50 animate-pulse rounded" />
             ) : (
-              <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">
+              <p className="text-3xl font-semibold font-inter tracking-[-1px]">
                 {formatCurrency(viralityBalance)}
               </p>
             )}
@@ -169,11 +165,11 @@ export function TopUpBalanceDialog({
 
           {/* Amount Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium font-inter tracking-[-0.3px]">
-              Amount to Transfer
+            <label className="text-xs text-muted-foreground font-inter tracking-[-0.3px] uppercase">
+              Transfer Amount
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
               <Input
                 type="number"
                 placeholder="0.00"
@@ -181,70 +177,62 @@ export function TopUpBalanceDialog({
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-7 font-inter tracking-[-0.3px] text-lg"
+                className="pl-9 h-12 font-inter tracking-[-0.3px] text-lg bg-muted/30"
               />
             </div>
           </div>
 
           {/* Validation Warning */}
           {exceedsBalance && parsedAmount > 0 && (
-            <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/5 rounded-lg">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span className="font-inter tracking-[-0.3px]">Amount exceeds Virality balance</span>
+              <span className="font-inter tracking-[-0.3px]">Exceeds available balance</span>
             </div>
           )}
 
           {/* Summary */}
           {parsedAmount > 0 && !exceedsBalance && (
-            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground font-inter tracking-[-0.3px]">Transferring</span>
-                <span className="font-medium font-inter tracking-[-0.3px]">{formatCurrency(parsedAmount)}</span>
-              </div>
-              <div className="border-t border-border" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground font-inter tracking-[-0.3px]">New Boost Balance</span>
-                <span className="font-medium text-emerald-500 font-inter tracking-[-0.3px]">
+            <div className="space-y-3 pt-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">New boost balance</span>
+                <span className="text-sm font-medium text-emerald-500 font-inter tracking-[-0.3px]">
                   {formatCurrency(currentBalance + parsedAmount)}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground font-inter tracking-[-0.3px]">Remaining Virality Balance</span>
-                <span className="font-medium font-inter tracking-[-0.3px]">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Remaining balance</span>
+                <span className="text-sm font-medium font-inter tracking-[-0.3px]">
                   {formatCurrency(viralityBalance - parsedAmount)}
                 </span>
               </div>
             </div>
           )}
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 font-inter tracking-[-0.5px]"
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleTransfer}
-              disabled={loading || parsedAmount <= 0 || exceedsBalance || loadingBalance}
-              className="flex-1 font-inter tracking-[-0.5px]"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Transferring...
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Transfer
-                </>
-              )}
-            </Button>
-          </div>
+        {/* Actions */}
+        <div className="flex gap-3 p-6 pt-0">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 font-inter tracking-[-0.5px] h-11"
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleTransfer}
+            disabled={loading || parsedAmount <= 0 || exceedsBalance || loadingBalance}
+            className="flex-1 font-inter tracking-[-0.5px] h-11"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Transferring...
+              </>
+            ) : (
+              "Transfer"
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
