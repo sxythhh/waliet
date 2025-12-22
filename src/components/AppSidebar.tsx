@@ -11,7 +11,7 @@ import supportIcon from "@/assets/support-icon.svg";
 import lightbulbIcon from "@/assets/lightbulb-icon.svg";
 import bugIcon from "@/assets/bug-icon.svg";
 import homeInactive from "@/assets/home-icon-custom.svg";
-import homeActive from "@/assets/home-icon-custom.svg";
+import homeActive from "@/assets/home-icon-active.svg";
 import walletInactive from "@/assets/wallet-inactive.svg";
 import walletActive from "@/assets/wallet-active.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";
