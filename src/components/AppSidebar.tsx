@@ -333,9 +333,7 @@ export function AppSidebar() {
                     }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
-                      <button onClick={() => {
-                    setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-foreground hover:bg-[#141414]">
+                      <button disabled className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground opacity-50 cursor-not-allowed">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
@@ -541,10 +539,7 @@ export function AppSidebar() {
                   
                   {/* Create Brand */}
                   <div className="p-1.5">
-                    <button onClick={() => {
-                  setWorkspaceOpen(false);
-                  setShowCreateBrandDialog(true);
-                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
+                    <button disabled className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors text-neutral-500 opacity-50 cursor-not-allowed">
                       <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                         <Plus className="w-3.5 h-3.5" />
                       </div>
