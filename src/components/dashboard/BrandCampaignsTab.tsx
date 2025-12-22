@@ -128,6 +128,7 @@ export function BrandCampaignsTab({
         ascending: false
       });
       if (bountiesError) throw bountiesError;
+      console.log("Fetched bounties:", bountiesData);
       setBounties((bountiesData || []) as BountyCampaign[]);
     } catch (error) {
       console.error("Error fetching brand data:", error);
