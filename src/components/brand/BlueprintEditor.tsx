@@ -984,9 +984,17 @@ export function BlueprintEditor({
                   Saving...
                 </span>}
             </div>
-            <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity shrink-0">
-              Activate Blueprint
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button 
+                onClick={() => window.open(`/blueprint/${blueprint.id}/preview`, '_blank')}
+                className="px-3 sm:px-4 py-2 rounded-md bg-muted hover:bg-muted/80 text-foreground font-geist tracking-[-0.5px] text-xs sm:text-sm transition-opacity"
+              >
+                Preview
+              </button>
+              <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-[#296BF0] border-t border-[#4A83FF] text-white font-geist tracking-[-0.5px] text-xs sm:text-sm hover:opacity-90 transition-opacity">
+                Activate Blueprint
+              </button>
+            </div>
           </div>
 
           {/* Content */}
