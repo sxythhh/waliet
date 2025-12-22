@@ -144,12 +144,15 @@ export function SubscriptionGateDialog({
         }
       );
 
+      console.log("[create-subscription-checkout] response", { data, error });
+
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-      if (!data?.url) throw new Error("No checkout URL returned");
+      if (!data || typeof data !== "object" || !("url" in data) || !data.url) {
+        throw new Error("No checkout URL returned");
+      }
 
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
+      window.location.href = data.url as string;
     } catch (err) {
       console.error("Error creating checkout session:", err);
       toast.error(err instanceof Error ? err.message : "Failed to create checkout");
