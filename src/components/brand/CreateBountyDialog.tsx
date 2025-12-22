@@ -301,7 +301,7 @@ export function CreateBountyDialog({
                   
 
                   {/* Payment Schedule - First */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 pt-[10px]">
                     <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
                     <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({
                   ...formData,
