@@ -54,7 +54,7 @@ export default function PublicNavbar() {
                 <NavigationMenu>
                   <NavigationMenuList>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-transparent font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-transparent">
+                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-transparent font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-transparent focus:bg-transparent focus:text-white data-[active]:bg-transparent">
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
