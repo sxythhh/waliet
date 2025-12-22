@@ -447,8 +447,8 @@ export function AppSidebar() {
               <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Current Workspace Details - Only show when in brand mode */}
-                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] py-[7px] px-[7px]">
-                      <div className="flex items-center gap-3 mb-3">
+                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] flex items-center justify-center">
+                      <div className="flex items-center gap-3">
                         {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}>
                             <span className="text-sm font-medium text-white uppercase">{currentBrandName?.charAt(0)}</span>
                           </div>}
