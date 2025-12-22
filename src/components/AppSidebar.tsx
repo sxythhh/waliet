@@ -313,11 +313,15 @@ export function AppSidebar() {
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
                       {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
-                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{ backgroundColor: brand.brand_color || '#8B5CF6' }}>{brand.name.charAt(0).toUpperCase()}</div>}
+                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
+                      backgroundColor: brand.brand_color || '#8B5CF6'
+                    }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{brand.name}</span>
                         </button>)}
                       {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
-                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
+                      backgroundColor: membership.brands.brand_color || '#8B5CF6'
+                    }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
                       <button onClick={() => {
@@ -436,7 +440,9 @@ export function AppSidebar() {
                   <div className="flex items-center gap-2">
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
                         <img src={swapHorizIcon} alt="" className="w-3.5 h-3.5" />
-                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}>
+                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{
+                  backgroundColor: currentBrandColor || '#8B5CF6'
+                }}>
                           <span className="text-[10px] font-semibold text-white">{currentBrandName?.charAt(0).toUpperCase()}</span>
                         </div>}
                     <p className="font-medium text-foreground truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
@@ -447,9 +453,11 @@ export function AppSidebar() {
               <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Current Workspace Details - Only show when in brand mode */}
-                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] flex items-center justify-center">
+                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] flex items-center justify-start">
                       <div className="flex items-center gap-3">
-                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: currentBrandColor || '#8B5CF6' }}>
+                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                    backgroundColor: currentBrandColor || '#8B5CF6'
+                  }}>
                             <span className="text-sm font-medium text-white uppercase">{currentBrandName?.charAt(0)}</span>
                           </div>}
                         <div>
@@ -493,7 +501,9 @@ export function AppSidebar() {
                     {/* Admin brands */}
                     {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
-                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: brand.brand_color || '#8B5CF6' }}>
+                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
+                      backgroundColor: brand.brand_color || '#8B5CF6'
+                    }}>
                                 <span className="text-[11px] font-medium text-white uppercase">{brand.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
@@ -504,7 +514,9 @@ export function AppSidebar() {
                     {/* Non-admin brand memberships */}
                     {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
-                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }}>
+                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
+                      backgroundColor: membership.brands.brand_color || '#8B5CF6'
+                    }}>
                                 <span className="text-[11px] font-medium text-white uppercase">{membership.brands.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
