@@ -240,12 +240,12 @@ export function CreateBrandDialog({
                   </div>
 
                   {/* Color Picker - Inline */}
-                  <div className="flex items-center gap-1">
+                  <div className="grid grid-cols-7 gap-0.5">
                     {BRAND_COLORS.map((color) => (
                       <button
                         key={color}
                         type="button"
-                        className={`w-5 h-5 rounded-full transition-all flex-shrink-0 ${brandColor === color ? 'ring-1.5 ring-offset-1 ring-offset-background ring-white/80 scale-110' : 'hover:scale-110'}`}
+                        className={`w-5 h-5 rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
                         style={{ backgroundColor: color }}
                         onClick={() => setBrandColor(color)}
                       />
