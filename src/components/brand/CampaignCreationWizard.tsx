@@ -683,7 +683,7 @@ export function CampaignCreationWizard({
                         <FormItem>
                           <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                            <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -712,7 +712,7 @@ export function CampaignCreationWizard({
                       ) : (
                         <div
                           onClick={() => fileInputRef.current?.click()}
-                          className="h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-muted-foreground/50 cursor-pointer flex items-center justify-center transition-colors bg-muted/20"
+                          className="h-32 rounded-xl border-0 cursor-pointer flex items-center justify-center transition-colors bg-muted/20 hover:bg-muted/30"
                         >
                           <div className="text-center">
                             <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
