@@ -203,7 +203,7 @@ export function CreateBrandDialog({
                       variant="ghost" 
                       size="sm" 
                       onClick={() => fileInputRef.current?.click()} 
-                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-[#2a2a2a] border-0 text-muted-foreground hover:bg-[#3a3a3a] hover:text-foreground"
+                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground"
                     >
                       <Upload className="h-3 w-3" />
                       {logoPreview ? 'Change' : 'Upload'}
@@ -214,7 +214,7 @@ export function CreateBrandDialog({
                         variant="ghost" 
                         size="sm" 
                         onClick={removeLogo} 
-                        className="h-7 text-xs font-inter tracking-[-0.3px] px-2.5 bg-[#2a2a2a] border-0 text-muted-foreground hover:bg-[#3a3a3a] hover:text-foreground"
+                        className="h-7 text-xs font-inter tracking-[-0.3px] px-2.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground"
                       >
                         Remove
                       </Button>
