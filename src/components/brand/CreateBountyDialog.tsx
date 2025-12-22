@@ -330,10 +330,6 @@ export function CreateBountyDialog({
                     })} placeholder="500" className="pl-7 h-9 bg-muted/30 border-0 text-right pr-3 font-geist tracking-[-0.5px] text-sm" />
                       </div>
                     </div>
-                    <Slider value={[parseFloat(formData.monthly_retainer) || 100]} onValueChange={value => setFormData({
-                  ...formData,
-                  monthly_retainer: value[0].toString()
-                })} min={10} max={1000} step={10} className="w-full" />
                     
                   </div>
 
@@ -417,7 +413,7 @@ export function CreateBountyDialog({
                     })}
                   >
                     <div className={cn(
-                      "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200",
+                      "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
                       formData.is_private 
                         ? "bg-primary border-primary" 
                         : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
