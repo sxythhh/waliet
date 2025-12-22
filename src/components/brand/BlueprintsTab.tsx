@@ -281,7 +281,7 @@ export function BlueprintsTab({
         const contentPreview = getContentPreview(blueprint.content);
         return <DropdownMenu key={blueprint.id}>
                 <DropdownMenuTrigger asChild>
-                  <div className="group cursor-pointer rounded-xl border border-border/50 bg-card/30 dark:bg-card/20 transition-all duration-200 hover:border-border hover:shadow-sm overflow-hidden">
+                  <div className="group cursor-pointer rounded-xl border border-border/50 bg-[#101010] transition-all duration-200 hover:bg-[#1a1a1a] hover:border-border hover:shadow-sm overflow-hidden">
                     {/* Content Preview */}
                     <div className="p-5 min-h-[120px] border-b border-border/30">
                       {contentPreview && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4 font-inter tracking-[-0.5px]">
@@ -290,7 +290,7 @@ export function BlueprintsTab({
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 space-y-3 group-hover:bg-[#f5f5f5] dark:group-hover:bg-[#0f0f0f] transition-colors">
+                    <div className="p-4 space-y-3 transition-colors">
                       {/* Title Row */}
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-medium text-[15px] truncate flex-1">
