@@ -347,7 +347,7 @@ export function BrandCampaignsTab({
                       className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${
                         statusFilter === filter 
                           ? "border-primary text-foreground" 
-                          : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {filter}
