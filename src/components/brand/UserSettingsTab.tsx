@@ -41,6 +41,12 @@ const PLAN_PRICES: Record<string, number> = {
   'starter': 99,
   'growth': 249
 };
+const BRAND_COLORS = [
+  "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
+  "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
+  "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"
+];
+
 interface Brand {
   id: string;
   name: string;
@@ -48,6 +54,7 @@ interface Brand {
   logo_url: string | null;
   description: string | null;
   brand_type: string | null;
+  brand_color: string | null;
   assets_url: string | null;
   home_url: string | null;
   account_url: string | null;
@@ -121,6 +128,7 @@ export function UserSettingsTab() {
   const [tiktokHandle, setTiktokHandle] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [appStoreUrl, setAppStoreUrl] = useState("");
+  const [brandColor, setBrandColor] = useState("#8B5CF6");
   const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<{
     id: string;
     name: string;
@@ -157,6 +165,7 @@ export function UserSettingsTab() {
       setTiktokHandle(data?.tiktok_handle || "");
       setWebsiteUrl(data?.website_url || "");
       setAppStoreUrl(data?.app_store_url || "");
+      setBrandColor(data?.brand_color || "#8B5CF6");
     } catch (error) {
       console.error("Error fetching brand:", error);
     }
@@ -218,6 +227,7 @@ export function UserSettingsTab() {
       } = await supabase.from("brands").update({
         name: editedBrandName,
         slug: editedSlug,
+        brand_color: brandColor,
         instagram_handle: instagramHandle || null,
         linkedin_handle: linkedinHandle || null,
         tiktok_handle: tiktokHandle || null,
@@ -463,22 +473,56 @@ export function UserSettingsTab() {
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
               {/* Icon Section */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                  Icon
+                  Workspace Logo & Colour
                 </Label>
-                <div className="flex items-center gap-4">
-                  {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-16 h-16 rounded-xl object-cover" /> : <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
-                      {brand.name?.[0]?.toUpperCase() || "B"}
-                    </div>}
-                  <label className="px-4 py-2 text-sm font-medium tracking-[-0.5px] rounded-lg bg-muted/50 hover:bg-muted text-foreground transition-colors cursor-pointer">
-                    {uploadingAvatar ? "Uploading..." : "Change icon"}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                  </label>
+                
+                <div className="flex items-center gap-2.5">
+                  {/* Logo Preview or Initials with Color */}
+                  <div 
+                    className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: brand.logo_url ? undefined : brandColor }}
+                    onClick={() => document.getElementById('brand-logo-upload')?.click()}
+                  >
+                    {brand.logo_url ? (
+                      <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-sm font-semibold font-inter">
+                        {brand.name?.slice(0, 2).toUpperCase() || "B"}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Color Picker */}
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setBrandColor(color)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Upload/Remove Buttons */}
+                  <div className="flex items-center gap-1">
+                    <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
+                      <Upload className="h-3 w-3" />
+                      {brand.logo_url ? 'Change' : 'Upload'}
+                      <input 
+                        id="brand-logo-upload"
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleAvatarUpload} 
+                        disabled={uploadingAvatar} 
+                      />
+                    </label>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                  Recommended: 800×800px
-                </p>
               </div>
 
               <Spacer />
