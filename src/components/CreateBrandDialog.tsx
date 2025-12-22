@@ -192,12 +192,44 @@ export function CreateBrandDialog({
             {/* Content */}
             <div className="px-6 py-5 space-y-5">
               {/* Icon Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
-                    Workspace Logo & Colour
-                  </label>
-                  <div className="flex items-center gap-2">
+              <div className="space-y-2">
+                <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                  Workspace Logo & Colour
+                </label>
+                
+                <div className="flex items-center gap-3">
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  
+                  {/* Logo Preview or Initials with Color */}
+                  <div 
+                    className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: logoPreview ? undefined : brandColor }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-sm font-semibold font-inter">
+                        {getInitials(brandName)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Color Picker */}
+                  <div className="grid grid-cols-7 gap-0.5">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-5 h-5 rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setBrandColor(color)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Upload/Remove Buttons */}
+                  <div className="flex items-center gap-1 ml-auto">
                     <Button 
                       type="button" 
                       variant="ghost" 
@@ -219,37 +251,6 @@ export function CreateBrandDialog({
                         Remove
                       </Button>
                     )}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                  
-                  {/* Logo Preview or Initials with Color */}
-                  <div 
-                    className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
-                    style={{ backgroundColor: logoPreview ? undefined : brandColor }}
-                  >
-                    {logoPreview ? (
-                      <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-sm font-semibold font-inter">
-                        {getInitials(brandName)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Color Picker - Inline */}
-                  <div className="grid grid-cols-7 gap-0.5">
-                    {BRAND_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-5 h-5 rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setBrandColor(color)}
-                      />
-                    ))}
                   </div>
                 </div>
               </div>
