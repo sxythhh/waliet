@@ -33,6 +33,8 @@ import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
 import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
 import storefrontIcon from "@/assets/storefront-icon.svg";
+import paymentsInactive from "@/assets/payments-inactive.svg";
+import paymentsActive from "@/assets/payments-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -93,6 +95,10 @@ const brandMenuItems = [{
 }, {
   title: "Creators",
   tab: "creators",
+  icon: null as any
+}, {
+  title: "Payments",
+  tab: "payments",
   icon: null as any
 }, {
   title: "Settings",
@@ -578,6 +584,9 @@ export function AppSidebar() {
                     </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
                       <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "payments" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={paymentsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={paymentsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
                       <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />

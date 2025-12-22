@@ -22,6 +22,7 @@ import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { ScopeTab } from "@/components/brand/ScopeTab";
+import { PaymentsTab } from "@/components/brand/PaymentsTab";
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -220,6 +221,8 @@ export default function Dashboard() {
           return <CreatorsTab brandId={currentBrand.id} />;
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
+        case "payments":
+          return <PaymentsTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />;
         case "profile":
           return <UserSettingsTab />;
         default:
