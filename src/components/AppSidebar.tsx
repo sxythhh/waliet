@@ -78,7 +78,7 @@ const creatorMenuItems = [{
   tab: "referrals",
   icon: null as any
 }, {
-  title: "Settings",
+  title: "Profile",
   tab: "profile",
   icon: CircleUser
 }];
@@ -95,7 +95,7 @@ const brandMenuItems = [{
   tab: "creators",
   icon: null as any
 }, {
-  title: "Settings",
+  title: "Profile",
   tab: "profile",
   icon: CircleUser
 }];
