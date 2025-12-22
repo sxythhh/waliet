@@ -165,22 +165,22 @@ export function BoostDetailView({
     const nextPendingApp = applications.find((app, idx) => idx > currentIndex && app.status === 'pending');
     const prevPendingApp = [...applications].reverse().find((app, idx) => applications.indexOf(app) < currentIndex && app.status === 'pending');
     const nextApp = nextPendingApp || prevPendingApp;
-
-    const { error } = await supabase.from("bounty_applications").update({
+    const {
+      error
+    } = await supabase.from("bounty_applications").update({
       status: newStatus
     }).eq("id", applicationId);
-    
     if (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update application status");
       return;
     }
-    
+
     // Update local state instead of refetching
-    setApplications(prev => prev.map(app => 
-      app.id === applicationId ? { ...app, status: newStatus } : app
-    ));
-    
+    setApplications(prev => prev.map(app => app.id === applicationId ? {
+      ...app,
+      status: newStatus
+    } : app));
     if (newStatus === 'accepted' && boost?.discord_guild_id) {
       const application = applications.find(app => app.id === applicationId);
       if (application) {
@@ -196,7 +196,7 @@ export function BoostDetailView({
         }
       }
     }
-    
+
     // Auto-select next pending application
     if (nextApp && newStatus !== 'pending') {
       setSelectedAppId(nextApp.id);
@@ -206,11 +206,9 @@ export function BoostDetailView({
   // Keyboard navigation for applications
   useEffect(() => {
     if (activeTab !== 'applications' || !selectedAppId) return;
-    
     const handleKeyDown = (e: KeyboardEvent) => {
       const currentIndex = applications.findIndex(a => a.id === selectedAppId);
       if (currentIndex === -1) return;
-      
       if (e.key === 'ArrowUp' && currentIndex > 0) {
         e.preventDefault();
         setSelectedAppId(applications[currentIndex - 1].id);
@@ -219,7 +217,6 @@ export function BoostDetailView({
         setSelectedAppId(applications[currentIndex + 1].id);
       }
     };
-    
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTab, selectedAppId, applications]);
@@ -286,16 +283,14 @@ export function BoostDetailView({
             <div className="w-80 border-r border-border/30 p-4 space-y-4">
               <Skeleton className="h-5 w-24 mb-3" />
               <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20">
+                {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20">
                     <Skeleton className="h-10 w-10 rounded-full" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-28" />
                       <Skeleton className="h-3 w-20" />
                     </div>
                     <Skeleton className="h-5 w-16 rounded-full" />
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </div>
             
@@ -303,24 +298,20 @@ export function BoostDetailView({
             <div className="flex-1 p-6 space-y-6">
               {/* Stats cards */}
               <div className="grid grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
+                {[1, 2, 3].map(i => <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
                     <Skeleton className="h-3 w-20" />
                     <Skeleton className="h-6 w-16" />
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               {/* Main content area */}
               <div className="space-y-4">
                 <Skeleton className="h-5 w-32" />
                 <div className="grid grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
+                  {[1, 2, 3, 4].map(i => <div key={i} className="p-4 rounded-xl bg-muted/20 space-y-2">
                       <Skeleton className="h-3 w-24" />
                       <Skeleton className="h-5 w-16" />
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
               
@@ -351,9 +342,10 @@ export function BoostDetailView({
             <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8 hover:bg-transparent">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2">
-              <span className="hover:underline">{boost.title}</span>
-              {boost.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20 font-inter tracking-[-0.5px]">
+            <button onClick={onBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline flex items-center gap-2">
+              {boost.title}
+              {boost.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+                  <Lock className="h-3 w-3 mr-1" />
                   Private
                 </Badge>}
             </button>
@@ -391,26 +383,11 @@ export function BoostDetailView({
               {/* Invite URL Section */}
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Link className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium tracking-[-0.5px]">Invite URL</p>
-                      <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                        {`${window.location.origin}/boost/${boostId}`}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px]"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/boost/${boostId}`);
-                      toast.success("Invite URL copied to clipboard");
-                    }}
-                  >
+                  
+                  <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px]" onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/boost/${boostId}`);
+                  toast.success("Invite URL copied to clipboard");
+                }}>
                     <Copy className="h-3.5 w-3.5" />
                     Copy
                   </Button>
@@ -694,41 +671,34 @@ export function BoostDetailView({
                       <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border/30">
                         <div className="flex items-center gap-2 font-inter tracking-[-0.5px]">
                           <Button className="flex-1 gap-2 bg-[#1f60dd] hover:bg-[#1a50c8] text-white border-t border-[#3672ea]" onClick={async () => {
-                            const profile = profiles[selectedApp.user_id];
-                            if (!profile || !boost) return;
-                            
-                            // Check for existing conversation
-                            const { data: existingConv } = await supabase
-                              .from("conversations")
-                              .select("*")
-                              .eq("brand_id", boost.brand_id)
-                              .eq("creator_id", profile.id)
-                              .maybeSingle();
-                            
-                            if (existingConv) {
-                              toast.success("Opening conversation...");
-                              window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
-                              return;
-                            }
-                            
-                            // Create new conversation
-                            const { data, error } = await supabase
-                              .from("conversations")
-                              .insert({
-                                brand_id: boost.brand_id,
-                                creator_id: profile.id
-                              })
-                              .select()
-                              .single();
-                            
-                            if (error) {
-                              toast.error("Failed to start conversation");
-                              return;
-                            }
-                            
-                            toast.success("Conversation started!");
-                            window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
-                          }}>
+                      const profile = profiles[selectedApp.user_id];
+                      if (!profile || !boost) return;
+
+                      // Check for existing conversation
+                      const {
+                        data: existingConv
+                      } = await supabase.from("conversations").select("*").eq("brand_id", boost.brand_id).eq("creator_id", profile.id).maybeSingle();
+                      if (existingConv) {
+                        toast.success("Opening conversation...");
+                        window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
+                        return;
+                      }
+
+                      // Create new conversation
+                      const {
+                        data,
+                        error
+                      } = await supabase.from("conversations").insert({
+                        brand_id: boost.brand_id,
+                        creator_id: profile.id
+                      }).select().single();
+                      if (error) {
+                        toast.error("Failed to start conversation");
+                        return;
+                      }
+                      toast.success("Conversation started!");
+                      window.location.href = `/dashboard?workspace=${boost.brand_id}&tab=creators`;
+                    }}>
                             <MessageSquare className="h-4 w-4" />
                             Message
                           </Button>
@@ -742,11 +712,9 @@ export function BoostDetailView({
                                 Approve
                               </Button>
                             </>}
-                          {selectedApp.status === 'rejected' && 
-                              <Button variant="ghost" className="flex-1 gap-2 bg-amber-500/10 text-amber-500 hover:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'pending')}>
+                          {selectedApp.status === 'rejected' && <Button variant="ghost" className="flex-1 gap-2 bg-amber-500/10 text-amber-500 hover:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20" onClick={() => handleUpdateStatus(selectedApp.id, 'pending')}>
                                 Revert Rejection
-                              </Button>
-                          }
+                              </Button>}
                         </div>
                       </div>
                     </> : <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -766,6 +734,6 @@ export function BoostDetailView({
       fetchBoostData();
     }} />
 
-      <TopUpBalanceDialog open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} boostId={boostId} boostTitle={boost?.title || ""} currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)} onSuccess={fetchBoostData} />
+      <TopUpBalanceDialog open={topUpDialogOpen} onOpenChange={setTopUpDialogOpen} boostId={boostId} boostTitle={boost?.title || ""} currentBalance={(boost?.budget || 0) - (boost?.budget_used || 0)} />
     </>;
 }
