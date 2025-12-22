@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
@@ -214,40 +213,18 @@ export function CreateBrandDialog({
                     )}
                   </div>
 
-                  {/* Color Picker */}
-                  <Popover>
-                    <PopoverTrigger asChild>
+                  {/* Color Picker - Inline */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {BRAND_COLORS.map((color, index) => (
                       <button
+                        key={`${color}-${index}`}
                         type="button"
-                        className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-foreground/30 transition-colors"
-                        style={{ backgroundColor: brandColor }}
-                        title="Pick brand color"
+                        className={`w-6 h-6 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-1 ring-offset-background ring-foreground scale-110' : 'hover:scale-110'}`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setBrandColor(color)}
                       />
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-3" align="start">
-                      <div className="grid grid-cols-5 gap-2">
-                        {BRAND_COLORS.map((color, index) => (
-                          <button
-                            key={`${color}-${index}`}
-                            type="button"
-                            className={`w-7 h-7 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground' : 'hover:scale-110'}`}
-                            style={{ backgroundColor: color }}
-                            onClick={() => setBrandColor(color)}
-                          />
-                        ))}
-                      </div>
-                      <div className="mt-3 flex items-center gap-2">
-                        <Input
-                          type="text"
-                          value={brandColor}
-                          onChange={(e) => setBrandColor(e.target.value)}
-                          placeholder="#8B5CF6"
-                          className="h-8 text-xs font-mono"
-                          maxLength={7}
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                    ))}
+                  </div>
 
                   {/* Upload/Remove Buttons */}
                   <div className="flex items-center gap-2">
