@@ -214,42 +214,44 @@ export function CreateBrandDialog({
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-3">
+                  <div className="flex-1 space-y-2.5">
                     {/* Color Picker Grid */}
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-7 gap-1.5">
                       {BRAND_COLORS.map((color) => (
                         <button
                           key={color}
                           type="button"
-                          className={`w-8 h-8 rounded-lg transition-all ${brandColor === color ? 'ring-2 ring-offset-2 ring-offset-background ring-primary' : 'hover:scale-105 hover:shadow-md'}`}
+                          className={`w-6 h-6 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-1 ring-offset-background ring-white' : 'hover:scale-105 hover:shadow-md'}`}
                           style={{ backgroundColor: color }}
                           onClick={() => setBrandColor(color)}
                         />
                       ))}
                     </div>
                     
-                    {/* Upload Button */}
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => fileInputRef.current?.click()} 
-                      className="h-8 text-xs font-inter tracking-[-0.3px] gap-1.5"
-                    >
-                      <Upload className="h-3.5 w-3.5" />
-                      {logoPreview ? 'Change Image' : 'Upload Image'}
-                    </Button>
-                    {logoPreview && (
+                    {/* Upload Buttons Row */}
+                    <div className="flex items-center gap-2">
                       <Button 
                         type="button" 
-                        variant="ghost" 
+                        variant="outline" 
                         size="sm" 
-                        onClick={removeLogo} 
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] ml-2"
+                        onClick={() => fileInputRef.current?.click()} 
+                        className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5"
                       >
-                        Remove
+                        <Upload className="h-3 w-3" />
+                        {logoPreview ? 'Change' : 'Upload'}
                       </Button>
-                    )}
+                      {logoPreview && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={removeLogo} 
+                          className="h-7 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px] px-2"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
