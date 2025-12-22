@@ -469,8 +469,8 @@ export function AppSidebar() {
                   
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                    <span className="text-[11px] font-medium text-neutral-500 font-inter tracking-[-0.3px]">Workspaces</span>
-                    <span className="text-[11px] text-neutral-600 font-normal">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
+                    <span className="text-[11px] font-medium font-inter tracking-[-0.3px] text-primary-foreground">Workspaces</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
                   </div>
                   
                   {/* Search */}
