@@ -473,13 +473,15 @@ export function UserSettingsTab() {
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
               {/* Save Button - Top */}
-              <Button 
-                onClick={handleSaveBrand} 
-                disabled={savingBrand} 
-                className="w-auto h-9 px-6 tracking-[-0.5px] bg-background text-foreground border border-border hover:bg-muted mb-6"
-              >
-                {savingBrand ? "Saving..." : "Save Changes"}
-              </Button>
+              <div className="flex justify-end mb-6">
+                <Button 
+                  onClick={handleSaveBrand} 
+                  disabled={savingBrand} 
+                  className="w-auto h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
+                >
+                  {savingBrand ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
 
               {/* Icon Section */}
               <div className="space-y-2">
