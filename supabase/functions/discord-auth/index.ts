@@ -96,9 +96,18 @@ serve(async (req) => {
 
       const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-      // Check if user exists with this email
-      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === discordUser.email);
+      // Check if user exists with this email by querying profiles table
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email')
+        .eq('email', discordUser.email)
+        .maybeSingle();
+
+      let existingUser = null;
+      if (existingProfile) {
+        const { data: userData } = await supabaseAdmin.auth.admin.getUserById(existingProfile.id);
+        existingUser = userData?.user;
+      }
 
       const expiresAt = new Date(Date.now() + expires_in * 1000).toISOString();
 
