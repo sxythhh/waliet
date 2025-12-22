@@ -457,22 +457,6 @@ export function AppSidebar() {
                           <p className="text-[11px] text-neutral-500">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => {
-                    setWorkspaceOpen(false);
-                    handleTabClick('profile');
-                  }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]">
-                          <img src={settingsFilledIcon} alt="" className="w-3.5 h-3.5" />
-                          <span>Settings</span>
-                        </button>
-                        <button onClick={() => {
-                    setWorkspaceOpen(false);
-                    setInviteMemberOpen(true);
-                  }} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] rounded-lg transition-colors text-[12px] text-neutral-300 font-geist tracking-[-0.3px]">
-                          <img src={personEditIcon} alt="" className="w-3.5 h-3.5" />
-                          <span>Invite</span>
-                        </button>
-                      </div>
                     </div>}
                   
                   {/* Header */}
