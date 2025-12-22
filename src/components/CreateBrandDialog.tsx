@@ -7,9 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
+
+const BRAND_COLORS = [
+  "#8B5CF6", "#6366F1", "#3B82F6", "#0EA5E9", "#14B8A6", 
+  "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
+  "#8B5CF6", "#A855F7", "#D946EF", "#F43F5E", "#64748B"
+];
+
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Brand name is required").max(100),
   home_url: z.string().trim().max(255).optional().or(z.literal("")),
@@ -36,6 +44,7 @@ export function CreateBrandDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [brandColor, setBrandColor] = useState("#8B5CF6");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
@@ -112,7 +121,8 @@ export function CreateBrandDialog({
         slug: slug,
         description: values.description || null,
         home_url: values.home_url || null,
-        logo_url: logoUrl
+        logo_url: logoUrl,
+        brand_color: brandColor
       }).select().single();
       if (brandError) throw brandError;
 
@@ -132,6 +142,7 @@ export function CreateBrandDialog({
       form.reset();
       setLogoFile(null);
       setLogoPreview(null);
+      setBrandColor("#8B5CF6");
       onSuccess?.();
 
       // Navigate to the new brand dashboard
@@ -151,6 +162,7 @@ export function CreateBrandDialog({
     form.reset();
     setLogoFile(null);
     setLogoPreview(null);
+    setBrandColor("#8B5CF6");
     setOpen(false);
   };
   return <Dialog open={open} onOpenChange={setOpen}>
@@ -188,12 +200,54 @@ export function CreateBrandDialog({
                 <div className="flex items-center gap-4 mt-1.5">
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   
-                  {/* Logo Preview or Initials */}
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-primary flex items-center justify-center">
-                    {logoPreview ? <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" /> : <span className="text-primary-foreground text-base font-semibold font-inter">
+                  {/* Logo Preview or Initials with Color */}
+                  <div 
+                    className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                    style={{ backgroundColor: logoPreview ? undefined : brandColor }}
+                  >
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Brand logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-base font-semibold font-inter">
                         {getInitials(brandName)}
-                      </span>}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Color Picker */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:border-foreground/30 transition-colors"
+                        style={{ backgroundColor: brandColor }}
+                        title="Pick brand color"
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-3" align="start">
+                      <div className="grid grid-cols-5 gap-2">
+                        {BRAND_COLORS.map((color, index) => (
+                          <button
+                            key={`${color}-${index}`}
+                            type="button"
+                            className={`w-7 h-7 rounded-md transition-all ${brandColor === color ? 'ring-2 ring-offset-2 ring-offset-background ring-foreground' : 'hover:scale-110'}`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => setBrandColor(color)}
+                          />
+                        ))}
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <Input
+                          type="text"
+                          value={brandColor}
+                          onChange={(e) => setBrandColor(e.target.value)}
+                          placeholder="#8B5CF6"
+                          className="h-8 text-xs font-mono"
+                          maxLength={7}
+                        />
+                      </div>
+                    </PopoverContent>
+                  </Popover>
 
                   {/* Upload/Remove Buttons */}
                   <div className="flex items-center gap-2">

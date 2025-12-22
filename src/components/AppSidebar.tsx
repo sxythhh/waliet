@@ -49,6 +49,7 @@ interface Brand {
   name: string;
   slug: string;
   logo_url: string | null;
+  brand_color: string | null;
 }
 interface BrandMembership {
   brand_id: string;
@@ -57,6 +58,7 @@ interface BrandMembership {
     name: string;
     slug: string;
     logo_url: string | null;
+    brand_color: string | null;
   };
 }
 const creatorMenuItems = [{
@@ -210,7 +212,7 @@ export function AppSidebar() {
     if (!user) return;
     const {
       data
-    } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url)").eq("user_id", user.id);
+    } = await supabase.from("brand_members").select("brand_id, role, brands(name, slug, logo_url, brand_color)").eq("user_id", user.id);
     if (data) {
       setBrandMemberships(data as unknown as BrandMembership[]);
     }
@@ -218,7 +220,7 @@ export function AppSidebar() {
   const fetchAllBrands = async () => {
     const {
       data
-    } = await supabase.from("brands").select("id, name, slug, logo_url").order("name");
+    } = await supabase.from("brands").select("id, name, slug, logo_url, brand_color").order("name");
     if (data) {
       setAllBrands(data);
     }
@@ -308,11 +310,11 @@ export function AppSidebar() {
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
                       {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
-                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
+                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{ backgroundColor: brand.brand_color || '#8B5CF6' }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{brand.name}</span>
                         </button>)}
                       {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
-                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <Building2 className="w-4 h-4" />}
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
                       <button onClick={() => {
@@ -504,8 +506,8 @@ export function AppSidebar() {
                     {/* Admin brands */}
                     {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
-                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
-                                <span className="text-[11px] font-medium text-neutral-400 uppercase">{brand.name.charAt(0)}</span>
+                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: brand.brand_color || '#8B5CF6' }}>
+                                <span className="text-[11px] font-medium text-white uppercase">{brand.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
                           </div>
@@ -515,8 +517,8 @@ export function AppSidebar() {
                     {/* Non-admin brand memberships */}
                     {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                           <div className="flex items-center gap-2.5">
-                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
-                                <span className="text-[11px] font-medium text-neutral-400 uppercase">{membership.brands.name.charAt(0)}</span>
+                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }}>
+                                <span className="text-[11px] font-medium text-white uppercase">{membership.brands.name.charAt(0)}</span>
                               </div>}
                             <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
                           </div>
