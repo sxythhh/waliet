@@ -1212,10 +1212,9 @@ export function CampaignCreationWizard({
                   size="sm"
                   onClick={handleNext}
                   disabled={isSubmitting}
-                  className="min-w-[100px] gap-2"
+                  className="min-w-[100px] font-inter tracking-[-0.5px] bg-white text-black hover:bg-white/90 border border-border"
                 >
                   Continue
-                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               ) : (
                 <Button
