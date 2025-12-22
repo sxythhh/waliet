@@ -11,6 +11,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageInput } from "@/components/brand/MessageInput";
 import { RecruitCreatorsDialog } from "@/components/brand/RecruitCreatorsDialog";
+import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
@@ -114,6 +116,7 @@ export function CreatorsTab({
     campaign: CreatorCampaign;
   } | null>(null);
   const [recruitDialogOpen, setRecruitDialogOpen] = useState(false);
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -704,9 +707,18 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
                 Start conversations by messaging creators from the right panel.
               </p>
-              <Button onClick={() => setRecruitDialogOpen(true)} className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-9 px-4 text-xs rounded-3xl">
-                <Plus className="h-3.5 w-3.5" />
-                Recruit Creators
+              <Button 
+                onClick={() => {
+                  if (!activeConversation) {
+                    setPlanDialogOpen(true);
+                  } else {
+                    setRecruitDialogOpen(true);
+                  }
+                }} 
+                className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-gradient-to-r from-[#1f60dd] to-[#4b85f7] text-white hover:from-[#1a50c8] hover:to-[#3d73e5] border-t border-white/20 shadow-md"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Upgrade Plan
               </Button>
             </div> : filteredConversations.length === 0 ? <div className="flex flex-col items-center justify-center p-8 text-center h-[300px]">
               <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
@@ -1122,6 +1134,13 @@ export function CreatorsTab({
             }
           }
         }}
+      />
+
+      {/* Subscription Gate Dialog */}
+      <SubscriptionGateDialog
+        brandId={brandId}
+        open={planDialogOpen}
+        onOpenChange={setPlanDialogOpen}
       />
     </div>;
 }
