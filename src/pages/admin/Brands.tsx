@@ -23,7 +23,7 @@ export default function AdminBrands() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Brands</h1>
-          <CreateBrandDialog />
+          <CreateBrandDialog disabled />
         </div>
         <AllBrandsView />
       </div>
