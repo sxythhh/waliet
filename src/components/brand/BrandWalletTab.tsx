@@ -236,29 +236,6 @@ export function BrandWalletTab({
       </div>;
   }
 
-  // Show setup prompt if no Stripe Connect account
-  if (!walletData?.has_stripe_account) {
-    return <div className="space-y-6">
-        <div className="pt-6">
-          <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-full bg-[#1f60dd]/10 flex items-center justify-center mx-auto mb-4">
-              <img src={creditCardIcon} alt="" className="w-6 h-6 invert-0 brightness-0 opacity-60" style={{
-              filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)'
-            }} />
-            </div>
-            <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Connect Your Stripe Account</h3>
-            <p className="text-sm text-muted-foreground tracking-[-0.5px] mb-6 max-w-sm mx-auto">
-              Connect your Stripe account to manage campaign budgets, 
-              deposit funds, and process withdrawals.
-            </p>
-            <button onClick={handleSetupWallet} disabled={settingUp} className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none">
-              <img src={creditCardIcon} alt="" className="w-4 h-4" />
-              {settingUp ? 'Connecting...' : 'Connect Stripe'}
-            </button>
-          </div>
-        </div>
-      </div>;
-  }
   return <div className="space-y-6">
       {/* Onboarding Card - Show if not complete */}
       {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
