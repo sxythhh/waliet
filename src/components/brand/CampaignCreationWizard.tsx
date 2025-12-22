@@ -16,6 +16,7 @@ import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, Extern
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -736,11 +737,25 @@ export function CampaignCreationWizard({
                         control={form.control}
                         name="is_private"
                         render={({ field }) => (
-                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Private</FormLabel>
-                            <FormControl>
-                              <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
+                          <FormItem>
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group"
+                              onClick={() => field.onChange(!field.value)}
+                            >
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                field.value 
+                                  ? "bg-primary border-primary" 
+                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                              )}>
+                                {field.value && (
+                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                                )}
+                              </div>
+                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                Private
+                              </FormLabel>
+                            </div>
                           </FormItem>
                         )}
                       />
@@ -748,11 +763,25 @@ export function CampaignCreationWizard({
                         control={form.control}
                         name="requires_application"
                         render={({ field }) => (
-                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Applications</FormLabel>
-                            <FormControl>
-                              <Switch checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
+                          <FormItem>
+                            <div 
+                              className="flex items-center gap-3 cursor-pointer group"
+                              onClick={() => field.onChange(!field.value)}
+                            >
+                              <div className={cn(
+                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                field.value 
+                                  ? "bg-primary border-primary" 
+                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
+                              )}>
+                                {field.value && (
+                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                                )}
+                              </div>
+                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
+                                Applications
+                              </FormLabel>
+                            </div>
                           </FormItem>
                         )}
                       />
