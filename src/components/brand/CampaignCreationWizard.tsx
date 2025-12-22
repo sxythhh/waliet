@@ -668,11 +668,8 @@ export function CampaignCreationWizard({
                 {currentStep === 1 && (
                   <div className="space-y-5">
                     {/* Available Balance Display */}
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="p-4 rounded-xl bg-primary/5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <Wallet className="w-5 h-5 text-primary" />
-                        </div>
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Virality Balance</p>
                           <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
