@@ -334,10 +334,7 @@ export function CreateBountyDialog({
                   ...formData,
                   monthly_retainer: value[0].toString()
                 })} min={10} max={1000} step={10} className="w-full" />
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
-                      <span>$10</span>
-                      <span>$1,000+</span>
-                    </div>
+                    
                   </div>
 
                   {/* Videos and Max Creators */}
