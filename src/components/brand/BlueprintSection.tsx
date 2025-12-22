@@ -53,13 +53,6 @@ export function BlueprintSection({
         </span>
       );
     }
-    if (status === "unfilled") {
-      return (
-        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground font-inter tracking-[-0.5px]">
-          Unfilled
-        </span>
-      );
-    }
     if (status === "selected" || statusCount) {
       return (
         <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/20 text-emerald-500 font-inter tracking-[-0.5px]">
