@@ -486,7 +486,7 @@ export function AppSidebar() {
                   {/* Active Section */}
                   
                   
-                  <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[3px]">
+                  <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[5px]">
                     {/* Creator Dashboard */}
                     {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
                         <div className="flex items-center gap-2.5">
