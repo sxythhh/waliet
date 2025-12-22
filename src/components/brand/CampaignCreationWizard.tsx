@@ -552,7 +552,7 @@ export function CampaignCreationWizard({
           category: values.category || null,
           content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
-          budget: budgetAmount,
+          budget: 0, // Start at 0, allocate-brand-budget will set the actual budget
           rpm_rate: Number(values.rpm_rate) || 5,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
