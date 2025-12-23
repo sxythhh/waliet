@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
 import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb, Trash2 } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -43,6 +44,7 @@ interface BoostCardProps {
     brands?: {
       name: string;
       logo_url: string | null;
+      is_verified?: boolean;
     };
     blueprint?: {
       content: string | null;
@@ -225,7 +227,10 @@ export function BoostCard({
                 </div>}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold truncate">{boost.title}</h3>
-                <p className="text-xs text-muted-foreground truncate">{boost.brands?.name}</p>
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                  {boost.brands?.name}
+                  {boost.brands?.is_verified && <VerifiedBadge size="sm" />}
+                </p>
               </div>
             </div>
 

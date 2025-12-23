@@ -8,6 +8,7 @@ import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "@/components/ThemeProvider";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -38,6 +39,7 @@ interface Campaign {
   description: string;
   brand_name: string;
   brand_logo_url: string;
+  brand_is_verified?: boolean;
   budget: number;
   budget_used?: number;
   rpm_rate: number;
@@ -91,6 +93,7 @@ interface RecommendedCampaign {
   title: string;
   brand_name: string;
   brand_logo_url: string | null;
+  brand_is_verified?: boolean;
   rpm_rate: number;
   slug: string;
   banner_url: string | null;
@@ -214,7 +217,7 @@ export function CampaignsTab({
       data: userSubmissions
     } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id);
     const joinedCampaignIds = userSubmissions?.map(s => s.campaign_id) || [];
-    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget, requires_application, application_questions, description, status, start_date, guidelines, blueprint_id").eq("status", "active").eq("is_private", false).limit(3);
+    let recommendedQuery = supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, rpm_rate, slug, banner_url, allowed_platforms, budget, budget_used, is_infinite_budget, requires_application, application_questions, description, status, start_date, guidelines, blueprint_id, brands(is_verified)").eq("status", "active").eq("is_private", false).limit(3);
     if (joinedCampaignIds.length > 0) {
       recommendedQuery = recommendedQuery.not("id", "in", `(${joinedCampaignIds.join(",")})`);
     }
@@ -223,6 +226,7 @@ export function CampaignsTab({
     } = await recommendedQuery;
     setRecommendedCampaigns((recommendedData || []).map(c => ({
       ...c,
+      brand_is_verified: (c.brands as any)?.is_verified || false,
       application_questions: Array.isArray(c.application_questions) ? c.application_questions as string[] : []
     })));
 
@@ -378,7 +382,8 @@ export function CampaignsTab({
         *,
         brands (
           name,
-          logo_url
+          logo_url,
+          is_verified
         )
       `).in("id", campaignIds).order("created_at", {
       ascending: false
@@ -422,6 +427,7 @@ export function CampaignsTab({
         ...campaign,
         brand_name: (campaign.brands as any)?.name || campaign.brand_name,
         brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
+        brand_is_verified: (campaign.brands as any)?.is_verified || false,
         submission_status: submissionStatusMap.get(campaign.id),
         connected_accounts: accountsByCampaign.get(campaign.id) || []
       }));
@@ -733,7 +739,7 @@ export function CampaignsTab({
                         <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline font-['Inter'] tracking-[-0.5px]">
                           {campaign.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
+                        <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
                       </div>
                     </div>
 
@@ -893,7 +899,7 @@ export function CampaignsTab({
                       Ended
                     </Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground font-semibold">{campaign.brand_name}</p>
+                  <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
                 </div>
               </div>
 

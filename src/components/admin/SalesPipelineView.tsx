@@ -21,6 +21,7 @@ interface Brand {
   assets_url: string | null;
   show_account_tab: boolean;
   is_active: boolean;
+  is_verified: boolean;
   created_at: string;
 }
 
@@ -83,6 +84,7 @@ export function SalesPipelineView() {
             assets_url,
             show_account_tab,
             is_active,
+            is_verified,
             created_at
           )
         `)
