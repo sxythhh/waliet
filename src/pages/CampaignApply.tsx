@@ -10,6 +10,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
@@ -131,6 +132,7 @@ export default function CampaignApply() {
   const [showApplySheet, setShowApplySheet] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(true);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   useEffect(() => {
     fetchCampaignData();
@@ -624,6 +626,8 @@ export default function CampaignApply() {
     }
     if (isBoost) {
       setShowApplySheet(true);
+    } else {
+      setShowMobileApplySheet(true);
     }
   };
   const questions = campaign ? Array.isArray(campaign.application_questions) ? campaign.application_questions : [] : [];
@@ -967,5 +971,108 @@ export default function CampaignApply() {
       setShowApplySheet(false);
       fetchCampaignData();
     }} />}
+
+      {/* Mobile Apply Sheet for Regular Campaigns */}
+      {!isBoost && campaign && (
+        <Sheet open={showMobileApplySheet} onOpenChange={setShowMobileApplySheet}>
+          <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+            <SheetHeader className="pb-4">
+              <SheetTitle className="font-['Inter'] tracking-[-0.5px]">Apply to Campaign</SheetTitle>
+            </SheetHeader>
+            <div className="overflow-y-auto h-[calc(100%-60px)] space-y-6 pb-8">
+              {/* Account Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                  Select Social Accounts <span className="text-destructive">*</span>
+                </Label>
+                
+                {loadingAccounts ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-14 w-full rounded-lg" />
+                    <Skeleton className="h-14 w-full rounded-lg" />
+                  </div>
+                ) : socialAccounts.length === 0 ? (
+                  <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
+                    <img src={emptyAccountsImage} alt="No accounts" className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm text-muted-foreground mb-4 font-['Inter'] tracking-[-0.5px]">No matching accounts found</p>
+                    <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Account
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {socialAccounts.map(account => {
+                      const isSelected = selectedAccounts.includes(account.id);
+                      const platformIcon = getPlatformIcon(account.platform);
+                      return (
+                        <button
+                          key={account.id}
+                          onClick={() => toggleAccountSelection(account.id)}
+                          className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}
+                        >
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
+                            {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                          {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
+                          <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setShowAddAccountDialog(true)}
+                      className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-muted/30 transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Application Questions */}
+              {questions.length > 0 && campaign?.requires_application !== false && (
+                <div className="space-y-4">
+                  <div className="h-px bg-border" />
+                  {questions.map((question: string, idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        {question} <span className="text-destructive">*</span>
+                      </Label>
+                      <Textarea
+                        value={answers[idx] || ""}
+                        onChange={e => setAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
+                        placeholder="Your answer..."
+                        className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <Button 
+                  onClick={() => {
+                    handleSubmit();
+                    setShowMobileApplySheet(false);
+                  }} 
+                  disabled={isEnded || submitting || selectedAccounts.length === 0} 
+                  className="w-full font-['Inter'] tracking-[-0.5px]" 
+                  size="lg"
+                  style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                >
+                  {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
+                </Button>
+                {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && (
+                  <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
+                    Select at least one account to continue
+                  </p>
+                )}
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>;
 }
