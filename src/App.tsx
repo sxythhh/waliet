@@ -50,7 +50,6 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import CreatorTerms from "./pages/CreatorTerms";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
-import PublicBounty from "./pages/PublicBounty";
 import CampaignApply from "./pages/CampaignApply";
 import New from "./pages/New";
 import Contact from "./pages/Contact";
@@ -77,6 +76,28 @@ function UtmTracker() {
 function JoinRedirect() {
   const { slug } = useParams();
   return <Navigate to={`/dashboard?tab=discover&campaignSlug=${slug}`} replace />;
+}
+
+// Redirect /boost/:id to /c/:slug (fetch slug first)
+function BoostRedirect() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const fetchBoostSlug = async () => {
+      const { data } = await import("@/integrations/supabase/client").then(m => 
+        m.supabase.from("bounty_campaigns").select("slug").eq("id", id).maybeSingle()
+      );
+      if (data?.slug) {
+        navigate(`/c/${data.slug}`, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    };
+    fetchBoostSlug();
+  }, [id, navigate]);
+  
+  return <div className="min-h-screen flex items-center justify-center"><p>Redirecting...</p></div>;
 }
 
 // Handle subdomain routing for brand pages
@@ -177,7 +198,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
               <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-              <Route path="/boost/:id" element={<PublicBounty />} />
+              <Route path="/boost/:id" element={<BoostRedirect />} />
               <Route path="/blueprint/:id" element={<BlueprintDetail />} />
               <Route path="/blueprint/:blueprintId/preview" element={<BlueprintPreview />} />
               {/* Boost dashboard is now part of /dashboard?boost=:id */}
