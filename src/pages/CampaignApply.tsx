@@ -25,7 +25,6 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
-
 interface Blueprint {
   id: string;
   title: string;
@@ -40,7 +39,6 @@ interface Blueprint {
   example_videos: any[] | null;
   assets: any[] | null;
 }
-
 interface Campaign {
   id: string;
   title: string;
@@ -69,7 +67,6 @@ interface Campaign {
     name?: string;
   };
 }
-
 interface BountyCampaign {
   id: string;
   title: string;
@@ -92,21 +89,32 @@ interface BountyCampaign {
     is_verified?: boolean;
   };
 }
-
 export default function CampaignApply() {
-  const { slug } = useParams();
+  const {
+    slug
+  } = useParams();
   const navigate = useNavigate();
-  const { resolvedTheme } = useTheme();
-  const { user } = useAuth();
-  
+  const {
+    resolvedTheme
+  } = useTheme();
+  const {
+    user
+  } = useAuth();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [boostCampaign, setBoostCampaign] = useState<BountyCampaign | null>(null);
-  const [boostBrand, setBoostBrand] = useState<{ name: string; logo_url: string | null; description: string | null; is_verified?: boolean } | null>(null);
+  const [boostBrand, setBoostBrand] = useState<{
+    name: string;
+    logo_url: string | null;
+    description: string | null;
+    is_verified?: boolean;
+  } | null>(null);
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loading, setLoading] = useState(true);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [answers, setAnswers] = useState<{
+    [key: string]: string;
+  }>({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -114,72 +122,59 @@ export default function CampaignApply() {
   const [isBoost, setIsBoost] = useState(false);
   const [showApplySheet, setShowApplySheet] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(true);
-
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
-
   const fetchCampaignData = async () => {
     if (!slug) return;
-    
     setLoading(true);
     try {
-      const { data: campaignData, error } = await supabase
-        .from("campaigns")
-        .select(`*, brands (name, logo_url, is_verified)`)
-        .eq("slug", slug)
-        .maybeSingle();
-
+      const {
+        data: campaignData,
+        error
+      } = await supabase.from("campaigns").select(`*, brands (name, logo_url, is_verified)`).eq("slug", slug).maybeSingle();
       if (error) throw error;
-      
       if (campaignData) {
         setIsBoost(false);
         const transformedCampaign: Campaign = {
           ...campaignData,
           brand_name: (campaignData.brands as any)?.name || campaignData.brand_name,
           brand_logo_url: (campaignData.brands as any)?.logo_url || campaignData.brand_logo_url,
-          brands: campaignData.brands as any,
+          brands: campaignData.brands as any
         };
         setCampaign(transformedCampaign);
-
         if (campaignData.blueprint_id) {
-          const { data: blueprintData } = await supabase
-            .from("blueprints")
-            .select("*")
-            .eq("id", campaignData.blueprint_id)
-            .single();
+          const {
+            data: blueprintData
+          } = await supabase.from("blueprints").select("*").eq("id", campaignData.blueprint_id).single();
           if (blueprintData) setBlueprint(blueprintData as Blueprint);
         }
         await checkAuthAndLoadAccounts(campaignData);
       } else {
-        const { data: boostData, error: boostError } = await supabase
-          .from("bounty_campaigns")
-          .select(`*, brands (name, logo_url, is_verified)`)
-          .eq("slug", slug)
-          .maybeSingle();
-
+        const {
+          data: boostData,
+          error: boostError
+        } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified)`).eq("slug", slug).maybeSingle();
         if (boostError) throw boostError;
-
         if (!boostData) {
           toast.error("Campaign not found");
           navigate("/dashboard");
           return;
         }
-
         setIsBoost(true);
         setBoostCampaign(boostData as BountyCampaign);
         if (boostData.brands) setBoostBrand(boostData.brands as any);
-
         if (boostData.blueprint_id) {
-          const { data: blueprintData } = await supabase
-            .from("blueprints")
-            .select("*")
-            .eq("id", boostData.blueprint_id)
-            .single();
+          const {
+            data: blueprintData
+          } = await supabase.from("blueprints").select("*").eq("id", boostData.blueprint_id).single();
           if (blueprintData) setBlueprint(blueprintData as Blueprint);
         }
-
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: {
+            session
+          }
+        } = await supabase.auth.getSession();
         setIsLoggedIn(!!session);
       }
     } catch (error) {
@@ -189,83 +184,73 @@ export default function CampaignApply() {
       setLoading(false);
     }
   };
-
   const checkAuthAndLoadAccounts = async (campaignData: any) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     setIsLoggedIn(!!session);
     if (!session) return;
-    
     setLoadingAccounts(true);
     const platforms = campaignData.allowed_platforms || [];
-    
-    const { data: accounts } = await supabase
-      .from("social_accounts")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .in("platform", platforms.map((p: string) => p.toLowerCase()));
-
-    const { data: activeSubmissions } = await supabase
-      .from("campaign_submissions")
-      .select("platform")
-      .eq("campaign_id", campaignData.id)
-      .eq("creator_id", session.user.id)
-      .neq("status", "withdrawn");
-
+    const {
+      data: accounts
+    } = await supabase.from("social_accounts").select("*").eq("user_id", session.user.id).in("platform", platforms.map((p: string) => p.toLowerCase()));
+    const {
+      data: activeSubmissions
+    } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaignData.id).eq("creator_id", session.user.id).neq("status", "withdrawn");
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
-    
     setSocialAccounts(availableAccounts);
     setLoadingAccounts(false);
   };
-
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
-      case "tiktok": return isLightMode ? tiktokLogoBlack : tiktokLogo;
-      case "instagram": return isLightMode ? instagramLogoBlack : instagramLogo;
-      case "youtube": return isLightMode ? youtubeLogoBlack : youtubeLogo;
-      default: return null;
+      case "tiktok":
+        return isLightMode ? tiktokLogoBlack : tiktokLogo;
+      case "instagram":
+        return isLightMode ? instagramLogoBlack : instagramLogo;
+      case "youtube":
+        return isLightMode ? youtubeLogoBlack : youtubeLogo;
+      default:
+        return null;
     }
   };
-
   const toggleAccountSelection = (accountId: string) => {
-    setSelectedAccounts(prev => 
-      prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]
-    );
+    setSelectedAccounts(prev => prev.includes(accountId) ? prev.filter(id => id !== accountId) : [...prev, accountId]);
   };
-
   const parseTextWithLinks = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
-        return (
-          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+        return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline" onClick={e => e.stopPropagation()}>
             {part}
-          </a>
-        );
+          </a>;
       }
       return part;
     });
   };
-
   const handleSubmit = async () => {
     if (!campaign || selectedAccounts.length === 0) {
       toast.error("Please select at least one social account");
       return;
     }
-
     if (campaign.status === "ended") {
       toast.error("This campaign has ended and is no longer accepting applications");
       return;
     }
-
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: {
+        user
+      }
+    } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please sign in to join campaigns");
       return;
     }
-
     const questions = Array.isArray(campaign.application_questions) ? campaign.application_questions : [];
     if (campaign.requires_application !== false && questions.length > 0) {
       const unansweredQuestions = questions.filter((_, idx) => !answers[idx]?.trim());
@@ -274,59 +259,42 @@ export default function CampaignApply() {
         return;
       }
     }
-
     setSubmitting(true);
     try {
       const submissionStatus = campaign.requires_application === false ? "approved" : "pending";
-
-      await supabase
-        .from("campaign_submissions")
-        .delete()
-        .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id)
-        .eq("status", "withdrawn");
-
-      const { data: existingData } = await supabase
-        .from("campaign_submissions")
-        .select("platform")
-        .eq("campaign_id", campaign.id)
-        .eq("creator_id", user.id)
-        .neq("status", "withdrawn");
-
+      await supabase.from("campaign_submissions").delete().eq("campaign_id", campaign.id).eq("creator_id", user.id).eq("status", "withdrawn");
+      const {
+        data: existingData
+      } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaign.id).eq("creator_id", user.id).neq("status", "withdrawn");
       const existingPlatforms = new Set(existingData?.map(s => s.platform) || []);
       let submissionsCreated = 0;
-      const submittedAccountsData: Array<{ platform: string; username: string; account_link: string }> = [];
-
+      const submittedAccountsData: Array<{
+        platform: string;
+        username: string;
+        account_link: string;
+      }> = [];
       for (const accountId of selectedAccounts) {
         const account = socialAccounts.find(a => a.id === accountId);
         if (existingPlatforms.has(account.platform)) continue;
-
         const formattedAnswers = campaign.application_questions?.map((question: string, index: number) => ({
-          question, answer: answers[index] || ""
+          question,
+          answer: answers[index] || ""
         })) || [];
-
         const contentUrl = account.account_link || `pending-${Date.now()}-${accountId}`;
-
-        const { error: submissionError } = await supabase
-          .from("campaign_submissions")
-          .insert({
-            campaign_id: campaign.id,
-            creator_id: user.id,
-            platform: account.platform,
-            content_url: contentUrl,
-            status: submissionStatus,
-            application_answers: formattedAnswers
-          });
-
+        const {
+          error: submissionError
+        } = await supabase.from("campaign_submissions").insert({
+          campaign_id: campaign.id,
+          creator_id: user.id,
+          platform: account.platform,
+          content_url: contentUrl,
+          status: submissionStatus,
+          application_answers: formattedAnswers
+        });
         if (submissionError) throw submissionError;
-
-        const { data: existingLink } = await supabase
-          .from("social_account_campaigns")
-          .select("id, status")
-          .eq("social_account_id", accountId)
-          .eq("campaign_id", campaign.id)
-          .maybeSingle();
-
+        const {
+          data: existingLink
+        } = await supabase.from("social_account_campaigns").select("id, status").eq("social_account_id", accountId).eq("campaign_id", campaign.id).maybeSingle();
         if (!existingLink) {
           await supabase.from("social_account_campaigns").insert({
             social_account_id: accountId,
@@ -335,12 +303,11 @@ export default function CampaignApply() {
             status: 'active'
           });
         } else if (existingLink.status !== 'active') {
-          await supabase
-            .from("social_account_campaigns")
-            .update({ status: 'active', disconnected_at: null })
-            .eq("id", existingLink.id);
+          await supabase.from("social_account_campaigns").update({
+            status: 'active',
+            disconnected_at: null
+          }).eq("id", existingLink.id);
         }
-
         submissionsCreated++;
         submittedAccountsData.push({
           platform: account.platform,
@@ -348,20 +315,25 @@ export default function CampaignApply() {
           account_link: account.account_link || contentUrl
         });
       }
-
       if (!campaign.requires_application && submissionsCreated > 0) {
         await supabase.functions.invoke('track-campaign-user', {
-          body: { campaignId: campaign.id, userId: user.id }
+          body: {
+            campaignId: campaign.id,
+            userId: user.id
+          }
         });
       }
-
       if (submissionsCreated > 0) {
-        const { data: profile } = await supabase.from('profiles').select('username, email').eq('id', user.id).single();
-        const { data: brandData } = await supabase.from('brands').select('slug').eq('name', campaign.brand_name).single();
+        const {
+          data: profile
+        } = await supabase.from('profiles').select('username, email').eq('id', user.id).single();
+        const {
+          data: brandData
+        } = await supabase.from('brands').select('slug').eq('name', campaign.brand_name).single();
         const formattedAnswers = campaign.application_questions?.map((question: string, index: number) => ({
-          question, answer: answers[index] || ""
+          question,
+          answer: answers[index] || ""
         })) || [];
-
         await supabase.functions.invoke('notify-campaign-application', {
           body: {
             username: profile?.username || 'Unknown',
@@ -377,17 +349,12 @@ export default function CampaignApply() {
           }
         });
       }
-
       if (submissionsCreated === 0) {
         toast.info("You've already applied to this campaign with the selected account(s)");
         return;
       }
-
       const accountText = submissionsCreated === 1 ? "account is" : "accounts are";
-      const successMessage = campaign.requires_application === false
-        ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.`
-        : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
-
+      const successMessage = campaign.requires_application === false ? `Successfully joined the campaign! ${submissionsCreated} ${accountText} now connected.` : `Application submitted successfully! ${submissionsCreated} ${accountText} now connected to this campaign.`;
       toast.success(successMessage);
       navigate("/dashboard?tab=campaigns");
     } catch (error: any) {
@@ -397,30 +364,24 @@ export default function CampaignApply() {
       setSubmitting(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <div className="h-64 bg-muted animate-pulse" />
         <div className="max-w-5xl mx-auto px-4 -mt-20 relative z-10">
           <Skeleton className="h-24 w-24 rounded-2xl mb-4" />
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-6 w-72" />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (!campaign && !boostCampaign) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+    return <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Campaign not found</h1>
           <p className="text-muted-foreground mb-4">This campaign doesn't exist or has been removed.</p>
           <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Get unified data
@@ -436,7 +397,6 @@ export default function CampaignApply() {
   if (isBoost && boostCampaign?.blueprint_embed_url) {
     const isFull = boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators;
     const availableSpots = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
-
     const handleApplyClick = () => {
       if (!user) {
         sessionStorage.setItem('applyReturnUrl', window.location.pathname);
@@ -445,21 +405,10 @@ export default function CampaignApply() {
       }
       setShowApplySheet(true);
     };
+    return <div className="relative h-screen w-screen overflow-hidden">
+        <iframe src={boostCampaign.blueprint_embed_url.startsWith('http') ? boostCampaign.blueprint_embed_url : `https://${boostCampaign.blueprint_embed_url}`} className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Campaign Blueprint" />
 
-    return (
-      <div className="relative h-screen w-screen overflow-hidden">
-        <iframe
-          src={boostCampaign.blueprint_embed_url.startsWith('http') 
-            ? boostCampaign.blueprint_embed_url 
-            : `https://${boostCampaign.blueprint_embed_url}`}
-          className="absolute inset-0 w-full h-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="Campaign Blueprint"
-        />
-
-        {!isFull && showFloatingMenu && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        {!isFull && showFloatingMenu && <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
             <div className="bg-background/90 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-5 max-w-sm w-[90vw]">
               <div className="flex items-center gap-3 mb-4">
                 <Avatar className="h-12 w-12 border-2 border-border">
@@ -478,41 +427,62 @@ export default function CampaignApply() {
                 {user ? "Apply Now" : "Sign In to Apply"}
               </Button>
             </div>
-          </div>
-        )}
+          </div>}
 
-        {!isFull && !showFloatingMenu && (
-          <button onClick={() => setShowFloatingMenu(true)} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg font-medium">
+        {!isFull && !showFloatingMenu && <button onClick={() => setShowFloatingMenu(true)} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg font-medium">
             Apply Now
-          </button>
-        )}
+          </button>}
 
-        <ApplyToBountySheet
-          open={showApplySheet}
-          onOpenChange={setShowApplySheet}
-          bounty={{ ...boostCampaign, brands: boostBrand ? { name: boostBrand.name, logo_url: boostBrand.logo_url || '', is_verified: false } : undefined }}
-          onSuccess={() => { setShowApplySheet(false); fetchCampaignData(); }}
-        />
-      </div>
-    );
+        <ApplyToBountySheet open={showApplySheet} onOpenChange={setShowApplySheet} bounty={{
+        ...boostCampaign,
+        brands: boostBrand ? {
+          name: boostBrand.name,
+          logo_url: boostBrand.logo_url || '',
+          is_verified: false
+        } : undefined
+      }} onSuccess={() => {
+        setShowApplySheet(false);
+        fetchCampaignData();
+      }} />
+      </div>;
   }
 
   // Build stats array
-  const stats: { label: string; value: string }[] = [];
+  const stats: {
+    label: string;
+    value: string;
+  }[] = [];
   if (isBoost && boostCampaign) {
-    stats.push({ label: "Monthly", value: `$${boostCampaign.monthly_retainer}` });
-    stats.push({ label: "Videos/mo", value: `${boostCampaign.videos_per_month}` });
+    stats.push({
+      label: "Monthly",
+      value: `$${boostCampaign.monthly_retainer}`
+    });
+    stats.push({
+      label: "Videos/mo",
+      value: `${boostCampaign.videos_per_month}`
+    });
     const spotsLeft = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
-    stats.push({ label: "Spots Left", value: `${spotsLeft}` });
+    stats.push({
+      label: "Spots Left",
+      value: `${spotsLeft}`
+    });
     if (boostCampaign.end_date) {
-      stats.push({ label: "Ends", value: format(new Date(boostCampaign.end_date), 'MMM d') });
+      stats.push({
+        label: "Ends",
+        value: format(new Date(boostCampaign.end_date), 'MMM d')
+      });
     }
   } else if (campaign && !campaign.is_infinite_budget) {
     const remaining = campaign.budget - (campaign.budget_used || 0);
-    stats.push({ label: "Budget Left", value: `$${remaining.toLocaleString()}` });
-    stats.push({ label: "RPM Rate", value: `$${campaign.rpm_rate}` });
+    stats.push({
+      label: "Budget Left",
+      value: `$${remaining.toLocaleString()}`
+    });
+    stats.push({
+      label: "RPM Rate",
+      value: `$${campaign.rpm_rate}`
+    });
   }
-
   const handleApplyClick = () => {
     if (isEnded) {
       toast.error("This boost has ended and is no longer accepting applications");
@@ -527,13 +497,10 @@ export default function CampaignApply() {
       setShowApplySheet(true);
     }
   };
-
-  const questions = campaign ? (Array.isArray(campaign.application_questions) ? campaign.application_questions : []) : [];
+  const questions = campaign ? Array.isArray(campaign.application_questions) ? campaign.application_questions : [] : [];
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
   const isEnded = status === "ended";
-
-  return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+  return <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
       <PublicNavbar />
       
       <div className="flex-1 flex pt-14 overflow-hidden">
@@ -541,19 +508,13 @@ export default function CampaignApply() {
         <div className="flex-1 overflow-y-auto lg:pr-[380px]">
           {/* Hero Banner */}
           <div className="relative">
-            {bannerUrl ? (
-              <div className="h-56 md:h-72 w-full overflow-hidden">
+            {bannerUrl ? <div className="h-56 md:h-72 w-full overflow-hidden">
                 <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-              </div>
-            ) : (
-              <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
-            )}
+              </div> : <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />}
             
             {/* Back button */}
-            <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-            </button>
+            
           </div>
 
           <div className="max-w-3xl mx-auto px-4 pb-32 lg:pb-8">
@@ -571,182 +532,136 @@ export default function CampaignApply() {
                   </div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
-                    {isEnded ? (
-                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#b60b0b',
-                        borderTop: '1px solid #ed3030',
-                        borderRadius: '20px'
-                      }}>
+                    {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    backgroundColor: '#b60b0b',
+                    borderTop: '1px solid #ed3030',
+                    borderRadius: '20px'
+                  }}>
                         <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                         Ended
-                      </span>
-                    ) : status === 'active' ? (
-                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#1f6d36',
-                        borderTop: '1px solid #3c8544',
-                        borderRadius: '20px'
-                      }}>
+                      </span> : status === 'active' ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    backgroundColor: '#1f6d36',
+                    borderTop: '1px solid #3c8544',
+                    borderRadius: '20px'
+                  }}>
                         <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
                         Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#6b7280',
-                        borderRadius: '20px'
-                      }}>
+                      </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    backgroundColor: '#6b7280',
+                    borderRadius: '20px'
+                  }}>
                         {status}
-                      </span>
-                    )}
+                      </span>}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Stats Row */}
-            {stats.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-                {stats.map((stat, i) => (
-                  <div key={i} className="bg-card border border-border rounded-xl p-4">
+            {stats.length > 0 && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {stats.map((stat, i) => <div key={i} className="bg-card border border-border rounded-xl p-4">
                     <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{stat.label}</p>
                     <p className="text-xl font-bold font-['Inter'] tracking-[-0.5px]">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
 
             {/* Mobile Apply Card */}
             <div className="lg:hidden mb-8">
               <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
                 <h2 className="text-lg font-semibold mb-6">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
-                {!isLoggedIn ? (
-                  <div className="text-center py-4">
+                {!isLoggedIn ? <div className="text-center py-4">
                     <p className="text-muted-foreground mb-4 text-sm">Sign in to apply</p>
                     <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)}>Sign In</Button>
-                  </div>
-                ) : isBoost ? (
-                  <div className="space-y-4">
+                  </div> : isBoost ? <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
                     <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
                       {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
                     </Button>
-                  </div>
-                ) : (
-                  <Button className="w-full" size="lg" disabled={isEnded} onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
+                  </div> : <Button className="w-full" size="lg" disabled={isEnded} onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
                     {isEnded ? 'Campaign Ended' : 'Continue to Apply'}
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
 
             {/* Content Section */}
             <div className="space-y-8">
             {/* Description */}
-            {description && (
-              <div>
+            {description && <div>
                 <h2 className="text-lg font-semibold mb-3">About</h2>
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">
                   {parseTextWithLinks(description)}
                 </p>
-              </div>
-            )}
+              </div>}
 
             {/* Blueprint Content */}
-            {blueprint?.content_guidelines && (
-              <div>
+            {blueprint?.content_guidelines && <div>
                 <h2 className="text-lg font-semibold mb-3">Content Guidelines</h2>
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">{blueprint.content_guidelines}</p>
-              </div>
-            )}
+              </div>}
 
-            {blueprint?.content && (
-              <div>
+            {blueprint?.content && <div>
                 <h2 className="text-lg font-semibold mb-3">Brief</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blueprint.content) }} />
-              </div>
-            )}
+                <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(blueprint.content)
+              }} />
+              </div>}
 
-            {blueprint?.hooks && blueprint.hooks.length > 0 && (
-              <div>
+            {blueprint?.hooks && blueprint.hooks.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hook Ideas</h2>
                 <div className="space-y-2">
-                  {blueprint.hooks.map((hook: any, i: number) => (
-                    <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.hooks.map((hook: any, i: number) => <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
                       {typeof hook === 'string' ? hook : hook.text || hook.content}
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
-              </div>
-            )}
+              </div>}
 
-            {blueprint?.talking_points && blueprint.talking_points.length > 0 && (
-              <div>
+            {blueprint?.talking_points && blueprint.talking_points.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Talking Points</h2>
                 <ul className="space-y-2">
-                  {blueprint.talking_points.map((point: any, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  {blueprint.talking_points.map((point: any, i: number) => <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                       <span className="text-primary mt-1">•</span>
                       <span>{typeof point === 'string' ? point : point.text || point.content}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
-              </div>
-            )}
+              </div>}
 
-            {blueprint?.dos_and_donts && (
-              <div className="grid md:grid-cols-2 gap-4">
-                {blueprint.dos_and_donts.dos?.length > 0 && (
-                  <div>
+            {blueprint?.dos_and_donts && <div className="grid md:grid-cols-2 gap-4">
+                {blueprint.dos_and_donts.dos?.length > 0 && <div>
                     <h2 className="text-lg font-semibold mb-3 text-green-500">Do's</h2>
                     <ul className="space-y-2">
-                      {blueprint.dos_and_donts.dos.map((item: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20 font-['Inter'] tracking-[-0.5px]">
+                      {blueprint.dos_and_donts.dos.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20 font-['Inter'] tracking-[-0.5px]">
                           <span className="text-green-500">✓</span>
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
-                  </div>
-                )}
-                {blueprint.dos_and_donts.donts?.length > 0 && (
-                  <div>
+                  </div>}
+                {blueprint.dos_and_donts.donts?.length > 0 && <div>
                     <h2 className="text-lg font-semibold mb-3 text-red-500">Don'ts</h2>
                     <ul className="space-y-2">
-                      {blueprint.dos_and_donts.donts.map((item: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20 font-['Inter'] tracking-[-0.5px]">
+                      {blueprint.dos_and_donts.donts.map((item: string, i: number) => <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20 font-['Inter'] tracking-[-0.5px]">
                           <span className="text-red-500">✗</span>
                           <span>{item}</span>
-                        </li>
-                      ))}
+                        </li>)}
                     </ul>
-                  </div>
-                )}
-              </div>
-            )}
+                  </div>}
+              </div>}
 
-            {blueprint?.call_to_action && (
-              <div>
+            {blueprint?.call_to_action && <div>
                 <h2 className="text-lg font-semibold mb-3">Call to Action</h2>
                 <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.call_to_action}</p>
-              </div>
-            )}
+              </div>}
 
-            {blueprint?.hashtags && blueprint.hashtags.length > 0 && (
-              <div>
+            {blueprint?.hashtags && blueprint.hashtags.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hashtags</h2>
                 <div className="flex flex-wrap gap-2">
-                  {blueprint.hashtags.map((tag, i) => (
-                    <Badge key={i} variant="secondary" className="font-['Inter'] tracking-[-0.5px]">#{tag.replace('#', '')}</Badge>
-                  ))}
+                  {blueprint.hashtags.map((tag, i) => <Badge key={i} variant="secondary" className="font-['Inter'] tracking-[-0.5px]">#{tag.replace('#', '')}</Badge>)}
                 </div>
-              </div>
-            )}
+              </div>}
 
-            {blueprint?.brand_voice && (
-              <div>
+            {blueprint?.brand_voice && <div>
                 <h2 className="text-lg font-semibold mb-3">Brand Voice</h2>
                 <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.brand_voice}</p>
-              </div>
-            )}
+              </div>}
             </div>
           </div>
         </div>
@@ -763,148 +678,103 @@ export default function CampaignApply() {
                 </p>
               </div>
 
-              {!isLoggedIn ? (
-                <div className="text-center py-12 px-4 rounded-xl bg-muted/30 border border-border">
+              {!isLoggedIn ? <div className="text-center py-12 px-4 rounded-xl bg-muted/30 border border-border">
                   <p className="text-muted-foreground mb-4 text-sm font-['Inter'] tracking-[-0.5px]">Sign in to apply for this campaign</p>
                   <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)} className="font-['Inter'] tracking-[-0.5px]">
                     Sign In
                   </Button>
-                </div>
-              ) : isBoost ? (
-                <div className="space-y-4">
+                </div> : isBoost ? <div className="space-y-4">
                   <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Ready to join this boost program?</p>
                   <Button className="w-full font-['Inter'] tracking-[-0.5px]" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
                     {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
                   </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
+                </div> : <div className="space-y-6">
                   {/* Account Selection */}
                   <div className="space-y-3">
                     <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
                       Select Social Accounts <span className="text-destructive">*</span>
                     </Label>
                     
-                    {loadingAccounts ? (
-                      <div className="space-y-2">
+                    {loadingAccounts ? <div className="space-y-2">
                         <Skeleton className="h-14 w-full rounded-lg" />
                         <Skeleton className="h-14 w-full rounded-lg" />
-                      </div>
-                    ) : socialAccounts.length === 0 ? (
-                      <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
+                      </div> : socialAccounts.length === 0 ? <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
                         <img src={emptyAccountsImage} alt="No accounts" className="w-10 h-10 mx-auto mb-3 opacity-40" />
                         <p className="text-sm text-muted-foreground mb-4 font-['Inter'] tracking-[-0.5px]">No matching accounts found</p>
                         <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
                           <Plus className="h-4 w-4 mr-2" />
                           Add Account
                         </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {socialAccounts.map((account) => {
-                          const isSelected = selectedAccounts.includes(account.id);
-                          const platformIcon = getPlatformIcon(account.platform);
-                          
-                          return (
-                            <button
-                              key={account.id}
-                              onClick={() => toggleAccountSelection(account.id)}
-                              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
-                                isSelected 
-                                  ? "border-primary bg-primary/5" 
-                                  : "border-border hover:border-muted-foreground/50 bg-card"
-                              }`}
-                            >
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"
-                              }`}>
+                      </div> : <div className="space-y-2">
+                        {socialAccounts.map(account => {
+                    const isSelected = selectedAccounts.includes(account.id);
+                    const platformIcon = getPlatformIcon(account.platform);
+                    return <button key={account.id} onClick={() => toggleAccountSelection(account.id)} className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}>
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                               </div>
                               {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
                               <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
-                            </button>
-                          );
-                        })}
-                        <button
-                          onClick={() => setShowAddAccountDialog(true)}
-                          className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 transition-colors text-muted-foreground hover:text-foreground"
-                        >
+                            </button>;
+                  })}
+                        <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 transition-colors text-muted-foreground hover:text-foreground">
                           <Plus className="h-4 w-4" />
                           <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
                         </button>
-                      </div>
-                    )}
+                      </div>}
                   </div>
 
                   {/* Application Questions */}
-                  {questions.length > 0 && campaign?.requires_application !== false && (
-                    <div className="space-y-4">
+                  {questions.length > 0 && campaign?.requires_application !== false && <div className="space-y-4">
                       <div className="h-px bg-border" />
-                      {questions.map((question: string, idx: number) => (
-                        <div key={idx} className="space-y-2">
+                      {questions.map((question: string, idx: number) => <div key={idx} className="space-y-2">
                           <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
                             {question} <span className="text-destructive">*</span>
                           </Label>
-                          <Textarea
-                            value={answers[idx] || ""}
-                            onChange={(e) => setAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
-                            placeholder="Your answer..."
-                            className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                          <Textarea value={answers[idx] || ""} onChange={e => setAnswers(prev => ({
+                    ...prev,
+                    [idx]: e.target.value
+                  }))} placeholder="Your answer..." className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
+                        </div>)}
+                    </div>}
 
                   {/* Submit Button */}
                   <div className="pt-2">
-                    <Button 
-                      onClick={handleSubmit} 
-                      disabled={isEnded || submitting || selectedAccounts.length === 0} 
-                      className="w-full font-['Inter'] tracking-[-0.5px]" 
-                      size="lg"
-                    >
+                    <Button onClick={handleSubmit} disabled={isEnded || submitting || selectedAccounts.length === 0} className="w-full font-['Inter'] tracking-[-0.5px]" size="lg">
                       {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                     </Button>
-                    {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && (
-                      <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
+                    {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
                         Select at least one account to continue
-                      </p>
-                    )}
+                      </p>}
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
           </div>
         </div>
       </div>
 
       {/* Fixed bottom CTA for mobile */}
-      {isBoost && !isFull && !isEnded && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
+      {isBoost && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
           <Button className="w-full" size="lg" onClick={handleApplyClick}>
             {user ? "Apply Now" : "Sign In to Apply"}
           </Button>
-        </div>
-      )}
+        </div>}
 
-      <AddSocialAccountDialog
-        open={showAddAccountDialog}
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={() => {
-          setShowAddAccountDialog(false);
-          if (campaign) checkAuthAndLoadAccounts(campaign);
-        }}
-      />
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={() => {
+      setShowAddAccountDialog(false);
+      if (campaign) checkAuthAndLoadAccounts(campaign);
+    }} />
 
-      {isBoost && boostCampaign && (
-        <ApplyToBountySheet
-          open={showApplySheet}
-          onOpenChange={setShowApplySheet}
-          bounty={{ ...boostCampaign, brands: boostBrand ? { name: boostBrand.name, logo_url: boostBrand.logo_url || '', is_verified: false } : undefined }}
-          onSuccess={() => { setShowApplySheet(false); fetchCampaignData(); }}
-        />
-      )}
-    </div>
-  );
+      {isBoost && boostCampaign && <ApplyToBountySheet open={showApplySheet} onOpenChange={setShowApplySheet} bounty={{
+      ...boostCampaign,
+      brands: boostBrand ? {
+        name: boostBrand.name,
+        logo_url: boostBrand.logo_url || '',
+        is_verified: false
+      } : undefined
+    }} onSuccess={() => {
+      setShowApplySheet(false);
+      fetchCampaignData();
+    }} />}
+    </div>;
 }
