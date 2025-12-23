@@ -679,8 +679,7 @@ export function DiscoverTab() {
                 };
                 const isEnded = campaign.status === "ended";
                 const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                return <Card key={`campaign-${campaign.id}`} className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer ${isEnded ? "opacity-60" : ""}`} onClick={handleCampaignClick}>
-                      {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+                return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer" onClick={handleCampaignClick}>
                       
                       <button onClick={e => toggleBookmark(campaign.id, e)} className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
