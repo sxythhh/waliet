@@ -126,9 +126,85 @@ export default function CampaignApply() {
   const [showApplySheet, setShowApplySheet] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(true);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
+
+  // Fetch bookmark status when campaign/boost loads
+  useEffect(() => {
+    const fetchBookmarkStatus = async () => {
+      if (!user) return;
+      
+      if (campaign) {
+        const { data } = await supabase
+          .from("campaign_bookmarks")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("campaign_id", campaign.id)
+          .maybeSingle();
+        setIsBookmarked(!!data);
+      } else if (boostCampaign) {
+        const { data } = await supabase
+          .from("bounty_bookmarks")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("bounty_campaign_id", boostCampaign.id)
+          .maybeSingle();
+        setIsBookmarked(!!data);
+      }
+    };
+    fetchBookmarkStatus();
+  }, [user, campaign, boostCampaign]);
+
+  const toggleBookmark = async () => {
+    if (!user) {
+      toast.error("Please sign in to bookmark");
+      return;
+    }
+
+    if (campaign) {
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from("campaign_bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("campaign_id", campaign.id);
+        if (!error) {
+          setIsBookmarked(false);
+          toast.success("Bookmark removed");
+        }
+      } else {
+        const { error } = await supabase
+          .from("campaign_bookmarks")
+          .insert({ user_id: user.id, campaign_id: campaign.id });
+        if (!error) {
+          setIsBookmarked(true);
+          toast.success("Campaign bookmarked");
+        }
+      }
+    } else if (boostCampaign) {
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from("bounty_bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("bounty_campaign_id", boostCampaign.id);
+        if (!error) {
+          setIsBookmarked(false);
+          toast.success("Bookmark removed");
+        }
+      } else {
+        const { error } = await supabase
+          .from("bounty_bookmarks")
+          .insert({ user_id: user.id, bounty_campaign_id: boostCampaign.id });
+        if (!error) {
+          setIsBookmarked(true);
+          toast.success("Boost bookmarked");
+        }
+      }
+    }
+  };
   const fetchCampaignData = async () => {
     if (!slug) return;
     setLoading(true);
@@ -615,10 +691,10 @@ export default function CampaignApply() {
                         <Copy className="h-4 w-4" />
                       </button>
                       <button 
-                        onClick={() => toast.info("Bookmark feature coming soon")}
-                        className="p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground border border-border/50"
+                        onClick={toggleBookmark}
+                        className={`p-1.5 rounded-md transition-all border border-border/50 ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}
                       >
-                        <Bookmark className="h-4 w-4" />
+                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                       </button>
                     </div>
                   </div>
