@@ -69,13 +69,18 @@ interface BountyCampaign {
   created_at: string;
   brand_id: string;
   blueprint_id?: string | null;
+  slug?: string | null;
   brands?: {
     name: string;
     logo_url: string;
     is_verified?: boolean;
   };
 }
-export function DiscoverTab() {
+interface DiscoverTabProps {
+  navigateOnClick?: boolean;
+}
+
+export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
   const {
     user
   } = useAuth();
@@ -674,8 +679,12 @@ export function DiscoverTab() {
                 const budgetUsed = campaign.budget_used || 0;
                 const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
                 const handleCampaignClick = () => {
-                  setSelectedCampaign(campaign);
-                  setSheetOpen(true);
+                  if (navigateOnClick) {
+                    navigate(`/c/${campaign.slug}`);
+                  } else {
+                    setSelectedCampaign(campaign);
+                    setSheetOpen(true);
+                  }
                 };
                 const isEnded = campaign.status === "ended";
                 const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
@@ -759,8 +768,12 @@ export function DiscoverTab() {
                 const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
                 return <Card key={`bounty-${bounty.id}`} className={`group bg-card border border-[#dce1eb] dark:border-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={() => {
                   if (!isEnded) {
-                    setSelectedBounty(bounty);
-                    setBountySheetOpen(true);
+                    if (navigateOnClick && bounty.slug) {
+                      navigate(`/c/${bounty.slug}`);
+                    } else {
+                      setSelectedBounty(bounty);
+                      setBountySheetOpen(true);
+                    }
                   }
                 }}>
                       {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
