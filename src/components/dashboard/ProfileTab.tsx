@@ -1049,8 +1049,8 @@ export function ProfileTab() {
                               style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}
                             >
                               <span className="text-white/70">Hide from public profile</span>
-                              <div className={`w-8 h-4 rounded-full transition-colors ${account.hidden_from_public ? 'bg-primary' : 'bg-white/20'}`}>
-                                <div className={`w-3 h-3 rounded-full bg-white mt-0.5 transition-transform ${account.hidden_from_public ? 'translate-x-4.5 ml-0.5' : 'translate-x-0.5'}`} />
+                              <div className={`w-8 h-4 rounded-full transition-colors relative ${account.hidden_from_public ? 'bg-primary' : 'bg-white/20'}`}>
+                                <div className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all duration-200 ${account.hidden_from_public ? 'left-4' : 'left-0.5'}`} />
                               </div>
                             </button>
 
