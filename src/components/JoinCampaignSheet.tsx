@@ -471,7 +471,6 @@ export function JoinCampaignSheet({
                   {campaign.brand_name}
                   {campaign.brands?.is_verified && <VerifiedBadge size="sm" />}
                 </p>
-                {campaign.campaign_type || campaign.category || campaign.platforms}
               </div>
             </div>
 
