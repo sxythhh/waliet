@@ -375,17 +375,17 @@ export default function CampaignApply() {
           {/* Main content skeleton */}
           <div className="flex-1 overflow-y-auto">
             {/* Banner skeleton */}
-            <div className="h-48 md:h-64 bg-[#141414] animate-pulse" />
+            <div className="h-48 md:h-64 bg-[#0c0c0c] animate-pulse" />
             
             {/* Header section */}
             <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-16 relative z-10">
               <div className="flex flex-col md:flex-row md:items-end gap-4 mb-8">
-                <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-[#1a1a1a]" />
+                <Skeleton className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-[#111111]" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-7 w-40 bg-[#1a1a1a]" />
+                  <Skeleton className="h-7 w-40 bg-[#111111]" />
                   <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-24 bg-[#1a1a1a]" />
-                    <Skeleton className="h-5 w-16 rounded-full bg-[#1a1a1a]" />
+                    <Skeleton className="h-5 w-24 bg-[#111111]" />
+                    <Skeleton className="h-5 w-16 rounded-full bg-[#111111]" />
                   </div>
                 </div>
               </div>
@@ -393,31 +393,31 @@ export default function CampaignApply() {
               {/* Stats cards skeleton */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-[#141414] rounded-xl p-4 border border-white/5">
-                    <Skeleton className="h-3 w-16 mb-2 bg-[#1f1f1f]" />
-                    <Skeleton className="h-6 w-12 bg-[#1f1f1f]" />
+                  <div key={i} className="bg-[#0c0c0c] rounded-xl p-4">
+                    <Skeleton className="h-3 w-16 mb-2 bg-[#151515]" />
+                    <Skeleton className="h-6 w-12 bg-[#151515]" />
                   </div>
                 ))}
               </div>
               
               {/* About section skeleton */}
               <div className="mb-8">
-                <Skeleton className="h-5 w-20 mb-4 bg-[#1a1a1a]" />
+                <Skeleton className="h-5 w-20 mb-4 bg-[#111111]" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-full bg-[#141414]" />
-                  <Skeleton className="h-4 w-full bg-[#141414]" />
-                  <Skeleton className="h-4 w-3/4 bg-[#141414]" />
+                  <Skeleton className="h-4 w-full bg-[#0c0c0c]" />
+                  <Skeleton className="h-4 w-full bg-[#0c0c0c]" />
+                  <Skeleton className="h-4 w-3/4 bg-[#0c0c0c]" />
                 </div>
               </div>
             </div>
           </div>
           
           {/* Sidebar skeleton */}
-          <div className="hidden lg:block w-80 border-l border-white/5 p-6 bg-[#0a0a0a]">
-            <div className="bg-[#141414] rounded-2xl p-5 border border-white/5">
-              <Skeleton className="h-5 w-32 mb-2 bg-[#1f1f1f]" />
-              <Skeleton className="h-4 w-48 mb-6 bg-[#1a1a1a]" />
-              <Skeleton className="h-10 w-full rounded-lg bg-[#1f1f1f]" />
+          <div className="hidden lg:block w-80 border-l border-white/5 p-6 bg-[#080808]">
+            <div className="bg-[#0c0c0c] rounded-2xl p-5">
+              <Skeleton className="h-5 w-32 mb-2 bg-[#151515]" />
+              <Skeleton className="h-4 w-48 mb-6 bg-[#111111]" />
+              <Skeleton className="h-10 w-full rounded-lg bg-[#151515]" />
             </div>
           </div>
         </div>
