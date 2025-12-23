@@ -459,7 +459,21 @@ export function JoinCampaignSheet({
                   {campaign.brand_name}
                   {campaign.brands?.is_verified && <VerifiedBadge size="sm" />}
                 </p>
-                {campaign.campaign_type || campaign.category || campaign.platforms}
+                {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                    {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                        {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
+                      </span>}
+                    {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>
+                        {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                      </span>}
+                    {campaign.platforms.length > 0}
+                  </div>}
               </div>
             </div>
 
