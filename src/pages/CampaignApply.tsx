@@ -855,7 +855,7 @@ export default function CampaignApply() {
                               <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
                             </button>;
                   })}
-                        <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 transition-colors text-muted-foreground hover:text-foreground">
+                        <button onClick={() => setShowAddAccountDialog(true)} className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-transparent hover:bg-[#0e0e0e] transition-colors text-muted-foreground hover:text-foreground">
                           <Plus className="h-4 w-4" />
                           <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
                         </button>
