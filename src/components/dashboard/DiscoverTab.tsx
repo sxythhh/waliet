@@ -79,8 +79,9 @@ interface BountyCampaign {
 interface DiscoverTabProps {
   navigateOnClick?: boolean;
 }
-
-export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
+export function DiscoverTab({
+  navigateOnClick = false
+}: DiscoverTabProps) {
   const {
     user
   } = useAuth();
@@ -698,7 +699,7 @@ export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
                           </h3>
                         </div>
 
-                        <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
+                        <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0 px-0 py-0">
                           {campaign.is_infinite_budget ? <>
                             <div className="flex items-baseline justify-between">
                               <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
