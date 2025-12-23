@@ -98,15 +98,3 @@ verify_jwt = true
 
 [functions.allocate-brand-budget]
 verify_jwt = true
-
-[functions.create-stripe-connect-account]
-verify_jwt = true
-
-[functions.get-stripe-connect-balance]
-verify_jwt = true
-
-[functions.create-stripe-connect-deposit]
-verify_jwt = true
-
-[functions.stripe-connect-portal]
-verify_jwt = true

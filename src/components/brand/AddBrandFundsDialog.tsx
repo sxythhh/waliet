@@ -64,24 +64,32 @@ export function AddBrandFundsDialog({
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-stripe-connect-deposit', {
+      const processingFee = (amount * 0.03) + 0.30;
+      const totalAmount = amount + processingFee;
+
+      const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
         body: { 
           brand_id: brandId, 
           amount,
-          success_url: `${window.location.origin}${window.location.pathname}${window.location.search}&deposit=success`,
-          cancel_url: `${window.location.origin}${window.location.pathname}${window.location.search}&deposit=cancelled`,
+          total_amount: totalAmount,
+          return_url: window.location.href,
         },
       });
 
       if (error) throw error;
 
-      if (data?.url) {
-        toast.message('Redirecting to checkout', {
-          description: 'Complete your payment to add funds.',
-        });
-        window.location.href = data.url;
-        return;
-      }
+       if (data?.needs_payment_method && data?.checkout_url) {
+         // Store the amount + intent id so we can finalize the top-up after returning from checkout
+         sessionStorage.setItem(
+           `pending_topup_${brandId}`,
+           JSON.stringify({ amount, transactionId: data?.transaction_id })
+         );
+         toast.message('Redirecting to checkout', {
+           description: 'Complete your payment to add funds.',
+         });
+         window.location.href = data.checkout_url;
+         return;
+       }
 
       if (data?.needs_payment_method && !data?.checkout_url) {
         toast.error('Please enter an amount to add funds.');

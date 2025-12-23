@@ -33,8 +33,6 @@ import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
 import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
 import storefrontIcon from "@/assets/storefront-icon.svg";
-import paymentsInactive from "@/assets/payments-inactive.svg";
-import paymentsActive from "@/assets/payments-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -95,10 +93,6 @@ const brandMenuItems = [{
 }, {
   title: "Creators",
   tab: "creators",
-  icon: null as any
-}, {
-  title: "Payments",
-  tab: "payments",
   icon: null as any
 }, {
   title: "Settings",
@@ -316,24 +310,26 @@ export function AppSidebar() {
               <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
-                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
+                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
                       <img src={swapHorizIcon} alt="" className="w-4 h-4" />
                       <span className="text-sm">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
-                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
+                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
                           {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{brand.name}</span>
                         </button>)}
-                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-foreground hover:bg-[#141414]'}`}>
+                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
                           {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{membership.brands.name}</span>
                         </button>)}
-                      <button disabled className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground opacity-50 cursor-not-allowed">
+                      <button onClick={() => {
+                    setShowCreateBrandDialog(true);
+                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-[#141414] hover:text-foreground">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
@@ -342,11 +338,11 @@ export function AppSidebar() {
                 
                 {/* Quick Links */}
                 <div className="space-y-0.5">
-                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-[#141414] transition-colors">
+                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Support</span>
                   </button>
-                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-foreground hover:bg-[#141414] transition-colors">
+                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <div className="flex items-center gap-3">
                       <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
                       <span className="text-sm font-inter tracking-[-0.5px]">Discord</span>
@@ -356,14 +352,14 @@ export function AppSidebar() {
                   <button onClick={() => {
                   setFeedbackType("feature");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-[#141414] transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
                   </button>
                   <button onClick={() => {
                   setFeedbackType("bug");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-[#141414] transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
                     <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
                   </button>
@@ -371,11 +367,11 @@ export function AppSidebar() {
 
                 {/* Theme & Logout */}
                 <div className="pt-1 flex items-center gap-2">
-                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-foreground hover:bg-[#1f1f1f] transition-colors">
+                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-foreground transition-colors">
                     {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                     <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                   </button>
-                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-foreground hover:bg-[#1f1f1f] hover:text-red-400 transition-colors">
+                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-red-400 transition-colors">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Log out</span>
                   </button>
@@ -418,9 +414,6 @@ export function AppSidebar() {
                 </div> : item.tab === "education" ? <div className="relative h-6 w-6">
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                </div> : item.tab === "payments" ? <div className="relative h-6 w-6">
-                  <img src={paymentsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={paymentsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
               <span className="text-[12px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
@@ -539,7 +532,10 @@ export function AppSidebar() {
                   
                   {/* Create Brand */}
                   <div className="p-1.5">
-                    <button disabled className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors text-neutral-500 opacity-50 cursor-not-allowed">
+                    <button onClick={() => {
+                  setWorkspaceOpen(false);
+                  setShowCreateBrandDialog(true);
+                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
                       <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
                         <Plus className="w-3.5 h-3.5" />
                       </div>
@@ -582,9 +578,6 @@ export function AppSidebar() {
                     </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
                       <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "payments" ? <div className="relative h-[24px] w-[24px]">
-                      <img src={paymentsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={paymentsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
                       <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />

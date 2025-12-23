@@ -107,13 +107,11 @@ function BrandLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <WorkspaceProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <main className="flex-1">{children}</main>
-        </div>
-      </SidebarProvider>
-    </WorkspaceProvider>;
+  return <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <main className="flex-1">{children}</main>
+      </div>
+    </SidebarProvider>;
 }
 function AdminLayout({
   children

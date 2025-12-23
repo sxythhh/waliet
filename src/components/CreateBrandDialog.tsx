@@ -28,14 +28,12 @@ interface CreateBrandDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
-  disabled?: boolean;
 }
 export function CreateBrandDialog({
   onSuccess,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
-  hideTrigger = false,
-  disabled = false
+  hideTrigger = false
 }: CreateBrandDialogProps) {
   const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -166,8 +164,8 @@ export function CreateBrandDialog({
     setBrandColor("#8B5CF6");
     setOpen(false);
   };
-  return <Dialog open={disabled ? false : open} onOpenChange={disabled ? undefined : setOpen}>
-      {!hideTrigger && <DialogTrigger asChild><Button disabled={disabled}>Create Brand</Button></DialogTrigger>}
+  return <Dialog open={open} onOpenChange={setOpen}>
+      {!hideTrigger && <DialogTrigger asChild />}
       <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">

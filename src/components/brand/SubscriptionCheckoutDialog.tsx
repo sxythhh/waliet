@@ -1,72 +1,82 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WhopCheckoutEmbed } from "@whop/checkout/react";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface SubscriptionCheckoutProps {
+interface SubscriptionCheckoutDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   planId: string;
   planName: string;
   brandId: string;
-  isAnnual?: boolean;
   onComplete?: () => void;
-  children: React.ReactNode;
 }
 
-export function SubscriptionCheckoutButton({
+const PLAN_IDS: Record<string, string> = {
+  starter: "plan_DU4ba3ik2UHVZ",
+  growth: "plan_JSWLvDSLsSde4",
+};
+
+export function SubscriptionCheckoutDialog({
+  open,
+  onOpenChange,
   planId,
   planName,
   brandId,
-  isAnnual = false,
   onComplete,
-  children,
-}: SubscriptionCheckoutProps) {
-  const [loading, setLoading] = useState(false);
+}: SubscriptionCheckoutDialogProps) {
+  const [mounted, setMounted] = useState(false);
+  
+  // Get the actual Whop plan ID
+  const whopPlanId = PLAN_IDS[planId] || planId;
+  
+  // Construct return URL with brand context
+  const returnUrl = `${window.location.origin}/dashboard?workspace=${brandId}&tab=profile&checkout=complete`;
 
-  const handleCheckout = async () => {
-    setLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "create-subscription-checkout",
-        {
-          body: {
-            plan_key: planId,
-            is_annual: isAnnual,
-            brand_id: brandId,
-          },
-        }
-      );
-
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (!data?.url) throw new Error("No checkout URL returned");
-
-      // Redirect to Stripe checkout
-      window.location.href = data.url;
-    } catch (err) {
-      console.error("Error creating checkout session:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
-      setLoading(false);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+    } else {
+      // Reset mounted state when dialog closes
+      const timer = setTimeout(() => setMounted(false), 300);
+      return () => clearTimeout(timer);
     }
+  }, [open]);
+
+  const handleComplete = (planId: string, receiptId: string) => {
+    console.log("Checkout complete:", { planId, receiptId });
+    onComplete?.();
+    onOpenChange(false);
   };
 
-  if (loading) {
-    return (
-      <button disabled className="w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] bg-muted/50 text-foreground flex items-center justify-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading...
-      </button>
-    );
-  }
-
   return (
-    <div onClick={handleCheckout} className="cursor-pointer">
-      {children}
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="tracking-[-0.5px]">
+            Subscribe to {planName}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="min-h-[400px]">
+          {mounted && (
+            <WhopCheckoutEmbed
+              planId={whopPlanId}
+              returnUrl={returnUrl}
+              theme="system"
+              onComplete={handleComplete}
+              fallback={
+                <div className="space-y-4 p-4">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              }
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-}
-
-// Keep the old export for backwards compatibility
-export function SubscriptionCheckoutDialog(props: any) {
-  return null;
 }

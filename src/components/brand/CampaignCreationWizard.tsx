@@ -12,11 +12,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -410,30 +409,19 @@ export function CampaignCreationWizard({
   };
   const handleNext = async () => {
     if (currentStep === 1) {
-      const formValues = form.getValues();
-      // Only validate budget if not infinite budget
-      const fieldsToValidate: (keyof CampaignFormValues)[] = formValues.is_infinite_budget 
-        ? ["rpm_rate", "allowed_platforms"] 
-        : ["budget", "rpm_rate", "allowed_platforms"];
-      const isValid = await form.trigger(fieldsToValidate);
-      if (!isValid) {
-        toast.error("Please complete the required fields to continue.");
-        return;
-      }
-
+      const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
+      if (!isValid) return;
+      
       // Validate budget doesn't exceed available balance (for new campaigns only)
-      if (!isEditMode && !formValues.is_infinite_budget) {
-        const budgetValue = parseFloat(formValues.budget || "0");
+      const values = form.getValues();
+      if (!isEditMode && !values.is_infinite_budget) {
+        const budgetValue = parseFloat(values.budget || "0");
         if (budgetValue > availableBalance) {
-          toast.error(
-            `Budget cannot exceed available balance of $${availableBalance.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })}`,
-          );
+          toast.error(`Budget cannot exceed available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
           return;
         }
       }
-
+      
       setCurrentStep(2);
     }
   };
@@ -679,59 +667,87 @@ export function CampaignCreationWizard({
                 {/* Step 1: Budget & Targeting */}
                 {currentStep === 1 && (
                   <div className="space-y-5">
-                    {/* Campaign Name */}
+                    {/* Available Balance Display */}
+                    <div className="p-4 rounded-xl bg-primary/5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Virality Balance</p>
+                          <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
+                            {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
                     <FormField
                       control={form.control}
-                      name="title"
+                      name="is_infinite_budget"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Unlimited Budget</FormLabel>
+                            <p className="text-xs text-muted-foreground">No cap on spending</p>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {!watchedValues.is_infinite_budget && (
+                      <FormField
+                        control={form.control}
+                        name="budget"
+                        render={({ field }) => {
+                          const budgetValue = parseFloat(field.value || "0");
+                          const exceedsBalance = budgetValue > availableBalance;
+                          return (
+                            <FormItem>
+                              <div className="flex items-center justify-between">
+                                <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Total Budget</FormLabel>
+                                {exceedsBalance && (
+                                  <span className="text-xs text-destructive font-inter">Exceeds available balance</span>
+                                )}
+                              </div>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="10,000" 
+                                    className={`pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 ${exceedsBalance ? 'ring-1 ring-destructive' : ''}`} 
+                                    max={availableBalance}
+                                    {...field} 
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    )}
+
+                    <FormField
+                      control={form.control}
+                      name="rpm_rate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Name</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
+                            <span className="text-xs text-muted-foreground">per 1K views</span>
+                          </div>
                           <FormControl>
-                            <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" {...field} />
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                              <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
-                    {/* Banner Upload */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Banner</Label>
-                      {bannerPreview ? (
-                        <div className="relative h-32 rounded-xl overflow-hidden group">
-                          <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={removeBanner}
-                              className="gap-2"
-                            >
-                              <X className="h-4 w-4" />
-                              Remove
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          onClick={() => fileInputRef.current?.click()}
-                          className="h-32 rounded-xl border-0 cursor-pointer flex items-center justify-center transition-colors bg-muted/20 hover:bg-muted/30"
-                        >
-                          <div className="text-center">
-                            <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">Upload banner image</p>
-                          </div>
-                        </div>
-                      )}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </div>
 
                     <FormField
                       control={form.control}
@@ -775,20 +791,20 @@ export function CampaignCreationWizard({
                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
                                 }`}
                               >
-                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
-                                 <p className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.5px]">Creators post on their existing accounts</p>
-                               </div>
-                               <div
-                                 onClick={() => field.onChange("branded_accounts")}
-                                 className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                   field.value === "branded_accounts"
-                                     ? "border-primary bg-primary/5"
-                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                 }`}
-                               >
-                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
-                                 <p className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.5px]">Creators create new branded accounts</p>
-                               </div>
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
+                              </div>
+                              <div
+                                onClick={() => field.onChange("branded_accounts")}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                  field.value === "branded_accounts"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
+                              </div>
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -796,30 +812,16 @@ export function CampaignCreationWizard({
                       )}
                     />
 
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="is_private"
                         render={({ field }) => (
-                          <FormItem>
-                            <div 
-                              className="flex items-center gap-3 cursor-pointer group"
-                              onClick={() => field.onChange(!field.value)}
-                            >
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                field.value 
-                                  ? "bg-primary border-primary" 
-                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                              )}>
-                                {field.value && (
-                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                                )}
-                              </div>
-                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                Hide this campaign from the Marketplace
-                              </FormLabel>
-                            </div>
+                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Private</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -827,25 +829,11 @@ export function CampaignCreationWizard({
                         control={form.control}
                         name="requires_application"
                         render={({ field }) => (
-                          <FormItem>
-                            <div 
-                              className="flex items-center gap-3 cursor-pointer group"
-                              onClick={() => field.onChange(!field.value)}
-                            >
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                field.value 
-                                  ? "bg-primary border-primary" 
-                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                              )}>
-                                {field.value && (
-                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                                )}
-                              </div>
-                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                Require creators to submit an application
-                              </FormLabel>
-                            </div>
+                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Applications</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -918,131 +906,6 @@ export function CampaignCreationWizard({
                         )}
                       </div>
                     )}
-
-                    {/* Budget Section */}
-                    <div className="pt-4 border-t border-border space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="is_infinite_budget"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div 
-                              className="flex items-center gap-3 cursor-pointer group"
-                              onClick={() => field.onChange(!field.value)}
-                            >
-                              <div className={cn(
-                                "w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                field.value 
-                                  ? "bg-primary border-primary" 
-                                  : "border-muted-foreground/40 group-hover:border-muted-foreground/60"
-                              )}>
-                                {field.value && (
-                                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                                )}
-                              </div>
-                              <FormLabel className="text-sm text-foreground cursor-pointer font-inter tracking-[-0.5px]">
-                                Unlimited budget (pay as you go)
-                              </FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-
-                      {!watchedValues.is_infinite_budget && (
-                        <FormField
-                          control={form.control}
-                          name="budget"
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="flex items-center justify-between">
-                                <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Campaign Budget</FormLabel>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <Wallet className="h-3 w-3" />
-                                  <span>Available: ${loadingBalance ? "..." : availableBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                                </div>
-                              </div>
-                              <FormControl>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                                  <Input
-                                    type="number"
-                                    placeholder="1000"
-                                    className="h-10 pl-7 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
-                                    {...field}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      <FormField
-                        control={form.control}
-                        name="rpm_rate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate ($ per 1,000 views)</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  placeholder="5.00"
-                                  className="h-10 pl-7 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
-                                  {...field}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Platforms */}
-                      <FormField
-                        control={form.control}
-                        name="allowed_platforms"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Platforms</FormLabel>
-                            <FormControl>
-                              <div className="flex gap-2">
-                                {[
-                                  { id: "tiktok", logo: tiktokLogo, label: "TikTok" },
-                                  { id: "instagram", logo: instagramLogo, label: "Instagram" },
-                                  { id: "youtube", logo: youtubeLogo, label: "YouTube" },
-                                ].map((platform) => (
-                                  <div
-                                    key={platform.id}
-                                    onClick={() => {
-                                      const current = field.value || [];
-                                      if (current.includes(platform.id)) {
-                                        field.onChange(current.filter((p: string) => p !== platform.id));
-                                      } else {
-                                        field.onChange([...current, platform.id]);
-                                      }
-                                    }}
-                                    className={cn(
-                                      "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all",
-                                      field.value?.includes(platform.id)
-                                        ? "bg-primary/20 ring-1 ring-primary"
-                                        : "bg-muted/30 hover:bg-muted/50"
-                                    )}
-                                  >
-                                    <img src={platform.logo} alt={platform.label} className="w-4 h-4 object-contain" />
-                                    <span className="text-sm text-foreground">{platform.label}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
                   </div>
                 )}
 
@@ -1250,38 +1113,6 @@ export function CampaignCreationWizard({
                           </div>
                         )}
 
-                        {/* RPM Rate Adjustment - Admin Only */}
-                        {isAdmin && (
-                          <div className="rounded-lg bg-muted/20 p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">RPM Rate</span>
-                              <Badge variant="outline" className="text-xs">Admin</Badge>
-                            </div>
-                            <FormField
-                              control={form.control}
-                              name="rpm_rate"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <div className="relative">
-                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                      <Input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        placeholder="CPM rate"
-                                        className="pl-7 h-9 bg-muted/30 border-0"
-                                        {...field}
-                                      />
-                                    </div>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )}
-
                         {/* Payout Day - Admin Only */}
                         {isAdmin && (
                           <FormField
@@ -1433,9 +1264,10 @@ export function CampaignCreationWizard({
                   size="sm"
                   onClick={handleNext}
                   disabled={isSubmitting}
-                  className="min-w-[100px] font-inter tracking-[-0.5px] bg-white text-black hover:bg-white/90 border border-border"
+                  className="min-w-[100px] gap-2"
                 >
                   Continue
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               ) : (
                 <Button

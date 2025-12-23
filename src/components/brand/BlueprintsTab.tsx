@@ -224,7 +224,7 @@ export function BlueprintsTab({
       </div>
 
       {blueprints.length === 0 ? <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
-          <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
+          <iframe src="https://joinvirality.com/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
         </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
           {blueprints.map(blueprint => {
         const contentPreview = getContentPreview(blueprint.content);

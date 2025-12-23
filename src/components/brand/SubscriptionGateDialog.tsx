@@ -1,5 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import {
@@ -8,8 +11,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface SubscriptionGateDialogProps {
   brandId: string;
@@ -26,8 +27,7 @@ export const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
-    monthlyPrice: 99,
-    annualPrice: 82,
+    price: 99,
     description: 'For teams just getting started',
     limits: { boosts: 1, hires: 10 },
     features: [
@@ -41,8 +41,7 @@ export const PLANS = [
   {
     key: 'growth',
     name: 'Growth',
-    monthlyPrice: 249,
-    annualPrice: 207,
+    price: 249,
     description: 'For scaling creator programs',
     limits: { boosts: 3, hires: 30 },
     features: [
@@ -57,8 +56,7 @@ export const PLANS = [
   {
     key: 'enterprise',
     name: 'Enterprise',
-    monthlyPrice: null,
-    annualPrice: null,
+    price: null,
     description: 'For large-scale operations',
     limits: { boosts: Infinity, hires: Infinity },
     features: [
@@ -85,12 +83,14 @@ function FeatureItem({ feature }: { feature: Feature }) {
               type="button"
               className="flex w-full items-center gap-2 text-left text-sm tracking-[-0.5px]"
               onPointerDown={(e) => {
+                // On mobile/touch, toggle tooltip on tap
                 if (e.pointerType === "touch") {
                   e.preventDefault();
                   setOpen((v) => !v);
                 }
               }}
               onClick={() => {
+                // Fallback for browsers that don't provide pointerType reliably
                 if (window.matchMedia?.("(hover: none)").matches) setOpen((v) => !v);
               }}
             >
@@ -121,8 +121,7 @@ export function SubscriptionGateDialog({
   open,
   onOpenChange
 }: SubscriptionGateDialogProps) {
-  const [isAnnual, setIsAnnual] = useState(false);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState<string | null>(null);
 
   const handleSelectPlan = async (planKey: string) => {
     if (planKey === 'enterprise') {
@@ -130,33 +129,44 @@ export function SubscriptionGateDialog({
       return;
     }
 
-    setLoadingPlan(planKey);
+    if (!brandId) {
+      toast.error("Brand ID is required");
+      return;
+    }
+
+    setLoading(planKey);
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "create-subscription-checkout",
-        {
-          body: {
-            plan_key: planKey,
-            is_annual: isAnnual,
-            brand_id: brandId,
-          },
-        }
-      );
-
-      console.log("[create-subscription-checkout] response", { data, error });
-
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
-      if (!data || typeof data !== "object" || !("url" in data) || !data.url) {
-        throw new Error("No checkout URL returned");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to continue");
+        return;
       }
 
-      window.location.href = data.url as string;
+      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
+        body: {
+          brand_id: brandId,
+          plan_key: planKey,
+          return_url: `${window.location.origin}${window.location.pathname}?subscription=success`,
+        },
+      });
+
+      if (error) {
+        console.error('Checkout error:', error);
+        toast.error("Failed to create checkout");
+        return;
+      }
+
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        toast.error("No checkout URL returned");
+      }
     } catch (err) {
-      console.error("Error creating checkout session:", err);
-      toast.error(err instanceof Error ? err.message : "Failed to create checkout");
-      setLoadingPlan(null);
+      console.error('Error creating checkout:', err);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(null);
     }
   };
 
@@ -173,35 +183,11 @@ export function SubscriptionGateDialog({
             </p>
           </DialogHeader>
           
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-3 px-8 pb-2">
-            <span className={`text-sm font-medium tracking-[-0.5px] transition-colors ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Monthly
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isAnnual ? 'bg-primary' : 'bg-muted'}`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAnnual ? 'translate-x-5' : 'translate-x-0'}`}
-              />
-            </button>
-            <span className={`text-sm font-medium tracking-[-0.5px] transition-colors ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Annual
-            </span>
-            {isAnnual && (
-              <span className="text-xs font-medium tracking-[-0.5px] text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
-                Save ~17%
-              </span>
-            )}
-          </div>
-
           <div className="p-[10px]">
             <div className="grid md:grid-cols-3 gap-6">
               {PLANS.map((plan) => {
+                const isLoading = loading === plan.key;
                 const isEnterprise = plan.key === 'enterprise';
-                const isLoading = loadingPlan === plan.key;
                 
                 return (
                   <div
@@ -228,17 +214,10 @@ export function SubscriptionGateDialog({
                     </div>
                     
                     <div className="mb-5">
-                      {plan.monthlyPrice !== null ? (
+                      {plan.price !== null ? (
                         <>
-                          <span className="text-3xl font-semibold tracking-[-0.5px]">
-                            ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                          </span>
+                          <span className="text-3xl font-semibold tracking-[-0.5px]">${plan.price}</span>
                           <span className="text-muted-foreground text-sm tracking-[-0.5px]">/month</span>
-                          {isAnnual && (
-                            <p className="text-xs text-muted-foreground tracking-[-0.5px] mt-1">
-                              Billed annually
-                            </p>
-                          )}
                         </>
                       ) : (
                         <span className="text-3xl font-semibold tracking-[-0.5px]">Custom</span>
@@ -253,8 +232,8 @@ export function SubscriptionGateDialog({
                     
                     <button
                       onClick={() => handleSelectPlan(plan.key)}
-                      disabled={!!loadingPlan}
-                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+                      disabled={!!loading}
+                      className={`w-full py-2.5 px-4 rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none ${
                         plan.popular 
                           ? 'bg-[#1f60dd] border-t border-[#4b85f7] text-white hover:bg-[#1a50c8]' 
                           : 'bg-muted/50 text-foreground hover:bg-muted'
@@ -262,7 +241,7 @@ export function SubscriptionGateDialog({
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           Loading...
                         </>
                       ) : isEnterprise ? (

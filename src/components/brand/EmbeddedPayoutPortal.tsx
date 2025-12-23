@@ -10,10 +10,9 @@ import {
 import { loadWhopElements } from '@whop/embedded-components-vanilla-js';
 import type { WhopElementsOptions } from '@whop/embedded-components-vanilla-js/types';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Settings, Globe, RotateCcw, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Loader2, Settings, Globe, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { toast } from 'sonner';
 
 const elements = loadWhopElements();
 
@@ -38,7 +37,7 @@ interface EmbeddedPayoutPortalProps {
   redirectUrl: string;
 }
 
-function WhopPayoutPortalContent({ brandId, companyId, redirectUrl }: { brandId: string; companyId: string; redirectUrl: string }) {
+function PayoutPortalContent({ brandId, companyId, redirectUrl }: { brandId: string; companyId: string; redirectUrl: string }) {
   const sessionRef = usePayoutsSessionRef();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -148,90 +147,26 @@ function WhopPayoutPortalContent({ brandId, companyId, redirectUrl }: { brandId:
   );
 }
 
-function StripeConnectPortalContent({ brandId, redirectUrl }: { brandId: string; redirectUrl: string }) {
-  const [loading, setLoading] = useState(false);
-
-  const openStripePortal = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('stripe-connect-portal', {
-        body: { brand_id: brandId, return_url: redirectUrl },
-      });
-
-      if (error || !data?.url) {
-        throw new Error(error?.message || 'Failed to open Stripe portal');
-      }
-
-      window.open(data.url, '_blank');
-    } catch (err) {
-      console.error('Failed to open Stripe portal:', err);
-      toast.error('Failed to open Stripe dashboard');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="rounded-xl border border-border bg-card p-6">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-            <Settings className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">Stripe Connect</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your payouts, view balances, and update account settings through Stripe's dashboard.
-            </p>
-          </div>
-          <Button 
-            onClick={openStripePortal} 
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <ExternalLink className="w-4 h-4 mr-2" />
-            )}
-            Open Stripe Dashboard
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function EmbeddedPayoutPortal({ brandId, redirectUrl }: EmbeddedPayoutPortalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [hasStripeConnect, setHasStripeConnect] = useState(false);
 
   useEffect(() => {
-    const fetchPayoutConfig = async () => {
+    const fetchCompanyId = async () => {
       try {
         const { data: brand, error: brandError } = await supabase
           .from('brands')
-          .select('whop_company_id, stripe_account_id, stripe_onboarding_complete')
+          .select('whop_company_id')
           .eq('id', brandId)
           .single();
 
-        if (brandError) {
-          setError('Failed to load brand configuration');
+        if (brandError || !brand?.whop_company_id) {
+          setError('Brand not configured for payouts');
           return;
         }
 
-        // Check for Whop first
-        if (brand?.whop_company_id) {
-          setCompanyId(brand.whop_company_id);
-        } 
-        // Fall back to Stripe Connect
-        else if (brand?.stripe_account_id && brand?.stripe_onboarding_complete) {
-          setHasStripeConnect(true);
-        } else {
-          setError('No payout method configured. Please set up Stripe Connect first.');
-        }
+        setCompanyId(brand.whop_company_id);
       } catch (err) {
         setError('Failed to load payout configuration');
       } finally {
@@ -239,7 +174,7 @@ export function EmbeddedPayoutPortal({ brandId, redirectUrl }: EmbeddedPayoutPor
       }
     };
 
-    fetchPayoutConfig();
+    fetchCompanyId();
   }, [brandId]);
 
   if (loading) {
@@ -250,37 +185,19 @@ export function EmbeddedPayoutPortal({ brandId, redirectUrl }: EmbeddedPayoutPor
     );
   }
 
-  if (error) {
+  if (error || !companyId) {
     return (
       <div className="flex items-center justify-center h-[400px] text-muted-foreground p-4">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  // Use Whop if available
-  if (companyId) {
-    return (
-      <div className="h-full w-full overflow-y-auto">
-        <Elements appearance={appearance} elements={elements}>
-          <WhopPayoutPortalContent brandId={brandId} companyId={companyId} redirectUrl={redirectUrl} />
-        </Elements>
-      </div>
-    );
-  }
-
-  // Fall back to Stripe Connect
-  if (hasStripeConnect) {
-    return (
-      <div className="h-full w-full overflow-y-auto">
-        <StripeConnectPortalContent brandId={brandId} redirectUrl={redirectUrl} />
+        <p>{error || 'Unable to load payout portal'}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center h-[400px] text-muted-foreground p-4">
-      <p>Unable to load payout portal</p>
+    <div className="h-full w-full overflow-y-auto">
+      <Elements appearance={appearance} elements={elements}>
+        <PayoutPortalContent brandId={brandId} companyId={companyId} redirectUrl={redirectUrl} />
+      </Elements>
     </div>
   );
 }

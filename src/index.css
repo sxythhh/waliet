@@ -193,8 +193,6 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
   }
 
   html, body, #root {

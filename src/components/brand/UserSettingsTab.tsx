@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Upload, Crown, Check, Eye, EyeOff, Trash2, ArrowUpRight } from "lucide-react";
+import { Upload, Crown, Check, Eye, EyeOff, Trash2 } from "lucide-react";
 import framePersonIcon from "@/assets/frame-person-notification-icon.svg";
 import stackedInboxIcon from "@/assets/stacked-inbox-icon.svg";
 import mailNotificationIcon from "@/assets/mail-notification-icon.svg";
@@ -389,19 +389,6 @@ export function UserSettingsTab() {
     setShowCreateBrandDialog(false);
   };
   const Spacer = () => <div className="h-6" />;
-
-  // Unified save handler based on active tab
-  const handleUnifiedSave = async () => {
-    if (activeTab === "general") {
-      await handleSaveBrand();
-    } else if (activeTab === "integrations") {
-      await handleSaveIntegrations();
-    } else if (activeTab === "wallet") {
-      await handleSave();
-    }
-  };
-
-  const isSaving = savingBrand || savingIntegrations || saving;
   if (loading) {
     return <div className="p-4 space-y-6 max-w-xl mx-auto">
         {/* Header Skeleton */}
@@ -467,22 +454,11 @@ export function UserSettingsTab() {
   }
   return <div className="p-4 space-y-6 max-w-xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
-          <p className="text-sm text-muted-foreground tracking-[-0.5px]">
-            Manage your workspace and billing
-          </p>
-        </div>
-        {isBrandMode && brand && activeTab !== "team" && (
-          <Button 
-            onClick={handleUnifiedSave} 
-            disabled={isSaving} 
-            className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
-        )}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
+        <p className="text-sm text-muted-foreground tracking-[-0.5px]">
+          Manage your workspace and billing
+        </p>
       </div>
 
       {/* Tabs Navigation */}
@@ -496,6 +472,17 @@ export function UserSettingsTab() {
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
+              {/* Save Button - Top */}
+              <div className="flex justify-end mb-6">
+                <Button 
+                  onClick={handleSaveBrand} 
+                  disabled={savingBrand} 
+                  className="w-auto h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
+                >
+                  {savingBrand ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+
               {/* Icon Section */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
@@ -566,17 +553,15 @@ export function UserSettingsTab() {
                 <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
                   Public URL
                 </Label>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center flex-1">
-                    <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
-                    <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
-                      .virality.gg
-                    </span>
-                  </div>
-                  <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="h-11 w-11 flex items-center justify-center rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                  </a>
+                <div className="flex items-center">
+                  <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
+                  <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
+                    .virality.gg
+                  </span>
                 </div>
+                <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
+                  Preview public page →
+                </a>
               </div>
 
               <Spacer />
@@ -822,6 +807,10 @@ export function UserSettingsTab() {
                 </div>
               </div>
 
+              {/* Save Button */}
+              <Button onClick={handleSaveIntegrations} disabled={savingIntegrations} className="w-full h-11 tracking-[-0.5px]">
+                {savingIntegrations ? "Saving..." : "Save Integrations"}
+              </Button>
             </>}
         </TabsContent>
 
@@ -919,6 +908,12 @@ export function UserSettingsTab() {
           })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
+          
+
+          {/* Save Button */}
+          <Button onClick={handleSave} disabled={saving} className="w-full h-11 tracking-[-0.5px]">
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
         </TabsContent>
       </Tabs>
 
