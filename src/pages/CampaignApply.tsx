@@ -14,7 +14,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -602,6 +602,25 @@ export default function CampaignApply() {
                   }}>
                         {status}
                       </span>}
+                    
+                    {/* Copy & Bookmark buttons */}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          toast.success("Link copied to clipboard");
+                        }}
+                        className="p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground border border-border/50"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => toast.info("Bookmark feature coming soon")}
+                        className="p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground border border-border/50"
+                      >
+                        <Bookmark className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
