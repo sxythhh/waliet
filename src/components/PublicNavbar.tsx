@@ -49,7 +49,7 @@ export default function PublicNavbar() {
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl">
+                        <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl px-[5px] py-[7px]">
                           <NavigationMenuLink asChild>
                             <Link to="/discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
                               <img alt="" className="w-5 h-5" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
