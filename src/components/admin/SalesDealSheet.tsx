@@ -3,14 +3,17 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { ManageRoadmapDialog } from "@/components/admin/ManageRoadmapDialog";
 import { EditBrandSubscriptionDialog } from "@/components/admin/EditBrandSubscriptionDialog";
 import { AdjustBrandWalletDialog } from "@/components/admin/AdjustBrandWalletDialog";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarDays, ExternalLink, Trash2, Users, CreditCard, Globe, User, Crown, Power, Pencil, Map, Wallet } from "lucide-react";
+import { CalendarDays, ExternalLink, Trash2, Users, CreditCard, Globe, User, Crown, Power, Pencil, Map, Wallet, BadgeCheck } from "lucide-react";
 
 type SalesStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
 
@@ -26,6 +29,7 @@ interface Brand {
   assets_url: string | null;
   show_account_tab: boolean;
   is_active: boolean;
+  is_verified: boolean;
   created_at: string;
   subscription_status?: string | null;
   subscription_plan?: string | null;
@@ -153,6 +157,22 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
     } catch (error) {
       console.error("Error updating brand status:", error);
       toast.error("Failed to update brand status");
+    }
+  };
+
+  const toggleBrandVerified = async () => {
+    if (!deal?.brands) return;
+    try {
+      const { error } = await supabase
+        .from("brands")
+        .update({ is_verified: !deal.brands.is_verified })
+        .eq("id", deal.brands.id);
+      if (error) throw error;
+      toast.success(`Brand ${!deal.brands.is_verified ? 'verified' : 'unverified'}`);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Error updating brand verification:", error);
+      toast.error("Failed to update verification status");
     }
   };
 
@@ -306,6 +326,26 @@ export function SalesDealSheet({ deal, open, onOpenChange, onUpdate }: SalesDeal
                 </div>
                 {getSubscriptionBadge()}
               </div>
+            </div>
+
+            {/* Verified Section */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BadgeCheck className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Verified Brand</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {deal.brands.is_verified && <VerifiedBadge size="md" />}
+                  <Switch
+                    checked={deal.brands.is_verified}
+                    onCheckedChange={toggleBrandVerified}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Verified brands display a badge next to their name on campaigns and boosts.
+              </p>
             </div>
 
             {/* Wallet Section */}

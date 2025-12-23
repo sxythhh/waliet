@@ -744,6 +744,7 @@ export type Database = {
           id: string
           instagram_handle: string | null
           is_active: boolean
+          is_verified: boolean
           linkedin_handle: string | null
           logo_url: string | null
           name: string
@@ -789,6 +790,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           is_active?: boolean
+          is_verified?: boolean
           linkedin_handle?: string | null
           logo_url?: string | null
           name: string
@@ -834,6 +836,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           is_active?: boolean
+          is_verified?: boolean
           linkedin_handle?: string | null
           logo_url?: string | null
           name?: string

@@ -16,6 +16,7 @@ interface Brand {
   slug: string;
   brand_type: string | null;
   is_active: boolean;
+  is_verified: boolean;
   created_at: string;
   renewal_date: string | null;
   logo_url: string | null;
