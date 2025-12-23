@@ -719,30 +719,25 @@ export default function CampaignApply() {
               </div>
 
               {!isLoggedIn ? <>
-                <div className="text-center py-8 px-6 rounded-2xl bg-gradient-to-b from-muted/40 to-muted/20 border border-border/50">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <UserPlus className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="text-base font-semibold font-['Inter'] tracking-[-0.5px] mb-1">Join to Apply</h3>
-                  <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-6 max-w-[280px] mx-auto">
+                <div className="text-center py-10 px-8 rounded-2xl bg-gradient-to-br from-primary/5 via-background to-primary/5">
+                  <h3 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px] mb-2">Join to Apply</h3>
+                  <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-8 max-w-[260px] mx-auto leading-relaxed">
                     Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
                   </p>
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2.5">
                     <Button 
                       onClick={() => setShowAuthDialog(true)} 
-                      className="w-full font-['Inter'] tracking-[-0.5px] gap-2"
+                      className="w-full font-['Inter'] tracking-[-0.5px] font-medium"
                       size="lg"
                     >
-                      <UserPlus className="w-4 h-4" />
                       Create Account
                     </Button>
                     <Button 
-                      variant="outline" 
+                      variant="ghost" 
                       onClick={() => setShowAuthDialog(true)} 
-                      className="w-full font-['Inter'] tracking-[-0.5px] gap-2"
+                      className="w-full font-['Inter'] tracking-[-0.5px] text-muted-foreground hover:text-foreground"
                       size="lg"
                     >
-                      <LogIn className="w-4 h-4" />
                       Sign In
                     </Button>
                   </div>
