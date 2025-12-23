@@ -550,9 +550,7 @@ export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-            {[...Array(6)].map((_, i) => <div key={i} className="bg-card rounded-lg border overflow-hidden">
-                {/* Banner skeleton */}
-                <Skeleton className="h-32 w-full rounded-none" />
+            {[...Array(6)].map((_, i) => <div key={i} className="bg-card rounded-lg overflow-hidden">
                 {/* Content */}
                 <div className="p-3 space-y-3">
                   {/* Brand logo + title */}
