@@ -33,6 +33,7 @@ import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
+import { CampaignCard } from "@/components/dashboard/CampaignCard";
 interface Campaign {
   id: string;
   title: string;
@@ -797,97 +798,46 @@ export function CampaignsTab({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {recommendedCampaigns.map(campaign => {
-          const budgetUsed = campaign.budget_used || 0;
-          const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-          return <Card key={campaign.id} className="group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border cursor-pointer" onClick={() => {
-            setSelectedCampaignForJoin({
-              id: campaign.id,
-              title: campaign.title,
-              description: (campaign as any).description || '',
-              brand_name: campaign.brand_name,
-              brand_logo_url: campaign.brand_logo_url || '',
-              budget: campaign.budget,
-              budget_used: campaign.budget_used || 0,
-              rpm_rate: campaign.rpm_rate,
-              status: (campaign as any).status || 'active',
-              start_date: (campaign as any).start_date || null,
-              banner_url: campaign.banner_url,
-              platforms: campaign.allowed_platforms || [],
-              slug: campaign.slug,
-              guidelines: (campaign as any).guidelines || null,
-              application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
-              requires_application: (campaign as any).requires_application,
-              is_infinite_budget: campaign.is_infinite_budget,
-              blueprint_id: (campaign as any).blueprint_id || null
-            });
-            setJoinCampaignSheetOpen(true);
-          }}>
-                  {/* Banner Image */}
-                  {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                      <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                    </div>}
-
-                  {/* Content Section */}
-                  <CardContent className="p-3 flex-1 flex flex-col font-instrument tracking-tight gap-0">
-                    {/* Brand Logo + Title */}
-                    <div className="flex items-start gap-2.5">
-                      {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                          <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                        </div>}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                          {campaign.title}
-                        </h3>
-                        <p className="text-xs text-foreground font-semibold flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
-                      </div>
-                    </div>
-
-                    {/* Budget Section */}
-                    <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
-                      {campaign.is_infinite_budget ? <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                              <span className="text-base font-bold">
-                                ∞ Unlimited Budget
-                              </span>
-                            </div>
-                          </div>
-                          <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                    background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                    backgroundSize: '20px 20px',
-                    animation: 'slide 1s linear infinite'
-                  }} />
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span>No budget limit</span>
-                          </div>
-                        </> : <>
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                              <span className="text-base font-bold tabular-nums">
-                                ${Math.ceil(budgetUsed).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-semibold">
-                                / ${Math.ceil(campaign.budget).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
-                            <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />
-                          </div>
-                          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                            <span className="font-semibold">{budgetPercentage.toFixed(0)}% used</span>
-                          </div>
-                        </>}
-                    </div>
-                  </CardContent>
-                </Card>;
-        })}
+              const handleClick = () => {
+                setSelectedCampaignForJoin({
+                  id: campaign.id,
+                  title: campaign.title,
+                  description: (campaign as any).description || '',
+                  brand_name: campaign.brand_name,
+                  brand_logo_url: campaign.brand_logo_url || '',
+                  budget: campaign.budget,
+                  budget_used: campaign.budget_used || 0,
+                  rpm_rate: campaign.rpm_rate,
+                  status: (campaign as any).status || 'active',
+                  start_date: (campaign as any).start_date || null,
+                  banner_url: campaign.banner_url,
+                  platforms: campaign.allowed_platforms || [],
+                  slug: campaign.slug,
+                  guidelines: (campaign as any).guidelines || null,
+                  application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
+                  requires_application: (campaign as any).requires_application,
+                  is_infinite_budget: campaign.is_infinite_budget,
+                  blueprint_id: (campaign as any).blueprint_id || null
+                });
+                setJoinCampaignSheetOpen(true);
+              };
+              return <CampaignCard
+                key={campaign.id}
+                id={campaign.id}
+                title={campaign.title}
+                brand_name={campaign.brand_name}
+                brand_logo_url={campaign.brand_logo_url}
+                brand_is_verified={campaign.brand_is_verified}
+                banner_url={campaign.banner_url}
+                budget={campaign.budget}
+                budget_used={campaign.budget_used}
+                is_infinite_budget={campaign.is_infinite_budget}
+                platforms={campaign.allowed_platforms || []}
+                onClick={handleClick}
+                showBookmark={false}
+                showFullscreen={false}
+              />;
+            })}
           </div>
         </div>}
 

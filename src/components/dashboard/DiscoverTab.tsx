@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus, Maximize2 } from "lucide-react";
 import videosIcon from "@/assets/videos-icon.svg";
 import personIcon from "@/assets/person-icon.svg";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
@@ -22,7 +22,6 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
-import { Maximize2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
@@ -30,6 +29,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { CampaignCard } from "./CampaignCard";
 interface Campaign {
   id: string;
   title: string;
@@ -676,8 +676,6 @@ export function DiscoverTab({
             return sortedItems.map(item => {
               if (item.type === 'campaign') {
                 const campaign = item.data;
-                const budgetUsed = campaign.budget_used || 0;
-                const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
                 const handleCampaignClick = () => {
                   if (navigateOnClick) {
                     navigate(`/c/${campaign.slug}`);
@@ -688,124 +686,27 @@ export function DiscoverTab({
                 };
                 const isEnded = campaign.status === "ended";
                 const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer" onClick={handleCampaignClick}>
-                      
-                      <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5">
-                        <button onClick={e => {
-                      e.stopPropagation();
-                      navigate(`/c/${campaign.slug}`);
-                    }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <Maximize2 className="h-4 w-4" />
-                        </button>
-                        <button onClick={e => toggleBookmark(campaign.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
-                          <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-                        </button>
-                      </div>
-                      
-
-                      <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
-                        {/* Brand Info with Banner */}
-                        <div className="flex items-center gap-2.5">
-                          {/* Campaign Banner */}
-                          {campaign.banner_url ? (
-                            <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-                              <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-14 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
-                              <span className="text-xs font-semibold text-muted-foreground">
-                                {campaign.title?.charAt(0) || 'C'}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              {/* Brand Logo */}
-                              {campaign.brand_logo_url ? (
-                                <div className="w-4 h-4 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-                                  <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-4 h-4 rounded-[3px] bg-muted flex items-center justify-center flex-shrink-0">
-                                  <span className="text-[8px] font-semibold text-muted-foreground">
-                                    {campaign.brand_name?.charAt(0) || 'B'}
-                                  </span>
-                                </div>
-                              )}
-                              <span className="text-xs text-foreground font-semibold font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
-                                {campaign.brand_name}
-                                {campaign.brand_is_verified && <VerifiedBadge size="sm" />}
-                              </span>
-                            </div>
-                            <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                              {campaign.title}
-                            </h3>
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0 px-0 py-0">
-                          {campaign.is_infinite_budget ? <>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                                <span className="text-base font-bold">∞ Unlimited Budget</span>
-                              </div>
-                              {campaign.platforms && campaign.platforms.length > 0 && (
-                                <div className="flex items-center gap-1 opacity-65">
-                                  {campaign.platforms.includes('tiktok') && (
-                                    <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                  {campaign.platforms.includes('instagram') && (
-                                    <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                  {campaign.platforms.includes('youtube') && (
-                                    <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <div className="relative h-1.5 rounded-full overflow-hidden" style={{
-                          background: 'linear-gradient(45deg, hsl(217, 91%, 60%) 25%, hsl(217, 91%, 45%) 25%, hsl(217, 91%, 45%) 50%, hsl(217, 91%, 60%) 50%, hsl(217, 91%, 60%) 75%, hsl(217, 91%, 45%) 75%, hsl(217, 91%, 45%))',
-                          backgroundSize: '20px 20px',
-                          animation: 'slide 1s linear infinite'
-                        }} />
-                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium">
-                              <span>No budget limit</span>
-                            </div>
-                          </> : <>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-baseline gap-1.5">
-                                <span className="text-xs font-semibold font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
-                                  ${Math.ceil(campaign.budget).toLocaleString(undefined, {
-                                maximumFractionDigits: 0
-                              })}
-                                </span>
-                              </div>
-                              {campaign.platforms && campaign.platforms.length > 0 && (
-                                <div className="flex items-center gap-1 opacity-65">
-                                  {campaign.platforms.includes('tiktok') && (
-                                    <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                  {campaign.platforms.includes('instagram') && (
-                                    <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                  {campaign.platforms.includes('youtube') && (
-                                    <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5 object-contain" />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
-                              <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                            width: `${budgetPercentage}%`
-                          }} />
-                            </div>
-                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
-                              <span className="font-semibold font-['Inter'] tracking-[-0.5px]">{budgetPercentage.toFixed(0)}% used</span>
-                            </div>
-                          </>}
-                        </div>
-                      </CardContent>
-                    </Card>;
+                return <CampaignCard
+                  key={`campaign-${campaign.id}`}
+                  id={campaign.id}
+                  title={campaign.title}
+                  brand_name={campaign.brand_name}
+                  brand_logo_url={campaign.brand_logo_url}
+                  brand_is_verified={campaign.brand_is_verified}
+                  banner_url={campaign.banner_url}
+                  budget={campaign.budget}
+                  budget_used={campaign.budget_used}
+                  is_infinite_budget={campaign.is_infinite_budget}
+                  platforms={campaign.platforms}
+                  isEnded={isEnded}
+                  isBookmarked={isBookmarked}
+                  onClick={handleCampaignClick}
+                  onBookmarkClick={(e) => toggleBookmark(campaign.id, e)}
+                  onFullscreenClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/c/${campaign.slug}`);
+                  }}
+                />;
               } else {
                 const bounty = item.data;
                 const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
