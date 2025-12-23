@@ -223,7 +223,7 @@ export function ApplyToBountySheet({
       <AddSocialAccountDialog open={showAddSocialDialog} onOpenChange={setShowAddSocialDialog} onSuccess={checkConnectedAccounts} />
 
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible">
           {/* Floating Fullscreen Button */}
           <button
             onClick={() => {
