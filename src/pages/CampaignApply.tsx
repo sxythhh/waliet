@@ -621,23 +621,7 @@ export default function CampaignApply() {
                   </div>)}
               </div>}
 
-            {/* Mobile Apply Card */}
-            <div className="lg:hidden mb-8">
-              <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
-                <h2 className="text-lg font-semibold mb-6">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
-                {!isLoggedIn ? <div className="text-center py-4">
-                    <p className="text-muted-foreground mb-4 text-sm">Sign in to apply</p>
-                    <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)}>Sign In</Button>
-                  </div> : isBoost ? <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
-                    <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
-                      {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
-                    </Button>
-                  </div> : <Button className="w-full" size="lg" disabled={isEnded} onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
-                    {isEnded ? 'Campaign Ended' : 'Continue to Apply'}
-                  </Button>}
-              </div>
-            </div>
+            {/* Mobile Apply Card - hidden since we have sticky bottom CTA */}
 
             {/* Content Section */}
             <div className="space-y-8">
