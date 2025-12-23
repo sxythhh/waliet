@@ -452,39 +452,45 @@ export function UserSettingsTab() {
         </div>
       </div>;
   }
-  return <div className="p-4 space-y-6 max-w-xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
-          <p className="text-sm text-muted-foreground tracking-[-0.5px]">
-            Manage your workspace and billing
-          </p>
+  return <div className="max-w-xl mx-auto">
+      {/* Sticky Header & Tabs */}
+      <div className="sticky top-0 z-10 bg-background pt-4 pb-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
+            <p className="text-sm text-muted-foreground tracking-[-0.5px]">
+              Manage your workspace and billing
+            </p>
+          </div>
+          {isBrandMode && brand && (
+            <Button 
+              onClick={() => {
+                if (activeTab === 'general') {
+                  handleSaveBrand();
+                } else if (activeTab === 'integrations') {
+                  handleSaveIntegrations();
+                }
+              }} 
+              disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false}
+              className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
+            >
+              {(activeTab === 'general' && savingBrand) || (activeTab === 'integrations' && savingIntegrations) ? "Saving..." : "Save Changes"}
+            </Button>
+          )}
         </div>
-        {isBrandMode && brand && (
-          <Button 
-            onClick={() => {
-              if (activeTab === 'general') {
-                handleSaveBrand();
-              } else if (activeTab === 'integrations') {
-                handleSaveIntegrations();
-              }
-            }} 
-            disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false}
-            className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
-          >
-            {(activeTab === 'general' && savingBrand) || (activeTab === 'integrations' && savingIntegrations) ? "Saving..." : "Save Changes"}
-          </Button>
-        )}
-      </div>
 
-      {/* Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center gap-6 border-b border-border">
+        {/* Tabs Navigation */}
+        <div className="flex items-center gap-6 border-b border-border mt-6 px-4">
           {["wallet", "general", "integrations", "team"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>)}
         </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="p-4 space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
@@ -948,5 +954,6 @@ export function UserSettingsTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </div>
     </div>;
 }
