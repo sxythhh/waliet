@@ -53,6 +53,7 @@ interface Campaign {
   rpm_rate: number;
   status: string | null;
   start_date: string | null;
+  created_at: string | null;
   banner_url: string | null;
   allowed_platforms: string[] | null;
   slug: string;
@@ -80,6 +81,7 @@ interface BountyCampaign {
   accepted_creators_count: number;
   start_date: string | null;
   end_date: string | null;
+  created_at: string | null;
   banner_url: string | null;
   status: string;
   blueprint_id: string | null;
@@ -650,12 +652,17 @@ export default function CampaignApply() {
                   <AvatarFallback className="text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 pb-2">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-0.5">
                     {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
                         {brandName}
                       </Link> : <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
+                  {(campaign?.created_at || boostCampaign?.created_at) && (
+                    <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px] mb-1">
+                      Posted on {format(new Date(campaign?.created_at || boostCampaign?.created_at || ''), 'MMM d, yyyy')}
+                    </p>
+                  )}
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
                     {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
