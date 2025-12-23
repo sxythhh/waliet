@@ -12,9 +12,10 @@ import forBrandsIcon from "@/assets/for-brands-icon.png";
 interface PublicNavbarProps {
   searchQuery?: string;
   onSearchClick?: () => void;
+  scrollContainerRef?: React.RefObject<HTMLElement>;
 }
 
-export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavbarProps) {
+export default function PublicNavbar({ searchQuery, onSearchClick, scrollContainerRef }: PublicNavbarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
@@ -165,6 +166,6 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
       </header>
 
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
-      <FloatingFooter />
+      <FloatingFooter scrollContainerRef={scrollContainerRef} />
     </>;
 }
