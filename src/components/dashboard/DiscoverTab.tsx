@@ -705,27 +705,38 @@ export function DiscoverTab({
 
                       <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
                         {/* Brand Info with Banner */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
+                          {/* Campaign Banner */}
                           {campaign.banner_url ? (
-                            <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                            <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
                               <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                             </div>
-                          ) : campaign.brand_logo_url ? (
-                            <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-                              <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                            </div>
                           ) : (
-                            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
+                            <div className="w-14 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
                               <span className="text-xs font-semibold text-muted-foreground">
-                                {campaign.brand_name?.charAt(0) || 'B'}
+                                {campaign.title?.charAt(0) || 'C'}
                               </span>
                             </div>
                           )}
                           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <span className="text-xs text-foreground font-semibold font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
-                              {campaign.brand_name}
-                              {campaign.brand_is_verified && <VerifiedBadge size="sm" />}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              {/* Brand Logo */}
+                              {campaign.brand_logo_url ? (
+                                <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                                  <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                  <span className="text-[8px] font-semibold text-muted-foreground">
+                                    {campaign.brand_name?.charAt(0) || 'B'}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="text-xs text-foreground font-semibold font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
+                                {campaign.brand_name}
+                                {campaign.brand_is_verified && <VerifiedBadge size="sm" />}
+                              </span>
+                            </div>
                             <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
                               {campaign.title}
                             </h3>
@@ -742,13 +753,13 @@ export function DiscoverTab({
                           {campaign.platforms && campaign.platforms.length > 0 && (
                             <div className="flex items-center gap-1">
                               {campaign.platforms.includes('tiktok') && (
-                                <img src="/lovable-uploads/7cbccb5b-27cd-4ef1-9051-677ab8901520.webp" alt="TikTok" className="w-4 h-4 object-contain" />
+                                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 object-contain" />
                               )}
                               {campaign.platforms.includes('instagram') && (
-                                <img src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" alt="Instagram" className="w-4 h-4 object-contain" />
+                                <img src={instagramLogo} alt="Instagram" className="w-4 h-4 object-contain" />
                               )}
                               {campaign.platforms.includes('youtube') && (
-                                <img src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" alt="YouTube" className="w-4 h-4 object-contain" />
+                                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 object-contain" />
                               )}
                             </div>
                           )}
