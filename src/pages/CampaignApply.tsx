@@ -667,22 +667,22 @@ export default function CampaignApply() {
                     </p>
                   )}
                   <div className="flex items-center gap-1.5 md:gap-2">
-                    <h1 className="text-lg md:text-3xl font-bold tracking-tight">{title}</h1>
-                    {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    <h1 className="text-base md:text-3xl font-bold tracking-tight">{title}</h1>
+                    {isEnded ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#b60b0b',
                     borderTop: '1px solid #ed3030',
                     borderRadius: '20px'
                   }}>
                         <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
                         Ended
-                      </span> : status === 'active' ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      </span> : status === 'active' ? <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#1f6d36',
                     borderTop: '1px solid #3c8544',
                     borderRadius: '20px'
                   }}>
                         <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
                         Active
-                      </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                      </span> : <span className="hidden md:flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#6b7280',
                     borderRadius: '20px'
                   }}>
