@@ -655,14 +655,14 @@ export default function CampaignApply() {
                   <AvatarFallback className="text-lg md:text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 pb-1 md:pb-2">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2">
                     {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
                         {brandName}
                       </Link> : <span className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
                   {(campaign?.created_at || boostCampaign?.created_at) && (
-                    <p className="text-[10px] md:text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px] mb-0.5 md:mb-1">
+                    <p className="text-[10px] md:text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
                       Posted on {format(new Date(campaign?.created_at || boostCampaign?.created_at || ''), 'MMM d, yyyy')}
                     </p>
                   )}
