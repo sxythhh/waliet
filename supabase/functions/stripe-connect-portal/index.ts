@@ -99,14 +99,27 @@ serve(async (req) => {
       });
     }
 
-    // For Standard accounts, we create a login link instead of account link
-    // This allows the user to access their Stripe dashboard directly
-    const loginLink = await stripe.accounts.createLoginLink(brand.stripe_account_id);
+    // Get the Stripe account to check its type
+    const account = await stripe.accounts.retrieve(brand.stripe_account_id);
+    logStep("Account retrieved", { type: account.type, id: account.id });
 
-    logStep("Login link created", { url: loginLink.url });
+    let dashboardUrl: string;
+
+    if (account.type === 'express') {
+      // For Express accounts, create a login link
+      const loginLink = await stripe.accounts.createLoginLink(brand.stripe_account_id);
+      dashboardUrl = loginLink.url;
+      logStep("Express login link created", { url: dashboardUrl });
+    } else {
+      // For Standard accounts, they manage their own Stripe dashboard directly
+      // Redirect to the Stripe dashboard
+      dashboardUrl = 'https://dashboard.stripe.com';
+      logStep("Standard account - using direct dashboard URL", { url: dashboardUrl });
+    }
 
     return new Response(JSON.stringify({ 
-      url: loginLink.url
+      url: dashboardUrl,
+      account_type: account.type
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
