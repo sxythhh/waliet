@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
+import { FloatingFooter } from "@/components/FloatingFooter";
 import forBrandsIcon from "@/assets/for-brands-icon.png";
 
 interface PublicNavbarProps {
@@ -163,5 +164,6 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
       </header>
 
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
+      <FloatingFooter />
     </>;
 }
