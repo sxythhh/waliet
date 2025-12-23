@@ -226,14 +226,10 @@ export function ApplyToBountySheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible">
           {/* Floating Fullscreen Button */}
-          <button
-            onClick={() => {
-              onOpenChange(false);
-              navigate(`/c/${bounty.slug || bounty.id}`);
-            }}
-            className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50"
-            title="Open full page"
-          >
+          <button onClick={() => {
+          onOpenChange(false);
+          navigate(`/c/${bounty.slug || bounty.id}`);
+        }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50" title="Open full page">
             <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
           </button>
           {/* Always show boost details */}
@@ -265,30 +261,7 @@ export function ApplyToBountySheet({
           </SheetHeader>
 
           {/* Stats Cards - Visual grid layout */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl bg-muted/50 p-4">
-              <p className="text-xl font-bold text-foreground font-inter tracking-[-0.5px]">
-                ${bounty.monthly_retainer.toLocaleString()}
-              </p>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">Per Month</p>
-            </div>
-            
-            <div className="rounded-xl bg-muted/50 p-4">
-              <p className="text-xl font-bold text-foreground font-inter tracking-[-0.5px]">
-                {bounty.videos_per_month}
-              </p>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">Videos/Mo</p>
-            </div>
-            
-            <div className="rounded-xl bg-muted/50 p-4">
-              <p className={`text-xl font-bold font-inter tracking-[-0.5px] ${isFull ? 'text-muted-foreground' : 'text-foreground'}`}>
-                {spotsRemaining > 0 ? spotsRemaining : 0}
-              </p>
-              <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-1">
-                {isFull ? 'Full' : 'Spots Left'}
-              </p>
-            </div>
-          </div>
+          
 
           {/* Blueprint Details Section */}
           {blueprint && <div className="space-y-3">
