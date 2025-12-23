@@ -754,18 +754,26 @@ export default function CampaignApply() {
         {/* Right Column - Fixed Application Sidebar (Desktop Only) */}
         <div className="hidden lg:flex fixed top-14 right-0 w-[380px] h-[calc(100vh-56px)] border-l border-border bg-background">
           <div className="flex-1 overflow-y-auto p-6" id="desktop-apply">
-            <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
-              <h2 className="text-lg font-semibold mb-6">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
+            <div className="space-y-6">
+              {/* Header */}
+              <div>
+                <h2 className="text-xl font-semibold font-['Inter'] tracking-[-0.5px]">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
+                <p className="text-sm text-muted-foreground mt-1 font-['Inter'] tracking-[-0.5px]">
+                  {isBoost ? 'Join this creator program' : 'Connect your accounts to get started'}
+                </p>
+              </div>
 
               {!isLoggedIn ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4 text-sm">Sign in to apply</p>
-                  <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)}>Sign In</Button>
+                <div className="text-center py-12 px-4 rounded-xl bg-muted/30 border border-border">
+                  <p className="text-muted-foreground mb-4 text-sm font-['Inter'] tracking-[-0.5px]">Sign in to apply for this campaign</p>
+                  <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)} className="font-['Inter'] tracking-[-0.5px]">
+                    Sign In
+                  </Button>
                 </div>
               ) : isBoost ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
-                  <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
+                  <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Ready to join this boost program?</p>
+                  <Button className="w-full font-['Inter'] tracking-[-0.5px]" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
                     {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
                   </Button>
                 </div>
@@ -773,20 +781,20 @@ export default function CampaignApply() {
                 <div className="space-y-6">
                   {/* Account Selection */}
                   <div className="space-y-3">
-                    <Label className="text-sm font-medium">
+                    <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
                       Select Social Accounts <span className="text-destructive">*</span>
                     </Label>
                     
                     {loadingAccounts ? (
                       <div className="space-y-2">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-14 w-full rounded-lg" />
+                        <Skeleton className="h-14 w-full rounded-lg" />
                       </div>
                     ) : socialAccounts.length === 0 ? (
-                      <div className="text-center py-6 bg-muted/30 rounded-xl border border-dashed border-border">
-                        <img src={emptyAccountsImage} alt="No accounts" className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p className="text-sm text-muted-foreground mb-3">No matching accounts</p>
-                        <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)}>
+                      <div className="text-center py-8 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
+                        <img src={emptyAccountsImage} alt="No accounts" className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                        <p className="text-sm text-muted-foreground mb-4 font-['Inter'] tracking-[-0.5px]">No matching accounts found</p>
+                        <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
                           <Plus className="h-4 w-4 mr-2" />
                           Add Account
                         </Button>
@@ -801,26 +809,28 @@ export default function CampaignApply() {
                             <button
                               key={account.id}
                               onClick={() => toggleAccountSelection(account.id)}
-                              className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                                isSelected ? "border-primary bg-primary/10" : "border-border hover:border-primary/50"
+                              className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${
+                                isSelected 
+                                  ? "border-primary bg-primary/5" 
+                                  : "border-border hover:border-muted-foreground/50 bg-card"
                               }`}
                             >
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                isSelected ? "border-primary bg-primary" : "border-muted-foreground"
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"
                               }`}>
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                               </div>
-                              {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
-                              <span className="font-medium text-sm">{account.username}</span>
+                              {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
+                              <span className="font-medium text-sm font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
                             </button>
                           );
                         })}
                         <button
                           onClick={() => setShowAddAccountDialog(true)}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-border hover:border-primary/50 transition-all text-muted-foreground hover:text-foreground"
+                          className="w-full flex items-center justify-center gap-2 p-4 rounded-lg border-2 border-dashed border-border hover:border-muted-foreground/50 transition-colors text-muted-foreground hover:text-foreground"
                         >
                           <Plus className="h-4 w-4" />
-                          <span className="text-sm">Add another account</span>
+                          <span className="text-sm font-['Inter'] tracking-[-0.5px]">Add another account</span>
                         </button>
                       </div>
                     )}
@@ -829,26 +839,39 @@ export default function CampaignApply() {
                   {/* Application Questions */}
                   {questions.length > 0 && campaign?.requires_application !== false && (
                     <div className="space-y-4">
+                      <div className="h-px bg-border" />
                       {questions.map((question: string, idx: number) => (
                         <div key={idx} className="space-y-2">
-                          <Label className="text-sm font-medium">
+                          <Label className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
                             {question} <span className="text-destructive">*</span>
                           </Label>
                           <Textarea
                             value={answers[idx] || ""}
                             onChange={(e) => setAnswers(prev => ({ ...prev, [idx]: e.target.value }))}
                             placeholder="Your answer..."
-                            className="min-h-[100px] resize-none"
+                            className="min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]"
                           />
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <Button onClick={handleSubmit} disabled={isEnded || submitting || selectedAccounts.length === 0} className="w-full" size="lg">
-                    {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
-                    <ArrowUp className="ml-2 h-4 w-4" />
-                  </Button>
+                  {/* Submit Button */}
+                  <div className="pt-2">
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={isEnded || submitting || selectedAccounts.length === 0} 
+                      className="w-full font-['Inter'] tracking-[-0.5px]" 
+                      size="lg"
+                    >
+                      {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
+                    </Button>
+                    {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && (
+                      <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
+                        Select at least one account to continue
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
