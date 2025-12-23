@@ -295,7 +295,7 @@ export function BrandCampaignsTab({
           </div>
 
           {/* Action Cards & Embed Group */}
-          <div className="flex flex-col gap-0 mt-4">
+          <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
             {/* Action Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
