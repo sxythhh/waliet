@@ -340,7 +340,7 @@ export default function PublicProfile() {
   const showBanner = !user;
 
   return (
-    <div className="min-h-screen bg-background overflow-y-auto" style={{ paddingBottom: showBanner ? '100px' : '24px' }}>
+    <div className="h-[100dvh] bg-background overflow-y-auto" style={{ paddingBottom: showBanner ? '100px' : '24px' }}>
       {/* Header Section */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-8">
         <div className="flex flex-col sm:flex-row items-start gap-6">
@@ -393,7 +393,7 @@ export default function PublicProfile() {
                   >
                     {getPlatformIcon(account.platform)}
                     <span className="text-sm font-['Inter'] tracking-[-0.5px] text-foreground">
-                      @{account.username}
+                      {account.username}
                     </span>
                   </button>
                 ))}
