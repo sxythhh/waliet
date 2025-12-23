@@ -718,7 +718,7 @@ export function DiscoverTab() {
                                 Active
                               </span>}
                             </div>
-                            <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
+                            <p className="text-xs text-foreground font-semibold flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                               {campaign.brand_name}
                               {campaign.brand_is_verified && <VerifiedBadge size="sm" />}
                             </p>
@@ -796,7 +796,7 @@ export function DiscoverTab() {
                                 {bounty.brands?.name?.charAt(0) || 'B'}
                               </span>
                             </div>}
-                          <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
+                          <span className="text-xs text-foreground font-semibold font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
                             {bounty.brands?.name || 'Unknown Brand'}
                             {bounty.brands?.is_verified && <VerifiedBadge size="sm" />}
                           </span>

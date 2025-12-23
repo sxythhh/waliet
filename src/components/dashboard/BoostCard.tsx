@@ -227,7 +227,7 @@ export function BoostCard({
                 </div>}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold truncate">{boost.title}</h3>
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                <p className="text-xs text-foreground font-semibold truncate flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                   {boost.brands?.name}
                   {boost.brands?.is_verified && <VerifiedBadge size="sm" />}
                 </p>
