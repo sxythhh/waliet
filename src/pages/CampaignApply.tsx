@@ -859,8 +859,14 @@ export default function CampaignApply() {
                 <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
               </> : isBoost ? <div className="space-y-4">
                   <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Ready to join this boost program?</p>
-                  <Button className="w-full font-['Inter'] tracking-[-0.5px]" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
-                    {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
+                  <Button 
+                    className="w-full font-['Inter'] tracking-[-0.5px]" 
+                    size="lg" 
+                    onClick={handleApplyClick} 
+                    disabled={isFull || isEnded}
+                    style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                  >
+                    {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Start Application'}
                   </Button>
                 </div> : <div className="space-y-6">
                   {/* Account Selection */}
