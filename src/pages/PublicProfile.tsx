@@ -2,189 +2,282 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link2, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Calendar, ArrowRight, ExternalLink, Video, DollarSign, Eye, TrendingUp, Briefcase } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
+import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import xLogo from "@/assets/x-logo.png";
 import wordmarkLogo from "@/assets/wordmark-logo.png";
+
 interface Profile {
   id: string;
   username: string;
   full_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  created_at: string;
 }
+
 interface SocialAccount {
   id: string;
   platform: string;
   username: string;
   is_verified: boolean;
   account_link: string | null;
-  connected_campaigns?: Array<{
-    connection_id: string;
-    campaign: {
-      id: string;
-      title: string;
-      brand_name: string;
-      brand_logo_url: string | null;
-      brands?: {
-        logo_url: string;
-      } | null;
-    };
-  }>;
-  demographic_submissions?: Array<{
-    status: string;
-  }>;
 }
+
+interface CampaignParticipation {
+  id: string;
+  campaign_id: string;
+  status: string;
+  joined_at: string;
+  campaign: {
+    id: string;
+    title: string;
+    brand_name: string;
+    brand_logo_url: string | null;
+    banner_url: string | null;
+    rpm_rate: number;
+    status: string;
+    brands?: {
+      logo_url: string;
+      is_verified?: boolean;
+    } | null;
+  };
+  total_views?: number;
+  total_earnings?: number;
+  videos_count?: number;
+}
+
+interface BoostParticipation {
+  id: string;
+  bounty_campaign_id: string;
+  status: string;
+  applied_at: string;
+  boost: {
+    id: string;
+    title: string;
+    monthly_retainer: number;
+    videos_per_month: number;
+    brands?: {
+      name: string;
+      logo_url: string;
+      is_verified?: boolean;
+    } | null;
+  };
+  videos_submitted?: number;
+  total_earned?: number;
+}
+
 export default function PublicProfile() {
-  const {
-    username: rawUsername
-  } = useParams();
+  const { username: rawUsername } = useParams();
   const navigate = useNavigate();
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   
-  // Strip @ prefix if present for database lookup
   const username = rawUsername?.startsWith('@') ? rawUsername.slice(1) : rawUsername;
   
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
+  const [campaignParticipations, setCampaignParticipations] = useState<CampaignParticipation[]>([]);
+  const [boostParticipations, setBoostParticipations] = useState<BoostParticipation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [campaignCache, setCampaignCache] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState("campaigns");
+  const [stats, setStats] = useState({
+    totalCampaigns: 0,
+    totalBoosts: 0,
+    totalViews: 0,
+    totalEarnings: 0
+  });
+
   useEffect(() => {
     fetchProfile();
   }, [username, user]);
+
   const fetchProfile = async () => {
-    // Handle empty username
     if (!username) {
       if (!user) {
         navigate("/");
         return;
       }
-      // Fetch current user's profile
-      const {
-        data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url, created_at")
+        .eq("id", user.id)
+        .maybeSingle();
+      
       if (currentUserProfile?.username) {
-        navigate(`/@${currentUserProfile.username}`, {
-          replace: true
-        });
+        navigate(`/@${currentUserProfile.username}`, { replace: true });
         return;
       }
     }
-    const {
-      data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("username", username).maybeSingle();
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, bio, avatar_url, created_at")
+      .eq("username", username)
+      .maybeSingle();
+
     if (!profileData) {
-      // Profile not found
       if (!user) {
         navigate("/");
         return;
       }
-      // Fetch current user's profile instead
-      const {
-        data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
+      const { data: currentUserProfile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, bio, avatar_url, created_at")
+        .eq("id", user.id)
+        .maybeSingle();
+      
       if (currentUserProfile?.username) {
-        navigate(`/@${currentUserProfile.username}`, {
-          replace: true
-        });
+        navigate(`/@${currentUserProfile.username}`, { replace: true });
         return;
       }
       setLoading(false);
       return;
     }
-    if (profileData) {
-      setProfile(profileData);
 
-      // Fetch social accounts with their connected campaigns and demographic status
-      const {
-        data: socialData
-      } = await supabase.from("social_accounts").select(`
-          id,
-          platform,
-          username,
-          is_verified,
-          account_link
-        `).eq("user_id", profileData.id);
-      if (socialData) {
-        // Fetch connected campaigns for each social account
-        const campaignsToFetch = new Set<string>();
-        const accountsWithCampaigns = await Promise.all(socialData.map(async account => {
-          const {
-            data: campaignConnections
-          } = await supabase.from("social_account_campaigns").select(`
-                id,
-                campaigns (
-                  id,
-                  title,
-                  brand_name,
-                  brand_logo_url,
-                  brands (
-                    logo_url
-                  )
-                )
-              `).eq("social_account_id", account.id).eq("status", "active");
+    setProfile(profileData);
 
-          // Track campaign IDs to pre-fetch
-          campaignConnections?.forEach(conn => {
-            if (conn.campaigns) {
-              campaignsToFetch.add((conn.campaigns as any).id);
-            }
-          });
-          const {
-            data: demographics
-          } = await supabase.from("demographic_submissions").select("status").eq("social_account_id", account.id).order("submitted_at", {
-            ascending: false
-          }).limit(1);
-          return {
-            ...account,
-            connected_campaigns: campaignConnections?.map(conn => ({
-              connection_id: conn.id,
-              campaign: conn.campaigns as any
-            })) || [],
-            demographic_submissions: demographics || []
-          };
-        }));
-
-        // Pre-fetch full campaign data for instant loading
-        if (campaignsToFetch.size > 0) {
-          const {
-            data: fullCampaigns
-          } = await supabase.from("campaigns").select(`
-              *,
-              brands (
-                logo_url
-              )
-            `).in("id", Array.from(campaignsToFetch));
-          if (fullCampaigns) {
-            const cache: Record<string, any> = {};
-            fullCampaigns.forEach(campaign => {
-              cache[campaign.id] = {
-                ...campaign,
-                brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
-                platforms: campaign.allowed_platforms || [],
-                application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
-              };
-            });
-            setCampaignCache(cache);
-          }
-        }
-        setSocialAccounts(accountsWithCampaigns);
-      }
+    // Fetch social accounts
+    const { data: socialData } = await supabase
+      .from("social_accounts")
+      .select("id, platform, username, is_verified, account_link")
+      .eq("user_id", profileData.id);
+    
+    if (socialData) {
+      setSocialAccounts(socialData);
     }
+
+    // Fetch campaign participations with stats
+    const { data: submissions } = await supabase
+      .from("campaign_submissions")
+      .select(`
+        id,
+        campaign_id,
+        status,
+        submitted_at,
+        campaigns (
+          id,
+          title,
+          brand_name,
+          brand_logo_url,
+          banner_url,
+          rpm_rate,
+          status,
+          brands (
+            logo_url,
+            is_verified
+          )
+        )
+      `)
+      .eq("creator_id", profileData.id)
+      .eq("status", "approved")
+      .order("submitted_at", { ascending: false });
+
+    if (submissions) {
+      // Fetch video stats for each campaign
+      const participationsWithStats = await Promise.all(
+        (submissions as any[]).map(async (sub) => {
+          const { data: videos } = await supabase
+            .from("campaign_videos")
+            .select("id, estimated_payout")
+            .eq("campaign_id", sub.campaign_id)
+            .eq("creator_id", profileData.id);
+          
+          const totalEarnings = videos?.reduce((acc, v) => acc + (v.estimated_payout || 0), 0) || 0;
+          
+          return {
+            id: sub.id,
+            campaign_id: sub.campaign_id,
+            status: sub.status,
+            joined_at: sub.submitted_at,
+            campaign: sub.campaigns as any,
+            total_views: 0, // Views not tracked in this table
+            total_earnings: totalEarnings,
+            videos_count: videos?.length || 0
+          };
+        })
+      );
+      setCampaignParticipations(participationsWithStats);
+    }
+
+    // Fetch boost participations
+    const { data: boostApps } = await supabase
+      .from("bounty_applications")
+      .select(`
+        id,
+        bounty_campaign_id,
+        status,
+        applied_at,
+        bounty_campaigns (
+          id,
+          title,
+          monthly_retainer,
+          videos_per_month,
+          brands (
+            name,
+            logo_url,
+            is_verified
+          )
+        )
+      `)
+      .eq("user_id", profileData.id)
+      .eq("status", "accepted")
+      .order("applied_at", { ascending: false });
+
+    if (boostApps) {
+      const boostsWithStats = await Promise.all(
+        boostApps.map(async (app) => {
+          const { data: submissions } = await supabase
+            .from("boost_video_submissions")
+            .select("id, payout_amount, status")
+            .eq("bounty_campaign_id", app.bounty_campaign_id)
+            .eq("user_id", profileData.id);
+          
+          const approvedSubmissions = submissions?.filter(s => s.status === "approved") || [];
+          const totalEarned = approvedSubmissions.reduce((acc, s) => acc + (s.payout_amount || 0), 0);
+          
+          return {
+            id: app.id,
+            bounty_campaign_id: app.bounty_campaign_id,
+            status: app.status,
+            applied_at: app.applied_at,
+            boost: app.bounty_campaigns as any,
+            videos_submitted: submissions?.length || 0,
+            total_earned: totalEarned
+          };
+        })
+      );
+      setBoostParticipations(boostsWithStats);
+    }
+
+    // Calculate total stats
+    const totalViews = campaignParticipations.reduce((acc, p) => acc + (p.total_views || 0), 0);
+    const campaignEarnings = campaignParticipations.reduce((acc, p) => acc + (p.total_earnings || 0), 0);
+    const boostEarnings = boostParticipations.reduce((acc, p) => acc + (p.total_earned || 0), 0);
+    
+    setStats({
+      totalCampaigns: submissions?.length || 0,
+      totalBoosts: boostApps?.length || 0,
+      totalViews,
+      totalEarnings: campaignEarnings + boostEarnings
+    });
+
     setLoading(false);
   };
+
   const getPlatformIcon = (platform: string) => {
-    const iconClass = "h-4 w-4";
+    const iconClass = "h-5 w-5";
     switch (platform) {
       case "instagram":
         return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
@@ -192,60 +285,20 @@ export default function PublicProfile() {
         return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
       case "tiktok":
         return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+      case "x":
+        return <img src={xLogo} alt="X" className={iconClass} />;
       default:
         return null;
     }
   };
-  if (loading) {
-    return <div className="min-h-screen bg-background">
-        {/* Header Skeleton */}
-        <div className="bg-background">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-            <div className="flex flex-col items-center text-center space-y-6">
-              <Skeleton className="h-32 w-32 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Content Skeleton */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-          <Card className="bg-card border-0">
-            <CardContent className="p-6">
-              <Skeleton className="h-6 w-48 mb-4" />
-              <div className="space-y-3">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>;
-  }
-  if (!profile) {
-    return null;
-  }
   const handleCampaignClick = async (campaignId: string) => {
-    // Check if campaign is already cached
-    if (campaignCache[campaignId]) {
-      setSelectedCampaign(campaignCache[campaignId]);
-      setSheetOpen(true);
-      return;
-    }
-
-    // Fallback: fetch if not cached
-    const {
-      data
-    } = await supabase.from("campaigns").select(`
-        *,
-        brands (
-          logo_url
-        )
-      `).eq("id", campaignId).single();
+    const { data } = await supabase
+      .from("campaigns")
+      .select(`*, brands (logo_url)`)
+      .eq("id", campaignId)
+      .single();
+    
     if (data) {
       const campaignData = {
         ...data,
@@ -254,78 +307,321 @@ export default function PublicProfile() {
         application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
       };
       setSelectedCampaign(campaignData);
-      setCampaignCache(prev => ({
-        ...prev,
-        [campaignId]: campaignData
-      }));
       setSheetOpen(true);
     }
   };
-  const showBanner = !user && profile.id !== user?.id;
 
-  return <div className="min-h-screen bg-background pb-20">
-      {/* Header with Large Avatar */}
-      <div className="bg-background">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-          <div className="flex flex-col items-center text-center space-y-6">
-            {/* Large Avatar without Glow Effect */}
-            <Avatar className="h-32 w-32 border-4 border-background shadow-2xl">
-              <AvatarImage src={profile.avatar_url || ""} />
-              <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          <div className="flex items-start gap-6">
+            <Skeleton className="h-24 w-24 rounded-full" />
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <div className="mt-12 space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return null;
+  }
+
+  const showBanner = !user;
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header Section */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-8">
+        <div className="flex flex-col sm:flex-row items-start gap-6">
+          {/* Avatar */}
+          <div className="relative">
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-xl ring-2 ring-border">
+              <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+              <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
                 {profile.full_name?.[0] || profile.username[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
+            {/* Online indicator */}
+            <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-emerald-500 border-2 border-background" />
+          </div>
 
-            {/* Name and Username */}
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{profile.full_name || profile.username}</h1>
-              <p className="text-muted-foreground">@{profile.username}</p>
-              {profile.bio && <p className="text-sm text-foreground/80 max-w-2xl mt-3 font-medium">{profile.bio}</p>}
+          {/* Profile Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl font-bold font-['Inter'] tracking-[-0.5px]">
+                  {profile.full_name || profile.username}
+                </h1>
+                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                  @{profile.username}
+                </p>
+              </div>
+
+              {/* Social Links */}
+              <div className="flex items-center gap-2">
+                {socialAccounts.map((account) => (
+                  <button
+                    key={account.id}
+                    onClick={() => account.account_link && window.open(account.account_link, '_blank')}
+                    className="p-2.5 rounded-full bg-card border border-border hover:bg-muted transition-colors"
+                    title={`@${account.username}`}
+                  >
+                    {getPlatformIcon(account.platform)}
+                  </button>
+                ))}
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full px-6"
+                >
+                  Contact
+                </Button>
+              </div>
+            </div>
+
+            {/* Bio */}
+            {profile.bio && (
+              <p className="mt-4 text-foreground/80 font-['Inter'] tracking-[-0.3px] leading-relaxed max-w-xl">
+                {profile.bio}
+              </p>
+            )}
+
+            {/* Join Date */}
+            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span className="font-['Inter'] tracking-[-0.5px]">
+                Joined {format(new Date(profile.created_at), 'MMMM yyyy')}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 space-y-6 sm:px-[23px] py-0">
-        {/* Connected Accounts */}
-        <Card className="bg-card border-0">
-          <CardContent className="p-6 py-[13px]">
-            <h2 className="text-lg font-semibold mb-4">Connected Accounts</h2>
-            
-            {socialAccounts.length === 0 ? <p className="text-center py-8 text-muted-foreground">No accounts connected</p> : <div className="space-y-3">
-                {socialAccounts.map(account => {
-              const connectedCampaigns = account.connected_campaigns || [];
-              const latestDemographicSubmission = account.demographic_submissions?.[0];
-              const demographicStatus = latestDemographicSubmission?.status;
-              return <div key={account.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border bg-[#131313]">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1 w-full">
-                        <div onClick={() => account.account_link && window.open(account.account_link, '_blank')} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-[#1a1a1a] hover:bg-[#222] transition-colors cursor-pointer border border-transparent w-fit">
-                          {getPlatformIcon(account.platform)}
-                          <span className="font-medium">{account.username}</span>
+      {/* Stats Overview */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <Briefcase className="h-4 w-4" />
+            </div>
+            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalCampaigns}</p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Campaigns</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalBoosts}</p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Boosts</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <Eye className="h-4 w-4" />
+            </div>
+            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">
+              {stats.totalViews >= 1000000 
+                ? `${(stats.totalViews / 1000000).toFixed(1)}M`
+                : stats.totalViews >= 1000 
+                  ? `${(stats.totalViews / 1000).toFixed(1)}K`
+                  : stats.totalViews}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Total Views</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <DollarSign className="h-4 w-4" />
+            </div>
+            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px] text-emerald-500">
+              ${stats.totalEarnings.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Earned</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Section */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full bg-transparent border-b border-border rounded-none h-auto p-0 gap-0">
+            <TabsTrigger 
+              value="campaigns" 
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
+            >
+              Campaigns
+            </TabsTrigger>
+            <TabsTrigger 
+              value="boosts" 
+              className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium"
+            >
+              Boosts
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Campaigns Tab */}
+          <TabsContent value="campaigns" className="mt-6 space-y-4">
+            {campaignParticipations.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="font-['Inter'] tracking-[-0.5px]">No campaign history yet</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {campaignParticipations.map((participation) => {
+                  const campaign = participation.campaign;
+                  const logoUrl = campaign?.brands?.logo_url || campaign?.brand_logo_url;
+                  const isVerified = campaign?.brands?.is_verified;
+                  
+                  return (
+                    <Card 
+                      key={participation.id}
+                      onClick={() => handleCampaignClick(participation.campaign_id)}
+                      className="bg-card border border-border hover:border-border/80 transition-all cursor-pointer group overflow-hidden"
+                    >
+                      <CardContent className="p-0">
+                        <div className="flex">
+                          {/* Campaign Banner/Logo */}
+                          {campaign?.banner_url ? (
+                            <div className="w-32 h-24 sm:w-40 sm:h-28 flex-shrink-0 overflow-hidden bg-muted">
+                              <img 
+                                src={campaign.banner_url} 
+                                alt={campaign?.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-32 h-24 sm:w-40 sm:h-28 flex-shrink-0 bg-muted flex items-center justify-center">
+                              {logoUrl ? (
+                                <img src={logoUrl} alt="" className="w-12 h-12 object-contain" />
+                              ) : (
+                                <Video className="h-8 w-8 text-muted-foreground" />
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Campaign Info */}
+                          <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                {logoUrl && !campaign?.banner_url && (
+                                  <img src={logoUrl} alt="" className="h-5 w-5 rounded object-cover" />
+                                )}
+                                <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
+                                  {campaign?.brand_name}
+                                  {isVerified && <VerifiedBadge size="sm" />}
+                                </span>
+                              </div>
+                              <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1 group-hover:text-primary transition-colors">
+                                {campaign?.title}
+                              </h3>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                              <span className="flex items-center gap-1">
+                                <Video className="h-3.5 w-3.5" />
+                                {participation.videos_count} videos
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3.5 w-3.5" />
+                                {participation.total_views?.toLocaleString() || 0} views
+                              </span>
+                              <span className="flex items-center gap-1 text-emerald-500">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                ${participation.total_earnings?.toLocaleString() || 0}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Arrow */}
+                          <div className="hidden sm:flex items-center px-4">
+                            <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
 
-                        {connectedCampaigns.length > 0 && <Link2 className="hidden sm:block h-3.5 w-3.5 text-white/40 flex-shrink-0" />}
+          {/* Boosts Tab */}
+          <TabsContent value="boosts" className="mt-6 space-y-4">
+            {boostParticipations.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="font-['Inter'] tracking-[-0.5px]">No boost history yet</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {boostParticipations.map((participation) => {
+                  const boost = participation.boost;
+                  const logoUrl = boost?.brands?.logo_url;
+                  const isVerified = boost?.brands?.is_verified;
+                  
+                  return (
+                    <Card 
+                      key={participation.id}
+                      className="bg-card border border-border hover:border-border/80 transition-all group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-4">
+                          {/* Brand Logo */}
+                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
+                            {logoUrl ? (
+                              <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          
+                          {/* Boost Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
+                                {boost?.brands?.name}
+                                {isVerified && <VerifiedBadge size="sm" />}
+                              </span>
+                            </div>
+                            <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1">
+                              {boost?.title}
+                            </h3>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                              <span>${boost?.monthly_retainer}/mo</span>
+                              <span>{participation.videos_submitted} videos submitted</span>
+                            </div>
+                          </div>
+                          
+                          {/* Earnings */}
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
+                              ${participation.total_earned?.toLocaleString() || 0}
+                            </p>
+                            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
-                        {connectedCampaigns.length > 0 && <div className="flex flex-wrap gap-2">
-                            {connectedCampaigns.map(connection => {
-                      const logoUrl = connection.campaign.brands?.logo_url || connection.campaign.brand_logo_url;
-                      return <div key={connection.connection_id} onClick={() => handleCampaignClick(connection.campaign.id)} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 hover:border-white/20 transition-colors cursor-pointer hover:bg-[#222]">
-                                  {logoUrl && <img src={logoUrl} alt={connection.campaign.brand_name} className="h-4 w-4 object-contain" />}
-                                  <span className="text-xs font-medium">{connection.campaign.title}</span>
-                                </div>;
-                    })}
-                          </div>}
-                      </div>
-                    </div>;
-            })}
-              </div>}
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center pt-8 pb-4 py-[5px]">
-          <img src={wordmarkLogo} alt="Virality" className="h-10 mx-auto opacity-50" />
+      {/* Footer */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12">
+        <div className="text-center pt-8 border-t border-border">
+          <img src={wordmarkLogo} alt="Virality" className="h-8 mx-auto opacity-40" />
         </div>
       </div>
 
@@ -336,15 +632,16 @@ export default function PublicProfile() {
       {showBanner && (
         <div 
           onClick={() => navigate("/")}
-          className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] py-6 px-6 cursor-pointer hover:opacity-90 transition-opacity z-50 rounded-t-[32px]"
+          className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] py-5 px-6 cursor-pointer hover:opacity-90 transition-opacity z-50"
         >
-          <div className="max-w-4xl mx-auto flex items-center justify-center gap-3">
-            <span className="text-white font-instrument font-extrabold text-2xl tracking-tighter">
+          <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
+            <span className="text-white font-['Inter'] font-bold text-lg tracking-[-0.5px]">
               Go Viral, Get Paid
             </span>
-            <ArrowRight className="h-6 w-6 text-white" />
+            <ArrowRight className="h-5 w-5 text-white" />
           </div>
         </div>
       )}
-    </div>;
+    </div>
+  );
 }
