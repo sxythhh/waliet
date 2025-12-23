@@ -13,7 +13,7 @@ import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -252,6 +252,11 @@ export default function CampaignApply() {
   const handleSubmit = async () => {
     if (!campaign || selectedAccounts.length === 0) {
       toast.error("Please select at least one social account");
+      return;
+    }
+
+    if (campaign.status === "ended") {
+      toast.error("This campaign has ended and is no longer accepting applications");
       return;
     }
 
@@ -509,6 +514,10 @@ export default function CampaignApply() {
   }
 
   const handleApplyClick = () => {
+    if (isEnded) {
+      toast.error("This boost has ended and is no longer accepting applications");
+      return;
+    }
     if (!user) {
       sessionStorage.setItem('applyReturnUrl', window.location.pathname);
       navigate("/auth");
@@ -521,6 +530,7 @@ export default function CampaignApply() {
 
   const questions = campaign ? (Array.isArray(campaign.application_questions) ? campaign.application_questions : []) : [];
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
+  const isEnded = status === "ended";
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
@@ -561,7 +571,16 @@ export default function CampaignApply() {
                   </div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
-                    {status === 'active' ? (
+                    {isEnded ? (
+                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#b60b0b',
+                        borderTop: '1px solid #ed3030',
+                        borderRadius: '20px'
+                      }}>
+                        <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
+                        Ended
+                      </span>
+                    ) : status === 'active' ? (
                       <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                         backgroundColor: '#1f6d36',
                         borderTop: '1px solid #3c8544',
@@ -607,13 +626,13 @@ export default function CampaignApply() {
                 ) : isBoost ? (
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
-                    <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull}>
-                      {isFull ? 'No Spots Available' : 'Apply Now'}
+                    <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
+                      {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
                     </Button>
                   </div>
                 ) : (
-                  <Button className="w-full" size="lg" onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
-                    Continue to Apply
+                  <Button className="w-full" size="lg" disabled={isEnded} onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
+                    {isEnded ? 'Campaign Ended' : 'Continue to Apply'}
                   </Button>
                 )}
               </div>
@@ -746,8 +765,8 @@ export default function CampaignApply() {
               ) : isBoost ? (
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
-                  <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull}>
-                    {isFull ? 'No Spots Available' : 'Apply Now'}
+                  <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
+                    {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
                   </Button>
                 </div>
               ) : (
@@ -826,8 +845,8 @@ export default function CampaignApply() {
                     </div>
                   )}
 
-                  <Button onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0} className="w-full" size="lg">
-                    {submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
+                  <Button onClick={handleSubmit} disabled={isEnded || submitting || selectedAccounts.length === 0} className="w-full" size="lg">
+                    {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                     <ArrowUp className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -838,7 +857,7 @@ export default function CampaignApply() {
       </div>
 
       {/* Fixed bottom CTA for mobile */}
-      {isBoost && !isFull && (
+      {isBoost && !isFull && !isEnded && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
           <Button className="w-full" size="lg" onClick={handleApplyClick}>
             {user ? "Apply Now" : "Sign In to Apply"}
