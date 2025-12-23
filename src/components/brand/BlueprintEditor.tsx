@@ -17,7 +17,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
-import { ScopeVideoCard } from "@/components/brand/ScopeVideoCard";
+
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -44,16 +44,6 @@ interface Persona {
 interface ExampleVideo {
   url: string;
   description: string;
-}
-interface SavedScopeVideo {
-  id: string;
-  scope_video_id: string;
-  video_url: string | null;
-  file_url: string | null;
-  thumbnail_url: string | null;
-  caption: string | null;
-  username: string | null;
-  platform: string;
 }
 interface Blueprint {
   id: string;
@@ -123,7 +113,7 @@ export function BlueprintEditor({
   const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [savedScopeVideos, setSavedScopeVideos] = useState<SavedScopeVideo[]>([]);
+  
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
@@ -140,18 +130,7 @@ export function BlueprintEditor({
   }, [blueprintId, brandId]);
   const fetchBlueprintAndBrand = async () => {
     setLoading(true);
-    const [blueprintRes, brandRes, scopeVideosRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url, brand_color").eq("id", brandId).single(), supabase.from("scope_video_saves").select(`
-          id,
-          scope_video_id,
-          scope_videos (
-            video_url,
-            file_url,
-            thumbnail_url,
-            caption,
-            username,
-            platform
-          )
-        `).eq("blueprint_id", blueprintId)]);
+    const [blueprintRes, brandRes] = await Promise.all([supabase.from("blueprints").select("*").eq("id", blueprintId).single(), supabase.from("brands").select("id, name, logo_url, brand_color").eq("id", brandId).single()]);
     if (blueprintRes.error) {
       console.error("Error fetching blueprint:", blueprintRes.error);
       toast.error("Failed to load blueprint");
@@ -185,20 +164,6 @@ export function BlueprintEditor({
       setBrand(brandRes.data);
     }
 
-    // Process saved scope videos
-    if (scopeVideosRes.data) {
-      const videos = scopeVideosRes.data.map((save: any) => ({
-        id: save.id,
-        scope_video_id: save.scope_video_id,
-        video_url: save.scope_videos?.video_url,
-        file_url: save.scope_videos?.file_url,
-        thumbnail_url: save.scope_videos?.thumbnail_url,
-        caption: save.scope_videos?.caption,
-        username: save.scope_videos?.username,
-        platform: save.scope_videos?.platform
-      }));
-      setSavedScopeVideos(videos);
-    }
     setLoading(false);
   };
   const saveBlueprint = useCallback(debounce(async (updates: Partial<Blueprint>) => {
@@ -507,18 +472,6 @@ export function BlueprintEditor({
       example_videos: newVideos
     });
   };
-  const removeSavedScopeVideo = async (saveId: string) => {
-    const {
-      error
-    } = await supabase.from("scope_video_saves").delete().eq("id", saveId);
-    if (error) {
-      console.error("Error removing saved scope video:", error);
-      toast.error("Failed to remove video");
-      return;
-    }
-    setSavedScopeVideos(prev => prev.filter(v => v.id !== saveId));
-    toast.success("Video removed");
-  };
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -648,8 +601,7 @@ export function BlueprintEditor({
           status: "unfilled"
         };
       case "example_videos":
-        const totalVideos = blueprint.example_videos.length + savedScopeVideos.length;
-        return totalVideos > 0 ? {
+        return blueprint.example_videos.length > 0 ? {
           status: "filled"
         } : {
           status: "unfilled"
@@ -884,24 +836,8 @@ export function BlueprintEditor({
                     </div>
                   </div>}
               </div>
-              {/* Saved Scope Videos */}
-              {savedScopeVideos.length > 0 && <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">From Scope</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {savedScopeVideos.map(video => <ScopeVideoCard key={video.id} video={{
-                  id: video.id,
-                  platform: video.platform,
-                  username: video.username,
-                  video_url: video.video_url,
-                  file_url: video.file_url,
-                  thumbnail_url: video.thumbnail_url,
-                  caption: video.caption
-                }} mode="blueprint" onRemove={() => removeSavedScopeVideo(video.id)} />)}
-                  </div>
-                </div>}
               {/* Manual Example Videos */}
               {blueprint.example_videos.length > 0 && <div className="space-y-2">
-                  {savedScopeVideos.length > 0 && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] px-1">Uploaded</p>}
                   {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                       <div className="flex items-start gap-3">
                         {video.url && <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">

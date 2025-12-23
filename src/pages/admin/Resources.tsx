@@ -67,26 +67,12 @@ interface Module {
   order_index: number;
 }
 
-type ResourceType = "templates" | "blog" | "courses" | "scope";
+type ResourceType = "templates" | "blog" | "courses";
 
 interface Brand {
   id: string;
   name: string;
   logo_url: string | null;
-}
-
-interface ScopeVideo {
-  id: string;
-  brand_id: string | null;
-  platform: string;
-  username: string | null;
-  video_url: string;
-  file_url: string | null;
-  thumbnail_url: string | null;
-  views: number;
-  caption: string | null;
-  created_at: string;
-  brands?: { name: string; logo_url: string | null } | null;
 }
 
 export default function Resources() {

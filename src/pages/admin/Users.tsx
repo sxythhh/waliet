@@ -1005,17 +1005,13 @@ export default function AdminUsers() {
       // Still show success as wallet was updated, but log the error
     }
 
-    // Create audit log
-    await supabase.from("security_audit_log").insert({
+    // Log audit (table was removed, skip audit logging)
+    console.log("Manual payment sent:", {
       user_id: session.user.id,
       action: "MANUAL_PAYMENT",
-      table_name: "wallets",
-      record_id: selectedUser.id,
-      new_data: {
-        amount,
-        recipient: selectedUser.username,
-        notes: paymentNotes
-      }
+      recipient: selectedUser.username,
+      amount,
+      notes: paymentNotes
     });
     toast({
       title: "Success",
