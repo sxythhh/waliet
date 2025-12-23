@@ -1,45 +1,65 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 
-export function FloatingFooter() {
+interface FloatingFooterProps {
+  scrollContainerRef?: React.RefObject<HTMLElement>;
+}
+
+export function FloatingFooter({ scrollContainerRef }: FloatingFooterProps) {
   const [isVisible, setIsVisible] = useState(false);
   const hasScrolled = useRef(false);
+  const scrollContainerEl = useRef<HTMLElement | Window | null>(null);
 
-  useEffect(() => {
-    // Find the scrollable container - look for overflow-y-auto or overflow-auto
+  const setupScrollListener = useCallback(() => {
+    // Use provided ref, or find the scrollable container
     const findScrollContainer = (): HTMLElement | Window => {
-      const containers = document.querySelectorAll('main, [class*="overflow-y-auto"], [class*="overflow-auto"]');
-      for (const container of containers) {
-        if (container.scrollHeight > container.clientHeight) {
-          return container as HTMLElement;
+      if (scrollContainerRef?.current) {
+        return scrollContainerRef.current;
+      }
+      
+      // Look for common scrollable containers
+      const selectors = [
+        'main[class*="overflow"]',
+        '[class*="overflow-y-auto"]',
+        '[class*="overflow-auto"]'
+      ];
+      
+      for (const selector of selectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const el of elements) {
+          const htmlEl = el as HTMLElement;
+          if (htmlEl.scrollHeight > htmlEl.clientHeight + 10) {
+            return htmlEl;
+          }
         }
       }
+      
       return window;
     };
 
-    const scrollContainer = findScrollContainer();
-    const isWindow = scrollContainer === window;
+    // Small delay to ensure DOM is ready
+    const container = findScrollContainer();
+    scrollContainerEl.current = container;
+    
+    const isWindow = container === window;
 
     const handleScroll = () => {
       let scrollPosition: number;
-      let containerHeight: number;
       let scrollHeight: number;
 
       if (isWindow) {
         scrollPosition = window.scrollY + window.innerHeight;
-        containerHeight = window.innerHeight;
         scrollHeight = document.documentElement.scrollHeight;
       } else {
-        const el = scrollContainer as HTMLElement;
+        const el = container as HTMLElement;
         scrollPosition = el.scrollTop + el.clientHeight;
-        containerHeight = el.clientHeight;
         scrollHeight = el.scrollHeight;
       }
 
       // Mark that user has scrolled
-      const currentScrollTop = isWindow ? window.scrollY : (scrollContainer as HTMLElement).scrollTop;
-      if (!hasScrolled.current && currentScrollTop > 50) {
+      const currentScrollTop = isWindow ? window.scrollY : (container as HTMLElement).scrollTop;
+      if (!hasScrolled.current && currentScrollTop > 30) {
         hasScrolled.current = true;
       }
 
@@ -49,15 +69,31 @@ export function FloatingFooter() {
         return;
       }
 
-      const threshold = 50;
+      const threshold = 30;
       setIsVisible(scrollPosition >= scrollHeight - threshold);
     };
 
-    const target = isWindow ? window : scrollContainer;
-    target.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, [scrollContainerRef]);
 
-    return () => target.removeEventListener("scroll", handleScroll);
-  }, []);
+  useEffect(() => {
+    // Delay setup to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      const cleanup = setupScrollListener();
+      return cleanup;
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (scrollContainerEl.current) {
+        scrollContainerEl.current.removeEventListener("scroll", () => {});
+      }
+    };
+  }, [setupScrollListener]);
 
   return (
     <div
