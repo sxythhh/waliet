@@ -471,14 +471,12 @@ export function DiscoverTab({
           {/* Search and Filters Row */}
           <div className="flex flex-wrap gap-2 items-center">
             {/* Search Input - Click to open overlay (only show if not using external search) */}
-            {!externalSetSearchOverlayOpen && (
-              <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
+            {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
                   {searchQuery || 'Search campaigns...'}
                 </div>
-              </button>
-            )}
+              </button>}
 
 
             {/* Bookmarked Toggle */}
@@ -689,13 +687,10 @@ export function DiscoverTab({
                 return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer" onClick={handleCampaignClick}>
                       
                       <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/c/${campaign.slug}`);
-                          }} 
-                          className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"
-                        >
+                        <button onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/c/${campaign.slug}`);
+                    }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
                           <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
                         </button>
                         <button onClick={e => toggleBookmark(campaign.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
@@ -745,11 +740,7 @@ export function DiscoverTab({
                           </> : <>
                             <div className="flex items-baseline justify-between">
                               <div className="flex items-baseline gap-1.5">
-                                <span className="text-base font-bold tabular-nums font-['Inter'] tracking-[-0.5px]">
-                                  ${Math.ceil(budgetUsed).toLocaleString(undefined, {
-                                maximumFractionDigits: 0
-                              })}
-                                </span>
+                                
                                 <span className="text-xs text-muted-foreground font-semibold font-['Inter'] tracking-[-0.5px]">
                                   / ${Math.ceil(campaign.budget).toLocaleString(undefined, {
                                 maximumFractionDigits: 0
@@ -789,13 +780,10 @@ export function DiscoverTab({
                       
                       {/* Bookmark & Fullscreen Buttons */}
                       <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/c/${bounty.slug}`);
-                          }} 
-                          className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"
-                        >
+                        <button onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/c/${bounty.slug}`);
+                    }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
                           <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
                         </button>
                         <button onClick={e => toggleBountyBookmark(bounty.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
