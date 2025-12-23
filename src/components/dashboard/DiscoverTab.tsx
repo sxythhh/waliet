@@ -742,7 +742,7 @@ export function DiscoverTab({
                               <div className="flex items-baseline gap-1.5">
                                 
                                 <span className="text-xs text-muted-foreground font-semibold font-['Inter'] tracking-[-0.5px]">
-                                  / ${Math.ceil(campaign.budget).toLocaleString(undefined, {
+                                  ${Math.ceil(campaign.budget).toLocaleString(undefined, {
                                 maximumFractionDigits: 0
                               })}
                                 </span>
