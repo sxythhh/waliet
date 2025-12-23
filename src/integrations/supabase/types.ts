@@ -383,6 +383,7 @@ export type Database = {
         Row: {
           accepted_creators_count: number
           application_questions: Json | null
+          availability_requirement: string | null
           banner_url: string | null
           blueprint_embed_url: string | null
           blueprint_id: string | null
@@ -399,16 +400,19 @@ export type Database = {
           is_private: boolean
           max_accepted_creators: number
           monthly_retainer: number
+          position_type: string | null
           slug: string | null
           start_date: string | null
           status: string
           title: string
           updated_at: string
           videos_per_month: number
+          work_location: string | null
         }
         Insert: {
           accepted_creators_count?: number
           application_questions?: Json | null
+          availability_requirement?: string | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
@@ -425,16 +429,19 @@ export type Database = {
           is_private?: boolean
           max_accepted_creators: number
           monthly_retainer: number
+          position_type?: string | null
           slug?: string | null
           start_date?: string | null
           status?: string
           title: string
           updated_at?: string
           videos_per_month: number
+          work_location?: string | null
         }
         Update: {
           accepted_creators_count?: number
           application_questions?: Json | null
+          availability_requirement?: string | null
           banner_url?: string | null
           blueprint_embed_url?: string | null
           blueprint_id?: string | null
@@ -451,12 +458,14 @@ export type Database = {
           is_private?: boolean
           max_accepted_creators?: number
           monthly_retainer?: number
+          position_type?: string | null
           slug?: string | null
           start_date?: string | null
           status?: string
           title?: string
           updated_at?: string
           videos_per_month?: number
+          work_location?: string | null
         }
         Relationships: [
           {
