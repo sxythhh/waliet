@@ -21,7 +21,7 @@ import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
-import { ScopeTab } from "@/components/brand/ScopeTab";
+
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -215,7 +215,7 @@ export default function Dashboard() {
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "scope":
-          return <ScopeTab brandId={currentBrand.id} />;
+          return <div className="p-8 text-center text-muted-foreground">Scope feature has been removed</div>;
         case "creators":
           return <CreatorsTab brandId={currentBrand.id} />;
         case "education":
