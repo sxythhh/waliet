@@ -124,7 +124,7 @@ export function BoostDetailView({
     const {
       data: applicationsData,
       error: applicationsError
-    } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).order("applied_at", {
+    } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).neq("status", "accepted").order("applied_at", {
       ascending: false
     });
     if (applicationsError) {
