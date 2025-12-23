@@ -354,22 +354,9 @@ export function ApplyToBountySheet({
                   </Button>
                 </div>
               </div>
-            </div> : <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+            </div> : <form onSubmit={handleSubmit} className="space-y-5 pt-2 py-0">
               {/* Connected Accounts Display */}
-              {(socialAccounts.length > 0 || discordConnected) && <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Your connected accounts</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {socialAccounts.map(account => <div key={account.id} className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md text-xs">
-                        {account.platform === 'tiktok' && <img src={tiktokLogo} alt="" className="h-3 w-3" />}
-                        {account.platform === 'instagram' && <img src={instagramLogo} alt="" className="h-3 w-3" />}
-                        <span className="text-foreground">@{account.username}</span>
-                      </div>)}
-                    {discordConnected && <div className="flex items-center gap-1.5 px-2 py-1 bg-muted/50 rounded-md text-xs">
-                        <img src={discordIcon} alt="" className="h-3 w-3" />
-                        <span className="text-foreground">Discord</span>
-                      </div>}
-                  </div>
-                </div>}
+              {socialAccounts.length > 0 || discordConnected}
 
               {/* Video Upload Section */}
               <div className="space-y-3">
