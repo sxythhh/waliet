@@ -3,9 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Brand {
   id: string;
@@ -35,15 +33,18 @@ interface Boost {
   status: string;
 }
 
+type ContentItem = 
+  | { type: "campaign"; data: Campaign }
+  | { type: "boost"; data: Boost };
+
 export default function BrandPublicPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [brand, setBrand] = useState<Brand | null>(null);
-  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
-  const [endedCampaigns, setEndedCampaigns] = useState<Campaign[]>([]);
-  const [activeBoosts, setActiveBoosts] = useState<Boost[]>([]);
-  const [endedBoosts, setEndedBoosts] = useState<Boost[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [boosts, setBoosts] = useState<Boost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"active" | "ended">("active");
 
   useEffect(() => {
     const fetchBrandData = async () => {
@@ -64,7 +65,6 @@ export default function BrandPublicPage() {
 
         setBrand(brandData);
 
-        // Fetch all campaigns
         const { data: campaignsData } = await supabase
           .from("campaigns")
           .select("id, title, description, banner_url, rpm_rate, status, slug")
@@ -72,11 +72,8 @@ export default function BrandPublicPage() {
           .eq("is_private", false)
           .order("created_at", { ascending: false });
 
-        const campaigns = campaignsData || [];
-        setActiveCampaigns(campaigns.filter(c => c.status === "active"));
-        setEndedCampaigns(campaigns.filter(c => c.status !== "active"));
+        setCampaigns(campaignsData || []);
 
-        // Fetch all boosts
         const { data: boostsData } = await supabase
           .from("bounty_campaigns")
           .select("id, title, description, banner_url, monthly_retainer, status")
@@ -84,9 +81,7 @@ export default function BrandPublicPage() {
           .eq("is_private", false)
           .order("created_at", { ascending: false });
 
-        const boosts = boostsData || [];
-        setActiveBoosts(boosts.filter(b => b.status === "active"));
-        setEndedBoosts(boosts.filter(b => b.status !== "active"));
+        setBoosts(boostsData || []);
       } catch (error) {
         console.error("Error fetching brand:", error);
         navigate("/404");
@@ -98,18 +93,30 @@ export default function BrandPublicPage() {
     fetchBrandData();
   }, [slug, navigate]);
 
+  const activeItems: ContentItem[] = [
+    ...campaigns.filter(c => c.status === "active").map(c => ({ type: "campaign" as const, data: c })),
+    ...boosts.filter(b => b.status === "active").map(b => ({ type: "boost" as const, data: b })),
+  ];
+
+  const endedItems: ContentItem[] = [
+    ...campaigns.filter(c => c.status !== "active").map(c => ({ type: "campaign" as const, data: c })),
+    ...boosts.filter(b => b.status !== "active").map(b => ({ type: "boost" as const, data: b })),
+  ];
+
+  const currentItems = activeTab === "active" ? activeItems : endedItems;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-6 py-16">
-          <div className="flex flex-col items-center gap-4 mb-12">
-            <Skeleton className="w-24 h-24 rounded-full" />
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
+        <div className="max-w-2xl mx-auto px-6 py-20">
+          <div className="flex flex-col items-center gap-4 mb-16">
+            <Skeleton className="w-20 h-20 rounded-full" />
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-4 w-56" />
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
+          <div className="space-y-3">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
           </div>
         </div>
       </div>
@@ -120,75 +127,13 @@ export default function BrandPublicPage() {
     return null;
   }
 
-  const CampaignItem = ({ campaign }: { campaign: Campaign }) => (
-    <div
-      className="group py-6 cursor-pointer transition-colors hover:bg-muted/30"
-      onClick={() => navigate(`/campaign/${campaign.slug}`)}
-    >
-      <div className="flex items-start gap-5">
-        {campaign.banner_url && (
-          <img
-            src={campaign.banner_url}
-            alt={campaign.title}
-            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-              {campaign.title}
-            </h3>
-            <span className="text-sm text-muted-foreground flex-shrink-0">
-              ${campaign.rpm_rate} RPM
-            </span>
-          </div>
-          {campaign.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {campaign.description}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const BoostItem = ({ boost }: { boost: Boost }) => (
-    <div
-      className="group py-6 cursor-pointer transition-colors hover:bg-muted/30"
-      onClick={() => navigate(`/boost/${boost.id}`)}
-    >
-      <div className="flex items-start gap-5">
-        {boost.banner_url && (
-          <img
-            src={boost.banner_url}
-            alt={boost.title}
-            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-              {boost.title}
-            </h3>
-            <span className="text-sm text-muted-foreground flex-shrink-0">
-              ${boost.monthly_retainer}/mo
-            </span>
-          </div>
-          {boost.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-              {boost.description}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  const EmptyState = ({ message }: { message: string }) => (
-    <div className="py-16 text-center">
-      <p className="text-muted-foreground">{message}</p>
-    </div>
-  );
+  const handleItemClick = (item: ContentItem) => {
+    if (item.type === "campaign") {
+      navigate(`/c/${item.data.slug}`);
+    } else {
+      navigate(`/c/${item.data.id}`);
+    }
+  };
 
   return (
     <>
@@ -198,25 +143,25 @@ export default function BrandPublicPage() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto px-6 py-16">
+        <div className="max-w-2xl mx-auto px-6 py-20">
           {/* Brand Header */}
           <div className="flex flex-col items-center text-center mb-16">
-            <Avatar className="w-24 h-24 mb-5">
+            <Avatar className="w-20 h-20 mb-4">
               <AvatarImage src={brand.logo_url || undefined} alt={brand.name} />
-              <AvatarFallback className="text-3xl font-semibold bg-muted">
+              <AvatarFallback className="text-2xl font-medium bg-muted text-muted-foreground">
                 {brand.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <h1 className="text-3xl font-semibold tracking-tight mb-2">{brand.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{brand.name}</h1>
             {brand.description && (
-              <p className="text-muted-foreground max-w-md">{brand.description}</p>
+              <p className="text-muted-foreground text-sm mt-2 max-w-sm">{brand.description}</p>
             )}
             {brand.home_url && (
               <a
                 href={brand.home_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline mt-3"
+                className="text-xs text-muted-foreground hover:text-foreground mt-3 transition-colors"
               >
                 {brand.home_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
               </a>
@@ -224,92 +169,93 @@ export default function BrandPublicPage() {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="campaigns" className="w-full">
-            <TabsList className="w-full justify-start bg-transparent p-0 h-auto mb-8">
-              <TabsTrigger 
-                value="campaigns" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 mr-8 pb-3 rounded-none data-[state=active]:text-foreground text-muted-foreground font-medium"
+          <div className="mb-8">
+            <div className="flex gap-8">
+              <button
+                onClick={() => setActiveTab("active")}
+                className={`pb-3 text-sm font-medium transition-colors relative ${
+                  activeTab === "active"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                Campaigns
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {activeCampaigns.length + endedCampaigns.length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="boosts" 
-                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none data-[state=active]:text-foreground text-muted-foreground font-medium"
+                Active
+                <span className="ml-1.5 text-muted-foreground">{activeItems.length}</span>
+                {activeTab === "active" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab("ended")}
+                className={`pb-3 text-sm font-medium transition-colors relative ${
+                  activeTab === "ended"
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                Boosts
-                <span className="ml-2 text-xs text-muted-foreground">
-                  {activeBoosts.length + endedBoosts.length}
-                </span>
-              </TabsTrigger>
-            </TabsList>
+                Ended
+                <span className="ml-1.5 text-muted-foreground">{endedItems.length}</span>
+                {activeTab === "ended" && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            </div>
+            <div className="h-px bg-border -mt-px" />
+          </div>
 
-            <TabsContent value="campaigns" className="mt-0">
-              {activeCampaigns.length > 0 && (
-                <div className="mb-12">
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Active
-                  </h2>
-                  <div className="divide-y divide-border/50">
-                    {activeCampaigns.map((campaign) => (
-                      <CampaignItem key={campaign.id} campaign={campaign} />
-                    ))}
+          {/* Content List */}
+          {currentItems.length > 0 ? (
+            <div className="space-y-1">
+              {currentItems.map((item) => {
+                const id = item.type === "campaign" ? item.data.id : item.data.id;
+                const title = item.data.title;
+                const description = item.data.description;
+                const banner = item.data.banner_url;
+                const label = item.type === "campaign" 
+                  ? `$${(item.data as Campaign).rpm_rate} RPM`
+                  : `$${(item.data as Boost).monthly_retainer}/mo`;
+                const badge = item.type === "boost" ? "Boost" : null;
+
+                return (
+                  <div
+                    key={id}
+                    onClick={() => handleItemClick(item)}
+                    className="flex items-center gap-4 py-4 px-3 -mx-3 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
+                  >
+                    {banner ? (
+                      <img
+                        src={banner}
+                        alt={title}
+                        className="w-12 h-12 object-cover rounded-md flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-muted rounded-md flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-sm truncate">{title}</h3>
+                        {badge && (
+                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {badge}
+                          </span>
+                        )}
+                      </div>
+                      {description && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{description}</p>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground flex-shrink-0">{label}</span>
                   </div>
-                </div>
-              )}
-
-              {endedCampaigns.length > 0 && (
-                <div>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Ended
-                  </h2>
-                  <div className="divide-y divide-border/50">
-                    {endedCampaigns.map((campaign) => (
-                      <CampaignItem key={campaign.id} campaign={campaign} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeCampaigns.length === 0 && endedCampaigns.length === 0 && (
-                <EmptyState message="No campaigns yet" />
-              )}
-            </TabsContent>
-
-            <TabsContent value="boosts" className="mt-0">
-              {activeBoosts.length > 0 && (
-                <div className="mb-12">
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Active
-                  </h2>
-                  <div className="divide-y divide-border/50">
-                    {activeBoosts.map((boost) => (
-                      <BoostItem key={boost.id} boost={boost} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {endedBoosts.length > 0 && (
-                <div>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Ended
-                  </h2>
-                  <div className="divide-y divide-border/50">
-                    {endedBoosts.map((boost) => (
-                      <BoostItem key={boost.id} boost={boost} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeBoosts.length === 0 && endedBoosts.length === 0 && (
-                <EmptyState message="No boosts yet" />
-              )}
-            </TabsContent>
-          </Tabs>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-20 text-center">
+              <p className="text-sm text-muted-foreground">
+                {activeTab === "active" ? "No active opportunities" : "No ended opportunities"}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </>
