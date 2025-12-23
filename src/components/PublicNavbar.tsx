@@ -1,15 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
-import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
-import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 import forBrandsIcon from "@/assets/for-brands-icon.png";
-export default function PublicNavbar() {
+
+interface PublicNavbarProps {
+  searchQuery?: string;
+  onSearchClick?: () => void;
+}
+
+export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavbarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
@@ -83,6 +86,17 @@ export default function PublicNavbar() {
                 </Link>
               </div>
             </div>
+            
+            {/* Search Input - Only on discover page */}
+            {onSearchClick && (
+              <button 
+                onClick={onSearchClick} 
+                className="hidden md:flex items-center gap-2 px-3 h-8 bg-muted/30 rounded-lg text-sm text-muted-foreground/60 hover:bg-muted/50 transition-colors min-w-[200px]"
+              >
+                <Search className="h-4 w-4" />
+                <span>{searchQuery || 'Search campaigns...'}</span>
+              </button>
+            )}
             
             <div className="flex items-center gap-3">
               {isAuthenticated === null ? <div className="w-24 h-8" /> : isAuthenticated ? <>

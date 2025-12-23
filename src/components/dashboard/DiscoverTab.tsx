@@ -78,9 +78,17 @@ interface BountyCampaign {
 }
 interface DiscoverTabProps {
   navigateOnClick?: boolean;
+  searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
+  searchOverlayOpen?: boolean;
+  setSearchOverlayOpen?: (open: boolean) => void;
 }
 export function DiscoverTab({
-  navigateOnClick = false
+  navigateOnClick = false,
+  searchQuery: externalSearchQuery,
+  setSearchQuery: externalSetSearchQuery,
+  searchOverlayOpen: externalSearchOverlayOpen,
+  setSearchOverlayOpen: externalSetSearchOverlayOpen
 }: DiscoverTabProps) {
   const {
     user
@@ -92,7 +100,7 @@ export function DiscoverTab({
   const [sortBy, setSortBy] = useState<string>("newest");
   const [frequency, setFrequency] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState<string>("");
   const [hideInfiniteBudget, setHideInfiniteBudget] = useState(false);
   const [hideLowBudget, setHideLowBudget] = useState(false);
   const [hideEnded, setHideEnded] = useState(false);
@@ -106,7 +114,13 @@ export function DiscoverTab({
   const [bookmarkedCampaignIds, setBookmarkedCampaignIds] = useState<string[]>([]);
   const [bookmarkedBountyIds, setBookmarkedBountyIds] = useState<string[]>([]);
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false);
-  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
+  const [internalSearchOverlayOpen, setInternalSearchOverlayOpen] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const searchQuery = externalSearchQuery ?? internalSearchQuery;
+  const setSearchQuery = externalSetSearchQuery ?? setInternalSearchQuery;
+  const searchOverlayOpen = externalSearchOverlayOpen ?? internalSearchOverlayOpen;
+  const setSearchOverlayOpen = externalSetSearchOverlayOpen ?? setInternalSearchOverlayOpen;
   const [typeFilter, setTypeFilter] = useState<'all' | 'campaigns' | 'boosts'>('all');
   const [nicheFilter, setNicheFilter] = useState<string | null>(null);
   const [browseFilter, setBrowseFilter] = useState<string | null>(null);
@@ -455,13 +469,15 @@ export function DiscoverTab({
         <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
           {/* Search and Filters Row */}
           <div className="flex flex-wrap gap-2 items-center">
-            {/* Search Input - Click to open overlay */}
-            <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-              <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
-                {searchQuery || 'Search campaigns...'}
-              </div>
-            </button>
+            {/* Search Input - Click to open overlay (only show if not using external search) */}
+            {!externalSetSearchOverlayOpen && (
+              <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
+                  {searchQuery || 'Search campaigns...'}
+                </div>
+              </button>
+            )}
 
 
             {/* Bookmarked Toggle */}
