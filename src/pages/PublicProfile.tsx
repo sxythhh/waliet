@@ -137,10 +137,10 @@ export default function PublicProfile() {
     setProfile(profileData);
 
 
-    // Fetch social accounts
+    // Fetch social accounts (exclude hidden ones from public profile)
     const {
       data: socialData
-    } = await supabase.from("social_accounts").select("id, platform, username, is_verified, account_link").eq("user_id", profileData.id);
+    } = await supabase.from("social_accounts").select("id, platform, username, is_verified, account_link").eq("user_id", profileData.id).eq("hidden_from_public", false);
 
     const platformUsernames = (socialData || []).map(a => a.username).filter(Boolean) as string[];
 
