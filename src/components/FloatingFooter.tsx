@@ -1,30 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 
 export function FloatingFooter() {
   const [isVisible, setIsVisible] = useState(false);
+  const hasScrolled = useRef(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      // Check if we're near the bottom of the page
+      // Mark that user has scrolled
+      if (!hasScrolled.current && window.scrollY > 50) {
+        hasScrolled.current = true;
+      }
+
+      // Only show if user has scrolled and is near the very bottom
+      if (!hasScrolled.current) {
+        setIsVisible(false);
+        return;
+      }
+
       const scrollPosition = window.scrollY + window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-      const threshold = 100; // pixels from bottom
+      const threshold = 50; // pixels from bottom - must be very close
 
       setIsVisible(scrollPosition >= documentHeight - threshold);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    // Initial check
-    handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-40 bg-[#1a1a1a]/95 backdrop-blur-md border-t border-white/5 transition-all duration-300 ease-out ${
+      className={`fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0a] border-t border-white/5 transition-all duration-300 ease-out ${
         isVisible
           ? "translate-y-0 opacity-100"
           : "translate-y-full opacity-0 pointer-events-none"
