@@ -152,6 +152,8 @@ export default function PublicProfile() {
         campaign_id,
         status,
         submitted_at,
+        views,
+        earnings,
         campaigns (
           id,
           title,
@@ -168,22 +170,29 @@ export default function PublicProfile() {
       `).eq("creator_id", profileData.id).eq("status", "approved").order("submitted_at", {
       ascending: false
     });
+
+    console.debug("[PublicProfile] approved submissions", {
+      username: profileData.username,
+      count: submissions?.length ?? 0,
+      sample: submissions?.[0]
+    });
+
     let participationsWithStats: any[] = [];
     if (submissions) {
-      // Fetch video stats for each campaign
       participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
+        // We keep campaign_videos query only for videos_count; earnings/views come from submissions table.
         const {
           data: videos
-        } = await supabase.from("campaign_videos").select("id, estimated_payout").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id);
-        const totalEarnings = videos?.reduce((acc, v) => acc + (v.estimated_payout || 0), 0) || 0;
+        } = await supabase.from("campaign_videos").select("id").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id);
+
         return {
           id: sub.id,
           campaign_id: sub.campaign_id,
           status: sub.status,
           joined_at: sub.submitted_at,
           campaign: sub.campaigns as any,
-          total_views: 0,
-          total_earnings: totalEarnings,
+          total_views: sub.views || 0,
+          total_earnings: sub.earnings || 0,
           videos_count: videos?.length || 0
         };
       }));
