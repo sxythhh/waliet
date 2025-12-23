@@ -19,6 +19,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 interface Blueprint {
   id: string;
   title: string;
@@ -441,6 +442,17 @@ export function JoinCampaignSheet({
   const budgetPercentage = campaign.budget > 0 ? (campaign.budget_used || 0) / campaign.budget * 100 : 0;
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
+        {/* Floating Fullscreen Button */}
+        <button
+          onClick={() => {
+            onOpenChange(false);
+            navigate(`/campaign/${campaign.slug}/apply`);
+          }}
+          className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-foreground/10 backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-foreground/20 transition-colors z-50"
+          title="Open full page"
+        >
+          <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
+        </button>
         <div className="flex-1 overflow-y-auto px-6 pb-24">
           <div className="mt-6 space-y-6 pb-[80px]">
             {/* Campaign Banner */}

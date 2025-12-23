@@ -53,6 +53,7 @@ import CreatorTerms from "./pages/CreatorTerms";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
+import CampaignApply from "./pages/CampaignApply";
 import New from "./pages/New";
 import Contact from "./pages/Contact";
 import CaseStudies from "./pages/CaseStudies";
@@ -184,6 +185,7 @@ const App = () => (
               <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
               <Route path="/join/:slug" element={<JoinRedirect />} />
               <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
+              <Route path="/campaign/:slug/apply" element={<CampaignApply />} />
               <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
               <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
               <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
