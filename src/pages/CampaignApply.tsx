@@ -920,7 +920,13 @@ export default function CampaignApply() {
 
                   {/* Submit Button */}
                   <div className="pt-2">
-                    <Button onClick={handleSubmit} disabled={isEnded || submitting || selectedAccounts.length === 0} className="w-full font-['Inter'] tracking-[-0.5px]" size="lg">
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={isEnded || submitting || selectedAccounts.length === 0} 
+                      className="w-full font-['Inter'] tracking-[-0.5px]" 
+                      size="lg"
+                      style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                    >
                       {isEnded ? "Campaign Ended" : submitting ? "Submitting..." : campaign?.requires_application === false ? "Join Campaign" : "Submit Application"}
                     </Button>
                     {selectedAccounts.length === 0 && socialAccounts.length > 0 && !isEnded && <p className="text-xs text-muted-foreground text-center mt-3 font-['Inter'] tracking-[-0.5px]">
