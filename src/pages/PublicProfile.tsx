@@ -43,12 +43,16 @@ interface SocialAccount {
 }
 export default function PublicProfile() {
   const {
-    username
+    username: rawUsername
   } = useParams();
   const navigate = useNavigate();
   const {
     user
   } = useAuth();
+  
+  // Strip @ prefix if present for database lookup
+  const username = rawUsername?.startsWith('@') ? rawUsername.slice(1) : rawUsername;
+  
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
