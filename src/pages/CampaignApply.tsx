@@ -526,76 +526,101 @@ export default function CampaignApply() {
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
       <PublicNavbar />
       
-      <div className="flex-1 overflow-y-auto pt-14">
-        {/* Hero Banner */}
-        <div className="relative">
-          {bannerUrl ? (
-            <div className="h-56 md:h-72 w-full overflow-hidden">
-              <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-            </div>
-          ) : (
-            <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
-          )}
-          
-          {/* Back button */}
-          <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background transition-colors">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        </div>
-
-      <div className="max-w-5xl mx-auto px-4 pb-32">
-        {/* Brand & Title */}
-        <div className="relative -mt-16 mb-8">
-          <div className="flex items-end gap-4">
-            <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl ring-1 ring-border/50">
-              <AvatarImage src={brandLogo || undefined} className="object-cover" />
-              <AvatarFallback className="text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 pb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
-                {brandVerified && <VerifiedBadge size="sm" />}
+      <div className="flex-1 flex pt-14 overflow-hidden">
+        {/* Left Column - Scrollable Content */}
+        <div className="flex-1 overflow-y-auto lg:pr-[380px]">
+          {/* Hero Banner */}
+          <div className="relative">
+            {bannerUrl ? (
+              <div className="h-56 md:h-72 w-full overflow-hidden">
+                <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
               </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
-                {status === 'active' ? (
-                  <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                    backgroundColor: '#1f6d36',
-                    borderTop: '1px solid #3c8544',
-                    borderRadius: '20px'
-                  }}>
-                    <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
-                    Active
-                  </span>
+            ) : (
+              <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
+            )}
+            
+            {/* Back button */}
+            <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="max-w-3xl mx-auto px-4 pb-32 lg:pb-8">
+            {/* Brand & Title */}
+            <div className="relative -mt-16 mb-8">
+              <div className="flex items-end gap-4">
+                <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl ring-1 ring-border/50">
+                  <AvatarImage src={brandLogo || undefined} className="object-cover" />
+                  <AvatarFallback className="text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 pb-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
+                    {brandVerified && <VerifiedBadge size="sm" />}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+                    {status === 'active' ? (
+                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#1f6d36',
+                        borderTop: '1px solid #3c8544',
+                        borderRadius: '20px'
+                      }}>
+                        <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                        backgroundColor: '#6b7280',
+                        borderRadius: '20px'
+                      }}>
+                        {status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Row */}
+            {stats.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {stats.map((stat, i) => (
+                  <div key={i} className="bg-card border border-border rounded-xl p-4">
+                    <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{stat.label}</p>
+                    <p className="text-xl font-bold font-['Inter'] tracking-[-0.5px]">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile Apply Card */}
+            <div className="lg:hidden mb-8">
+              <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
+                <h2 className="text-lg font-semibold mb-6">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
+                {!isLoggedIn ? (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground mb-4 text-sm">Sign in to apply</p>
+                    <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)}>Sign In</Button>
+                  </div>
+                ) : isBoost ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">Ready to join this boost program?</p>
+                    <Button className="w-full" size="lg" onClick={handleApplyClick} disabled={isFull}>
+                      {isFull ? 'No Spots Available' : 'Apply Now'}
+                    </Button>
+                  </div>
                 ) : (
-                  <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                    backgroundColor: '#6b7280',
-                    borderRadius: '20px'
-                  }}>
-                    {status}
-                  </span>
+                  <Button className="w-full" size="lg" onClick={() => document.getElementById('desktop-apply')?.scrollIntoView()}>
+                    Continue to Apply
+                  </Button>
                 )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Stats Row */}
-        {stats.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            {stats.map((stat, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-4">
-                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{stat.label}</p>
-                <p className="text-xl font-bold font-['Inter'] tracking-[-0.5px]">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-5 gap-8">
-          {/* Left Column - Content */}
-          <div className="lg:col-span-3 space-y-8">
+            {/* Content Section */}
+            <div className="space-y-8">
             {/* Description */}
             {description && (
               <div>
@@ -703,11 +728,14 @@ export default function CampaignApply() {
                 <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.brand_voice}</p>
               </div>
             )}
+            </div>
           </div>
+        </div>
 
-          {/* Right Column - Application */}
-          <div className="lg:col-span-2">
-            <div className="lg:sticky lg:top-8 p-6 rounded-2xl bg-card border border-border shadow-lg">
+        {/* Right Column - Fixed Application Sidebar (Desktop Only) */}
+        <div className="hidden lg:flex fixed top-14 right-0 w-[380px] h-[calc(100vh-56px)] border-l border-border bg-background">
+          <div className="flex-1 overflow-y-auto p-6" id="desktop-apply">
+            <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
               <h2 className="text-lg font-semibold mb-6">{isBoost ? 'Apply to Boost' : 'Apply to Campaign'}</h2>
 
               {!isLoggedIn ? (
@@ -807,7 +835,6 @@ export default function CampaignApply() {
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Fixed bottom CTA for mobile */}
