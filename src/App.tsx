@@ -31,7 +31,6 @@ import BrandInvite from "./pages/BrandInvite";
 import Training from "./pages/Training";
 
 import PublicProfile from "./pages/PublicProfile";
-import CampaignPreview from "./pages/CampaignPreview";
 import Apply from "./pages/Apply";
 import AdminOverview from "./pages/admin/Overview";
 import AdminPayouts from "./pages/admin/Payouts";
@@ -52,7 +51,6 @@ import Privacy from "./pages/Privacy";
 import CreatorTerms from "./pages/CreatorTerms";
 import BoostCampaignDetail from "./pages/BoostCampaignDetail";
 import PublicBounty from "./pages/PublicBounty";
-import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import CampaignApply from "./pages/CampaignApply";
 import New from "./pages/New";
 import Contact from "./pages/Contact";
@@ -66,6 +64,7 @@ import Install from "./pages/Install";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 import { getSubdomainSlug } from "./utils/subdomain";
+
 const queryClient = new QueryClient();
 
 // Component to track UTM params on app load
@@ -184,11 +183,9 @@ const App = () => (
               {/* Boost dashboard is now part of /dashboard?boost=:id */}
               <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
               <Route path="/join/:slug" element={<JoinRedirect />} />
-              <Route path="/c/:slug" element={<CreatorCampaignDashboard />} />
-              <Route path="/campaign/:slug/apply" element={<CampaignApply />} />
+              <Route path="/c/:slug" element={<CampaignApply />} />
               <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
               <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
-              <Route path="/campaign/preview/:id" element={<DashboardLayout><CampaignPreview /></DashboardLayout>} />
               <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
               <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
               <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />

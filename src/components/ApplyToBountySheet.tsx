@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import discordIcon from "@/assets/discord-icon.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import alternateEmailIcon from "@/assets/alternate-email-icon.svg";
+import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 interface BountyCampaign {
   id: string;
   title: string;
@@ -46,6 +48,7 @@ export function ApplyToBountySheet({
   bounty,
   onSuccess
 }: ApplyToBountySheetProps) {
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [uploadedVideoFile, setUploadedVideoFile] = useState<File | null>(null);
@@ -221,6 +224,17 @@ export function ApplyToBountySheet({
 
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-y-auto">
+          {/* Floating Fullscreen Button */}
+          <button
+            onClick={() => {
+              onOpenChange(false);
+              navigate(`/boost/${bounty.id}`);
+            }}
+            className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50"
+            title="Open full page"
+          >
+            <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
+          </button>
           {/* Always show boost details */}
           <>
               {/* Banner Image */}

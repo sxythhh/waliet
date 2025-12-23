@@ -446,9 +446,9 @@ export function JoinCampaignSheet({
         <button
           onClick={() => {
             onOpenChange(false);
-            navigate(`/campaign/${campaign.slug}/apply`);
+            navigate(`/c/${campaign.slug}`);
           }}
-          className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-foreground/10 backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-foreground/20 transition-colors z-50"
+          className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50"
           title="Open full page"
         >
           <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
