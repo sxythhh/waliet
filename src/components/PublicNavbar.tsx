@@ -8,6 +8,7 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
 import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
 import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
+import forBrandsIcon from "@/assets/for-brands-icon.png";
 export default function PublicNavbar() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -60,10 +61,10 @@ export default function PublicNavbar() {
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
                             <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                              <img src={boostsMenuIcon} alt="" className="w-5 h-5" />
+                              <img src={forBrandsIcon} alt="" className="w-5 h-5" />
                               <div>
-                                <div className="font-medium text-white">Boosts</div>
-                                <div className="text-xs text-white/50">Fixed-rate video bounties</div>
+                                <div className="font-medium text-white">For Brands</div>
+                                <div className="text-xs text-white/50">Launch opportunities on Virality</div>
                               </div>
                             </Link>
                           </NavigationMenuLink>
