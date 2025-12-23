@@ -136,13 +136,23 @@ export default function PublicProfile() {
     }
     setProfile(profileData);
 
+
     // Fetch social accounts
     const {
       data: socialData
     } = await supabase.from("social_accounts").select("id, platform, username, is_verified, account_link").eq("user_id", profileData.id);
+
+    const platformUsernames = (socialData || []).map(a => a.username).filter(Boolean) as string[];
+
     if (socialData) {
       setSocialAccounts(socialData);
     }
+
+    // Fetch wallet totals (source of truth for earnings)
+    const {
+      data: wallet
+    } = await supabase.from("wallets").select("total_earned").eq("user_id", profileData.id).maybeSingle();
+    const walletTotalEarned = Number(wallet?.total_earned) || 0;
 
     // Fetch campaign participations with stats
     const {
@@ -180,10 +190,15 @@ export default function PublicProfile() {
     let participationsWithStats: any[] = [];
     if (submissions) {
       participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
-        // We keep campaign_videos query only for videos_count; earnings/views come from submissions table.
-        const {
-          data: videos
-        } = await supabase.from("campaign_videos").select("id").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id);
+        // videos_count comes from campaign_videos; view totals come from cached campaign videos (platform usernames)
+        const [{ data: videos }, { data: cachedVideos }] = await Promise.all([
+          supabase.from("campaign_videos").select("id").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id),
+          platformUsernames.length
+            ? supabase.from("cached_campaign_videos").select("views").eq("campaign_id", sub.campaign_id).in("username", platformUsernames)
+            : Promise.resolve({ data: [] as any[] } as any)
+        ]);
+
+        const totalViews = (cachedVideos || []).reduce((acc: number, v: any) => acc + (v.views || 0), 0);
 
         return {
           id: sub.id,
@@ -191,7 +206,7 @@ export default function PublicProfile() {
           status: sub.status,
           joined_at: sub.submitted_at,
           campaign: sub.campaigns as any,
-          total_views: sub.views || 0,
+          total_views: totalViews,
           total_earnings: sub.earnings || 0,
           videos_count: videos?.length || 0
         };
@@ -244,13 +259,12 @@ export default function PublicProfile() {
 
     // Calculate total stats using the freshly fetched data (not stale state)
     const totalViews = participationsWithStats.reduce((acc, p) => acc + (p.total_views || 0), 0);
-    const campaignEarnings = participationsWithStats.reduce((acc, p) => acc + (p.total_earnings || 0), 0);
-    const boostEarnings = boostsWithStats.reduce((acc, p) => acc + (p.total_earned || 0), 0);
     setStats({
       totalCampaigns: submissions?.length || 0,
       totalBoosts: boostApps?.length || 0,
       totalViews,
-      totalEarnings: campaignEarnings + boostEarnings
+      // Wallet total is the only reliable source of total earnings right now
+      totalEarnings: walletTotalEarned
     });
     setLoading(false);
   };
