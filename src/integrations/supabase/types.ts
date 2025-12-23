@@ -399,6 +399,7 @@ export type Database = {
           is_private: boolean
           max_accepted_creators: number
           monthly_retainer: number
+          slug: string | null
           start_date: string | null
           status: string
           title: string
@@ -424,6 +425,7 @@ export type Database = {
           is_private?: boolean
           max_accepted_creators: number
           monthly_retainer: number
+          slug?: string | null
           start_date?: string | null
           status?: string
           title: string
@@ -449,6 +451,7 @@ export type Database = {
           is_private?: boolean
           max_accepted_creators?: number
           monthly_retainer?: number
+          slug?: string | null
           start_date?: string | null
           status?: string
           title?: string
