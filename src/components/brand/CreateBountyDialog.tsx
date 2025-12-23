@@ -247,6 +247,15 @@ export function CreateBountyDialog({
         ? formData.custom_position 
         : formData.position_type;
 
+      // Generate slug from title
+      const baseSlug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 50);
+      const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
+
       const {
         error
       } = await supabase.from('bounty_campaigns').insert({
@@ -268,7 +277,8 @@ export function CreateBountyDialog({
         content_distribution: formData.content_distribution,
         position_type: finalPositionType || null,
         availability_requirement: formData.availability_requirement || null,
-        work_location: formData.work_location || null
+        work_location: formData.work_location || null,
+        slug: uniqueSlug
       });
       if (error) throw error;
       if (subscriptionStatus === 'active') {
