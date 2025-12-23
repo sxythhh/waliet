@@ -8,9 +8,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink, ArrowLeft } from "lucide-react";
+import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink, ArrowLeft, X, Users, Video, DollarSign, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import DOMPurify from "dompurify";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -78,6 +84,7 @@ interface BountyCampaign {
   status: string;
   blueprint_id: string | null;
   slug: string | null;
+  blueprint_embed_url: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -89,9 +96,11 @@ export default function CampaignApply() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
+  const { user } = useAuth();
   
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [boostCampaign, setBoostCampaign] = useState<BountyCampaign | null>(null);
+  const [boostBrand, setBoostBrand] = useState<{ name: string; logo_url: string | null; description: string | null } | null>(null);
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loading, setLoading] = useState(true);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
@@ -102,6 +111,8 @@ export default function CampaignApply() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [isBoost, setIsBoost] = useState(false);
+  const [showApplySheet, setShowApplySheet] = useState(false);
+  const [showFloatingMenu, setShowFloatingMenu] = useState(true);
 
   useEffect(() => {
     fetchCampaignData();
@@ -179,6 +190,11 @@ export default function CampaignApply() {
 
         setIsBoost(true);
         setBoostCampaign(boostData as BountyCampaign);
+        
+        // Set brand data
+        if (boostData.brands) {
+          setBoostBrand(boostData.brands as any);
+        }
 
         // Load blueprint if available
         if (boostData.blueprint_id) {
@@ -468,11 +484,317 @@ export default function CampaignApply() {
     );
   }
 
-  // If it's a boost, redirect to the boost page for now (or render boost UI)
+  // Render boost UI
   if (isBoost && boostCampaign) {
-    // Navigate to boost detail page - boosts have their own application flow
-    navigate(`/boost/${boostCampaign.id}`, { replace: true });
-    return null;
+    const isFull = boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators;
+    const availableSpots = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
+
+    const handleApplyClick = () => {
+      if (!user) {
+        sessionStorage.setItem('applyReturnUrl', window.location.pathname);
+        navigate("/auth");
+        return;
+      }
+      setShowApplySheet(true);
+    };
+
+    // If there's an embed URL, show fullscreen iframe view
+    if (boostCampaign.blueprint_embed_url) {
+      return (
+        <div className="relative h-screen w-screen overflow-hidden">
+          <iframe
+            src={boostCampaign.blueprint_embed_url.startsWith('http') 
+              ? boostCampaign.blueprint_embed_url 
+              : `https://${boostCampaign.blueprint_embed_url}`}
+            className="absolute inset-0 w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            title="Campaign Blueprint"
+          />
+
+          {!isFull && showFloatingMenu && (
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+              <div className="bg-background/80 backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6 max-w-md w-[90vw] sm:w-full">
+                <div className="flex items-center gap-4 mb-4">
+                  {boostBrand?.logo_url && (
+                    <img
+                      src={boostBrand.logo_url}
+                      alt={boostBrand.name}
+                      className="h-14 w-14 rounded-xl object-cover ring-2 ring-primary/20"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg font-inter tracking-[-0.5px]">{boostBrand?.name || boostCampaign.title}</h3>
+                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                      {availableSpots} {availableSpots === 1 ? 'spot' : 'spots'} remaining
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="sm:hidden"
+                    onClick={() => setShowFloatingMenu(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    size="lg"
+                    className="flex-1 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+                    onClick={handleApplyClick}
+                  >
+                    {user ? "Apply Now" : "Sign In to Apply"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isFull && !showFloatingMenu && (
+            <button
+              onClick={() => setShowFloatingMenu(true)}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 sm:hidden bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-lg font-inter tracking-[-0.5px] font-medium"
+            >
+              Apply Now
+            </button>
+          )}
+
+          <ApplyToBountySheet
+            open={showApplySheet}
+            onOpenChange={setShowApplySheet}
+            bounty={{
+              ...boostCampaign,
+              brands: boostBrand ? { name: boostBrand.name, logo_url: boostBrand.logo_url || '', is_verified: false } : undefined
+            }}
+            onSuccess={() => {
+              setShowApplySheet(false);
+              fetchCampaignData();
+            }}
+          />
+        </div>
+      );
+    }
+
+    // Show detailed boost page when no embed URL
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header with banner */}
+        <div className="relative">
+          {boostCampaign.banner_url ? (
+            <div className="h-48 md:h-64 w-full overflow-hidden">
+              <img 
+                src={boostCampaign.banner_url} 
+                alt={boostCampaign.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+            </div>
+          ) : (
+            <div className="h-32 md:h-40 w-full bg-gradient-to-r from-primary/20 to-primary/5" />
+          )}
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 pb-32">
+          {/* Brand & Title Section */}
+          <div className="relative -mt-12 mb-8">
+            <div className="flex items-end gap-4">
+              <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
+                <AvatarImage src={boostBrand?.logo_url || undefined} />
+                <AvatarFallback className="text-2xl font-bold">{boostBrand?.name?.charAt(0) || 'B'}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 pb-1">
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">{boostBrand?.name}</p>
+                <h1 className="text-2xl md:text-3xl font-bold font-inter tracking-[-0.5px]">{boostCampaign.title}</h1>
+              </div>
+              <Badge variant={boostCampaign.status === 'active' ? 'default' : 'secondary'} className="mb-1">
+                {boostCampaign.status}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <DollarSign className="h-4 w-4" />
+                <span className="text-xs font-inter tracking-[-0.5px]">Monthly</span>
+              </div>
+              <p className="text-xl font-bold font-inter tracking-[-0.5px]">${boostCampaign.monthly_retainer}</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Video className="h-4 w-4" />
+                <span className="text-xs font-inter tracking-[-0.5px]">Videos/mo</span>
+              </div>
+              <p className="text-xl font-bold font-inter tracking-[-0.5px]">{boostCampaign.videos_per_month}</p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Users className="h-4 w-4" />
+                <span className="text-xs font-inter tracking-[-0.5px]">Spots</span>
+              </div>
+              <p className="text-xl font-bold font-inter tracking-[-0.5px]">{availableSpots} / {boostCampaign.max_accepted_creators}</p>
+            </div>
+            {boostCampaign.end_date && (
+              <div className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs font-inter tracking-[-0.5px]">Ends</span>
+                </div>
+                <p className="text-xl font-bold font-inter tracking-[-0.5px]">{format(new Date(boostCampaign.end_date), 'MMM d')}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          {boostCampaign.description && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">About</h2>
+              <p className="text-muted-foreground font-inter tracking-[-0.5px] whitespace-pre-wrap">{boostCampaign.description}</p>
+            </div>
+          )}
+
+          {/* Blueprint Content */}
+          {blueprint && (
+            <div className="space-y-8">
+              {blueprint.content_guidelines && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Content Guidelines</h2>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px] whitespace-pre-wrap">{blueprint.content_guidelines}</p>
+                </div>
+              )}
+
+              {blueprint.content && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Brief</h2>
+                  <div 
+                    className="prose prose-sm dark:prose-invert max-w-none font-inter"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blueprint.content) }}
+                  />
+                </div>
+              )}
+
+              {blueprint.hooks && blueprint.hooks.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Hooks</h2>
+                  <ul className="space-y-2">
+                    {blueprint.hooks.map((hook: any, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-muted-foreground font-inter tracking-[-0.5px]">
+                        <span className="text-primary">•</span>
+                        <span>{typeof hook === 'string' ? hook : hook.text || hook.content}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {blueprint.talking_points && blueprint.talking_points.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Talking Points</h2>
+                  <ul className="space-y-2">
+                    {blueprint.talking_points.map((point: any, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-muted-foreground font-inter tracking-[-0.5px]">
+                        <span className="text-primary">•</span>
+                        <span>{typeof point === 'string' ? point : point.text || point.content}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {blueprint.dos_and_donts && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {blueprint.dos_and_donts.dos && blueprint.dos_and_donts.dos.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px] text-green-500">Do's</h2>
+                      <ul className="space-y-2">
+                        {blueprint.dos_and_donts.dos.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-muted-foreground font-inter tracking-[-0.5px]">
+                            <span className="text-green-500">✓</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {blueprint.dos_and_donts.donts && blueprint.dos_and_donts.donts.length > 0 && (
+                    <div>
+                      <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px] text-red-500">Don'ts</h2>
+                      <ul className="space-y-2">
+                        {blueprint.dos_and_donts.donts.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-muted-foreground font-inter tracking-[-0.5px]">
+                            <span className="text-red-500">✗</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {blueprint.call_to_action && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Call to Action</h2>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px]">{blueprint.call_to_action}</p>
+                </div>
+              )}
+
+              {blueprint.hashtags && blueprint.hashtags.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Hashtags</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {blueprint.hashtags.map((tag, i) => (
+                      <Badge key={i} variant="secondary" className="font-inter tracking-[-0.5px]">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {blueprint.brand_voice && (
+                <div>
+                  <h2 className="text-lg font-semibold mb-3 font-inter tracking-[-0.5px]">Brand Voice</h2>
+                  <p className="text-muted-foreground font-inter tracking-[-0.5px]">{blueprint.brand_voice}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Fixed Apply Button */}
+        {!isFull && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-xl border-t border-border">
+            <div className="max-w-4xl mx-auto">
+              <Button
+                size="lg"
+                className="w-full shadow-lg font-inter tracking-[-0.5px]"
+                onClick={handleApplyClick}
+              >
+                {user ? "Apply Now" : "Sign In to Apply"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <ApplyToBountySheet
+          open={showApplySheet}
+          onOpenChange={setShowApplySheet}
+          bounty={{
+            ...boostCampaign,
+            brands: boostBrand ? { name: boostBrand.name, logo_url: boostBrand.logo_url || '', is_verified: false } : undefined
+          }}
+          onSuccess={() => {
+            setShowApplySheet(false);
+            fetchCampaignData();
+          }}
+        />
+      </div>
+    );
   }
 
   if (!campaign) {
