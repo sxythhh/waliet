@@ -688,9 +688,6 @@ export function DiscoverTab() {
                         <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
                       </button>
                       
-                      {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                        <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                      </div>}
 
                       <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
                         <div className="flex items-start gap-2.5">
