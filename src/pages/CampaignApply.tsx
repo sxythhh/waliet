@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PublicNavbar from "@/components/PublicNavbar";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,7 @@ interface Campaign {
     logo_url: string;
     is_verified?: boolean;
     name?: string;
+    slug?: string;
   };
 }
 interface BountyCampaign {
@@ -87,6 +88,7 @@ interface BountyCampaign {
     name: string;
     logo_url: string;
     is_verified?: boolean;
+    slug?: string;
   };
 }
 export default function CampaignApply() {
@@ -132,7 +134,7 @@ export default function CampaignApply() {
       const {
         data: campaignData,
         error
-      } = await supabase.from("campaigns").select(`*, brands (name, logo_url, is_verified)`).eq("slug", slug).maybeSingle();
+      } = await supabase.from("campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
       if (error) throw error;
       if (campaignData) {
         setIsBoost(false);
@@ -154,7 +156,7 @@ export default function CampaignApply() {
         const {
           data: boostData,
           error: boostError
-        } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified)`).eq("slug", slug).maybeSingle();
+        } = await supabase.from("bounty_campaigns").select(`*, brands (name, logo_url, is_verified, slug)`).eq("slug", slug).maybeSingle();
         if (boostError) throw boostError;
         if (!boostData) {
           toast.error("Campaign not found");
@@ -389,6 +391,7 @@ export default function CampaignApply() {
   const brandName = isBoost ? boostBrand?.name : campaign?.brand_name;
   const brandLogo = isBoost ? boostBrand?.logo_url : campaign?.brand_logo_url;
   const brandVerified = isBoost ? boostBrand?.is_verified : campaign?.brands?.is_verified;
+  const brandSlug = isBoost ? boostCampaign?.brands?.slug : campaign?.brands?.slug;
   const bannerUrl = isBoost ? boostCampaign?.banner_url : campaign?.banner_url;
   const description = isBoost ? boostCampaign?.description : campaign?.description;
   const status = isBoost ? boostCampaign?.status : campaign?.status;
@@ -527,7 +530,13 @@ export default function CampaignApply() {
                 </Avatar>
                 <div className="flex-1 pb-2">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
+                    {brandSlug ? (
+                      <Link to={`/b/${brandSlug}`} className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
+                        {brandName}
+                      </Link>
+                    ) : (
+                      <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
+                    )}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
                   <div className="flex items-center gap-2">
