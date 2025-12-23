@@ -702,26 +702,11 @@ export function DiscoverTab() {
                           </span>
                         </div>
                         
-                        {/* Title with Status */}
+                        {/* Title */}
                         <div className="flex items-center gap-1.5">
                           <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
                             {campaign.title}
                           </h3>
-                          {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                            backgroundColor: '#b60b0b',
-                            borderTop: '1px solid #ed3030',
-                            borderRadius: '20px'
-                          }}>
-                            <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
-                            Ended
-                          </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                            backgroundColor: '#1f6d36',
-                            borderTop: '1px solid #3c8544',
-                            borderRadius: '20px'
-                          }}>
-                            <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
-                            Active
-                          </span>}
                         </div>
 
                         <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
