@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ExternalLink } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useTheme } from "@/components/ThemeProvider";
@@ -56,6 +57,7 @@ interface Campaign {
   blueprint_id?: string | null;
   brands?: {
     logo_url: string;
+    is_verified?: boolean;
   };
 }
 interface JoinCampaignSheetProps {
@@ -453,7 +455,10 @@ export function JoinCampaignSheet({
                 </div>}
               <div className="flex-1">
                 <h3 className="font-semibold text-2xl">{campaign.title}</h3>
-                <p className="text-sm text-muted-foreground">{campaign.brand_name}</p>
+                <p className="text-sm text-foreground flex items-center gap-1">
+                  {campaign.brand_name}
+                  {campaign.brands?.is_verified && <VerifiedBadge size="sm" />}
+                </p>
                 {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
                     {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
                   fontFamily: 'Inter',
