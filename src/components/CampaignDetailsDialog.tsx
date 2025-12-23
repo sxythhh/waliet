@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone, LogOut } from "lucide-react";
 import addDiamondIcon from "@/assets/add-diamond-icon.svg";
 import warningIcon from "@/assets/warning-icon.svg";
 import { useState, useEffect } from "react";
@@ -55,6 +55,7 @@ interface CampaignDetailsDialogProps {
   onJoin?: () => void;
   onConnectAccount?: () => void;
   onManageAccount?: (account: ConnectedAccount) => void;
+  onLeaveCampaign?: () => void;
 }
 const calculateTimeAgo = (createdAt: string) => {
   const now = new Date();
@@ -123,7 +124,8 @@ export function CampaignDetailsDialog({
   onOpenChange,
   onJoin,
   onConnectAccount,
-  onManageAccount
+  onManageAccount,
+  onLeaveCampaign
 }: CampaignDetailsDialogProps) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [expectedPayout, setExpectedPayout] = useState<{
@@ -230,10 +232,22 @@ export function CampaignDetailsDialog({
               <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
             </div>}
           <div className="flex-1 min-w-0">
-            <h2 className="text-base sm:text-lg font-semibold mb-1" style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.5px'
-          }}>{campaign.brand_name}</h2>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-base sm:text-lg font-semibold" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>{campaign.brand_name}</h2>
+              {campaign.status === 'ended' && onLeaveCampaign && (
+                <button
+                  onClick={onLeaveCampaign}
+                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors"
+                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                >
+                  <LogOut className="w-3 h-3" />
+                  Leave
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
