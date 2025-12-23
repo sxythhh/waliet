@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Search } from "lucide-react";
+import { LogOut } from "lucide-react";
+import searchIcon from "@/assets/search-icon.svg";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,10 +127,10 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
             {/* Search Input - Always visible */}
             <button 
               onClick={handleSearchClick} 
-              className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-muted/20 border border-white/10 rounded-lg text-sm font-inter tracking-[-0.5px] text-muted-foreground/50 hover:bg-muted/30 hover:border-white/15 transition-colors min-w-[280px]"
+              className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-muted-foreground/50 hover:bg-muted/30 transition-colors min-w-[280px]"
             >
               <div className="flex items-center gap-2">
-                <Search className="h-4 w-4" />
+                <img src={searchIcon} alt="" className="h-4 w-4 opacity-60" />
                 <span>{searchQuery || 'Search opportunities'}</span>
               </div>
               <div className="flex items-center justify-center h-5 w-5 rounded bg-white/10 text-[11px] font-medium text-white/50">
