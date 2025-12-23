@@ -162,7 +162,6 @@ export function CampaignCreationWizard({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(campaign?.banner_url || null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const [manualBudgetUsed, setManualBudgetUsed] = useState<string>("");
   const [isAdjustingBudget, setIsAdjustingBudget] = useState(false);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
@@ -338,19 +337,6 @@ export function CampaignCreationWizard({
     }
   }, [open, campaign]);
 
-  // Load brand's shortimize API key
-  useEffect(() => {
-    const loadShortimizeApiKey = async () => {
-      if (open && brandId && isAdmin) {
-        const {
-          data
-        } = await supabase.from('brands').select('shortimize_api_key').eq('id', brandId).single();
-        setShortimizeApiKey(data?.shortimize_api_key || "");
-      }
-    };
-    loadShortimizeApiKey();
-  }, [open, brandId, isAdmin]);
-
   // Load brand's blueprints
   useEffect(() => {
     const loadBlueprints = async () => {
@@ -470,13 +456,6 @@ export function CampaignCreationWizard({
         error
       } = await supabase.from("campaigns").insert(campaignData);
       if (error) throw error;
-
-      // Save shortimize API key to brand if admin
-      if (isAdmin && shortimizeApiKey) {
-        await supabase.from("brands").update({
-          shortimize_api_key: shortimizeApiKey
-        }).eq("id", brandId);
-      }
       toast.success("Campaign saved as draft!");
       onOpenChange(false);
       form.reset();
@@ -598,12 +577,6 @@ export function CampaignCreationWizard({
         toast.success("Campaign created as draft. An admin will review and activate it.");
       }
 
-      // Save shortimize API key to brand if admin
-      if (isAdmin && shortimizeApiKey) {
-        await supabase.from("brands").update({
-          shortimize_api_key: shortimizeApiKey
-        }).eq("id", brandId);
-      }
       onOpenChange(false);
       form.reset();
       setCurrentStep(1);
@@ -1047,27 +1020,6 @@ export function CampaignCreationWizard({
                       </Select>
                     </div>
 
-                    {/* Collapsible Sections */}
-                    <div className="space-y-3">
-
-                      {/* Admin-only: Shortimize API Key */}
-                      {isAdmin && (
-                        <div className="rounded-lg bg-muted/20 p-4">
-                          <div className="flex items-center gap-2 mb-3">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Shortimize Integration</span>
-                            <Badge variant="outline" className="text-xs">Admin</Badge>
-                          </div>
-                          <Input
-                            type="password"
-                            placeholder="Enter Shortimize API key"
-                            value={shortimizeApiKey}
-                            onChange={e => setShortimizeApiKey(e.target.value)}
-                            className="h-9 bg-muted/30 border-0 text-sm focus:ring-1 focus:ring-primary/30"
-                          />
-                        </div>
-                      )}
-                    </div>
 
                     {/* Edit Mode Options */}
                     {isEditMode && (
