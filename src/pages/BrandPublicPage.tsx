@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import PublicNavbar from "@/components/PublicNavbar";
 
 interface Brand {
   id: string;
@@ -142,6 +143,7 @@ export default function BrandPublicPage() {
         <meta name="description" content={brand.description || `Join ${brand.name} creator campaigns on Virality`} />
       </Helmet>
 
+      <PublicNavbar />
       <div className="min-h-screen bg-background">
         <div className="max-w-2xl mx-auto px-6 py-20">
           {/* Brand Header */}
