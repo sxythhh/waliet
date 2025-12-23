@@ -156,24 +156,6 @@ export function ManageAccountDialog({
         if (error) throw error;
       }
 
-      // Track account in Shortimize
-      try {
-        console.log('Tracking account in Shortimize...');
-        const { error: trackError } = await supabase.functions.invoke('track-campaign-user', {
-          body: {
-            campaignId: campaignId,
-            userId: user.id
-          }
-        });
-        
-        if (trackError) {
-          console.error('Error tracking account:', trackError);
-        } else {
-          console.log('Successfully tracked account in Shortimize');
-        }
-      } catch (error) {
-        console.error('Error calling track function:', error);
-      }
 
       toast({
         title: "Success",
@@ -202,24 +184,6 @@ export function ManageAccountDialog({
       }).eq('id', connectionId);
       if (error) throw error;
 
-      // Stop tracking in Shortimize
-      try {
-        console.log('Stopping Shortimize tracking...');
-        const { error: untrackError } = await supabase.functions.invoke('untrack-shortimize-account', {
-          body: {
-            campaignId: campaignId,
-            socialAccountId: account.id
-          }
-        });
-        
-        if (untrackError) {
-          console.error('Error stopping tracking:', untrackError);
-        } else {
-          console.log('Successfully stopped tracking in Shortimize');
-        }
-      } catch (error) {
-        console.error('Error calling untrack function:', error);
-      }
 
       toast({
         title: "Success",
