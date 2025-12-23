@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ExternalLink, AlertCircle, Upload, X } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import discordIcon from "@/assets/discord-icon.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -30,6 +31,7 @@ interface BountyCampaign {
   brands?: {
     name: string;
     logo_url: string;
+    is_verified?: boolean;
   };
 }
 interface ApplyToBountySheetProps {
@@ -234,11 +236,14 @@ export function ApplyToBountySheet({
               {bounty.brands?.logo_url && <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
                   <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
                 </div>}
-              <div className="flex-1">
-                <SheetTitle className="text-2xl font-bold text-foreground mb-1">
+              <div className="flex-1 -mt-0.5">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <p className="text-sm text-foreground font-medium">{bounty.brands?.name}</p>
+                  {bounty.brands?.is_verified && <VerifiedBadge />}
+                </div>
+                <SheetTitle className="text-2xl font-bold text-foreground">
                   {bounty.title}
                 </SheetTitle>
-                <p className="text-sm text-muted-foreground">{bounty.brands?.name}</p>
               </div>
             </div>
             
