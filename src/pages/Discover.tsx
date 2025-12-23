@@ -8,9 +8,11 @@ export default function Discover() {
   return (
     <div className="min-h-screen bg-background">
       <PublicNavbar />
-      <main className="pt-14">
+      {/* Dedicated scroll container so page still scrolls even if body is scroll-locked */}
+      <main className="pt-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
         <DiscoverTab />
       </main>
     </div>
   );
 }
+
