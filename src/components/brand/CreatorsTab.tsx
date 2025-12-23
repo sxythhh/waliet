@@ -626,26 +626,72 @@ export function CreatorsTab({
   };
   if (loading) {
     return <div className="h-full flex font-inter tracking-[-0.5px]">
-        <div className="w-80 border-r border-border p-4 space-y-4 hidden lg:block">
-          <Skeleton className="h-6 w-24" />
-          {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
+        {/* Messages Panel Skeleton */}
+        <div className="w-80 border-r border-border/50 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-border/50">
+            <Skeleton className="h-5 w-20 mb-4" />
+            <div className="flex gap-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-7 w-16 rounded-full" />)}
+            </div>
+          </div>
+          <div className="flex-1 p-3 space-y-1">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ animationDelay: `${i * 100}ms` }}>
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2 pt-0.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                </div>
               </div>
-            </div>)}
+            ))}
+          </div>
         </div>
-        <div className="flex-1 hidden lg:block" />
-        <div className="w-full lg:w-96 border-l border-border p-4 space-y-4">
-          <Skeleton className="h-6 w-24" />
-          {[1, 2, 3, 4].map(i => <div key={i} className="flex items-center gap-3 p-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16" />
+        
+        {/* Center Panel Skeleton */}
+        <div className="flex-1 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-border/50 flex items-center gap-3">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <Skeleton className="h-12 w-12 rounded-xl mx-auto" />
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <Skeleton className="h-3 w-36 mx-auto" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Creators Panel Skeleton */}
+        <div className="w-full lg:w-96 border-l border-border/50 flex flex-col">
+          <div className="p-4 border-b border-border/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+            <Skeleton className="h-9 w-full rounded-lg" />
+          </div>
+          <div className="flex-1 p-3 space-y-1">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ animationDelay: `${i * 80}ms` }}>
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-28" />
+                  <div className="flex gap-1.5">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-6 rounded" />
               </div>
-            </div>)}
+            ))}
+          </div>
         </div>
       </div>;
   }
