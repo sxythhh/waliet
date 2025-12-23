@@ -471,27 +471,29 @@ export function DiscoverTab({
         {/* Filters */}
         <div className="space-y-3 font-['Inter'] tracking-[-0.5px]">
           {/* Search and Filters Row */}
-          <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
             {/* Search Input - Click to open overlay (only show if not using external search) */}
-            {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 min-w-[140px] sm:w-72 sm:flex-none text-left">
+            {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative w-full sm:w-72 text-left">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
                   {searchQuery || 'Search campaigns...'}
                 </div>
               </button>}
 
+            {/* Filter buttons row */}
+            <div className="flex gap-2 items-center">
+              {/* Bookmarked Toggle */}
+              <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${showBookmarkedOnly ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
+                <Bookmark className={`h-3.5 w-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
+                Saved
+              </button>
 
-            {/* Bookmarked Toggle */}
-            <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${showBookmarkedOnly ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
-              <Bookmark className={`h-3.5 w-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
-              Saved
-            </button>
-
-            {/* Filter Toggle */}
-            <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filtersOpen ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              Filters
-            </button>
+              {/* Filter Toggle */}
+              <button onClick={() => setFiltersOpen(!filtersOpen)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${filtersOpen ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filters
+              </button>
+            </div>
 
             {/* Create Campaign Button */}
             
