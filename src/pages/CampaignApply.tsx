@@ -63,12 +63,35 @@ interface Campaign {
   };
 }
 
+interface BountyCampaign {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  start_date: string | null;
+  end_date: string | null;
+  banner_url: string | null;
+  status: string;
+  blueprint_id: string | null;
+  slug: string | null;
+  brands?: {
+    name: string;
+    logo_url: string;
+    is_verified?: boolean;
+  };
+}
+
 export default function CampaignApply() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
   
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [boostCampaign, setBoostCampaign] = useState<BountyCampaign | null>(null);
   const [blueprint, setBlueprint] = useState<Blueprint | null>(null);
   const [loading, setLoading] = useState(true);
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);
@@ -78,6 +101,7 @@ export default function CampaignApply() {
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [isBoost, setIsBoost] = useState(false);
 
   useEffect(() => {
     fetchCampaignData();
@@ -88,6 +112,7 @@ export default function CampaignApply() {
     
     setLoading(true);
     try {
+      // First try to find a campaign by slug
       const { data: campaignData, error } = await supabase
         .from("campaigns")
         .select(`
@@ -102,36 +127,76 @@ export default function CampaignApply() {
         .maybeSingle();
 
       if (error) throw error;
-      if (!campaignData) {
-        toast.error("Campaign not found");
-        navigate("/dashboard");
-        return;
-      }
+      
+      if (campaignData) {
+        setIsBoost(false);
+        const transformedCampaign: Campaign = {
+          ...campaignData,
+          brand_name: (campaignData.brands as any)?.name || campaignData.brand_name,
+          brand_logo_url: (campaignData.brands as any)?.logo_url || campaignData.brand_logo_url,
+          brands: campaignData.brands as any,
+        };
 
-      const transformedCampaign: Campaign = {
-        ...campaignData,
-        brand_name: (campaignData.brands as any)?.name || campaignData.brand_name,
-        brand_logo_url: (campaignData.brands as any)?.logo_url || campaignData.brand_logo_url,
-        brands: campaignData.brands as any,
-      };
+        setCampaign(transformedCampaign);
 
-      setCampaign(transformedCampaign);
-
-      // Load blueprint if available
-      if (campaignData.blueprint_id) {
-        const { data: blueprintData } = await supabase
-          .from("blueprints")
-          .select("*")
-          .eq("id", campaignData.blueprint_id)
-          .single();
-        
-        if (blueprintData) {
-          setBlueprint(blueprintData as Blueprint);
+        // Load blueprint if available
+        if (campaignData.blueprint_id) {
+          const { data: blueprintData } = await supabase
+            .from("blueprints")
+            .select("*")
+            .eq("id", campaignData.blueprint_id)
+            .single();
+          
+          if (blueprintData) {
+            setBlueprint(blueprintData as Blueprint);
+          }
         }
-      }
 
-      // Check auth and load accounts
-      await checkAuthAndLoadAccounts(campaignData);
+        // Check auth and load accounts
+        await checkAuthAndLoadAccounts(campaignData);
+      } else {
+        // Try to find a bounty_campaign by slug
+        const { data: boostData, error: boostError } = await supabase
+          .from("bounty_campaigns")
+          .select(`
+            *,
+            brands (
+              name,
+              logo_url,
+              is_verified
+            )
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (boostError) throw boostError;
+
+        if (!boostData) {
+          toast.error("Campaign not found");
+          navigate("/dashboard");
+          return;
+        }
+
+        setIsBoost(true);
+        setBoostCampaign(boostData as BountyCampaign);
+
+        // Load blueprint if available
+        if (boostData.blueprint_id) {
+          const { data: blueprintData } = await supabase
+            .from("blueprints")
+            .select("*")
+            .eq("id", boostData.blueprint_id)
+            .single();
+          
+          if (blueprintData) {
+            setBlueprint(blueprintData as Blueprint);
+          }
+        }
+
+        // Check auth for boosts
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
+      }
     } catch (error) {
       console.error("Error fetching campaign:", error);
       toast.error("Failed to load campaign");
@@ -391,7 +456,7 @@ export default function CampaignApply() {
     );
   }
 
-  if (!campaign) {
+  if (!campaign && !boostCampaign) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -401,6 +466,17 @@ export default function CampaignApply() {
         </div>
       </div>
     );
+  }
+
+  // If it's a boost, redirect to the boost page for now (or render boost UI)
+  if (isBoost && boostCampaign) {
+    // Navigate to boost detail page - boosts have their own application flow
+    navigate(`/boost/${boostCampaign.id}`, { replace: true });
+    return null;
+  }
+
+  if (!campaign) {
+    return null;
   }
 
   const budgetRemaining = campaign.budget - (campaign.budget_used || 0);

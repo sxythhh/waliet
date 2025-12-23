@@ -30,6 +30,7 @@ interface BountyCampaign {
   banner_url: string | null;
   status: string;
   blueprint_id?: string | null;
+  slug?: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -228,7 +229,7 @@ export function ApplyToBountySheet({
           <button
             onClick={() => {
               onOpenChange(false);
-              navigate(`/boost/${bounty.id}`);
+              navigate(`/c/${bounty.slug || bounty.id}`);
             }}
             className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50"
             title="Open full page"
