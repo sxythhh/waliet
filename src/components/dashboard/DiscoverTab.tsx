@@ -462,24 +462,6 @@ export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
               </div>
             </button>
 
-            {/* Platform Pills */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {[{
-              value: "all",
-              label: "All"
-            }, {
-              value: "tiktok",
-              label: "TikTok"
-            }, {
-              value: "instagram",
-              label: "Instagram"
-            }, {
-              value: "youtube",
-              label: "YouTube"
-            }].map(platform => <button key={platform.value} onClick={() => setSelectedPlatform(platform.value === "all" ? null : platform.value)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${selectedPlatform === null && platform.value === "all" || selectedPlatform === platform.value ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
-                  {platform.label}
-                </button>)}
-            </div>
 
             {/* Bookmarked Toggle */}
             <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${showBookmarkedOnly ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
@@ -869,7 +851,7 @@ export function DiscoverTab({ navigateOnClick = false }: DiscoverTabProps) {
       
       <JoinPrivateCampaignDialog open={joinPrivateDialogOpen} onOpenChange={setJoinPrivateDialogOpen} />
       
-      <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} />
+      <SearchOverlay isOpen={searchOverlayOpen} onClose={() => setSearchOverlayOpen(false)} searchQuery={searchQuery} onSearchChange={setSearchQuery} onTypeFilter={setTypeFilter} onNicheFilter={setNicheFilter} onBrowseFilter={setBrowseFilter} onPlatformFilter={setSelectedPlatform} activeTypeFilter={typeFilter} activeNicheFilter={nicheFilter} activeBrowseFilter={browseFilter} activePlatformFilter={selectedPlatform} />
       
       {/* Create Campaign Dialog */}
       <CreateCampaignTypeDialog open={createCampaignDialogOpen} onOpenChange={setCreateCampaignDialogOpen} brandId={userBrand?.id} onSelectClipping={blueprintId => {
