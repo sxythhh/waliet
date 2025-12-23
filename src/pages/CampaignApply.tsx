@@ -87,6 +87,9 @@ interface BountyCampaign {
   blueprint_id: string | null;
   slug: string | null;
   blueprint_embed_url: string | null;
+  position_type: string | null;
+  availability_requirement: string | null;
+  work_location: string | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -813,6 +816,35 @@ export default function CampaignApply() {
                   {isBoost ? 'Join this creator program' : 'Connect your accounts to get started'}
                 </p>
               </div>
+
+              {/* Boost Details */}
+              {isBoost && boostCampaign && (boostCampaign.position_type || boostCampaign.availability_requirement || boostCampaign.work_location) && (
+                <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                  {boostCampaign.position_type && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Role</span>
+                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">{boostCampaign.position_type}</span>
+                    </div>
+                  )}
+                  {boostCampaign.availability_requirement && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Availability</span>
+                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                        {boostCampaign.availability_requirement === 'part_time' ? 'Part-time' : 
+                         boostCampaign.availability_requirement === 'full_time' ? 'Full-time' : 
+                         boostCampaign.availability_requirement === 'projects_gigs' ? 'Projects & Gigs' : 
+                         boostCampaign.availability_requirement}
+                      </span>
+                    </div>
+                  )}
+                  {boostCampaign.work_location && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Location</span>
+                      <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize">{boostCampaign.work_location}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {!isLoggedIn ? <>
                 <div className="text-center py-10 px-8 rounded-2xl bg-[#0e0e0e]">
