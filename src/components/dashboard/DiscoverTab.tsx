@@ -804,13 +804,7 @@ export function DiscoverTab({
                             <UserCheck className="h-3 w-3" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
-                          {bounty.start_date && <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(bounty.start_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                            </span>}
+                          {bounty.start_date}
                         </div>
                         
                         {/* Description */}
