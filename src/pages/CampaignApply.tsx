@@ -975,7 +975,7 @@ export default function CampaignApply() {
       {/* Mobile Apply Sheet for Regular Campaigns */}
       {!isBoost && campaign && (
         <Sheet open={showMobileApplySheet} onOpenChange={setShowMobileApplySheet}>
-          <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl">
+          <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl pt-6">
             <SheetHeader className="pb-4">
               <SheetTitle className="font-['Inter'] tracking-[-0.5px]">Apply to Campaign</SheetTitle>
             </SheetHeader>
