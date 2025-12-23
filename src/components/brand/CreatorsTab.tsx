@@ -376,8 +376,8 @@ export function CreatorsTab({
     const campaignsData = campaignsResult.data || [];
     const bouncyCampaignsData = bouncyCampaignsResult.data || [];
 
-    // Store campaigns for filter dropdown
-    setCampaigns(campaignsData);
+    // Store campaigns for filter dropdown (include both campaigns and boosts)
+    setCampaigns([...campaignsData, ...bouncyCampaignsData]);
     const campaignIds = campaignsData.map(c => c.id);
     const bountyIds = bouncyCampaignsData.map(b => b.id);
     const campaignMap = new Map(campaignsData.map(c => [c.id, c.title]));
@@ -548,7 +548,9 @@ export function CreatorsTab({
   };
   const filteredCreators = creators.filter(creator => {
     const query = searchQuery.toLowerCase();
-    return creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
+    const matchesSearch = creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
+    const matchesCampaign = campaignFilter === 'all' || creator.campaigns.some(c => c.id === campaignFilter);
+    return matchesSearch && matchesCampaign;
   });
   const removeFromCampaign = async (creatorId: string, campaign: CreatorCampaign) => {
     try {
@@ -871,11 +873,24 @@ export function CreatorsTab({
         </div>
 
         {/* Search */}
-        <div className="p-3 border-b border-border">
+        <div className="p-3 border-b border-border space-y-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-border text-sm" />
           </div>
+          <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+            <SelectTrigger className="h-9 bg-muted/30 border-border text-sm">
+              <SelectValue placeholder="All campaigns" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All campaigns</SelectItem>
+              {campaigns.map(campaign => (
+                <SelectItem key={campaign.id} value={campaign.id}>
+                  {campaign.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <ScrollArea className="flex-1">
