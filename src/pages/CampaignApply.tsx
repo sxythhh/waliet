@@ -649,7 +649,7 @@ export default function CampaignApply() {
           <div className="max-w-3xl mx-auto px-4 pb-32 lg:pb-8">
             {/* Brand & Title */}
             <div className="relative -mt-16 mb-8">
-              <div className="flex items-end gap-2 md:gap-4">
+              <div className="flex items-start gap-2 md:gap-4">
                 <Avatar className="h-14 w-14 md:h-24 md:w-24 border-4 border-background shadow-xl ring-1 ring-border/50">
                   <AvatarImage src={brandLogo || undefined} className="object-cover" />
                   <AvatarFallback className="text-lg md:text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
