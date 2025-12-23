@@ -840,9 +840,9 @@ export function DiscoverTab({
                       <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
                         {/* Brand Info */}
                         <div className="flex items-center gap-2">
-                          {bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+{bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
                               <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                            </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
+                            </div> : <div className="w-6 h-6 rounded-[3px] bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
                               <span className="text-[10px] font-semibold text-muted-foreground">
                                 {bounty.brands?.name?.charAt(0) || 'B'}
                               </span>
