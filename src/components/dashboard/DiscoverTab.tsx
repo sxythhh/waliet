@@ -824,7 +824,7 @@ export function DiscoverTab({
                         </div>
                         
                         {/* Metadata Row */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
                           <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                             <img src={videosIcon} alt="" className="h-3 w-3 dark:invert" />
                             {bounty.videos_per_month} videos/mo
