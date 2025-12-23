@@ -20,6 +20,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
+import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
@@ -687,9 +688,20 @@ export function DiscoverTab({
                 const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
                 return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer" onClick={handleCampaignClick}>
                       
-                      <button onClick={e => toggleBookmark(campaign.id, e)} className={`absolute top-2 right-2 z-[5] p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
-                        <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-                      </button>
+                      <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/c/${campaign.slug}`);
+                          }} 
+                          className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"
+                        >
+                          <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
+                        </button>
+                        <button onClick={e => toggleBookmark(campaign.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
+                          <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+                        </button>
+                      </div>
                       
 
                       <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
