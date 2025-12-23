@@ -631,8 +631,8 @@ export function BoostDetailView({
                                 {selectedUserAccounts.map(account => {
                           const logo = getPlatformLogo(account.platform);
                           return <a key={account.id} href={account.account_link || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-muted/30 hover:bg-muted/50 rounded-full px-3 py-1.5 transition-colors">
-                                      {account.avatar_url ? <img src={account.avatar_url} alt={account.username} className="h-5 w-5 rounded-full" /> : logo ? <img src={logo} alt={account.platform} className="h-4 w-4" /> : null}
-                                      <span className="text-sm">@{account.username}</span>
+                                      {logo ? <img src={logo} alt={account.platform} className="h-4 w-4" /> : null}
+                                      <span className="text-sm">{account.username}</span>
                                       {account.follower_count ? <span className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()}</span> : null}
                                     </a>;
                         })}
