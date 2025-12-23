@@ -738,12 +738,9 @@ export default function CampaignApply() {
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">{blueprint.content_guidelines}</p>
               </div>}
 
-            {blueprint?.content && <div>
-                <h2 className="text-lg font-semibold mb-3">Brief</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{
+            {blueprint?.content && <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h1:text-xl prose-h1:mb-3 prose-h2:text-lg prose-h2:mb-2 prose-h3:text-base prose-h3:mb-2 prose-p:text-[13px] prose-p:leading-relaxed prose-li:text-[13px]" style={{ '--tw-prose-body': 'hsl(220 9% 40%)', '--tw-prose-invert-body': 'hsl(220 9% 60%)' } as React.CSSProperties} dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(blueprint.content)
-              }} />
-              </div>}
+              }} />}
 
             {blueprint?.hooks && blueprint.hooks.length > 0 && <div>
                 <h2 className="text-lg font-semibold mb-3">Hook Ideas</h2>
