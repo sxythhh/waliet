@@ -940,7 +940,7 @@ export default function CampaignApply() {
       </div>
 
       {/* Fixed bottom CTA for mobile */}
-      {isBoost && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
+      {!isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
           <Button 
             className="w-full font-['Inter'] tracking-[-0.5px]" 
             size="lg" 
