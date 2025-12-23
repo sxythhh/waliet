@@ -224,7 +224,7 @@ export function ApplyToBountySheet({
       <AddSocialAccountDialog open={showAddSocialDialog} onOpenChange={setShowAddSocialDialog} onSuccess={checkConnectedAccounts} />
 
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible">
+        <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible flex flex-col">
           {/* Floating Fullscreen Button */}
           <button onClick={() => {
           onOpenChange(false);
@@ -240,7 +240,7 @@ export function ApplyToBountySheet({
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
           </div>}
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto pb-24">
           {/* Header with Brand */}
           <SheetHeader className="space-y-4 text-left">
             <div className="flex items-start gap-3">
@@ -410,7 +410,7 @@ export function ApplyToBountySheet({
                 <Textarea id="application_text" value={applicationText} onChange={e => setApplicationText(e.target.value)} placeholder="Tell the brand why you'd be perfect for this boost..." className="bg-muted/50 border-0 text-foreground placeholder:text-muted-foreground min-h-[100px] resize-none font-['Inter'] tracking-[-0.5px]" />
               </div>
 
-              <div className="flex gap-3 pt-4 sticky bottom-0 bg-background py-4 -mx-6 px-6">
+              <div className="flex gap-3 fixed bottom-0 left-0 right-0 bg-background py-4 px-6 border-t border-border sm:left-auto sm:right-0 sm:w-full sm:max-w-xl">
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
                   Cancel
                 </Button>
