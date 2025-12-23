@@ -3,7 +3,7 @@ import PublicNavbar from "@/components/PublicNavbar";
 
 export default function Discover() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-auto">
       <PublicNavbar />
       <div className="pt-14">
         <DiscoverTab />
