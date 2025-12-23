@@ -168,9 +168,10 @@ export default function PublicProfile() {
       `).eq("creator_id", profileData.id).eq("status", "approved").order("submitted_at", {
       ascending: false
     });
+    let participationsWithStats: any[] = [];
     if (submissions) {
       // Fetch video stats for each campaign
-      const participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
+      participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
         const {
           data: videos
         } = await supabase.from("campaign_videos").select("id, estimated_payout").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id);
@@ -182,7 +183,6 @@ export default function PublicProfile() {
           joined_at: sub.submitted_at,
           campaign: sub.campaigns as any,
           total_views: 0,
-          // Views not tracked in this table
           total_earnings: totalEarnings,
           videos_count: videos?.length || 0
         };
@@ -212,12 +212,13 @@ export default function PublicProfile() {
       `).eq("user_id", profileData.id).eq("status", "accepted").order("applied_at", {
       ascending: false
     });
+    let boostsWithStats: any[] = [];
     if (boostApps) {
-      const boostsWithStats = await Promise.all(boostApps.map(async app => {
+      boostsWithStats = await Promise.all(boostApps.map(async app => {
         const {
-          data: submissions
+          data: videoSubmissions
         } = await supabase.from("boost_video_submissions").select("id, payout_amount, status").eq("bounty_campaign_id", app.bounty_campaign_id).eq("user_id", profileData.id);
-        const approvedSubmissions = submissions?.filter(s => s.status === "approved") || [];
+        const approvedSubmissions = videoSubmissions?.filter(s => s.status === "approved") || [];
         const totalEarned = approvedSubmissions.reduce((acc, s) => acc + (s.payout_amount || 0), 0);
         return {
           id: app.id,
@@ -225,17 +226,17 @@ export default function PublicProfile() {
           status: app.status,
           applied_at: app.applied_at,
           boost: app.bounty_campaigns as any,
-          videos_submitted: submissions?.length || 0,
+          videos_submitted: videoSubmissions?.length || 0,
           total_earned: totalEarned
         };
       }));
       setBoostParticipations(boostsWithStats);
     }
 
-    // Calculate total stats
-    const totalViews = campaignParticipations.reduce((acc, p) => acc + (p.total_views || 0), 0);
-    const campaignEarnings = campaignParticipations.reduce((acc, p) => acc + (p.total_earnings || 0), 0);
-    const boostEarnings = boostParticipations.reduce((acc, p) => acc + (p.total_earned || 0), 0);
+    // Calculate total stats using the freshly fetched data (not stale state)
+    const totalViews = participationsWithStats.reduce((acc, p) => acc + (p.total_views || 0), 0);
+    const campaignEarnings = participationsWithStats.reduce((acc, p) => acc + (p.total_earnings || 0), 0);
+    const boostEarnings = boostsWithStats.reduce((acc, p) => acc + (p.total_earned || 0), 0);
     setStats({
       totalCampaigns: submissions?.length || 0,
       totalBoosts: boostApps?.length || 0,
