@@ -2783,6 +2783,7 @@ export type Database = {
           campaign_id: string | null
           connected_at: string | null
           follower_count: number | null
+          hidden_from_public: boolean
           id: string
           is_verified: boolean | null
           platform: string
@@ -2797,6 +2798,7 @@ export type Database = {
           campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
+          hidden_from_public?: boolean
           id?: string
           is_verified?: boolean | null
           platform: string
@@ -2811,6 +2813,7 @@ export type Database = {
           campaign_id?: string | null
           connected_at?: string | null
           follower_count?: number | null
+          hidden_from_public?: boolean
           id?: string
           is_verified?: boolean | null
           platform?: string

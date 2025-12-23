@@ -80,6 +80,7 @@ interface SocialAccount {
   connected_at: string;
   bio: string | null;
   avatar_url: string | null;
+  hidden_from_public: boolean;
   connected_campaigns?: Array<{
     connection_id: string;
     campaign: {
@@ -1030,6 +1031,28 @@ export function ProfileTab() {
                                     </p>}
                                 </div>;
                       })()}
+
+                            {/* Hide from public profile toggle */}
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const newValue = !account.hidden_from_public;
+                                await supabase
+                                  .from("social_accounts")
+                                  .update({ hidden_from_public: newValue })
+                                  .eq("id", account.id);
+                                setSocialAccounts(prev => 
+                                  prev.map(a => a.id === account.id ? { ...a, hidden_from_public: newValue } : a)
+                                );
+                              }}
+                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors"
+                              style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}
+                            >
+                              <span className="text-white/70">Hide from public profile</span>
+                              <div className={`w-8 h-4 rounded-full transition-colors ${account.hidden_from_public ? 'bg-primary' : 'bg-white/20'}`}>
+                                <div className={`w-3 h-3 rounded-full bg-white mt-0.5 transition-transform ${account.hidden_from_public ? 'translate-x-4.5 ml-0.5' : 'translate-x-0.5'}`} />
+                              </div>
+                            </button>
 
                             {/* Actions */}
                             <div className="flex gap-2 pt-1">
