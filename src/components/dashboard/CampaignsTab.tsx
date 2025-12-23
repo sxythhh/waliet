@@ -739,7 +739,7 @@ export function CampaignsTab({
                         <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 group-hover:underline font-['Inter'] tracking-[-0.5px]">
                           {campaign.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
+                        <p className="text-xs text-foreground font-semibold flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
                       </div>
                     </div>
 
@@ -899,7 +899,7 @@ export function CampaignsTab({
                       Ended
                     </Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
+                  <p className="text-xs text-foreground font-semibold flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
                 </div>
               </div>
 
