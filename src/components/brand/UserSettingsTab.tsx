@@ -454,11 +454,28 @@ export function UserSettingsTab() {
   }
   return <div className="p-4 space-y-6 max-w-xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
-        <p className="text-sm text-muted-foreground tracking-[-0.5px]">
-          Manage your workspace and billing
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
+          <p className="text-sm text-muted-foreground tracking-[-0.5px]">
+            Manage your workspace and billing
+          </p>
+        </div>
+        {isBrandMode && brand && (
+          <Button 
+            onClick={() => {
+              if (activeTab === 'general') {
+                handleSaveBrand();
+              } else if (activeTab === 'integrations') {
+                handleSaveIntegrations();
+              }
+            }} 
+            disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false}
+            className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
+          >
+            {(activeTab === 'general' && savingBrand) || (activeTab === 'integrations' && savingIntegrations) ? "Saving..." : "Save Changes"}
+          </Button>
+        )}
       </div>
 
       {/* Tabs Navigation */}
@@ -472,17 +489,6 @@ export function UserSettingsTab() {
         {/* General Tab */}
         <TabsContent value="general" className="mt-6 space-y-0">
           {isBrandMode && brand && <>
-              {/* Save Button - Top */}
-              <div className="flex justify-end mb-6">
-                <Button 
-                  onClick={handleSaveBrand} 
-                  disabled={savingBrand} 
-                  className="w-auto h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
-                >
-                  {savingBrand ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
-
               {/* Icon Section */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
@@ -807,10 +813,6 @@ export function UserSettingsTab() {
                 </div>
               </div>
 
-              {/* Save Button */}
-              <Button onClick={handleSaveIntegrations} disabled={savingIntegrations} className="w-full h-11 tracking-[-0.5px]">
-                {savingIntegrations ? "Saving..." : "Save Integrations"}
-              </Button>
             </>}
         </TabsContent>
 
