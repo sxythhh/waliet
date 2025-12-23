@@ -7,9 +7,39 @@ export function FloatingFooter() {
   const hasScrolled = useRef(false);
 
   useEffect(() => {
+    // Find the scrollable container - look for overflow-y-auto or overflow-auto
+    const findScrollContainer = (): HTMLElement | Window => {
+      const containers = document.querySelectorAll('main, [class*="overflow-y-auto"], [class*="overflow-auto"]');
+      for (const container of containers) {
+        if (container.scrollHeight > container.clientHeight) {
+          return container as HTMLElement;
+        }
+      }
+      return window;
+    };
+
+    const scrollContainer = findScrollContainer();
+    const isWindow = scrollContainer === window;
+
     const handleScroll = () => {
+      let scrollPosition: number;
+      let containerHeight: number;
+      let scrollHeight: number;
+
+      if (isWindow) {
+        scrollPosition = window.scrollY + window.innerHeight;
+        containerHeight = window.innerHeight;
+        scrollHeight = document.documentElement.scrollHeight;
+      } else {
+        const el = scrollContainer as HTMLElement;
+        scrollPosition = el.scrollTop + el.clientHeight;
+        containerHeight = el.clientHeight;
+        scrollHeight = el.scrollHeight;
+      }
+
       // Mark that user has scrolled
-      if (!hasScrolled.current && window.scrollY > 50) {
+      const currentScrollTop = isWindow ? window.scrollY : (scrollContainer as HTMLElement).scrollTop;
+      if (!hasScrolled.current && currentScrollTop > 50) {
         hasScrolled.current = true;
       }
 
@@ -19,16 +49,14 @@ export function FloatingFooter() {
         return;
       }
 
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const threshold = 50; // pixels from bottom - must be very close
-
-      setIsVisible(scrollPosition >= documentHeight - threshold);
+      const threshold = 50;
+      setIsVisible(scrollPosition >= scrollHeight - threshold);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const target = isWindow ? window : scrollContainer;
+    target.addEventListener("scroll", handleScroll, { passive: true });
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => target.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
