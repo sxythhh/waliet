@@ -16,6 +16,7 @@ interface CreateCampaignTypeDialogProps {
   onSelectClipping: (blueprintId?: string) => void;
   onSelectManaged: (blueprintId?: string) => void;
   onSelectBoost?: () => void;
+  onSelectJobPost?: () => void;
   trigger?: React.ReactNode;
   brandId?: string;
   open?: boolean;
@@ -26,6 +27,7 @@ export function CreateCampaignTypeDialog({
   onSelectClipping,
   onSelectManaged,
   onSelectBoost,
+  onSelectJobPost,
   trigger,
   brandId,
   open: controlledOpen,
@@ -74,6 +76,11 @@ export function CreateCampaignTypeDialog({
   const handleBoostClick = () => {
     setOpen(false);
     onSelectBoost?.();
+  };
+
+  const handleJobPostClick = () => {
+    setOpen(false);
+    onSelectJobPost?.();
   };
   const handleCreateBlueprint = () => {
     setOpen(false);
@@ -160,6 +167,25 @@ export function CreateCampaignTypeDialog({
                   </span>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
                     Monthly retainer with fixed creator slots
+                  </p>
+                </div>
+              </button>
+
+              {/* Job Post Option */}
+              <button onClick={handleJobPostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
+                  backgroundColor: '#7c3aed'
+                }}>
+                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                    Job Post
+                  </span>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                    Hire for specific roles like editors or strategists
                   </p>
                 </div>
               </button>
@@ -250,6 +276,25 @@ export function CreateCampaignTypeDialog({
                   </span>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
                     Monthly retainer with fixed creator slots
+                  </p>
+                </div>
+              </button>
+
+              {/* Job Post Option */}
+              <button onClick={handleJobPostClick} className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{
+                  backgroundColor: '#7c3aed'
+                }}>
+                  <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                    Job Post
+                  </span>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
+                    Hire for specific roles like editors or strategists
                   </p>
                 </div>
               </button>
