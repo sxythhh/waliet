@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PublicNavbar from "@/components/PublicNavbar";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -522,23 +523,26 @@ export default function CampaignApply() {
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
 
   return (
-    <div className="min-h-screen bg-background overflow-y-auto">
-      {/* Hero Banner */}
-      <div className="relative">
-        {bannerUrl ? (
-          <div className="h-56 md:h-72 w-full overflow-hidden">
-            <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          </div>
-        ) : (
-          <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
-        )}
-        
-        {/* Back button */}
-        <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background transition-colors">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-      </div>
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+      <PublicNavbar />
+      
+      <div className="flex-1 overflow-y-auto pt-14">
+        {/* Hero Banner */}
+        <div className="relative">
+          {bannerUrl ? (
+            <div className="h-56 md:h-72 w-full overflow-hidden">
+              <OptimizedImage src={bannerUrl} alt={title || ''} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+            </div>
+          ) : (
+            <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />
+          )}
+          
+          {/* Back button */}
+          <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-10 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-background transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
 
       <div className="max-w-5xl mx-auto px-4 pb-32">
         {/* Brand & Title */}
@@ -803,6 +807,7 @@ export default function CampaignApply() {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Fixed bottom CTA for mobile */}
