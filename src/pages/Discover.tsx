@@ -6,10 +6,10 @@ export default function Discover() {
   useScrollUnlockOnMount();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <PublicNavbar />
       {/* Dedicated scroll container so page still scrolls even if body is scroll-locked */}
-      <main className="pt-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+      <main className="flex-1 pt-14 overflow-y-auto">
         <DiscoverTab navigateOnClick />
       </main>
     </div>
