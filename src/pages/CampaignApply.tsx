@@ -746,7 +746,7 @@ export default function CampaignApply() {
                     const isSelected = selectedAccounts.includes(account.id);
                     const platformIcon = getPlatformIcon(account.platform);
                     return <button key={account.id} onClick={() => toggleAccountSelection(account.id)} className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}>
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
+                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
                                 {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                               </div>
                               {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain flex-shrink-0" />}
