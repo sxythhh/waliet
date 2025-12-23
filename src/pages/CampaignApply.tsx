@@ -10,10 +10,11 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
+import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -124,6 +125,7 @@ export default function CampaignApply() {
   const [isBoost, setIsBoost] = useState(false);
   const [showApplySheet, setShowApplySheet] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(true);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
@@ -687,12 +689,37 @@ export default function CampaignApply() {
                 </p>
               </div>
 
-              {!isLoggedIn ? <div className="text-center py-12 px-4 rounded-xl bg-muted/30 border border-border">
-                  <p className="text-muted-foreground mb-4 text-sm font-['Inter'] tracking-[-0.5px]">Sign in to apply for this campaign</p>
-                  <Button onClick={() => navigate(`/auth?redirect=/c/${slug}`)} className="font-['Inter'] tracking-[-0.5px]">
-                    Sign In
-                  </Button>
-                </div> : isBoost ? <div className="space-y-4">
+              {!isLoggedIn ? <>
+                <div className="text-center py-8 px-6 rounded-2xl bg-gradient-to-b from-muted/40 to-muted/20 border border-border/50">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <UserPlus className="w-6 h-6 text-primary" />
+                  </div>
+                  <h3 className="text-base font-semibold font-['Inter'] tracking-[-0.5px] mb-1">Join to Apply</h3>
+                  <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-6 max-w-[280px] mx-auto">
+                    Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <Button 
+                      onClick={() => setShowAuthDialog(true)} 
+                      className="w-full font-['Inter'] tracking-[-0.5px] gap-2"
+                      size="lg"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Create Account
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowAuthDialog(true)} 
+                      className="w-full font-['Inter'] tracking-[-0.5px] gap-2"
+                      size="lg"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Button>
+                  </div>
+                </div>
+                <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
+              </> : isBoost ? <div className="space-y-4">
                   <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px]">Ready to join this boost program?</p>
                   <Button className="w-full font-['Inter'] tracking-[-0.5px]" size="lg" onClick={handleApplyClick} disabled={isFull || isEnded}>
                     {isEnded ? 'Boost Ended' : isFull ? 'No Spots Available' : 'Apply Now'}
