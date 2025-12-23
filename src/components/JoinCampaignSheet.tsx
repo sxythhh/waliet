@@ -447,14 +447,10 @@ export function JoinCampaignSheet({
   return <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-lg flex flex-col p-0">
         {/* Floating Fullscreen Button */}
-        <button
-          onClick={() => {
-            onOpenChange(false);
-            navigate(`/c/${campaign.slug}`);
-          }}
-          className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50"
-          title="Open full page"
-        >
+        <button onClick={() => {
+        onOpenChange(false);
+        navigate(`/c/${campaign.slug}`);
+      }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50" title="Open full page">
           <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
         </button>
         <div className="flex-1 overflow-y-auto px-6 pb-24">
@@ -475,21 +471,7 @@ export function JoinCampaignSheet({
                   {campaign.brand_name}
                   {campaign.brands?.is_verified && <VerifiedBadge size="sm" />}
                 </p>
-                {(campaign.campaign_type || campaign.category || campaign.platforms) && <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                    {campaign.campaign_type && <span className="px-3 py-1.5 text-[11px] font-medium bg-[#2060df]/15 text-[#4f89ff] rounded-full" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>
-                        {campaign.campaign_type.charAt(0).toUpperCase() + campaign.campaign_type.slice(1)}
-                      </span>}
-                    {campaign.category && <span className="px-3 py-1.5 text-[11px] font-medium bg-muted/50 text-muted-foreground rounded-full" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>
-                        {campaign.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </span>}
-                    {campaign.platforms.length > 0}
-                  </div>}
+                {campaign.campaign_type || campaign.category || campaign.platforms}
               </div>
             </div>
 
