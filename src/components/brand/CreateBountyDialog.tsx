@@ -34,8 +34,34 @@ const STEPS = [{
   label: "Compensation"
 }, {
   id: 2,
+  label: "Position"
+}, {
+  id: 3,
   label: "Details"
 }];
+
+const POSITION_TYPES = [
+  "Video Editor",
+  "Thumbnail Designer",
+  "Creative Director",
+  "Channel Manager",
+  "YouTube Strategist",
+  "Scriptwriter",
+  "YouTube Producer",
+  "Other"
+] as const;
+
+const AVAILABILITY_OPTIONS = [
+  { value: "part_time", label: "Available for Part-time jobs" },
+  { value: "full_time", label: "Available for Full-time jobs" },
+  { value: "projects_gigs", label: "Available for Projects and Gigs" }
+] as const;
+
+const WORK_LOCATION_OPTIONS = [
+  { value: "remote", label: "Remote" },
+  { value: "hybrid", label: "Hybrid" },
+  { value: "onsite", label: "Onsite" }
+] as const;
 export function CreateBountyDialog({
   open,
   onOpenChange,
@@ -72,7 +98,11 @@ export function CreateBountyDialog({
     blueprint_embed_url: "",
     is_private: false,
     application_questions: [] as string[],
-    content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts"
+    content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts",
+    position_type: "" as string,
+    custom_position: "" as string,
+    availability_requirement: "" as string,
+    work_location: "" as string
   });
   const [newQuestion, setNewQuestion] = useState("");
 
@@ -175,6 +205,9 @@ export function CreateBountyDialog({
         return;
       }
       setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Position step - position_type is optional
+      setCurrentStep(3);
     }
   };
   const handleBack = () => {
@@ -208,6 +241,12 @@ export function CreateBountyDialog({
       const fullRequirements = `PLATFORMS: ${blueprintPlatforms.join(", ")}`;
       // Determine status based on subscription
       const boostStatus = subscriptionStatus === 'active' ? 'active' : 'draft';
+
+      // Determine final position type
+      const finalPositionType = formData.position_type === 'Other' 
+        ? formData.custom_position 
+        : formData.position_type;
+
       const {
         error
       } = await supabase.from('bounty_campaigns').insert({
@@ -226,7 +265,10 @@ export function CreateBountyDialog({
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
         is_private: formData.is_private,
         application_questions: formData.application_questions.length > 0 ? formData.application_questions : null,
-        content_distribution: formData.content_distribution
+        content_distribution: formData.content_distribution,
+        position_type: finalPositionType || null,
+        availability_requirement: formData.availability_requirement || null,
+        work_location: formData.work_location || null
       });
       if (error) throw error;
       if (subscriptionStatus === 'active') {
@@ -259,7 +301,11 @@ export function CreateBountyDialog({
       blueprint_embed_url: "",
       is_private: false,
       application_questions: [],
-      content_distribution: "creators_own_page"
+      content_distribution: "creators_own_page",
+      position_type: "",
+      custom_position: "",
+      availability_requirement: "",
+      work_location: ""
     });
     setNewQuestion("");
     setBannerFile(null);
@@ -493,8 +539,131 @@ export function CreateBountyDialog({
               </div>
             </div>}
 
-          {/* Step 2: Details */}
-          {currentStep === 2 && <div className="space-y-6">
+          {/* Step 2: Position */}
+          {currentStep === 2 && <div className="space-y-6 pt-4">
+              {/* Position Type */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">What type of position is this?</Label>
+                <div className="space-y-2">
+                  {POSITION_TYPES.map(position => (
+                    <div
+                      key={position}
+                      onClick={() => setFormData({
+                        ...formData,
+                        position_type: position,
+                        custom_position: position === 'Other' ? formData.custom_position : ''
+                      })}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all",
+                        formData.position_type === position
+                          ? "bg-primary/10 border border-primary"
+                          : "bg-muted/30 hover:bg-[#0e0e0e] border border-transparent"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                        formData.position_type === position
+                          ? "border-primary"
+                          : "border-muted-foreground/40"
+                      )}>
+                        {formData.position_type === position && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">
+                        {position === 'Other' ? 'I am hiring for a different position' : position}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Custom position input */}
+                {formData.position_type === 'Other' && (
+                  <div className="pt-2">
+                    <Input
+                      value={formData.custom_position}
+                      onChange={e => setFormData({
+                        ...formData,
+                        custom_position: e.target.value
+                      })}
+                      placeholder="Enter position title..."
+                      className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Availability Requirement */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">What is the talent's availability requirement?</Label>
+                <div className="space-y-2">
+                  {AVAILABILITY_OPTIONS.map(option => (
+                    <div
+                      key={option.value}
+                      onClick={() => setFormData({
+                        ...formData,
+                        availability_requirement: option.value
+                      })}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all",
+                        formData.availability_requirement === option.value
+                          ? "bg-primary/10 border border-primary"
+                          : "bg-muted/30 hover:bg-[#0e0e0e] border border-transparent"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                        formData.availability_requirement === option.value
+                          ? "border-primary"
+                          : "border-muted-foreground/40"
+                      )}>
+                        {formData.availability_requirement === option.value && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">{option.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Work Location */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Work location preference</Label>
+                <div className="space-y-2">
+                  {WORK_LOCATION_OPTIONS.map(option => (
+                    <div
+                      key={option.value}
+                      onClick={() => setFormData({
+                        ...formData,
+                        work_location: option.value
+                      })}
+                      className={cn(
+                        "flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all",
+                        formData.work_location === option.value
+                          ? "bg-primary/10 border border-primary"
+                          : "bg-muted/30 hover:bg-[#0e0e0e] border border-transparent"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
+                        formData.work_location === option.value
+                          ? "border-primary"
+                          : "border-muted-foreground/40"
+                      )}>
+                        {formData.work_location === option.value && (
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">{option.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>}
+
+          {/* Step 3: Details */}
+          {currentStep === 3 && <div className="space-y-6">
               {/* Title */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Boost Title</Label>
@@ -604,7 +773,7 @@ export function CreateBountyDialog({
           </Button>
 
           <div className="flex items-center gap-2">
-            {currentStep < 2 ? <Button type="button" size="sm" onClick={handleNext} className="min-w-[100px] gap-2 font-inter tracking-[-0.5px]">
+            {currentStep < 3 ? <Button type="button" size="sm" onClick={handleNext} className="min-w-[100px] gap-2 font-inter tracking-[-0.5px]">
                 Continue
                 <ArrowRight className="h-3.5 w-3.5" />
               </Button> : <Button type="button" size="sm" onClick={handleSubmit} disabled={creating} className="min-w-[100px] font-inter tracking-[-0.5px]">
