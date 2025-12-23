@@ -4,9 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
-import videosIcon from "@/assets/videos-icon.svg";
-import personIcon from "@/assets/person-icon.svg";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +20,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
-import { Maximize2 } from "lucide-react";
+import fullscreenIcon from "@/assets/fullscreen-icon.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
@@ -347,7 +345,7 @@ export function DiscoverTab({
       const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
-        brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
+        brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
         brand_is_verified: (campaign.brands as any)?.is_verified || false,
         platforms: campaign.allowed_platforms || [],
         application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
@@ -693,7 +691,7 @@ export function DiscoverTab({
                       e.stopPropagation();
                       navigate(`/c/${campaign.slug}`);
                     }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <Maximize2 className="h-4 w-4" />
+                          <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
                         </button>
                         <button onClick={e => toggleBookmark(campaign.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                           <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
@@ -743,7 +741,7 @@ export function DiscoverTab({
                             <div className="flex items-baseline justify-between">
                               <div className="flex items-baseline gap-1.5">
                                 
-                                <span className="text-xs font-semibold font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
+                                <span className="text-xs text-muted-foreground font-semibold font-['Inter'] tracking-[-0.5px]">
                                   ${Math.ceil(campaign.budget).toLocaleString(undefined, {
                                 maximumFractionDigits: 0
                               })}
@@ -786,7 +784,7 @@ export function DiscoverTab({
                       e.stopPropagation();
                       navigate(`/c/${bounty.slug}`);
                     }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <Maximize2 className="h-4 w-4" />
+                          <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
                         </button>
                         <button onClick={e => toggleBountyBookmark(bounty.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                           <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
@@ -824,13 +822,13 @@ export function DiscoverTab({
                         </div>
                         
                         {/* Metadata Row */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                           <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
-                            <img src={videosIcon} alt="" className="h-3 w-3 dark:invert" />
+                            <Film className="h-3 w-3 opacity-50" />
                             {bounty.videos_per_month} videos/mo
                           </span>
                           <span className={`flex items-center gap-1 font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-400' : ''}`}>
-                            <img src={personIcon} alt="" className="h-3 w-3 dark:invert" />
+                            <UserCheck className="h-3 w-3" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
                           {bounty.start_date}
