@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { JoinPrivateCampaignDialog } from "@/components/JoinPrivateCampaignDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, Film, UserCheck, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
+import { DollarSign, Video, Users, Search, SlidersHorizontal, Bookmark, PauseCircle, Calendar, ChevronLeft, ChevronRight, Sparkles, Plus } from "lucide-react";
+import videosIcon from "@/assets/videos-icon.svg";
+import personIcon from "@/assets/person-icon.svg";
 import checkCircleIcon from "@/assets/check-circle-filled.svg";
 import checkCircleWhiteIcon from "@/assets/check-circle-white.svg";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -824,11 +826,11 @@ export function DiscoverTab({
                         {/* Metadata Row */}
                         <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                           <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
-                            <Film className="h-3 w-3" />
+                            <img src={videosIcon} alt="" className="h-3 w-3 dark:invert" />
                             {bounty.videos_per_month} videos/mo
                           </span>
                           <span className={`flex items-center gap-1 font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-400' : ''}`}>
-                            <UserCheck className="h-3 w-3" />
+                            <img src={personIcon} alt="" className="h-3 w-3 dark:invert" />
                             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
                           </span>
                           {bounty.start_date}
