@@ -1,7 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
@@ -16,6 +16,39 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSearchClick = useCallback(() => {
+    if (onSearchClick) {
+      onSearchClick();
+    } else {
+      // Navigate to discover page if not already there
+      navigate('/discover');
+    }
+  }, [onSearchClick, navigate]);
+
+  // Keyboard shortcut for "/"
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input or textarea
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === '/') {
+        e.preventDefault();
+        handleSearchClick();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSearchClick]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -33,7 +66,9 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
     });
     return () => subscription.unsubscribe();
   }, []);
+
   const isActive = (path: string) => location.pathname === path;
+
   return <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
@@ -87,16 +122,19 @@ export default function PublicNavbar({ searchQuery, onSearchClick }: PublicNavba
               </div>
             </div>
             
-            {/* Search Input - Only on discover page */}
-            {onSearchClick && (
-              <button 
-                onClick={onSearchClick} 
-                className="hidden md:flex items-center gap-2 px-3 h-8 bg-muted/30 rounded-lg text-sm text-muted-foreground/60 hover:bg-muted/50 transition-colors min-w-[200px]"
-              >
+            {/* Search Input - Always visible */}
+            <button 
+              onClick={handleSearchClick} 
+              className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-muted/20 border border-white/10 rounded-lg text-sm font-inter tracking-[-0.5px] text-muted-foreground/50 hover:bg-muted/30 hover:border-white/15 transition-colors min-w-[280px]"
+            >
+              <div className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
-                <span>{searchQuery || 'Search campaigns...'}</span>
-              </button>
-            )}
+                <span>{searchQuery || 'Search opportunities'}</span>
+              </div>
+              <div className="flex items-center justify-center h-5 w-5 rounded bg-white/10 text-[11px] font-medium text-white/50">
+                /
+              </div>
+            </button>
             
             <div className="flex items-center gap-3">
               {isAuthenticated === null ? <div className="w-24 h-8" /> : isAuthenticated ? <>
