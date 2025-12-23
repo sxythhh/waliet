@@ -148,7 +148,7 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
                   </Link>
                   <Button variant="ghost" size="sm" onClick={async () => {
                 await supabase.auth.signOut();
-              }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl" aria-label="Sign out">
+              }} className="hidden md:flex font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl" aria-label="Sign out">
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                     Sign Out
                   </Button>
