@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, Check, Trash2 } from "lucide-react";
+import { CalendarIcon, Upload, Check, Trash2, X, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -42,6 +43,7 @@ interface BountyData {
   blueprint_id: string | null;
   brand_id: string;
   is_private: boolean;
+  tags: string[] | null;
 }
 
 const labelStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
@@ -71,10 +73,13 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
     blueprint_embed_url: null,
     blueprint_id: null,
     brand_id: "",
-    is_private: false
+    is_private: false,
+    tags: null
   });
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
     if (open && bountyId) {
@@ -96,6 +101,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       setSelectedBlueprintId(data.blueprint_id || "none");
       if (data.start_date) setStartDate(new Date(data.start_date));
       if (data.end_date) setEndDate(new Date(data.end_date));
+      setTags(data.tags || []);
       
       // Fetch blueprints and subscription status for the brand
       if (data.brand_id) {
@@ -192,7 +198,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           status: formData.status,
           blueprint_embed_url: formData.blueprint_embed_url || null,
           blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
-          is_private: formData.is_private
+          is_private: formData.is_private,
+          tags: tags.length > 0 ? tags : null
         })
         .eq('id', bountyId);
 
@@ -413,6 +420,68 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                     </SelectContent>
                   </Select>
                 )}
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Tags</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const trimmed = tagInput.trim();
+                        if (trimmed && !tags.includes(trimmed)) {
+                          setTags([...tags, trimmed]);
+                          setTagInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Add a tag and press Enter"
+                    className="border-0 bg-muted/50 h-11 flex-1"
+                    style={inputStyle}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-11 px-3 bg-muted/50 hover:bg-muted"
+                    onClick={() => {
+                      const trimmed = tagInput.trim();
+                      if (trimmed && !tags.includes(trimmed)) {
+                        setTags([...tags, trimmed]);
+                        setTagInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {tags.map((tag, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="pl-2 pr-1 py-1 gap-1 text-xs"
+                        style={inputStyle}
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                          className="ml-1 hover:bg-muted rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground" style={labelStyle}>
+                  Add tags to help categorize this boost (e.g., "Gaming", "Tech", "Lifestyle")
+                </p>
               </div>
 
               {/* Private Toggle */}
