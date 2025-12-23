@@ -742,28 +742,6 @@ export function DiscoverTab({
                             </h3>
                           </div>
                         </div>
-                        
-                        {/* RPM Rate and Platform Icons */}
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1">
-                            <span className="text-xs font-semibold text-primary font-['Inter'] tracking-[-0.5px]">
-                              ${campaign.rpm_rate}/1K views
-                            </span>
-                          </div>
-                          {campaign.platforms && campaign.platforms.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              {campaign.platforms.includes('tiktok') && (
-                                <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 object-contain" />
-                              )}
-                              {campaign.platforms.includes('instagram') && (
-                                <img src={instagramLogo} alt="Instagram" className="w-4 h-4 object-contain" />
-                              )}
-                              {campaign.platforms.includes('youtube') && (
-                                <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 object-contain" />
-                              )}
-                            </div>
-                          )}
-                        </div>
 
                         <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0 px-0 py-0">
                           {campaign.is_infinite_budget ? <>
@@ -777,8 +755,21 @@ export function DiscoverTab({
                           backgroundSize: '20px 20px',
                           animation: 'slide 1s linear infinite'
                         }} />
-                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium">
                               <span>No budget limit</span>
+                              {campaign.platforms && campaign.platforms.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  {campaign.platforms.includes('tiktok') && (
+                                    <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                  {campaign.platforms.includes('instagram') && (
+                                    <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                  {campaign.platforms.includes('youtube') && (
+                                    <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </> : <>
                             <div className="flex items-baseline justify-between">
@@ -796,8 +787,21 @@ export function DiscoverTab({
                             width: `${budgetPercentage}%`
                           }} />
                             </div>
-                            <div className="flex justify-between text-[10px] text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
                               <span className="font-semibold font-['Inter'] tracking-[-0.5px]">{budgetPercentage.toFixed(0)}% used</span>
+                              {campaign.platforms && campaign.platforms.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  {campaign.platforms.includes('tiktok') && (
+                                    <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                  {campaign.platforms.includes('instagram') && (
+                                    <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                  {campaign.platforms.includes('youtube') && (
+                                    <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5 object-contain" />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </>}
                         </div>
