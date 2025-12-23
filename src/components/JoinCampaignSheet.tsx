@@ -202,6 +202,10 @@ export function JoinCampaignSheet({
       toast.error("Please select at least one social account");
       return;
     }
+    if (campaign.status === "ended") {
+      toast.error("This campaign has ended and is no longer accepting applications");
+      return;
+    }
     const {
       data: {
         user
@@ -640,9 +644,9 @@ export function JoinCampaignSheet({
               <Button className="w-full text-white" style={{
             fontFamily: 'Geist',
             letterSpacing: '-0.5px',
-            backgroundColor: '#2060df'
-          }} onClick={handleSubmit} disabled={submitting || selectedAccounts.length === 0}>
-                {submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
+            backgroundColor: campaign.status === "ended" ? '#6b7280' : '#2060df'
+          }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0}>
+                {campaign.status === "ended" ? "Campaign Ended" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
               </Button>
               <Button variant="ghost" className="w-full md:hidden" style={{
             fontFamily: 'Geist',
