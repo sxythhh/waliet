@@ -347,7 +347,7 @@ export function DiscoverTab({
       const availableCampaigns = data.filter(campaign => !joinedCampaignIds.includes(campaign.id));
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
-        brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
+        brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
         brand_is_verified: (campaign.brands as any)?.is_verified || false,
         platforms: campaign.allowed_platforms || [],
         application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
