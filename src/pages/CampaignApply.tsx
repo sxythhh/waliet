@@ -649,25 +649,25 @@ export default function CampaignApply() {
           <div className="max-w-3xl mx-auto px-4 pb-32 lg:pb-8">
             {/* Brand & Title */}
             <div className="relative -mt-16 mb-8">
-              <div className="flex items-end gap-4">
-                <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-background shadow-xl ring-1 ring-border/50">
+              <div className="flex items-end gap-2 md:gap-4">
+                <Avatar className="h-14 w-14 md:h-24 md:w-24 border-4 border-background shadow-xl ring-1 ring-border/50">
                   <AvatarImage src={brandLogo || undefined} className="object-cover" />
-                  <AvatarFallback className="text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
+                  <AvatarFallback className="text-lg md:text-2xl font-bold bg-muted">{brandName?.charAt(0) || 'B'}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1 pb-2">
+                <div className="flex-1 pb-1 md:pb-2">
                   <div className="flex items-center gap-2 mb-0.5">
-                    {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
+                    {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
                         {brandName}
-                      </Link> : <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
+                      </Link> : <span className="text-xs md:text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
                   {(campaign?.created_at || boostCampaign?.created_at) && (
-                    <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px] mb-1">
+                    <p className="text-[10px] md:text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px] mb-0.5 md:mb-1">
                       Posted on {format(new Date(campaign?.created_at || boostCampaign?.created_at || ''), 'MMM d, yyyy')}
                     </p>
                   )}
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <h1 className="text-lg md:text-3xl font-bold tracking-tight">{title}</h1>
                     {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
                     backgroundColor: '#b60b0b',
                     borderTop: '1px solid #ed3030',
