@@ -4,10 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Users, Video, Zap } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Brand {
   id: string;
@@ -41,8 +39,10 @@ export default function BrandPublicPage() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [brand, setBrand] = useState<Brand | null>(null);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [boosts, setBoosts] = useState<Boost[]>([]);
+  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
+  const [endedCampaigns, setEndedCampaigns] = useState<Campaign[]>([]);
+  const [activeBoosts, setActiveBoosts] = useState<Boost[]>([]);
+  const [endedBoosts, setEndedBoosts] = useState<Boost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +50,6 @@ export default function BrandPublicPage() {
       if (!slug) return;
 
       try {
-        // Fetch brand
         const { data: brandData, error: brandError } = await supabase
           .from("brands")
           .select("id, name, slug, logo_url, description, home_url")
@@ -65,27 +64,29 @@ export default function BrandPublicPage() {
 
         setBrand(brandData);
 
-        // Fetch active campaigns
+        // Fetch all campaigns
         const { data: campaignsData } = await supabase
           .from("campaigns")
           .select("id, title, description, banner_url, rpm_rate, status, slug")
           .eq("brand_id", brandData.id)
-          .eq("status", "active")
           .eq("is_private", false)
           .order("created_at", { ascending: false });
 
-        setCampaigns(campaignsData || []);
+        const campaigns = campaignsData || [];
+        setActiveCampaigns(campaigns.filter(c => c.status === "active"));
+        setEndedCampaigns(campaigns.filter(c => c.status !== "active"));
 
-        // Fetch active boosts
+        // Fetch all boosts
         const { data: boostsData } = await supabase
           .from("bounty_campaigns")
           .select("id, title, description, banner_url, monthly_retainer, status")
           .eq("brand_id", brandData.id)
-          .eq("status", "active")
           .eq("is_private", false)
           .order("created_at", { ascending: false });
 
-        setBoosts(boostsData || []);
+        const boosts = boostsData || [];
+        setActiveBoosts(boosts.filter(b => b.status === "active"));
+        setEndedBoosts(boosts.filter(b => b.status !== "active"));
       } catch (error) {
         console.error("Error fetching brand:", error);
         navigate("/404");
@@ -100,17 +101,15 @@ export default function BrandPublicPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          <div className="flex items-center gap-4 mb-8">
-            <Skeleton className="w-20 h-20 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
+        <div className="max-w-3xl mx-auto px-6 py-16">
+          <div className="flex flex-col items-center gap-4 mb-12">
+            <Skeleton className="w-24 h-24 rounded-full" />
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
           </div>
-          <div className="grid gap-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
           </div>
         </div>
       </div>
@@ -121,6 +120,76 @@ export default function BrandPublicPage() {
     return null;
   }
 
+  const CampaignItem = ({ campaign }: { campaign: Campaign }) => (
+    <div
+      className="group py-6 cursor-pointer transition-colors hover:bg-muted/30"
+      onClick={() => navigate(`/campaign/${campaign.slug}`)}
+    >
+      <div className="flex items-start gap-5">
+        {campaign.banner_url && (
+          <img
+            src={campaign.banner_url}
+            alt={campaign.title}
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+              {campaign.title}
+            </h3>
+            <span className="text-sm text-muted-foreground flex-shrink-0">
+              ${campaign.rpm_rate} RPM
+            </span>
+          </div>
+          {campaign.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {campaign.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const BoostItem = ({ boost }: { boost: Boost }) => (
+    <div
+      className="group py-6 cursor-pointer transition-colors hover:bg-muted/30"
+      onClick={() => navigate(`/boost/${boost.id}`)}
+    >
+      <div className="flex items-start gap-5">
+        {boost.banner_url && (
+          <img
+            src={boost.banner_url}
+            alt={boost.title}
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+              {boost.title}
+            </h3>
+            <span className="text-sm text-muted-foreground flex-shrink-0">
+              ${boost.monthly_retainer}/mo
+            </span>
+          </div>
+          {boost.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {boost.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const EmptyState = ({ message }: { message: string }) => (
+    <div className="py-16 text-center">
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  );
+
   return (
     <>
       <Helmet>
@@ -129,160 +198,118 @@ export default function BrandPublicPage() {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-3xl mx-auto px-6 py-16">
           {/* Brand Header */}
-          <div className="flex items-start gap-4 mb-8">
-            <Avatar className="w-20 h-20 border-2 border-border">
+          <div className="flex flex-col items-center text-center mb-16">
+            <Avatar className="w-24 h-24 mb-5">
               <AvatarImage src={brand.logo_url || undefined} alt={brand.name} />
-              <AvatarFallback className="text-2xl font-bold bg-primary/10">
+              <AvatarFallback className="text-3xl font-semibold bg-muted">
                 {brand.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold tracking-tight">{brand.name}</h1>
-              {brand.description && (
-                <p className="text-muted-foreground mt-1">{brand.description}</p>
-              )}
-              {brand.home_url && (
-                <a
-                  href={brand.home_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2"
-                >
-                  Visit website <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
+            <h1 className="text-3xl font-semibold tracking-tight mb-2">{brand.name}</h1>
+            {brand.description && (
+              <p className="text-muted-foreground max-w-md">{brand.description}</p>
+            )}
+            {brand.home_url && (
+              <a
+                href={brand.home_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary hover:underline mt-3"
+              >
+                {brand.home_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </a>
+            )}
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <Card className="bg-card/50">
-              <CardContent className="pt-4 pb-3 text-center">
-                <Video className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                <p className="text-2xl font-bold">{campaigns.length}</p>
-                <p className="text-xs text-muted-foreground">Active Campaigns</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50">
-              <CardContent className="pt-4 pb-3 text-center">
-                <Zap className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                <p className="text-2xl font-bold">{boosts.length}</p>
-                <p className="text-xs text-muted-foreground">Active Boosts</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/50">
-              <CardContent className="pt-4 pb-3 text-center">
-                <Users className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
-                <p className="text-2xl font-bold">-</p>
-                <p className="text-xs text-muted-foreground">Creators</p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Tabs */}
+          <Tabs defaultValue="campaigns" className="w-full">
+            <TabsList className="w-full justify-start bg-transparent p-0 h-auto mb-8">
+              <TabsTrigger 
+                value="campaigns" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 mr-8 pb-3 rounded-none data-[state=active]:text-foreground text-muted-foreground font-medium"
+              >
+                Campaigns
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {activeCampaigns.length + endedCampaigns.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="boosts" 
+                className="data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 pb-3 rounded-none data-[state=active]:text-foreground text-muted-foreground font-medium"
+              >
+                Boosts
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {activeBoosts.length + endedBoosts.length}
+                </span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Campaigns Section */}
-          {campaigns.length > 0 && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Campaigns</h2>
-              <div className="grid gap-4">
-                {campaigns.map((campaign) => (
-                  <Card key={campaign.id} className="overflow-hidden hover:border-primary/50 transition-colors">
-                    <div className="flex">
-                      {campaign.banner_url && (
-                        <div className="w-32 h-24 flex-shrink-0">
-                          <img
-                            src={campaign.banner_url}
-                            alt={campaign.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <CardContent className="flex-1 p-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold">{campaign.title}</h3>
-                            {campaign.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                                {campaign.description}
-                              </p>
-                            )}
-                          </div>
-                          <Badge variant="secondary" className="ml-2">
-                            ${campaign.rpm_rate} RPM
-                          </Badge>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="mt-3"
-                          onClick={() => navigate(`/campaign/${campaign.slug}`)}
-                        >
-                          View Campaign
-                        </Button>
-                      </CardContent>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
+            <TabsContent value="campaigns" className="mt-0">
+              {activeCampaigns.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Active
+                  </h2>
+                  <div className="divide-y divide-border/50">
+                    {activeCampaigns.map((campaign) => (
+                      <CampaignItem key={campaign.id} campaign={campaign} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Boosts Section */}
-          {boosts.length > 0 && (
-            <section className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Creator Boosts</h2>
-              <div className="grid gap-4">
-                {boosts.map((boost) => (
-                  <Card key={boost.id} className="overflow-hidden hover:border-primary/50 transition-colors">
-                    <div className="flex">
-                      {boost.banner_url && (
-                        <div className="w-32 h-24 flex-shrink-0">
-                          <img
-                            src={boost.banner_url}
-                            alt={boost.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <CardContent className="flex-1 p-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold">{boost.title}</h3>
-                            {boost.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                                {boost.description}
-                              </p>
-                            )}
-                          </div>
-                          <Badge variant="secondary" className="ml-2">
-                            ${boost.monthly_retainer}/mo
-                          </Badge>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="mt-3"
-                          onClick={() => navigate(`/boost/${boost.id}`)}
-                        >
-                          View Boost
-                        </Button>
-                      </CardContent>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
+              {endedCampaigns.length > 0 && (
+                <div>
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Ended
+                  </h2>
+                  <div className="divide-y divide-border/50">
+                    {endedCampaigns.map((campaign) => (
+                      <CampaignItem key={campaign.id} campaign={campaign} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Empty State */}
-          {campaigns.length === 0 && boosts.length === 0 && (
-            <Card className="bg-card/50">
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">
-                  No active campaigns or boosts at the moment.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+              {activeCampaigns.length === 0 && endedCampaigns.length === 0 && (
+                <EmptyState message="No campaigns yet" />
+              )}
+            </TabsContent>
+
+            <TabsContent value="boosts" className="mt-0">
+              {activeBoosts.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Active
+                  </h2>
+                  <div className="divide-y divide-border/50">
+                    {activeBoosts.map((boost) => (
+                      <BoostItem key={boost.id} boost={boost} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {endedBoosts.length > 0 && (
+                <div>
+                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                    Ended
+                  </h2>
+                  <div className="divide-y divide-border/50">
+                    {endedBoosts.map((boost) => (
+                      <BoostItem key={boost.id} boost={boost} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeBoosts.length === 0 && endedBoosts.length === 0 && (
+                <EmptyState message="No boosts yet" />
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>
