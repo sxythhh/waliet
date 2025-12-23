@@ -392,12 +392,10 @@ export default function CampaignApply() {
               
               {/* Stats cards skeleton */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-[#0c0c0c] rounded-xl p-4">
+                {[...Array(4)].map((_, i) => <div key={i} className="bg-[#0c0c0c] rounded-xl p-4">
                     <Skeleton className="h-3 w-16 mb-2 bg-[#151515]" />
                     <Skeleton className="h-6 w-12 bg-[#151515]" />
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               {/* About section skeleton */}
@@ -577,13 +575,9 @@ export default function CampaignApply() {
                 </Avatar>
                 <div className="flex-1 pb-2">
                   <div className="flex items-center gap-2 mb-1">
-                    {brandSlug ? (
-                      <Link to={`/b/${brandSlug}`} className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
+                    {brandSlug ? <Link to={`/b/${brandSlug}`} className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px] hover:underline">
                         {brandName}
-                      </Link>
-                    ) : (
-                      <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
-                    )}
+                      </Link> : <span className="text-sm font-medium text-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>}
                     {brandVerified && <VerifiedBadge size="sm" />}
                   </div>
                   <div className="flex items-center gap-2">
@@ -725,21 +719,10 @@ export default function CampaignApply() {
                     Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
                   </p>
                   <div className="flex flex-col gap-2.5">
-                    <Button 
-                      onClick={() => setShowAuthDialog(true)} 
-                      className="w-full font-['Inter'] tracking-[-0.5px] font-medium"
-                      size="lg"
-                    >
+                    <Button onClick={() => setShowAuthDialog(true)} className="w-full font-['Inter'] tracking-[-0.5px] font-medium" size="lg">
                       Create Account
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setShowAuthDialog(true)} 
-                      className="w-full font-['Inter'] tracking-[-0.5px] text-muted-foreground hover:text-foreground"
-                      size="lg"
-                    >
-                      Sign In
-                    </Button>
+                    
                   </div>
                 </div>
                 <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
