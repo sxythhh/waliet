@@ -204,7 +204,7 @@ const App = () => (
               <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
               <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="/:username" element={<PublicProfile />} />
+                <Route path="/@:username" element={<PublicProfile />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </SubdomainHandler>
