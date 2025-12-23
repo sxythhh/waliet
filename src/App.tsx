@@ -55,6 +55,7 @@ import PublicBounty from "./pages/PublicBounty";
 import CreatorCampaignDashboard from "./pages/CreatorCampaignDashboard";
 import New from "./pages/New";
 import Contact from "./pages/Contact";
+import CaseStudies from "./pages/CaseStudies";
 import BlueprintDetail from "./pages/BlueprintDetail";
 import BlueprintPreview from "./pages/BlueprintPreview";
 import Resources from "./pages/Resources";
@@ -167,6 +168,7 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/new" element={<New />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/case-studies" element={<CaseStudies />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/blog" element={<Resources />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
