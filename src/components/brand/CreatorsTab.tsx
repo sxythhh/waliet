@@ -686,18 +686,6 @@ export function CreatorsTab({
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
-          
-          {campaigns.length > 0 && <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-              <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs rounded-md border-0 bg-transparent hover:bg-muted/50 text-muted-foreground">
-                <SelectValue placeholder="All Campaigns" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover">
-                <SelectItem value="all" className="text-xs">All Campaigns</SelectItem>
-                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id} className="text-xs">
-                    {campaign.title}
-                  </SelectItem>)}
-              </SelectContent>
-            </Select>}
         </div>
 
         <ScrollArea className="flex-1">
