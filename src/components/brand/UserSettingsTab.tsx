@@ -274,9 +274,18 @@ export function UserSettingsTab() {
     if (!file || !brand?.id) return;
     try {
       setUploadingAvatar(true);
+      
+      // Get current user for RLS policy compliance
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to upload");
+        return;
+      }
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${brand.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // Path must start with user ID to satisfy RLS policy
+      const filePath = `${user.id}/${fileName}`;
       const {
         error: uploadError
       } = await supabase.storage.from('avatars').upload(filePath, file, {
