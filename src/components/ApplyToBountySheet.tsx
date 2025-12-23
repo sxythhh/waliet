@@ -264,53 +264,8 @@ export function ApplyToBountySheet({
           
 
 
-          {/* Application Form - Show connect prompt if no accounts */}
-          {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
-              <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-5 bg-muted/30 rounded-xl">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                  <img src={alternateEmailIcon} alt="" className="h-6 w-6 opacity-60" />
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="font-['Inter'] tracking-[-0.5px] text-base font-medium text-foreground">
-                    Connect an account to apply
-                  </h3>
-                  <p className="font-['Inter'] tracking-[-0.5px] text-sm text-muted-foreground max-w-[280px]">
-                    Link a social account or Discord to submit your application
-                  </p>
-                </div>
-                
-                <div className="flex flex-col gap-2 w-full max-w-[280px]">
-                  <Button onClick={() => setShowAddSocialDialog(true)} className="font-['Inter'] tracking-[-0.5px] w-full">
-                    Connect Social Account
-                  </Button>
-                  <Button onClick={() => {
-                    const DISCORD_CLIENT_ID = '1358316231341375518';
-                    const REDIRECT_URI = `${window.location.origin}/discord/callback`;
-                    const STATE = btoa(JSON.stringify({
-                      userId
-                    }));
-                    const discordAuthUrl = `https://discord.com/api/oauth2/authorize?` + `client_id=${DISCORD_CLIENT_ID}&` + `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` + `response_type=code&` + `scope=identify%20email%20guilds.join&` + `state=${STATE}`;
-                    const popup = window.open(discordAuthUrl, 'Discord OAuth', 'width=500,height=700');
-                    const handleMessage = async (event: MessageEvent) => {
-                      if (event.origin !== window.location.origin) return;
-                      if (event.data.type === 'discord-oauth-success') {
-                        popup?.close();
-                        toast.success("Discord account linked successfully!");
-                        checkConnectedAccounts();
-                      } else if (event.data.type === 'discord-oauth-error') {
-                        popup?.close();
-                        toast.error(event.data.error || "Failed to link Discord account.");
-                      }
-                    };
-                    window.addEventListener('message', handleMessage);
-                  }} variant="ghost" className="font-['Inter'] tracking-[-0.5px] text-muted-foreground hover:text-foreground w-full gap-2">
-                    <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/db3f044f-3d8c-43ea-9461-09bfff9b41e0.webp" />
-                    Connect Discord
-                  </Button>
-                </div>
-              </div>
-            </div> : <form onSubmit={handleSubmit} className="space-y-5 pt-2 py-0">
+          {/* Application Form */}
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2 py-0">
               {/* Connected Accounts Display */}
               {socialAccounts.length > 0 || discordConnected}
 
@@ -374,7 +329,7 @@ export function ApplyToBountySheet({
                   {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
                 </Button>
               </div>
-            </form>}
+            </form>
               </div>
             </>
         </SheetContent>
