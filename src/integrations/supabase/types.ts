@@ -3177,6 +3177,14 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      match_analytics_to_users: {
+        Args: { p_campaign_id: string }
+        Returns: {
+          matched_count: number
+          total_count: number
+          unmatched_count: number
+        }[]
+      }
       upsert_discord_tokens: {
         Args: {
           p_access_token: string

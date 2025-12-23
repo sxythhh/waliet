@@ -79,17 +79,6 @@ export function ConnectedAccountsTab() {
       return;
     }
 
-    // Stop tracking in Shortimize (non-blocking)
-    try {
-      await supabase.functions.invoke('untrack-shortimize-account', {
-        body: {
-          campaignId,
-          socialAccountId,
-        },
-      });
-    } catch (err) {
-      console.error('Failed to untrack from Shortimize:', err);
-    }
 
     toast.success(`Disconnected ${accountName} from ${campaignName}`);
     fetchConnections();

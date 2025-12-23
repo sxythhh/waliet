@@ -16,7 +16,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow, format } from "date-fns";
-import { ShortimizeTrackAccountDialog } from "./ShortimizeTrackAccountDialog";
 import { ImportCampaignStatsDialog } from "./ImportCampaignStatsDialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -171,7 +170,6 @@ export function CampaignAnalyticsTable({
     start: string;
     end: string;
   }>>([]);
-  const [trackAccountDialogOpen, setTrackAccountDialogOpen] = useState(false);
   const [revertDialogOpen, setRevertDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [revertingTransaction, setRevertingTransaction] = useState(false);
@@ -2321,12 +2319,6 @@ export function CampaignAnalyticsTable({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    
-    {/* Shortimize Track Account Dialog */}
-    <ShortimizeTrackAccountDialog campaignId={campaignId} open={trackAccountDialogOpen} onOpenChange={setTrackAccountDialogOpen} onSuccess={() => {
-      fetchAnalytics();
-      toast.success("Account will be tracked in Shortimize");
-    }} />
 
     {/* User Details Dialog */}
     <Dialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen}>

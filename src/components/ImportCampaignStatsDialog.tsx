@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, CalendarIcon, RefreshCw, Loader2, Trash2 } from "lucide-react";
+import { Upload, CalendarIcon, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -11,7 +11,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface ImportCampaignStatsDialogProps {
@@ -31,9 +30,6 @@ export function ImportCampaignStatsDialog({
   const [progress, setProgress] = useState(0);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [syncing, setSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState<{ total: number; synced: number } | null>(null);
-  const [shortimizeCollectionName, setShortimizeCollectionName] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -257,70 +253,6 @@ export function ImportCampaignStatsDialog({
       console.error("Error importing stats:", error);
       toast.error("Failed to import stats");
     } finally {
-      setImporting(false);
-    }
-  };
-
-  const handleShortimizeSync = async () => {
-    if (!shortimizeCollectionName.trim()) {
-      toast.error("Please enter a Shortimize collection name");
-      return;
-    }
-
-    setSyncing(true);
-    setSyncProgress(null);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('sync-shortimize-analytics', {
-        body: {
-          campaignId,
-          collectionNames: [shortimizeCollectionName.trim()],
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        setSyncProgress({ total: data.total, synced: data.synced });
-        
-        if (data.errors > 0) {
-          toast.warning(`${data.errors} accounts had errors`);
-        }
-        
-        // Auto-match accounts to users after sync
-        try {
-          const { data: matchStats, error: matchError } = await supabase
-            .rpc('match_analytics_to_users', { p_campaign_id: campaignId });
-          
-          if (!matchError && matchStats?.[0]) {
-            const matched = matchStats[0].matched_count || 0;
-            const total = matchStats[0].total_count || 0;
-            toast.success(`Synced ${data.synced} accounts, linked ${matched} of ${total}`);
-          } else {
-            toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
-          }
-        } catch (matchErr) {
-          console.error('Error matching accounts:', matchErr);
-          toast.success(`Synced ${data.synced} of ${data.total} accounts from Shortimize`);
-        }
-        
-        onImportComplete();
-        onMatchingRequired();
-        
-        // Close the dialog after successful sync
-        setTimeout(() => {
-          setOpen(false);
-          setShortimizeCollectionName("");
-          setSyncProgress(null);
-        }, 1500);
-      } else {
-        toast.error(data.error || "Failed to sync from Shortimize");
-      }
-    } catch (error: any) {
-      console.error("Error syncing from Shortimize:", error);
-      toast.error(error.message || "Failed to sync from Shortimize");
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -358,80 +290,11 @@ export function ImportCampaignStatsDialog({
         <DialogHeader>
           <DialogTitle>Import Campaign Analytics</DialogTitle>
           <DialogDescription className="text-white/60">
-            Import analytics from Shortimize or upload a CSV file
+            Upload a CSV file with analytics data
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="shortimize" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-[#191919]">
-            <TabsTrigger value="shortimize" className="data-[state=active]:bg-primary">
-              Shortimize Sync
-            </TabsTrigger>
-            <TabsTrigger value="csv" className="data-[state=active]:bg-primary">
-              CSV Upload
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="shortimize" className="space-y-4 mt-4">
-            <div className="bg-[#191919] border border-white/10 rounded-lg p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <RefreshCw className="h-5 w-5 text-primary mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-white mb-1">Sync from Shortimize</h4>
-                  <p className="text-xs text-white/60">
-                    Automatically fetch the latest analytics data from your Shortimize tracked accounts
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="collectionName" className="text-white text-sm">Collection Name</Label>
-                <Input
-                  id="collectionName"
-                  type="text"
-                  placeholder="e.g., my-campaign-collection"
-                  value={shortimizeCollectionName}
-                  onChange={(e) => setShortimizeCollectionName(e.target.value)}
-                  className="bg-black/30 border-white/10 text-white placeholder:text-white/40"
-                />
-                <p className="text-xs text-white/50">
-                  Enter the exact collection name from your Shortimize dashboard
-                </p>
-              </div>
-              
-              {syncProgress && (
-                <div className="bg-black/30 rounded p-3 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/80">Last sync:</span>
-                    <span className="text-primary font-medium">
-                      {syncProgress.synced} / {syncProgress.total} accounts
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <Button
-                onClick={handleShortimizeSync}
-                disabled={syncing || !shortimizeCollectionName.trim()}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                {syncing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync Now
-                  </>
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="csv" className="space-y-4 mt-4">
-        <div className="space-y-4">
+        <div className="space-y-4 mt-4">
           {/* Date Range Selection */}
           <div className="space-y-3">
             <Label className="text-white text-sm font-medium">Data Period <span className="text-red-500">*</span></Label>
@@ -540,14 +403,12 @@ export function ImportCampaignStatsDialog({
             </div>
           )}
         </div>
-          </TabsContent>
-        </Tabs>
         
         <DialogFooter className="mt-4 flex justify-between">
           <Button
             variant="destructive"
             onClick={() => setDeleteConfirmOpen(true)}
-            disabled={deleting || importing || syncing}
+            disabled={deleting || importing}
             className="mr-auto"
           >
             <Trash2 className="h-4 w-4 mr-2" />
@@ -558,7 +419,7 @@ export function ImportCampaignStatsDialog({
             <Button
               variant="ghost"
               onClick={() => setOpen(false)}
-              disabled={importing || syncing || deleting}
+              disabled={importing || deleting}
               className="text-white hover:bg-white/10"
             >
               Cancel

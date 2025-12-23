@@ -3,10 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, Video, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck } from "lucide-react";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
-import { VideosTab } from "@/components/brand/VideosTab";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -51,7 +50,7 @@ interface Campaign {
 interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
-type DetailTab = "home" | "videos" | "applications" | "creators" | "payouts";
+type DetailTab = "home" | "applications" | "creators" | "payouts";
 export function BrandCampaignDetailView({
   campaignId
 }: BrandCampaignDetailViewProps) {
@@ -89,10 +88,6 @@ export function BrandCampaignDetailView({
     id: "home" as DetailTab,
     label: "Home",
     icon: Home
-  }, {
-    id: "videos" as DetailTab,
-    label: "Videos",
-    icon: Video
   }, ...(campaign?.requires_application !== false ? [{
     id: "applications" as DetailTab,
     label: "Applications",
@@ -175,10 +170,6 @@ export function BrandCampaignDetailView({
         <div className="flex-1 overflow-auto">
           {activeDetailTab === "home" && campaign.brand_id ? (
             <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} />
-          ) : activeDetailTab === "videos" && campaign.brand_id ? (
-            <div className="p-4 py-0">
-              <VideosTab campaignId={campaignId} brandId={campaign.brand_id} isAdmin={true} approvedCreators={[]} timeframe={timeframe} />
-            </div>
           ) : activeDetailTab === "applications" ? (
             <CampaignApplicationsView campaignId={campaignId} />
           ) : activeDetailTab === "creators" ? (
