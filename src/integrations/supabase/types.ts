@@ -404,6 +404,7 @@ export type Database = {
           slug: string | null
           start_date: string | null
           status: string
+          tags: string[] | null
           title: string
           updated_at: string
           videos_per_month: number
@@ -433,6 +434,7 @@ export type Database = {
           slug?: string | null
           start_date?: string | null
           status?: string
+          tags?: string[] | null
           title: string
           updated_at?: string
           videos_per_month: number
@@ -462,6 +464,7 @@ export type Database = {
           slug?: string | null
           start_date?: string | null
           status?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
           videos_per_month?: number
