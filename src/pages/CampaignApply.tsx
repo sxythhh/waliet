@@ -929,8 +929,13 @@ export default function CampaignApply() {
 
       {/* Fixed bottom CTA for mobile */}
       {isBoost && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
-          <Button className="w-full" size="lg" onClick={handleApplyClick}>
-            {user ? "Apply Now" : "Sign In to Apply"}
+          <Button 
+            className="w-full font-['Inter'] tracking-[-0.5px]" 
+            size="lg" 
+            onClick={handleApplyClick}
+            style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+          >
+            {user ? "Start Application" : "Sign In to Apply"}
           </Button>
         </div>}
 
