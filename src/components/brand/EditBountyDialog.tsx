@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, Check } from "lucide-react";
+import { CalendarIcon, Upload, Check, Trash2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -49,6 +50,9 @@ const inputStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
 export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: EditBountyDialogProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
+  const [deleteBlockReason, setDeleteBlockReason] = useState<string | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>("");
@@ -109,6 +113,31 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
         ]);
         setBlueprints(bpData || []);
         setSubscriptionStatus(brandData?.subscription_status || null);
+      }
+
+      // Check if boost can be deleted
+      const [{ count: pendingCount }, { count: acceptedCount }] = await Promise.all([
+        supabase
+          .from('bounty_applications')
+          .select('*', { count: 'exact', head: true })
+          .eq('bounty_campaign_id', bountyId)
+          .eq('status', 'pending'),
+        supabase
+          .from('bounty_applications')
+          .select('*', { count: 'exact', head: true })
+          .eq('bounty_campaign_id', bountyId)
+          .eq('status', 'accepted')
+      ]);
+
+      if ((pendingCount ?? 0) > 0) {
+        setCanDelete(false);
+        setDeleteBlockReason(`Cannot delete: ${pendingCount} pending application(s)`);
+      } else if ((acceptedCount ?? 0) > 0) {
+        setCanDelete(false);
+        setDeleteBlockReason(`Cannot delete: ${acceptedCount} active creator(s)`);
+      } else {
+        setCanDelete(true);
+        setDeleteBlockReason(null);
       }
     } catch (error: any) {
       console.error("Error fetching bounty:", error);
@@ -177,6 +206,40 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
       toast.error(error.message || "Failed to update boost campaign");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!canDelete) {
+      toast.error(deleteBlockReason || "Cannot delete this boost");
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      // Delete any rejected applications first
+      await supabase
+        .from('bounty_applications')
+        .delete()
+        .eq('bounty_campaign_id', bountyId)
+        .eq('status', 'rejected');
+
+      // Delete the boost
+      const { error } = await supabase
+        .from('bounty_campaigns')
+        .delete()
+        .eq('id', bountyId);
+
+      if (error) throw error;
+
+      toast.success("Boost deleted successfully");
+      onSuccess();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error("Error deleting boost:", error);
+      toast.error(error.message || "Failed to delete boost");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -367,25 +430,67 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 justify-end pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onOpenChange(false)}
-                  disabled={saving}
-                  className="h-10"
-                  style={labelStyle}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={saving} 
-                  className="h-10 bg-foreground text-background hover:bg-foreground/90"
-                  style={labelStyle}
-                >
-                  {saving ? "Saving..." : "Save"}
-                </Button>
+              <div className="flex gap-2 justify-between pt-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={saving || deleting}
+                      className={cn(
+                        "h-10 text-destructive hover:text-destructive hover:bg-destructive/10",
+                        !canDelete && "opacity-50 cursor-not-allowed"
+                      )}
+                      style={labelStyle}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle style={labelStyle}>Delete Boost</AlertDialogTitle>
+                      <AlertDialogDescription style={labelStyle}>
+                        {canDelete 
+                          ? "Are you sure you want to delete this boost? This action cannot be undone."
+                          : deleteBlockReason}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel style={labelStyle}>Cancel</AlertDialogCancel>
+                      {canDelete && (
+                        <AlertDialogAction
+                          onClick={handleDelete}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          style={labelStyle}
+                        >
+                          {deleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                      )}
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => onOpenChange(false)}
+                    disabled={saving || deleting}
+                    className="h-10"
+                    style={labelStyle}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={saving || deleting} 
+                    className="h-10 bg-foreground text-background hover:bg-foreground/90"
+                    style={labelStyle}
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
               </div>
             </form>
           )}
