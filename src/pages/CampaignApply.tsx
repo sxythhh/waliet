@@ -713,7 +713,7 @@ export default function CampaignApply() {
               </div>
 
               {!isLoggedIn ? <>
-                <div className="text-center py-10 px-8 rounded-2xl bg-[#0e0e0e]">
+                <div className="text-center py-10 px-8 rounded-2xl bg-gradient-to-br from-primary/5 via-background to-primary/5 bg-primary-foreground text-secondary">
                   <h3 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px] mb-2">Join to Apply</h3>
                   <p className="text-muted-foreground text-sm font-['Inter'] tracking-[-0.5px] mb-8 max-w-[260px] mx-auto leading-relaxed">
                     Create an account or sign in to apply for this {isBoost ? 'boost' : 'campaign'}
