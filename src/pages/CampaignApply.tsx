@@ -12,7 +12,7 @@ import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, Lightbulb, MessageSquare, ThumbsUp, ThumbsDown, Hash, Mic, ArrowLeft, X, Users, Video, DollarSign, Calendar, Sparkles } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -492,19 +492,19 @@ export default function CampaignApply() {
   }
 
   // Build stats array
-  const stats: { icon: React.ReactNode; label: string; value: string }[] = [];
+  const stats: { label: string; value: string }[] = [];
   if (isBoost && boostCampaign) {
-    stats.push({ icon: <DollarSign className="h-4 w-4" />, label: "Monthly", value: `$${boostCampaign.monthly_retainer}` });
-    stats.push({ icon: <Video className="h-4 w-4" />, label: "Videos/mo", value: `${boostCampaign.videos_per_month}` });
+    stats.push({ label: "Monthly", value: `$${boostCampaign.monthly_retainer}` });
+    stats.push({ label: "Videos/mo", value: `${boostCampaign.videos_per_month}` });
     const spotsLeft = boostCampaign.max_accepted_creators - boostCampaign.accepted_creators_count;
-    stats.push({ icon: <Users className="h-4 w-4" />, label: "Spots Left", value: `${spotsLeft}` });
+    stats.push({ label: "Spots Left", value: `${spotsLeft}` });
     if (boostCampaign.end_date) {
-      stats.push({ icon: <Calendar className="h-4 w-4" />, label: "Ends", value: format(new Date(boostCampaign.end_date), 'MMM d') });
+      stats.push({ label: "Ends", value: format(new Date(boostCampaign.end_date), 'MMM d') });
     }
   } else if (campaign && !campaign.is_infinite_budget) {
     const remaining = campaign.budget - (campaign.budget_used || 0);
-    stats.push({ icon: <DollarSign className="h-4 w-4" />, label: "Budget Left", value: `$${remaining.toLocaleString()}` });
-    stats.push({ icon: <Sparkles className="h-4 w-4" />, label: "RPM Rate", value: `$${campaign.rpm_rate}` });
+    stats.push({ label: "Budget Left", value: `$${remaining.toLocaleString()}` });
+    stats.push({ label: "RPM Rate", value: `$${campaign.rpm_rate}` });
   }
 
   const handleApplyClick = () => {
@@ -522,7 +522,7 @@ export default function CampaignApply() {
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-y-auto">
       {/* Hero Banner */}
       <div className="relative">
         {bannerUrl ? (
@@ -550,14 +550,30 @@ export default function CampaignApply() {
             </Avatar>
             <div className="flex-1 pb-2">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-medium text-muted-foreground">{brandName}</span>
+                <span className="text-sm font-medium text-muted-foreground font-['Inter'] tracking-[-0.5px]">{brandName}</span>
                 {brandVerified && <VerifiedBadge size="sm" />}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+                {status === 'active' ? (
+                  <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    backgroundColor: '#1f6d36',
+                    borderTop: '1px solid #3c8544',
+                    borderRadius: '20px'
+                  }}>
+                    <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
+                    Active
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                    backgroundColor: '#6b7280',
+                    borderRadius: '20px'
+                  }}>
+                    {status}
+                  </span>
+                )}
+              </div>
             </div>
-            <Badge variant={status === 'active' ? 'default' : 'secondary'} className="mb-2 capitalize">
-              {status}
-            </Badge>
           </div>
         </div>
 
@@ -565,14 +581,9 @@ export default function CampaignApply() {
         {stats.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             {stats.map((stat, i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                  {stat.icon}
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  <p className="text-lg font-bold">{stat.value}</p>
-                </div>
+              <div key={i} className="bg-card border border-border rounded-xl p-4">
+                <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">{stat.label}</p>
+                <p className="text-xl font-bold font-['Inter'] tracking-[-0.5px]">{stat.value}</p>
               </div>
             ))}
           </div>
@@ -585,7 +596,7 @@ export default function CampaignApply() {
             {description && (
               <div>
                 <h2 className="text-lg font-semibold mb-3">About</h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">
                   {parseTextWithLinks(description)}
                 </p>
               </div>
@@ -594,11 +605,8 @@ export default function CampaignApply() {
             {/* Blueprint Content */}
             {blueprint?.content_guidelines && (
               <div>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-primary" />
-                  Content Guidelines
-                </h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{blueprint.content_guidelines}</p>
+                <h2 className="text-lg font-semibold mb-3">Content Guidelines</h2>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap font-['Inter'] tracking-[-0.5px]">{blueprint.content_guidelines}</p>
               </div>
             )}
 
@@ -611,13 +619,10 @@ export default function CampaignApply() {
 
             {blueprint?.hooks && blueprint.hooks.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  Hook Ideas
-                </h2>
+                <h2 className="text-lg font-semibold mb-3">Hook Ideas</h2>
                 <div className="space-y-2">
                   {blueprint.hooks.map((hook: any, i: number) => (
-                    <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm">
+                    <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border text-sm font-['Inter'] tracking-[-0.5px]">
                       {typeof hook === 'string' ? hook : hook.text || hook.content}
                     </div>
                   ))}
@@ -627,13 +632,10 @@ export default function CampaignApply() {
 
             {blueprint?.talking_points && blueprint.talking_points.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Mic className="h-4 w-4 text-primary" />
-                  Talking Points
-                </h2>
+                <h2 className="text-lg font-semibold mb-3">Talking Points</h2>
                 <ul className="space-y-2">
                   {blueprint.talking_points.map((point: any, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-muted-foreground">
+                    <li key={i} className="flex items-start gap-2 text-muted-foreground font-['Inter'] tracking-[-0.5px]">
                       <span className="text-primary mt-1">•</span>
                       <span>{typeof point === 'string' ? point : point.text || point.content}</span>
                     </li>
@@ -646,13 +648,10 @@ export default function CampaignApply() {
               <div className="grid md:grid-cols-2 gap-4">
                 {blueprint.dos_and_donts.dos?.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-green-500">
-                      <ThumbsUp className="h-4 w-4" />
-                      Do's
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-3 text-green-500">Do's</h2>
                     <ul className="space-y-2">
                       {blueprint.dos_and_donts.dos.map((item: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-green-500/10 border border-green-500/20 font-['Inter'] tracking-[-0.5px]">
                           <span className="text-green-500">✓</span>
                           <span>{item}</span>
                         </li>
@@ -662,13 +661,10 @@ export default function CampaignApply() {
                 )}
                 {blueprint.dos_and_donts.donts?.length > 0 && (
                   <div>
-                    <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-red-500">
-                      <ThumbsDown className="h-4 w-4" />
-                      Don'ts
-                    </h2>
+                    <h2 className="text-lg font-semibold mb-3 text-red-500">Don'ts</h2>
                     <ul className="space-y-2">
                       {blueprint.dos_and_donts.donts.map((item: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <li key={i} className="flex items-start gap-2 text-sm p-2 rounded-lg bg-red-500/10 border border-red-500/20 font-['Inter'] tracking-[-0.5px]">
                           <span className="text-red-500">✗</span>
                           <span>{item}</span>
                         </li>
@@ -682,19 +678,16 @@ export default function CampaignApply() {
             {blueprint?.call_to_action && (
               <div>
                 <h2 className="text-lg font-semibold mb-3">Call to Action</h2>
-                <p className="text-muted-foreground">{blueprint.call_to_action}</p>
+                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.call_to_action}</p>
               </div>
             )}
 
             {blueprint?.hashtags && blueprint.hashtags.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Hash className="h-4 w-4 text-primary" />
-                  Hashtags
-                </h2>
+                <h2 className="text-lg font-semibold mb-3">Hashtags</h2>
                 <div className="flex flex-wrap gap-2">
                   {blueprint.hashtags.map((tag, i) => (
-                    <Badge key={i} variant="secondary">#{tag.replace('#', '')}</Badge>
+                    <Badge key={i} variant="secondary" className="font-['Inter'] tracking-[-0.5px]">#{tag.replace('#', '')}</Badge>
                   ))}
                 </div>
               </div>
@@ -703,7 +696,7 @@ export default function CampaignApply() {
             {blueprint?.brand_voice && (
               <div>
                 <h2 className="text-lg font-semibold mb-3">Brand Voice</h2>
-                <p className="text-muted-foreground">{blueprint.brand_voice}</p>
+                <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.brand_voice}</p>
               </div>
             )}
           </div>
