@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Calendar, ArrowRight, ExternalLink, Video, DollarSign, Eye, TrendingUp, Briefcase } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, Briefcase } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -340,7 +340,7 @@ export default function PublicProfile() {
   const showBanner = !user;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background overflow-y-auto" style={{ paddingBottom: showBanner ? '100px' : '24px' }}>
       {/* Header Section */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-8">
         <div className="flex flex-col sm:flex-row items-start gap-6">
@@ -368,24 +368,11 @@ export default function PublicProfile() {
                 </p>
               </div>
 
-              {/* Social Links */}
-              <div className="flex items-center gap-2">
-                {socialAccounts.map((account) => (
-                  <button
-                    key={account.id}
-                    onClick={() => account.account_link && window.open(account.account_link, '_blank')}
-                    className="p-2.5 rounded-full bg-card border border-border hover:bg-muted transition-colors"
-                    title={`@${account.username}`}
-                  >
-                    {getPlatformIcon(account.platform)}
-                  </button>
-                ))}
-                <Button
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full px-6"
-                >
-                  Contact
-                </Button>
-              </div>
+              <Button
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full px-6"
+              >
+                Contact
+              </Button>
             </div>
 
             {/* Bio */}
@@ -393,6 +380,24 @@ export default function PublicProfile() {
               <p className="mt-4 text-foreground/80 font-['Inter'] tracking-[-0.3px] leading-relaxed max-w-xl">
                 {profile.bio}
               </p>
+            )}
+
+            {/* Connected Accounts - below bio */}
+            {socialAccounts.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3 mt-4">
+                {socialAccounts.map((account) => (
+                  <button
+                    key={account.id}
+                    onClick={() => account.account_link && window.open(account.account_link, '_blank')}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border hover:bg-muted transition-colors"
+                  >
+                    {getPlatformIcon(account.platform)}
+                    <span className="text-sm font-['Inter'] tracking-[-0.5px] text-foreground">
+                      @{account.username}
+                    </span>
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* Join Date */}
@@ -406,44 +411,32 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats Overview - Cleaner design without icons */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-              <Briefcase className="h-4 w-4" />
-            </div>
-            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalCampaigns}</p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Campaigns</p>
+          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
+            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalCampaigns}</p>
+            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Campaigns</p>
           </div>
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalBoosts}</p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Boosts</p>
+          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
+            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalBoosts}</p>
+            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Boosts</p>
           </div>
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-              <Eye className="h-4 w-4" />
-            </div>
-            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px]">
+          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
+            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">
               {stats.totalViews >= 1000000 
                 ? `${(stats.totalViews / 1000000).toFixed(1)}M`
                 : stats.totalViews >= 1000 
                   ? `${(stats.totalViews / 1000).toFixed(1)}K`
                   : stats.totalViews}
             </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Total Views</p>
+            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Total Views</p>
           </div>
-          <div className="bg-card border border-border rounded-xl p-4 text-center">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
-              <DollarSign className="h-4 w-4" />
-            </div>
-            <p className="text-2xl font-bold font-['Inter'] tracking-[-0.5px] text-emerald-500">
+          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
+            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px] text-emerald-500">
               ${stats.totalEarnings.toLocaleString()}
             </p>
-            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Earned</p>
+            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Earned</p>
           </div>
         </div>
       </div>
@@ -481,72 +474,48 @@ export default function PublicProfile() {
                   const isVerified = campaign?.brands?.is_verified;
                   
                   return (
-                    <Card 
+                    <div 
                       key={participation.id}
                       onClick={() => handleCampaignClick(participation.campaign_id)}
-                      className="bg-card border border-border hover:border-border/80 transition-all cursor-pointer group overflow-hidden"
+                      className="bg-card/50 border border-border/50 rounded-2xl p-4 hover:bg-card/80 transition-all cursor-pointer group"
                     >
-                      <CardContent className="p-0">
-                        <div className="flex">
-                          {/* Campaign Banner/Logo */}
-                          {campaign?.banner_url ? (
-                            <div className="w-32 h-24 sm:w-40 sm:h-28 flex-shrink-0 overflow-hidden bg-muted">
-                              <img 
-                                src={campaign.banner_url} 
-                                alt={campaign?.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
+                      <div className="flex items-center gap-4">
+                        {/* Brand Logo */}
+                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-32 h-24 sm:w-40 sm:h-28 flex-shrink-0 bg-muted flex items-center justify-center">
-                              {logoUrl ? (
-                                <img src={logoUrl} alt="" className="w-12 h-12 object-contain" />
-                              ) : (
-                                <Video className="h-8 w-8 text-muted-foreground" />
-                              )}
-                            </div>
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
                           )}
-                          
-                          {/* Campaign Info */}
-                          <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                {logoUrl && !campaign?.banner_url && (
-                                  <img src={logoUrl} alt="" className="h-5 w-5 rounded object-cover" />
-                                )}
-                                <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
-                                  {campaign?.brand_name}
-                                  {isVerified && <VerifiedBadge size="sm" />}
-                                </span>
-                              </div>
-                              <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1 group-hover:text-primary transition-colors">
-                                {campaign?.title}
-                              </h3>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                              <span className="flex items-center gap-1">
-                                <Video className="h-3.5 w-3.5" />
-                                {participation.videos_count} videos
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Eye className="h-3.5 w-3.5" />
-                                {participation.total_views?.toLocaleString() || 0} views
-                              </span>
-                              <span className="flex items-center gap-1 text-emerald-500">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                ${participation.total_earnings?.toLocaleString() || 0}
-                              </span>
-                            </div>
+                        </div>
+                        
+                        {/* Campaign Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                              {campaign?.brand_name}
+                            </span>
+                            {isVerified && <VerifiedBadge size="sm" />}
                           </div>
-                          
-                          {/* Arrow */}
-                          <div className="hidden sm:flex items-center px-4">
-                            <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1 group-hover:text-primary transition-colors">
+                            {campaign?.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <span>{participation.videos_count} videos</span>
+                            <span className="text-foreground/30">•</span>
+                            <span>{participation.total_views?.toLocaleString() || 0} views</span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                        
+                        {/* Earnings */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
+                            ${participation.total_earnings?.toLocaleString() || 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -561,55 +530,54 @@ export default function PublicProfile() {
                 <p className="font-['Inter'] tracking-[-0.5px]">No boost history yet</p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-3">
                 {boostParticipations.map((participation) => {
                   const boost = participation.boost;
                   const logoUrl = boost?.brands?.logo_url;
                   const isVerified = boost?.brands?.is_verified;
                   
                   return (
-                    <Card 
+                    <div 
                       key={participation.id}
-                      className="bg-card border border-border hover:border-border/80 transition-all group"
+                      className="bg-card/50 border border-border/50 rounded-2xl p-4 hover:bg-card/80 transition-all group"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          {/* Brand Logo */}
-                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border">
-                            {logoUrl ? (
-                              <img src={logoUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                            )}
+                      <div className="flex items-center gap-4">
+                        {/* Brand Logo */}
+                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {logoUrl ? (
+                            <img src={logoUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                          )}
+                        </div>
+                        
+                        {/* Boost Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                              {boost?.brands?.name}
+                            </span>
+                            {isVerified && <VerifiedBadge size="sm" />}
                           </div>
-                          
-                          {/* Boost Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
-                                {boost?.brands?.name}
-                                {isVerified && <VerifiedBadge size="sm" />}
-                              </span>
-                            </div>
-                            <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1">
-                              {boost?.title}
-                            </h3>
-                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                              <span>${boost?.monthly_retainer}/mo</span>
-                              <span>{participation.videos_submitted} videos submitted</span>
-                            </div>
-                          </div>
-                          
-                          {/* Earnings */}
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
-                              ${participation.total_earned?.toLocaleString() || 0}
-                            </p>
-                            <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
+                          <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1">
+                            {boost?.title}
+                          </h3>
+                          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            <span>${boost?.monthly_retainer}/mo</span>
+                            <span className="text-foreground/30">•</span>
+                            <span>{participation.videos_submitted} videos</span>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                        
+                        {/* Earnings */}
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
+                            ${participation.total_earned?.toLocaleString() || 0}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
