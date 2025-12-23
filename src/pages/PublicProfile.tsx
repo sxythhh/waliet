@@ -70,7 +70,7 @@ export default function PublicProfile() {
         data: currentUserProfile
       } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
-        navigate(`/${currentUserProfile.username}`, {
+        navigate(`/@${currentUserProfile.username}`, {
           replace: true
         });
         return;
@@ -90,7 +90,7 @@ export default function PublicProfile() {
         data: currentUserProfile
       } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
-        navigate(`/${currentUserProfile.username}`, {
+        navigate(`/@${currentUserProfile.username}`, {
           replace: true
         });
         return;
