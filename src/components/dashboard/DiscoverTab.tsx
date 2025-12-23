@@ -20,7 +20,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import emptyCampaignsImage from "@/assets/empty-campaigns.png";
-import fullscreenIcon from "@/assets/fullscreen-icon.svg";
+import { Maximize2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { SearchOverlay } from "./SearchOverlay";
@@ -691,7 +691,7 @@ export function DiscoverTab({
                       e.stopPropagation();
                       navigate(`/c/${campaign.slug}`);
                     }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
+                          <Maximize2 className="h-4 w-4" />
                         </button>
                         <button onClick={e => toggleBookmark(campaign.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                           <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
@@ -784,7 +784,7 @@ export function DiscoverTab({
                       e.stopPropagation();
                       navigate(`/c/${bounty.slug}`);
                     }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <img src={fullscreenIcon} alt="View" className="h-4 w-4 dark:invert" />
+                          <Maximize2 className="h-4 w-4" />
                         </button>
                         <button onClick={e => toggleBountyBookmark(bounty.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
                           <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
