@@ -743,7 +743,7 @@ export function DiscoverTab({
                             <div className="flex items-baseline justify-between">
                               <div className="flex items-baseline gap-1.5">
                                 
-                                <span className="text-xs text-muted-foreground font-semibold font-['Inter'] tracking-[-0.5px]">
+                                <span className="text-xs font-semibold font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
                                   ${Math.ceil(campaign.budget).toLocaleString(undefined, {
                                 maximumFractionDigits: 0
                               })}
