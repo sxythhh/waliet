@@ -2681,60 +2681,6 @@ export type Database = {
         }
         Relationships: []
       }
-      shortimize_tracking: {
-        Row: {
-          accounts_synced: number | null
-          campaign_id: string
-          collection_id: string | null
-          collection_name: string | null
-          created_at: string
-          id: string
-          last_sync_at: string | null
-          sync_error: string | null
-          sync_status: string | null
-          updated_at: string
-        }
-        Insert: {
-          accounts_synced?: number | null
-          campaign_id: string
-          collection_id?: string | null
-          collection_name?: string | null
-          created_at?: string
-          id?: string
-          last_sync_at?: string | null
-          sync_error?: string | null
-          sync_status?: string | null
-          updated_at?: string
-        }
-        Update: {
-          accounts_synced?: number | null
-          campaign_id?: string
-          collection_id?: string | null
-          collection_name?: string | null
-          created_at?: string
-          id?: string
-          last_sync_at?: string | null
-          sync_error?: string | null
-          sync_status?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shortimize_tracking_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shortimize_tracking_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "public_campaigns"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       social_account_campaigns: {
         Row: {
           campaign_id: string
@@ -2885,60 +2831,6 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
-        }
-        Relationships: []
-      }
-      video_analytics: {
-        Row: {
-          account: string
-          brand_id: string
-          comments: number | null
-          created_at: string | null
-          engagement_rate: number | null
-          id: string
-          imported_at: string | null
-          likes: number | null
-          platform: string
-          updated_at: string | null
-          upload_date: string | null
-          video_link: string
-          video_title: string | null
-          views: number | null
-          views_performance: number | null
-        }
-        Insert: {
-          account: string
-          brand_id: string
-          comments?: number | null
-          created_at?: string | null
-          engagement_rate?: number | null
-          id?: string
-          imported_at?: string | null
-          likes?: number | null
-          platform: string
-          updated_at?: string | null
-          upload_date?: string | null
-          video_link: string
-          video_title?: string | null
-          views?: number | null
-          views_performance?: number | null
-        }
-        Update: {
-          account?: string
-          brand_id?: string
-          comments?: number | null
-          created_at?: string | null
-          engagement_rate?: number | null
-          id?: string
-          imported_at?: string | null
-          likes?: number | null
-          platform?: string
-          updated_at?: string | null
-          upload_date?: string | null
-          video_link?: string
-          video_title?: string | null
-          views?: number | null
-          views_performance?: number | null
         }
         Relationships: []
       }
@@ -3284,14 +3176,6 @@ export type Database = {
       is_brand_member: {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
-      }
-      match_analytics_to_users: {
-        Args: { p_campaign_id: string }
-        Returns: {
-          matched_count: number
-          total_count: number
-          unmatched_count: number
-        }[]
       }
       upsert_discord_tokens: {
         Args: {
