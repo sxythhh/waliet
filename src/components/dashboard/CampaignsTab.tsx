@@ -650,8 +650,7 @@ export function CampaignsTab({
       </div>
 
       {/* Actions Section - Hidden if user has joined campaigns AND has payment method */}
-      {!shouldHideActionCards && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {!shouldHideActionCards && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button onClick={() => window.open('https://discord.gg/virality', '_blank')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
             <div className="w-10 h-10 rounded-lg bg-[#e0e0e0] dark:bg-[#1a1a1a] flex items-center justify-center flex-shrink-0">
               <img src={discordWhiteIcon} alt="" className="w-5 h-5 invert dark:invert-0" />
@@ -687,8 +686,7 @@ export function CampaignsTab({
               </p>
             </div>
           </button>
-        </div>
-      )}
+        </div>}
 
       {/* Your Campaigns - Moved to appear first */}
       {!hasNoCampaigns && <div className="space-y-3">
@@ -784,16 +782,7 @@ export function CampaignsTab({
                   </Button>
                 </div>}
               
-              {isEnded && !isPending && <div className="mt-auto pt-2">
-                  <Button variant="ghost" size="sm" onClick={e => {
-                    e.stopPropagation();
-                    setSelectedCampaignId(campaign.id);
-                    setLeaveCampaignDialogOpen(true);
-                  }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
-                      <LogOut className="w-3.5 h-3.5 mr-1.5" />
-                      Leave Campaign
-                  </Button>
-                </div>}
+              {isEnded && !isPending}
             </CardContent>
           </Card>;
         })}
