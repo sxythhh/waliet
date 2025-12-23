@@ -286,13 +286,14 @@ export default function PublicProfile() {
   const handleCampaignClick = async (campaignId: string) => {
     const {
       data
-    } = await supabase.from("campaigns").select(`*, brands (logo_url)`).eq("id", campaignId).single();
+    } = await supabase.from("campaigns").select(`*, brands (logo_url, is_verified)`).eq("id", campaignId).single();
     if (data) {
       const campaignData = {
         ...data,
         brand_logo_url: data.brand_logo_url || (data.brands as any)?.logo_url,
         platforms: data.allowed_platforms || [],
-        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : []
+        application_questions: Array.isArray(data.application_questions) ? data.application_questions as string[] : [],
+        brands: data.brands
       };
       setSelectedCampaign(campaignData);
       setSheetOpen(true);
