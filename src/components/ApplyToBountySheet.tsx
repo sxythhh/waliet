@@ -263,50 +263,6 @@ export function ApplyToBountySheet({
           {/* Stats Cards - Visual grid layout */}
           
 
-          {/* Blueprint Details Section */}
-          {blueprint && <div className="space-y-3">
-              <div className="rounded-xl bg-muted/50 overflow-hidden">
-                {/* Blueprint Header */}
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Content Brief</span>
-                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground" onClick={() => window.open(`/blueprint/${blueprint.id}`, '_blank')}>
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    View Full
-                  </Button>
-                </div>
-                
-                <div className="p-4 space-y-4">
-                  {/* Content Preview */}
-                  {blueprint.content && <div className="text-sm text-muted-foreground leading-relaxed line-clamp-3 prose prose-sm max-w-none [&>*]:m-0" dangerouslySetInnerHTML={{
-                    __html: blueprint.content
-                  }} />}
-                  
-                  {/* Hooks */}
-                  {blueprint.hooks && Array.isArray(blueprint.hooks) && blueprint.hooks.length > 0 && <div className="space-y-2">
-                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Suggested Hooks</span>
-                      <div className="space-y-1.5">
-                        {blueprint.hooks.slice(0, 2).map((hook: any, idx: number) => <div key={idx} className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-                            <span className="text-primary mt-0.5 text-xs">→</span>
-                            <span className="line-clamp-1">{typeof hook === 'string' ? hook : hook.text}</span>
-                          </div>)}
-                      </div>
-                    </div>}
-                  
-                  {/* Call to Action */}
-                  {blueprint.call_to_action && <div className="space-y-1.5">
-                      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Call to Action</span>
-                      <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">{blueprint.call_to_action}</p>
-                    </div>}
-                  
-                  {/* Hashtags */}
-                  {blueprint.hashtags && Array.isArray(blueprint.hashtags) && blueprint.hashtags.length > 0 && <div className="flex flex-wrap gap-1.5">
-                      {blueprint.hashtags.slice(0, 5).map((tag: string, idx: number) => <span key={idx} className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                          #{tag}
-                        </span>)}
-                    </div>}
-                </div>
-              </div>
-            </div>}
 
           {/* Application Form - Show connect prompt if no accounts */}
           {!isCheckingAccounts && !hasConnectedAccounts ? <div className="space-y-5 pt-2">
