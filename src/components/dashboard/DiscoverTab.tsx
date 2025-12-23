@@ -15,6 +15,7 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { ApplyToBoostDialog } from "@/components/ApplyToBoostDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -32,6 +33,7 @@ interface Campaign {
   description: string;
   brand_name: string;
   brand_logo_url: string;
+  brand_is_verified?: boolean;
   budget: number;
   budget_used?: number;
   rpm_rate: number;
@@ -48,6 +50,7 @@ interface Campaign {
   is_featured?: boolean;
   brands?: {
     logo_url: string;
+    is_verified?: boolean;
   };
 }
 interface BountyCampaign {
@@ -69,6 +72,7 @@ interface BountyCampaign {
   brands?: {
     name: string;
     logo_url: string;
+    is_verified?: boolean;
   };
 }
 export function DiscoverTab() {
@@ -310,7 +314,8 @@ export function DiscoverTab() {
     } = await supabase.from("campaigns").select(`
         *,
         brands (
-          logo_url
+          logo_url,
+          is_verified
         )
       `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
@@ -320,6 +325,7 @@ export function DiscoverTab() {
       const campaignsWithBrandLogo = availableCampaigns.map(campaign => ({
         ...campaign,
         brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
+        brand_is_verified: (campaign.brands as any)?.is_verified || false,
         platforms: campaign.allowed_platforms || [],
         application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
       }));
@@ -334,7 +340,8 @@ export function DiscoverTab() {
         *,
         brands (
           name,
-          logo_url
+          logo_url,
+          is_verified
         )
       `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
@@ -686,29 +693,35 @@ export function DiscoverTab() {
                       </div>}
 
                       <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-start gap-2.5">
                           {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
                             <OptimizedImage src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                           </div>}
-                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                              {campaign.title}
-                            </h3>
-                            {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                          backgroundColor: '#b60b0b',
-                          borderTop: '1px solid #ed3030',
-                          borderRadius: '20px'
-                        }}>
-                              <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
-                              Ended
-                            </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                          backgroundColor: '#1f6d36',
-                          borderTop: '1px solid #3c8544',
-                          borderRadius: '20px'
-                        }}>
-                              <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
-                              Active
-                            </span>}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="text-sm font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
+                                {campaign.title}
+                              </h3>
+                              {isEnded ? <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                            backgroundColor: '#b60b0b',
+                            borderTop: '1px solid #ed3030',
+                            borderRadius: '20px'
+                          }}>
+                                <PauseCircle className="h-2.5 w-2.5" fill="white" stroke="#b60b0b" />
+                                Ended
+                              </span> : <span className="flex items-center gap-0.5 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
+                            backgroundColor: '#1f6d36',
+                            borderTop: '1px solid #3c8544',
+                            borderRadius: '20px'
+                          }}>
+                                <img alt="" className="h-2.5 w-2.5" src="/lovable-uploads/33335174-79b4-4e03-8347-5e90e25a7659.png" />
+                                Active
+                              </span>}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
+                              {campaign.brand_name}
+                              {campaign.brand_is_verified && <VerifiedBadge size="sm" />}
+                            </p>
                           </div>
                         </div>
 
@@ -783,8 +796,9 @@ export function DiscoverTab() {
                                 {bounty.brands?.name?.charAt(0) || 'B'}
                               </span>
                             </div>}
-                          <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px]">
+                          <span className="text-xs text-muted-foreground font-medium font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
                             {bounty.brands?.name || 'Unknown Brand'}
+                            {bounty.brands?.is_verified && <VerifiedBadge size="sm" />}
                           </span>
                         </div>
                         
