@@ -708,11 +708,11 @@ export function DiscoverTab({
                         <div className="flex items-center gap-2.5">
                           {/* Campaign Banner */}
                           {campaign.banner_url ? (
-                            <div className="w-14 h-10 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                            <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
                               <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover" />
                             </div>
                           ) : (
-                            <div className="w-14 h-10 rounded-[3px] bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
+                            <div className="w-14 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
                               <span className="text-xs font-semibold text-muted-foreground">
                                 {campaign.title?.charAt(0) || 'C'}
                               </span>
