@@ -10,9 +10,11 @@ interface SearchOverlayProps {
   onTypeFilter: (type: 'all' | 'campaigns' | 'boosts') => void;
   onNicheFilter: (niche: string | null) => void;
   onBrowseFilter: (filter: string | null) => void;
+  onPlatformFilter: (platform: string | null) => void;
   activeTypeFilter: 'all' | 'campaigns' | 'boosts';
   activeNicheFilter: string | null;
   activeBrowseFilter: string | null;
+  activePlatformFilter: string | null;
 }
 
 const BROWSE_FILTERS = [
@@ -21,6 +23,13 @@ const BROWSE_FILTERS = [
   { id: 'popular', label: 'Popular', icon: Flame },
   { id: 'ending-soon', label: 'Ending Soon', icon: Clock },
   { id: 'high-paying', label: 'High Paying', icon: DollarSign },
+];
+
+const PLATFORM_FILTERS = [
+  { id: 'all', label: 'All Platforms' },
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'youtube', label: 'YouTube' },
 ];
 
 const NICHES = [
@@ -52,9 +61,11 @@ export function SearchOverlay({
   onTypeFilter,
   onNicheFilter,
   onBrowseFilter,
+  onPlatformFilter,
   activeTypeFilter,
   activeNicheFilter,
   activeBrowseFilter,
+  activePlatformFilter,
 }: SearchOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,7 +102,7 @@ export function SearchOverlay({
 
   if (!isOpen) return null;
 
-  const hasActiveFilters = searchQuery || activeTypeFilter !== 'all' || activeNicheFilter || activeBrowseFilter;
+  const hasActiveFilters = searchQuery || activeTypeFilter !== 'all' || activeNicheFilter || activeBrowseFilter || activePlatformFilter;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -133,6 +144,28 @@ export function SearchOverlay({
                   }`}
                 >
                   {type.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Platform Filter */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+              Platform
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {PLATFORM_FILTERS.map((platform) => (
+                <button
+                  key={platform.id}
+                  onClick={() => onPlatformFilter(platform.id === 'all' ? null : (activePlatformFilter === platform.id ? null : platform.id))}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                    (activePlatformFilter === null && platform.id === 'all') || activePlatformFilter === platform.id
+                      ? 'bg-foreground text-background'
+                      : 'bg-muted/50 hover:bg-muted text-foreground'
+                  }`}
+                >
+                  {platform.label}
                 </button>
               ))}
             </div>
@@ -207,6 +240,7 @@ export function SearchOverlay({
                   onTypeFilter('all');
                   onNicheFilter(null);
                   onBrowseFilter(null);
+                  onPlatformFilter(null);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter'] tracking-[-0.5px]"
               >
