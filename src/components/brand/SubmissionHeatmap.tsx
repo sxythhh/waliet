@@ -188,7 +188,7 @@ export function SubmissionHeatmap({ submissions }: SubmissionHeatmapProps) {
           {/* Weeks */}
           <div className="flex gap-[2px] flex-1">
             {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex flex-col gap-[2px]">
+              <div key={weekIdx} className="flex flex-col gap-[2px] flex-1">
                 {week.map((day, dayIdx) => {
                   const isFuture = isAfter(day.date, today);
                   const isToday = isSameDay(day.date, today);
@@ -196,7 +196,7 @@ export function SubmissionHeatmap({ submissions }: SubmissionHeatmapProps) {
                     <Tooltip key={dayIdx}>
                       <TooltipTrigger asChild>
                         <div
-                          className={`h-[12px] w-[12px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)}`}
+                          className={`h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)}`}
                         />
                       </TooltipTrigger>
                       <TooltipContent 
