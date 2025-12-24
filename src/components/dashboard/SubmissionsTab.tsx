@@ -28,6 +28,13 @@ interface Submission {
   rejection_reason?: string | null;
   reviewed_at?: string | null;
   type: 'campaign' | 'boost';
+  // Video details
+  video_title?: string | null;
+  video_cover_url?: string | null;
+  views?: number | null;
+  likes?: number | null;
+  comments?: number | null;
+  shares?: number | null;
   program: {
     id: string;
     title: string;
@@ -142,6 +149,13 @@ export function SubmissionsTab() {
           rejection_reason: video.rejection_reason,
           reviewed_at: video.reviewed_at,
           type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
+          // Video details
+          video_title: video.video_title,
+          video_cover_url: video.video_thumbnail_url,
+          views: video.views,
+          likes: video.likes,
+          comments: video.comments,
+          shares: video.shares,
           program: program || { id: video.source_id, title: 'Unknown', brand_name: '', brand_logo_url: null }
         };
       }).filter(s => s.program);
@@ -369,11 +383,11 @@ export function SubmissionsTab() {
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>Program</TableHead>
+                }}>Video</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>Type</TableHead>
+                }}>Program</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
@@ -382,14 +396,14 @@ export function SubmissionsTab() {
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
                 }}>Status</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12 text-right" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}>Views</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
                 }}>Submitted</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Reviewed</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12 text-right" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
@@ -401,131 +415,204 @@ export function SubmissionsTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedSubmissions.map(submission => <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
-                      {/* Program */}
-                      <TableCell className="py-4">
-                        <div className="flex items-center gap-2">
-                          {submission.program.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                              <img src={submission.program.brand_logo_url} alt={submission.program.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                            </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs text-foreground font-medium">
-                                {submission.program.title.charAt(0).toUpperCase()}
-                              </span>
-                            </div>}
-                          <span className="text-sm font-medium" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}>
-                            {submission.program.title}
-                          </span>
-                        </div>
-                      </TableCell>
-                      
-                      {/* Type */}
-                      <TableCell className="py-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${submission.type === 'campaign' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'}`} style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>
-                          {submission.type === 'campaign' ? 'Campaign' : 'Boost'}
-                        </span>
-                      </TableCell>
-                      
-                      {/* Platform */}
-                      <TableCell className="py-4">
-                        <div className="flex items-center gap-2">
-                          {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-4 h-4" />}
-                          <span className="text-sm text-muted-foreground capitalize" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}>
-                            {submission.platform}
-                          </span>
-                        </div>
-                      </TableCell>
-                      
-                      {/* Status */}
-                      <TableCell className="py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${submission.status === 'approved' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : submission.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : submission.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
-                          {submission.status === 'approved' && <Check className="h-3 w-3" />}
-                          {submission.status === 'pending' && <Clock className="h-3 w-3" />}
-                          {submission.status === 'rejected' && <X className="h-3 w-3" />}
-                          <span style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.3px'
-                    }}>
-                            {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
-                          </span>
-                        </span>
-                      </TableCell>
-                      
-                      {/* Submitted */}
-                      <TableCell className="py-4">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground" style={{
-                          fontFamily: 'Inter',
-                          letterSpacing: '-0.3px'
-                        }}>
-                                {format(new Date(submission.created_at), 'MMM d')}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3">
-                              <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground">Submitted</p>
-                                <p className="text-sm font-medium">{format(new Date(submission.created_at), 'MMMM d, yyyy')}</p>
-                                <p className="text-xs text-muted-foreground">{format(new Date(submission.created_at), 'h:mm a')}</p>
+                  {paginatedSubmissions.map(submission => {
+                    const formatNumber = (num: number | null | undefined) => {
+                      if (!num) return '—';
+                      if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+                      if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+                      return num.toString();
+                    };
+
+                    return (
+                      <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
+                        {/* Video Thumbnail & Title */}
+                        <TableCell className="py-3">
+                          <a 
+                            href={submission.video_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 group"
+                          >
+                            {/* 9:16 aspect ratio thumbnail */}
+                            <div className="w-10 h-[60px] rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
+                              {submission.video_cover_url ? (
+                                <img 
+                                  src={submission.video_cover_url} 
+                                  alt={submission.video_title || 'Video'} 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Video className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
+                              {/* Platform badge */}
+                              {getPlatformIcon(submission.platform) && (
+                                <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center">
+                                  <img 
+                                    src={getPlatformIcon(submission.platform)!} 
+                                    alt={submission.platform} 
+                                    className="w-2.5 h-2.5"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 max-w-[200px]">
+                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors" style={{
+                                fontFamily: 'Inter',
+                                letterSpacing: '-0.3px'
+                              }}>
+                                {submission.video_title || 'Untitled Video'}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                {submission.type === 'campaign' ? 'Campaign' : 'Boost'}
+                              </p>
+                            </div>
+                          </a>
+                        </TableCell>
+                        
+                        {/* Program */}
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2">
+                            {submission.program.brand_logo_url ? (
+                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                <img src={submission.program.brand_logo_url} alt={submission.program.brand_name || 'Brand'} className="w-full h-full object-cover" />
                               </div>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      
-                      {/* Reviewed */}
-                      <TableCell className="py-4 text-sm text-muted-foreground" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>
-                        {submission.reviewed_at ? <TooltipProvider>
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs text-foreground font-medium">
+                                  {submission.program.title.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-sm font-medium truncate max-w-[120px]" style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.3px'
+                            }}>
+                              {submission.program.title}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Platform */}
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2">
+                            {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-4 h-4" />}
+                            <span className="text-sm text-muted-foreground capitalize" style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.3px'
+                            }}>
+                              {submission.platform}
+                            </span>
+                          </div>
+                        </TableCell>
+                        
+                        {/* Status */}
+                        <TableCell className="py-3">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${submission.status === 'approved' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : submission.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : submission.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                            {submission.status === 'approved' && <Check className="h-3 w-3" />}
+                            {submission.status === 'pending' && <Clock className="h-3 w-3" />}
+                            {submission.status === 'rejected' && <X className="h-3 w-3" />}
+                            <span style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.3px'
+                            }}>
+                              {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                            </span>
+                          </span>
+                        </TableCell>
+                        
+                        {/* Views */}
+                        <TableCell className="py-3 text-right">
+                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="underline decoration-dotted cursor-pointer hover:text-foreground">
-                                  {format(new Date(submission.reviewed_at), 'MMM d')}
+                                <span className="text-sm font-medium tabular-nums cursor-default" style={{
+                                  fontFamily: 'Inter',
+                                  letterSpacing: '-0.3px'
+                                }}>
+                                  {formatNumber(submission.views)}
+                                </span>
+                              </TooltipTrigger>
+                              {(submission.likes || submission.comments || submission.shares) && (
+                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3">
+                                  <div className="space-y-1.5 text-sm">
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="text-muted-foreground">Views</span>
+                                      <span className="font-medium tabular-nums">{submission.views?.toLocaleString() || '—'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="text-muted-foreground">Likes</span>
+                                      <span className="font-medium tabular-nums">{submission.likes?.toLocaleString() || '—'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="text-muted-foreground">Comments</span>
+                                      <span className="font-medium tabular-nums">{submission.comments?.toLocaleString() || '—'}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <span className="text-muted-foreground">Shares</span>
+                                      <span className="font-medium tabular-nums">{submission.shares?.toLocaleString() || '—'}</span>
+                                    </div>
+                                  </div>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                        
+                        {/* Submitted */}
+                        <TableCell className="py-3">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground" style={{
+                                  fontFamily: 'Inter',
+                                  letterSpacing: '-0.3px'
+                                }}>
+                                  {format(new Date(submission.created_at), 'MMM d')}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3">
                                 <div className="space-y-1">
-                                  <p className="text-xs text-muted-foreground">Reviewed</p>
-                                  <p className="text-sm font-medium">{format(new Date(submission.reviewed_at), 'MMMM d, yyyy')}</p>
+                                  <p className="text-xs text-muted-foreground">Submitted</p>
+                                  <p className="text-sm font-medium">{format(new Date(submission.created_at), 'MMMM d, yyyy')}</p>
+                                  <p className="text-xs text-muted-foreground">{format(new Date(submission.created_at), 'h:mm a')}</p>
                                 </div>
                               </TooltipContent>
                             </Tooltip>
-                          </TooltipProvider> : submission.status !== 'pending' ? format(new Date(submission.updated_at), 'MMM d') : <span className="text-muted-foreground/50">—</span>}
-                      </TableCell>
-                      
-                      {/* Payout */}
-                      <TableCell className="py-4 text-right">
-                        {submission.status === 'approved' && submission.estimated_payout ? <span className="text-sm font-semibold text-green-600 dark:text-green-400" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }}>
-                            ${submission.estimated_payout.toFixed(2)}
-                          </span> : submission.status === 'pending' && submission.estimated_payout ? <span className="text-sm text-muted-foreground" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }}>
-                            ~${submission.estimated_payout.toFixed(2)}
-                          </span> : <span className="text-sm text-muted-foreground/50">—</span>}
-                      </TableCell>
-                      
-                      {/* Link */}
-                      <TableCell className="py-4">
-                        <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-muted transition-colors inline-flex">
-                          <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                        </a>
-                      </TableCell>
-                    </TableRow>)}
+                          </TooltipProvider>
+                        </TableCell>
+                        
+                        {/* Payout */}
+                        <TableCell className="py-3 text-right">
+                          {submission.status === 'approved' && submission.estimated_payout ? (
+                            <span className="text-sm font-semibold text-green-600 dark:text-green-400" style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.5px'
+                            }}>
+                              ${submission.estimated_payout.toFixed(2)}
+                            </span>
+                          ) : submission.status === 'pending' && submission.estimated_payout ? (
+                            <span className="text-sm text-muted-foreground" style={{
+                              fontFamily: 'Inter',
+                              letterSpacing: '-0.5px'
+                            }}>
+                              ~${submission.estimated_payout.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground/50">—</span>
+                          )}
+                        </TableCell>
+                        
+                        {/* Link */}
+                        <TableCell className="py-3">
+                          <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-muted transition-colors inline-flex">
+                            <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
