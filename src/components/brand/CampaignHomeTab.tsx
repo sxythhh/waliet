@@ -284,24 +284,15 @@ export function CampaignHomeTab({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // First sync videos from Shortimize to cache
-      const { error: syncError } = await supabase.functions.invoke('sync-campaign-account-videos', {
-        body: { campaignId, forceRefresh: true }
-      });
-      if (syncError) {
-        console.error('Video sync error:', syncError);
-      }
-
-      // Then sync metrics from cached videos
-      const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
-        body: { campaignId }
-      });
+      // Sync metrics from Shortimize API - this updates video_submissions and aggregates to program_video_metrics
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics');
+      
       if (error) {
         toast.error('Failed to sync metrics: ' + error.message);
         return;
       }
       if (data && !data.success) {
-        toast.error('Sync failed: ' + (data.errorMessage || 'Unknown error'));
+        toast.error('Sync failed: ' + (data.error || 'Unknown error'));
         return;
       }
       toast.success('Metrics synced successfully');

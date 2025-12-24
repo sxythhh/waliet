@@ -253,13 +253,16 @@ export function BoostHomeTab({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Sync metrics from Shortimize for this brand's boosts
-      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics', {
-        body: { brandId: boost.brand_id, boostId: boost.id }
-      });
+      // Sync metrics from Shortimize API - this updates video_submissions and aggregates to program_video_metrics
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics');
+      
       if (error) {
         toast.error('Failed to sync metrics');
         console.error('Error syncing metrics:', error);
+        return;
+      }
+      if (data && !data.success) {
+        toast.error('Sync failed: ' + (data.error || 'Unknown error'));
         return;
       }
       toast.success('Metrics synced successfully');
