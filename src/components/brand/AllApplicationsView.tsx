@@ -24,6 +24,7 @@ interface Application {
   submitted_at: string;
   reviewed_at: string | null;
   application_answers: { question: string; answer: string }[] | null;
+  is_boost?: boolean;
   profile?: {
     username: string;
     full_name: string | null;
@@ -56,33 +57,67 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      // First get all campaign IDs for this brand
-      const { data: campaigns } = await supabase
-        .from("campaigns")
-        .select("id, title")
-        .eq("brand_id", brandId);
+      // Fetch campaigns and bounty campaigns for this brand in parallel
+      const [campaignsResult, boostCampaignsResult] = await Promise.all([
+        supabase.from("campaigns").select("id, title").eq("brand_id", brandId),
+        supabase.from("bounty_campaigns").select("id, title").eq("brand_id", brandId),
+      ]);
 
-      const campaignIds = campaigns?.map(c => c.id) || [];
-      const campaignMap = new Map(campaigns?.map(c => [c.id, c.title]) || []);
+      const campaigns = campaignsResult.data || [];
+      const boostCampaigns = boostCampaignsResult.data || [];
 
-      if (campaignIds.length === 0) {
-        setApplications([]);
-        setLoading(false);
-        return;
-      }
+      const campaignIds = campaigns.map(c => c.id);
+      const boostCampaignIds = boostCampaigns.map(c => c.id);
+      const campaignMap = new Map(campaigns.map(c => [c.id, c.title]));
+      const boostCampaignMap = new Map(boostCampaigns.map(c => [c.id, c.title]));
 
-      // Fetch all pending applications across all campaigns
-      const { data, error } = await supabase
-        .from("campaign_submissions")
-        .select("*")
-        .in("campaign_id", campaignIds)
-        .eq("status", "pending")
-        .order("submitted_at", { ascending: false });
+      // Fetch pending applications from both tables in parallel
+      const [campaignSubmissionsResult, bountyApplicationsResult] = await Promise.all([
+        campaignIds.length > 0
+          ? supabase
+              .from("campaign_submissions")
+              .select("*")
+              .in("campaign_id", campaignIds)
+              .eq("status", "pending")
+              .order("submitted_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+        boostCampaignIds.length > 0
+          ? supabase
+              .from("bounty_applications")
+              .select("*")
+              .in("bounty_campaign_id", boostCampaignIds)
+              .eq("status", "pending")
+              .order("applied_at", { ascending: false })
+          : Promise.resolve({ data: [], error: null }),
+      ]);
 
-      if (error) throw error;
+      if (campaignSubmissionsResult.error) throw campaignSubmissionsResult.error;
+      if (bountyApplicationsResult.error) throw bountyApplicationsResult.error;
+
+      // Normalize bounty applications to match campaign_submissions structure
+      const normalizedBountyApps = (bountyApplicationsResult.data || []).map(app => ({
+        id: app.id,
+        campaign_id: app.bounty_campaign_id,
+        creator_id: app.user_id,
+        platform: "boost" as string,
+        content_url: app.video_url,
+        status: app.status,
+        submitted_at: app.applied_at,
+        reviewed_at: app.reviewed_at,
+        application_answers: app.application_text ? [{ question: "Application", answer: app.application_text }] : null,
+        is_boost: true,
+      }));
+
+      const allSubmissions = [
+        ...(campaignSubmissionsResult.data || []).map(app => ({ ...app, is_boost: false })),
+        ...normalizedBountyApps,
+      ];
+
+      // Sort by submitted_at descending
+      allSubmissions.sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
 
       // Fetch profiles for all creators
-      const creatorIds = [...new Set(data?.map(a => a.creator_id) || [])];
+      const creatorIds = [...new Set(allSubmissions.map(a => a.creator_id))];
       let profileMap = new Map();
       
       if (creatorIds.length > 0) {
@@ -93,12 +128,14 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
         profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
       }
 
-      const applicationsWithProfiles: Application[] = data?.map(app => ({
+      const applicationsWithProfiles: Application[] = allSubmissions.map(app => ({
         ...app,
-        campaign_title: campaignMap.get(app.campaign_id),
+        campaign_title: app.is_boost 
+          ? boostCampaignMap.get(app.campaign_id) 
+          : campaignMap.get(app.campaign_id),
         application_answers: app.application_answers as { question: string; answer: string }[] | null,
         profile: profileMap.get(app.creator_id),
-      })) || [];
+      }));
 
       setApplications(applicationsWithProfiles);
       
@@ -117,28 +154,44 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
     setProcessing(applicationId);
     try {
       const application = applications.find(a => a.id === applicationId);
-      
-      const { error } = await supabase
-        .from("campaign_submissions")
-        .update({
-          status: newStatus,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", applicationId);
+      if (!application) throw new Error("Application not found");
 
-      if (error) throw error;
+      // Use different table based on whether it's a boost application
+      if (application.is_boost) {
+        // For bounty applications, use 'accepted' instead of 'approved'
+        const bountyStatus = newStatus === 'approved' ? 'accepted' : 'rejected';
+        const { error } = await supabase
+          .from("bounty_applications")
+          .update({
+            status: bountyStatus,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", applicationId);
 
-      // If approved, track the account
-      if (newStatus === 'approved' && application) {
-        try {
-          await supabase.functions.invoke('track-campaign-user', {
-            body: {
-              campaignId: application.campaign_id,
-              userId: application.creator_id,
-            },
-          });
-        } catch (trackError) {
-          console.error('Error tracking account:', trackError);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("campaign_submissions")
+          .update({
+            status: newStatus,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", applicationId);
+
+        if (error) throw error;
+
+        // If approved, track the account (only for campaigns)
+        if (newStatus === 'approved') {
+          try {
+            await supabase.functions.invoke('track-campaign-user', {
+              body: {
+                campaignId: application.campaign_id,
+                userId: application.creator_id,
+              },
+            });
+          } catch (trackError) {
+            console.error('Error tracking account:', trackError);
+          }
         }
       }
 
