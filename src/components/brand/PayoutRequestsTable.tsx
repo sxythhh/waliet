@@ -565,23 +565,21 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
   if (loading) {
     return (
-      <Card className="bg-card border-0">
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-6 w-16" />
+      <div className="p-6">
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-4 rounded-lg">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-6 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
