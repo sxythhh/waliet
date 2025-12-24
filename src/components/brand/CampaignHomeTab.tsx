@@ -417,9 +417,6 @@ export function CampaignHomeTab({
         metricsData={metricsData}
         isRefreshing={isRefreshing}
         onRefresh={handleRefresh}
-        showHashtagsWarning={true}
-        hashtagsConfigured={campaignHashtags.length > 0}
-        adminControls={isAdmin ? <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={handleRefresh} /> : undefined}
       />
 
       {/* Top Performing Videos - using shared component */}

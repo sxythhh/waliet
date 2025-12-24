@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
+import { toast } from "sonner";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
@@ -115,6 +116,7 @@ export function BoostHomeTab({
   const [totalVideos, setTotalVideos] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     let isCancelled = false;
     const loadData = async () => {
@@ -247,11 +249,27 @@ export function BoostHomeTab({
     return () => {
       isCancelled = true;
     };
-  }, [boost.id, timeframe, boost.accepted_creators_count, boost.max_accepted_creators]);
+  }, [boost.id, timeframe, boost.accepted_creators_count, boost.max_accepted_creators, refreshKey]);
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    // For boosts, just reload data
-    setTimeout(() => setIsRefreshing(false), 1000);
+    try {
+      // Sync metrics from Shortimize for this brand's boosts
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics', {
+        body: { brandId: boost.brand_id, boostId: boost.id }
+      });
+      if (error) {
+        toast.error('Failed to sync metrics');
+        console.error('Error syncing metrics:', error);
+        return;
+      }
+      toast.success('Metrics synced successfully');
+      setRefreshKey(k => k + 1);
+    } catch (error) {
+      console.error('Error refreshing metrics:', error);
+      toast.error('Failed to refresh metrics');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
   const budgetTotal = boost.budget || 0;
   const budgetUsed = boost.budget_used || 0;
@@ -355,7 +373,7 @@ export function BoostHomeTab({
       </div>
 
       {/* Performance Chart - using shared component */}
-      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} showHashtagsWarning={false} hashtagsConfigured={true} />
+      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} />
 
       {/* Top Performing Videos - using shared component */}
       <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} hashtagsConfigured={true} hashtags={[]} />
