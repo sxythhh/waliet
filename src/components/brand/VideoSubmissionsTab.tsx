@@ -687,8 +687,8 @@ export function VideoSubmissionsTab({
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-border/40">
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
-                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Creator</TableHead>
-                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Platform</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
@@ -715,24 +715,12 @@ export function VideoSubmissionsTab({
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1.5">
-                                {submission.video_author_avatar ? (
-                                  <img src={submission.video_author_avatar} alt="" className="h-4 w-4 rounded-full" />
-                                ) : (
-                                  <Avatar className="h-4 w-4">
-                                    <AvatarImage src={profile?.avatar_url || undefined} />
-                                    <AvatarFallback className="text-[8px]">
-                                      {profile?.username?.[0]?.toUpperCase() || "?"}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                )}
-                                <span className="text-xs text-muted-foreground">
-                                  @{submission.video_author_username || profile?.username}
+                                <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                  <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
+                                </div>
+                                <span className="text-xs text-white">
+                                  {submission.video_author_username || profile?.username}
                                 </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center">
-                                <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
                               </div>
                             </TableCell>
                             <TableCell>
