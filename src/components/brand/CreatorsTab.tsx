@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -171,13 +171,11 @@ export function CreatorsTab({
     if (data && data.length > 0) {
       // Fetch creator profiles for all conversations
       const creatorIds = data.map(c => c.creator_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, avatar_url, email")
-        .in("id", creatorIds);
-      
+      const {
+        data: profiles
+      } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", creatorIds);
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-      
+
       // Attach creator data to each conversation
       const conversationsWithCreators = data.map(conv => ({
         ...conv,
@@ -194,7 +192,6 @@ export function CreatorsTab({
           date_joined: null
         } : undefined
       }));
-      
       setConversations(conversationsWithCreators);
 
       // Set bookmarked conversations from database
@@ -624,6 +621,74 @@ export function CreatorsTab({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+  if (loading) {
+    return <div className="h-full flex font-inter tracking-[-0.5px]">
+        {/* Messages Panel Skeleton */}
+        <div className="w-80 border-r border-border/50 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-border/50">
+            <Skeleton className="h-5 w-20 mb-4" />
+            <div className="flex gap-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-7 w-16 rounded-full" />)}
+            </div>
+          </div>
+          <div className="flex-1 p-3 space-y-1">
+            {[1, 2, 3, 4, 5].map(i => <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{
+            animationDelay: `${i * 100}ms`
+          }}>
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2 pt-0.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3.5 w-24" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              </div>)}
+          </div>
+        </div>
+        
+        {/* Center Panel Skeleton */}
+        <div className="flex-1 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-border/50 flex items-center gap-3">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <Skeleton className="h-12 w-12 rounded-xl mx-auto" />
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <Skeleton className="h-3 w-36 mx-auto" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Creators Panel Skeleton */}
+        <div className="w-full lg:w-96 border-l border-border/50 flex flex-col">
+          <div className="p-4 border-b border-border/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+            <Skeleton className="h-9 w-full rounded-lg" />
+          </div>
+          <div className="flex-1 p-3 space-y-1">
+            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{
+            animationDelay: `${i * 80}ms`
+          }}>
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-28" />
+                  <div className="flex gap-1.5">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </div>
+                </div>
+                <Skeleton className="h-6 w-6 rounded" />
+              </div>)}
+          </div>
+        </div>
+      </div>;
+  }
 
   // Mobile Navigation Tabs
   const MobileNav = () => <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
@@ -672,16 +737,13 @@ export function CreatorsTab({
               <p className="text-sm text-muted-foreground mb-6 max-w-[220px] leading-relaxed">
                 Start conversations by messaging creators from the right panel.
               </p>
-              <Button 
-                onClick={() => {
-                  if (!activeConversation) {
-                    setPlanDialogOpen(true);
-                  } else {
-                    setRecruitDialogOpen(true);
-                  }
-                }} 
-                className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md"
-              >
+              <Button onClick={() => {
+            if (!activeConversation) {
+              setPlanDialogOpen(true);
+            } else {
+              setRecruitDialogOpen(true);
+            }
+          }} className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md">
                 <Plus className="h-3.5 w-3.5" />
                 Recruit Creators
               </Button>
@@ -847,11 +909,9 @@ export function CreatorsTab({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All campaigns</SelectItem>
-              {campaigns.map(campaign => (
-                <SelectItem key={campaign.id} value={campaign.id}>
+              {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>
                   {campaign.title}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -1078,47 +1138,35 @@ export function CreatorsTab({
       </AlertDialog>
 
       {/* Recruit Creators Dialog */}
-      <RecruitCreatorsDialog
-        open={recruitDialogOpen}
-        onOpenChange={setRecruitDialogOpen}
-        brandId={brandId}
-        onStartConversation={async (creatorId, creatorName) => {
-          // Find or create conversation with this creator
-          const creator = creators.find(c => c.id === creatorId);
-          if (creator) {
-            await startConversation(creator);
-          } else {
-            // Fetch creator profile and start conversation
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("id, username, full_name, avatar_url, email")
-              .eq("id", creatorId)
-              .single();
-            
-            if (profile) {
-              const newCreator: Creator = {
-                id: profile.id,
-                username: profile.username,
-                full_name: profile.full_name,
-                avatar_url: profile.avatar_url,
-                email: profile.email,
-                campaigns: [],
-                social_accounts: [],
-                total_views: 0,
-                total_earnings: 0,
-                date_joined: null
-              };
-              await startConversation(newCreator);
-            }
-          }
-        }}
-      />
+      <RecruitCreatorsDialog open={recruitDialogOpen} onOpenChange={setRecruitDialogOpen} brandId={brandId} onStartConversation={async (creatorId, creatorName) => {
+      // Find or create conversation with this creator
+      const creator = creators.find(c => c.id === creatorId);
+      if (creator) {
+        await startConversation(creator);
+      } else {
+        // Fetch creator profile and start conversation
+        const {
+          data: profile
+        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").eq("id", creatorId).single();
+        if (profile) {
+          const newCreator: Creator = {
+            id: profile.id,
+            username: profile.username,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+            email: profile.email,
+            campaigns: [],
+            social_accounts: [],
+            total_views: 0,
+            total_earnings: 0,
+            date_joined: null
+          };
+          await startConversation(newCreator);
+        }
+      }
+    }} />
 
       {/* Subscription Gate Dialog */}
-      <SubscriptionGateDialog
-        brandId={brandId}
-        open={planDialogOpen}
-        onOpenChange={setPlanDialogOpen}
-      />
+      <SubscriptionGateDialog brandId={brandId} open={planDialogOpen} onOpenChange={setPlanDialogOpen} />
     </div>;
 }
