@@ -1,17 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare } from "lucide-react";
-import { Check, X, ExternalLink, User } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MessageSquare, Check, X, User } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+
+type StatusFilter = "all" | "pending" | "approved" | "rejected";
 
 interface Application {
   id: string;
@@ -24,6 +26,7 @@ interface Application {
   submitted_at: string;
   reviewed_at: string | null;
   application_answers: { question: string; answer: string }[] | null;
+  application_text?: string | null;
   is_boost?: boolean;
   profile?: {
     username: string;
@@ -49,6 +52,7 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   useEffect(() => {
     fetchApplications();
@@ -71,14 +75,13 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
       const campaignMap = new Map(campaigns.map(c => [c.id, c.title]));
       const boostCampaignMap = new Map(boostCampaigns.map(c => [c.id, c.title]));
 
-      // Fetch pending applications from both tables in parallel
+      // Fetch all applications from both tables (not just pending)
       const [campaignSubmissionsResult, bountyApplicationsResult] = await Promise.all([
         campaignIds.length > 0
           ? supabase
               .from("campaign_submissions")
               .select("*")
               .in("campaign_id", campaignIds)
-              .eq("status", "pending")
               .order("submitted_at", { ascending: false })
           : Promise.resolve({ data: [], error: null }),
         boostCampaignIds.length > 0
@@ -86,7 +89,6 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
               .from("bounty_applications")
               .select("*")
               .in("bounty_campaign_id", boostCampaignIds)
-              .eq("status", "pending")
               .order("applied_at", { ascending: false })
           : Promise.resolve({ data: [], error: null }),
       ]);
@@ -104,7 +106,8 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
         status: app.status,
         submitted_at: app.applied_at,
         reviewed_at: app.reviewed_at,
-        application_answers: app.application_text ? [{ question: "Application", answer: app.application_text }] : null,
+        application_answers: null,
+        application_text: app.application_text,
         is_boost: true,
       }));
 
@@ -139,8 +142,10 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
 
       setApplications(applicationsWithProfiles);
       
+      // Auto-select first pending application
       if (applicationsWithProfiles.length > 0 && !selectedAppId) {
-        setSelectedAppId(applicationsWithProfiles[0].id);
+        const pendingApp = applicationsWithProfiles.find(a => a.status === 'pending');
+        setSelectedAppId(pendingApp?.id || applicationsWithProfiles[0].id);
       }
     } catch (error) {
       console.error("Error fetching applications:", error);
@@ -195,17 +200,12 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
         }
       }
 
-      // Remove from list
-      setApplications(prev => prev.filter(a => a.id !== applicationId));
-      
-      const currentIndex = applications.findIndex(a => a.id === applicationId);
-      const remaining = applications.filter(a => a.id !== applicationId);
-      if (remaining.length > 0) {
-        const nextIndex = Math.min(currentIndex, remaining.length - 1);
-        setSelectedAppId(remaining[nextIndex].id);
-      } else {
-        setSelectedAppId(null);
-      }
+      // Update application status in list
+      setApplications(prev => prev.map(a => 
+        a.id === applicationId 
+          ? { ...a, status: application.is_boost && newStatus === 'approved' ? 'accepted' : newStatus }
+          : a
+      ));
 
       onApplicationReviewed?.();
       toast.success(`Application ${newStatus}`);
@@ -217,15 +217,47 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
     }
   };
 
-  const selectedApp = applications.find(a => a.id === selectedAppId);
+  const pendingCount = applications.filter(a => a.status === 'pending').length;
+  const approvedCount = applications.filter(a => a.status === 'approved' || a.status === 'accepted').length;
+  const rejectedCount = applications.filter(a => a.status === 'rejected').length;
+  const totalCount = applications.length;
+
+  const filteredApplications = useMemo(() => {
+    if (statusFilter === "all") return applications;
+    if (statusFilter === "approved") return applications.filter(a => a.status === 'approved' || a.status === 'accepted');
+    return applications.filter(a => a.status === statusFilter);
+  }, [applications, statusFilter]);
+
+  const selectedApp = filteredApplications.find(a => a.id === selectedAppId) || filteredApplications[0];
+
+  // Auto-select first filtered application when filter changes
+  useEffect(() => {
+    if (filteredApplications.length > 0 && !filteredApplications.find(a => a.id === selectedAppId)) {
+      setSelectedAppId(filteredApplications[0].id);
+    }
+  }, [filteredApplications, selectedAppId]);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+      case 'accepted':
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-red-500/30 bg-red-500/10">Rejected</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-amber-500 border-amber-500/30 bg-amber-500/10">Pending</Badge>;
+    }
+  };
+
+  const getAppUrl = (app: Application) => app.content_url;
 
   if (loading) {
     return (
       <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-8 w-48 bg-muted/50 dark:bg-muted-foreground/20" />
         <div className="grid grid-cols-3 gap-4">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64 col-span-2" />
+          <Skeleton className="h-64 bg-muted/50 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-64 col-span-2 bg-muted/50 dark:bg-muted-foreground/20" />
         </div>
       </div>
     );
@@ -235,7 +267,7 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
         <User className="h-12 w-12 text-muted-foreground/50 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No pending applications</h3>
+        <h3 className="text-lg font-semibold mb-2">No applications</h3>
         <p className="text-muted-foreground text-sm">
           When creators apply to your campaigns, they'll appear here for review.
         </p>
@@ -244,16 +276,32 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
   }
 
   return (
-    <div className="flex h-full min-h-[500px]">
+    <div className="flex h-full">
       {/* Applications List - Left Column */}
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">
-          <h3 className="font-semibold">All Applications</h3>
-          <p className="text-sm text-muted-foreground">{applications.length} pending</p>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold">Applications</h3>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+              <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All ({totalCount})</SelectItem>
+                <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
+                <SelectItem value="approved">Approved ({approvedCount})</SelectItem>
+                <SelectItem value="rejected">Rejected ({rejectedCount})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
-            {applications.map(app => (
+            {filteredApplications.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No {statusFilter} applications
+              </div>
+            ) : filteredApplications.map(app => (
               <button
                 key={app.id}
                 onClick={() => setSelectedAppId(app.id)}
@@ -271,23 +319,30 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">
-                      {app.profile?.full_name || app.profile?.username || "Unknown"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">
+                        {app.profile?.full_name || app.profile?.username || "Unknown"}
+                      </p>
+                      {app.status !== 'pending' && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                          app.status === 'approved' || app.status === 'accepted' 
+                            ? 'bg-emerald-500/10 text-emerald-500' 
+                            : 'bg-red-500/10 text-red-500'
+                        }`}>
+                          {app.status === 'approved' || app.status === 'accepted' ? 'Approved' : 'Rejected'}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {app.campaign_title || "Campaign"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(app.submitted_at), { addSuffix: true })}
-                    </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {app.platform && PLATFORM_LOGOS[app.platform?.toLowerCase()] && (
+                        <img src={PLATFORM_LOGOS[app.platform.toLowerCase()]} alt={app.platform} className="h-3 w-3" />
+                      )}
+                      <span>{formatDistanceToNow(new Date(app.submitted_at), { addSuffix: true })}</span>
+                    </div>
                   </div>
-                  {PLATFORM_LOGOS[app.platform?.toLowerCase()] && (
-                    <img 
-                      src={PLATFORM_LOGOS[app.platform.toLowerCase()]} 
-                      alt={app.platform} 
-                      className="h-4 w-4 opacity-60"
-                    />
-                  )}
                 </div>
               </button>
             ))}
@@ -295,109 +350,124 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
         </ScrollArea>
       </div>
 
-      {/* Selected Application Details - Right Column */}
-      <div className="flex-1 flex flex-col">
+      {/* Application Details - Right Column */}
+      <div className="flex-1 flex flex-col relative">
         {selectedApp ? (
           <>
-            {/* Header */}
-            <div className="p-4 border-b border-border">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
-                  <AvatarFallback>
-                    {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold">
-                    {selectedApp.profile?.full_name || selectedApp.profile?.username}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    @{selectedApp.profile?.username} · {selectedApp.campaign_title}
-                  </p>
+            <div className="flex-1 overflow-auto p-6 pb-24">
+              <div className="space-y-5">
+                {/* Creator Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 ring-2 ring-border/50">
+                      <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
+                      <AvatarFallback className="text-base font-medium tracking-[-0.5px]">
+                        {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-0.5">
+                      <h2 className="text-base font-semibold tracking-[-0.5px]">
+                        {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
+                      </h2>
+                      <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+                        @{selectedApp.profile?.username} · {selectedApp.campaign_title}
+                      </p>
+                    </div>
+                  </div>
+                  {getStatusBadge(selectedApp.status)}
                 </div>
-              </div>
-            </div>
 
-            {/* Content */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-6">
-                {/* Submitted Content */}
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Submitted Content</h3>
+                {/* Connected Account */}
+                {getAppUrl(selectedApp) && (
                   <a
-                    href={selectedApp.content_url}
+                    href={getAppUrl(selectedApp)!}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-primary hover:underline text-sm"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    {selectedApp.content_url}
+                    {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform?.toLowerCase()] && (
+                      <div className="h-9 w-9 rounded-lg flex items-center justify-center">
+                        <img src={PLATFORM_LOGOS[selectedApp.platform.toLowerCase()]} alt={selectedApp.platform} className="h-5 w-5" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium tracking-[-0.3px] truncate">
+                        {(() => {
+                          const url = getAppUrl(selectedApp);
+                          if (!url) return "Unknown";
+                          const match = url.match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/(@?[\w.-]+)/i);
+                          return match ? match[1].replace(/^@/, '') : url;
+                        })()}
+                      </p>
+                      <p className="text-xs text-muted-foreground tracking-[-0.2px] capitalize">
+                        {selectedApp.is_boost ? "Submitted video" : "Connected account"}
+                      </p>
+                    </div>
                   </a>
-                </div>
+                )}
+
+                {/* Application Note */}
+                {selectedApp.application_text && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Note</p>
+                    <div className="p-3 rounded-xl border border-border/50 bg-muted/20">
+                      <p className="text-sm text-foreground tracking-[-0.3px] leading-relaxed">{selectedApp.application_text}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Application Answers */}
                 {selectedApp.application_answers && selectedApp.application_answers.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-3">Application Answers</h3>
-                    <div className="space-y-4">
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Responses</p>
+                    <div className="space-y-2">
                       {selectedApp.application_answers.map((qa, index) => (
-                        <div key={index} className="bg-muted/30 rounded-lg p-4">
-                          <p className="text-sm font-medium text-muted-foreground mb-1">
-                            {qa.question}
-                          </p>
-                          <p className="text-sm">{qa.answer}</p>
+                        <div key={index} className="p-3 rounded-xl border border-border/50 bg-muted/20">
+                          <p className="text-xs text-muted-foreground tracking-[-0.2px] mb-1.5">{qa.question}</p>
+                          <p className="text-sm text-foreground tracking-[-0.3px] leading-relaxed">{qa.answer || "No answer provided"}</p>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-
-                {/* Contact Info */}
-                {selectedApp.profile?.email && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Contact</h3>
-                    <p className="text-sm text-muted-foreground">{selectedApp.profile.email}</p>
-                  </div>
-                )}
               </div>
-            </ScrollArea>
-
-            {/* Fixed Footer Actions */}
-            <div className="p-4 border-t border-border bg-background flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1"
-              >
-                <MessageSquare className="h-4 w-4" />
-                Message
-              </Button>
-              <div className="flex-1" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleUpdateStatus(selectedApp.id, "rejected")}
-                disabled={processing === selectedApp.id}
-                className="gap-1"
-              >
-                <X className="h-4 w-4" />
-                Reject
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleUpdateStatus(selectedApp.id, "approved")}
-                disabled={processing === selectedApp.id}
-                className="gap-1"
-              >
-                <Check className="h-4 w-4" />
-                Accept
-              </Button>
             </div>
+
+            {/* Action Buttons - Fixed at bottom (only show for pending applications) */}
+            {selectedApp.status === 'pending' && (
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
+                    variant="outline"
+                    disabled={processing === selectedApp.id}
+                    className="flex-1 h-11 font-medium tracking-[-0.5px] border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-11 px-4 font-medium tracking-[-0.5px] border-border/50 hover:bg-muted/50"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Message
+                  </Button>
+                  <Button
+                    onClick={() => handleUpdateStatus(selectedApp.id, 'approved')}
+                    disabled={processing === selectedApp.id}
+                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-500 text-white"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Accept
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Select an application to view details
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            Select an application to review
           </div>
         )}
       </div>
