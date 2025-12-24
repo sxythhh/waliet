@@ -423,17 +423,21 @@ export function CampaignHomeTab({
               <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex cursor-pointer">
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex cursor-pointer gap-0.5">
                         {stats.paidViews > 0 && (
                           <div 
-                            className="h-full bg-emerald-500 transition-all duration-300"
+                            className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
                             style={{ width: `${paidPercent}%` }}
                           />
                         )}
                         {stats.unpaidViews > 0 && (
                           <div 
-                            className="h-full bg-amber-500 transition-all duration-300"
-                            style={{ width: `${pendingPercent}%` }}
+                            className="h-full bg-amber-500 transition-all duration-300 rounded-full animate-diagonal-stripes"
+                            style={{ 
+                              width: `${pendingPercent}%`,
+                              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.15) 2px, rgba(255,255,255,0.15) 4px)',
+                              backgroundSize: '8px 8px'
+                            }}
                           />
                         )}
                       </div>
