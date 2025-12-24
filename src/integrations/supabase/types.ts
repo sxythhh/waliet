@@ -1130,6 +1130,141 @@ export type Database = {
           },
         ]
       }
+      campaign_links: {
+        Row: {
+          assigned_to: string | null
+          bounty_campaign_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          conversion_value: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          destination_url: string
+          dub_link_id: string | null
+          dub_short_link: string | null
+          id: string
+          is_active: boolean
+          short_code: string
+          title: string | null
+          total_clicks: number
+          total_conversions: number
+          unique_clicks: number
+          updated_at: string
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          bounty_campaign_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          conversion_value?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          destination_url: string
+          dub_link_id?: string | null
+          dub_short_link?: string | null
+          id?: string
+          is_active?: boolean
+          short_code: string
+          title?: string | null
+          total_clicks?: number
+          total_conversions?: number
+          unique_clicks?: number
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          bounty_campaign_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          conversion_value?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          destination_url?: string
+          dub_link_id?: string | null
+          dub_short_link?: string | null
+          id?: string
+          is_active?: boolean
+          short_code?: string
+          title?: string | null
+          total_clicks?: number
+          total_conversions?: number
+          unique_clicks?: number
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_links_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_submissions: {
         Row: {
           application_answers: Json | null
@@ -1934,6 +2069,94 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      link_clicks: {
+        Row: {
+          browser: string | null
+          city: string | null
+          clicked_at: string
+          country: string | null
+          device: string | null
+          id: string
+          ip_hash: string | null
+          link_id: string
+          os: string | null
+          referrer: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          clicked_at?: string
+          country?: string | null
+          device?: string | null
+          id?: string
+          ip_hash?: string | null
+          link_id: string
+          os?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          clicked_at?: string
+          country?: string | null
+          device?: string | null
+          id?: string
+          ip_hash?: string | null
+          link_id?: string
+          os?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_clicks_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      link_conversions: {
+        Row: {
+          conversion_type: string
+          converted_at: string
+          id: string
+          link_id: string
+          metadata: Json | null
+          order_id: string | null
+          value: number | null
+        }
+        Insert: {
+          conversion_type?: string
+          converted_at?: string
+          id?: string
+          link_id: string
+          metadata?: Json | null
+          order_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          conversion_type?: string
+          converted_at?: string
+          id?: string
+          link_id?: string
+          metadata?: Json | null
+          order_id?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_conversions_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -3108,6 +3331,7 @@ export type Database = {
       delete_discord_tokens: { Args: { p_user_id: string }; Returns: undefined }
       encrypt_discord_token: { Args: { token: string }; Returns: string }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
+      generate_short_code: { Args: never; Returns: string }
       get_current_user_email: { Args: never; Returns: string }
       get_discord_tokens: {
         Args: { p_user_id: string }

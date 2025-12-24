@@ -110,3 +110,15 @@ verify_jwt = true
 
 [functions.fetch-youtube-video]
 verify_jwt = true
+
+[functions.create-campaign-link]
+verify_jwt = true
+
+[functions.track-link-click]
+verify_jwt = false
+
+[functions.track-link-conversion]
+verify_jwt = false
+
+[functions.get-link-analytics]
+verify_jwt = true
