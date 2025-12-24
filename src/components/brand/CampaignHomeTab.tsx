@@ -406,7 +406,7 @@ export function CampaignHomeTab({
             {/* Paid vs Unpaid Progress Bar */}
             {(stats.paidViews > 0 || stats.unpaidViews > 0) && (
               <div className="space-y-1.5">
-                <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden flex">
+                <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex">
                   {stats.paidViews > 0 && (
                     <div 
                       className="h-full bg-emerald-500 transition-all duration-300"
@@ -420,7 +420,7 @@ export function CampaignHomeTab({
                     />
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground tracking-[-0.5px]">
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     {formatNumber(stats.paidViews)} paid
