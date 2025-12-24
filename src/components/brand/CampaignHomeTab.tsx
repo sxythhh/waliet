@@ -121,13 +121,14 @@ export function CampaignHomeTab({
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
         
         // Query video_submissions directly for accurate metrics (refreshed every 8 hours from Shortimize)
+        // Include payout_status to calculate paid vs unpaid views directly
         const videoSubmissionsQuery = supabase
           .from('video_submissions')
-          .select('id, status, views, likes, comments, shares, bookmarks, submitted_at')
+          .select('id, status, views, likes, comments, shares, bookmarks, submitted_at, payout_status')
           .eq('source_type', 'campaign')
           .eq('source_id', campaignId);
         
-        // Query campaign_account_analytics for paid views data
+        // Query campaign_account_analytics for paid views data (fallback)
         const analyticsQuery = supabase
           .from('campaign_account_analytics')
           .select('total_views, paid_views')
@@ -160,6 +161,7 @@ export function CampaignHomeTab({
           shares: number | null;
           bookmarks: number | null;
           submitted_at: string | null;
+          payout_status: string | null;
         }[];
         
         // Filter by date range if needed
@@ -218,13 +220,12 @@ export function CampaignHomeTab({
         const totalSubmissionsCount = filteredSubmissions.length;
         const approvedSubmissionsCount = approvedSubmissions.length;
         
-        // Calculate paid vs unpaid views from campaign_account_analytics
-        const analyticsData = analyticsResult.data || [];
-        const totalPaidViews = analyticsData.reduce((sum, a) => sum + (a.paid_views || 0), 0);
-        const totalAnalyticsViews = analyticsData.reduce((sum, a) => sum + (a.total_views || 0), 0);
-        // Use the larger of analytics total_views or our calculated totalViews for unpaid calculation
-        const baseViews = Math.max(totalAnalyticsViews, totalViews);
-        const unpaidViews = Math.max(0, baseViews - totalPaidViews);
+        // Calculate paid vs unpaid views directly from video_submissions payout_status
+        // This is more reliable than campaign_account_analytics which may not be updated
+        const paidSubmissions = approvedSubmissions.filter(s => s.payout_status === 'paid');
+        const unpaidSubmissions = approvedSubmissions.filter(s => s.payout_status !== 'paid');
+        const totalPaidViews = paidSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
+        const unpaidViews = unpaidSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
         
         setStats({
           totalViews,
