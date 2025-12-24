@@ -267,78 +267,87 @@ export function CampaignApplicationsView({ campaignId, boostId, onApplicationRev
         {selectedApp ? (
           <>
             <div className="flex-1 overflow-auto p-6 pb-24">
-              <div className="space-y-6">
-                {/* Creator Info */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
+              <div className="space-y-5">
+                {/* Creator Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 ring-2 ring-border/50">
                       <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
-                      <AvatarFallback className="text-xl">
+                      <AvatarFallback className="text-base font-medium tracking-[-0.5px]">
                         {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h2 className="text-xl font-semibold">
+                    <div className="space-y-0.5">
+                      <h2 className="text-base font-semibold tracking-[-0.5px]">
                         {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
                       </h2>
-                      <p className="text-muted-foreground">@{selectedApp.profile?.username}</p>
-                      {selectedApp.profile?.email && (
-                        <p className="text-sm text-muted-foreground">{selectedApp.profile.email}</p>
-                      )}
+                      <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+                        @{selectedApp.profile?.username}
+                      </p>
                     </div>
                   </div>
-                  <Badge variant="outline">Pending</Badge>
+                  <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-amber-500 border-amber-500/30 bg-amber-500/10">
+                    Pending
+                  </Badge>
                 </div>
 
-                {/* Platform & Account / Video URL */}
+                {/* Connected Account */}
                 {getAppUrl(selectedApp) && (
-                  <div className="p-4 rounded-lg bg-muted/30">
-                    <div className="flex items-center gap-3">
-                      {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
+                  <a 
+                    href={getAppUrl(selectedApp)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group"
+                  >
+                    {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
+                      <div className="h-9 w-9 rounded-lg bg-background flex items-center justify-center">
                         <img 
                           src={PLATFORM_LOGOS[selectedApp.platform]} 
                           alt={selectedApp.platform}
-                          className="h-6 w-6"
+                          className="h-5 w-5"
                         />
-                      )}
-                      <div className="flex-1">
-                        {selectedApp.platform && (
-                          <p className="font-medium capitalize">{selectedApp.platform}</p>
-                        )}
-                        <a 
-                          href={getAppUrl(selectedApp)!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-primary hover:underline flex items-center gap-1"
-                        >
-                          {isBoost ? "View submitted video" : getAppUrl(selectedApp)}
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
                       </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium tracking-[-0.3px] truncate">
+                        {(() => {
+                          const url = getAppUrl(selectedApp);
+                          if (!url) return "Unknown";
+                          // Extract username from URL
+                          const match = url.match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/(@?[\w.-]+)/i);
+                          return match ? (match[1].startsWith('@') ? match[1] : `@${match[1]}`) : url;
+                        })()}
+                      </p>
+                      <p className="text-xs text-muted-foreground tracking-[-0.2px] capitalize">
+                        {isBoost ? "Submitted video" : "Connected account"}
+                      </p>
                     </div>
-                  </div>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </a>
                 )}
 
-                {/* Application Text (for boosts) */}
+                {/* Application Note */}
                 {selectedApp.application_text && (
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">Application Note</h3>
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <p className="text-foreground">{selectedApp.application_text}</p>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Note</p>
+                    <div className="p-3 rounded-xl border border-border/50 bg-muted/20">
+                      <p className="text-sm text-foreground tracking-[-0.3px] leading-relaxed">{selectedApp.application_text}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Application Answers (for campaigns) */}
+                {/* Application Answers */}
                 {selectedApp.application_answers && selectedApp.application_answers.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">Application Answers</h3>
-                    {selectedApp.application_answers.map((qa, index) => (
-                      <div key={index} className="p-4 rounded-lg bg-muted/30">
-                        <p className="text-sm text-muted-foreground mb-2">{qa.question}</p>
-                        <p className="text-foreground">{qa.answer || "No answer provided"}</p>
-                      </div>
-                    ))}
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground tracking-[-0.2px] uppercase">Responses</p>
+                    <div className="space-y-2">
+                      {selectedApp.application_answers.map((qa, index) => (
+                        <div key={index} className="p-3 rounded-xl border border-border/50 bg-muted/20">
+                          <p className="text-xs text-muted-foreground tracking-[-0.2px] mb-1.5">{qa.question}</p>
+                          <p className="text-sm text-foreground tracking-[-0.3px] leading-relaxed">{qa.answer || "No answer provided"}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
