@@ -39,20 +39,17 @@ Deno.serve(async (req) => {
       throw new Error('Invalid authentication token');
     }
 
-    // Verify admin role
-    const { data: roleData, error: roleError } = await supabase
+// Check if user is admin OR brand member with access to the campaign
+    const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .eq('role', 'admin')
       .maybeSingle();
 
-    if (roleError || !roleData) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const isAdmin = !!roleData;
+    
+    // If not admin, we'll verify brand membership after getting campaign details
 
     // Parse request body
     const body: PaymentRequest = await req.json();
@@ -73,10 +70,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify campaign exists
+// Verify campaign exists
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')
-      .select('id, title, budget, budget_used')
+      .select('id, title, budget, budget_used, brand_id')
       .eq('id', campaign_id)
       .single();
 
@@ -85,6 +82,23 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Campaign not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // If not admin, verify brand membership
+    if (!isAdmin) {
+      const { data: brandMember } = await supabase
+        .from('brand_members')
+        .select('id')
+        .eq('brand_id', campaign.brand_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!brandMember) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized: Brand member access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Verify user exists

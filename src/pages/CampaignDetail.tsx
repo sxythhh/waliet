@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, LogOut, Link } from "lucide-react";
+import { ArrowLeft, LogOut, Link, Video } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
 
 interface Campaign {
   id: string;
@@ -15,6 +16,8 @@ interface Campaign {
   brand_logo_url: string;
   budget: number;
   rpm_rate: number;
+  post_rate: number | null;
+  payment_model: string | null;
   status: string;
   guidelines: string;
   start_date: string;
@@ -36,7 +39,8 @@ export default function CampaignDetail() {
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
   const [leavingCampaign, setLeavingCampaign] = useState(false);
-  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showSubmitVideoDialog, setShowSubmitVideoDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -280,8 +284,16 @@ export default function CampaignDetail() {
           Back to Campaigns
         </Button>
         
-        <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
+          {campaign.payment_model === 'pay_per_post' && (
+            <Button onClick={() => setShowSubmitVideoDialog(true)}>
+              <Video className="mr-2 h-4 w-4" />
+              Submit Video
+            </Button>
+          )}
+          
           <Button
+            variant="outline"
             onClick={() => navigate("/dashboard?tab=profile")}
           >
             <Link className="mr-2 h-4 w-4" />
@@ -404,7 +416,7 @@ export default function CampaignDetail() {
         </div>
       </div>
       
-      {/* Leave Campaign Confirmation Dialog */}
+{/* Leave Campaign Confirmation Dialog */}
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -430,6 +442,21 @@ export default function CampaignDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Submit Video Dialog */}
+      {campaign && (
+        <SubmitVideoDialog
+          open={showSubmitVideoDialog}
+          onOpenChange={setShowSubmitVideoDialog}
+          campaign={{
+            id: campaign.id,
+            title: campaign.title,
+            payment_model: campaign.payment_model,
+            post_rate: campaign.post_rate,
+            allowed_platforms: campaign.allowed_platforms
+          }}
+        />
+      )}
     </div>
   );
 }

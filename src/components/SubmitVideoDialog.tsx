@@ -15,9 +15,9 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 interface Campaign {
   id: string;
   title: string;
-  brand_name: string;
+  brand_name?: string;
   payment_model?: string | null;
-  rpm_rate: number;
+  rpm_rate?: number;
   post_rate?: number | null;
   allowed_platforms?: string[];
 }
@@ -162,16 +162,16 @@ export function SubmitVideoDialog({ campaign, open, onOpenChange, onSuccess }: S
             Submit Video
           </DialogTitle>
           <DialogDescription>
-            Submit your video for {campaign.title} to earn{" "}
+Submit your video for {campaign.title} to earn{" "}
             {isPayPerPost ? (
               <span className="font-semibold text-emerald-500">
                 ${campaign.post_rate?.toFixed(2)} per approved video
               </span>
-            ) : (
+            ) : campaign.rpm_rate ? (
               <span className="font-semibold text-emerald-500">
                 ${campaign.rpm_rate} per 1K views
               </span>
-            )}
+            ) : null}
           </DialogDescription>
         </DialogHeader>
 
@@ -235,8 +235,8 @@ export function SubmitVideoDialog({ campaign, open, onOpenChange, onSuccess }: S
                 {isPayPerPost ? "Payout on Approval" : "Earnings Based on Views"}
               </span>
             </div>
-            <span className="text-sm font-bold text-emerald-500">
-              {isPayPerPost ? `$${campaign.post_rate?.toFixed(2)}` : `$${campaign.rpm_rate}/1K`}
+<span className="text-sm font-bold text-emerald-500">
+              {isPayPerPost ? `$${campaign.post_rate?.toFixed(2)}` : campaign.rpm_rate ? `$${campaign.rpm_rate}/1K` : "View-based"}
             </span>
           </div>
 
