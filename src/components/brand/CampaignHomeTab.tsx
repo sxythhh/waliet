@@ -170,14 +170,11 @@ export function CampaignHomeTab({
     setTopVideos([]);
     setTotalVideos(0);
   }, [timeframe]);
-
   useEffect(() => {
     let isCancelled = false;
-    
     const loadAll = async () => {
       if (isCancelled) return;
       setIsLoading(true);
-      
       try {
         // Run all initial queries in parallel for speed
         const dateRange = getDateRange(timeframe);
@@ -186,85 +183,31 @@ export function CampaignHomeTab({
         const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
         // Build all queries
-        const brandQuery = supabase
-          .from('brands')
-          .select('collection_name, shortimize_api_key')
-          .eq('id', brandId)
-          .single();
-
-        const campaignQuery = supabase
-          .from('campaigns')
-          .select('hashtags')
-          .eq('id', campaignId)
-          .single();
-
-        const allTransactionsQuery = supabase
-          .from('wallet_transactions')
-          .select('amount, created_at')
-          .eq('metadata->>campaign_id', campaignId)
-          .eq('type', 'earning');
-
-        let metricsRangeQuery = supabase
-          .from('campaign_video_metrics')
-          .select('total_views')
-          .eq('campaign_id', campaignId)
-          .order('recorded_at', { ascending: false })
-          .limit(1);
+        const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
+        const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
+        const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
+        let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', {
+          ascending: false
+        }).limit(1);
         if (dateRange) {
-          metricsRangeQuery = metricsRangeQuery
-            .gte('recorded_at', dateRange.start.toISOString())
-            .lte('recorded_at', dateRange.end.toISOString());
+          metricsRangeQuery = metricsRangeQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
         }
-
-        const metricsThisWeekQuery = supabase
-          .from('campaign_video_metrics')
-          .select('total_views')
-          .eq('campaign_id', campaignId)
-          .gte('recorded_at', oneWeekAgo.toISOString())
-          .order('recorded_at', { ascending: false })
-          .limit(1);
-
-        const metricsLastWeekQuery = supabase
-          .from('campaign_video_metrics')
-          .select('total_views')
-          .eq('campaign_id', campaignId)
-          .gte('recorded_at', twoWeeksAgo.toISOString())
-          .lt('recorded_at', oneWeekAgo.toISOString())
-          .order('recorded_at', { ascending: false })
-          .limit(1);
-
-        let chartMetricsQuery = supabase
-          .from('campaign_video_metrics')
-          .select('*')
-          .eq('campaign_id', campaignId)
-          .order('recorded_at', { ascending: true });
+        const metricsThisWeekQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', {
+          ascending: false
+        }).limit(1);
+        const metricsLastWeekQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', twoWeeksAgo.toISOString()).lt('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', {
+          ascending: false
+        }).limit(1);
+        let chartMetricsQuery = supabase.from('campaign_video_metrics').select('*').eq('campaign_id', campaignId).order('recorded_at', {
+          ascending: true
+        });
         if (dateRange) {
-          chartMetricsQuery = chartMetricsQuery
-            .gte('recorded_at', dateRange.start.toISOString())
-            .lte('recorded_at', dateRange.end.toISOString());
+          chartMetricsQuery = chartMetricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
         }
 
         // Execute ALL queries in parallel
-        const [
-          brandResult,
-          campaignResult,
-          allTransactionsResult,
-          metricsRangeResult,
-          metricsThisWeekResult,
-          metricsLastWeekResult,
-          chartMetricsResult
-        ] = await Promise.all([
-          brandQuery,
-          campaignQuery,
-          allTransactionsQuery,
-          metricsRangeQuery,
-          metricsThisWeekQuery,
-          metricsLastWeekQuery,
-          chartMetricsQuery
-        ]);
-
+        const [brandResult, campaignResult, allTransactionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([brandQuery, campaignQuery, allTransactionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery]);
         if (isCancelled) return;
-
         const brandData = brandResult.data;
         setBrand(brandData);
         setCampaignHashtags(campaignResult.data?.hashtags || []);
@@ -278,30 +221,18 @@ export function CampaignHomeTab({
             return date >= dateRange.start && date <= dateRange.end;
           });
         }
-
-        const payoutsThisWeek = allTransactionsData
-          .filter(t => new Date(t.created_at) >= oneWeekAgo)
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
-        const payoutsLastWeek = allTransactionsData
-          .filter(t => {
-            const date = new Date(t.created_at);
-            return date >= twoWeeksAgo && date < oneWeekAgo;
-          })
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
-
+        const payoutsThisWeek = allTransactionsData.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0);
+        const payoutsLastWeek = allTransactionsData.filter(t => {
+          const date = new Date(t.created_at);
+          return date >= twoWeeksAgo && date < oneWeekAgo;
+        }).reduce((sum, t) => sum + (t.amount || 0), 0);
         const viewsThisWeekValue = metricsThisWeekResult.data?.[0]?.total_views || 0;
         const viewsLastWeekValue = metricsLastWeekResult.data?.[0]?.total_views || 0;
-        const viewsChangePercent = viewsLastWeekValue > 0 
-          ? ((viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue) * 100 
-          : 0;
-        const payoutsChangePercent = payoutsLastWeek > 0 
-          ? ((payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek) * 100 
-          : 0;
-
+        const viewsChangePercent = viewsLastWeekValue > 0 ? (viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue * 100 : 0;
+        const payoutsChangePercent = payoutsLastWeek > 0 ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 : 0;
         const totalViews = metricsRangeResult.data?.[0]?.total_views || 0;
         const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
-        const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
-
+        const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
         setStats({
           totalViews,
           totalPayouts,
@@ -322,7 +253,6 @@ export function CampaignHomeTab({
             const bookmarks = m.total_bookmarks || 0;
             const videos = m.total_videos || 0;
             const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
-            
             return {
               date: format(new Date(m.recorded_at), 'MMM d'),
               views,
@@ -341,24 +271,22 @@ export function CampaignHomeTab({
         } else {
           setMetricsData([]);
         }
-
         setIsLoading(false);
 
         // Load top videos from cached data (non-blocking)
-        let videosQuery = supabase
-          .from('cached_campaign_videos')
-          .select('*', { count: 'exact' })
-          .eq('campaign_id', campaignId)
-          .order('views', { ascending: false })
-          .limit(3);
-        
+        let videosQuery = supabase.from('cached_campaign_videos').select('*', {
+          count: 'exact'
+        }).eq('campaign_id', campaignId).order('views', {
+          ascending: false
+        }).limit(3);
         if (dateRange) {
-          videosQuery = videosQuery
-            .gte('uploaded_at', dateRange.start.toISOString())
-            .lte('uploaded_at', dateRange.end.toISOString());
+          videosQuery = videosQuery.gte('uploaded_at', dateRange.start.toISOString()).lte('uploaded_at', dateRange.end.toISOString());
         }
-        
-        videosQuery.then(({ data: cachedVideos, count, error }) => {
+        videosQuery.then(({
+          data: cachedVideos,
+          count,
+          error
+        }) => {
           if (isCancelled) return;
           if (!error && cachedVideos) {
             const mappedVideos: VideoData[] = cachedVideos.map(v => ({
@@ -371,40 +299,47 @@ export function CampaignHomeTab({
               latest_views: v.views || 0,
               latest_likes: v.likes || 0,
               latest_comments: v.comments || 0,
-              latest_shares: v.shares || 0,
+              latest_shares: v.shares || 0
             }));
             setTopVideos(mappedVideos);
             setTotalVideos(count || 0);
           }
         });
-        
       } catch (error) {
         console.error('Error fetching home data:', error);
         if (!isCancelled) setIsLoading(false);
       }
     };
-
     loadAll();
-    return () => { isCancelled = true; };
+    return () => {
+      isCancelled = true;
+    };
   }, [campaignId, brandId, timeframe, refreshKey]);
-  
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       // First sync videos from Shortimize to cache
-      const { error: syncError } = await supabase.functions.invoke('sync-campaign-account-videos', {
-        body: { campaignId, forceRefresh: true }
+      const {
+        error: syncError
+      } = await supabase.functions.invoke('sync-campaign-account-videos', {
+        body: {
+          campaignId,
+          forceRefresh: true
+        }
       });
-      
       if (syncError) {
         console.error('Video sync error:', syncError);
       }
-      
+
       // Then sync metrics from cached videos
-      const { data, error } = await supabase.functions.invoke('sync-campaign-video-metrics', {
-        body: { campaignId }
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('sync-campaign-video-metrics', {
+        body: {
+          campaignId
+        }
       });
-      
       if (error) {
         toast.error('Failed to sync metrics: ' + error.message);
         return;
@@ -413,9 +348,8 @@ export function CampaignHomeTab({
         toast.error('Sync failed: ' + (data.errorMessage || 'Unknown error'));
         return;
       }
-      
       toast.success('Metrics synced successfully');
-      
+
       // Trigger re-fetch by incrementing refresh key
       setRefreshKey(k => k + 1);
     } catch (error) {
@@ -551,11 +485,7 @@ export function CampaignHomeTab({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
           <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
           <div className="flex items-center gap-2">
-            {isAdmin && (
-              <span className="text-xs text-muted-foreground tracking-[-0.5px] hidden sm:inline">
-                Syncs every 4h (12am, 4am, 8am, 12pm, 4pm, 8pm)
-              </span>
-            )}
+            {isAdmin}
             {isAdmin && <ManualMetricsDialog campaignId={campaignId} brandId={brandId} onSuccess={handleRefresh} />}
             <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="h-8 px-2">
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -651,21 +581,17 @@ export function CampaignHomeTab({
             }} />)}
               </AreaChart>
             </ResponsiveContainer> : <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-3">
-              {campaignHashtags.length === 0 ? (
-                <>
+              {campaignHashtags.length === 0 ? <>
                   <p className="font-medium text-foreground">Hashtags Required</p>
                   <p className="text-center max-w-sm">Add hashtags to your campaign to start tracking video metrics. Videos will be matched by hashtag in captions.</p>
-                </>
-              ) : (
-                <>
+                </> : <>
                   <p>No metrics data recorded yet</p>
                   <p className="text-xs text-center max-w-sm">Metrics are synced automatically every 4 hours. Click below to sync now.</p>
                   <Button type="button" variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="border-black/0">
                     <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                     Sync Now
                   </Button>
-                </>
-              )}
+                </>}
             </div>}
         </div>
       </Card>
@@ -714,14 +640,10 @@ export function CampaignHomeTab({
               </a>)}
           </div> : <Card className="p-8 bg-card/30 border-table-border">
             <div className="text-center text-muted-foreground tracking-[-0.5px] space-y-2">
-              {campaignHashtags.length === 0 ? (
-                <>
+              {campaignHashtags.length === 0 ? <>
                   <p className="font-medium text-foreground">No Hashtags Configured</p>
                   <p>Add hashtags to your campaign settings to filter and track videos.</p>
-                </>
-              ) : (
-                <p>No videos found matching hashtags: {campaignHashtags.join(', ')}</p>
-              )}
+                </> : <p>No videos found matching hashtags: {campaignHashtags.join(', ')}</p>}
             </div>
           </Card>}
       </div>
