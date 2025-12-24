@@ -233,11 +233,34 @@ export function SubmitVideoDialog({
         return;
       }
 
+      // Get the selected account username
+      const selectedAccount = socialAccounts.find(acc => acc.id === selectedAccountId);
+      if (!selectedAccount) {
+        toast.error("Selected account not found");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Fetch video details from API
+      const videoDetails = await fetchVideoDetails(videoUrl.trim());
+
+      // Validate that the video author matches the selected account
+      if (videoDetails && videoDetails.authorUsername) {
+        const videoAuthor = videoDetails.authorUsername.toLowerCase().replace('@', '');
+        const accountUsername = selectedAccount.username.toLowerCase().replace('@', '');
+        
+        if (videoAuthor !== accountUsername) {
+          toast.error(`This video belongs to @${videoDetails.authorUsername}, not your account @${selectedAccount.username}`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Check if video URL already submitted
       const { data: existing } = await supabase
-        .from("campaign_videos")
+        .from("video_submissions")
         .select("id")
-        .eq("campaign_id", campaign.id)
+        .eq("source_id", campaign.id)
         .eq("video_url", videoUrl.trim())
         .maybeSingle();
 
@@ -247,32 +270,33 @@ export function SubmitVideoDialog({
         return;
       }
 
-      // Fetch video details from TikTok API
-      const videoDetails = await fetchVideoDetails(videoUrl.trim());
+      // Get campaign brand_id
+      const { data: campaignData } = await supabase
+        .from("campaigns")
+        .select("brand_id")
+        .eq("id", campaign.id)
+        .single();
 
       // Calculate estimated payout for pay_per_post
       const estimatedPayout = isPayPerPost ? campaign.post_rate || 0 : null;
 
-      // Insert the video submission
-      const { error } = await supabase.from("campaign_videos").insert({
-        campaign_id: campaign.id,
+      // Insert into video_submissions table (unified table)
+      const { error } = await supabase.from("video_submissions").insert({
+        source_type: "campaign",
+        source_id: campaign.id,
+        brand_id: campaignData?.brand_id || null,
         creator_id: user.id,
         video_url: videoUrl.trim(),
         platform: platform,
-        social_account_id: selectedAccountId,
         status: "pending",
-        estimated_payout: estimatedPayout,
+        payout_amount: estimatedPayout,
+        submitted_at: new Date().toISOString(),
         // Add video metadata if fetched
         ...(videoDetails && {
-          video_description: videoDetails.description,
-          video_cover_url: videoDetails.coverUrl,
-          video_author_username: videoDetails.authorUsername,
-          video_author_avatar: videoDetails.authorAvatar,
-          video_upload_date: videoDetails.uploadDate,
-          video_views: videoDetails.views,
-          video_likes: videoDetails.likes,
-          video_comments: videoDetails.comments,
-          video_shares: videoDetails.shares,
+          views: videoDetails.views || 0,
+          likes: videoDetails.likes || 0,
+          comments: videoDetails.comments || 0,
+          shares: videoDetails.shares || 0,
         })
       });
 
