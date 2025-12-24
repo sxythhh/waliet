@@ -34,6 +34,8 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
+import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
+
 interface Campaign {
   id: string;
   title: string;
@@ -148,6 +150,7 @@ export function CampaignsTab({
     platform: string;
     username: string;
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'submissions'>('campaigns');
 
   // New state for dashboard sections
   const [profile, setProfile] = useState<{
@@ -639,6 +642,43 @@ export function CampaignsTab({
   const hasJoinedCampaigns = campaigns.length > 0;
   const shouldHideActionCards = hasJoinedCampaigns && hasPaymentMethod;
   return <div className={`space-y-6 pt-6 ${className || ''}`}>
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-6 border-b border-border">
+        <button
+          onClick={() => setActiveTab('campaigns')}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === 'campaigns' 
+              ? 'text-foreground' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+        >
+          Campaigns
+          {activeTab === 'campaigns' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('submissions')}
+          className={`pb-3 text-sm font-medium transition-colors relative ${
+            activeTab === 'submissions' 
+              ? 'text-foreground' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+        >
+          Submissions
+          {activeTab === 'submissions' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />
+          )}
+        </button>
+      </div>
+
+      {/* Submissions Tab Content */}
+      {activeTab === 'submissions' && <SubmissionsTab />}
+
+      {/* Campaigns Tab Content */}
+      {activeTab === 'campaigns' && <>
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -1043,5 +1083,6 @@ export function CampaignsTab({
         }, 300);
       }
     }} />
+    </>}
     </div>;
 }
