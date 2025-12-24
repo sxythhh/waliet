@@ -110,7 +110,6 @@ export function BrandCampaignDetailView({
   const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
-
   useEffect(() => {
     const subtab = searchParams.get("subtab");
     if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts") {
@@ -118,7 +117,6 @@ export function BrandCampaignDetailView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
-
   const {
     isAdmin
   } = useAdminCheck();
@@ -325,7 +323,7 @@ export function BrandCampaignDetailView({
   return <div className="p-[10px] h-full flex flex-col">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
         {/* Header with title and campaign selector */}
-        <div className="flex-shrink-0 flex items-center justify-between px-2 sm:px-[5px] py-[10px] bg-background gap-2">
+        <div className="flex-shrink-0 flex items-center justify-between px-2 bg-background gap-2 sm:px-[15px] py-[8px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {onBack && <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent shrink-0">
                 <ArrowLeft className="h-4 w-4" />
@@ -414,11 +412,11 @@ export function BrandCampaignDetailView({
         <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
             {detailTabs.map(tab => <button key={tab.id} onClick={() => {
-              setActiveDetailTab(tab.id);
-              const newParams = new URLSearchParams(searchParams);
-              newParams.set("subtab", tab.id);
-              setSearchParams(newParams);
-            }} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            setActiveDetailTab(tab.id);
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set("subtab", tab.id);
+            setSearchParams(newParams);
+          }} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
                     {tab.count}
