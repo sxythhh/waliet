@@ -130,7 +130,7 @@ export function BudgetProgressCard({
                   stroke="url(#creatorGradient)"
                   strokeWidth="14"
                   strokeLinecap="round"
-                  strokeDasharray={`${(creatorPercentage / 100) * (Math.PI * 75)} ${Math.PI * 75}`}
+                  strokeDasharray={`${Math.max(0, (creatorPercentage / 100) * (Math.PI * 75) - 4)} 4 ${Math.PI * 75}`}
                   className="transition-all duration-700"
                 />
                 
