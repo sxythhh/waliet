@@ -2,9 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
 import { format } from "date-fns";
-import tiktokLogo from "@/assets/tiktok-logo-black-new.png";
-import instagramLogo from "@/assets/instagram-logo-black.png";
-import youtubeLogo from "@/assets/youtube-logo-black-new.png";
+import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import instagramLogo from "@/assets/instagram-logo-white.png";
+import youtubeLogo from "@/assets/youtube-logo-white.png";
 
 export interface VideoData {
   ad_id: string;
