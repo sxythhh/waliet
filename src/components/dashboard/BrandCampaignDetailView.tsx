@@ -346,7 +346,7 @@ export function BrandCampaignDetailView({
                         className={`focus:bg-muted focus:text-foreground ${campaignId === c.id ? "bg-muted" : ""}`}
                       >
                         <span className="truncate">{c.title}</span>
-                        <Badge variant="outline" className="ml-auto text-[10px]">{c.status}</Badge>
+                        <Badge variant="outline" className="ml-auto text-[10px] capitalize">{c.status}</Badge>
                       </DropdownMenuItem>
                     ))}
                   </>
@@ -364,7 +364,7 @@ export function BrandCampaignDetailView({
                         className={`focus:bg-muted focus:text-foreground ${boostId === b.id ? "bg-muted" : ""}`}
                       >
                         <span className="truncate">{b.title}</span>
-                        <Badge variant="outline" className="ml-auto text-[10px]">{b.status}</Badge>
+                        <Badge variant="outline" className="ml-auto text-[10px] capitalize">{b.status}</Badge>
                       </DropdownMenuItem>
                     ))}
                   </>
