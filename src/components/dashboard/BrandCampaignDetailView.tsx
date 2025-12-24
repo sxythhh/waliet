@@ -332,7 +332,7 @@ export function BrandCampaignDetailView({
             {/* Campaign/Boost Selector Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors">
+                <button className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2 hover:bg-muted/50 rounded-[7px] px-2 py-1 transition-colors">
                   {entityTitle}
                   {isBoost && boost?.is_private && <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
                       Private
