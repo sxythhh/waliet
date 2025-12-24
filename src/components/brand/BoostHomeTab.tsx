@@ -141,7 +141,7 @@ export function BoostHomeTab({
         const {
           data: submissions
         } = await supabase.from('video_submissions')
-          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments')
+          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments, video_title, video_thumbnail_url, video_author_username, video_description')
           .eq('source_type', 'boost')
           .eq('source_id', boost.id);
 
@@ -253,29 +253,30 @@ export function BoostHomeTab({
         });
         setMetricsData(formattedMetrics);
 
-        // Map approved submissions to top videos format
-        const approvedVideos = submissionsData.filter(s => s.status === 'approved').slice(0, 3);
+        // Map approved submissions to top videos format - sort by views descending
+        const approvedVideos = submissionsData
+          .filter(s => s.status === 'approved')
+          .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
+          .slice(0, 3);
 
-        // Fetch usernames for the videos
         if (approvedVideos.length > 0) {
-          const userIds = [...new Set(approvedVideos.map(v => v.creator_id))];
-          const {
-            data: profiles
-          } = await supabase.from('profiles').select('id, username').in('id', userIds);
-          const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
           const mappedVideos: VideoData[] = approvedVideos.map(v => ({
             ad_id: v.id,
-            username: profileMap.get(v.creator_id) || 'Unknown',
+            username: v.video_author_username || 'Unknown',
             platform: v.platform,
             ad_link: v.video_url,
             uploaded_at: v.submitted_at,
-            title: 'Boost submission',
+            title: v.video_title || v.video_description?.slice(0, 100) || 'Video submission',
             latest_views: Number(v.views) || 0,
             latest_likes: Number(v.likes) || 0,
             latest_comments: Number(v.comments) || 0,
-            latest_shares: Number(v.shares) || 0
+            latest_shares: Number(v.shares) || 0,
+            thumbnail_url: v.video_thumbnail_url || undefined
           }));
           setTopVideos(mappedVideos);
+          setTotalVideos(approvedSubmissions);
+        } else {
+          setTopVideos([]);
           setTotalVideos(approvedSubmissions);
         }
       } catch (error) {
