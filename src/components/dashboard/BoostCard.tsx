@@ -105,6 +105,49 @@ export function BoostCard({
       console.error("Error fetching submissions:", error);
     }
   };
+  // Fetch video details from TikTok, Instagram, or YouTube API
+  const fetchVideoDetails = async (url: string) => {
+    try {
+      if (url.includes('tiktok.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        return data?.data || null;
+      } else if (url.includes('instagram.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: { postUrl: url }
+        });
+        if (error) throw error;
+        return data?.data || null;
+      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        // Map YouTube response to common format
+        if (data) {
+          return {
+            description: data.title || data.description,
+            coverUrl: data.thumbnail_url,
+            authorUsername: data.author_username,
+            authorAvatar: data.author_avatar,
+            uploadDate: data.published_date,
+            views: data.view_count,
+            likes: data.like_count,
+            comments: 0,
+            shares: 0,
+          };
+        }
+        return null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching video details:", error);
+      return null;
+    }
+  };
+
   const handleSubmitVideo = async () => {
     if (!videoUrl.trim()) {
       toast.error("Please enter a video URL");
@@ -156,6 +199,9 @@ export function BoostCard({
         return;
       }
 
+      // Fetch video details from API
+      const videoDetails = await fetchVideoDetails(videoUrl.trim());
+
       // Get brand_id from boost
       const { data: boostData } = await supabase
         .from("bounty_campaigns")
@@ -174,7 +220,20 @@ export function BoostCard({
         platform: detectedPlatform,
         submission_notes: null,
         payout_amount: payoutPerVideo,
-        submitted_at: new Date().toISOString()
+        submitted_at: new Date().toISOString(),
+        // Add video metadata if fetched
+        ...(videoDetails && {
+          views: videoDetails.views || 0,
+          likes: videoDetails.likes || 0,
+          comments: videoDetails.comments || 0,
+          shares: videoDetails.shares || 0,
+          video_description: videoDetails.description || null,
+          video_thumbnail_url: videoDetails.coverUrl || null,
+          video_author_username: videoDetails.authorUsername || null,
+          video_author_avatar: videoDetails.authorAvatar || null,
+          video_title: videoDetails.title || null,
+          video_upload_date: videoDetails.uploadDate || null,
+        })
       });
       if (error) throw error;
       toast.success("Video submitted successfully!");
