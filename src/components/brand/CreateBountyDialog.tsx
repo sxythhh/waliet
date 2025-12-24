@@ -76,7 +76,8 @@ export function CreateBountyDialog({
     position_type: "" as string,
     custom_position: "" as string,
     availability_requirement: "" as string,
-    work_location: "" as string
+    work_location: "" as string,
+    shortimize_collection_name: "" as string
   });
   const [newQuestion, setNewQuestion] = useState("");
 
@@ -249,7 +250,8 @@ export function CreateBountyDialog({
         position_type: finalPositionType || null,
         availability_requirement: formData.availability_requirement || null,
         work_location: formData.work_location || null,
-        slug: uniqueSlug
+        slug: uniqueSlug,
+        shortimize_collection_name: formData.shortimize_collection_name || null
       });
       if (error) throw error;
       if (subscriptionStatus === 'active') {
@@ -286,7 +288,8 @@ export function CreateBountyDialog({
       position_type: "",
       custom_position: "",
       availability_requirement: "",
-      work_location: ""
+      work_location: "",
+      shortimize_collection_name: ""
     });
     setNewQuestion("");
     setBannerFile(null);
@@ -430,6 +433,18 @@ export function CreateBountyDialog({
                         {blueprints.map(bp => <SelectItem key={bp.id} value={bp.id} className="font-inter tracking-[-0.5px]">{bp.title}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  {/* Shortimize Collection Name */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Video Tracking Collection</Label>
+                    <Input 
+                      value={formData.shortimize_collection_name} 
+                      onChange={e => setFormData({ ...formData, shortimize_collection_name: e.target.value })}
+                      placeholder="e.g., Boost Videos" 
+                      className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" 
+                    />
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Approved videos will be tracked in this Shortimize collection</p>
                   </div>
 
                   <div 

@@ -174,6 +174,7 @@ interface Campaign {
   application_questions?: string[] | null;
   payout_day_of_week?: number | null;
   blueprint_id?: string | null;
+  shortimize_collection_name?: string | null;
 }
 interface CampaignCreationWizardProps {
   brandId: string;
@@ -217,6 +218,7 @@ export function CampaignCreationWizard({
   const [availableBalance, setAvailableBalance] = useState<number>(0);
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [shortimizeCollectionName, setShortimizeCollectionName] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
@@ -407,12 +409,13 @@ export function CampaignCreationWizard({
     loadBlueprints();
   }, [open, brandId]);
 
-  // Reset selected blueprint when dialog opens
+  // Reset selected blueprint and collection name when dialog opens
   useEffect(() => {
     if (open) {
       setSelectedBlueprintId(campaign?.blueprint_id || initialBlueprintId || null);
+      setShortimizeCollectionName(campaign?.shortimize_collection_name || "");
     }
-  }, [open, campaign?.blueprint_id, initialBlueprintId]);
+  }, [open, campaign?.blueprint_id, campaign?.shortimize_collection_name, initialBlueprintId]);
   const watchedValues = form.watch();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -508,7 +511,8 @@ export function CampaignCreationWizard({
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
         is_featured: false,
-        hashtags: values.hashtags || []
+        hashtags: values.hashtags || [],
+        shortimize_collection_name: shortimizeCollectionName || null
       };
       const {
         error
@@ -559,6 +563,7 @@ export function CampaignCreationWizard({
           application_questions: values.application_questions || [],
           payout_day_of_week: values.payout_day_of_week,
           blueprint_id: selectedBlueprintId || null,
+          shortimize_collection_name: shortimizeCollectionName || null,
           ...(bannerFile ? {
             banner_url: bannerUrl
           } : {})
@@ -609,7 +614,8 @@ export function CampaignCreationWizard({
           // Always start as draft - admin must activate
           slug: slug,
           is_featured: false,
-          blueprint_id: selectedBlueprintId || initialBlueprintId || null
+          blueprint_id: selectedBlueprintId || initialBlueprintId || null,
+          shortimize_collection_name: shortimizeCollectionName || null
         };
         const {
           data: newCampaign,
@@ -980,6 +986,18 @@ export function CampaignCreationWizard({
                             </SelectItem>)}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {/* Shortimize Collection Name */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Video Tracking Collection</Label>
+                      <Input 
+                        value={shortimizeCollectionName} 
+                        onChange={e => setShortimizeCollectionName(e.target.value)}
+                        placeholder="e.g., Campaign Videos" 
+                        className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" 
+                      />
+                      <p className="text-[10px] text-muted-foreground">Approved videos will be tracked in this Shortimize collection</p>
                     </div>
 
 
