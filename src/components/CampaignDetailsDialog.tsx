@@ -538,7 +538,7 @@ export function CampaignDetailsDialog({
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>Your Connected Accounts</h4>
-              {onConnectAccount && <button onClick={onConnectAccount} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]" style={{
+              {onConnectAccount && <button onClick={onConnectAccount} className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-medium text-white bg-[#2061de] hover:bg-[#1a4db8] transition-colors border-t border-[#4b85f7]" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.3px'
           }}>
