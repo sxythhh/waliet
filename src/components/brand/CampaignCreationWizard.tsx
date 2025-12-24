@@ -20,37 +20,83 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-const CAMPAIGN_NICHES = [
-  { id: 'tech', label: 'Tech & Software' },
-  { id: 'gaming', label: 'Gaming' },
-  { id: 'lifestyle', label: 'Lifestyle' },
-  { id: 'fashion', label: 'Fashion & Beauty' },
-  { id: 'finance', label: 'Finance & Crypto' },
-  { id: 'creative', label: 'Art & Creative' },
-  { id: 'music', label: 'Music & Audio' },
-  { id: 'photography', label: 'Photography' },
-  { id: 'education', label: 'Education' },
-  { id: 'travel', label: 'Travel' },
-  { id: 'fitness', label: 'Health & Fitness' },
-  { id: 'food', label: 'Food & Drink' },
-  { id: 'parenting', label: 'Parenting & Family' },
-  { id: 'pets', label: 'Pets & Animals' },
-  { id: 'home', label: 'Home & Garden' },
-  { id: 'auto', label: 'Automotive' },
-  { id: 'luxury', label: 'Luxury & Premium' },
-  { id: 'ecommerce', label: 'E-commerce & Retail' },
-];
-
-const PAYOUT_DAYS = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-];
-
+const CAMPAIGN_NICHES = [{
+  id: 'tech',
+  label: 'Tech & Software'
+}, {
+  id: 'gaming',
+  label: 'Gaming'
+}, {
+  id: 'lifestyle',
+  label: 'Lifestyle'
+}, {
+  id: 'fashion',
+  label: 'Fashion & Beauty'
+}, {
+  id: 'finance',
+  label: 'Finance & Crypto'
+}, {
+  id: 'creative',
+  label: 'Art & Creative'
+}, {
+  id: 'music',
+  label: 'Music & Audio'
+}, {
+  id: 'photography',
+  label: 'Photography'
+}, {
+  id: 'education',
+  label: 'Education'
+}, {
+  id: 'travel',
+  label: 'Travel'
+}, {
+  id: 'fitness',
+  label: 'Health & Fitness'
+}, {
+  id: 'food',
+  label: 'Food & Drink'
+}, {
+  id: 'parenting',
+  label: 'Parenting & Family'
+}, {
+  id: 'pets',
+  label: 'Pets & Animals'
+}, {
+  id: 'home',
+  label: 'Home & Garden'
+}, {
+  id: 'auto',
+  label: 'Automotive'
+}, {
+  id: 'luxury',
+  label: 'Luxury & Premium'
+}, {
+  id: 'ecommerce',
+  label: 'E-commerce & Retail'
+}];
+const PAYOUT_DAYS = [{
+  value: 0,
+  label: 'Sunday'
+}, {
+  value: 1,
+  label: 'Monday'
+}, {
+  value: 2,
+  label: 'Tuesday'
+}, {
+  value: 3,
+  label: 'Wednesday'
+}, {
+  value: 4,
+  label: 'Thursday'
+}, {
+  value: 5,
+  label: 'Friday'
+}, {
+  value: 6,
+  label: 'Saturday'
+}];
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
@@ -92,12 +138,10 @@ const campaignSchema = z.object({
   path: ["budget"]
 });
 type CampaignFormValues = z.infer<typeof campaignSchema>;
-
 interface Blueprint {
   id: string;
   title: string;
 }
-
 interface Campaign {
   id: string;
   title: string;
@@ -184,24 +228,29 @@ export function CampaignCreationWizard({
       if (open && brandId) {
         setLoadingBalance(true);
         try {
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: {
+              session
+            }
+          } = await supabase.auth.getSession();
           if (!session) return;
-          
+
           // Fetch balance
-          const { data, error } = await supabase.functions.invoke('get-brand-balance', {
-            body: { brand_id: brandId }
+          const {
+            data,
+            error
+          } = await supabase.functions.invoke('get-brand-balance', {
+            body: {
+              brand_id: brandId
+            }
           });
-          
           if (error) throw error;
           setAvailableBalance(data?.virality_balance || 0);
 
           // Fetch subscription status
-          const { data: brandData } = await supabase
-            .from('brands')
-            .select('subscription_status')
-            .eq('id', brandId)
-            .single();
-          
+          const {
+            data: brandData
+          } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
           setSubscriptionStatus(brandData?.subscription_status || null);
         } catch (error) {
           console.error('Error fetching brand data:', error);
@@ -283,10 +332,10 @@ export function CampaignCreationWizard({
       description: campaign?.description || "",
       campaign_type: campaign?.campaign_type || "clipping",
       category: campaign?.category || "",
-      content_distribution: (campaign?.content_distribution as "creators_own_page" | "branded_accounts") || "creators_own_page",
+      content_distribution: campaign?.content_distribution as "creators_own_page" | "branded_accounts" || "creators_own_page",
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
-      payment_model: (campaign?.payment_model as "pay_per_view" | "pay_per_post") || "pay_per_view",
+      payment_model: campaign?.payment_model as "pay_per_view" | "pay_per_post" || "pay_per_view",
       rpm_rate: campaign?.rpm_rate?.toString() || "5",
       post_rate: campaign?.post_rate?.toString() || "10",
       embed_url: campaign?.embed_url || "",
@@ -323,7 +372,7 @@ export function CampaignCreationWizard({
         description: campaign?.description || "",
         campaign_type: campaign?.campaign_type || "clipping",
         category: campaign?.category || "",
-        content_distribution: (campaign?.content_distribution as "creators_own_page" | "branded_accounts") || "creators_own_page",
+        content_distribution: campaign?.content_distribution as "creators_own_page" | "branded_accounts" || "creators_own_page",
         is_infinite_budget: campaign?.is_infinite_budget || false,
         budget: campaign?.budget?.toString() || "",
         rpm_rate: campaign?.rpm_rate?.toString() || "5",
@@ -347,11 +396,11 @@ export function CampaignCreationWizard({
   useEffect(() => {
     const loadBlueprints = async () => {
       if (open && brandId) {
-        const { data } = await supabase
-          .from('blueprints')
-          .select('id, title')
-          .eq('brand_id', brandId)
-          .order('created_at', { ascending: false });
+        const {
+          data
+        } = await supabase.from('blueprints').select('id, title').eq('brand_id', brandId).order('created_at', {
+          ascending: false
+        });
         setBlueprints(data || []);
       }
     };
@@ -403,17 +452,18 @@ export function CampaignCreationWizard({
     if (currentStep === 1) {
       const isValid = await form.trigger(["budget", "rpm_rate", "allowed_platforms"]);
       if (!isValid) return;
-      
+
       // Validate budget doesn't exceed available balance (for new campaigns only)
       const values = form.getValues();
       if (!isEditMode && !values.is_infinite_budget) {
         const budgetValue = parseFloat(values.budget || "0");
         if (budgetValue > availableBalance) {
-          toast.error(`Budget cannot exceed available balance of $${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`);
+          toast.error(`Budget cannot exceed available balance of $${availableBalance.toLocaleString('en-US', {
+            minimumFractionDigits: 2
+          })}`);
           return;
         }
       }
-      
       setCurrentStep(2);
     }
   };
@@ -531,9 +581,7 @@ export function CampaignCreationWizard({
           const randomSuffix = Math.random().toString(36).substring(2, 10);
           return `${baseSlug}-${randomSuffix}`;
         })();
-        
         const budgetAmount = values.is_infinite_budget ? 0 : Number(values.budget) || 0;
-        
         const insertData = {
           title: values.title,
           description: values.description || null,
@@ -541,7 +589,8 @@ export function CampaignCreationWizard({
           category: values.category || null,
           content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
-          budget: 0, // Start at 0, allocate-brand-budget will set the actual budget
+          budget: 0,
+          // Start at 0, allocate-brand-budget will set the actual budget
           rpm_rate: Number(values.rpm_rate) || 5,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
@@ -556,7 +605,8 @@ export function CampaignCreationWizard({
           brand_id: brandId,
           brand_name: brandName,
           brand_logo_url: brandData?.logo_url || null,
-          status: "draft", // Always start as draft - admin must activate
+          status: "draft",
+          // Always start as draft - admin must activate
           slug: slug,
           is_featured: false,
           blueprint_id: selectedBlueprintId || initialBlueprintId || null
@@ -566,27 +616,26 @@ export function CampaignCreationWizard({
           error
         } = await supabase.from("campaigns").insert(insertData).select().single();
         if (error) throw error;
-        
+
         // Allocate budget from Virality balance if budget > 0
         if (budgetAmount > 0 && newCampaign) {
-          const { error: allocateError } = await supabase.functions.invoke('allocate-brand-budget', {
+          const {
+            error: allocateError
+          } = await supabase.functions.invoke('allocate-brand-budget', {
             body: {
               brand_id: brandId,
               campaign_id: newCampaign.id,
               amount: budgetAmount
             }
           });
-          
           if (allocateError) {
             console.error('Error allocating budget:', allocateError);
             // Don't fail campaign creation, but notify user
             toast.warning("Campaign created but budget allocation failed. Please add budget manually.");
           }
         }
-        
         toast.success("Campaign created as draft. An admin will review and activate it.");
       }
-
       onOpenChange(false);
       form.reset();
       setCurrentStep(1);
@@ -628,13 +677,9 @@ export function CampaignCreationWizard({
         <DialogContent className="max-w-[540px] w-[95vw] max-h-[85vh] bg-background border-border p-0 overflow-hidden flex flex-col">
           {/* Header */}
           <div className="flex items-center gap-3 px-6 py-4 border-b border-border">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            {brandLogoUrl ? <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-lg object-cover" /> : <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <span className="text-sm font-semibold text-primary">{brandName?.charAt(0) || "V"}</span>
-              </div>
-            )}
+              </div>}
             <div>
               <h2 className="text-base font-semibold text-foreground tracking-[-0.5px]">
                 {isEditMode ? "Edit Campaign" : "New Campaign"}
@@ -648,25 +693,25 @@ export function CampaignCreationWizard({
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="p-6">
                 {/* Step 1: Budget & Targeting */}
-                {currentStep === 1 && (
-                  <div className="space-y-5">
+                {currentStep === 1 && <div className="space-y-5">
                     {/* Available Balance Display */}
                     <div className="p-4 rounded-xl bg-primary/5">
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Virality Balance</p>
                           <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
-                            {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                            {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}`}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="is_infinite_budget"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                    <FormField control={form.control} name="is_infinite_budget" render={({
+                  field
+                }) => <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
                           <div className="space-y-0.5">
                             <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Unlimited Budget</FormLabel>
                             <p className="text-xs text-muted-foreground">No cap on spending</p>
@@ -674,89 +719,52 @@ export function CampaignCreationWizard({
                           <FormControl>
                             <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {!watchedValues.is_infinite_budget && (
-                      <FormField
-                        control={form.control}
-                        name="budget"
-                        render={({ field }) => {
-                          const budgetValue = parseFloat(field.value || "0");
-                          const exceedsBalance = budgetValue > availableBalance;
-                          return (
-                            <FormItem>
+                    {!watchedValues.is_infinite_budget && <FormField control={form.control} name="budget" render={({
+                  field
+                }) => {
+                  const budgetValue = parseFloat(field.value || "0");
+                  const exceedsBalance = budgetValue > availableBalance;
+                  return <FormItem>
                               <div className="flex items-center justify-between">
                                 <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Total Budget</FormLabel>
-                                {exceedsBalance && (
-                                  <span className="text-xs text-destructive font-inter">Exceeds available balance</span>
-                                )}
+                                {exceedsBalance && <span className="text-xs text-destructive font-inter">Exceeds available balance</span>}
                               </div>
                               <FormControl>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                  <Input 
-                                    type="number" 
-                                    placeholder="10,000" 
-                                    className={`pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 ${exceedsBalance ? 'ring-1 ring-destructive' : ''}`} 
-                                    max={availableBalance}
-                                    {...field} 
-                                  />
+                                  <Input type="number" placeholder="10,000" className={`pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 ${exceedsBalance ? 'ring-1 ring-destructive' : ''}`} max={availableBalance} {...field} />
                                 </div>
                               </FormControl>
                               <FormMessage />
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    )}
+                            </FormItem>;
+                }} />}
 
                     {/* Payment Model Selection */}
-                    <FormField
-                      control={form.control}
-                      name="payment_model"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
+                    <FormField control={form.control} name="payment_model" render={({
+                  field
+                }) => <FormItem className="space-y-2">
                           <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Submission Model</FormLabel>
                           <FormControl>
                             <div className="grid grid-cols-2 gap-3">
-                              <div
-                                onClick={() => field.onChange("pay_per_view")}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                  field.value === "pay_per_view"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                }`}
-                              >
+                              <div onClick={() => field.onChange("pay_per_view")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "pay_per_view" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Account</p>
-                                <p className="text-xs text-muted-foreground mt-1">Creators are paid based on total views their accounts generate, based on videos including a hashtag</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators are paid based on total views their accounts generate</p>
                               </div>
-                              <div
-                                onClick={() => field.onChange("pay_per_post")}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                  field.value === "pay_per_post"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                }`}
-                              >
+                              <div onClick={() => field.onChange("pay_per_post")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "pay_per_post" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Video</p>
                                 <p className="text-xs text-muted-foreground mt-1">Payment based on each approved video</p>
                               </div>
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     {/* CPM Rate - only show for pay_per_view */}
-                    {form.watch("payment_model") === "pay_per_view" && (
-                      <FormField
-                        control={form.control}
-                        name="rpm_rate"
-                        render={({ field }) => (
-                          <FormItem>
+                    {form.watch("payment_model") === "pay_per_view" && <FormField control={form.control} name="rpm_rate" render={({
+                  field
+                }) => <FormItem>
                             <div className="flex items-center justify-between">
                               <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
                               <span className="text-xs text-muted-foreground">per 1K views</span>
@@ -768,18 +776,12 @@ export function CampaignCreationWizard({
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
 
                     {/* Post Rate - only show for pay_per_post */}
-                    {form.watch("payment_model") === "pay_per_post" && (
-                      <FormField
-                        control={form.control}
-                        name="post_rate"
-                        render={({ field }) => (
-                          <FormItem>
+                    {form.watch("payment_model") === "pay_per_post" && <FormField control={form.control} name="post_rate" render={({
+                  field
+                }) => <FormItem>
                             <div className="flex items-center justify-between">
                               <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Rate Per Approved Video</FormLabel>
                               <span className="text-xs text-muted-foreground">fixed payment</span>
@@ -791,16 +793,11 @@ export function CampaignCreationWizard({
                               </div>
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
 
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="category" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Content Niche</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
@@ -809,298 +806,187 @@ export function CampaignCreationWizard({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {CAMPAIGN_NICHES.map((niche) => (
-                                <SelectItem key={niche.id} value={niche.id}>
+                              {CAMPAIGN_NICHES.map(niche => <SelectItem key={niche.id} value={niche.id}>
                                   {niche.label}
-                                </SelectItem>
-                              ))}
+                                </SelectItem>)}
                             </SelectContent>
                           </Select>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     {/* Content Distribution */}
-                    <FormField
-                      control={form.control}
-                      name="content_distribution"
-                      render={({ field }) => (
-                        <FormItem className="space-y-2">
+                    <FormField control={form.control} name="content_distribution" render={({
+                  field
+                }) => <FormItem className="space-y-2">
                           <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Content Distribution</FormLabel>
                           <FormControl>
                             <div className="grid grid-cols-2 gap-3">
-                              <div
-                                onClick={() => field.onChange("creators_own_page")}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                  field.value === "creators_own_page"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                }`}
-                              >
+                              <div onClick={() => field.onChange("creators_own_page")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "creators_own_page" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
                                 <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
                               </div>
-                              <div
-                                onClick={() => field.onChange("branded_accounts")}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                  field.value === "branded_accounts"
-                                    ? "border-primary bg-primary/5"
-                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
-                                }`}
-                              >
+                              <div onClick={() => field.onChange("branded_accounts")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "branded_accounts" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
                                 <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
                               </div>
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     <div className="grid grid-cols-2 gap-3">
-                      <FormField
-                        control={form.control}
-                        name="is_private"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                      <FormField control={form.control} name="is_private" render={({
+                    field
+                  }) => <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
                             <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Private</FormLabel>
                             <FormControl>
                               <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="requires_application"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+                          </FormItem>} />
+                      <FormField control={form.control} name="requires_application" render={({
+                    field
+                  }) => <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
                             <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground cursor-pointer">Applications</FormLabel>
                             <FormControl>
                               <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
 
-                    {watchedValues.is_private && (
-                      <FormField
-                        control={form.control}
-                        name="access_code"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchedValues.is_private && <FormField control={form.control} name="access_code" render={({
+                  field
+                }) => <FormItem>
                             <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Access Code</FormLabel>
                             <FormControl>
                               <Input placeholder="BRAND2024" className="h-10 bg-muted/30 border-0 uppercase focus:ring-1 focus:ring-primary/30" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
 
                     {/* Application Questions */}
-                    {watchedValues.requires_application && (
-                      <div className="pt-2">
+                    {watchedValues.requires_application && <div className="pt-2">
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-sm font-inter tracking-[-0.5px] text-foreground">Application Questions</span>
-                          <span className="text-xs text-muted-foreground">({(form.watch("application_questions")?.length || 0)}/5)</span>
+                          <span className="text-xs text-muted-foreground">({form.watch("application_questions")?.length || 0}/5)</span>
                         </div>
                         
                         <div className="flex gap-2">
-                          <Input
-                            placeholder="Add a question creators must answer..."
-                            value={newQuestion}
-                            onChange={e => setNewQuestion(e.target.value)}
-                            className="flex-1 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
-                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuestion())}
-                          />
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            onClick={addQuestion}
-                            disabled={(form.watch("application_questions")?.length || 0) >= 5}
-                            className="h-10 px-4"
-                          >
+                          <Input placeholder="Add a question creators must answer..." value={newQuestion} onChange={e => setNewQuestion(e.target.value)} className="flex-1 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuestion())} />
+                          <Button type="button" variant="secondary" size="sm" onClick={addQuestion} disabled={(form.watch("application_questions")?.length || 0) >= 5} className="h-10 px-4">
                             Add
                           </Button>
                         </div>
 
-                        {(form.watch("application_questions")?.length ?? 0) > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {form.watch("application_questions")?.map((question, index) => (
-                              <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 group">
+                        {(form.watch("application_questions")?.length ?? 0) > 0 && <div className="mt-3 space-y-2">
+                            {form.watch("application_questions")?.map((question, index) => <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 group">
                                 <span className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
                                   <span className="text-xs font-semibold text-primary">{index + 1}</span>
                                 </span>
                                 <span className="text-sm flex-1 text-foreground">{question}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => removeQuestion(index)}
-                                >
+                                <Button type="button" variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeQuestion(index)}>
                                   <X className="h-3 w-3" />
                                 </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                              </div>)}
+                          </div>}
+                      </div>}
+                  </div>}
 
                 {/* Step 2: Campaign Details */}
-                {currentStep === 2 && (
-                  <div className="space-y-5">
+                {currentStep === 2 && <div className="space-y-5">
                     {/* Banner Upload - Compact */}
                     <div className="space-y-2">
-                      {bannerPreview ? (
-                        <div className="relative h-32 rounded-xl overflow-hidden group">
+                      {bannerPreview ? <div className="relative h-32 rounded-xl overflow-hidden group">
                           <img src={bannerPreview} alt="Campaign banner" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={removeBanner}
-                              className="gap-2"
-                            >
+                            <Button type="button" variant="secondary" size="sm" onClick={removeBanner} className="gap-2">
                               <X className="h-3.5 w-3.5" />
                               Remove
                             </Button>
                           </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="h-32 rounded-xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer flex items-center justify-center"
-                          onClick={() => fileInputRef.current?.click()}
-                        >
+                        </div> : <div className="h-32 rounded-xl border-2 border-dashed border-border hover:border-primary/30 bg-muted/20 hover:bg-muted/40 transition-all cursor-pointer flex items-center justify-center" onClick={() => fileInputRef.current?.click()}>
                           <div className="text-center">
                             <Upload className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
                             <p className="text-sm text-muted-foreground">Upload banner image</p>
                           </div>
-                        </div>
-                      )}
+                        </div>}
                       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                     </div>
 
                     {/* Title & Description */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="title" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Campaign Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Enter campaign name" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
 
-                      <FormField
-                        control={form.control}
-                        name="hashtags"
-                        render={({ field }) => (
-                          <FormItem>
+                      <FormField control={form.control} name="hashtags" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Tracking Hashtags</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input
-                                  placeholder="Add hashtag and press Enter"
-                                  className="h-10 pl-8 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30"
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      const input = e.currentTarget;
-                                      const value = input.value.trim().replace(/^#/, '');
-                                      if (value && !field.value?.includes(value)) {
-                                        field.onChange([...(field.value || []), value]);
-                                        input.value = '';
-                                      }
-                                    }
-                                  }}
-                                />
+                                <Input placeholder="Add hashtag and press Enter" className="h-10 pl-8 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const input = e.currentTarget;
+                            const value = input.value.trim().replace(/^#/, '');
+                            if (value && !field.value?.includes(value)) {
+                              field.onChange([...(field.value || []), value]);
+                              input.value = '';
+                            }
+                          }
+                        }} />
                               </div>
                             </FormControl>
-                            {field.value && field.value.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                {field.value.map((tag: string, index: number) => (
-                                  <Badge key={index} variant="secondary" className="gap-1 text-xs">
+                            {field.value && field.value.length > 0 && <div className="flex flex-wrap gap-1.5 mt-2">
+                                {field.value.map((tag: string, index: number) => <Badge key={index} variant="secondary" className="gap-1 text-xs">
                                     #{tag}
-                                    <button
-                                      type="button"
-                                      onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))}
-                                      className="ml-0.5 hover:text-destructive"
-                                    >
+                                    <button type="button" onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))} className="ml-0.5 hover:text-destructive">
                                       <X className="h-2.5 w-2.5" />
                                     </button>
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
+                                  </Badge>)}
+                              </div>}
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                          </FormItem>} />
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
+                    <FormField control={form.control} name="description" render={({
+                  field
+                }) => <FormItem>
                           <FormLabel className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Description</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder="Describe your campaign..."
-                              className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30"
-                              {...field}
-                            />
+                            <Textarea placeholder="Describe your campaign..." className="min-h-[80px] bg-muted/30 border-0 resize-none focus:ring-1 focus:ring-primary/30" {...field} />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
                     {/* Blueprint Selection */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Blueprint</Label>
-                      <Select
-                        value={selectedBlueprintId || "none"}
-                        onValueChange={(val) => setSelectedBlueprintId(val === "none" ? null : val)}
-                      >
+                      <Select value={selectedBlueprintId || "none"} onValueChange={val => setSelectedBlueprintId(val === "none" ? null : val)}>
                         <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30">
                           <SelectValue placeholder="Select a blueprint" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">No blueprint</SelectItem>
-                          {blueprints.map((blueprint) => (
-                            <SelectItem key={blueprint.id} value={blueprint.id}>
+                          {blueprints.map(blueprint => <SelectItem key={blueprint.id} value={blueprint.id}>
                               {blueprint.title}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
 
 
                     {/* Edit Mode Options */}
-                    {isEditMode && (
-                      <div className="pt-4 border-t border-border space-y-4">
+                    {isEditMode && <div className="pt-4 border-t border-border space-y-4">
                         {/* Manual Budget Adjustment - Admin Only */}
-                        {isAdmin && (
-                          <div className="rounded-lg bg-muted/20 p-4">
+                        {isAdmin && <div className="rounded-lg bg-muted/20 p-4">
                             <div className="flex items-center gap-2 mb-3">
                               <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Manual Budget Adjustment</span>
                               <Badge variant="outline" className="text-xs">Admin</Badge>
@@ -1109,161 +995,105 @@ export function CampaignCreationWizard({
                             <div className="flex gap-2">
                               <div className="relative flex-1">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={manualBudgetUsed}
-                                  onChange={e => setManualBudgetUsed(e.target.value)}
-                                  placeholder="New budget used"
-                                  className="pl-7 h-9 bg-muted/30 border-0"
-                                />
+                                <Input type="number" step="0.01" min="0" value={manualBudgetUsed} onChange={e => setManualBudgetUsed(e.target.value)} placeholder="New budget used" className="pl-7 h-9 bg-muted/30 border-0" />
                               </div>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                onClick={handleManualBudgetAdjustment}
-                                disabled={isAdjustingBudget || !manualBudgetUsed}
-                                className="h-9"
-                              >
+                              <Button type="button" variant="secondary" size="sm" onClick={handleManualBudgetAdjustment} disabled={isAdjustingBudget || !manualBudgetUsed} className="h-9">
                                 {isAdjustingBudget ? "Saving..." : "Update"}
                               </Button>
                             </div>
-                            {manualBudgetUsed && !isNaN(parseFloat(manualBudgetUsed)) && (
-                              <p className="text-xs text-muted-foreground mt-1.5">
+                            {manualBudgetUsed && !isNaN(parseFloat(manualBudgetUsed)) && <p className="text-xs text-muted-foreground mt-1.5">
                                 Change: {parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0) >= 0 ? '+' : ''}
                                 ${(parseFloat(manualBudgetUsed) - (campaign?.budget_used || 0)).toFixed(2)}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                              </p>}
+                          </div>}
 
                         {/* Payout Day - Admin Only */}
-                        {isAdmin && (
-                          <FormField
-                            control={form.control}
-                            name="payout_day_of_week"
-                            render={({ field }) => (
-                              <div className="rounded-lg bg-muted/20 p-4">
+                        {isAdmin && <FormField control={form.control} name="payout_day_of_week" render={({
+                    field
+                  }) => <div className="rounded-lg bg-muted/20 p-4">
                                 <div className="flex items-center gap-2 mb-3">
                                   <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Payout Day</span>
                                   <Badge variant="outline" className="text-xs">Admin</Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground mb-2">Demographics due 1 day before</p>
-                                <Select 
-                                  onValueChange={(val) => field.onChange(parseInt(val))} 
-                                  value={field.value?.toString()}
-                                >
+                                <Select onValueChange={val => field.onChange(parseInt(val))} value={field.value?.toString()}>
                                   <SelectTrigger className="h-9 bg-muted/30 border-0">
                                     <SelectValue placeholder="Select payout day" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {PAYOUT_DAYS.map((day) => (
-                                      <SelectItem key={day.value} value={day.value.toString()}>
+                                    {PAYOUT_DAYS.map(day => <SelectItem key={day.value} value={day.value.toString()}>
                                         {day.label}
-                                      </SelectItem>
-                                    ))}
+                                      </SelectItem>)}
                                   </SelectContent>
                                 </Select>
-                              </div>
-                            )}
-                          />
-                        )}
+                              </div>} />}
 
                         {/* Launch button for draft campaigns when subscription is active */}
-                        {campaign?.status === 'draft' && (
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
+                        {campaign?.status === 'draft' && <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 border border-primary/20">
                             <div>
                               <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">
                                 {subscriptionStatus === 'active' ? 'Ready to Launch' : 'Subscription Required'}
                               </span>
                               <p className="text-xs text-muted-foreground">
-                                {subscriptionStatus === 'active' 
-                                  ? 'This campaign is in draft mode. Launch it to make it visible.'
-                                  : 'Activate your subscription to launch this campaign.'}
+                                {subscriptionStatus === 'active' ? 'This campaign is in draft mode. Launch it to make it visible.' : 'Activate your subscription to launch this campaign.'}
                               </p>
                             </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={subscriptionStatus !== 'active'}
-                              onClick={async () => {
-                                if (!campaign?.id) return;
-                                const { error } = await supabase
-                                  .from('campaigns')
-                                  .update({ status: 'active' })
-                                  .eq('id', campaign.id);
-                                if (error) {
-                                  toast.error('Failed to launch campaign');
-                                } else {
-                                  toast.success('Campaign launched!');
-                                  onSuccess?.();
-                                }
-                              }}
-                              className="gap-1.5"
-                            >
+                            <Button type="button" size="sm" disabled={subscriptionStatus !== 'active'} onClick={async () => {
+                      if (!campaign?.id) return;
+                      const {
+                        error
+                      } = await supabase.from('campaigns').update({
+                        status: 'active'
+                      }).eq('id', campaign.id);
+                      if (error) {
+                        toast.error('Failed to launch campaign');
+                      } else {
+                        toast.success('Campaign launched!');
+                        onSuccess?.();
+                      }
+                    }} className="gap-1.5">
                               Launch
                             </Button>
-                          </div>
-                        )}
+                          </div>}
 
-                        {campaign?.status !== 'draft' && (
-                          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                        {campaign?.status !== 'draft' && <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                             <div>
                               <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Pause Campaign</span>
                               <p className="text-xs text-muted-foreground">Hide from discover</p>
                             </div>
-                            <Switch
-                              checked={campaign?.status === 'paused'}
-                              onCheckedChange={async checked => {
-                                if (!campaign?.id) return;
-                                const newStatus = checked ? 'paused' : 'active';
-                                const { error } = await supabase
-                                  .from('campaigns')
-                                  .update({ status: newStatus })
-                                  .eq('id', campaign.id);
-                                if (error) {
-                                  toast.error('Failed to update campaign status');
-                                } else {
-                                  toast.success(checked ? 'Campaign paused' : 'Campaign activated');
-                                  onSuccess?.();
-                                }
-                              }}
-                            />
-                          </div>
-                        )}
+                            <Switch checked={campaign?.status === 'paused'} onCheckedChange={async checked => {
+                      if (!campaign?.id) return;
+                      const newStatus = checked ? 'paused' : 'active';
+                      const {
+                        error
+                      } = await supabase.from('campaigns').update({
+                        status: newStatus
+                      }).eq('id', campaign.id);
+                      if (error) {
+                        toast.error('Failed to update campaign status');
+                      } else {
+                        toast.success(checked ? 'Campaign paused' : 'Campaign activated');
+                        onSuccess?.();
+                      }
+                    }} />
+                          </div>}
 
                         <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const link = `${window.location.origin}/join/${campaign?.slug}`;
-                              navigator.clipboard.writeText(link);
-                              toast.success('Invite link copied');
-                            }}
-                            className="gap-2"
-                          >
+                          <Button type="button" variant="outline" size="sm" onClick={() => {
+                      const link = `${window.location.origin}/join/${campaign?.slug}`;
+                      navigator.clipboard.writeText(link);
+                      toast.success('Invite link copied');
+                    }} className="gap-2">
                             <Copy className="h-3.5 w-3.5" />
                             Copy Link
                           </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => setDeleteDialogOpen(true)}
-                            className="gap-2"
-                          >
+                          <Button type="button" variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)} className="gap-2">
                             <Trash2 className="h-3.5 w-3.5" />
                             Delete
                           </Button>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      </div>}
+                  </div>}
               </form>
             </Form>
           </div>
@@ -1272,56 +1102,30 @@ export function CampaignCreationWizard({
           <div className="border-t border-border px-6 py-4 flex items-center justify-end bg-background">
 
             <div className="flex items-center gap-2">
-              {currentStep > 1 && !isEditMode && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBack}
-                  disabled={isSubmitting}
-                >
+              {currentStep > 1 && !isEditMode && <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={isSubmitting}>
                   Back
-                </Button>
-              )}
+                </Button>}
               
-              {currentStep < 2 && !isEditMode ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleNext}
-                  disabled={isSubmitting}
-                  className="min-w-[100px] gap-2"
-                >
+              {currentStep < 2 && !isEditMode ? <Button type="button" size="sm" onClick={handleNext} disabled={isSubmitting} className="min-w-[100px] gap-2">
                   Continue
                   <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={async () => {
-                    if (isEditMode) {
-                      const values = form.getValues();
-                      await onSubmit(values as CampaignFormValues);
-                      return;
-                    }
-                    const isValid = await form.trigger();
-                    if (!isValid) {
-                      const errors = form.formState.errors;
-                      const errorMessages = Object.entries(errors)
-                        .map(([key, error]) => `${key}: ${error?.message}`)
-                        .join(', ');
-                      toast.error(`Please fix form errors: ${errorMessages}`);
-                      return;
-                    }
-                    form.handleSubmit(onSubmit)();
-                  }}
-                  disabled={isSubmitting}
-                  className="min-w-[100px]"
-                >
+                </Button> : <Button type="button" size="sm" onClick={async () => {
+              if (isEditMode) {
+                const values = form.getValues();
+                await onSubmit(values as CampaignFormValues);
+                return;
+              }
+              const isValid = await form.trigger();
+              if (!isValid) {
+                const errors = form.formState.errors;
+                const errorMessages = Object.entries(errors).map(([key, error]) => `${key}: ${error?.message}`).join(', ');
+                toast.error(`Please fix form errors: ${errorMessages}`);
+                return;
+              }
+              form.handleSubmit(onSubmit)();
+            }} disabled={isSubmitting} className="min-w-[100px]">
                   {isSubmitting ? "Saving..." : isEditMode ? "Save Changes" : "Create Campaign"}
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </DialogContent>
