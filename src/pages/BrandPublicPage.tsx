@@ -138,9 +138,9 @@ export default function BrandPublicPage() {
 
       <PublicNavbar />
       <div className="min-h-screen bg-background">
-        <div className="max-w-2xl mx-auto px-6 py-20">
+        <div className="max-w-2xl mx-auto px-6 py-12">
           {/* Brand Header */}
-          <div className="flex flex-col items-center text-center mb-16">
+          <div className="flex flex-col items-center text-center mb-10">
             <Avatar className="w-20 h-20 mb-4">
               <AvatarImage src={brand.logo_url || undefined} alt={brand.name} />
               <AvatarFallback 
