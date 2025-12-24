@@ -381,7 +381,7 @@ export function BoostHomeTab({
       <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} />
 
       {/* Top Performing Videos - using shared component */}
-      <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} hashtagsConfigured={true} hashtags={[]} />
+      <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} />
 
       {/* About Section */}
       {boost.description && <div>
