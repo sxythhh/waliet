@@ -252,7 +252,7 @@ export function CampaignHomeTab({
         // Load top videos from video_submissions sorted by views (non-blocking)
         supabase
           .from('video_submissions')
-          .select('id, video_url, platform, views, likes, comments, shares, submitted_at, creator_id', { count: 'exact' })
+          .select('id, video_url, platform, views, likes, comments, shares, video_title, video_description, video_upload_date, video_author_username, creator_id', { count: 'exact' })
           .eq('source_type', 'campaign')
           .eq('source_id', campaignId)
           .eq('status', 'approved')
@@ -261,18 +261,18 @@ export function CampaignHomeTab({
           .then(async ({ data: submissions, count, error }) => {
             if (isCancelled) return;
             if (!error && submissions && submissions.length > 0) {
-              // Fetch usernames for the creators
+              // Fetch usernames for the creators as fallback
               const userIds = [...new Set(submissions.map(s => s.creator_id))];
               const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds);
               const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
               
               const mappedVideos: VideoData[] = submissions.map(v => ({
                 ad_id: v.id,
-                username: profileMap.get(v.creator_id) || 'Unknown',
+                username: v.video_author_username || profileMap.get(v.creator_id) || 'Unknown',
                 platform: v.platform || 'tiktok',
                 ad_link: v.video_url || '',
-                uploaded_at: v.submitted_at || '',
-                title: '',
+                uploaded_at: v.video_upload_date || '',
+                title: v.video_title || v.video_description || '',
                 latest_views: v.views || 0,
                 latest_likes: v.likes || 0,
                 latest_comments: v.comments || 0,
