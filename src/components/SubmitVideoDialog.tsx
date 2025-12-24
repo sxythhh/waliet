@@ -466,8 +466,7 @@ export function SubmitVideoDialog({
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged}
-                  className="h-11 px-6 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  className="h-11 px-6 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7] font-['Inter'] tracking-[-0.5px]"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
@@ -480,7 +479,7 @@ export function SubmitVideoDialog({
                       Fetching details...
                     </span>
                   ) : (
-                    "Submit for approval"
+                    "Submit video"
                   )}
                 </Button>
               </div>
