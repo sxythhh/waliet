@@ -877,11 +877,11 @@ export function VideoSubmissionsTab({
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : submission.status === "rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
+                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-['Inter'] tracking-[-0.5px] ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : submission.status === "rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
                                 {submission.status === "approved" && <Check className="h-3 w-3" />}
                                 {submission.status === "rejected" && <X className="h-3 w-3" />}
                                 {submission.status === "pending" && <Clock className="h-3 w-3" />}
-                                {submission.status}
+                                {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
