@@ -22,7 +22,6 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
-
 interface VideoSubmission {
   id: string;
   user_id: string;
@@ -36,7 +35,6 @@ interface VideoSubmission {
   rejection_reason: string | null;
   is_flagged: boolean | null;
 }
-
 interface Profile {
   id: string;
   username: string;
@@ -44,7 +42,6 @@ interface Profile {
   avatar_url: string | null;
   email?: string | null;
 }
-
 interface CreatorStats {
   userId: string;
   profile: Profile;
@@ -72,15 +69,16 @@ interface VideoSubmissionsTabProps {
   videosPerMonth?: number;
   onSubmissionReviewed?: () => void;
 }
-
-export function VideoSubmissionsTab({ 
-  campaign, 
+export function VideoSubmissionsTab({
+  campaign,
   boostId,
   monthlyRetainer = 0,
   videosPerMonth = 1,
-  onSubmissionReviewed 
+  onSubmissionReviewed
 }: VideoSubmissionsTabProps) {
-  const { resolvedTheme } = useTheme();
+  const {
+    resolvedTheme
+  } = useTheme();
   const [submissions, setSubmissions] = useState<VideoSubmission[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [loading, setLoading] = useState(true);
@@ -97,14 +95,10 @@ export function VideoSubmissionsTab({
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
   const entityId = isBoost ? boostId : campaign?.id;
-  
-  // Calculate payout amount
-  const payoutPerVideo = isBoost 
-    ? monthlyRetainer / videosPerMonth 
-    : (campaign?.payment_model === "pay_per_post" ? (campaign?.post_rate || 0) : 0);
-  
-  const isPayPerPost = isBoost || campaign?.payment_model === "pay_per_post";
 
+  // Calculate payout amount
+  const payoutPerVideo = isBoost ? monthlyRetainer / videosPerMonth : campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
+  const isPayPerPost = isBoost || campaign?.payment_model === "pay_per_post";
   const getPlatformLogo = (platform: string) => {
     const isDark = resolvedTheme === "dark";
     switch (platform?.toLowerCase()) {
@@ -118,38 +112,34 @@ export function VideoSubmissionsTab({
         return isDark ? tiktokLogoWhite : tiktokLogoBlack;
     }
   };
-
   useEffect(() => {
     if (entityId) {
       fetchSubmissions();
     }
   }, [entityId]);
-
   const fetchSubmissions = async () => {
     if (!entityId) return;
     setLoading(true);
-    
     try {
       let submissionsData: any[] = [];
-      
       if (isBoost) {
         // Fetch from boost_video_submissions
-        const { data, error } = await supabase
-          .from("boost_video_submissions")
-          .select("*")
-          .eq("bounty_campaign_id", entityId)
-          .order("submitted_at", { ascending: false });
-        
+        const {
+          data,
+          error
+        } = await supabase.from("boost_video_submissions").select("*").eq("bounty_campaign_id", entityId).order("submitted_at", {
+          ascending: false
+        });
         if (error) throw error;
         submissionsData = data || [];
       } else {
         // Fetch from campaign_videos
-        const { data, error } = await supabase
-          .from("campaign_videos")
-          .select("*")
-          .eq("campaign_id", entityId)
-          .order("created_at", { ascending: false });
-        
+        const {
+          data,
+          error
+        } = await supabase.from("campaign_videos").select("*").eq("campaign_id", entityId).order("created_at", {
+          ascending: false
+        });
         if (error) throw error;
         // Normalize campaign_videos to match boost structure
         submissionsData = (data || []).map(v => ({
@@ -162,20 +152,17 @@ export function VideoSubmissionsTab({
           payout_amount: v.estimated_payout,
           submitted_at: v.created_at,
           reviewed_at: v.updated_at,
-          rejection_reason: null,
+          rejection_reason: null
         }));
       }
-      
       setSubmissions(submissionsData);
 
       // Fetch profiles for all users
       if (submissionsData.length > 0) {
         const userIds = [...new Set(submissionsData.map(s => s.user_id))];
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("id, username, full_name, avatar_url, email")
-          .in("id", userIds);
-        
+        const {
+          data: profilesData
+        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", userIds);
         if (profilesData) {
           const profileMap: Record<string, Profile> = {};
           profilesData.forEach(p => {
@@ -191,45 +178,38 @@ export function VideoSubmissionsTab({
       setLoading(false);
     }
   };
-
   const handleApprove = async (submission: VideoSubmission) => {
     setProcessing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
       if (isBoost) {
         // Update boost submission status
-        const { error: updateError } = await supabase
-          .from("boost_video_submissions")
-          .update({
-            status: "approved",
-            reviewed_at: new Date().toISOString(),
-            reviewed_by: user.id,
-          })
-          .eq("id", submission.id);
-
+        const {
+          error: updateError
+        } = await supabase.from("boost_video_submissions").update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id
+        }).eq("id", submission.id);
         if (updateError) throw updateError;
 
         // Credit creator's wallet
-        const { data: wallet } = await supabase
-          .from("wallets")
-          .select("balance, total_earned")
-          .eq("user_id", submission.user_id)
-          .single();
-
+        const {
+          data: wallet
+        } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", submission.user_id).single();
         if (wallet) {
           const payout = submission.payout_amount || payoutPerVideo;
           const newBalance = (wallet.balance || 0) + payout;
           const newTotalEarned = (wallet.total_earned || 0) + payout;
-          
-          await supabase
-            .from("wallets")
-            .update({
-              balance: newBalance,
-              total_earned: newTotalEarned,
-            })
-            .eq("user_id", submission.user_id);
+          await supabase.from("wallets").update({
+            balance: newBalance,
+            total_earned: newTotalEarned
+          }).eq("user_id", submission.user_id);
 
           // Create transaction record
           await supabase.from("wallet_transactions").insert({
@@ -240,36 +220,35 @@ export function VideoSubmissionsTab({
             metadata: {
               boost_id: entityId,
               submission_id: submission.id,
-              video_url: submission.video_url,
+              video_url: submission.video_url
             },
-            created_by: user.id,
+            created_by: user.id
           });
         }
       } else {
         // Update campaign video status
-        const { error: updateError } = await supabase
-          .from("campaign_videos")
-          .update({
-            status: "approved",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", submission.id);
-
+        const {
+          error: updateError
+        } = await supabase.from("campaign_videos").update({
+          status: "approved",
+          updated_at: new Date().toISOString()
+        }).eq("id", submission.id);
         if (updateError) throw updateError;
 
         // If pay_per_post, process payment
         if (isPayPerPost && payoutPerVideo > 0) {
           try {
-            const { error: paymentError } = await supabase.functions.invoke("create-campaign-payment", {
+            const {
+              error: paymentError
+            } = await supabase.functions.invoke("create-campaign-payment", {
               body: {
                 campaign_id: entityId,
                 user_id: submission.user_id,
                 amount: payoutPerVideo,
                 description: `Video approved: ${submission.video_url}`,
-                platform: submission.platform,
-              },
+                platform: submission.platform
+              }
             });
-
             if (paymentError) {
               console.error("Payment error:", paymentError);
               toast.error("Video approved but payment failed. Please process manually.");
@@ -280,12 +259,7 @@ export function VideoSubmissionsTab({
           }
         }
       }
-
-      toast.success(isPayPerPost 
-        ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.`
-        : "Video approved!"
-      );
-      
+      toast.success(isPayPerPost ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.` : "Video approved!");
       fetchSubmissions();
       setSelectedSubmission(null);
       onSubmissionReviewed?.();
@@ -296,39 +270,35 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
-
   const handleReject = async () => {
     if (!selectedSubmission) return;
     setProcessing(true);
-    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
       if (isBoost) {
-        const { error } = await supabase
-          .from("boost_video_submissions")
-          .update({
-            status: "rejected",
-            reviewed_at: new Date().toISOString(),
-            reviewed_by: user.id,
-            rejection_reason: rejectionReason.trim() || null,
-          })
-          .eq("id", selectedSubmission.id);
-
+        const {
+          error
+        } = await supabase.from("boost_video_submissions").update({
+          status: "rejected",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id,
+          rejection_reason: rejectionReason.trim() || null
+        }).eq("id", selectedSubmission.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("campaign_videos")
-          .update({
-            status: "rejected",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", selectedSubmission.id);
-
+        const {
+          error
+        } = await supabase.from("campaign_videos").update({
+          status: "rejected",
+          updated_at: new Date().toISOString()
+        }).eq("id", selectedSubmission.id);
         if (error) throw error;
       }
-
       toast.success("Video rejected");
       fetchSubmissions();
       setRejectDialogOpen(false);
@@ -342,35 +312,27 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
-
   const handleFlag = async (submission: VideoSubmission) => {
     setProcessing(true);
-    
     try {
       const newFlagState = !submission.is_flagged;
-      
       if (isBoost) {
-        const { error } = await supabase
-          .from("boost_video_submissions")
-          .update({
-            is_flagged: newFlagState,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", submission.id);
-
+        const {
+          error
+        } = await supabase.from("boost_video_submissions").update({
+          is_flagged: newFlagState,
+          updated_at: new Date().toISOString()
+        }).eq("id", submission.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("campaign_videos")
-          .update({
-            is_flagged: newFlagState,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", submission.id);
-
+        const {
+          error
+        } = await supabase.from("campaign_videos").update({
+          is_flagged: newFlagState,
+          updated_at: new Date().toISOString()
+        }).eq("id", submission.id);
         if (error) throw error;
       }
-
       toast.success(newFlagState ? "Submission flagged" : "Flag removed");
       fetchSubmissions();
     } catch (error) {
@@ -385,7 +347,6 @@ export function VideoSubmissionsTab({
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
-
   const creatorStats: CreatorStats[] = Object.keys(profiles).map(userId => {
     const profile = profiles[userId];
     const userSubmissions = submissions.filter(s => s.user_id === userId);
@@ -393,7 +354,6 @@ export function VideoSubmissionsTab({
       const date = new Date(s.submitted_at);
       return date >= monthStart && date <= monthEnd;
     });
-
     return {
       userId,
       profile,
@@ -401,30 +361,23 @@ export function VideoSubmissionsTab({
       approvedThisMonth: thisMonthSubs.filter(s => s.status === "approved").length,
       pendingThisMonth: thisMonthSubs.filter(s => s.status === "pending").length,
       earnedThisMonth: thisMonthSubs.filter(s => s.status === "approved").length * payoutPerVideo,
-      submissions: userSubmissions,
+      submissions: userSubmissions
     };
   }).sort((a, b) => b.approvedThisMonth - a.approvedThisMonth);
-
   if (loading) {
-    return (
-      <div className="h-full flex flex-col overflow-hidden">
+    return <div className="h-full flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
           <div className="w-[340px] flex-shrink-0 border-r border-border p-4 space-y-4">
-            {[1, 2, 3].map(i => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
-            ))}
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
           </div>
           <div className="flex-1 p-6 space-y-4">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-full flex flex-col overflow-hidden">
+  return <div className="h-full flex flex-col overflow-hidden">
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Creator List */}
@@ -434,46 +387,28 @@ export function VideoSubmissionsTab({
             <h3 className="text-sm font-medium font-inter tracking-[-0.5px]">Users</h3>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={userSearchQuery}
-                onChange={(e) => setUserSearchQuery(e.target.value)}
-                className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]"
-              />
+              <Input placeholder="Search users..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]" />
             </div>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
               {(() => {
-                const filteredCreators = creatorStats.filter(creator => {
-                  if (!userSearchQuery.trim()) return true;
-                  const query = userSearchQuery.toLowerCase();
-                  return (
-                    creator.profile.username?.toLowerCase().includes(query) ||
-                    creator.profile.full_name?.toLowerCase().includes(query) ||
-                    creator.profile.email?.toLowerCase().includes(query)
-                  );
-                });
-                
-                if (filteredCreators.length === 0) {
-                  return (
-                    <div className="text-center py-8 text-muted-foreground">
+              const filteredCreators = creatorStats.filter(creator => {
+                if (!userSearchQuery.trim()) return true;
+                const query = userSearchQuery.toLowerCase();
+                return creator.profile.username?.toLowerCase().includes(query) || creator.profile.full_name?.toLowerCase().includes(query) || creator.profile.email?.toLowerCase().includes(query);
+              });
+              if (filteredCreators.length === 0) {
+                return <div className="text-center py-8 text-muted-foreground">
                       <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
                       <p className="text-sm font-inter tracking-[-0.5px]">
                         {userSearchQuery ? "No users found" : "No submissions yet"}
                       </p>
-                    </div>
-                  );
-                }
-                
-                return filteredCreators.map(creator => {
-                  const isSelected = selectedCreator === creator.userId;
-                  return (
-                    <button
-                      key={creator.userId}
-                      onClick={() => setSelectedCreator(isSelected ? null : creator.userId)}
-                      className="w-full rounded-xl p-4 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30"
-                    >
+                    </div>;
+              }
+              return filteredCreators.map(creator => {
+                const isSelected = selectedCreator === creator.userId;
+                return <button key={creator.userId} onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} className="w-full rounded-xl p-4 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30">
                       <div className="flex items-center gap-3 mb-3">
                         <Avatar className="h-10 w-10 border border-border/40">
                           <AvatarImage src={creator.profile.avatar_url || undefined} />
@@ -489,33 +424,22 @@ export function VideoSubmissionsTab({
                             @{creator.profile.username}
                           </p>
                         </div>
-                        <ChevronRight
-                          className={`h-4 w-4 text-muted-foreground transition-transform ${
-                            isSelected ? "rotate-90" : ""
-                          }`}
-                        />
+                        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
 
                       {/* Submission Heatmap */}
                       <div className="mt-3">
-                        <SubmissionHeatmap
-                          submissions={creator.submissions.map(s => ({
-                            submitted_at: s.submitted_at,
-                            status: s.status,
-                          }))}
-                          onDateClick={(date) => {
-                            setSelectedCreator(creator.userId);
-                            setSelectedDateFilter(prev => 
-                              prev && isSameDay(prev, date) ? null : date
-                            );
-                          }}
-                          selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null}
-                        />
+                        <SubmissionHeatmap submissions={creator.submissions.map(s => ({
+                      submitted_at: s.submitted_at,
+                      status: s.status
+                    }))} onDateClick={date => {
+                      setSelectedCreator(creator.userId);
+                      setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
+                    }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
                       </div>
-                    </button>
-                  );
-                });
-              })()}
+                    </button>;
+              });
+            })()}
             </div>
           </ScrollArea>
         </div>
@@ -525,18 +449,14 @@ export function VideoSubmissionsTab({
           <div className="p-3 border-b border-border space-y-3">
             {/* Header */}
             <div className="flex items-center gap-2.5">
-              {selectedCreator && profiles[selectedCreator] && (
-                <Avatar className="h-7 w-7 ring-2 ring-background">
+              {selectedCreator && profiles[selectedCreator] && <Avatar className="h-7 w-7 ring-2 ring-background">
                   <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
                   <AvatarFallback className="text-xs font-medium bg-muted/60">
                     {profiles[selectedCreator]?.username?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
-                </Avatar>
-              )}
+                </Avatar>}
               <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                {selectedCreator
-                  ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions`
-                  : "Pending Videos"}
+                {selectedCreator ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions` : "Pending Videos"}
               </h3>
             </div>
 
@@ -544,109 +464,73 @@ export function VideoSubmissionsTab({
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status Filter */}
               <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
-                {(["all", "pending", "approved", "rejected"] as const).map(status => (
-                  <button
-                    key={status}
-                    onClick={() => setFilterStatus(status)}
-                    className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${
-                      filterStatus === status
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
+                {(["all", "pending", "approved", "rejected"] as const).map(status => <button key={status} onClick={() => setFilterStatus(status)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${filterStatus === status ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </button>
-                ))}
+                  </button>)}
               </div>
 
               {/* Sort By */}
               <div className="flex items-center gap-1 ml-auto">
                 <span className="text-[10px] text-muted-foreground tracking-[-0.5px]">Sort:</span>
                 <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
-                  {(["date", "status", "platform"] as const).map(sort => (
-                    <button
-                      key={sort}
-                      onClick={() => setSortBy(sort)}
-                      className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${
-                        sortBy === sort
-                          ? "bg-background text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
+                  {(["date", "status", "platform"] as const).map(sort => <button key={sort} onClick={() => setSortBy(sort)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${sortBy === sort ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                       {sort.charAt(0).toUpperCase() + sort.slice(1)}
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
               </div>
               
               {/* Date Filter Indicator */}
-              {selectedDateFilter && (
-                <button
-                  onClick={() => setSelectedDateFilter(null)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] tracking-[-0.5px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
-                >
+              {selectedDateFilter && <button onClick={() => setSelectedDateFilter(null)} className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] tracking-[-0.5px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors">
                   <CalendarDays className="h-3 w-3" />
                   <span>{format(selectedDateFilter, "MMM d, yyyy")}</span>
                   <X className="h-3 w-3 ml-0.5" />
-                </button>
-              )}
+                </button>}
             </div>
           </div>
 
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
               {(() => {
-                // Get filtered and sorted submissions
-                let filteredSubs = selectedCreator
-                  ? submissions.filter(s => s.user_id === selectedCreator)
-                  : submissions;
+              // Get filtered and sorted submissions
+              let filteredSubs = selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : submissions;
 
-                // Apply status filter
-                if (filterStatus !== "all") {
-                  filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
+              // Apply status filter
+              if (filterStatus !== "all") {
+                filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
+              }
+
+              // Apply date filter
+              if (selectedDateFilter) {
+                filteredSubs = filteredSubs.filter(s => isSameDay(new Date(s.submitted_at), selectedDateFilter));
+              }
+
+              // Apply sorting
+              filteredSubs = [...filteredSubs].sort((a, b) => {
+                if (sortBy === "date") {
+                  return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+                } else if (sortBy === "status") {
+                  const statusOrder = {
+                    pending: 0,
+                    approved: 1,
+                    rejected: 2
+                  };
+                  return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0);
+                } else if (sortBy === "platform") {
+                  return (a.platform || "").localeCompare(b.platform || "");
                 }
-
-                // Apply date filter
-                if (selectedDateFilter) {
-                  filteredSubs = filteredSubs.filter(s => 
-                    isSameDay(new Date(s.submitted_at), selectedDateFilter)
-                  );
-                }
-
-                // Apply sorting
-                filteredSubs = [...filteredSubs].sort((a, b) => {
-                  if (sortBy === "date") {
-                    return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
-                  } else if (sortBy === "status") {
-                    const statusOrder = { pending: 0, approved: 1, rejected: 2 };
-                    return (
-                      (statusOrder[a.status as keyof typeof statusOrder] || 0) -
-                      (statusOrder[b.status as keyof typeof statusOrder] || 0)
-                    );
-                  } else if (sortBy === "platform") {
-                    return (a.platform || "").localeCompare(b.platform || "");
-                  }
-                  return 0;
-                });
-
-                if (filteredSubs.length === 0) {
-                  return (
-                    <div className="text-center py-12 text-muted-foreground">
+                return 0;
+              });
+              if (filteredSubs.length === 0) {
+                return <div className="text-center py-12 text-muted-foreground">
                       <img src={videoLibraryIcon} alt="" className="h-8 w-8 mx-auto mb-2 opacity-40" />
                       <p className="text-sm tracking-[-0.5px]">
                         No submissions found for the applied filter
                       </p>
-                    </div>
-                  );
-                }
-
-                return filteredSubs.map(submission => {
-                  const profile = profiles[submission.user_id];
-                  return (
-                    <div
-                      key={submission.id}
-                      className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60"
-                    >
+                    </div>;
+              }
+              return filteredSubs.map(submission => {
+                const profile = profiles[submission.user_id];
+                return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
                       {/* Header */}
                       <div className="flex items-center justify-between p-4 border-b border-border/20">
                         <div className="flex items-center gap-3">
@@ -665,15 +549,7 @@ export function VideoSubmissionsTab({
                             </p>
                           </div>
                         </div>
-                        <Badge
-                          className={`text-[11px] font-medium ${
-                            submission.status === "approved"
-                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                              : submission.status === "rejected"
-                              ? "bg-red-500/10 text-red-500 border-red-500/20"
-                              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                          }`}
-                        >
+                        <Badge className={`text-[11px] font-medium ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : submission.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"}`}>
                           {submission.status}
                         </Badge>
                       </div>
@@ -683,18 +559,9 @@ export function VideoSubmissionsTab({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-muted/40 flex items-center justify-center">
-                              <img
-                                src={getPlatformLogo(submission.platform)}
-                                alt={submission.platform}
-                                className="h-4 w-4"
-                              />
+                              <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-4 w-4" />
                             </div>
-                            <a
-                              href={submission.video_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-primary hover:underline flex items-center gap-1.5 tracking-[-0.5px]"
-                            >
+                            <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1.5 tracking-[-0.5px]">
                               <ExternalLink className="h-3.5 w-3.5" />
                               View Video
                             </a>
@@ -704,61 +571,38 @@ export function VideoSubmissionsTab({
                           </span>
                         </div>
 
-                        {submission.submission_notes && (
-                          <p className="text-sm text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 tracking-[-0.5px]">
+                        {submission.submission_notes && <p className="text-sm text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 tracking-[-0.5px]">
                             {submission.submission_notes}
-                          </p>
-                        )}
+                          </p>}
 
-                        {submission.rejection_reason && (
-                          <p className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 tracking-[-0.5px]">
+                        {submission.rejection_reason && <p className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 tracking-[-0.5px]">
                             {submission.rejection_reason}
-                          </p>
-                        )}
+                          </p>}
                       </div>
 
                       {/* Actions */}
-                      {submission.status === "pending" && (
-                        <div className="flex border-t border-[#0d0d0d]">
-                          <button
-                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50"
-                            onClick={() => {
-                              setSelectedSubmission(submission);
-                              setRejectDialogOpen(true);
-                            }}
-                            disabled={processing}
-                          >
+                      {submission.status === "pending" && <div className="flex border-t border-[#0d0d0d]">
+                          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" onClick={() => {
+                      setSelectedSubmission(submission);
+                      setRejectDialogOpen(true);
+                    }} disabled={processing}>
                             <X className="h-4 w-4" />
                             Reject
                           </button>
                           <div className="w-px bg-border/20" />
-                          <button
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${
-                              submission.is_flagged 
-                                ? "text-orange-400 bg-orange-500/10" 
-                                : "text-orange-400 hover:bg-orange-500/5"
-                            }`}
-                            onClick={() => handleFlag(submission)}
-                            disabled={processing}
-                          >
-                            <img src={flagIcon} alt="" className="h-4 w-4" />
+                          <button className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${submission.is_flagged ? "text-orange-400 bg-orange-500/10" : "text-orange-400 hover:bg-orange-500/5"}`} onClick={() => handleFlag(submission)} disabled={processing}>
+                            <img alt="" className="h-4 w-4" src="/lovable-uploads/cefe6d19-6933-495c-affa-26b57ccee741.png" />
                             {submission.is_flagged ? "Flagged" : "Flag"}
                           </button>
                           <div className="w-px bg-border/20" />
-                          <button
-                            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50"
-                            onClick={() => handleApprove(submission)}
-                            disabled={processing}
-                          >
+                          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" onClick={() => handleApprove(submission)} disabled={processing}>
                             <Check className="h-4 w-4" />
                             Approve
                           </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                });
-              })()}
+                        </div>}
+                    </div>;
+              });
+            })()}
             </div>
           </ScrollArea>
         </div>
@@ -773,12 +617,7 @@ export function VideoSubmissionsTab({
               Provide a reason for rejecting this video (optional)
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Reason for rejection..."
-            value={rejectionReason}
-            onChange={e => setRejectionReason(e.target.value)}
-            rows={3}
-          />
+          <Textarea placeholder="Reason for rejection..." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} rows={3} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
               Cancel
@@ -789,6 +628,5 @@ export function VideoSubmissionsTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
