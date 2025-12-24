@@ -45,9 +45,12 @@ interface PayoutItem {
   video_submission?: {
     video_url: string;
     video_title: string | null;
+    video_description: string | null;
     video_thumbnail_url: string | null;
+    video_author_avatar: string | null;
     platform: string | null;
     views: number | null;
+    likes: number | null;
     video_author_username: string | null;
   };
 }
@@ -211,7 +214,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
       const itemSubmissionIds = [...new Set(itemsData.map(item => item.submission_id))];
       const { data: videoSubmissions } = await supabase
         .from('video_submissions')
-        .select('id, video_url, video_title, video_thumbnail_url, platform, views, video_author_username')
+        .select('id, video_url, video_title, video_description, video_thumbnail_url, video_author_avatar, platform, views, likes, video_author_username')
         .in('id', itemSubmissionIds);
 
       // Fetch the payout requests
@@ -501,9 +504,9 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                     {isExpanded && (
                       <TableRow className={`bg-muted/10 ${!isLast ? 'border-b border-border/50' : ''}`}>
                         <TableCell colSpan={6} className="p-0">
-                          <div className="p-4 space-y-2">
+                          <div className="p-4 space-y-3">
                             <div className="text-xs font-medium text-muted-foreground mb-3">Submission Items</div>
-                            <div className="grid gap-2">
+                            <div className="grid gap-3">
                               {request.items?.map(item => {
                                 const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
                                 const isFlagged = !!item.flagged_at;
@@ -511,88 +514,153 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                                 return (
                                   <div 
                                     key={item.id}
-                                    className={`flex items-center gap-4 p-3 rounded-lg border ${
+                                    className={`group rounded-xl border overflow-hidden transition-all hover:border-border/60 ${
                                       isFlagged 
                                         ? 'bg-amber-500/5 border-amber-500/20' 
-                                        : 'bg-background/50 border-border/30'
+                                        : 'bg-card/40 border-border/40'
                                     }`}
                                   >
-                                    {/* Thumbnail */}
-                                    <div className="w-16 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                                      {item.video_submission?.video_thumbnail_url ? (
-                                        <img 
-                                          src={item.video_submission.video_thumbnail_url} 
-                                          alt="" 
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                          {platformIcon && <img src={platformIcon} alt="" className="h-5 w-5 opacity-50" />}
-                                        </div>
-                                      )}
-                                    </div>
-                                    
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        {platformIcon && <img src={platformIcon} alt="" className="h-4 w-4" />}
-                                        <span className="text-sm font-medium truncate">
-                                          {item.video_submission?.video_title || item.video_submission?.video_url || 'Video'}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-muted-foreground">
-                                        @{item.video_submission?.video_author_username || 'unknown'} • {item.video_submission?.views?.toLocaleString() || 0} views
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Amount */}
-                                    <div className="text-right">
-                                      <div className="text-sm font-semibold">${item.amount.toFixed(2)}</div>
-                                    </div>
-                                    
-                                    {/* Flag Status / Action */}
-                                    <div className="flex items-center gap-2">
-                                      {isFlagged ? (
-                                        <Tooltip>
-                                          <TooltipTrigger>
-                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                                              <Flag className="h-3 w-3 mr-1" />
-                                              Flagged
-                                            </Badge>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>{item.flag_reason || 'Flagged for review'}</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      ) : (
-                                        request.status === 'clearing' && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 text-xs text-muted-foreground hover:text-amber-500"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleFlagItem(item.id, 'Flagged by brand for review');
-                                            }}
-                                            disabled={flaggingItem === item.id}
-                                          >
-                                            <Flag className="h-3 w-3 mr-1" />
-                                            Flag
-                                          </Button>
-                                        )
-                                      )}
-                                      
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 p-0"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          window.open(item.video_submission?.video_url, '_blank');
-                                        }}
+                                    {/* Main Content - Horizontal Layout */}
+                                    <div className="flex gap-4 p-4">
+                                      {/* 9:16 Video Thumbnail */}
+                                      <a 
+                                        href={item.video_submission?.video_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="relative w-16 h-[90px] rounded-lg overflow-hidden bg-muted/30 flex-shrink-0 group/thumb"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                      </Button>
+                                        {item.video_submission?.video_thumbnail_url ? (
+                                          <img 
+                                            src={item.video_submission.video_thumbnail_url} 
+                                            alt={item.video_submission?.video_title || "Video"} 
+                                            className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105"
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center">
+                                            {platformIcon && <img src={platformIcon} alt="" className="w-5 h-5 opacity-40" />}
+                                          </div>
+                                        )}
+                                        {/* Platform badge */}
+                                        <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-black/60 flex items-center justify-center">
+                                          {platformIcon && <img src={platformIcon} alt="" className="h-2.5 w-2.5" />}
+                                        </div>
+                                      </a>
+
+                                      {/* Video Details */}
+                                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                        {/* Top: Title & Amount */}
+                                        <div>
+                                          <div className="flex items-start justify-between gap-2 mb-1">
+                                            <a 
+                                              href={item.video_submission?.video_url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer" 
+                                              className="text-sm font-medium tracking-[-0.3px] line-clamp-2 hover:underline transition-all"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              {item.video_submission?.video_title || item.video_submission?.video_description || 'Untitled Video'}
+                                            </a>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                              <span className="text-sm font-semibold text-emerald-500 tabular-nums">
+                                                ${item.amount.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Description */}
+                                          {item.video_submission?.video_description && item.video_submission?.video_title && (
+                                            <p className="text-xs text-muted-foreground line-clamp-1 mb-1.5">
+                                              {item.video_submission.video_description}
+                                            </p>
+                                          )}
+                                          
+                                          {/* Author info */}
+                                          <div className="flex items-center gap-2">
+                                            {item.video_submission?.video_author_avatar ? (
+                                              <img 
+                                                src={item.video_submission.video_author_avatar} 
+                                                alt="" 
+                                                className="h-4 w-4 rounded-full"
+                                              />
+                                            ) : (
+                                              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center">
+                                                <span className="text-[8px] font-medium">
+                                                  {(item.video_submission?.video_author_username || 'U')[0].toUpperCase()}
+                                                </span>
+                                              </div>
+                                            )}
+                                            <span className="text-xs text-muted-foreground">
+                                              @{item.video_submission?.video_author_username || 'unknown'}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Bottom: Metrics Row */}
+                                        <div className="flex items-center justify-between mt-2">
+                                          <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ letterSpacing: '-0.05em' }}>
+                                            <div className="flex items-center gap-1">
+                                              <span className="font-medium text-foreground tabular-nums">
+                                                {item.video_submission?.views?.toLocaleString() || 0}
+                                              </span>
+                                              <span>views</span>
+                                            </div>
+                                            {item.video_submission?.likes !== undefined && item.video_submission?.likes !== null && (
+                                              <div className="flex items-center gap-1">
+                                                <span className="font-medium text-foreground tabular-nums">
+                                                  {item.video_submission.likes.toLocaleString()}
+                                                </span>
+                                                <span>likes</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* Actions */}
+                                          <div className="flex items-center gap-1">
+                                            {isFlagged ? (
+                                              <Tooltip>
+                                                <TooltipTrigger>
+                                                  <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">
+                                                    <Flag className="h-2.5 w-2.5 mr-1" />
+                                                    Flagged
+                                                  </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>{item.flag_reason || 'Flagged for review'}</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            ) : (
+                                              request.status === 'clearing' && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-6 text-[10px] text-muted-foreground hover:text-amber-500 px-2"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFlagItem(item.id, 'Flagged by brand for review');
+                                                  }}
+                                                  disabled={flaggingItem === item.id}
+                                                >
+                                                  <Flag className="h-2.5 w-2.5 mr-1" />
+                                                  Flag
+                                                </Button>
+                                              )
+                                            )}
+                                            
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.open(item.video_submission?.video_url, '_blank');
+                                              }}
+                                            >
+                                              <ExternalLink className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 );
