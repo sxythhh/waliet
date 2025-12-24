@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, ExternalLink, User } from "lucide-react";
+import { Check, X, ExternalLink, User, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -345,21 +345,28 @@ export function CampaignApplicationsView({ campaignId, boostId, onApplicationRev
             </div>
 
             {/* Action Buttons - Fixed at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
-              <div className="flex gap-3">
+            <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
+              <div className="flex gap-2">
                 <Button
                   onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
                   variant="outline"
                   disabled={processing === selectedApp.id}
-                  className="flex-1"
+                  className="flex-1 h-11 font-medium tracking-[-0.5px] border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
                 >
                   <X className="h-4 w-4 mr-2" />
                   Reject
                 </Button>
                 <Button
+                  variant="outline"
+                  className="h-11 px-4 font-medium tracking-[-0.5px] border-border/50 hover:bg-muted/50"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Message
+                </Button>
+                <Button
                   onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')}
                   disabled={processing === selectedApp.id}
-                  className="flex-1"
+                  className="flex-1 h-11 font-medium tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-500 text-white"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Accept
