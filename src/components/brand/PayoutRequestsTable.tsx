@@ -626,7 +626,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px] h-9 text-sm">
+              <SelectTrigger className="w-[140px] h-9 text-sm border-0 bg-background">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
