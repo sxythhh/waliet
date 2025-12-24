@@ -97,6 +97,7 @@ export function CampaignHomeTab({
   const [campaignHashtags, setCampaignHashtags] = useState<string[]>([]);
   const [campaignCollectionName, setCampaignCollectionName] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   // Reset videos when timeframe changes to prevent stale data
   useEffect(() => {
@@ -124,7 +125,7 @@ export function CampaignHomeTab({
         // Include payout_status to calculate paid vs unpaid views directly
         const videoSubmissionsQuery = supabase
           .from('video_submissions')
-          .select('id, status, views, likes, comments, shares, bookmarks, submitted_at, payout_status')
+          .select('id, status, views, likes, comments, shares, bookmarks, submitted_at, payout_status, metrics_updated_at')
           .eq('source_type', 'campaign')
           .eq('source_id', campaignId);
         
@@ -162,7 +163,15 @@ export function CampaignHomeTab({
           bookmarks: number | null;
           submitted_at: string | null;
           payout_status: string | null;
+          metrics_updated_at: string | null;
         }[];
+        
+        // Get the most recent metrics_updated_at for the sync time display
+        const latestSync = allSubmissions
+          .filter(s => s.metrics_updated_at)
+          .map(s => new Date(s.metrics_updated_at!).getTime())
+          .sort((a, b) => b - a)[0];
+        setLastSyncedAt(latestSync ? new Date(latestSync).toISOString() : null);
         
         // Filter by date range if needed
         let filteredSubmissions = allSubmissions;
@@ -490,6 +499,7 @@ export function CampaignHomeTab({
         metricsData={metricsData}
         isRefreshing={isRefreshing}
         onRefresh={handleRefresh}
+        lastSyncedAt={lastSyncedAt}
       />
 
       {/* Top Performing Videos - using shared component */}
