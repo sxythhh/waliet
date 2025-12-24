@@ -190,9 +190,13 @@ export default function PublicProfile() {
     let participationsWithStats: any[] = [];
     if (submissions) {
       participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
-        // videos_count comes from campaign_videos; view totals come from cached campaign videos (platform usernames)
+        // videos_count comes from video_submissions; view totals come from cached campaign videos (platform usernames)
         const [{ data: videos }, { data: cachedVideos }] = await Promise.all([
-          supabase.from("campaign_videos").select("id").eq("campaign_id", sub.campaign_id).eq("creator_id", profileData.id),
+          supabase.from("video_submissions")
+            .select("id")
+            .eq("source_type", "campaign")
+            .eq("source_id", sub.campaign_id)
+            .eq("creator_id", profileData.id),
           platformUsernames.length
             ? supabase.from("cached_campaign_videos").select("views").eq("campaign_id", sub.campaign_id).in("username", platformUsernames)
             : Promise.resolve({ data: [] as any[] } as any)
@@ -241,7 +245,11 @@ export default function PublicProfile() {
       boostsWithStats = await Promise.all(boostApps.map(async app => {
         const {
           data: videoSubmissions
-        } = await supabase.from("boost_video_submissions").select("id, payout_amount, status").eq("bounty_campaign_id", app.bounty_campaign_id).eq("user_id", profileData.id);
+        } = await supabase.from("video_submissions")
+          .select("id, payout_amount, status")
+          .eq("source_type", "boost")
+          .eq("source_id", app.bounty_campaign_id)
+          .eq("creator_id", profileData.id);
         const approvedSubmissions = videoSubmissions?.filter(s => s.status === "approved") || [];
         const totalEarned = approvedSubmissions.reduce((acc, s) => acc + (s.payout_amount || 0), 0);
         return {

@@ -2615,6 +2615,7 @@ export type Database = {
           reviewed_by: string | null
           shares: number | null
           shortimize_video_id: string | null
+          social_account_id: string | null
           source_id: string
           source_type: string
           status: string | null
@@ -2625,6 +2626,8 @@ export type Database = {
           video_author_username: string | null
           video_description: string | null
           video_thumbnail_url: string | null
+          video_title: string | null
+          video_upload_date: string | null
           video_url: string
           views: number | null
         }
@@ -2647,6 +2650,7 @@ export type Database = {
           reviewed_by?: string | null
           shares?: number | null
           shortimize_video_id?: string | null
+          social_account_id?: string | null
           source_id: string
           source_type: string
           status?: string | null
@@ -2657,6 +2661,8 @@ export type Database = {
           video_author_username?: string | null
           video_description?: string | null
           video_thumbnail_url?: string | null
+          video_title?: string | null
+          video_upload_date?: string | null
           video_url: string
           views?: number | null
         }
@@ -2679,6 +2685,7 @@ export type Database = {
           reviewed_by?: string | null
           shares?: number | null
           shortimize_video_id?: string | null
+          social_account_id?: string | null
           source_id?: string
           source_type?: string
           status?: string | null
@@ -2689,6 +2696,8 @@ export type Database = {
           video_author_username?: string | null
           video_description?: string | null
           video_thumbnail_url?: string | null
+          video_title?: string | null
+          video_upload_date?: string | null
           video_url?: string
           views?: number | null
         }
@@ -2698,6 +2707,13 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_submissions_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
         ]

@@ -122,15 +122,29 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
       
       if (brandData) setBrand(brandData);
 
-      // Fetch user's submissions
+      // Fetch user's submissions from unified table
       const { data: submissionsData } = await supabase
-        .from("boost_video_submissions")
+        .from("video_submissions")
         .select("*")
-        .eq("bounty_campaign_id", id)
-        .eq("user_id", user.id)
+        .eq("source_type", "boost")
+        .eq("source_id", id)
+        .eq("creator_id", user.id)
         .order("submitted_at", { ascending: false });
 
-      if (submissionsData) setSubmissions(submissionsData);
+      if (submissionsData) {
+        // Map to the expected VideoSubmission interface
+        setSubmissions(submissionsData.map(s => ({
+          id: s.id,
+          video_url: s.video_url,
+          platform: s.platform || 'tiktok',
+          submission_notes: s.submission_notes,
+          status: s.status || 'pending',
+          payout_amount: s.payout_amount,
+          submitted_at: s.submitted_at || s.created_at,
+          reviewed_at: s.reviewed_at,
+          rejection_reason: s.rejection_reason
+        })));
+      }
     } catch (error) {
       console.error("Error fetching boost:", error);
       toast.error("Failed to load boost");
@@ -198,15 +212,25 @@ export default function CreatorBoostDashboard({ boostId: propBoostId }: CreatorB
         return;
       }
 
+      // Get brand_id from boost
+      const { data: boostData } = await supabase
+        .from("bounty_campaigns")
+        .select("brand_id")
+        .eq("id", boost.id)
+        .single();
+
       const { error } = await supabase
-        .from("boost_video_submissions")
+        .from("video_submissions")
         .insert({
-          bounty_campaign_id: boost.id,
-          user_id: user.id,
+          source_type: "boost",
+          source_id: boost.id,
+          brand_id: boostData?.brand_id || null,
+          creator_id: user.id,
           video_url: videoUrl.trim(),
           platform: detectedPlatform,
           submission_notes: null,
-          payout_amount: payoutPerVideo
+          payout_amount: payoutPerVideo,
+          submitted_at: new Date().toISOString()
         });
 
       if (error) throw error;

@@ -75,109 +75,77 @@ export function SubmissionsTab() {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch campaign video submissions
-      const {
-        data: campaignVideos
-      } = await supabase.from('campaign_videos').select(`
-          id,
-          video_url,
-          platform,
-          status,
-          created_at,
-          updated_at,
-          submission_text,
-          estimated_payout,
-          campaigns (
-            id,
-            title,
-            brand_name,
-            brand_logo_url
-          )
-        `).eq('creator_id', user.id).order('created_at', {
-        ascending: false
-      });
+      // Fetch all video submissions from unified table
+      const { data: videoSubmissions, error } = await supabase
+        .from('video_submissions')
+        .select('*')
+        .eq('creator_id', user.id)
+        .order('submitted_at', { ascending: false });
 
-      // Fetch boost video submissions
-      const {
-        data: boostVideos
-      } = await supabase.from('boost_video_submissions').select(`
-          id,
-          video_url,
-          platform,
-          status,
-          created_at,
-          updated_at,
-          submission_notes,
-          payout_amount,
-          rejection_reason,
-          reviewed_at,
-          bounty_campaigns (
-            id,
-            title,
-            brands (
-              name,
-              logo_url
-            )
-          )
-        `).eq('user_id', user.id).order('created_at', {
-        ascending: false
-      });
-      const allSubmissions: Submission[] = [];
-
-      // Map campaign videos
-      if (campaignVideos) {
-        campaignVideos.forEach((video: any) => {
-          if (video.campaigns) {
-            allSubmissions.push({
-              id: video.id,
-              video_url: video.video_url,
-              platform: video.platform || 'unknown',
-              status: video.status || 'pending',
-              created_at: video.created_at,
-              updated_at: video.updated_at,
-              submission_text: video.submission_text,
-              estimated_payout: video.estimated_payout,
-              type: 'campaign',
-              program: {
-                id: video.campaigns.id,
-                title: video.campaigns.title,
-                brand_name: video.campaigns.brand_name,
-                brand_logo_url: video.campaigns.brand_logo_url
-              }
-            });
-          }
-        });
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        setLoading(false);
+        return;
       }
 
-      // Map boost videos
-      if (boostVideos) {
-        boostVideos.forEach((video: any) => {
-          if (video.bounty_campaigns) {
-            allSubmissions.push({
-              id: video.id,
-              video_url: video.video_url,
-              platform: video.platform || 'unknown',
-              status: video.status || 'pending',
-              created_at: video.created_at,
-              updated_at: video.updated_at,
-              submission_text: video.submission_notes,
-              estimated_payout: video.payout_amount,
-              rejection_reason: video.rejection_reason,
-              reviewed_at: video.reviewed_at,
-              type: 'boost',
-              program: {
-                id: video.bounty_campaigns.id,
-                title: video.bounty_campaigns.title,
-                brand_name: video.bounty_campaigns.brands?.name,
-                brand_logo_url: video.bounty_campaigns.brands?.logo_url
-              }
-            });
-          }
-        });
+      // Get unique source IDs for campaigns and boosts
+      const campaignIds = [...new Set(videoSubmissions?.filter(v => v.source_type === 'campaign').map(v => v.source_id) || [])];
+      const boostIds = [...new Set(videoSubmissions?.filter(v => v.source_type === 'boost').map(v => v.source_id) || [])];
+
+      // Fetch campaign details
+      let campaignMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+      if (campaignIds.length > 0) {
+        const { data: campaigns } = await supabase
+          .from('campaigns')
+          .select('id, title, brand_name, brand_logo_url')
+          .in('id', campaignIds);
+        if (campaigns) {
+          campaigns.forEach(c => {
+            campaignMap[c.id] = c;
+          });
+        }
       }
 
-      // Sort by created_at descending
-      allSubmissions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Fetch boost details with brand info
+      let boostMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+      if (boostIds.length > 0) {
+        const { data: boosts } = await supabase
+          .from('bounty_campaigns')
+          .select('id, title, brands(name, logo_url)')
+          .in('id', boostIds);
+        if (boosts) {
+          boosts.forEach((b: any) => {
+            boostMap[b.id] = {
+              id: b.id,
+              title: b.title,
+              brand_name: b.brands?.name || '',
+              brand_logo_url: b.brands?.logo_url || null
+            };
+          });
+        }
+      }
+
+      // Map to Submission type
+      const allSubmissions: Submission[] = (videoSubmissions || []).map(video => {
+        const isBoost = video.source_type === 'boost';
+        const program = isBoost ? boostMap[video.source_id] : campaignMap[video.source_id];
+        
+        return {
+          id: video.id,
+          video_url: video.video_url,
+          platform: video.platform || 'unknown',
+          status: video.status || 'pending',
+          created_at: video.submitted_at || video.created_at,
+          updated_at: video.updated_at,
+          submission_text: video.submission_notes,
+          estimated_payout: video.payout_amount,
+          rejection_reason: video.rejection_reason,
+          reviewed_at: video.reviewed_at,
+          type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
+          program: program || { id: video.source_id, title: 'Unknown', brand_name: '', brand_logo_url: null }
+        };
+      }).filter(s => s.program);
+
       setSubmissions(allSubmissions);
     } catch (error) {
       console.error('Error fetching submissions:', error);
