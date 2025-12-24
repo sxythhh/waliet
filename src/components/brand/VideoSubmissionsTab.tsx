@@ -522,7 +522,7 @@ export function VideoSubmissionsTab({
               });
               if (filteredSubs.length === 0) {
                 return <div className="text-center py-12 text-muted-foreground">
-                      <img src={videoLibraryIcon} alt="" className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      
                       <p className="text-sm tracking-[-0.5px]">
                         No submissions found for the applied filter
                       </p>
