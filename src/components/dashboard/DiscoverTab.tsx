@@ -686,27 +686,10 @@ export function DiscoverTab({
                 };
                 const isEnded = campaign.status === "ended";
                 const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                return <CampaignCard
-                  key={`campaign-${campaign.id}`}
-                  id={campaign.id}
-                  title={campaign.title}
-                  brand_name={campaign.brand_name}
-                  brand_logo_url={campaign.brand_logo_url}
-                  brand_is_verified={campaign.brand_is_verified}
-                  banner_url={campaign.banner_url}
-                  budget={campaign.budget}
-                  budget_used={campaign.budget_used}
-                  is_infinite_budget={campaign.is_infinite_budget}
-                  platforms={campaign.platforms}
-                  isEnded={isEnded}
-                  isBookmarked={isBookmarked}
-                  onClick={handleCampaignClick}
-                  onBookmarkClick={(e) => toggleBookmark(campaign.id, e)}
-                  onFullscreenClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/c/${campaign.slug}`);
-                  }}
-                />;
+                return <CampaignCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.platforms} isEnded={isEnded} isBookmarked={isBookmarked} onClick={handleCampaignClick} onBookmarkClick={e => toggleBookmark(campaign.id, e)} onFullscreenClick={e => {
+                  e.stopPropagation();
+                  navigate(`/c/${campaign.slug}`);
+                }} />;
               } else {
                 const bounty = item.data;
                 const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
@@ -741,7 +724,7 @@ export function DiscoverTab({
                       <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
                         {/* Brand Info */}
                         <div className="flex items-center gap-2">
-{bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+                      {bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
                               <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
                             </div> : <div className="w-6 h-6 rounded-[3px] bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
                               <span className="text-[10px] font-semibold text-muted-foreground">
@@ -769,7 +752,9 @@ export function DiscoverTab({
                         </div>
                         
                         {/* Metadata Row */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px]" style={{ color: '#a1a1a1' }}>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px]" style={{
+                      color: '#a1a1a1'
+                    }}>
                           <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
                             <img src={videosIcon} alt="" className="h-3 w-3 dark:invert" />
                             {bounty.videos_per_month} videos/mo
@@ -782,9 +767,7 @@ export function DiscoverTab({
                         </div>
                         
                         {/* Description */}
-                        {bounty.description && <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed font-['Inter'] tracking-[-0.5px]">
-                            {bounty.description}
-                          </p>}
+                        {bounty.description}
                         
                         {/* Retainer Amount */}
                         <div className="flex items-baseline gap-1 pt-2">
