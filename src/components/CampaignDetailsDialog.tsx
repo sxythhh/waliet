@@ -291,7 +291,7 @@ export function CampaignDetailsDialog({
           {hasConnectedAccounts && (
             <Button
               onClick={() => setShowSubmitVideoDialog(true)}
-              className="h-9 px-4 rounded-full font-medium text-sm bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7] flex-shrink-0"
+              className="h-9 px-4 rounded-[6px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border flex-shrink-0"
               style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
             >
               Submit Video
