@@ -324,7 +324,7 @@ export function BrandCampaignDetailView({
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuContent align="start" className="w-64 bg-popover z-50">
                 {/* All Programs option */}
                 <DropdownMenuItem
                   onClick={() => handleSelectEntity("all")}
