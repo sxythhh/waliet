@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
-import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, ExternalLink, User } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, ExternalLink, User, Search } from "lucide-react";
 import { toast } from "sonner";
 import creditCardIcon from "@/assets/credit-card-icon.svg";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -85,6 +87,25 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
   const [selectedRequest, setSelectedRequest] = useState<PayoutRequest | null>(null);
   const [flaggingItem, setFlaggingItem] = useState<string | null>(null);
   const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Filter requests based on search and status
+  const filteredRequests = useMemo(() => {
+    return requests.filter(request => {
+      // Search filter - match username or amount
+      const matchesSearch = searchQuery === "" || 
+        request.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        request.total_amount.toFixed(2).includes(searchQuery);
+      
+      // Status filter
+      const matchesStatus = statusFilter === "all" || 
+        (statusFilter === "flagged" && request.items?.some(i => i.flagged_at)) ||
+        (statusFilter !== "flagged" && request.status === statusFilter);
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [requests, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchPayoutRequests();
@@ -490,7 +511,36 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
         {/* Desktop Table */}
         {requests.length > 0 && (
         <div className="hidden md:block">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Payout Requests</h3>
+          {/* Search and Filter Bar */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by creator or amount..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px] h-9 text-sm">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="clearing">Clearing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="flagged">Flagged</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No payouts match your search criteria
+            </div>
+          ) : (
           <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
           <Table>
             <TableHeader>
@@ -504,9 +554,9 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {requests.map((request, index) => {
+              {filteredRequests.map((request, index) => {
                 const isExpanded = expandedRequest === request.id;
-                const isLast = index === requests.length - 1;
+                const isLast = index === filteredRequests.length - 1;
                 const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
                 
                 return (
@@ -759,66 +809,100 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
             </TableBody>
           </Table>
           </div>
+          )}
         </div>
         )}
 
         {/* Mobile Cards */}
+        {requests.length > 0 && (
         <div className="md:hidden space-y-3">
-          {requests.map(request => {
-            const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
-            
-            return (
-              <Card 
-                key={request.id} 
-                className="bg-card/50 border-border/50"
-                onClick={() => {
-                  setSelectedRequest(request);
-                  setDetailsDialogOpen(true);
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={request.profiles?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-muted text-xs">
-                          {request.profiles?.username?.charAt(0).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-sm font-medium">{request.profiles?.username}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(request.created_at), 'MMM d, yyyy')}
+          {/* Mobile Search and Filter */}
+          <div className="flex flex-col gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by creator or amount..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="clearing">Clearing</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="flagged">Flagged</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {filteredRequests.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              No payouts match your search criteria
+            </div>
+          ) : (
+            filteredRequests.map(request => {
+              const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
+              
+              return (
+                <Card 
+                  key={request.id} 
+                  className="bg-card/50 border-border/50"
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setDetailsDialogOpen(true);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={request.profiles?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-muted text-xs">
+                            {request.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-sm font-medium">{request.profiles?.username}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {format(new Date(request.created_at), 'MMM d, yyyy')}
+                          </div>
                         </div>
                       </div>
+                      {getStatusBadge(request)}
                     </div>
-                    {getStatusBadge(request)}
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-2xl font-bold">${request.total_amount.toFixed(2)}</span>
-                    <div className="text-sm text-muted-foreground">
-                      {request.items?.length || 0} items
-                      {flaggedItems.length > 0 && (
-                        <span className="text-amber-500 ml-1">({flaggedItems.length} flagged)</span>
-                      )}
+                    
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-2xl font-bold">${request.total_amount.toFixed(2)}</span>
+                      <div className="text-sm text-muted-foreground">
+                        {request.items?.length || 0} items
+                        {flaggedItems.length > 0 && (
+                          <span className="text-amber-500 ml-1">({flaggedItems.length} flagged)</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <Progress value={getClearingProgress(request)} className="h-1.5 mb-1" />
-                    <div className="text-xs text-muted-foreground">
-                      {request.status === 'completed' 
-                        ? 'Completed'
-                        : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
-                      }
+                    
+                    <div>
+                      <Progress value={getClearingProgress(request)} className="h-1.5 mb-1" />
+                      <div className="text-xs text-muted-foreground">
+                        {request.status === 'completed' 
+                          ? 'Completed'
+                          : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
+                        }
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </div>
+        )}
 
         {/* Boost Transactions History */}
         {transactions.length > 0 && (
