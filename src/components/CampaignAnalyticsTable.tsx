@@ -1251,13 +1251,8 @@ export function CampaignAnalyticsTable({
         </CardContent>
       </Card>;
   }
-  if (transactions.length === 0 && activeTab === 'transactions') {
-    return (
-      <div className={`space-y-4 ${className || ''}`}>
-        <PayoutRequestsTable campaignId={campaignId} />
-      </div>
-    );
-  }
+  // For transactions view, we don't need an early return since PayoutRequestsTable handles empty state
+  // and we still want to show the Transaction History section below
   return <>
       <div className={`space-y-4 ${className || ''}`}>
         {/* Summary Cards */}
