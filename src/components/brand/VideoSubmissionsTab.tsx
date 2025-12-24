@@ -485,20 +485,35 @@ export function VideoSubmissionsTab({
 
       // Determine which API to call based on platform
       if (url.includes('tiktok.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         videoDetails = data?.data || null;
       } else if (url.includes('instagram.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
-          body: { postUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: {
+            postUrl: url
+          }
         });
         if (error) throw error;
         videoDetails = data?.data || null;
       } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         if (data) {
@@ -511,18 +526,19 @@ export function VideoSubmissionsTab({
             views: data.view_count,
             likes: data.like_count,
             comments: 0,
-            shares: 0,
+            shares: 0
           };
         }
       }
-
       if (!videoDetails) {
         toast.error("Could not fetch video metadata. The video may be private or unavailable.");
         return;
       }
 
       // Update the submission in the database
-      const { error } = await supabase.from("video_submissions").update({
+      const {
+        error
+      } = await supabase.from("video_submissions").update({
         views: videoDetails.views || 0,
         likes: videoDetails.likes || 0,
         comments: videoDetails.comments || 0,
@@ -534,7 +550,6 @@ export function VideoSubmissionsTab({
         video_title: videoDetails.title || null,
         updated_at: new Date().toISOString()
       }).eq("id", submission.id);
-
       if (error) throw error;
 
       // Update local state
@@ -548,9 +563,8 @@ export function VideoSubmissionsTab({
         video_thumbnail_url: videoDetails.coverUrl || null,
         video_author_username: videoDetails.authorUsername || null,
         video_author_avatar: videoDetails.authorAvatar || null,
-        video_title: videoDetails.title || null,
+        video_title: videoDetails.title || null
       } : s));
-
       toast.success("Video metadata refreshed!");
     } catch (error) {
       console.error("Error refreshing metadata:", error);
@@ -559,7 +573,6 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
-
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -687,32 +700,18 @@ export function VideoSubmissionsTab({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="bg-background border border-[#0e0e0e] min-w-[100px]">
-                  {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => (
-                    <DropdownMenuItem 
-                      key={status} 
-                      onClick={() => setFilterStatus(status)}
-                      className={`text-[10px] tracking-[-0.5px] cursor-pointer ${filterStatus === status ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
-                    >
+                  {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => <DropdownMenuItem key={status} onClick={() => setFilterStatus(status)} className={`text-[10px] tracking-[-0.5px] cursor-pointer ${filterStatus === status ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </DropdownMenuItem>
-                  ))}
+                    </DropdownMenuItem>)}
                 </DropdownMenuContent>
               </DropdownMenu>
 
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode("cards")}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Card view"
-                >
+                <button onClick={() => setViewMode("cards")} className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Card view">
                   <LayoutGrid className="h-3.5 w-3.5" />
                 </button>
-                <button
-                  onClick={() => setViewMode("table")}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  title="Table view"
-                >
+                <button onClick={() => setViewMode("table")} className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Table view">
                   <TableIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -721,36 +720,16 @@ export function VideoSubmissionsTab({
               <div className="flex items-center gap-2 ml-auto">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg border transition-all duration-200",
-                        dateRange?.from
-                          ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15"
-                          : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground"
-                      )}
-                    >
+                    <button className={cn("flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg border transition-all duration-200", dateRange?.from ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15" : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground")}>
                       <CalendarDays className="h-3.5 w-3.5" />
-                      {dateRange?.from ? (
-                        dateRange.to ? (
-                          <span>
+                      {dateRange?.from ? dateRange.to ? <span>
                             {format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}
-                          </span>
-                        ) : (
-                          <span>{format(dateRange.from, "MMM d, yyyy")}</span>
-                        )
-                      ) : (
-                        <span>Date Range</span>
-                      )}
-                      {dateRange?.from && (
-                        <X
-                          className="h-3 w-3 ml-0.5 hover:text-destructive transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDateRange(undefined);
-                            setSelectedDateFilter(null);
-                          }}
-                        />
-                      )}
+                          </span> : <span>{format(dateRange.from, "MMM d, yyyy")}</span> : <span>Date Range</span>}
+                      {dateRange?.from && <X className="h-3 w-3 ml-0.5 hover:text-destructive transition-colors" onClick={e => {
+                      e.stopPropagation();
+                      setDateRange(undefined);
+                      setSelectedDateFilter(null);
+                    }} />}
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
@@ -758,49 +737,42 @@ export function VideoSubmissionsTab({
                       <p className="text-xs font-medium font-inter tracking-[-0.5px] text-foreground">Select date range</p>
                       <p className="text-[10px] text-muted-foreground tracking-[-0.5px] mt-0.5">Filter submissions by date</p>
                     </div>
-                    <Calendar
-                      mode="range"
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={(range) => {
-                        setDateRange(range);
-                        setSelectedDateFilter(null);
-                      }}
-                      numberOfMonths={2}
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                    <Calendar mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={range => {
+                    setDateRange(range);
+                    setSelectedDateFilter(null);
+                  }} numberOfMonths={2} className={cn("p-3 pointer-events-auto")} />
                     <div className="p-3 border-t border-border flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        {[
-                          { label: "Today", days: 0 },
-                          { label: "7d", days: 7 },
-                          { label: "30d", days: 30 },
-                        ].map(({ label, days }) => (
-                          <button
-                            key={label}
-                            onClick={() => {
-                              const end = new Date();
-                              const start = new Date();
-                              start.setDate(start.getDate() - days);
-                              setDateRange({ from: start, to: end });
-                            }}
-                            className="px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                          >
+                        {[{
+                        label: "Today",
+                        days: 0
+                      }, {
+                        label: "7d",
+                        days: 7
+                      }, {
+                        label: "30d",
+                        days: 30
+                      }].map(({
+                        label,
+                        days
+                      }) => <button key={label} onClick={() => {
+                        const end = new Date();
+                        const start = new Date();
+                        start.setDate(start.getDate() - days);
+                        setDateRange({
+                          from: start,
+                          to: end
+                        });
+                      }} className="px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
                             {label}
-                          </button>
-                        ))}
+                          </button>)}
                       </div>
-                      {dateRange?.from && (
-                        <button
-                          onClick={() => {
-                            setDateRange(undefined);
-                            setSelectedDateFilter(null);
-                          }}
-                          className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors"
-                        >
+                      {dateRange?.from && <button onClick={() => {
+                      setDateRange(undefined);
+                      setSelectedDateFilter(null);
+                    }} className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors">
                           Clear
-                        </button>
-                      )}
+                        </button>}
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -871,8 +843,7 @@ export function VideoSubmissionsTab({
 
               // Table View
               if (viewMode === "table") {
-                return (
-                  <Table>
+                return <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-border/40">
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
@@ -889,16 +860,10 @@ export function VideoSubmissionsTab({
                     </TableHeader>
                     <TableBody>
                       {filteredSubs.map(submission => {
-                        const profile = profiles[submission.user_id];
-                        return (
-                          <TableRow key={submission.id} className="border-[#0e0e0e]">
+                      const profile = profiles[submission.user_id];
+                      return <TableRow key={submission.id} className="border-[#0e0e0e]">
                             <TableCell className="max-w-[200px]">
-                              <a 
-                                href={submission.video_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline"
-                              >
+                              <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline">
                                 {submission.video_title || submission.video_description || "Untitled Video"}
                               </a>
                             </TableCell>
@@ -913,13 +878,7 @@ export function VideoSubmissionsTab({
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                                submission.status === "approved" 
-                                  ? "bg-emerald-500/10 text-emerald-500" 
-                                  : submission.status === "rejected" 
-                                    ? "bg-red-500/10 text-red-500" 
-                                    : "bg-amber-500/10 text-amber-500"
-                              }`}>
+                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : submission.status === "rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
                                 {submission.status === "approved" && <Check className="h-3 w-3" />}
                                 {submission.status === "rejected" && <X className="h-3 w-3" />}
                                 {submission.status === "pending" && <Clock className="h-3 w-3" />}
@@ -940,62 +899,36 @@ export function VideoSubmissionsTab({
                             </TableCell>
                             <TableCell>
                               <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
+                                {formatDistanceToNow(new Date(submission.submitted_at), {
+                              addSuffix: true
+                            })}
                               </span>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-1">
-                                {submission.status === "pending" && (
-                                  <>
-                                    <button
-                                      className="p-1 rounded hover:bg-red-500/10 text-red-400 transition-colors disabled:opacity-50"
-                                      onClick={() => {
-                                        setSelectedSubmission(submission);
-                                        setRejectDialogOpen(true);
-                                      }}
-                                      disabled={processing}
-                                      title="Reject"
-                                    >
+                                {submission.status === "pending" && <>
+                                    <button className="p-1 rounded hover:bg-red-500/10 text-red-400 transition-colors disabled:opacity-50" onClick={() => {
+                                setSelectedSubmission(submission);
+                                setRejectDialogOpen(true);
+                              }} disabled={processing} title="Reject">
                                       <X className="h-3.5 w-3.5" />
                                     </button>
-                                    <button
-                                      className={`p-1 rounded transition-colors disabled:opacity-50 ${
-                                        submission.is_flagged ? "bg-orange-500/10 text-orange-400" : "hover:bg-orange-500/10 text-orange-400"
-                                      }`}
-                                      onClick={() => handleFlag(submission)}
-                                      disabled={processing}
-                                      title={submission.is_flagged ? "Flagged" : "Flag"}
-                                    >
+                                    <button className={`p-1 rounded transition-colors disabled:opacity-50 ${submission.is_flagged ? "bg-orange-500/10 text-orange-400" : "hover:bg-orange-500/10 text-orange-400"}`} onClick={() => handleFlag(submission)} disabled={processing} title={submission.is_flagged ? "Flagged" : "Flag"}>
                                       <img alt="" className="h-3.5 w-3.5" src={flagIcon} />
                                     </button>
-                                    <button
-                                      className="p-1 rounded hover:bg-emerald-500/10 text-emerald-400 transition-colors disabled:opacity-50"
-                                      onClick={() => handleApprove(submission)}
-                                      disabled={processing}
-                                      title="Approve"
-                                    >
+                                    <button className="p-1 rounded hover:bg-emerald-500/10 text-emerald-400 transition-colors disabled:opacity-50" onClick={() => handleApprove(submission)} disabled={processing} title="Approve">
                                       <Check className="h-3.5 w-3.5" />
                                     </button>
-                                  </>
-                                )}
-                                {submission.status === "approved" && (
-                                  <button
-                                    className="p-1 rounded hover:bg-muted/50 text-muted-foreground transition-colors disabled:opacity-50"
-                                    onClick={() => handleRevertApproval(submission)}
-                                    disabled={processing}
-                                    title="Revert to Pending"
-                                  >
+                                  </>}
+                                {submission.status === "approved" && <button className="p-1 rounded hover:bg-muted/50 text-muted-foreground transition-colors disabled:opacity-50" onClick={() => handleRevertApproval(submission)} disabled={processing} title="Revert to Pending">
                                     <RotateCcw className="h-3.5 w-3.5" />
-                                  </button>
-                                )}
+                                  </button>}
                               </div>
                             </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                          </TableRow>;
+                    })}
                     </TableBody>
-                  </Table>
-                );
+                  </Table>;
               }
 
               // Card View (existing)
@@ -1018,19 +951,12 @@ export function VideoSubmissionsTab({
                           <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
                         </div>
                         {/* Refresh metadata button for missing data */}
-                        {(!submission.video_thumbnail_url || (submission.views === null && submission.likes === null)) && (
-                          <button
-                            className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRefreshMetadata(submission);
-                            }}
-                            disabled={processing}
-                            title="Refresh video metadata"
-                          >
+                        {(!submission.video_thumbnail_url || submission.views === null && submission.likes === null) && <button className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors" onClick={e => {
+                        e.stopPropagation();
+                        handleRefreshMetadata(submission);
+                      }} disabled={processing} title="Refresh video metadata">
                             <RefreshCw className="h-3 w-3 text-white" />
-                          </button>
-                        )}
+                          </button>}
                       </div>
 
                       {/* Video Details */}
@@ -1122,7 +1048,7 @@ export function VideoSubmissionsTab({
                         </button>
                         <div className="w-px bg-border/30" />
                         <button className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${submission.is_flagged ? "text-orange-400 bg-orange-500/10" : "text-orange-400 hover:bg-orange-500/5"}`} onClick={() => handleFlag(submission)} disabled={processing}>
-                          <img alt="" className="h-3.5 w-3.5" src={flagIcon} />
+                          <img alt="" className="h-3.5 w-3.5" src="/lovable-uploads/f6161ca6-82b3-42e2-9779-cf90798a04c8.png" />
                           {submission.is_flagged ? "Flagged" : "Flag"}
                         </button>
                         <div className="w-px bg-border/30" />
