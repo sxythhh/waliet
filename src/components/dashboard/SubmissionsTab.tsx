@@ -36,6 +36,7 @@ interface Submission {
   comments?: number | null;
   shares?: number | null;
   video_upload_date?: string | null;
+  video_author_username?: string | null;
   program: {
     id: string;
     title: string;
@@ -158,6 +159,7 @@ export function SubmissionsTab() {
           comments: video.comments,
           shares: video.shares,
           video_upload_date: video.video_upload_date,
+          video_author_username: video.video_author_username,
           program: program || { id: video.source_id, title: 'Unknown', brand_name: '', brand_logo_url: null }
         };
       }).filter(s => s.program);
@@ -393,7 +395,7 @@ export function SubmissionsTab() {
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>Platform</TableHead>
+                }}>Account</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
@@ -498,15 +500,15 @@ export function SubmissionsTab() {
                           </div>
                         </TableCell>
                         
-                        {/* Platform */}
+                        {/* Account */}
                         <TableCell className="py-3">
                           <div className="flex items-center gap-2">
                             {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-4 h-4" />}
-                            <span className="text-sm text-muted-foreground capitalize" style={{
+                            <span className="text-sm text-white dark:text-white" style={{
                               fontFamily: 'Inter',
                               letterSpacing: '-0.3px'
                             }}>
-                              {submission.platform}
+                              {submission.video_author_username || '—'}
                             </span>
                           </div>
                         </TableCell>
