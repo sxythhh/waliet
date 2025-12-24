@@ -460,10 +460,14 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
         const submissionIdsToUpdate = payoutItemsForStatus.map(item => item.submission_id);
         
         // Update video_submissions payout_status to 'paid'
-        await supabase
+        const { error: payoutStatusError } = await supabase
           .from('video_submissions')
           .update({ payout_status: 'paid' })
           .in('id', submissionIdsToUpdate);
+        
+        if (payoutStatusError) {
+          console.error('Error updating payout_status to paid:', payoutStatusError);
+        }
       }
 
       // Update boost budget_used if this is a boost payout
@@ -495,14 +499,18 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
         if (payoutItems && payoutItems.length > 0) {
           const submissionIds = payoutItems.map(item => item.submission_id);
           
-          // Get total views from these submissions
-          const { data: submissions } = await supabase
-            .from('campaign_videos')
-            .select('video_views, video_author_username, platform')
+          // Get total views from these submissions - use video_submissions table
+          const { data: submissions, error: submissionsError } = await supabase
+            .from('video_submissions')
+            .select('views, video_author_username, platform')
             .in('id', submissionIds);
 
+          if (submissionsError) {
+            console.error('Error fetching submissions for paid views:', submissionsError);
+          }
+
           if (submissions && submissions.length > 0) {
-            const totalViewsPaid = submissions.reduce((sum, sub) => sum + (sub.video_views || 0), 0);
+            const totalViewsPaid = submissions.reduce((sum, sub) => sum + (sub.views || 0), 0);
             
             // Get unique usernames and platforms
             const uniqueAccounts = new Map<string, string>();
@@ -525,7 +533,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                 .single();
 
               if (analytics) {
-                await supabase
+                const { error: updateError } = await supabase
                   .from('campaign_account_analytics')
                   .update({
                     paid_views: (analytics.paid_views || 0) + totalViewsPaid,
@@ -535,6 +543,10 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                   .eq('campaign_id', campaignId)
                   .eq('account_username', username)
                   .eq('platform', platform);
+                
+                if (updateError) {
+                  console.error('Error updating paid_views in analytics:', updateError);
+                }
               }
             }
           }
