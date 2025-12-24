@@ -102,11 +102,11 @@ export function SubmissionsTab() {
       const boostIds = [...new Set(videoSubmissions?.filter(v => v.source_type === 'boost').map(v => v.source_id) || [])];
 
       // Fetch campaign details
-      let campaignMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+      let campaignMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; rpm_rate: number; payment_model: string | null; post_rate: number | null }> = {};
       if (campaignIds.length > 0) {
         const { data: campaigns } = await supabase
           .from('campaigns')
-          .select('id, title, brand_name, brand_logo_url')
+          .select('id, title, brand_name, brand_logo_url, rpm_rate, payment_model, post_rate')
           .in('id', campaignIds);
         if (campaigns) {
           campaigns.forEach(c => {
@@ -116,11 +116,11 @@ export function SubmissionsTab() {
       }
 
       // Fetch boost details with brand info
-      let boostMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null }> = {};
+      let boostMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; monthly_retainer: number; videos_per_month: number }> = {};
       if (boostIds.length > 0) {
         const { data: boosts } = await supabase
           .from('bounty_campaigns')
-          .select('id, title, brands(name, logo_url)')
+          .select('id, title, monthly_retainer, videos_per_month, brands(name, logo_url)')
           .in('id', boostIds);
         if (boosts) {
           boosts.forEach((b: any) => {
@@ -128,7 +128,9 @@ export function SubmissionsTab() {
               id: b.id,
               title: b.title,
               brand_name: b.brands?.name || '',
-              brand_logo_url: b.brands?.logo_url || null
+              brand_logo_url: b.brands?.logo_url || null,
+              monthly_retainer: b.monthly_retainer || 0,
+              videos_per_month: b.videos_per_month || 1
             };
           });
         }
@@ -139,6 +141,22 @@ export function SubmissionsTab() {
         const isBoost = video.source_type === 'boost';
         const program = isBoost ? boostMap[video.source_id] : campaignMap[video.source_id];
         
+        // Calculate estimated payout
+        let estimatedPayout = video.payout_amount;
+        if (estimatedPayout === null || estimatedPayout === undefined) {
+          if (isBoost && program) {
+            const boost = program as typeof boostMap[string];
+            estimatedPayout = boost.monthly_retainer / boost.videos_per_month;
+          } else if (!isBoost && program) {
+            const campaign = program as typeof campaignMap[string];
+            if (campaign.payment_model === 'pay_per_post') {
+              estimatedPayout = campaign.post_rate || 0;
+            } else if (campaign.rpm_rate && video.views) {
+              estimatedPayout = (video.views / 1000) * campaign.rpm_rate;
+            }
+          }
+        }
+        
         return {
           id: video.id,
           video_url: video.video_url,
@@ -147,7 +165,7 @@ export function SubmissionsTab() {
           created_at: video.submitted_at || video.created_at,
           updated_at: video.updated_at,
           submission_text: video.submission_notes,
-          estimated_payout: video.payout_amount,
+          estimated_payout: estimatedPayout,
           rejection_reason: video.rejection_reason,
           reviewed_at: video.reviewed_at,
           type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
@@ -606,7 +624,7 @@ export function SubmissionsTab() {
                               ~${submission.estimated_payout.toFixed(2)}
                             </span>
                           ) : (
-                            <span className="text-sm text-muted-foreground/50">—</span>
+                            <span className="text-sm text-muted-foreground/50" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>—</span>
                           )}
                         </TableCell>
                         
