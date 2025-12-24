@@ -324,51 +324,40 @@ export function BrandCampaignDetailView({
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 z-50">
+              <DropdownMenuContent align="start" className="w-64 z-50 bg-[#080808]">
                 {/* All Programs option */}
                 <DropdownMenuItem
                   onClick={() => handleSelectEntity("all")}
-                  className={`focus:bg-muted focus:text-foreground ${isAllMode ? "bg-muted" : ""}`}
+                  className={`focus:bg-white/10 focus:text-foreground ${isAllMode ? "bg-white/10" : ""}`}
                 >
                   <span className="font-medium">All Programs</span>
                 </DropdownMenuItem>
                 
                 {(campaigns.length > 0 || boosts.length > 0) && <DropdownMenuSeparator />}
                 
-                {/* Campaigns */}
-                {campaigns.length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Campaigns</div>
-                    {campaigns.map(c => (
-                      <DropdownMenuItem
-                        key={c.id}
-                        onClick={() => handleSelectEntity({ type: "campaign", id: c.id })}
-                        className={`focus:bg-muted focus:text-foreground ${campaignId === c.id ? "bg-muted" : ""}`}
-                      >
-                        <span className="truncate">{c.title}</span>
-                        <Badge variant="outline" className="ml-auto text-[10px] capitalize">{c.status}</Badge>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
-                
-                {/* Boosts */}
-                {boosts.length > 0 && (
-                  <>
-                    {campaigns.length > 0 && <DropdownMenuSeparator />}
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Boosts</div>
-                    {boosts.map(b => (
-                      <DropdownMenuItem
-                        key={b.id}
-                        onClick={() => handleSelectEntity({ type: "boost", id: b.id })}
-                        className={`focus:bg-muted focus:text-foreground ${boostId === b.id ? "bg-muted" : ""}`}
-                      >
-                        <span className="truncate">{b.title}</span>
-                        <Badge variant="outline" className="ml-auto text-[10px] capitalize">{b.status}</Badge>
-                      </DropdownMenuItem>
-                    ))}
-                  </>
-                )}
+                {/* All Programs (Campaigns + Boosts) */}
+                <div className="flex flex-col gap-1 py-1">
+                  {campaigns.map(c => (
+                    <DropdownMenuItem
+                      key={c.id}
+                      onClick={() => handleSelectEntity({ type: "campaign", id: c.id })}
+                      className={`focus:bg-white/10 focus:text-foreground ${campaignId === c.id ? "bg-white/15" : ""}`}
+                    >
+                      <span className="truncate">{c.title}</span>
+                      <Badge variant="outline" className="ml-auto text-[10px] capitalize">{c.status}</Badge>
+                    </DropdownMenuItem>
+                  ))}
+                  {boosts.map(b => (
+                    <DropdownMenuItem
+                      key={b.id}
+                      onClick={() => handleSelectEntity({ type: "boost", id: b.id })}
+                      className={`focus:bg-white/10 focus:text-foreground ${boostId === b.id ? "bg-white/15" : ""}`}
+                    >
+                      <span className="truncate">{b.title}</span>
+                      <Badge variant="outline" className="ml-auto text-[10px] capitalize">{b.status}</Badge>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
