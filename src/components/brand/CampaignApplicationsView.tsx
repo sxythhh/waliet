@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -357,7 +357,7 @@ export function CampaignApplicationsView({
                       setSelectedAppId(filteredApplications[currentIndex - 1].id);
                     }
                   }} disabled={filteredApplications.findIndex(a => a.id === selectedApp.id) === 0} className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                        <ChevronLeft className="h-4 w-4" />
+                        <ChevronUp className="h-4 w-4" />
                       </button>
                       <button onClick={() => {
                     const currentIndex = filteredApplications.findIndex(a => a.id === selectedApp.id);
@@ -365,7 +365,7 @@ export function CampaignApplicationsView({
                       setSelectedAppId(filteredApplications[currentIndex + 1].id);
                     }
                   }} disabled={filteredApplications.findIndex(a => a.id === selectedApp.id) === filteredApplications.length - 1} className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronDown className="h-4 w-4" />
                       </button>
                     </div>
                     <Avatar className="h-12 w-12 ring-2 ring-border/50">
