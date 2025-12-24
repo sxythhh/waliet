@@ -32,9 +32,6 @@ interface PerformanceChartProps {
   metricsData: MetricsData[];
   isRefreshing: boolean;
   onRefresh: () => void;
-  showHashtagsWarning?: boolean;
-  hashtagsConfigured?: boolean;
-  adminControls?: React.ReactNode;
 }
 
 const formatNumber = (num: number) => {
@@ -46,10 +43,7 @@ const formatNumber = (num: number) => {
 export function PerformanceChart({
   metricsData,
   isRefreshing,
-  onRefresh,
-  showHashtagsWarning = true,
-  hashtagsConfigured = true,
-  adminControls
+  onRefresh
 }: PerformanceChartProps) {
   const [chartMode, setChartMode] = useState<'daily' | 'cumulative'>('cumulative');
   const [activeMetrics, setActiveMetrics] = useState<MetricType[]>(['views']);
@@ -73,12 +67,9 @@ export function PerformanceChart({
     <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
         <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
-        <div className="flex items-center gap-2">
-          {adminControls}
-          <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing} className="h-8 px-2">
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+        <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing} className="h-8 px-2">
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
 
       {/* Controls Row */}
@@ -189,21 +180,8 @@ export function PerformanceChart({
           </ResponsiveContainer>
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-sm tracking-[-0.5px] gap-3">
-            {showHashtagsWarning && !hashtagsConfigured ? (
-              <>
-                <p className="font-medium text-foreground">Hashtags Required</p>
-                <p className="text-center max-w-sm">Add hashtags to your campaign to start tracking video metrics. Videos will be matched by hashtag in captions.</p>
-              </>
-            ) : (
-              <>
-                <p>No metrics data recorded yet</p>
-                <p className="text-xs text-center max-w-sm">Metrics are synced automatically every 4 hours. Click below to sync now.</p>
-                <Button type="button" variant="outline" size="sm" onClick={onRefresh} disabled={isRefreshing} className="border-black/0">
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  Sync Now
-                </Button>
-              </>
-            )}
+            <p>No metrics data recorded yet</p>
+            <p className="text-xs text-center max-w-sm">Metrics are synced automatically every 4 hours. Click the refresh button to sync now.</p>
           </div>
         )}
       </div>
