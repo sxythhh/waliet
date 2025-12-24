@@ -287,16 +287,7 @@ export function BrandCampaignDetailView({
     detailTabs.push({ id: "payouts", label: "Payouts", icon: DollarSign });
   }
 
-  if (loading) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 p-6">
-          <Skeleton className="h-8 w-48 mb-4" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
-    );
-  }
+  // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
   if (!isAllMode && !campaign && !boost) {
     return (
