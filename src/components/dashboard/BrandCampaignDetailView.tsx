@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock } from "lucide-react";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock, Link2 } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
@@ -16,6 +16,7 @@ import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { PayoutRequestsTable } from "@/components/brand/PayoutRequestsTable";
+import { CampaignLinksTab } from "@/components/brand/CampaignLinksTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -85,7 +86,7 @@ interface BrandCampaignDetailViewProps {
   boostId?: string;
   onBack?: () => void;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "management";
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "management";
 type EntitySelection = "all" | {
   type: "campaign";
   id: string;
@@ -313,6 +314,15 @@ export function BrandCampaignDetailView({
     });
   }
 
+  // Links tab (not in all mode)
+  if (!isAllMode) {
+    detailTabs.push({
+      id: "links",
+      label: "Links",
+      icon: Link2
+    });
+  }
+
   // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
   if (!isAllMode && !campaign && !boost && !loading) {
@@ -430,7 +440,7 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign ? <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : null}
+          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign ? <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : null}
         </div>
       </div>
     </div>;

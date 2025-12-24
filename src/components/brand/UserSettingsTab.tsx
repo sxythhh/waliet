@@ -23,6 +23,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import slackLogo from "@/assets/slack-logo.png";
 import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
+import dubLogo from "@/assets/dub-logo.png";
 import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
 
 // Plan ID to display name mapping
@@ -61,6 +62,7 @@ interface Brand {
   whop_membership_id: string | null;
   whop_manage_url: string | null;
   shortimize_api_key: string | null;
+  dub_api_key: string | null;
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
   notify_new_application: boolean;
@@ -101,9 +103,11 @@ export function UserSettingsTab() {
 
   // Integration states
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
+  const [dubApiKey, setDubApiKey] = useState("");
   const [slackWebhookUrl, setSlackWebhookUrl] = useState("");
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
   const [savingIntegrations, setSavingIntegrations] = useState(false);
+  const [showDubKey, setShowDubKey] = useState(false);
   const [showShortimizeKey, setShowShortimizeKey] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
@@ -150,6 +154,7 @@ export function UserSettingsTab() {
       setSelectedPlan(data?.subscription_plan || "");
       setSelectedStatus(data?.subscription_status || "inactive");
       setShortimizeApiKey(data?.shortimize_api_key || "");
+      setDubApiKey(data?.dub_api_key || "");
       setSlackWebhookUrl(data?.slack_webhook_url || "");
       setDiscordWebhookUrl(data?.discord_webhook_url || "");
       setNotifyNewApplication(data?.notify_new_application ?? true);
@@ -193,6 +198,7 @@ export function UserSettingsTab() {
         error
       } = await supabase.from("brands").update({
         shortimize_api_key: shortimizeApiKey || null,
+        dub_api_key: dubApiKey || null,
         slack_webhook_url: slackWebhookUrl || null,
         discord_webhook_url: discordWebhookUrl || null
       }).eq("id", brand.id);
@@ -764,6 +770,31 @@ export function UserSettingsTab() {
                       {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                </div>
+              </div>
+
+              {/* Dub.co Link Tracking */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
+                  <div>
+                    <h3 className="font-medium tracking-[-0.5px]">Dub.co</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Create short links and track click analytics</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+                    API Key
+                  </Label>
+                  <div className="relative">
+                    <Input type={showDubKey ? "text" : "password"} value={dubApiKey} onChange={e => setDubApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Dub.co API key" />
+                    <button type="button" onClick={() => setShowDubKey(!showDubKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showDubKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Get your API key from <a href="https://dub.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dub.co/settings/tokens</a>
+                  </p>
                 </div>
               </div>
 

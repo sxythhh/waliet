@@ -764,6 +764,7 @@ export type Database = {
           created_at: string
           description: string | null
           discord_webhook_url: string | null
+          dub_api_key: string | null
           home_url: string | null
           id: string
           instagram_handle: string | null
@@ -810,6 +811,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discord_webhook_url?: string | null
+          dub_api_key?: string | null
           home_url?: string | null
           id?: string
           instagram_handle?: string | null
@@ -856,6 +858,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discord_webhook_url?: string | null
+          dub_api_key?: string | null
           home_url?: string | null
           id?: string
           instagram_handle?: string | null
