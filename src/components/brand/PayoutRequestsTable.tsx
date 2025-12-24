@@ -54,11 +54,12 @@ interface PayoutItem {
 
 interface PayoutRequestsTableProps {
   campaignId?: string;
+  boostId?: string;
   brandId?: string;
   showEmpty?: boolean;
 }
 
-export function PayoutRequestsTable({ campaignId, brandId, showEmpty = true }: PayoutRequestsTableProps) {
+export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = true }: PayoutRequestsTableProps) {
   const [requests, setRequests] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
@@ -71,7 +72,7 @@ export function PayoutRequestsTable({ campaignId, brandId, showEmpty = true }: P
     
     // Set up realtime subscription
     const channel = supabase
-      .channel(`payout-requests-${campaignId || brandId}`)
+      .channel(`payout-requests-${campaignId || boostId || brandId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -84,7 +85,7 @@ export function PayoutRequestsTable({ campaignId, brandId, showEmpty = true }: P
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [campaignId, brandId]);
+  }, [campaignId, boostId, brandId]);
 
   const fetchPayoutRequests = async () => {
     try {
@@ -114,9 +115,16 @@ export function PayoutRequestsTable({ campaignId, brandId, showEmpty = true }: P
           )
         `);
 
-      // Filter by campaign or brand via the video_submissions
+      // Filter by campaign, boost, or brand via the video_submissions
       if (campaignId) {
-        itemsQuery = itemsQuery.eq('video_submissions.source_id', campaignId);
+        itemsQuery = itemsQuery
+          .eq('video_submissions.source_id', campaignId)
+          .eq('video_submissions.source_type', 'campaign');
+      }
+      if (boostId) {
+        itemsQuery = itemsQuery
+          .eq('video_submissions.source_id', boostId)
+          .eq('video_submissions.source_type', 'boost');
       }
       if (brandId) {
         itemsQuery = itemsQuery.eq('video_submissions.brand_id', brandId);
