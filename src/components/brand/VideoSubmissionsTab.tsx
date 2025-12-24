@@ -973,7 +973,7 @@ export function VideoSubmissionsTab({
                               {submission.status === "approved" && <Check className="h-3 w-3" />}
                               {submission.status === "rejected" && <X className="h-3 w-3" />}
                               {submission.status === "pending" && <Clock className="h-3 w-3" />}
-                              {submission.status}
+                              {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                             </div>
                           </div>
                           
