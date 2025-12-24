@@ -15,6 +15,7 @@ import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
 import { AllApplicationsView } from "@/components/brand/AllApplicationsView";
 import { AllVideosView } from "@/components/brand/AllVideosView";
+import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -282,8 +283,8 @@ export function BrandCampaignDetailView({
     detailTabs.push({ id: "creators", label: "Creators", icon: Users });
   }
 
-  // Payouts tab (for campaigns only, not in all mode)
-  if (!isBoost && !isAllMode) {
+  // Payouts tab (for campaigns and all mode, not boosts)
+  if (!isBoost) {
     detailTabs.push({ id: "payouts", label: "Payouts", icon: DollarSign });
   }
 
@@ -498,7 +499,11 @@ export function BrandCampaignDetailView({
           ) : activeDetailTab === "creators" ? (
             <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
           ) : activeDetailTab === "payouts" ? (
-            <CampaignAnalyticsTable campaignId={campaignId!} view="transactions" className="px-[10px] py-0" />
+            isAllMode && brandId ? (
+              <AllPayoutsView brandId={brandId} />
+            ) : (
+              <CampaignAnalyticsTable campaignId={campaignId!} view="transactions" className="px-[10px] py-0" />
+            )
           ) : null}
         </div>
       </div>
