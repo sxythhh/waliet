@@ -324,7 +324,7 @@ export function BrandCampaignDetailView({
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 bg-popover z-50">
+              <DropdownMenuContent align="start" className="w-64 z-50">
                 {/* All Programs option */}
                 <DropdownMenuItem
                   onClick={() => handleSelectEntity("all")}
@@ -382,7 +382,7 @@ export function BrandCampaignDetailView({
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover z-50">
+              <DropdownMenuContent align="end" className="z-50">
                 {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => (
                   <DropdownMenuItem
                     key={option}
