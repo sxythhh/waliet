@@ -1,16 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, X, User, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+
+type StatusFilter = "all" | "pending" | "approved" | "rejected";
 interface Application {
   id: string;
   campaign_id?: string;
@@ -56,6 +59,7 @@ export function CampaignApplicationsView({
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const isBoost = !!boostId;
   useEffect(() => {
     fetchApplications();
@@ -173,8 +177,33 @@ export function CampaignApplicationsView({
     }
   };
   const pendingCount = applications.filter(a => a.status === 'pending').length;
+  const approvedCount = applications.filter(a => a.status === 'approved' || a.status === 'accepted').length;
+  const rejectedCount = applications.filter(a => a.status === 'rejected').length;
   const totalCount = applications.length;
-  const selectedApp = applications.find(a => a.id === selectedAppId);
+
+  const filteredApplications = useMemo(() => {
+    if (statusFilter === "all") return applications;
+    if (statusFilter === "approved") return applications.filter(a => a.status === 'approved' || a.status === 'accepted');
+    return applications.filter(a => a.status === statusFilter);
+  }, [applications, statusFilter]);
+
+  const selectedApp = filteredApplications.find(a => a.id === selectedAppId) || filteredApplications[0];
+
+  // Auto-select first filtered application when filter changes
+  useEffect(() => {
+    if (filteredApplications.length > 0 && !filteredApplications.find(a => a.id === selectedAppId)) {
+      setSelectedAppId(filteredApplications[0].id);
+    }
+  }, [filteredApplications, selectedAppId]);
+
+  const getFilterLabel = (filter: StatusFilter) => {
+    switch (filter) {
+      case "all": return `All (${totalCount})`;
+      case "pending": return `Pending (${pendingCount})`;
+      case "approved": return `Approved (${approvedCount})`;
+      case "rejected": return `Rejected (${rejectedCount})`;
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -213,12 +242,28 @@ export function CampaignApplicationsView({
       {/* Applications List - Left Column */}
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">
-          <h3 className="font-semibold">Applications</h3>
-          <p className="text-sm text-muted-foreground">{totalCount} total · {pendingCount} pending</p>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold">Applications</h3>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+              <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All ({totalCount})</SelectItem>
+                <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
+                <SelectItem value="approved">Approved ({approvedCount})</SelectItem>
+                <SelectItem value="rejected">Rejected ({rejectedCount})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
-            {applications.map(app => <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-colors ${selectedAppId === app.id ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"}`}>
+            {filteredApplications.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                No {statusFilter} applications
+              </div>
+            ) : filteredApplications.map(app => <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-colors ${selectedAppId === app.id ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"}`}>
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={app.profile?.avatar_url || ""} />
