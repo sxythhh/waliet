@@ -401,9 +401,7 @@ export function VideoSubmissionsTab({
               if (filteredCreators.length === 0) {
                 return <div className="text-center py-8 text-muted-foreground">
                       
-                      <p className="text-sm font-inter tracking-[-0.5px]">
-                        {userSearchQuery ? "No users found" : "No submissions yet"}
-                      </p>
+                      
                     </div>;
               }
               return filteredCreators.map(creator => {
