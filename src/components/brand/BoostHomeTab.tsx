@@ -356,7 +356,7 @@ export function BoostHomeTab({
   }
   return <div className="p-4 space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Views</p>
@@ -397,16 +397,6 @@ export function BoostHomeTab({
               </div>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.pendingSubmissions} pending review</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Creators</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.acceptedCreators}/{stats.maxCreators}</p>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">Active creators in program</p>
           </div>
         </Card>
       </div>
