@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, ArrowRight, Check, Lock, FileText, Plus, X, HelpCircle, Wallet } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Lock, FileText, Plus, X, HelpCircle, Wallet, Gift, TrendingUp } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -77,7 +77,9 @@ export function CreateBountyDialog({
     custom_position: "" as string,
     availability_requirement: "" as string,
     work_location: "" as string,
-    shortimize_collection_name: "" as string
+    shortimize_collection_name: "" as string,
+    view_bonuses_enabled: false,
+    view_bonus_tiers: [] as { view_threshold: number; bonus_amount: number }[]
   });
   const [newQuestion, setNewQuestion] = useState("");
 
@@ -229,6 +231,7 @@ export function CreateBountyDialog({
       const uniqueSlug = `${baseSlug}-${Date.now().toString(36)}`;
 
       const {
+        data: bountyData,
         error
       } = await supabase.from('bounty_campaigns').insert({
         brand_id: brandId,
@@ -251,9 +254,22 @@ export function CreateBountyDialog({
         availability_requirement: formData.availability_requirement || null,
         work_location: formData.work_location || null,
         slug: uniqueSlug,
-        shortimize_collection_name: formData.shortimize_collection_name || null
-      });
+        shortimize_collection_name: formData.shortimize_collection_name || null,
+        view_bonuses_enabled: formData.view_bonuses_enabled
+      }).select().single();
       if (error) throw error;
+
+      // Insert view bonus tiers if enabled
+      if (formData.view_bonuses_enabled && formData.view_bonus_tiers.length > 0 && bountyData) {
+        const tiersToInsert = formData.view_bonus_tiers.map(tier => ({
+          bounty_campaign_id: bountyData.id,
+          view_threshold: tier.view_threshold,
+          bonus_amount: tier.bonus_amount
+        }));
+        
+        await supabase.from('boost_view_bonuses').insert(tiersToInsert);
+      }
+
       if (subscriptionStatus === 'active') {
         toast.success("Boost created and launched!");
       } else {
@@ -289,7 +305,9 @@ export function CreateBountyDialog({
       custom_position: "",
       availability_requirement: "",
       work_location: "",
-      shortimize_collection_name: ""
+      shortimize_collection_name: "",
+      view_bonuses_enabled: false,
+      view_bonus_tiers: []
     });
     setNewQuestion("");
     setBannerFile(null);
@@ -447,7 +465,43 @@ export function CreateBountyDialog({
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">Approved videos will be tracked in this Shortimize collection</p>
                   </div>
 
-                  <div 
+                  {/* View Bonuses Toggle */}
+                  <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Gift className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium font-inter tracking-[-0.5px]">View Bonuses</Label>
+                          <p className="text-xs text-muted-foreground">Reward creators for viral videos</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={formData.view_bonuses_enabled}
+                        onCheckedChange={(checked) => setFormData({ ...formData, view_bonuses_enabled: checked })}
+                      />
+                    </div>
+                    
+                    {formData.view_bonuses_enabled && (
+                      <div className="pl-11 space-y-2">
+                        {formData.view_bonus_tiers.map((tier, index) => (
+                          <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-background">
+                            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs">{tier.view_threshold >= 1000 ? `${tier.view_threshold/1000}K` : tier.view_threshold} views → +${tier.bonus_amount}</span>
+                            <Button type="button" variant="ghost" size="sm" className="h-5 w-5 p-0 ml-auto" onClick={() => {
+                              setFormData({ ...formData, view_bonus_tiers: formData.view_bonus_tiers.filter((_, i) => i !== index) });
+                            }}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        <p className="text-[10px] text-muted-foreground">Configure tiers after creating the boost</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div
                     className="flex items-center gap-3 cursor-pointer group"
                     onClick={() => setFormData({
                       ...formData,
