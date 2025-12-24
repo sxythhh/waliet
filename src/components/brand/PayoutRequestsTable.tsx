@@ -418,7 +418,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
         );
       }
       return (
-        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 gap-1">
+        <Badge className="bg-blue-500/10 text-blue-500 border-transparent hover:bg-blue-500/10 gap-1">
           <Clock className="h-3 w-3" />
           {daysRemaining > 0 ? `${daysRemaining}d left` : `${hoursRemaining}h left`}
         </Badge>
