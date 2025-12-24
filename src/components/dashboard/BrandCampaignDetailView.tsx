@@ -13,7 +13,7 @@ import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
-import { AllApplicationsView } from "@/components/brand/AllApplicationsView";
+
 import { AllVideosView } from "@/components/brand/AllVideosView";
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
@@ -479,7 +479,7 @@ export function BrandCampaignDetailView({
             ) : null
           ) : activeDetailTab === "applications" ? (
             isAllMode && brandId ? (
-              <AllApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} />
+              <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} />
             ) : isBoost ? (
               <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} />
             ) : (
