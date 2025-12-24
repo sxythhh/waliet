@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { toast } from "sonner";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
+import { BudgetProgressCard } from "./BudgetProgressCard";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 interface Boost {
   id: string;
@@ -337,8 +336,6 @@ export function BoostHomeTab({
   const budgetTotal = boost.budget || 0;
   // Use actual payouts from transactions instead of boost.budget_used which may not update
   const budgetUsed = stats.totalPayouts;
-  const budgetRemaining = Math.max(0, budgetTotal - budgetUsed);
-  const progressPercentage = budgetTotal > 0 ? (budgetUsed / budgetTotal) * 100 : 0;
   if (isLoading) {
     return <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -411,44 +408,14 @@ export function BoostHomeTab({
         </Card>
       </div>
 
-      {/* Budget Card */}
-      <div className="rounded-xl bg-muted/30 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-inter font-semibold tracking-[-0.5px] uppercase text-muted-foreground">Balance</h3>
-          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50" onClick={onTopUp}>
-            <Plus className="h-3.5 w-3.5" />
-            Add Funds
-          </Button>
-        </div>
-        
-        {/* Budget Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-5">
-          <div>
-            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Spent</p>
-            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-amber-500">{formatCurrency(budgetUsed)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Total Budget</p>
-            <p className="text-xl font-bold font-inter tracking-[-0.5px]">{formatCurrency(budgetTotal)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Remaining</p>
-            <p className="text-xl font-bold font-inter tracking-[-0.5px] text-emerald-500">{formatCurrency(budgetRemaining)}</p>
-          </div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase">Budget Usage</span>
-            <span className="text-xs font-inter font-medium tracking-[-0.5px]">{progressPercentage.toFixed(1)}%</span>
-          </div>
-          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{
-            width: `${Math.min(progressPercentage, 100)}%`
-          }} />
-          </div>
-        </div>
-      </div>
+      {/* Budget & Creators Card */}
+      <BudgetProgressCard
+        budgetUsed={budgetUsed}
+        budgetTotal={budgetTotal}
+        acceptedCreators={stats.acceptedCreators}
+        maxCreators={stats.maxCreators}
+        onTopUp={onTopUp}
+      />
 
       {/* Performance Chart - using shared component */}
       <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} lastSyncedAt={lastSyncedAt} />
