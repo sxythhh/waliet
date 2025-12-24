@@ -854,10 +854,7 @@ export function CreatorsTab({
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="h-8 px-3 font-inter tracking-[-0.5px] text-sm bg-[#2060de] hover:bg-[#1a50c0] text-white">
-                  <DollarSign className="h-4 w-4 mr-1" />
-                  Pay
-                </Button>
+                
                 <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
                   {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
                 </Button>
