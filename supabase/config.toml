@@ -101,3 +101,6 @@ verify_jwt = true
 
 [functions.track-shortimize-video]
 verify_jwt = true
+
+[functions.fetch-tiktok-video]
+verify_jwt = true
