@@ -428,7 +428,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
           <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/30">
+              <TableRow className="border-b border-border/40 hover:bg-transparent">
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Creator</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Amount</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Items</TableHead>
