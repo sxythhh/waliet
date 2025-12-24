@@ -12,7 +12,7 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
+import { Pencil, Plus, BarChart3, Lock, FileText } from "lucide-react";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import emptyCampaignsImg from "@/assets/empty-campaigns-new.png";
@@ -76,6 +76,7 @@ export function BrandCampaignsTab({
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
   const {
     isAdmin,
@@ -132,6 +133,34 @@ export function BrandCampaignsTab({
       if (bountiesError) throw bountiesError;
       console.log("Fetched bounties:", bountiesData);
       setBounties((bountiesData || []) as BountyCampaign[]);
+
+      // Fetch pending applications count for campaigns
+      const campaignIds = (campaignsData || []).map(c => c.id);
+      const bountyIds = (bountiesData || []).map(b => b.id);
+      
+      let totalPending = 0;
+      
+      // Count pending campaign submissions
+      if (campaignIds.length > 0) {
+        const { count: campaignPending } = await supabase
+          .from("campaign_submissions")
+          .select("*", { count: "exact", head: true })
+          .in("campaign_id", campaignIds)
+          .eq("status", "pending");
+        totalPending += campaignPending || 0;
+      }
+      
+      // Count pending bounty applications
+      if (bountyIds.length > 0) {
+        const { count: bountyPending } = await supabase
+          .from("bounty_applications")
+          .select("*", { count: "exact", head: true })
+          .in("bounty_campaign_id", bountyIds)
+          .eq("status", "pending");
+        totalPending += bountyPending || 0;
+      }
+      
+      setPendingApplicationsCount(totalPending);
     } catch (error) {
       console.error("Error fetching brand data:", error);
       toast.error("Failed to load brand data");
@@ -315,6 +344,40 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
                 <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
               </div>
+            </div>
+          )}
+
+          {/* Pending Applications Banner */}
+          {pendingApplicationsCount > 0 && (
+            <div 
+              className="mt-4 bg-[#1a1a1a] border border-[#3d3d3d] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#222] transition-colors"
+              onClick={() => {
+                const newParams = new URLSearchParams(searchParams);
+                newParams.set("tab", "all-programs");
+                newParams.set("programTab", "applications");
+                setSearchParams(newParams);
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/20 rounded-lg">
+                  <FileText className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    {pendingApplicationsCount} application{pendingApplicationsCount !== 1 ? 's are' : ' is'} ready for review
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    People are applying to your campaign. Review them now to allow them to submit their clips.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 shrink-0"
+              >
+                Review applications
+              </Button>
             </div>
           )}
 
