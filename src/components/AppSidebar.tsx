@@ -245,9 +245,10 @@ export function AppSidebar() {
     }
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
-    // Clear blueprint and campaign params when switching tabs
+    // Clear blueprint, campaign, and boost params when switching tabs
     newParams.delete("blueprint");
     newParams.delete("campaign");
+    newParams.delete("boost");
     setSearchParams(newParams);
   };
   const handleWorkspaceChange = (newWorkspace: string) => {
