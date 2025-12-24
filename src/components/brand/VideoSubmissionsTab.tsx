@@ -679,7 +679,7 @@ export function VideoSubmissionsTab({
 
                       {/* Actions */}
                       {submission.status === "pending" && (
-                        <div className="flex border-t border-border/20">
+                        <div className="flex border-t border-[#0d0d0d]">
                           <button
                             className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50"
                             onClick={() => {
