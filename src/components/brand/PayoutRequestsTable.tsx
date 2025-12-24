@@ -416,52 +416,22 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
   return (
     <TooltipProvider>
-      <div className="space-y-4">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="bg-muted/30 border-0">
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground mb-1">Total Requests</div>
-              <div className="text-2xl font-bold">{requests.length}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-muted/30 border-0">
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground mb-1">In Clearing</div>
-              <div className="text-2xl font-bold text-blue-500">
-                {requests.filter(r => r.status === 'clearing').length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-muted/30 border-0">
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground mb-1">Flagged</div>
-              <div className="text-2xl font-bold text-amber-500">
-                {requests.filter(r => r.items?.some(i => i.flagged_at)).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-muted/30 border-0">
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground mb-1">Total Value</div>
-              <div className="text-2xl font-bold text-emerald-500">
-                ${requests.reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="space-y-6 font-['Inter'] tracking-[-0.5px]">
 
         {/* Desktop Table */}
-        <div className="hidden md:block rounded-xl overflow-hidden bg-card/30 border border-border/50">
+        {requests.length > 0 && (
+        <div className="hidden md:block">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Payout Requests</h3>
+          <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-border/50 hover:bg-transparent">
-                <TableHead className="text-foreground font-medium text-xs py-3 pl-4">Creator</TableHead>
-                <TableHead className="text-foreground font-medium text-xs py-3">Amount</TableHead>
-                <TableHead className="text-foreground font-medium text-xs py-3">Items</TableHead>
-                <TableHead className="text-foreground font-medium text-xs py-3">Clearing Progress</TableHead>
-                <TableHead className="text-foreground font-medium text-xs py-3">Status</TableHead>
-                <TableHead className="text-foreground font-medium text-xs py-3 text-right pr-4">Actions</TableHead>
+              <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/30">
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Creator</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Amount</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Items</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Clearing</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Status</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5 text-right pr-4"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -637,7 +607,9 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
               })}
             </TableBody>
           </Table>
+          </div>
         </div>
+        )}
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-3">
@@ -699,16 +671,16 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
         {/* Boost Transactions History */}
         {transactions.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px]">Completed Payments</h3>
-            <div className="rounded-xl overflow-hidden bg-card/30 border border-border/50">
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Completed Payments</h3>
+            <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border/50 hover:bg-transparent">
-                    <TableHead className="text-foreground font-medium text-xs py-3 pl-4">Date</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs py-3">Creator</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs py-3">Description</TableHead>
-                    <TableHead className="text-foreground font-medium text-xs py-3 text-right pr-4">Amount</TableHead>
+                  <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/30">
+                    <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Date</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Creator</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Description</TableHead>
+                    <TableHead className="text-muted-foreground font-medium text-xs py-2.5 text-right pr-4">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -717,7 +689,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                     return (
                       <TableRow 
                         key={txn.id}
-                        className={`hover:bg-muted/20 transition-colors ${!isLast ? 'border-b border-border/50' : 'border-0'}`}
+                        className={`hover:bg-muted/10 transition-colors ${!isLast ? 'border-b border-border/40' : 'border-0'}`}
                       >
                         <TableCell className="py-3 pl-4">
                           <span className="text-sm text-muted-foreground">
