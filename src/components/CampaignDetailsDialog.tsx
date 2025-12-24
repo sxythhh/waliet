@@ -286,6 +286,17 @@ export function CampaignDetailsDialog({
               <span className="hidden sm:inline">{timeAgo}</span>
             </div>
           </div>
+          
+          {/* Submit Video Button - Top Right */}
+          {hasConnectedAccounts && (
+            <Button
+              onClick={() => setShowSubmitVideoDialog(true)}
+              className="h-9 px-4 rounded-full font-medium text-sm bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7] flex-shrink-0"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+            >
+              Submit Video
+            </Button>
+          )}
         </div>
 
         {/* Campaign Update Banner */}
@@ -519,60 +530,6 @@ export function CampaignDetailsDialog({
           </div>
         </div>
 
-        {/* Submit Video Section */}
-        {hasConnectedAccounts && (
-          <div className="mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#2060df]/5 to-transparent border border-[#2060df]/20">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#2060df]/20 flex items-center justify-center flex-shrink-0">
-                  <Video className="w-6 h-6 text-[#2060df]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-sm mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-                    Submit Your Video
-                  </h4>
-                  <p className="text-xs text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                    Upload your video link to get paid. You'll earn{' '}
-                    {campaign.payment_model === 'pay_per_post' ? (
-                      <span className="font-medium text-[#2060df]">${campaign.post_rate?.toFixed(2)} per approved video</span>
-                    ) : (
-                      <span className="font-medium text-[#2060df]">${(campaign.rpm_rate * 1000).toLocaleString()} per 1M views</span>
-                    )}
-                  </p>
-                  
-                  {/* Submission Stats */}
-                  <div className="flex items-center gap-4 mb-3">
-                    {pendingSubmissions > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-amber-500" />
-                        <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                          {pendingSubmissions} pending
-                        </span>
-                      </div>
-                    )}
-                    {approvedSubmissions > 0 && (
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                          {approvedSubmissions} approved
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={() => setShowSubmitVideoDialog(true)}
-                    className="w-full sm:w-auto h-10 px-6 rounded-full font-semibold text-sm bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  >
-                    <Video className="w-4 h-4 mr-2" />
-                    Submit Video
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Connected Accounts Section */}
         {(onConnectAccount || onManageAccount) && <div className="mb-4">
