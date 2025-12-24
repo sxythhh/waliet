@@ -17,6 +17,7 @@ import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { PayoutRequestsTable } from "@/components/brand/PayoutRequestsTable";
 import { CampaignLinksTab } from "@/components/brand/CampaignLinksTab";
+import { ViewBonusesTab } from "@/components/brand/ViewBonusesTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
