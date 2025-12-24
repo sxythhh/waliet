@@ -642,6 +642,15 @@ export function CampaignsTab({
   const hasJoinedCampaigns = campaigns.length > 0;
   const shouldHideActionCards = hasJoinedCampaigns && hasPaymentMethod;
   return <div className={`space-y-6 pt-6 ${className || ''}`}>
+      {/* Welcome Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
+          </h1>
+        </div>
+      </div>
+
       {/* Tab Navigation */}
       <div className="flex items-center gap-6 border-b border-border">
         <button
@@ -679,16 +688,6 @@ export function CampaignsTab({
 
       {/* Campaigns Tab Content */}
       {activeTab === 'campaigns' && <>
-      {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}! 👋
-          </h1>
-          
-        </div>
-        
-      </div>
 
       {/* Actions Section - Hidden if user has joined campaigns AND has payment method */}
       {!shouldHideActionCards && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
