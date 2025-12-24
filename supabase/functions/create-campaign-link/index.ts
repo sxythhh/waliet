@@ -99,9 +99,17 @@ Deno.serve(async (req) => {
     let dubLinkId = null;
     let dubShortLink = null;
 
-    // Optional Dub integration
+    // Optional Dub integration - get API key from brand settings
     if (useDub) {
-      const dubApiKey = Deno.env.get('DUB_API_KEY');
+      // Fetch the brand's Dub API key
+      const { data: brand, error: brandError } = await supabase
+        .from('brands')
+        .select('dub_api_key')
+        .eq('id', brandId)
+        .single();
+
+      const dubApiKey = brand?.dub_api_key;
+      
       if (dubApiKey) {
         try {
           // Build destination URL with UTM params
@@ -137,6 +145,8 @@ Deno.serve(async (req) => {
           console.error('Dub integration error:', dubError);
           // Continue without Dub - fallback to internal tracking
         }
+      } else {
+        console.log('No Dub API key configured for brand');
       }
     }
 
