@@ -14,7 +14,7 @@ import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
 
-import { AllVideosView } from "@/components/brand/AllVideosView";
+
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
@@ -486,9 +486,7 @@ export function BrandCampaignDetailView({
               <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} />
             )
           ) : activeDetailTab === "videos" ? (
-            isAllMode && brandId ? (
-              <AllVideosView brandId={brandId} onSubmissionReviewed={fetchPendingApplicationsCount} />
-            ) : isBoost && boost ? (
+            isBoost && boost ? (
               <VideoSubmissionsTab
                 boostId={boostId}
                 monthlyRetainer={boost.monthly_retainer}
