@@ -718,7 +718,7 @@ export function CampaignCreationWizard({
                       name="payment_model"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
-                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Payment Model</FormLabel>
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Submission Model</FormLabel>
                           <FormControl>
                             <div className="grid grid-cols-2 gap-3">
                               <div
@@ -729,8 +729,8 @@ export function CampaignCreationWizard({
                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
                                 }`}
                               >
-                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Pay Per View</p>
-                                <p className="text-xs text-muted-foreground mt-1">Pay creators based on video views (CPM)</p>
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Account</p>
+                                <p className="text-xs text-muted-foreground mt-1">Creators are paid based on total views their accounts generate, based on videos including a hashtag</p>
                               </div>
                               <div
                                 onClick={() => field.onChange("pay_per_post")}
@@ -740,8 +740,8 @@ export function CampaignCreationWizard({
                                     : "border-transparent bg-muted/50 hover:bg-muted/70"
                                 }`}
                               >
-                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Pay Per Post</p>
-                                <p className="text-xs text-muted-foreground mt-1">Fixed payment per approved video</p>
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Video</p>
+                                <p className="text-xs text-muted-foreground mt-1">Payment based on each approved video</p>
                               </div>
                             </div>
                           </FormControl>
