@@ -17,6 +17,7 @@ export interface VideoData {
   latest_likes: number;
   latest_comments: number;
   latest_shares: number;
+  thumbnail_url?: string; // Direct thumbnail URL (optional, used when available)
 }
 
 interface TopPerformingVideosProps {
@@ -61,6 +62,10 @@ const getPlatformIcon = (platform: string) => {
 };
 
 const getThumbnailUrl = (video: VideoData) => {
+  // Use direct thumbnail URL if provided
+  if (video.thumbnail_url) return video.thumbnail_url;
+  
+  // Otherwise try to construct from platform ID
   const platformId = extractPlatformId(video.ad_link, video.platform);
   if (!platformId) return null;
   return `${THUMBNAIL_BASE_URL}/${video.username}/${platformId}_${video.platform}.jpg`;
