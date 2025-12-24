@@ -262,7 +262,10 @@ export function VideoSubmissionsTab({
 
       // Track video on Shortimize (fire and forget - don't block approval)
       try {
-        const { data: trackResult, error: trackError } = await supabase.functions.invoke("track-shortimize-video", {
+        const {
+          data: trackResult,
+          error: trackError
+        } = await supabase.functions.invoke("track-shortimize-video", {
           body: {
             videoUrl: submission.video_url,
             campaignId: isBoost ? undefined : entityId,
@@ -271,13 +274,14 @@ export function VideoSubmissionsTab({
             isBoost
           }
         });
-        
         if (trackError) {
           console.error("Shortimize tracking error:", trackError);
         } else if (trackResult?.success) {
           console.log("Video tracked on Shortimize:", trackResult);
           if (!trackResult.skipped && !trackResult.alreadyTracked) {
-            toast.success("Video tracked on Shortimize", { duration: 2000 });
+            toast.success("Video tracked on Shortimize", {
+              duration: 2000
+            });
           }
         } else if (trackResult?.skipped) {
           console.log("Shortimize tracking skipped:", trackResult.message);
@@ -286,7 +290,6 @@ export function VideoSubmissionsTab({
         console.error("Shortimize tracking failed:", trackError);
         // Don't show error to user - tracking failure shouldn't affect approval
       }
-
       toast.success(isPayPerPost ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.` : "Video approved!");
       fetchSubmissions();
       setSelectedSubmission(null);
@@ -411,8 +414,8 @@ export function VideoSubmissionsTab({
         {/* Left: Creator List */}
         <div className="w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
           {/* Header with title and search */}
-          <div className="p-3 border-b border-border space-y-2">
-            <h3 className="text-sm font-medium font-inter tracking-[-0.5px]">Users</h3>
+          <div className="p-3 border-b space-y-2 border-[#141414]/0">
+            
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input placeholder="Search users..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]" />
