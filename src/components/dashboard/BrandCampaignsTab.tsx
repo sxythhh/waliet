@@ -367,7 +367,7 @@ export function BrandCampaignsTab({
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="border-transparent text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0" onClick={e => {
+              <Button variant="outline" size="sm" onClick={e => {
           e.stopPropagation();
           const newParams = new URLSearchParams(searchParams);
           newParams.set("tab", "analytics");
@@ -375,7 +375,7 @@ export function BrandCampaignsTab({
           newParams.delete("campaign");
           newParams.delete("boost");
           setSearchParams(newParams);
-        }}>
+        }} className="border-transparent shrink-0 text-primary-foreground bg-[#1c1c1c]">
                 Review applications
               </Button>
             </div>}
