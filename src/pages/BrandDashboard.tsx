@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
-import { BoostDetailView } from "@/components/brand/BoostDetailView";
+import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -274,7 +274,7 @@ export default function BrandDashboard() {
           {effectiveView === "campaigns" && (
             <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
               {selectedBoostId ? (
-                <BoostDetailView 
+                <BrandCampaignDetailView 
                   boostId={selectedBoostId}
                   onBack={() => {
                     setSelectedBoostId(null);
@@ -435,7 +435,7 @@ export default function BrandDashboard() {
           {effectiveView === "bounties" && (
             <div className={selectedBoostId ? "h-full" : "max-w-7xl mx-auto px-4 md:px-8 pb-8"}>
               {selectedBoostId ? (
-                <BoostDetailView 
+                <BrandCampaignDetailView 
                   boostId={selectedBoostId}
                   onBack={() => {
                     setSelectedBoostId(null);
