@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, ExternalLink, Video, DollarSign, ChevronRight } from "lucide-react";
+import { Check, X, ExternalLink, Video, DollarSign, ChevronRight, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
@@ -87,6 +88,7 @@ export function VideoSubmissionsTab({
   const [processing, setProcessing] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
@@ -385,15 +387,44 @@ export function VideoSubmissionsTab({
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Creator List */}
         <div className="w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
+          {/* Header with title and search */}
+          <div className="p-3 border-b border-border space-y-2">
+            <h3 className="text-sm font-medium font-inter tracking-[-0.5px]">Users</h3>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]"
+              />
+            </div>
+          </div>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
-              {creatorStats.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm font-inter tracking-[-0.5px]">No submissions yet</p>
-                </div>
-              ) : (
-                creatorStats.map(creator => {
+              {(() => {
+                const filteredCreators = creatorStats.filter(creator => {
+                  if (!userSearchQuery.trim()) return true;
+                  const query = userSearchQuery.toLowerCase();
+                  return (
+                    creator.profile.username?.toLowerCase().includes(query) ||
+                    creator.profile.full_name?.toLowerCase().includes(query) ||
+                    creator.profile.email?.toLowerCase().includes(query)
+                  );
+                });
+                
+                if (filteredCreators.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm font-inter tracking-[-0.5px]">
+                        {userSearchQuery ? "No users found" : "No submissions yet"}
+                      </p>
+                    </div>
+                  );
+                }
+                
+                return filteredCreators.map(creator => {
                   const isSelected = selectedCreator === creator.userId;
                   return (
                     <button
@@ -438,8 +469,8 @@ export function VideoSubmissionsTab({
                       </div>
                     </button>
                   );
-                })
-              )}
+                });
+              })()}
             </div>
           </ScrollArea>
         </div>
