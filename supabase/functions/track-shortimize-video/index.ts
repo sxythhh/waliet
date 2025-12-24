@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
     });
 
     // Call Shortimize Video Tracking API
-    const shortimizeResponse = await fetch('https://shortimize.com/api/v1/videos', {
+    const shortimizeResponse = await fetch('https://api.shortimize.com/videos', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
