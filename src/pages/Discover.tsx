@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { DiscoverTab } from "@/components/dashboard/DiscoverTab";
 import PublicNavbar from "@/components/PublicNavbar";
+import { SEOHead } from "@/components/SEOHead";
 import { useScrollUnlockOnMount } from "@/hooks/useScrollUnlockOnMount";
+import { generateItemListSchema } from "@/lib/seo";
 
 export default function Discover() {
   useScrollUnlockOnMount();
@@ -9,8 +11,24 @@ export default function Discover() {
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLElement>(null);
 
+  const structuredData = generateItemListSchema({
+    name: "Content Creation Opportunities",
+    description: "Browse paid content creation opportunities from top brands",
+    items: [],
+  });
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <SEOHead
+        title="Discover Campaigns"
+        description="Browse and apply to paid content creation opportunities from top brands. Find campaigns that match your niche and start earning."
+        keywords={['campaigns', 'content opportunities', 'brand deals', 'creator campaigns', 'UGC opportunities']}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Discover', url: '/discover' },
+        ]}
+        structuredData={structuredData}
+      />
       <PublicNavbar 
         searchQuery={searchQuery} 
         onSearchClick={() => setSearchOverlayOpen(true)}
@@ -29,4 +47,3 @@ export default function Discover() {
     </div>
   );
 }
-

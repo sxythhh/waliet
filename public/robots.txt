@@ -10,5 +10,36 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://virality.gg/sitemap.xml
+
+# Crawl-delay for bots
+Crawl-delay: 1
+
+# Disallow private/auth routes
+Disallow: /auth
+Disallow: /auth/callback
+Disallow: /reset-password
+Disallow: /discord/callback
+Disallow: /x/callback
+Disallow: /brand-auth
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /manage
+Disallow: /campaign/
+Disallow: /referrals
+Disallow: /brand/*/account
+Disallow: /brand/*/library
+Disallow: /brand/*/training
