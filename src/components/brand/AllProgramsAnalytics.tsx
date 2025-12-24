@@ -259,20 +259,44 @@ export function AllProgramsAnalytics({
       const totalSubmissions = videoSubmissionsData.length;
       const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
 
-      // Get transactions for payouts
-      const { data: transactionsData } = await supabase
-        .from('wallet_transactions')
-        .select('amount, created_at, metadata')
-        .eq('type', 'earning');
-
-      // Filter transactions for this brand's campaigns and boosts
-      const brandTransactions = (transactionsData || []).filter(t => {
-        const metadata = t.metadata as any;
-        return (
-          (metadata?.campaign_id && campaignIds.includes(metadata.campaign_id)) ||
-          (metadata?.boost_id && boostIds.includes(metadata.boost_id))
-        );
-      });
+      // Get transactions for payouts - filter at DB level to avoid 1000 row limit issues
+      // Build OR conditions for campaign and boost IDs
+      const allProgramIds = [
+        ...campaignIds.map(id => `metadata->>campaign_id.eq.${id}`),
+        ...boostIds.map(id => `metadata->>boost_id.eq.${id}`)
+      ];
+      
+      let brandTransactions: { amount: number; created_at: string }[] = [];
+      
+      if (allProgramIds.length > 0) {
+        // Fetch transactions for each program in batches to avoid hitting limits
+        const transactionPromises = [];
+        
+        // Fetch campaign transactions
+        for (const campaignId of campaignIds) {
+          transactionPromises.push(
+            supabase
+              .from('wallet_transactions')
+              .select('amount, created_at')
+              .eq('type', 'earning')
+              .eq('metadata->>campaign_id', campaignId)
+          );
+        }
+        
+        // Fetch boost transactions
+        for (const boostId of boostIds) {
+          transactionPromises.push(
+            supabase
+              .from('wallet_transactions')
+              .select('amount, created_at')
+              .eq('type', 'earning')
+              .eq('metadata->>boost_id', boostId)
+          );
+        }
+        
+        const transactionResults = await Promise.all(transactionPromises);
+        brandTransactions = transactionResults.flatMap(r => r.data || []);
+      }
 
       let filteredTransactions = brandTransactions;
       if (dateRange) {
