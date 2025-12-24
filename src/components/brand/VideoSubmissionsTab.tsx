@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { isSameDay } from "date-fns";
@@ -588,11 +589,27 @@ export function VideoSubmissionsTab({
             {/* Filters */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status Filter */}
-              <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
-                {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => <button key={status} onClick={() => setFilterStatus(status)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${filterStatus === status ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </button>)}
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 bg-muted/30 rounded-lg px-2 py-1 text-[10px] tracking-[-0.5px] transition-colors">
+                    <span className={filterStatus === "all" ? "text-muted-foreground" : "text-foreground"}>
+                      {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-background border border-[#0e0e0e] min-w-[100px]">
+                  {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => (
+                    <DropdownMenuItem 
+                      key={status} 
+                      onClick={() => setFilterStatus(status)}
+                      className={`text-[10px] tracking-[-0.5px] cursor-pointer ${filterStatus === status ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
