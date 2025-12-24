@@ -654,16 +654,18 @@ export function VideoSubmissionsTab({
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
 
-                      {/* Submission Heatmap */}
-                      <div className="mt-3">
-                        <SubmissionHeatmap submissions={creator.submissions.map(s => ({
-                      submitted_at: s.submitted_at,
-                      status: s.status
-                    }))} onDateClick={date => {
-                      setSelectedCreator(creator.userId);
-                      setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
-                    }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
-                      </div>
+                      {/* Submission Heatmap - only show when selected */}
+                      {isSelected && (
+                        <div className="mt-3">
+                          <SubmissionHeatmap submissions={creator.submissions.map(s => ({
+                        submitted_at: s.submitted_at,
+                        status: s.status
+                      }))} onDateClick={date => {
+                        setSelectedCreator(creator.userId);
+                        setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
+                      }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
+                        </div>
+                      )}
                     </button>;
               });
             })()}
