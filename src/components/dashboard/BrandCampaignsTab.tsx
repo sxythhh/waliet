@@ -297,8 +297,7 @@ export function BrandCampaignsTab({
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
             {/* Action Cards */}
-            {campaigns.length === 0 && bounties.length === 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {campaigns.length === 0 && bounties.length === 0 && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
                   <div className="p-2 bg-muted rounded-lg shrink-0">
                     <img src={schoolIcon} alt="" className="w-5 h-5" />
@@ -318,9 +317,9 @@ export function BrandCampaignsTab({
                   </div>
                 </div>
                 <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
-              prev.set('tab', 'scope');
-              return prev;
-            })}>
+            prev.set('tab', 'scope');
+            return prev;
+          })}>
                   <div className="p-2 bg-muted rounded-lg shrink-0">
                     <img src={scopeIcon} alt="" className="w-5 h-5" />
                   </div>
@@ -329,15 +328,12 @@ export function BrandCampaignsTab({
                     <p className="text-xs text-muted-foreground mt-0.5">Spy on your competitor's Viral videos through our curated content library</p>
                   </div>
                 </div>
-              </div>
-            )}
+              </div>}
 
             {/* Subscription Required CTA and Embed - Only show if not subscribed */}
-            {subscriptionStatus !== "active" && (
-              <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
+            {subscriptionStatus !== "active" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Combined Campaigns & Boosts Grid */}
@@ -345,19 +341,9 @@ export function BrandCampaignsTab({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold font-['Inter'] tracking-[-0.5px]">Programs</h2>
                 <div className="flex items-center gap-0 border-b border-border">
-                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => (
-                    <button 
-                      key={filter} 
-                      onClick={() => setStatusFilter(filter)} 
-                      className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${
-                        statusFilter === filter 
-                          ? "border-primary text-foreground" 
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
+                  {(["all", "active", "draft", "ended"] as CampaignStatusFilter[]).map(filter => <button key={filter} onClick={() => setStatusFilter(filter)} className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize transition-all border-b-2 -mb-[1px] ${statusFilter === filter ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                       {filter}
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -464,7 +450,7 @@ export function BrandCampaignsTab({
 
           {/* Empty State */}
           {campaigns.length === 0 && bounties.length === 0 && <div className="px-4 items-center justify-center flex flex-col py-[23px]">
-              <img alt="" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src="/lovable-uploads/37304a68-34b1-42e1-9401-5985e1016c05.png" />
+              <img alt="" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src="/lovable-uploads/91c8dfd7-ab7c-4497-854c-7b1c899c749e.png" />
               
               <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
                 Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
