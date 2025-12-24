@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Clock } from "lucide-react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { format, addHours } from "date-fns";
+
 export interface MetricsData {
   date: string;
   datetime?: string; // Full datetime for tooltip
@@ -29,16 +31,32 @@ interface PerformanceChartProps {
   metricsData: MetricsData[];
   isRefreshing: boolean;
   onRefresh: () => void;
+  lastSyncedAt?: string | null;
 }
 const formatNumber = (num: number) => {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
   return num.toString();
 };
+
+const getNextSyncTime = (lastSyncedAt: string | null | undefined): string => {
+  if (!lastSyncedAt) return 'Unknown';
+  const lastSync = new Date(lastSyncedAt);
+  const nextSync = addHours(lastSync, 4);
+  const now = new Date();
+  
+  if (nextSync <= now) {
+    return 'Soon';
+  }
+  
+  return format(nextSync, 'h:mm a');
+};
+
 export function PerformanceChart({
   metricsData,
   isRefreshing,
-  onRefresh
+  onRefresh,
+  lastSyncedAt
 }: PerformanceChartProps) {
   const [chartMode, setChartMode] = useState<'daily' | 'cumulative'>('cumulative');
   const [activeMetrics, setActiveMetrics] = useState<MetricType[]>(['views']);
@@ -51,12 +69,23 @@ export function PerformanceChart({
     }
     return metric as keyof MetricsData;
   };
+  
+  const nextSync = getNextSyncTime(lastSyncedAt);
+  
   return <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
         <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
-        <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing} className="h-8 px-2">
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-        </Button>
+        <div className="flex items-center gap-3">
+          {lastSyncedAt && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span className="tracking-[-0.5px]">Next sync: {nextSync}</span>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing} className="h-8 px-2">
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       {/* Controls Row */}
