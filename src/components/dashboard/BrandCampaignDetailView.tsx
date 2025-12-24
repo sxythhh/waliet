@@ -111,6 +111,7 @@ export function BrandCampaignDetailView({
   const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+  const [hasDubIntegration, setHasDubIntegration] = useState(false);
   useEffect(() => {
     const subtab = searchParams.get("subtab");
     if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts") {
@@ -144,6 +145,23 @@ export function BrandCampaignDetailView({
     }
     fetchPendingApplicationsCount();
   }, [campaignId, boostId, brandId, isAllMode]);
+
+  // Check if brand has Dub integration configured
+  useEffect(() => {
+    const checkDubIntegration = async () => {
+      const checkBrandId = entityBrandId || brandId;
+      if (!checkBrandId) return;
+      
+      const { data } = await supabase
+        .from("brands")
+        .select("dub_api_key")
+        .eq("id", checkBrandId)
+        .single();
+      
+      setHasDubIntegration(!!data?.dub_api_key);
+    };
+    checkDubIntegration();
+  }, [entityBrandId, brandId]);
   const fetchAllCampaignsAndBoosts = async () => {
     if (!brandId) return;
     setLoading(true);
@@ -314,8 +332,8 @@ export function BrandCampaignDetailView({
     });
   }
 
-  // Links tab (not in all mode)
-  if (!isAllMode) {
+  // Links tab (not in all mode, only if Dub is configured)
+  if (!isAllMode && hasDubIntegration) {
     detailTabs.push({
       id: "links",
       label: "Links",
@@ -429,7 +447,7 @@ export function BrandCampaignDetailView({
             const newParams = new URLSearchParams(searchParams);
             newParams.set("subtab", tab.id);
             setSearchParams(newParams);
-          }} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          }} className={`flex items-center gap-2 px-4 py-1.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
                     {tab.count}
