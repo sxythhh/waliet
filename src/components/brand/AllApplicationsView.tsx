@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Check, X, User } from "lucide-react";
+import { Check, X, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -48,6 +49,7 @@ const PLATFORM_LOGOS: Record<string, string> = {
 };
 
 export function AllApplicationsView({ brandId, onApplicationReviewed }: AllApplicationsViewProps) {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -438,6 +440,16 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
               <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
                 <div className="flex gap-2">
                   <Button
+                    onClick={() => {
+                      if (selectedApp.creator_id) {
+                        navigate(`/dashboard?tab=creators&creator=${selectedApp.creator_id}`);
+                      }
+                    }}
+                    className="h-11 px-4 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100"
+                  >
+                    Message
+                  </Button>
+                  <Button
                     onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
                     variant="outline"
                     disabled={processing === selectedApp.id}
@@ -447,16 +459,9 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
                     Reject
                   </Button>
                   <Button
-                    variant="outline"
-                    className="h-11 px-4 font-medium tracking-[-0.5px] border-border/50 hover:bg-muted/50"
-                  >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                  <Button
                     onClick={() => handleUpdateStatus(selectedApp.id, 'approved')}
                     disabled={processing === selectedApp.id}
-                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-500 text-white"
+                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground"
                   >
                     <Check className="h-4 w-4 mr-2" />
                     Accept
