@@ -98,3 +98,6 @@ verify_jwt = true
 
 [functions.allocate-brand-budget]
 verify_jwt = true
+
+[functions.track-shortimize-video]
+verify_jwt = true

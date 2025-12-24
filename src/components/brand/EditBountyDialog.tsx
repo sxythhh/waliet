@@ -44,6 +44,7 @@ interface BountyData {
   brand_id: string;
   is_private: boolean;
   tags: string[] | null;
+  shortimize_collection_name: string | null;
 }
 
 const labelStyle = { fontFamily: 'Inter', letterSpacing: '-0.5px' } as const;
@@ -74,7 +75,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
     blueprint_id: null,
     brand_id: "",
     is_private: false,
-    tags: null
+    tags: null,
+    shortimize_collection_name: null
   });
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -199,7 +201,8 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
           blueprint_embed_url: formData.blueprint_embed_url || null,
           blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
           is_private: formData.is_private,
-          tags: tags.length > 0 ? tags : null
+          tags: tags.length > 0 ? tags : null,
+          shortimize_collection_name: formData.shortimize_collection_name || null
         })
         .eq('id', bountyId);
 
@@ -325,6 +328,21 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                 </Select>
                 <p className="text-xs text-muted-foreground" style={labelStyle}>
                   Creators will see this blueprint when viewing directions
+                </p>
+              </div>
+
+              {/* Shortimize Video Collection */}
+              <div className="space-y-2">
+                <Label style={labelStyle} className="text-xs text-muted-foreground">Video Tracking Collection</Label>
+                <Input
+                  value={formData.shortimize_collection_name || ""}
+                  onChange={(e) => setFormData({ ...formData, shortimize_collection_name: e.target.value })}
+                  placeholder="e.g., Boost Videos"
+                  className="border-0 bg-muted/50 h-11"
+                  style={inputStyle}
+                />
+                <p className="text-xs text-muted-foreground" style={labelStyle}>
+                  Approved videos will be automatically tracked in this Shortimize collection
                 </p>
               </div>
 

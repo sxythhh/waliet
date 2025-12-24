@@ -81,6 +81,7 @@ interface Campaign {
   status?: string;
   is_infinite_budget?: boolean;
   is_featured?: boolean;
+  shortimize_collection_name?: string | null;
 }
 interface CreateCampaignDialogProps {
   brandId: string;
@@ -112,26 +113,40 @@ export function CreateCampaignDialog({
   const [isCampaignEnded, setIsCampaignEnded] = useState(campaign?.status === "ended");
   const [shortimizeApiKey, setShortimizeApiKey] = useState("");
   const [collectionName, setCollectionName] = useState("");
+  const [videoCollectionName, setVideoCollectionName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch brand's Shortimize settings when dialog opens
+  // Fetch brand's Shortimize settings and campaign's video collection when dialog opens
   useEffect(() => {
     if (open && brandId) {
-      const fetchBrandSettings = async () => {
-        const { data } = await supabase
+      const fetchSettings = async () => {
+        const { data: brandData } = await supabase
           .from('brands')
           .select('shortimize_api_key, collection_name')
           .eq('id', brandId)
           .single();
         
-        if (data) {
-          setShortimizeApiKey(data.shortimize_api_key || "");
-          setCollectionName(data.collection_name || "");
+        if (brandData) {
+          setShortimizeApiKey(brandData.shortimize_api_key || "");
+          setCollectionName(brandData.collection_name || "");
+        }
+
+        // Fetch campaign's video collection name if editing
+        if (campaign?.id) {
+          const { data: campaignData } = await supabase
+            .from('campaigns')
+            .select('shortimize_collection_name')
+            .eq('id', campaign.id)
+            .single();
+          
+          if (campaignData) {
+            setVideoCollectionName(campaignData.shortimize_collection_name || "");
+          }
         }
       };
-      fetchBrandSettings();
+      fetchSettings();
     }
-  }, [open, brandId]);
+  }, [open, brandId, campaign?.id]);
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -233,7 +248,8 @@ export function CreateCampaignDialog({
         is_private: values.is_private,
         access_code: values.is_private ? values.access_code?.toUpperCase() : null,
         requires_application: values.requires_application,
-        is_featured: values.is_featured
+        is_featured: values.is_featured,
+        shortimize_collection_name: videoCollectionName || null
       };
       if (campaign) {
         // Update existing campaign
@@ -538,7 +554,7 @@ export function CreateCampaignDialog({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Collection Name</label>
+                <label className="text-sm font-medium text-white">Account Tracking Collection</label>
                 <Input
                   placeholder="e.g., Campaign Creators"
                   value={collectionName}
@@ -546,7 +562,20 @@ export function CreateCampaignDialog({
                   className="bg-[#191919] text-white placeholder:text-white/40"
                 />
                 <p className="text-xs text-white/40">
-                  Accounts will be added to this collection when tracked
+                  Creator accounts will be added to this collection when tracked
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white">Video Tracking Collection</label>
+                <Input
+                  placeholder="e.g., Campaign Videos"
+                  value={videoCollectionName}
+                  onChange={(e) => setVideoCollectionName(e.target.value)}
+                  className="bg-[#191919] text-white placeholder:text-white/40"
+                />
+                <p className="text-xs text-white/40">
+                  Approved videos will be automatically tracked in this collection
                 </p>
               </div>
             </div>
