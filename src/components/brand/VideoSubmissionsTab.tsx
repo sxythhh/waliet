@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, ExternalLink, DollarSign, ChevronRight, Search, CalendarDays } from "lucide-react";
+import { Check, X, ExternalLink, DollarSign, ChevronRight, Search, CalendarDays, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { isSameDay } from "date-fns";
 import { toast } from "sonner";
@@ -596,19 +596,22 @@ export function VideoSubmissionsTab({
                               href={submission.video_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-sm font-medium tracking-[-0.3px] line-clamp-2 hover:text-primary transition-colors"
+                              className="text-sm font-medium tracking-[-0.3px] line-clamp-2 hover:underline transition-all"
                             >
                               {submission.video_title || submission.video_description || "Untitled Video"}
                             </a>
-                            <Badge className={`text-[10px] font-medium flex-shrink-0 ${
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 border-0 ${
                               submission.status === "approved" 
-                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                                ? "bg-emerald-500/10 text-emerald-500" 
                                 : submission.status === "rejected" 
-                                  ? "bg-red-500/10 text-red-500 border-red-500/20" 
-                                  : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                            }`}>
+                                  ? "bg-red-500/10 text-red-500" 
+                                  : "bg-amber-500/10 text-amber-500"
+                            }`} style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                              {submission.status === "approved" && <Check className="h-3 w-3" />}
+                              {submission.status === "rejected" && <X className="h-3 w-3" />}
+                              {submission.status === "pending" && <Clock className="h-3 w-3" />}
                               {submission.status}
-                            </Badge>
+                            </div>
                           </div>
                           
                           {/* Author info */}
