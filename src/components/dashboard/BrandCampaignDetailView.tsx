@@ -8,6 +8,7 @@ import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserChec
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
+import { BoostHomeTab } from "@/components/brand/BoostHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
@@ -415,7 +416,7 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostManagementContent boost={boost} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign ? <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isAllMode && brandId ? <AllPayoutsView brandId={brandId} /> : <CampaignAnalyticsTable campaignId={campaignId!} view="transactions" className="px-[10px] py-0" /> : null}
+          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign ? <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isAllMode && brandId ? <AllPayoutsView brandId={brandId} /> : <CampaignAnalyticsTable campaignId={campaignId!} view="transactions" className="px-[10px] py-0" /> : null}
         </div>
       </div>
     </div>;
@@ -434,95 +435,4 @@ function AllProgramsHomeContent({
   timeframe: TimeframeOption;
 }) {
   return <AllProgramsAnalytics brandId={brandId} timeframe={timeframe} />;
-}
-
-// Boost Management Content (inline component for boost home tab)
-function BoostManagementContent({
-  boost,
-  onTopUp
-}: {
-  boost: Boost;
-  onTopUp: () => void;
-}) {
-  const budgetTotal = boost.budget || 0;
-  const budgetUsed = boost.budget_used || 0;
-  const budgetRemaining = budgetTotal - budgetUsed;
-  const progressPercentage = budgetTotal > 0 ? budgetUsed / budgetTotal * 100 : 0;
-  return <div className="p-6 space-y-6">
-      {/* About Section */}
-      {boost.description && <div>
-          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {boost.description}
-          </p>
-        </div>}
-
-      {/* Budget Card */}
-      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold tracking-[-0.5px]">Balance</h3>
-          <Button variant="ghost" size="sm" className="gap-1.5 h-7 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" onClick={onTopUp}>
-            <Plus className="h-3 w-3" />
-            Add Funds
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-6">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-            <p className="text-xl font-semibold">${budgetTotal.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Spent</p>
-            <p className="text-xl font-semibold">${budgetUsed.toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Remaining</p>
-            <p className="text-xl font-semibold text-emerald-500">${budgetRemaining.toLocaleString()}</p>
-          </div>
-        </div>
-        {/* Progress bar */}
-        <div className="mt-4">
-          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{
-            width: `${Math.min(progressPercentage, 100)}%`
-          }} />
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {progressPercentage.toFixed(1)}% of budget used
-          </p>
-        </div>
-      </div>
-
-      {/* Details Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Monthly Rate</p>
-          <p className="text-lg font-semibold">${boost.monthly_retainer}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Videos/Month</p>
-          <p className="text-lg font-semibold">{boost.videos_per_month}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Per Video</p>
-          <p className="text-lg font-semibold">
-            ${(boost.monthly_retainer / boost.videos_per_month).toFixed(2)}
-          </p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Creators</p>
-          <p className="text-lg font-semibold">
-            {boost.accepted_creators_count}/{boost.max_accepted_creators}
-          </p>
-        </div>
-      </div>
-
-      {/* Content Requirements */}
-      {boost.content_style_requirements && <div>
-          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">Content Requirements</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {boost.content_style_requirements}
-          </p>
-        </div>}
-    </div>;
 }
