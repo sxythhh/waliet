@@ -265,8 +265,10 @@ export function BrandCampaignDetailView({
     { id: "home", label: "Home", icon: Home },
   ];
 
-  // Videos tab
-  detailTabs.push({ id: "videos", label: "Videos", icon: Video });
+  // Videos tab (not in all mode)
+  if (!isAllMode) {
+    detailTabs.push({ id: "videos", label: "Videos", icon: Video });
+  }
 
   // Add applications tab (always available in all mode, or when specific entity allows)
   if (isAllMode || isBoost || campaign?.requires_application !== false) {
