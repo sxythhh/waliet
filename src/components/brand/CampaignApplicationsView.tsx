@@ -65,21 +65,21 @@ export function CampaignApplicationsView({
     try {
       let data: any[] = [];
       if (isBoost) {
-        // Fetch boost applications
+        // Fetch all boost applications (pending, accepted, rejected)
         const {
           data: boostData,
           error
-        } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).in("status", ["pending"]).order("applied_at", {
+        } = await supabase.from("bounty_applications").select("*").eq("bounty_campaign_id", boostId).order("applied_at", {
           ascending: false
         });
         if (error) throw error;
         data = boostData || [];
       } else if (campaignId) {
-        // Fetch campaign applications
+        // Fetch all campaign applications (pending, approved, rejected)
         const {
           data: campaignData,
           error
-        } = await supabase.from("campaign_submissions").select("*").eq("campaign_id", campaignId).in("status", ["pending"]).order("submitted_at", {
+        } = await supabase.from("campaign_submissions").select("*").eq("campaign_id", campaignId).order("submitted_at", {
           ascending: false
         });
         if (error) throw error;
@@ -104,9 +104,10 @@ export function CampaignApplicationsView({
         })) || [];
         setApplications(applicationsWithProfiles);
 
-        // Auto-select first pending application
+        // Auto-select first application (prioritize pending)
         if (applicationsWithProfiles.length > 0 && !selectedAppId) {
-          setSelectedAppId(applicationsWithProfiles[0].id);
+          const pendingApp = applicationsWithProfiles.find(a => a.status === 'pending');
+          setSelectedAppId(pendingApp?.id || applicationsWithProfiles[0].id);
         }
       } else {
         setApplications([]);
@@ -171,8 +172,21 @@ export function CampaignApplicationsView({
       setProcessing(null);
     }
   };
-  const pendingCount = applications.length;
+  const pendingCount = applications.filter(a => a.status === 'pending').length;
+  const totalCount = applications.length;
   const selectedApp = applications.find(a => a.id === selectedAppId);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+      case 'accepted':
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10">Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-red-500/30 bg-red-500/10">Rejected</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-amber-500 border-amber-500/30 bg-amber-500/10">Pending</Badge>;
+    }
+  };
 
   // Get the URL for the application (either content_url for campaigns or video_url for boosts)
   const getAppUrl = (app: Application) => app.content_url || app.video_url;
@@ -189,7 +203,7 @@ export function CampaignApplicationsView({
   if (applications.length === 0) {
     return <div className="flex flex-col items-center justify-center h-64 text-center">
         <User className="h-12 w-12 text-muted-foreground/50 mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No pending applications</h3>
+        <h3 className="text-lg font-semibold mb-2">No applications</h3>
         <p className="text-muted-foreground text-sm">
           When creators apply to this {isBoost ? "boost" : "campaign"}, they'll appear here for review.
         </p>
@@ -200,7 +214,7 @@ export function CampaignApplicationsView({
       <div className="w-80 border-r border-border flex flex-col">
         <div className="p-4 border-b border-border">
           <h3 className="font-semibold">Applications</h3>
-          <p className="text-sm text-muted-foreground">{pendingCount} pending</p>
+          <p className="text-sm text-muted-foreground">{totalCount} total · {pendingCount} pending</p>
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
@@ -213,9 +227,20 @@ export function CampaignApplicationsView({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                      {app.profile?.full_name || app.profile?.username || "Unknown"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">
+                        {app.profile?.full_name || app.profile?.username || "Unknown"}
+                      </p>
+                      {app.status !== 'pending' && (
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                          app.status === 'approved' || app.status === 'accepted' 
+                            ? 'bg-emerald-500/10 text-emerald-500' 
+                            : 'bg-red-500/10 text-red-500'
+                        }`}>
+                          {app.status === 'approved' || app.status === 'accepted' ? 'Approved' : 'Rejected'}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       {app.platform && PLATFORM_LOGOS[app.platform] && <img src={PLATFORM_LOGOS[app.platform]} alt={app.platform} className="h-3 w-3" />}
                       <span>{formatDistanceToNow(new Date(getSubmittedAt(app) || new Date()), {
@@ -252,9 +277,7 @@ export function CampaignApplicationsView({
                       </p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-amber-500 border-amber-500/30 bg-amber-500/10">
-                    Pending
-                  </Badge>
+                  {getStatusBadge(selectedApp.status)}
                 </div>
 
                 {/* Connected Account */}
@@ -300,23 +323,25 @@ export function CampaignApplicationsView({
               </div>
             </div>
 
-            {/* Action Buttons - Fixed at bottom */}
-            <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
-              <div className="flex gap-2">
-                <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30">
-                  <X className="h-4 w-4 mr-2" />
-                  Reject
-                </Button>
-                <Button variant="outline" className="h-11 px-4 font-medium tracking-[-0.5px] border-border/50 hover:bg-muted/50">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Message
-                </Button>
-                <Button onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-500 text-white">
-                  <Check className="h-4 w-4 mr-2" />
-                  Accept
-                </Button>
+            {/* Action Buttons - Fixed at bottom (only show for pending applications) */}
+            {selectedApp.status === 'pending' && (
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
+                <div className="flex gap-2">
+                  <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30">
+                    <X className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button variant="outline" className="h-11 px-4 font-medium tracking-[-0.5px] border-border/50 hover:bg-muted/50">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Message
+                  </Button>
+                  <Button onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-500 text-white">
+                    <Check className="h-4 w-4 mr-2" />
+                    Accept
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </> : <div className="flex items-center justify-center h-full text-muted-foreground">
             Select an application to review
           </div>}
