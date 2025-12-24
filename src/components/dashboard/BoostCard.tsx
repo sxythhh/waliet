@@ -203,6 +203,11 @@ export function BoostCard({
 
       // Fetch video details from API
       const videoDetails = await fetchVideoDetails(videoUrl.trim());
+      
+      // Warn if metadata couldn't be fetched
+      if (!videoDetails) {
+        console.warn("Could not fetch video metadata for:", videoUrl.trim());
+      }
 
       // Get brand_id from boost
       const { data: boostData } = await supabase
@@ -223,23 +228,28 @@ export function BoostCard({
         submission_notes: null,
         payout_amount: payoutPerVideo,
         submitted_at: new Date().toISOString(),
-        // Add video metadata if fetched
-        ...(videoDetails && {
-          views: videoDetails.views || 0,
-          likes: videoDetails.likes || 0,
-          comments: videoDetails.comments || 0,
-          shares: videoDetails.shares || 0,
-          video_description: videoDetails.description || null,
-          video_thumbnail_url: videoDetails.coverUrl || null,
-          video_author_username: videoDetails.authorUsername || null,
-          video_author_avatar: videoDetails.authorAvatar || null,
-          video_title: videoDetails.title || null,
-          video_upload_date: videoDetails.uploadDate || null,
-        })
+        // Add video metadata if fetched - use null instead of 0 for missing data
+        views: videoDetails?.views ?? null,
+        likes: videoDetails?.likes ?? null,
+        comments: videoDetails?.comments ?? null,
+        shares: videoDetails?.shares ?? null,
+        video_description: videoDetails?.description || null,
+        video_thumbnail_url: videoDetails?.coverUrl || null,
+        video_author_username: videoDetails?.authorUsername || null,
+        video_author_avatar: videoDetails?.authorAvatar || null,
+        video_title: videoDetails?.title || null,
+        video_upload_date: videoDetails?.uploadDate || null,
       });
       if (error) throw error;
-      toast.success("Video submitted successfully!");
+      
+      if (!videoDetails) {
+        toast.success("Video submitted! Metadata couldn't be fetched - it can be refreshed later.");
+      } else {
+        toast.success("Video submitted successfully!");
+      }
       setSubmitDialogOpen(false);
+      setVideoUrl("");
+      fetchSubmissions();
       setVideoUrl("");
       fetchSubmissions();
     } catch (error) {

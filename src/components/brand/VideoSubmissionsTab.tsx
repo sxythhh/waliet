@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -476,7 +476,90 @@ export function VideoSubmissionsTab({
     }
   };
 
-  // Group submissions by creator
+  // Handle refreshing video metadata
+  const handleRefreshMetadata = async (submission: VideoSubmission) => {
+    setProcessing(true);
+    try {
+      let videoDetails = null;
+      const url = submission.video_url;
+
+      // Determine which API to call based on platform
+      if (url.includes('tiktok.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        videoDetails = data?.data || null;
+      } else if (url.includes('instagram.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: { postUrl: url }
+        });
+        if (error) throw error;
+        videoDetails = data?.data || null;
+      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        if (data) {
+          videoDetails = {
+            description: data.title || data.description,
+            coverUrl: data.thumbnail_url,
+            authorUsername: data.author_username,
+            authorAvatar: data.author_avatar,
+            uploadDate: data.published_date,
+            views: data.view_count,
+            likes: data.like_count,
+            comments: 0,
+            shares: 0,
+          };
+        }
+      }
+
+      if (!videoDetails) {
+        toast.error("Could not fetch video metadata. The video may be private or unavailable.");
+        return;
+      }
+
+      // Update the submission in the database
+      const { error } = await supabase.from("video_submissions").update({
+        views: videoDetails.views || 0,
+        likes: videoDetails.likes || 0,
+        comments: videoDetails.comments || 0,
+        shares: videoDetails.shares || 0,
+        video_description: videoDetails.description || null,
+        video_thumbnail_url: videoDetails.coverUrl || null,
+        video_author_username: videoDetails.authorUsername || null,
+        video_author_avatar: videoDetails.authorAvatar || null,
+        video_title: videoDetails.title || null,
+        updated_at: new Date().toISOString()
+      }).eq("id", submission.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setSubmissions(prev => prev.map(s => s.id === submission.id ? {
+        ...s,
+        views: videoDetails.views || 0,
+        likes: videoDetails.likes || 0,
+        comments: videoDetails.comments || 0,
+        shares: videoDetails.shares || 0,
+        video_description: videoDetails.description || null,
+        video_thumbnail_url: videoDetails.coverUrl || null,
+        video_author_username: videoDetails.authorUsername || null,
+        video_author_avatar: videoDetails.authorAvatar || null,
+        video_title: videoDetails.title || null,
+      } : s));
+
+      toast.success("Video metadata refreshed!");
+    } catch (error) {
+      console.error("Error refreshing metadata:", error);
+      toast.error("Failed to refresh video metadata");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -779,7 +862,8 @@ export function VideoSubmissionsTab({
                     </div>;
               }
               const formatNumber = (num: number | null | undefined) => {
-                if (!num) return '—';
+                if (num === null || num === undefined) return '—';
+                if (num === 0) return '0';
                 if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
                 if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
                 return num.toString();
@@ -921,19 +1005,33 @@ export function VideoSubmissionsTab({
                     {/* Main Content - Horizontal Layout */}
                     <div className="flex gap-4 p-4">
                       {/* 9:16 Video Thumbnail */}
-                      <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="relative w-20 h-[120px] rounded-lg overflow-hidden bg-muted/30 flex-shrink-0 group/thumb">
-                        {submission.video_thumbnail_url ? <img src={submission.video_thumbnail_url} alt={submission.video_title || "Video"} className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105" /> : <div className="w-full h-full flex items-center justify-center">
-                            <img src={videoLibraryIcon} alt="" className="w-6 h-6 opacity-40" />
-                          </div>}
+                      <div className="relative w-20 h-[120px] rounded-lg overflow-hidden bg-muted/30 flex-shrink-0 group/thumb">
+                        <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                          {submission.video_thumbnail_url ? <img src={submission.video_thumbnail_url} alt={submission.video_title || "Video"} className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105" /> : <div className="w-full h-full flex items-center justify-center">
+                              <img src={videoLibraryIcon} alt="" className="w-6 h-6 opacity-40" />
+                            </div>}
+                          {/* Play overlay */}
+                          <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors flex items-center justify-center" />
+                        </a>
                         {/* Platform badge */}
                         <div className="absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 flex items-center justify-center">
                           <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
                         </div>
-                        {/* Play overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors flex items-center justify-center">
-                          
-                        </div>
-                      </a>
+                        {/* Refresh metadata button for missing data */}
+                        {(!submission.video_thumbnail_url || (submission.views === null && submission.likes === null)) && (
+                          <button
+                            className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRefreshMetadata(submission);
+                            }}
+                            disabled={processing}
+                            title="Refresh video metadata"
+                          >
+                            <RefreshCw className="h-3 w-3 text-white" />
+                          </button>
+                        )}
+                      </div>
 
                       {/* Video Details */}
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
