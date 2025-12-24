@@ -16,6 +16,7 @@ import creditCardIcon from "@/assets/credit-card-icon.svg";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -30,6 +31,7 @@ interface PayoutRequest {
   };
   items?: PayoutItem[];
 }
+
 interface PayoutItem {
   id: string;
   submission_id: string;
@@ -43,12 +45,16 @@ interface PayoutItem {
   video_submission?: {
     video_url: string;
     video_title: string | null;
+    video_description: string | null;
     video_thumbnail_url: string | null;
+    video_author_avatar: string | null;
     platform: string | null;
     views: number | null;
+    likes: number | null;
     video_author_username: string | null;
   };
 }
+
 interface BoostTransaction {
   id: string;
   user_id: string;
@@ -62,18 +68,15 @@ interface BoostTransaction {
     avatar_url: string | null;
   };
 }
+
 interface PayoutRequestsTableProps {
   campaignId?: string;
   boostId?: string;
   brandId?: string;
   showEmpty?: boolean;
 }
-export function PayoutRequestsTable({
-  campaignId,
-  boostId,
-  brandId,
-  showEmpty = true
-}: PayoutRequestsTableProps) {
+
+export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = true }: PayoutRequestsTableProps) {
   const [requests, setRequests] = useState<PayoutRequest[]>([]);
   const [transactions, setTransactions] = useState<BoostTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,39 +84,47 @@ export function PayoutRequestsTable({
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<PayoutRequest | null>(null);
   const [flaggingItem, setFlaggingItem] = useState<string | null>(null);
+
   useEffect(() => {
     fetchPayoutRequests();
     if (boostId) {
       fetchBoostTransactions();
     }
-
+    
     // Set up realtime subscription
-    const channel = supabase.channel(`payout-requests-${campaignId || boostId || brandId}`).on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'submission_payout_requests'
-    }, () => {
-      fetchPayoutRequests();
-    }).on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'wallet_transactions'
-    }, () => {
-      if (boostId) fetchBoostTransactions();
-    }).subscribe();
+    const channel = supabase
+      .channel(`payout-requests-${campaignId || boostId || brandId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'submission_payout_requests'
+      }, () => {
+        fetchPayoutRequests();
+      })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'wallet_transactions'
+      }, () => {
+        if (boostId) fetchBoostTransactions();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [campaignId, boostId, brandId]);
+
   const fetchBoostTransactions = async () => {
     if (!boostId) return;
+    
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('wallet_transactions').select('*').eq('type', 'earning').order('created_at', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .eq('type', 'earning')
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
 
       // Filter by boost_id in metadata
@@ -124,40 +135,52 @@ export function PayoutRequestsTable({
 
       // Fetch user profiles
       const userIds = [...new Set(boostTransactions.map(t => t.user_id))];
-      const {
-        data: profilesData
-      } = await supabase.from('profiles').select('id, username, avatar_url').in('id', userIds);
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
       const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+
       const enrichedTransactions: BoostTransaction[] = boostTransactions.map(t => ({
         ...t,
         profiles: profilesMap.get(t.user_id) || undefined
       }));
+
       setTransactions(enrichedTransactions);
     } catch (error) {
       console.error('Error fetching boost transactions:', error);
     }
   };
+
   const fetchPayoutRequests = async () => {
     try {
       // First, get video submissions that match our filter to find their IDs
-      let submissionsQuery = supabase.from('video_submissions').select('id, source_id, source_type, brand_id');
+      let submissionsQuery = supabase
+        .from('video_submissions')
+        .select('id, source_id, source_type, brand_id');
 
       // Filter by campaign, boost, or brand
       if (campaignId) {
-        submissionsQuery = submissionsQuery.eq('source_id', campaignId).eq('source_type', 'campaign');
+        submissionsQuery = submissionsQuery
+          .eq('source_id', campaignId)
+          .eq('source_type', 'campaign');
       }
       if (boostId) {
-        submissionsQuery = submissionsQuery.eq('source_id', boostId).eq('source_type', 'boost');
+        submissionsQuery = submissionsQuery
+          .eq('source_id', boostId)
+          .eq('source_type', 'boost');
       }
       if (brandId) {
         submissionsQuery = submissionsQuery.eq('brand_id', brandId);
       }
-      const {
-        data: submissionsData,
-        error: submissionsError
-      } = await submissionsQuery;
+
+      const { data: submissionsData, error: submissionsError } = await submissionsQuery;
+      
       if (submissionsError) throw submissionsError;
+
       const submissionIds = (submissionsData || []).map(s => s.id);
+
       if (submissionIds.length === 0) {
         setRequests([]);
         setLoading(false);
@@ -165,11 +188,13 @@ export function PayoutRequestsTable({
       }
 
       // Get payout items for these submissions
-      const {
-        data: itemsData,
-        error: itemsError
-      } = await supabase.from('submission_payout_items').select('*').in('submission_id', submissionIds);
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('submission_payout_items')
+        .select('*')
+        .in('submission_id', submissionIds);
+
       if (itemsError) throw itemsError;
+
       if (!itemsData || itemsData.length === 0) {
         setRequests([]);
         setLoading(false);
@@ -178,6 +203,7 @@ export function PayoutRequestsTable({
 
       // Get unique payout request IDs
       const requestIds = [...new Set(itemsData.map(item => item.payout_request_id))];
+
       if (requestIds.length === 0) {
         setRequests([]);
         setLoading(false);
@@ -186,24 +212,27 @@ export function PayoutRequestsTable({
 
       // Fetch video submission details for the items
       const itemSubmissionIds = [...new Set(itemsData.map(item => item.submission_id))];
-      const {
-        data: videoSubmissions
-      } = await supabase.from('video_submissions').select('id, video_url, video_title, video_thumbnail_url, platform, views, video_author_username').in('id', itemSubmissionIds);
+      const { data: videoSubmissions } = await supabase
+        .from('video_submissions')
+        .select('id, video_url, video_title, video_description, video_thumbnail_url, video_author_avatar, platform, views, likes, video_author_username')
+        .in('id', itemSubmissionIds);
 
       // Fetch the payout requests
-      const {
-        data: requestsData,
-        error: requestsError
-      } = await supabase.from('submission_payout_requests').select('*').in('id', requestIds).order('created_at', {
-        ascending: false
-      });
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('submission_payout_requests')
+        .select('*')
+        .in('id', requestIds)
+        .order('created_at', { ascending: false });
+
       if (requestsError) throw requestsError;
 
       // Fetch user profiles
       const userIds = [...new Set((requestsData || []).map(r => r.user_id))];
-      const {
-        data: profilesData
-      } = await supabase.from('profiles').select('id, username, avatar_url').in('id', userIds);
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
       const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
 
       // Create a map of video submissions by ID
@@ -226,6 +255,7 @@ export function PayoutRequestsTable({
         profiles: profilesMap.get(request.user_id) || undefined,
         items: itemsByRequest.get(request.id) || []
       }));
+
       setRequests(enrichedRequests);
     } catch (error) {
       console.error('Error fetching payout requests:', error);
@@ -234,23 +264,24 @@ export function PayoutRequestsTable({
       setLoading(false);
     }
   };
+
   const handleFlagItem = async (itemId: string, reason: string) => {
     setFlaggingItem(itemId);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
-      const {
-        error
-      } = await supabase.from('submission_payout_items').update({
-        flagged_at: new Date().toISOString(),
-        flagged_by: user.id,
-        flag_reason: reason
-      }).eq('id', itemId);
+
+      const { error } = await supabase
+        .from('submission_payout_items')
+        .update({
+          flagged_at: new Date().toISOString(),
+          flagged_by: user.id,
+          flag_reason: reason
+        })
+        .eq('id', itemId);
+
       if (error) throw error;
+
       toast.success('Item flagged for review');
       fetchPayoutRequests();
     } catch (error) {
@@ -260,72 +291,95 @@ export function PayoutRequestsTable({
       setFlaggingItem(null);
     }
   };
+
   const getPlatformIcon = (platform: string | null) => {
     switch (platform?.toLowerCase()) {
-      case 'tiktok':
-        return tiktokLogo;
-      case 'instagram':
-        return instagramLogo;
-      case 'youtube':
-        return youtubeLogo;
-      default:
-        return null;
+      case 'tiktok': return tiktokLogo;
+      case 'instagram': return instagramLogo;
+      case 'youtube': return youtubeLogo;
+      default: return null;
     }
   };
+
   const getStatusBadge = (request: PayoutRequest) => {
     const now = new Date();
     const clearingEnds = new Date(request.clearing_ends_at);
     const daysRemaining = differenceInDays(clearingEnds, now);
     const hoursRemaining = differenceInHours(clearingEnds, now);
+    
     const hasFlags = request.items?.some(item => item.flagged_at) || false;
+
     if (request.status === 'completed') {
-      return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1">
+      return (
+        <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1">
           <CheckCircle className="h-3 w-3" />
           Completed
-        </Badge>;
+        </Badge>
+      );
     }
+
     if (request.status === 'cancelled') {
-      return <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
+      return (
+        <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
           <AlertTriangle className="h-3 w-3" />
           Cancelled
-        </Badge>;
+        </Badge>
+      );
     }
+
     if (hasFlags) {
-      return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1">
+      return (
+        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1">
           <Flag className="h-3 w-3" />
           Flagged
-        </Badge>;
+        </Badge>
+      );
     }
+
     if (request.status === 'clearing') {
       if (hoursRemaining <= 0) {
-        return <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
+        return (
+          <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
             <Clock className="h-3 w-3" />
             Ready
-          </Badge>;
+          </Badge>
+        );
       }
-      return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 gap-1">
+      return (
+        <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 gap-1">
           <Clock className="h-3 w-3" />
           {daysRemaining > 0 ? `${daysRemaining}d left` : `${hoursRemaining}h left`}
-        </Badge>;
+        </Badge>
+      );
     }
-    return <Badge className="bg-muted text-muted-foreground gap-1">
+
+    return (
+      <Badge className="bg-muted text-muted-foreground gap-1">
         {request.status}
-      </Badge>;
+      </Badge>
+    );
   };
+
   const getClearingProgress = (request: PayoutRequest) => {
     if (request.status === 'completed') return 100;
+    
     const createdAt = new Date(request.created_at);
     const clearingEnds = new Date(request.clearing_ends_at);
     const now = new Date();
+    
     const totalDuration = clearingEnds.getTime() - createdAt.getTime();
     const elapsed = now.getTime() - createdAt.getTime();
-    return Math.min(100, Math.max(0, elapsed / totalDuration * 100));
+    
+    return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
   };
+
   if (loading) {
-    return <Card className="bg-card border-0">
+    return (
+      <Card className="bg-card border-0">
         <CardContent className="p-6">
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32" />
@@ -333,14 +387,19 @@ export function PayoutRequestsTable({
                 </div>
                 <Skeleton className="h-6 w-20" />
                 <Skeleton className="h-6 w-16" />
-              </div>)}
+              </div>
+            ))}
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   const hasAnyData = requests.length > 0 || transactions.length > 0;
+
   if (!hasAnyData && showEmpty) {
-    return <Card className="bg-card border-0 h-full">
+    return (
+      <Card className="bg-card border-0 h-full">
         <CardContent className="p-6 h-full flex items-center justify-center">
           <div className="text-center py-8">
             <img src={creditCardIcon} alt="" className="h-12 w-12 mx-auto opacity-50 mb-4" />
@@ -350,27 +409,47 @@ export function PayoutRequestsTable({
             </p>
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   if (!hasAnyData) {
     return null;
   }
-  return <TooltipProvider>
+
+  return (
+    <TooltipProvider>
       <div className="space-y-6 font-['Inter'] tracking-[-0.5px]">
 
         {/* Desktop Table */}
-        {requests.length > 0 && <div className="hidden md:block">
+        {requests.length > 0 && (
+        <div className="hidden md:block">
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Payout Requests</h3>
           <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
           <Table>
-            
+            <TableHeader>
+              <TableRow className="border-b border-border/40 hover:bg-transparent bg-muted/30">
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Creator</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Amount</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Items</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Clearing</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Status</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5 text-right pr-4"></TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {requests.map((request, index) => {
                 const isExpanded = expandedRequest === request.id;
                 const isLast = index === requests.length - 1;
                 const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
-                return <>
-                    <TableRow key={request.id} className={`hover:bg-muted/20 transition-colors cursor-pointer ${!isLast && !isExpanded ? 'border-b border-border/50' : 'border-0'}`} onClick={() => setExpandedRequest(isExpanded ? null : request.id)}>
+                
+                return (
+                  <>
+                    <TableRow 
+                      key={request.id}
+                      className={`hover:bg-muted/20 transition-colors cursor-pointer ${!isLast && !isExpanded ? 'border-b border-border/50' : 'border-0'}`}
+                      onClick={() => setExpandedRequest(isExpanded ? null : request.id)}
+                    >
                       <TableCell className="py-3 pl-4">
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-8 w-8">
@@ -393,18 +472,21 @@ export function PayoutRequestsTable({
                       <TableCell className="py-3">
                         <div className="flex items-center gap-2">
                           <span className="text-sm">{request.items?.length || 0} submissions</span>
-                          {flaggedItems.length > 0 && <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-xs">
+                          {flaggedItems.length > 0 && (
+                            <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-xs">
                               {flaggedItems.length} flagged
-                            </Badge>}
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="w-32">
                           <Progress value={getClearingProgress(request)} className="h-1.5" />
                           <div className="text-xs text-muted-foreground mt-1">
-                            {request.status === 'completed' ? 'Completed' : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), {
-                            addSuffix: true
-                          })}`}
+                            {request.status === 'completed' 
+                              ? 'Completed'
+                              : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
+                            }
                           </div>
                         </div>
                       </TableCell>
@@ -419,88 +501,198 @@ export function PayoutRequestsTable({
                     </TableRow>
                     
                     {/* Expanded Items */}
-                    {isExpanded && <TableRow className={`bg-muted/10 ${!isLast ? 'border-b border-border/50' : ''}`}>
+                    {isExpanded && (
+                      <TableRow className={`bg-muted/10 ${!isLast ? 'border-b border-border/50' : ''}`}>
                         <TableCell colSpan={6} className="p-0">
-                          <div className="p-4 space-y-2">
+                          <div className="p-4 space-y-3">
                             <div className="text-xs font-medium text-muted-foreground mb-3">Submission Items</div>
-                            <div className="grid gap-2">
+                            <div className="grid gap-3">
                               {request.items?.map(item => {
-                            const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
-                            const isFlagged = !!item.flagged_at;
-                            return <div key={item.id} className={`flex items-center gap-4 p-3 rounded-lg border ${isFlagged ? 'bg-amber-500/5 border-amber-500/20' : 'bg-background/50 border-border/30'}`}>
-                                    {/* Thumbnail */}
-                                    <div className="w-16 h-10 rounded overflow-hidden bg-muted flex-shrink-0">
-                                      {item.video_submission?.video_thumbnail_url ? <img src={item.video_submission.video_thumbnail_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">
-                                          {platformIcon && <img src={platformIcon} alt="" className="h-5 w-5 opacity-50" />}
-                                        </div>}
-                                    </div>
-                                    
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        {platformIcon && <img src={platformIcon} alt="" className="h-4 w-4" />}
-                                        <span className="text-sm font-medium truncate">
-                                          {item.video_submission?.video_title || item.video_submission?.video_url || 'Video'}
-                                        </span>
+                                const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
+                                const isFlagged = !!item.flagged_at;
+                                
+                                return (
+                                  <div 
+                                    key={item.id}
+                                    className={`group rounded-xl border overflow-hidden transition-all hover:border-border/60 ${
+                                      isFlagged 
+                                        ? 'bg-amber-500/5 border-amber-500/20' 
+                                        : 'bg-card/40 border-border/40'
+                                    }`}
+                                  >
+                                    {/* Main Content - Horizontal Layout */}
+                                    <div className="flex gap-4 p-4">
+                                      {/* 9:16 Video Thumbnail */}
+                                      <a 
+                                        href={item.video_submission?.video_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="relative w-16 h-[90px] rounded-lg overflow-hidden bg-muted/30 flex-shrink-0 group/thumb"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {item.video_submission?.video_thumbnail_url ? (
+                                          <img 
+                                            src={item.video_submission.video_thumbnail_url} 
+                                            alt={item.video_submission?.video_title || "Video"} 
+                                            className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105"
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center">
+                                            {platformIcon && <img src={platformIcon} alt="" className="w-5 h-5 opacity-40" />}
+                                          </div>
+                                        )}
+                                        {/* Platform badge */}
+                                        <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-black/60 flex items-center justify-center">
+                                          {platformIcon && <img src={platformIcon} alt="" className="h-2.5 w-2.5" />}
+                                        </div>
+                                      </a>
+
+                                      {/* Video Details */}
+                                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                        {/* Top: Title & Amount */}
+                                        <div>
+                                          <div className="flex items-start justify-between gap-2 mb-1">
+                                            <a 
+                                              href={item.video_submission?.video_url} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer" 
+                                              className="text-sm font-medium tracking-[-0.3px] line-clamp-2 hover:underline transition-all"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              {item.video_submission?.video_title || item.video_submission?.video_description || 'Untitled Video'}
+                                            </a>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                              <span className="text-sm font-semibold text-emerald-500 tabular-nums">
+                                                ${item.amount.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Description */}
+                                          {item.video_submission?.video_description && item.video_submission?.video_title && (
+                                            <p className="text-xs text-muted-foreground line-clamp-1 mb-1.5">
+                                              {item.video_submission.video_description}
+                                            </p>
+                                          )}
+                                          
+                                          {/* Author info */}
+                                          <div className="flex items-center gap-2">
+                                            {item.video_submission?.video_author_avatar ? (
+                                              <img 
+                                                src={item.video_submission.video_author_avatar} 
+                                                alt="" 
+                                                className="h-4 w-4 rounded-full"
+                                              />
+                                            ) : (
+                                              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center">
+                                                <span className="text-[8px] font-medium">
+                                                  {(item.video_submission?.video_author_username || 'U')[0].toUpperCase()}
+                                                </span>
+                                              </div>
+                                            )}
+                                            <span className="text-xs text-muted-foreground">
+                                              @{item.video_submission?.video_author_username || 'unknown'}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Bottom: Metrics Row */}
+                                        <div className="flex items-center justify-between mt-2">
+                                          <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ letterSpacing: '-0.05em' }}>
+                                            <div className="flex items-center gap-1">
+                                              <span className="font-medium text-foreground tabular-nums">
+                                                {item.video_submission?.views?.toLocaleString() || 0}
+                                              </span>
+                                              <span>views</span>
+                                            </div>
+                                            {item.video_submission?.likes !== undefined && item.video_submission?.likes !== null && (
+                                              <div className="flex items-center gap-1">
+                                                <span className="font-medium text-foreground tabular-nums">
+                                                  {item.video_submission.likes.toLocaleString()}
+                                                </span>
+                                                <span>likes</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* Actions */}
+                                          <div className="flex items-center gap-1">
+                                            {isFlagged ? (
+                                              <Tooltip>
+                                                <TooltipTrigger>
+                                                  <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px]">
+                                                    <Flag className="h-2.5 w-2.5 mr-1" />
+                                                    Flagged
+                                                  </Badge>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>{item.flag_reason || 'Flagged for review'}</p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            ) : (
+                                              request.status === 'clearing' && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-6 text-[10px] text-muted-foreground hover:text-amber-500 px-2"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleFlagItem(item.id, 'Flagged by brand for review');
+                                                  }}
+                                                  disabled={flaggingItem === item.id}
+                                                >
+                                                  <Flag className="h-2.5 w-2.5 mr-1" />
+                                                  Flag
+                                                </Button>
+                                              )
+                                            )}
+                                            
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                window.open(item.video_submission?.video_url, '_blank');
+                                              }}
+                                            >
+                                              <ExternalLink className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
                                       </div>
-                                      <div className="text-xs text-muted-foreground">
-                                        @{item.video_submission?.video_author_username || 'unknown'} • {item.video_submission?.views?.toLocaleString() || 0} views
-                                      </div>
                                     </div>
-                                    
-                                    {/* Amount */}
-                                    <div className="text-right">
-                                      <div className="text-sm font-semibold">${item.amount.toFixed(2)}</div>
-                                    </div>
-                                    
-                                    {/* Flag Status / Action */}
-                                    <div className="flex items-center gap-2">
-                                      {isFlagged ? <Tooltip>
-                                          <TooltipTrigger>
-                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">
-                                              <Flag className="h-3 w-3 mr-1" />
-                                              Flagged
-                                            </Badge>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>{item.flag_reason || 'Flagged for review'}</p>
-                                          </TooltipContent>
-                                        </Tooltip> : request.status === 'clearing' && <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-amber-500" onClick={e => {
-                                  e.stopPropagation();
-                                  handleFlagItem(item.id, 'Flagged by brand for review');
-                                }} disabled={flaggingItem === item.id}>
-                                            <Flag className="h-3 w-3 mr-1" />
-                                            Flag
-                                          </Button>}
-                                      
-                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={e => {
-                                  e.stopPropagation();
-                                  window.open(item.video_submission?.video_url, '_blank');
-                                }}>
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </div>
-                                  </div>;
-                          })}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </TableCell>
-                      </TableRow>}
-                  </>;
+                      </TableRow>
+                    )}
+                  </>
+                );
               })}
             </TableBody>
           </Table>
           </div>
-        </div>}
+        </div>
+        )}
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-3">
           {requests.map(request => {
-          const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
-          return <Card key={request.id} className="bg-card/50 border-border/50" onClick={() => {
-            setSelectedRequest(request);
-            setDetailsDialogOpen(true);
-          }}>
+            const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
+            
+            return (
+              <Card 
+                key={request.id} 
+                className="bg-card/50 border-border/50"
+                onClick={() => {
+                  setSelectedRequest(request);
+                  setDetailsDialogOpen(true);
+                }}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2.5">
@@ -524,25 +716,30 @@ export function PayoutRequestsTable({
                     <span className="text-2xl font-bold">${request.total_amount.toFixed(2)}</span>
                     <div className="text-sm text-muted-foreground">
                       {request.items?.length || 0} items
-                      {flaggedItems.length > 0 && <span className="text-amber-500 ml-1">({flaggedItems.length} flagged)</span>}
+                      {flaggedItems.length > 0 && (
+                        <span className="text-amber-500 ml-1">({flaggedItems.length} flagged)</span>
+                      )}
                     </div>
                   </div>
                   
                   <div>
                     <Progress value={getClearingProgress(request)} className="h-1.5 mb-1" />
                     <div className="text-xs text-muted-foreground">
-                      {request.status === 'completed' ? 'Completed' : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), {
-                    addSuffix: true
-                  })}`}
+                      {request.status === 'completed' 
+                        ? 'Completed'
+                        : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
+                      }
                     </div>
                   </div>
                 </CardContent>
-              </Card>;
-        })}
+              </Card>
+            );
+          })}
         </div>
 
         {/* Boost Transactions History */}
-        {transactions.length > 0 && <div>
+        {transactions.length > 0 && (
+          <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-3">Completed Payments</h3>
             <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
               <Table>
@@ -556,8 +753,12 @@ export function PayoutRequestsTable({
                 </TableHeader>
                 <TableBody>
                   {transactions.map((txn, index) => {
-                const isLast = index === transactions.length - 1;
-                return <TableRow key={txn.id} className={`hover:bg-muted/10 transition-colors ${!isLast ? 'border-b border-border/40' : 'border-0'}`}>
+                    const isLast = index === transactions.length - 1;
+                    return (
+                      <TableRow 
+                        key={txn.id}
+                        className={`hover:bg-muted/10 transition-colors ${!isLast ? 'border-b border-border/40' : 'border-0'}`}
+                      >
                         <TableCell className="py-3 pl-4">
                           <span className="text-sm text-muted-foreground">
                             {format(new Date(txn.created_at), 'MMM d, yyyy')}
@@ -584,12 +785,14 @@ export function PayoutRequestsTable({
                             ${Math.abs(txn.amount).toFixed(2)}
                           </span>
                         </TableCell>
-                      </TableRow>;
-              })}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
-          </div>}
+          </div>
+        )}
 
         {/* Mobile Details Dialog */}
         <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
@@ -600,13 +803,16 @@ export function PayoutRequestsTable({
                 Payout Request Details
               </DialogTitle>
               <DialogDescription>
-                {selectedRequest && <span>
+                {selectedRequest && (
+                  <span>
                     Requested on {format(new Date(selectedRequest.created_at), 'MMM d, yyyy')}
-                  </span>}
+                  </span>
+                )}
               </DialogDescription>
             </DialogHeader>
             
-            {selectedRequest && <div className="space-y-4 mt-4">
+            {selectedRequest && (
+              <div className="space-y-4 mt-4">
                 {/* Creator Info */}
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                   <Avatar className="h-10 w-10">
@@ -629,9 +835,10 @@ export function PayoutRequestsTable({
                   <div className="text-xs text-muted-foreground mb-2">Clearing Progress</div>
                   <Progress value={getClearingProgress(selectedRequest)} className="h-2 mb-2" />
                   <div className="text-sm">
-                    {selectedRequest.status === 'completed' ? 'Payout completed' : `Clearing ends ${formatDistanceToNow(new Date(selectedRequest.clearing_ends_at), {
-                  addSuffix: true
-                })}`}
+                    {selectedRequest.status === 'completed' 
+                      ? 'Payout completed'
+                      : `Clearing ends ${formatDistanceToNow(new Date(selectedRequest.clearing_ends_at), { addSuffix: true })}`
+                    }
                   </div>
                 </div>
                 
@@ -639,14 +846,29 @@ export function PayoutRequestsTable({
                 <div className="space-y-2">
                   <div className="text-sm font-medium">Submissions</div>
                   {selectedRequest.items?.map(item => {
-                const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
-                const isFlagged = !!item.flagged_at;
-                return <div key={item.id} className={`p-3 rounded-lg border ${isFlagged ? 'bg-amber-500/5 border-amber-500/20' : 'bg-muted/20 border-border/30'}`}>
+                    const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
+                    const isFlagged = !!item.flagged_at;
+                    
+                    return (
+                      <div 
+                        key={item.id}
+                        className={`p-3 rounded-lg border ${
+                          isFlagged ? 'bg-amber-500/5 border-amber-500/20' : 'bg-muted/20 border-border/30'
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-8 rounded overflow-hidden bg-muted flex-shrink-0">
-                            {item.video_submission?.video_thumbnail_url ? <img src={item.video_submission.video_thumbnail_url} alt="" className="w-full h-full object-cover" /> : platformIcon ? <div className="w-full h-full flex items-center justify-center">
+                            {item.video_submission?.video_thumbnail_url ? (
+                              <img 
+                                src={item.video_submission.video_thumbnail_url} 
+                                alt="" 
+                                className="w-full h-full object-cover"
+                              />
+                            ) : platformIcon ? (
+                              <div className="w-full h-full flex items-center justify-center">
                                 <img src={platformIcon} alt="" className="h-4 w-4 opacity-50" />
-                              </div> : null}
+                              </div>
+                            ) : null}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm truncate">
@@ -658,17 +880,22 @@ export function PayoutRequestsTable({
                           </div>
                           <div className="text-right">
                             <div className="text-sm font-semibold">${item.amount.toFixed(2)}</div>
-                            {isFlagged && <Badge className="bg-amber-500/10 text-amber-500 text-xs mt-1">
+                            {isFlagged && (
+                              <Badge className="bg-amber-500/10 text-amber-500 text-xs mt-1">
                                 Flagged
-                              </Badge>}
+                              </Badge>
+                            )}
                           </div>
                         </div>
-                      </div>;
-              })}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
-    </TooltipProvider>;
+    </TooltipProvider>
+  );
 }
