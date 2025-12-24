@@ -468,7 +468,7 @@ export function BrandCampaignsTab({
                 type: "boost";
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => setSelectedBoostId(bounty.id)}>
+              return <Card key={`boost-${bounty.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)}>
                           <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                             {bounty.banner_url ? <OptimizedImage src={bounty.banner_url} alt={bounty.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-muted flex items-center justify-center">
                                 <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
