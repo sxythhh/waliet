@@ -1315,6 +1315,7 @@ export type Database = {
           id: string
           is_flagged: boolean | null
           platform: string | null
+          status: string | null
           submission_text: string | null
           updated_at: string | null
           video_url: string
@@ -1329,6 +1330,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean | null
           platform?: string | null
+          status?: string | null
           submission_text?: string | null
           updated_at?: string | null
           video_url: string
@@ -1343,6 +1345,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean | null
           platform?: string | null
+          status?: string | null
           submission_text?: string | null
           updated_at?: string | null
           video_url?: string
@@ -1394,7 +1397,9 @@ export type Database = {
           is_featured: boolean
           is_infinite_budget: boolean | null
           is_private: boolean | null
+          payment_model: string | null
           payout_day_of_week: number | null
+          post_rate: number | null
           preview_url: string | null
           requirements: string[] | null
           requires_application: boolean
@@ -1434,7 +1439,9 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          payment_model?: string | null
           payout_day_of_week?: number | null
+          post_rate?: number | null
           preview_url?: string | null
           requirements?: string[] | null
           requires_application?: boolean
@@ -1474,7 +1481,9 @@ export type Database = {
           is_featured?: boolean
           is_infinite_budget?: boolean | null
           is_private?: boolean | null
+          payment_model?: string | null
           payout_day_of_week?: number | null
+          post_rate?: number | null
           preview_url?: string | null
           requirements?: string[] | null
           requires_application?: boolean

@@ -60,9 +60,11 @@ const campaignSchema = z.object({
   content_distribution: z.enum(["creators_own_page", "branded_accounts"]).default("creators_own_page"),
   is_infinite_budget: z.boolean().default(false),
   budget: z.string().optional(),
+  payment_model: z.enum(["pay_per_view", "pay_per_post"]).default("pay_per_view"),
   rpm_rate: z.string().refine(val => !isNaN(Number(val)) && Number(val) > 0, {
     message: "CPM rate must be a positive number"
   }),
+  post_rate: z.string().optional(),
   embed_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
@@ -106,6 +108,8 @@ interface Campaign {
   budget: number;
   budget_used?: number;
   rpm_rate: number;
+  payment_model?: string | null;
+  post_rate?: number | null;
   guidelines: string | null;
   banner_url: string | null;
   allowed_platforms: string[];
@@ -282,7 +286,9 @@ export function CampaignCreationWizard({
       content_distribution: (campaign?.content_distribution as "creators_own_page" | "branded_accounts") || "creators_own_page",
       is_infinite_budget: campaign?.is_infinite_budget || false,
       budget: campaign?.budget?.toString() || "",
+      payment_model: (campaign?.payment_model as "pay_per_view" | "pay_per_post") || "pay_per_view",
       rpm_rate: campaign?.rpm_rate?.toString() || "5",
+      post_rate: campaign?.post_rate?.toString() || "10",
       embed_url: campaign?.embed_url || "",
       preview_url: campaign?.preview_url || "",
       allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
@@ -435,7 +441,9 @@ export function CampaignCreationWizard({
         content_distribution: values.content_distribution || "creators_own_page",
         is_infinite_budget: values.is_infinite_budget,
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
+        payment_model: values.payment_model || "pay_per_view",
         rpm_rate: Number(values.rpm_rate) || 5,
+        post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 10 : 0,
         embed_url: values.embed_url || null,
         preview_url: values.preview_url || null,
         brand_id: brandId,
@@ -488,7 +496,9 @@ export function CampaignCreationWizard({
           content_distribution: values.content_distribution || "creators_own_page",
           is_infinite_budget: values.is_infinite_budget,
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
+          payment_model: values.payment_model || "pay_per_view",
           rpm_rate: Number(values.rpm_rate) || 5,
+          post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 10 : 0,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
           allowed_platforms: values.allowed_platforms,
@@ -702,25 +712,89 @@ export function CampaignCreationWizard({
                       />
                     )}
 
+                    {/* Payment Model Selection */}
                     <FormField
                       control={form.control}
-                      name="rpm_rate"
+                      name="payment_model"
                       render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center justify-between">
-                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
-                            <span className="text-xs text-muted-foreground">per 1K views</span>
-                          </div>
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Payment Model</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                              <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div
+                                onClick={() => field.onChange("pay_per_view")}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                  field.value === "pay_per_view"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Pay Per View</p>
+                                <p className="text-xs text-muted-foreground mt-1">Pay creators based on video views (CPM)</p>
+                              </div>
+                              <div
+                                onClick={() => field.onChange("pay_per_post")}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                  field.value === "pay_per_post"
+                                    ? "border-primary bg-primary/5"
+                                    : "border-transparent bg-muted/50 hover:bg-muted/70"
+                                }`}
+                              >
+                                <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Pay Per Post</p>
+                                <p className="text-xs text-muted-foreground mt-1">Fixed payment per approved video</p>
+                              </div>
                             </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {/* CPM Rate - only show for pay_per_view */}
+                    {form.watch("payment_model") === "pay_per_view" && (
+                      <FormField
+                        control={form.control}
+                        name="rpm_rate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
+                              <span className="text-xs text-muted-foreground">per 1K views</span>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Post Rate - only show for pay_per_post */}
+                    {form.watch("payment_model") === "pay_per_post" && (
+                      <FormField
+                        control={form.control}
+                        name="post_rate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Rate Per Approved Video</FormLabel>
+                              <span className="text-xs text-muted-foreground">fixed payment</span>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input type="number" placeholder="10" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={form.control}

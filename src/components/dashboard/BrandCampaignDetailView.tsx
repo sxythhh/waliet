@@ -3,11 +3,12 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck } from "lucide-react";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
+import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
@@ -46,11 +47,13 @@ interface Campaign {
   campaign_type?: string | null;
   category?: string | null;
   hashtags?: string[] | null;
+  payment_model?: string | null;
+  post_rate?: number | null;
 }
 interface BrandCampaignDetailViewProps {
   campaignId: string;
 }
-type DetailTab = "home" | "applications" | "creators" | "payouts";
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts";
 export function BrandCampaignDetailView({
   campaignId
 }: BrandCampaignDetailViewProps) {
@@ -103,7 +106,11 @@ export function BrandCampaignDetailView({
     label: "Applications",
     icon: UserCheck,
     count: pendingApplicationsCount
-  }] : []), ...(isAdmin ? [{
+  }] : []), {
+    id: "videos" as DetailTab,
+    label: "Videos",
+    icon: Video
+  }, ...(isAdmin ? [{
     id: "creators" as DetailTab,
     label: "Creators",
     icon: Users
@@ -188,6 +195,8 @@ export function BrandCampaignDetailView({
             <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} />
           ) : activeDetailTab === "applications" ? (
             <CampaignApplicationsView campaignId={campaignId} onApplicationReviewed={fetchPendingApplicationsCount} />
+          ) : activeDetailTab === "videos" ? (
+            <VideoSubmissionsTab campaign={campaign} />
           ) : activeDetailTab === "creators" ? (
             <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" />
           ) : (
