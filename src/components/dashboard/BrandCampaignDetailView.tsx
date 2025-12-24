@@ -14,7 +14,7 @@ import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 
@@ -79,19 +79,24 @@ interface Boost {
 }
 
 interface BrandCampaignDetailViewProps {
+  brandId?: string;
   campaignId?: string;
   boostId?: string;
   onBack?: () => void;
 }
 
 type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "management";
+type EntitySelection = "all" | { type: "campaign"; id: string } | { type: "boost"; id: string };
 
 export function BrandCampaignDetailView({
-  campaignId,
-  boostId,
+  brandId,
+  campaignId: propCampaignId,
+  boostId: propBoostId,
   onBack
 }: BrandCampaignDetailViewProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [boosts, setBoosts] = useState<Boost[]>([]);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [boost, setBoost] = useState<Boost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,19 +107,43 @@ export function BrandCampaignDetailView({
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const { isAdmin } = useAdminCheck();
 
+  // Determine current selection based on props or URL params
+  const urlCampaignId = searchParams.get("campaign");
+  const urlBoostId = searchParams.get("boost");
+  const campaignId = propCampaignId || urlCampaignId || undefined;
+  const boostId = propBoostId || urlBoostId || undefined;
+
+  // If brandId is passed without specific campaign/boost, show "All" mode
+  const isAllMode = !!brandId && !campaignId && !boostId;
   const isBoost = !!boostId;
   const entityId = isBoost ? boostId : campaignId;
-  const entityTitle = isBoost ? boost?.title : campaign?.title;
-  const entityBrandId = isBoost ? boost?.brand_id : campaign?.brand_id;
+  const entityTitle = isAllMode ? "All Programs" : isBoost ? boost?.title : campaign?.title;
+  const entityBrandId = isAllMode ? brandId : isBoost ? boost?.brand_id : campaign?.brand_id;
 
   useEffect(() => {
-    if (isBoost) {
+    if (isAllMode && brandId) {
+      fetchAllCampaignsAndBoosts();
+    } else if (isBoost) {
       fetchBoost();
-    } else {
+    } else if (campaignId) {
       fetchCampaign();
     }
     fetchPendingApplicationsCount();
-  }, [campaignId, boostId]);
+  }, [campaignId, boostId, brandId, isAllMode]);
+
+  const fetchAllCampaignsAndBoosts = async () => {
+    if (!brandId) return;
+    setLoading(true);
+    
+    const [campaignsResult, boostsResult] = await Promise.all([
+      supabase.from("campaigns").select("*").eq("brand_id", brandId).order("created_at", { ascending: false }),
+      supabase.from("bounty_campaigns").select("*").eq("brand_id", brandId).order("created_at", { ascending: false })
+    ]);
+
+    if (campaignsResult.data) setCampaigns(campaignsResult.data);
+    if (boostsResult.data) setBoosts(boostsResult.data);
+    setLoading(false);
+  };
 
   const fetchCampaign = async () => {
     if (!campaignId) return;
@@ -129,6 +158,15 @@ export function BrandCampaignDetailView({
       console.error("Error fetching campaign:", error);
     } else {
       setCampaign(data);
+      // Also fetch all campaigns/boosts for the dropdown if brand_id exists
+      if (data?.brand_id) {
+        const [campaignsResult, boostsResult] = await Promise.all([
+          supabase.from("campaigns").select("*").eq("brand_id", data.brand_id).order("created_at", { ascending: false }),
+          supabase.from("bounty_campaigns").select("*").eq("brand_id", data.brand_id).order("created_at", { ascending: false })
+        ]);
+        if (campaignsResult.data) setCampaigns(campaignsResult.data);
+        if (boostsResult.data) setBoosts(boostsResult.data);
+      }
     }
     setLoading(false);
   };
@@ -146,12 +184,28 @@ export function BrandCampaignDetailView({
       console.error("Error fetching boost:", error);
     } else {
       setBoost(data);
+      // Also fetch all campaigns/boosts for the dropdown
+      if (data?.brand_id) {
+        const [campaignsResult, boostsResult] = await Promise.all([
+          supabase.from("campaigns").select("*").eq("brand_id", data.brand_id).order("created_at", { ascending: false }),
+          supabase.from("bounty_campaigns").select("*").eq("brand_id", data.brand_id).order("created_at", { ascending: false })
+        ]);
+        if (campaignsResult.data) setCampaigns(campaignsResult.data);
+        if (boostsResult.data) setBoosts(boostsResult.data);
+      }
     }
     setLoading(false);
   };
 
   const fetchPendingApplicationsCount = async () => {
-    if (isBoost && boostId) {
+    if (isAllMode && brandId) {
+      // Count across all campaigns and boosts
+      const [campaignCount, boostCount] = await Promise.all([
+        supabase.from("campaign_submissions").select("id, campaigns!inner(brand_id)", { count: 'exact', head: true }).eq("campaigns.brand_id", brandId).eq("status", "pending"),
+        supabase.from("bounty_applications").select("id, bounty_campaigns!inner(brand_id)", { count: 'exact', head: true }).eq("bounty_campaigns.brand_id", brandId).eq("status", "pending")
+      ]);
+      setPendingApplicationsCount((campaignCount.count || 0) + (boostCount.count || 0));
+    } else if (isBoost && boostId) {
       const { count } = await supabase
         .from("bounty_applications")
         .select("id", { count: 'exact', head: true })
@@ -166,6 +220,21 @@ export function BrandCampaignDetailView({
         .eq("status", "pending");
       setPendingApplicationsCount(count || 0);
     }
+  };
+
+  const handleSelectEntity = (selection: "all" | { type: "campaign" | "boost"; id: string }) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("campaign");
+    newParams.delete("boost");
+    
+    if (selection !== "all") {
+      if (selection.type === "campaign") {
+        newParams.set("campaign", selection.id);
+      } else {
+        newParams.set("boost", selection.id);
+      }
+    }
+    setSearchParams(newParams);
   };
 
   const handleBack = () => {
@@ -192,8 +261,8 @@ export function BrandCampaignDetailView({
     { id: "home", label: "Home", icon: Home },
   ];
 
-  // Add applications tab for campaigns that require application or for boosts
-  if (isBoost || campaign?.requires_application !== false) {
+  // Add applications tab (always available in all mode, or when specific entity allows)
+  if (isAllMode || isBoost || campaign?.requires_application !== false) {
     detailTabs.push({
       id: "applications",
       label: "Applications",
@@ -205,13 +274,13 @@ export function BrandCampaignDetailView({
   // Videos tab
   detailTabs.push({ id: "videos", label: "Videos", icon: Video });
 
-  // Creators tab (admin only)
-  if (isAdmin && !isBoost) {
+  // Creators tab (admin only, not in all mode)
+  if (isAdmin && !isBoost && !isAllMode) {
     detailTabs.push({ id: "creators", label: "Creators", icon: Users });
   }
 
-  // Payouts tab (for campaigns only)
-  if (!isBoost) {
+  // Payouts tab (for campaigns only, not in all mode)
+  if (!isBoost && !isAllMode) {
     detailTabs.push({ id: "payouts", label: "Payouts", icon: DollarSign });
   }
 
@@ -226,7 +295,7 @@ export function BrandCampaignDetailView({
     );
   }
 
-  if (!campaign && !boost) {
+  if (!isAllMode && !campaign && !boost) {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
@@ -239,59 +308,114 @@ export function BrandCampaignDetailView({
   return (
     <div className="p-[10px] h-full flex flex-col">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
-        {/* Header with back button and title */}
+        {/* Header with title and campaign selector */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 sm:px-[5px] py-[10px] bg-background gap-2">
-          <div className="flex items-center gap-0 min-w-0 flex-1">
-            <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent shrink-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <button onClick={handleBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline truncate flex items-center gap-2">
-              {entityTitle}
-              {isBoost && boost?.is_private && (
-                <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
-                  Private
-                </Badge>
-              )}
-            </button>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {onBack && (
+              <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent shrink-0">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Campaign/Boost Selector Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-lg font-semibold tracking-[-0.5px] flex items-center gap-2 hover:bg-muted/50 rounded-lg px-2 py-1 transition-colors">
+                  {entityTitle}
+                  {isBoost && boost?.is_private && (
+                    <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+                      Private
+                    </Badge>
+                  )}
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64 bg-popover z-50">
+                {/* All Programs option */}
+                <DropdownMenuItem
+                  onClick={() => handleSelectEntity("all")}
+                  className={`focus:bg-muted focus:text-foreground ${isAllMode ? "bg-muted" : ""}`}
+                >
+                  <span className="font-medium">All Programs</span>
+                </DropdownMenuItem>
+                
+                {(campaigns.length > 0 || boosts.length > 0) && <DropdownMenuSeparator />}
+                
+                {/* Campaigns */}
+                {campaigns.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Campaigns</div>
+                    {campaigns.map(c => (
+                      <DropdownMenuItem
+                        key={c.id}
+                        onClick={() => handleSelectEntity({ type: "campaign", id: c.id })}
+                        className={`focus:bg-muted focus:text-foreground ${campaignId === c.id ? "bg-muted" : ""}`}
+                      >
+                        <span className="truncate">{c.title}</span>
+                        <Badge variant="outline" className="ml-auto text-[10px]">{c.status}</Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+                
+                {/* Boosts */}
+                {boosts.length > 0 && (
+                  <>
+                    {campaigns.length > 0 && <DropdownMenuSeparator />}
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Boosts</div>
+                    {boosts.map(b => (
+                      <DropdownMenuItem
+                        key={b.id}
+                        onClick={() => handleSelectEntity({ type: "boost", id: b.id })}
+                        className={`focus:bg-muted focus:text-foreground ${boostId === b.id ? "bg-muted" : ""}`}
+                      >
+                        <span className="truncate">{b.title}</span>
+                        <Badge variant="outline" className="ml-auto text-[10px]">{b.status}</Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Copy Invite URL */}
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-1.5 h-8 text-xs px-2 sm:px-3"
-              onClick={handleCopyInviteUrl}
-            >
-              <Copy className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Copy URL</span>
-            </Button>
-
-            {/* Timeframe selector (campaigns only) */}
-            {!isBoost && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3">
-                    <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
-                    <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-popover">
-                  {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => (
-                    <DropdownMenuItem
-                      key={option}
-                      className="focus:bg-muted focus:text-foreground"
-                      onClick={() => setTimeframe(option)}
-                    >
-                      {TIMEFRAME_LABELS[option]}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Copy Invite URL - only when specific entity selected */}
+            {!isAllMode && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-1.5 h-8 text-xs px-2 sm:px-3"
+                onClick={handleCopyInviteUrl}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Copy URL</span>
+              </Button>
             )}
 
-            {/* Top Up button (boosts) */}
-            {isBoost && (
+            {/* Timeframe selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3">
+                  <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
+                  <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover z-50">
+                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => (
+                  <DropdownMenuItem
+                    key={option}
+                    className="focus:bg-muted focus:text-foreground"
+                    onClick={() => setTimeframe(option)}
+                  >
+                    {TIMEFRAME_LABELS[option]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Top Up button (boosts only) */}
+            {isBoost && !isAllMode && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -303,19 +427,21 @@ export function BrandCampaignDetailView({
               </Button>
             )}
 
-            {/* Edit button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3"
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
-            </Button>
+            {/* Edit button - only when specific entity selected */}
+            {!isAllMode && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3"
+                onClick={() => setEditDialogOpen(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
+              </Button>
+            )}
 
-            {/* Top Up Budget (campaigns) */}
-            {!isBoost && (
+            {/* Top Up Budget (campaigns only) */}
+            {!isBoost && !isAllMode && (
               <Button size="sm" className="gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3">
                 <Plus className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Top Up Budget</span>
@@ -391,20 +517,28 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" && entityBrandId ? (
-            isBoost && boost ? (
+          {activeDetailTab === "home" ? (
+            isAllMode && brandId ? (
+              <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} />
+            ) : isBoost && boost ? (
               <BoostManagementContent boost={boost} onTopUp={() => setTopUpDialogOpen(true)} />
             ) : campaign?.brand_id ? (
               <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} />
             ) : null
           ) : activeDetailTab === "applications" ? (
-            isBoost ? (
+            isAllMode && brandId ? (
+              <AllApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : isBoost ? (
               <BoostApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} />
             ) : (
               <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} />
             )
           ) : activeDetailTab === "videos" ? (
-            isBoost && boost ? (
+            isAllMode && brandId ? (
+              <div className="p-6 text-center text-muted-foreground">
+                Video submissions across all programs will be displayed here.
+              </div>
+            ) : isBoost && boost ? (
               <VideoSubmissionsTab
                 boostId={boostId}
                 monthlyRetainer={boost.monthly_retainer}
@@ -421,6 +555,46 @@ export function BrandCampaignDetailView({
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+// All Programs Home Content placeholder
+function AllProgramsHomeContent({ brandId, campaigns, boosts }: { brandId: string; campaigns: Campaign[]; boosts: Boost[] }) {
+  const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0) + boosts.reduce((sum, b) => sum + (b.budget || 0), 0);
+  const totalUsed = campaigns.reduce((sum, c) => sum + (c.budget_used || 0), 0) + boosts.reduce((sum, b) => sum + (b.budget_used || 0), 0);
+  
+  return (
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Active Campaigns</p>
+          <p className="text-2xl font-semibold">{campaigns.filter(c => c.status === "active").length}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Active Boosts</p>
+          <p className="text-2xl font-semibold">{boosts.filter(b => b.status === "active").length}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
+          <p className="text-2xl font-semibold">${totalBudget.toLocaleString()}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
+          <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// All Applications View placeholder
+function AllApplicationsView({ brandId, onApplicationReviewed }: { brandId: string; onApplicationReviewed?: () => void }) {
+  return (
+    <div className="p-6">
+      <p className="text-muted-foreground text-center py-12">
+        Applications across all programs will be displayed here.
+      </p>
     </div>
   );
 }
