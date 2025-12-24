@@ -446,7 +446,7 @@ export function VideoSubmissionsTab({
 
         {/* Right: Pending Videos / Creator Videos */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="p-3 border-b border-border space-y-3 min-h-[88px]">
+          <div className="p-2.5 border-b border-border space-y-2">
             {/* Header */}
             <div className="flex items-center gap-2.5 h-8">
               <Avatar
