@@ -128,16 +128,6 @@ export function BudgetProgressCard({
                   className="transition-all duration-700"
                 />
                 
-                {/* Gap overlay - creates visual separation */}
-                {creatorPercentage > 0 && creatorPercentage < 100 && (
-                  <circle
-                    cx={90 + 75 * Math.cos(Math.PI - (creatorPercentage / 100) * Math.PI)}
-                    cy={90 - 75 * Math.sin(Math.PI - (creatorPercentage / 100) * Math.PI)}
-                    r="8"
-                    fill="#0a0a0a"
-                  />
-                )}
-                
                 {/* Gradient definition */}
                 <defs>
                   <linearGradient id="creatorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
