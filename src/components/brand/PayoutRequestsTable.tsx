@@ -450,6 +450,63 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       if (txError) throw txError;
 
+      // Update paid_views in campaign_account_analytics
+      if (campaignId) {
+        // Fetch payout items to get total views being paid
+        const { data: payoutItems } = await supabase
+          .from('submission_payout_items')
+          .select('submission_id')
+          .eq('payout_request_id', request.id);
+
+        if (payoutItems && payoutItems.length > 0) {
+          const submissionIds = payoutItems.map(item => item.submission_id);
+          
+          // Get total views from these submissions
+          const { data: submissions } = await supabase
+            .from('campaign_videos')
+            .select('video_views, video_author_username, platform')
+            .in('id', submissionIds);
+
+          if (submissions && submissions.length > 0) {
+            const totalViewsPaid = submissions.reduce((sum, sub) => sum + (sub.video_views || 0), 0);
+            
+            // Get unique usernames and platforms
+            const uniqueAccounts = new Map<string, string>();
+            submissions.forEach(sub => {
+              if (sub.video_author_username && sub.platform) {
+                uniqueAccounts.set(`${sub.video_author_username}-${sub.platform}`, sub.platform);
+              }
+            });
+
+            // Update campaign_account_analytics for each account
+            for (const [key, platform] of uniqueAccounts) {
+              const username = key.split('-')[0];
+              
+              const { data: analytics } = await supabase
+                .from('campaign_account_analytics')
+                .select('paid_views')
+                .eq('campaign_id', campaignId)
+                .eq('account_username', username)
+                .eq('platform', platform)
+                .single();
+
+              if (analytics) {
+                await supabase
+                  .from('campaign_account_analytics')
+                  .update({
+                    paid_views: (analytics.paid_views || 0) + totalViewsPaid,
+                    last_payment_amount: request.total_amount,
+                    last_payment_date: new Date().toISOString()
+                  })
+                  .eq('campaign_id', campaignId)
+                  .eq('account_username', username)
+                  .eq('platform', platform);
+              }
+            }
+          }
+        }
+      }
+
       toast.success(`Payout of $${request.total_amount.toFixed(2)} approved and sent to creator`);
       fetchPayoutRequests();
     } catch (error) {
