@@ -402,7 +402,7 @@ export function CampaignHomeTab({
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews)}</p>
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber((stats.paidViews + stats.unpaidViews) > 0 ? (stats.paidViews + stats.unpaidViews) : (metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews))}</p>
             </div>
             {/* Paid vs Unpaid Progress Bar */}
             {(stats.paidViews > 0 || stats.unpaidViews > 0) && (() => {
