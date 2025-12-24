@@ -350,7 +350,7 @@ export function BrandCampaignsTab({
           {/* Pending Applications Banner */}
           {pendingApplicationsCount > 0 && (
             <div 
-              className="mt-4 bg-[#1a1a1a] border border-[#3d3d3d] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#222] transition-colors"
+              className="mt-4 bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#222] transition-colors font-inter tracking-[-0.5px]"
               onClick={() => {
                 const newParams = new URLSearchParams(searchParams);
                 newParams.set("tab", "all-programs");
@@ -359,8 +359,8 @@ export function BrandCampaignsTab({
               }}
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <FileText className="w-5 h-5 text-amber-500" />
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <FileText className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">
@@ -374,7 +374,7 @@ export function BrandCampaignsTab({
               <Button 
                 variant="outline" 
                 size="sm"
-                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 shrink-0"
+                className="border-blue-500/50 text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0"
               >
                 Review applications
               </Button>
