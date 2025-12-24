@@ -291,7 +291,7 @@ export function CampaignApplicationsView({
       case 'rejected':
         return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-red-500/30 bg-red-500/10">Rejected</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-amber-500 border-amber-500/30 bg-amber-500/10">Pending</Badge>;
+        return <Badge variant="outline" className="text-xs font-inter font-medium tracking-[-0.5px] text-amber-500 border-0 bg-amber-500/10">Pending</Badge>;
     }
   };
 
