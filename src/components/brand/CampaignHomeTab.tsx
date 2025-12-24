@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
 import { toast } from "sonner";
@@ -404,34 +405,45 @@ export function CampaignHomeTab({
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews)}</p>
             </div>
             {/* Paid vs Unpaid Progress Bar */}
-            {(stats.paidViews > 0 || stats.unpaidViews > 0) && (
-              <div className="space-y-1.5">
-                <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex">
-                  {stats.paidViews > 0 && (
-                    <div 
-                      className="h-full bg-emerald-500 transition-all duration-300"
-                      style={{ width: `${(stats.paidViews / (stats.paidViews + stats.unpaidViews)) * 100}%` }}
-                    />
-                  )}
-                  {stats.unpaidViews > 0 && (
-                    <div 
-                      className="h-full bg-amber-500 transition-all duration-300"
-                      style={{ width: `${(stats.unpaidViews / (stats.paidViews + stats.unpaidViews)) * 100}%` }}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-[10px] text-muted-foreground tracking-[-0.5px]">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    {formatNumber(stats.paidViews)} paid
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    {formatNumber(stats.unpaidViews)} pending
-                  </span>
-                </div>
-              </div>
-            )}
+            {(stats.paidViews > 0 || stats.unpaidViews > 0) && (() => {
+              const total = stats.paidViews + stats.unpaidViews;
+              const paidPercent = total > 0 ? ((stats.paidViews / total) * 100).toFixed(1) : '0';
+              const pendingPercent = total > 0 ? ((stats.unpaidViews / total) * 100).toFixed(1) : '0';
+              return (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex cursor-pointer">
+                        {stats.paidViews > 0 && (
+                          <div 
+                            className="h-full bg-emerald-500 transition-all duration-300"
+                            style={{ width: `${paidPercent}%` }}
+                          />
+                        )}
+                        {stats.unpaidViews > 0 && (
+                          <div 
+                            className="h-full bg-amber-500 transition-all duration-300"
+                            style={{ width: `${pendingPercent}%` }}
+                          />
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">
+                      <div className="flex flex-col gap-1">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          {formatNumber(stats.paidViews)} paid ({paidPercent}%)
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-amber-500" />
+                          {formatNumber(stats.unpaidViews)} pending ({pendingPercent}%)
+                        </span>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              );
+            })()}
             {!(stats.paidViews > 0 || stats.unpaidViews > 0) && (
               <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
             )}
