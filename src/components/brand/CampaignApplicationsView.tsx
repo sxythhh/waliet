@@ -383,11 +383,6 @@ export function CampaignApplicationsView({
                             </span>
                           )}
                         </div>
-                        {isAllMode && app.campaign_title && (
-                          <p className="text-xs text-muted-foreground tracking-[-0.5px] truncate">
-                            {app.campaign_title}
-                          </p>
-                        )}
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                           {capitalizedTime}
                         </p>
