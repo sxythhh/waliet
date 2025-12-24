@@ -113,7 +113,7 @@ export function CampaignHomeTab({
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
-        const videoSubmissionsQuery = supabase.from('campaign_videos').select('id, status').eq('campaign_id', campaignId);
+        const videoSubmissionsQuery = supabase.from('video_submissions' as any).select('id, status').eq('campaign_id', campaignId);
         
         let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', { ascending: false }).limit(1);
         if (dateRange) {
@@ -164,7 +164,7 @@ export function CampaignHomeTab({
         const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
 
         // Process video submissions data
-        const videoSubmissionsData = videoSubmissionsResult.data || [];
+        const videoSubmissionsData = (videoSubmissionsResult.data || []) as unknown as { id: string; status: string }[];
         const totalSubmissions = videoSubmissionsData.length;
         const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
         
