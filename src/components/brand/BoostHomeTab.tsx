@@ -247,14 +247,14 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
       <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="p-4 rounded-lg bg-muted/50 dark:bg-muted/25 space-y-3">
+            <div key={i} className="p-4 rounded-lg bg-transparent space-y-3">
               <Skeleton className="h-4 w-28 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
               <Skeleton className="h-8 w-20 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
               <Skeleton className="h-3 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
             </div>
           ))}
         </div>
-        <div className="rounded-xl bg-muted/50 p-5 space-y-4">
+        <div className="rounded-xl bg-transparent p-5 space-y-4">
           <Skeleton className="h-5 w-20 bg-muted-foreground/15" />
           <div className="grid grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
@@ -266,7 +266,7 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
           </div>
           <Skeleton className="h-2 w-full bg-muted-foreground/15" />
         </div>
-        <div className="p-5 rounded-lg bg-muted/50 space-y-4">
+        <div className="p-5 rounded-lg bg-transparent space-y-4">
           <Skeleton className="h-5 w-40 bg-muted-foreground/15" />
           <Skeleton className="h-64 w-full bg-muted-foreground/15" />
         </div>
