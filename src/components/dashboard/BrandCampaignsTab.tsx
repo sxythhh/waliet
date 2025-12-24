@@ -12,10 +12,10 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
-import { Pencil, Plus, BarChart3, Lock, FileText } from "lucide-react";
+import { Pencil, Plus, BarChart3, Lock } from "lucide-react";
+import applicationsIcon from "@/assets/applications-animated.svg";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
-import emptyCampaignsImg from "@/assets/empty-campaigns-new.png";
 import stickyNoteIcon from "@/assets/sticky-note-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -350,17 +350,19 @@ export function BrandCampaignsTab({
           {/* Pending Applications Banner */}
           {pendingApplicationsCount > 0 && (
             <div 
-              className="mt-4 bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#222] transition-colors font-inter tracking-[-0.5px]"
+              className="mt-4 bg-popover/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-popover transition-colors font-inter tracking-[-0.5px]"
               onClick={() => {
                 const newParams = new URLSearchParams(searchParams);
-                newParams.set("tab", "all-programs");
-                newParams.set("programTab", "applications");
+                newParams.set("tab", "analytics");
+                newParams.set("subtab", "applications");
+                newParams.delete("campaign");
+                newParams.delete("boost");
                 setSearchParams(newParams);
               }}
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <FileText className="w-5 h-5 text-blue-500" />
+                  <img src={applicationsIcon} alt="Applications" className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">
@@ -375,10 +377,13 @@ export function BrandCampaignsTab({
                 variant="outline" 
                 size="sm"
                 className="border-transparent text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   const newParams = new URLSearchParams(searchParams);
-                  newParams.set("tab", "all-programs");
-                  newParams.set("programTab", "applications");
+                  newParams.set("tab", "analytics");
+                  newParams.set("subtab", "applications");
+                  newParams.delete("campaign");
+                  newParams.delete("boost");
                   setSearchParams(newParams);
                 }}
               >

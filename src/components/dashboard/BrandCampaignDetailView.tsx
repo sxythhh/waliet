@@ -109,6 +109,15 @@ export function BrandCampaignDetailView({
   const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+
+  useEffect(() => {
+    const subtab = searchParams.get("subtab");
+    if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts") {
+      setActiveDetailTab(subtab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const {
     isAdmin
   } = useAdminCheck();
@@ -405,7 +414,12 @@ export function BrandCampaignDetailView({
         {/* Tab Navigation */}
         <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
-            {detailTabs.map(tab => <button key={tab.id} onClick={() => setActiveDetailTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            {detailTabs.map(tab => <button key={tab.id} onClick={() => {
+              setActiveDetailTab(tab.id);
+              const newParams = new URLSearchParams(searchParams);
+              newParams.set("subtab", tab.id);
+              setSearchParams(newParams);
+            }} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
                     {tab.count}
