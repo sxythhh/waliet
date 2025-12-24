@@ -105,7 +105,31 @@ export function VideoSubmissionsTab({
   const isBoost = !!boostId;
   const entityId = isBoost ? boostId : campaign?.id;
 
-  // Calculate payout amount
+  // Calculate payout amount based on payment model
+  const getPayoutForSubmission = (submission: VideoSubmission) => {
+    // If payout_amount is already set, use it
+    if (submission.payout_amount !== null && submission.payout_amount !== undefined) {
+      return submission.payout_amount;
+    }
+    
+    // For boosts, calculate based on monthly retainer / videos per month
+    if (isBoost) {
+      return monthlyRetainer / videosPerMonth;
+    }
+    
+    // For campaigns
+    if (campaign?.payment_model === "pay_per_post") {
+      return campaign?.post_rate || 0;
+    }
+    
+    // For RPM-based campaigns, calculate based on views
+    if (campaign?.rpm_rate && submission.views) {
+      return (submission.views / 1000) * campaign.rpm_rate;
+    }
+    
+    return 0;
+  };
+  
   const payoutPerVideo = isBoost ? monthlyRetainer / videosPerMonth : campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
   const isPayPerPost = isBoost || campaign?.payment_model === "pay_per_post";
   const getPlatformLogo = (platform: string) => {
@@ -725,8 +749,8 @@ export function VideoSubmissionsTab({
                         </div>
 
                         {/* Bottom: Metrics Row */}
-                        <div className="flex items-center justify-between" style={{ fontFamily: 'Inter', letterSpacing: '-0.05em' }}>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground font-['Inter']" style={{ letterSpacing: '-0.05em' }}>
                             <div className="flex items-center gap-1">
                               <span className="font-medium text-foreground tabular-nums">{formatNumber(submission.views)}</span>
                               <span>views</span>
@@ -740,8 +764,8 @@ export function VideoSubmissionsTab({
                               <span>comments</span>
                             </div>
                           </div>
-                          <span className="text-sm font-semibold text-foreground">
-                            ${(submission.payout_amount || payoutPerVideo).toFixed(2)}
+                          <span className="text-sm font-semibold text-foreground font-['Inter'] tabular-nums">
+                            ${getPayoutForSubmission(submission).toFixed(2)}
                           </span>
                         </div>
                       </div>
