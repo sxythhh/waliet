@@ -198,6 +198,14 @@ export function VideoSubmissionsTab({
         }
       } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Optimistic update
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id 
+          ? { ...s, status: "approved", reviewed_at: new Date().toISOString(), reviewed_by: user.id }
+          : s
+      ));
+
       // Update unified video_submissions table
       const { error: updateError } = await supabase
         .from("video_submissions")
@@ -207,7 +215,14 @@ export function VideoSubmissionsTab({
           reviewed_by: user.id
         })
         .eq("id", submission.id);
-      if (updateError) throw updateError;
+      
+      if (updateError) {
+        // Revert on error
+        setSubmissions(prev => prev.map(s => 
+          s.id === submission.id ? { ...s, status: "pending", reviewed_at: null, reviewed_by: null } : s
+        ));
+        throw updateError;
+      }
 
       if (isBoost) {
         // Credit creator's wallet for boost
@@ -295,7 +310,6 @@ export function VideoSubmissionsTab({
         // Don't show error to user - tracking failure shouldn't affect approval
       }
       toast.success(isPayPerPost ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.` : "Video approved!");
-      fetchSubmissions();
       setSelectedSubmission(null);
       onSubmissionReviewed?.();
     } catch (error) {
@@ -312,6 +326,13 @@ export function VideoSubmissionsTab({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Optimistic update
+      setSubmissions(prev => prev.map(s => 
+        s.id === selectedSubmission.id 
+          ? { ...s, status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: user.id, rejection_reason: rejectionReason.trim() || null }
+          : s
+      ));
+
       // Update unified video_submissions table
       const { error } = await supabase
         .from("video_submissions")
@@ -322,10 +343,16 @@ export function VideoSubmissionsTab({
           rejection_reason: rejectionReason.trim() || null
         })
         .eq("id", selectedSubmission.id);
-      if (error) throw error;
+      
+      if (error) {
+        // Revert on error
+        setSubmissions(prev => prev.map(s => 
+          s.id === selectedSubmission.id ? { ...s, status: "pending", reviewed_at: null, reviewed_by: null, rejection_reason: null } : s
+        ));
+        throw error;
+      }
 
       toast.success("Video rejected");
-      fetchSubmissions();
       setRejectDialogOpen(false);
       setSelectedSubmission(null);
       setRejectionReason("");
@@ -342,6 +369,11 @@ export function VideoSubmissionsTab({
     try {
       const newFlagState = !submission.is_flagged;
       
+      // Optimistic update
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id ? { ...s, is_flagged: newFlagState } : s
+      ));
+
       // Update unified video_submissions table
       const { error } = await supabase
         .from("video_submissions")
@@ -350,10 +382,16 @@ export function VideoSubmissionsTab({
           updated_at: new Date().toISOString()
         })
         .eq("id", submission.id);
-      if (error) throw error;
+      
+      if (error) {
+        // Revert on error
+        setSubmissions(prev => prev.map(s => 
+          s.id === submission.id ? { ...s, is_flagged: !newFlagState } : s
+        ));
+        throw error;
+      }
 
       toast.success(newFlagState ? "Submission flagged" : "Flag removed");
-      fetchSubmissions();
     } catch (error) {
       console.error("Error flagging:", error);
       toast.error("Failed to flag submission");
@@ -368,6 +406,13 @@ export function VideoSubmissionsTab({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Optimistic update
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id 
+          ? { ...s, status: "pending", reviewed_at: null, reviewed_by: null }
+          : s
+      ));
+
       // Update status back to pending
       const { error } = await supabase
         .from("video_submissions")
@@ -378,10 +423,16 @@ export function VideoSubmissionsTab({
           updated_at: new Date().toISOString()
         })
         .eq("id", submission.id);
-      if (error) throw error;
+      
+      if (error) {
+        // Revert on error
+        setSubmissions(prev => prev.map(s => 
+          s.id === submission.id ? { ...s, status: "approved" } : s
+        ));
+        throw error;
+      }
 
       toast.success("Approval reverted to pending");
-      fetchSubmissions();
       onSubmissionReviewed?.();
     } catch (error) {
       console.error("Error reverting approval:", error);
