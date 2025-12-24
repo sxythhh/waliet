@@ -235,8 +235,10 @@ export function AllProgramsAnalytics({
       const formattedMetrics: MetricsData[] = sortedDates.map((dateKey, index) => {
         const data = metricsByDate.get(dateKey)!;
         const prevData = index > 0 ? metricsByDate.get(sortedDates[index - 1]) : null;
+        const dateObj = new Date(dateKey);
         return {
-          date: format(new Date(dateKey), 'MMM d'),
+          date: format(dateObj, 'MMM d'),
+          datetime: format(dateObj, 'MMM d, yyyy h:mm a'),
           views: data.views,
           likes: data.likes,
           shares: data.shares,

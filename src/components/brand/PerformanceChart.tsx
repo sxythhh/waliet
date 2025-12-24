@@ -6,6 +6,7 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, A
 
 export interface MetricsData {
   date: string;
+  datetime?: string; // Full datetime for tooltip
   views: number;
   likes: number;
   shares: number;
@@ -123,23 +124,26 @@ export function PerformanceChart({
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
               <XAxis 
                 dataKey="date" 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter', letterSpacing: '-0.5px' }} 
                 axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.3 }} 
                 tickLine={false} 
               />
               <YAxis 
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} 
+                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter', letterSpacing: '-0.5px' }} 
                 axisLine={false} 
                 tickLine={false} 
                 tickFormatter={value => formatNumber(value)} 
                 width={50} 
               />
               <Tooltip 
-                content={({ active, payload, label }) => {
+                content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
+                  // Use datetime if available, otherwise fall back to date
+                  const dataPoint = payload[0]?.payload as MetricsData;
+                  const displayLabel = dataPoint?.datetime || dataPoint?.date || '';
                   return (
                     <div className="bg-popover border border-border rounded-lg px-3 py-2.5 shadow-lg min-w-[140px]">
-                      <p className="text-sm font-medium text-foreground tracking-[-0.5px] mb-2">{label}</p>
+                      <p className="text-sm font-medium font-inter text-foreground tracking-[-0.5px] mb-2">{displayLabel}</p>
                       <div className="space-y-1.5">
                         {payload.map((entry: any) => {
                           const metricName = String(entry.dataKey).replace('daily', '').replace(/([A-Z])/g, ' $1').trim();
@@ -147,11 +151,11 @@ export function PerformanceChart({
                             <div key={entry.dataKey} className="flex items-center justify-between gap-6">
                               <div className="flex items-center gap-1.5">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-xs text-foreground tracking-[-0.5px] capitalize">
+                                <span className="text-xs font-inter text-foreground tracking-[-0.5px] capitalize">
                                   {metricName}
                                 </span>
                               </div>
-                              <span className="text-xs font-medium text-foreground tracking-[-0.5px]">
+                              <span className="text-xs font-medium font-inter text-foreground tracking-[-0.5px]">
                                 {Number(entry.value).toLocaleString()}
                               </span>
                             </div>
