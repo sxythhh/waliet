@@ -51,6 +51,8 @@ interface StatsData {
   payoutsChangePercent: number;
   totalSubmissions: number;
   approvedSubmissions: number;
+  paidViews: number;
+  unpaidViews: number;
 }
 
 const formatNumber = (num: number) => {
@@ -78,7 +80,9 @@ export function CampaignHomeTab({
     viewsChangePercent: 0,
     payoutsChangePercent: 0,
     totalSubmissions: 0,
-    approvedSubmissions: 0
+    approvedSubmissions: 0,
+    paidViews: 0,
+    unpaidViews: 0
   });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -122,14 +126,20 @@ export function CampaignHomeTab({
           .eq('source_type', 'campaign')
           .eq('source_id', campaignId);
         
+        // Query campaign_account_analytics for paid views data
+        const analyticsQuery = supabase
+          .from('campaign_account_analytics')
+          .select('total_views, paid_views')
+          .eq('campaign_id', campaignId);
+        
         let chartMetricsQuery = supabase.from('program_video_metrics').select('*').eq('source_type', 'campaign').eq('source_id', campaignId).order('recorded_at', { ascending: true });
         if (dateRange) {
           chartMetricsQuery = chartMetricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
         }
 
         // Execute ALL queries in parallel
-        const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, chartMetricsResult] = await Promise.all([
-          brandQuery, campaignQuery, allTransactionsQuery, videoSubmissionsQuery, chartMetricsQuery
+        const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, analyticsResult, chartMetricsResult] = await Promise.all([
+          brandQuery, campaignQuery, allTransactionsQuery, videoSubmissionsQuery, analyticsQuery, chartMetricsQuery
         ]);
         
         if (isCancelled) return;
@@ -207,6 +217,14 @@ export function CampaignHomeTab({
         const totalSubmissionsCount = filteredSubmissions.length;
         const approvedSubmissionsCount = approvedSubmissions.length;
         
+        // Calculate paid vs unpaid views from campaign_account_analytics
+        const analyticsData = analyticsResult.data || [];
+        const totalPaidViews = analyticsData.reduce((sum, a) => sum + (a.paid_views || 0), 0);
+        const totalAnalyticsViews = analyticsData.reduce((sum, a) => sum + (a.total_views || 0), 0);
+        // Use the larger of analytics total_views or our calculated totalViews for unpaid calculation
+        const baseViews = Math.max(totalAnalyticsViews, totalViews);
+        const unpaidViews = Math.max(0, baseViews - totalPaidViews);
+        
         setStats({
           totalViews,
           totalPayouts,
@@ -216,7 +234,9 @@ export function CampaignHomeTab({
           viewsChangePercent,
           payoutsChangePercent,
           totalSubmissions: totalSubmissionsCount,
-          approvedSubmissions: approvedSubmissionsCount
+          approvedSubmissions: approvedSubmissionsCount,
+          paidViews: totalPaidViews,
+          unpaidViews: unpaidViews
         });
 
         // Process chart metrics
@@ -383,7 +403,38 @@ export function CampaignHomeTab({
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews)}</p>
             </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
+            {/* Paid vs Unpaid Progress Bar */}
+            {(stats.paidViews > 0 || stats.unpaidViews > 0) && (
+              <div className="space-y-1.5">
+                <div className="h-2 w-full rounded-full bg-muted/30 overflow-hidden flex">
+                  {stats.paidViews > 0 && (
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-300"
+                      style={{ width: `${(stats.paidViews / (stats.paidViews + stats.unpaidViews)) * 100}%` }}
+                    />
+                  )}
+                  {stats.unpaidViews > 0 && (
+                    <div 
+                      className="h-full bg-amber-500 transition-all duration-300"
+                      style={{ width: `${(stats.unpaidViews / (stats.paidViews + stats.unpaidViews)) * 100}%` }}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    {formatNumber(stats.paidViews)} paid
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    {formatNumber(stats.unpaidViews)} pending
+                  </span>
+                </div>
+              </div>
+            )}
+            {!(stats.paidViews > 0 || stats.unpaidViews > 0) && (
+              <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
+            )}
           </div>
         </Card>
 
