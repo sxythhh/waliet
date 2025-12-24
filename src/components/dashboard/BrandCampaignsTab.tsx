@@ -326,24 +326,7 @@ export function BrandCampaignsTab({
           </div>
 
           {/* Summary Stats - Show when there are programs */}
-          {(campaigns.length > 0 || bounties.length > 0) && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-                <p className="text-xs text-muted-foreground mb-1">Active Campaigns</p>
-                <p className="text-2xl font-semibold">{activeCampaigns}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-                <p className="text-xs text-muted-foreground mb-1">Active Boosts</p>
-                <p className="text-2xl font-semibold">{bounties.filter(b => b.status === "active").length}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-                <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-                <p className="text-2xl font-semibold">${totalBudget.toLocaleString()}</p>
-              </div>
-              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-                <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
-                <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
-              </div>
-            </div>}
+          {campaigns.length > 0 || bounties.length > 0}
 
           {/* Pending Applications Banner */}
           {pendingApplicationsCount > 0 && <div className="mt-4 bg-popover/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-popover transition-colors font-inter tracking-[-0.5px]" onClick={() => {
