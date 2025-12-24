@@ -18,6 +18,7 @@ import creditCardIcon from "@/assets/credit-card-icon.svg";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import flagAmberIcon from "@/assets/flag-amber-icon.svg";
 
 interface PayoutRequest {
   id: string;
@@ -767,7 +768,8 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                             </Badge>
                           )}
                           {flaggedItems.length > 0 && (
-                            <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-xs">
+                            <Badge variant="outline" className="text-amber-500 border-transparent text-xs gap-1">
+                              <img src={flagAmberIcon} alt="" className="h-3 w-3" />
                               {flaggedItems.length} flagged
                             </Badge>
                           )}
