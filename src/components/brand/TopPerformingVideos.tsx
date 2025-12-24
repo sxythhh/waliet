@@ -22,8 +22,6 @@ export interface VideoData {
 interface TopPerformingVideosProps {
   videos: VideoData[];
   totalVideos: number;
-  hashtagsConfigured?: boolean;
-  hashtags?: string[];
 }
 
 const THUMBNAIL_BASE_URL = "https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails";
@@ -70,9 +68,7 @@ const getThumbnailUrl = (video: VideoData) => {
 
 export function TopPerformingVideos({ 
   videos, 
-  totalVideos, 
-  hashtagsConfigured = true,
-  hashtags = []
+  totalVideos
 }: TopPerformingVideosProps) {
   return (
     <div className="space-y-4">
@@ -133,15 +129,8 @@ export function TopPerformingVideos({
         </div>
       ) : (
         <Card className="p-8 bg-card/30 border-table-border">
-          <div className="text-center text-muted-foreground tracking-[-0.5px] space-y-2">
-            {!hashtagsConfigured ? (
-              <>
-                <p className="font-medium text-foreground">No Hashtags Configured</p>
-                <p>Add hashtags to your campaign settings to filter and track videos.</p>
-              </>
-            ) : (
-              <p>No videos found matching hashtags: {hashtags.join(', ')}</p>
-            )}
+          <div className="text-center text-muted-foreground tracking-[-0.5px]">
+            <p>No approved videos found yet</p>
           </div>
         </Card>
       )}

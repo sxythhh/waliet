@@ -249,31 +249,39 @@ export function CampaignHomeTab({
         }
         setIsLoading(false);
 
-        // Load top videos from cached data (non-blocking)
-        let videosQuery = supabase.from('cached_campaign_videos').select('*', { count: 'exact' }).eq('campaign_id', campaignId).order('views', { ascending: false }).limit(3);
-        if (dateRange) {
-          videosQuery = videosQuery.gte('uploaded_at', dateRange.start.toISOString()).lte('uploaded_at', dateRange.end.toISOString());
-        }
-        
-        videosQuery.then(({ data: cachedVideos, count, error }) => {
-          if (isCancelled) return;
-          if (!error && cachedVideos) {
-            const mappedVideos: VideoData[] = cachedVideos.map(v => ({
-              ad_id: v.shortimize_video_id,
-              username: v.username,
-              platform: v.platform,
-              ad_link: v.video_url || '',
-              uploaded_at: v.uploaded_at || '',
-              title: v.title || v.caption || '',
-              latest_views: v.views || 0,
-              latest_likes: v.likes || 0,
-              latest_comments: v.comments || 0,
-              latest_shares: v.shares || 0
-            }));
-            setTopVideos(mappedVideos);
-            setTotalVideos(count || 0);
-          }
-        });
+        // Load top videos from video_submissions sorted by views (non-blocking)
+        supabase
+          .from('video_submissions')
+          .select('id, video_url, platform, views, likes, comments, shares, submitted_at, creator_id', { count: 'exact' })
+          .eq('source_type', 'campaign')
+          .eq('source_id', campaignId)
+          .eq('status', 'approved')
+          .order('views', { ascending: false, nullsFirst: false })
+          .limit(3)
+          .then(async ({ data: submissions, count, error }) => {
+            if (isCancelled) return;
+            if (!error && submissions && submissions.length > 0) {
+              // Fetch usernames for the creators
+              const userIds = [...new Set(submissions.map(s => s.creator_id))];
+              const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds);
+              const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
+              
+              const mappedVideos: VideoData[] = submissions.map(v => ({
+                ad_id: v.id,
+                username: profileMap.get(v.creator_id) || 'Unknown',
+                platform: v.platform || 'tiktok',
+                ad_link: v.video_url || '',
+                uploaded_at: v.submitted_at || '',
+                title: '',
+                latest_views: v.views || 0,
+                latest_likes: v.likes || 0,
+                latest_comments: v.comments || 0,
+                latest_shares: v.shares || 0
+              }));
+              setTopVideos(mappedVideos);
+              setTotalVideos(count || 0);
+            }
+          });
       } catch (error) {
         console.error('Error fetching home data:', error);
         if (!isCancelled) setIsLoading(false);
@@ -423,8 +431,6 @@ export function CampaignHomeTab({
       <TopPerformingVideos
         videos={topVideos}
         totalVideos={totalVideos}
-        hashtagsConfigured={campaignHashtags.length > 0}
-        hashtags={campaignHashtags}
       />
     </div>
   );
