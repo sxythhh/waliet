@@ -297,6 +297,10 @@ export function SubmitVideoDialog({
           likes: videoDetails.likes || 0,
           comments: videoDetails.comments || 0,
           shares: videoDetails.shares || 0,
+          video_description: videoDetails.description || null,
+          video_thumbnail_url: videoDetails.coverUrl || null,
+          video_author_username: videoDetails.authorUsername || null,
+          video_author_avatar: videoDetails.authorAvatar || null,
         })
       });
 

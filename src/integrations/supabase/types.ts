@@ -2621,6 +2621,10 @@ export type Database = {
           submission_notes: string | null
           submitted_at: string | null
           updated_at: string | null
+          video_author_avatar: string | null
+          video_author_username: string | null
+          video_description: string | null
+          video_thumbnail_url: string | null
           video_url: string
           views: number | null
         }
@@ -2649,6 +2653,10 @@ export type Database = {
           submission_notes?: string | null
           submitted_at?: string | null
           updated_at?: string | null
+          video_author_avatar?: string | null
+          video_author_username?: string | null
+          video_description?: string | null
+          video_thumbnail_url?: string | null
           video_url: string
           views?: number | null
         }
@@ -2677,6 +2685,10 @@ export type Database = {
           submission_notes?: string | null
           submitted_at?: string | null
           updated_at?: string | null
+          video_author_avatar?: string | null
+          video_author_username?: string | null
+          video_description?: string | null
+          video_thumbnail_url?: string | null
           video_url?: string
           views?: number | null
         }
