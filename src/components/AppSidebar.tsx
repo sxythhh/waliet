@@ -28,6 +28,8 @@ import educationInactive from "@/assets/education-inactive.svg";
 import educationActive from "@/assets/education-active.svg";
 import scopeInactive from "@/assets/scope-inactive.svg";
 import scopeActive from "@/assets/scope-active.svg";
+import campaignsInactive from "@/assets/campaigns-inactive.svg";
+import campaignsActive from "@/assets/campaigns-active.svg";
 import nutFillIcon from "@/assets/nut-fill.svg";
 import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
@@ -87,9 +89,9 @@ const brandMenuItems = [{
   tab: "campaigns",
   icon: null as any
 }, {
-  title: "Manage",
+  title: "Campaigns",
   tab: "analytics",
-  icon: LayoutDashboard
+  icon: null as any
 }, {
   title: "Blueprints",
   tab: "blueprints",
@@ -588,6 +590,9 @@ export function AppSidebar() {
                     </div> : item.tab === "education" ? <div className="relative h-[24px] w-[24px]">
                       <img src={educationInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={educationActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "analytics" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={campaignsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={campaignsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
                   {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
