@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2, Ban, Shield, LogIn } from "lucide-react";
+import { Users as UsersIcon, Clock, CheckCircle2, XCircle, AlertCircle, Wallet, Globe, Mail, Copy, Minus, Trash2, Diamond, ExternalLink, CreditCard, TrendingUp, TrendingDown, DollarSign, Link2, Ban, Shield, LogIn, Plus } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -155,6 +156,13 @@ export function UserDetailsDialog({
   const [existingBan, setExistingBan] = useState<any>(null);
   const [loadingBan, setLoadingBan] = useState(false);
   const [isImpersonating, setIsImpersonating] = useState(false);
+  
+  // Admin link account state
+  const [linkAccountDialogOpen, setLinkAccountDialogOpen] = useState(false);
+  const [linkPlatform, setLinkPlatform] = useState<string>("tiktok");
+  const [linkUsername, setLinkUsername] = useState("");
+  const [linkFollowerCount, setLinkFollowerCount] = useState("");
+  const [isLinkingAccount, setIsLinkingAccount] = useState(false);
 
   // Fetch existing IP ban status when dialog opens
   useEffect(() => {
@@ -332,6 +340,60 @@ export function UserDetailsDialog({
       });
     } finally {
       setDeletingAccountId(null);
+    }
+  };
+
+  // Admin link account function - bypasses verification
+  const handleAdminLinkAccount = async () => {
+    if (!user?.id || !linkUsername.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a username",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLinkingAccount(true);
+    try {
+      // Generate account link based on platform
+      const accountLink = linkPlatform === 'tiktok' 
+        ? `https://www.tiktok.com/@${linkUsername.replace('@', '')}`
+        : linkPlatform === 'instagram'
+        ? `https://www.instagram.com/${linkUsername.replace('@', '')}`
+        : `https://www.youtube.com/@${linkUsername.replace('@', '')}`;
+
+      const { error } = await supabase.from("social_accounts").insert({
+        user_id: user.id,
+        platform: linkPlatform,
+        username: linkUsername.replace('@', ''),
+        account_link: accountLink,
+        follower_count: linkFollowerCount ? parseInt(linkFollowerCount) : null,
+        is_verified: true, // Admin-verified
+        connected_at: new Date().toISOString()
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Account Linked",
+        description: `Successfully linked @${linkUsername} to this user`
+      });
+
+      setLinkAccountDialogOpen(false);
+      setLinkUsername("");
+      setLinkFollowerCount("");
+      setLinkPlatform("tiktok");
+      onBalanceUpdated?.(); // This will refresh the social accounts
+    } catch (error: any) {
+      console.error("Error linking account:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to link account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLinkingAccount(false);
     }
   };
   const handleBalanceAdjustment = async () => {
@@ -531,12 +593,33 @@ export function UserDetailsDialog({
 
           {/* Accounts Tab */}
           <TabsContent value="accounts" className="mt-0 p-6 pt-4">
-            <ScrollArea className="h-[280px]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground">Connected social accounts</span>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
+                onClick={() => setLinkAccountDialogOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Link Account
+              </Button>
+            </div>
+            <ScrollArea className="h-[250px]">
               {loadingSocialAccounts ? <div className="flex items-center justify-center h-full text-muted-foreground">
                   Loading...
                 </div> : socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                   <Link2 className="w-8 h-8 mb-2 opacity-50" />
                   <p className="text-sm font-inter" style={{ letterSpacing: '-0.5px' }}>No connected accounts</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="mt-3 text-xs gap-1 border-0 bg-[#111]"
+                    onClick={() => setLinkAccountDialogOpen(true)}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Link Account
+                  </Button>
                 </div> : <div className="space-y-3">
                   {socialAccounts.map(account => {
                 // Sort submissions by date descending
@@ -1020,6 +1103,79 @@ export function UserDetailsDialog({
               </Button>
               <Button onClick={handleBalanceAdjustment} disabled={isSubmitting}>
                 {isSubmitting ? "Processing..." : "Subtract"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Admin Link Account Dialog */}
+        <Dialog open={linkAccountDialogOpen} onOpenChange={setLinkAccountDialogOpen}>
+          <DialogContent className="bg-[#0a0a0a] border-0">
+            <DialogHeader>
+              <DialogTitle className="font-inter tracking-[-0.5px]">Link Social Account</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Platform</Label>
+                <Select value={linkPlatform} onValueChange={setLinkPlatform}>
+                  <SelectTrigger className="bg-[#111] border-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tiktok">
+                      <div className="flex items-center gap-2">
+                        <img src={tiktokLogo} alt="TikTok" className="h-4 w-4" />
+                        TikTok
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="instagram">
+                      <div className="flex items-center gap-2">
+                        <img src={instagramLogo} alt="Instagram" className="h-4 w-4" />
+                        Instagram
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="youtube">
+                      <div className="flex items-center gap-2">
+                        <img src={youtubeLogo} alt="YouTube" className="h-4 w-4" />
+                        YouTube
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="link-username">Username</Label>
+                <Input 
+                  id="link-username" 
+                  placeholder="@username" 
+                  value={linkUsername} 
+                  onChange={e => setLinkUsername(e.target.value)} 
+                  className="bg-[#111] border-0" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="link-followers">Follower Count (Optional)</Label>
+                <Input 
+                  id="link-followers" 
+                  type="number" 
+                  placeholder="10000" 
+                  value={linkFollowerCount} 
+                  onChange={e => setLinkFollowerCount(e.target.value)} 
+                  className="bg-[#111] border-0" 
+                />
+              </div>
+              <div className="p-3 bg-[#111] rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <span className="text-amber-400 font-medium">Admin Override:</span> This will bypass the normal verification process and immediately link the account to this user.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setLinkAccountDialogOpen(false)} disabled={isLinkingAccount} className="border-0 bg-[#111]">
+                Cancel
+              </Button>
+              <Button onClick={handleAdminLinkAccount} disabled={isLinkingAccount || !linkUsername.trim()}>
+                {isLinkingAccount ? "Linking..." : "Link Account"}
               </Button>
             </DialogFooter>
           </DialogContent>
