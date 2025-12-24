@@ -300,7 +300,7 @@ export function CampaignApplicationsView({ campaignId, boostId, onApplicationRev
                     className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
                     {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
-                      <div className="h-9 w-9 rounded-lg bg-background flex items-center justify-center">
+                      <div className="h-9 w-9 rounded-lg flex items-center justify-center">
                         <img 
                           src={PLATFORM_LOGOS[selectedApp.platform]} 
                           alt={selectedApp.platform}
@@ -315,7 +315,7 @@ export function CampaignApplicationsView({ campaignId, boostId, onApplicationRev
                           if (!url) return "Unknown";
                           // Extract username from URL
                           const match = url.match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/(@?[\w.-]+)/i);
-                          return match ? (match[1].startsWith('@') ? match[1] : `@${match[1]}`) : url;
+                          return match ? match[1].replace(/^@/, '') : url;
                         })()}
                       </p>
                       <p className="text-xs text-muted-foreground tracking-[-0.2px] capitalize">
