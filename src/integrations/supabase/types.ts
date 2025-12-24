@@ -2632,6 +2632,10 @@ export type Database = {
       submission_payout_items: {
         Row: {
           amount: number
+          clawback_reason: string | null
+          clawback_status: string | null
+          clawed_back_at: string | null
+          clawed_back_by: string | null
           created_at: string
           flag_reason: string | null
           flagged_at: string | null
@@ -2645,6 +2649,10 @@ export type Database = {
         }
         Insert: {
           amount: number
+          clawback_reason?: string | null
+          clawback_status?: string | null
+          clawed_back_at?: string | null
+          clawed_back_by?: string | null
           created_at?: string
           flag_reason?: string | null
           flagged_at?: string | null
@@ -2658,6 +2666,10 @@ export type Database = {
         }
         Update: {
           amount?: number
+          clawback_reason?: string | null
+          clawback_status?: string | null
+          clawed_back_at?: string | null
+          clawed_back_by?: string | null
           created_at?: string
           flag_reason?: string | null
           flagged_at?: string | null
