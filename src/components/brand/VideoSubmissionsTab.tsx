@@ -7,7 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { isSameDay } from "date-fns";
 import { toast } from "sonner";
@@ -99,6 +100,7 @@ export function VideoSubmissionsTab({
   const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected" | "flagged">("all");
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
 
   // Determine if this is a boost or campaign
@@ -592,6 +594,24 @@ export function VideoSubmissionsTab({
                   </button>)}
               </div>
 
+              {/* View Toggle */}
+              <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  title="Card view"
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  title="Table view"
+                >
+                  <TableIcon className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
               {/* Sort By */}
               <div className="flex items-center gap-1 ml-auto">
                 <span className="text-[10px] text-muted-foreground tracking-[-0.5px]">Sort:</span>
@@ -653,14 +673,157 @@ export function VideoSubmissionsTab({
                       </p>
                     </div>;
               }
+              const formatNumber = (num: number | null | undefined) => {
+                if (!num) return '—';
+                if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+                if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+                return num.toString();
+              };
+
+              // Table View
+              if (viewMode === "table") {
+                return (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border/40">
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Creator</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Platform</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Submitted</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSubs.map(submission => {
+                        const profile = profiles[submission.user_id];
+                        return (
+                          <TableRow key={submission.id} className="hover:bg-muted/30 border-border/30">
+                            <TableCell className="max-w-[200px]">
+                              <a 
+                                href={submission.video_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline"
+                              >
+                                {submission.video_title || submission.video_description || "Untitled Video"}
+                              </a>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1.5">
+                                {submission.video_author_avatar ? (
+                                  <img src={submission.video_author_avatar} alt="" className="h-4 w-4 rounded-full" />
+                                ) : (
+                                  <Avatar className="h-4 w-4">
+                                    <AvatarImage src={profile?.avatar_url || undefined} />
+                                    <AvatarFallback className="text-[8px]">
+                                      {profile?.username?.[0]?.toUpperCase() || "?"}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                )}
+                                <span className="text-xs text-muted-foreground">
+                                  @{submission.video_author_username || profile?.username}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center">
+                                <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                submission.status === "approved" 
+                                  ? "bg-emerald-500/10 text-emerald-500" 
+                                  : submission.status === "rejected" 
+                                    ? "bg-red-500/10 text-red-500" 
+                                    : "bg-amber-500/10 text-amber-500"
+                              }`}>
+                                {submission.status === "approved" && <Check className="h-3 w-3" />}
+                                {submission.status === "rejected" && <X className="h-3 w-3" />}
+                                {submission.status === "pending" && <Clock className="h-3 w-3" />}
+                                {submission.status}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-xs font-medium tabular-nums">{formatNumber(submission.views)}</span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-xs font-medium tabular-nums">{formatNumber(submission.likes)}</span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-xs font-medium tabular-nums">{formatNumber(submission.comments)}</span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <span className="text-xs font-semibold tabular-nums">${getPayoutForSubmission(submission).toFixed(2)}</span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center justify-center gap-1">
+                                {submission.status === "pending" && (
+                                  <>
+                                    <button
+                                      className="p-1 rounded hover:bg-red-500/10 text-red-400 transition-colors disabled:opacity-50"
+                                      onClick={() => {
+                                        setSelectedSubmission(submission);
+                                        setRejectDialogOpen(true);
+                                      }}
+                                      disabled={processing}
+                                      title="Reject"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      className={`p-1 rounded transition-colors disabled:opacity-50 ${
+                                        submission.is_flagged ? "bg-orange-500/10 text-orange-400" : "hover:bg-orange-500/10 text-orange-400"
+                                      }`}
+                                      onClick={() => handleFlag(submission)}
+                                      disabled={processing}
+                                      title={submission.is_flagged ? "Flagged" : "Flag"}
+                                    >
+                                      <img alt="" className="h-3.5 w-3.5" src={flagIcon} />
+                                    </button>
+                                    <button
+                                      className="p-1 rounded hover:bg-emerald-500/10 text-emerald-400 transition-colors disabled:opacity-50"
+                                      onClick={() => handleApprove(submission)}
+                                      disabled={processing}
+                                      title="Approve"
+                                    >
+                                      <Check className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                                {submission.status === "approved" && (
+                                  <button
+                                    className="p-1 rounded hover:bg-muted/50 text-muted-foreground transition-colors disabled:opacity-50"
+                                    onClick={() => handleRevertApproval(submission)}
+                                    disabled={processing}
+                                    title="Revert to Pending"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                );
+              }
+
+              // Card View (existing)
               return filteredSubs.map(submission => {
                 const profile = profiles[submission.user_id];
-                const formatNumber = (num: number | null | undefined) => {
-                  if (!num) return '—';
-                  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-                  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-                  return num.toString();
-                };
                 return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
                     {/* Main Content - Horizontal Layout */}
                     <div className="flex gap-4 p-4">
