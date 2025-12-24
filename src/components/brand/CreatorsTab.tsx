@@ -549,14 +549,11 @@ export function CreatorsTab({
     const query = searchQuery.toLowerCase();
     const matchesSearch = creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
     const matchesCampaign = campaignFilter === 'all' || creator.campaigns.some(c => c.id === campaignFilter);
-    
+
     // Membership filter logic
     let matchesMembership = true;
     if (membershipFilter !== 'all') {
-      const relevantCampaigns = campaignFilter === 'all' 
-        ? creator.campaigns 
-        : creator.campaigns.filter(c => c.id === campaignFilter);
-      
+      const relevantCampaigns = campaignFilter === 'all' ? creator.campaigns : creator.campaigns.filter(c => c.id === campaignFilter);
       if (membershipFilter === 'active') {
         // Active: campaigns without status (regular campaigns are active) or accepted boost applications
         matchesMembership = relevantCampaigns.some(c => !c.status || c.status === 'accepted');
@@ -565,7 +562,6 @@ export function CreatorsTab({
         matchesMembership = relevantCampaigns.some(c => c.status === 'pending');
       }
     }
-    
     return matchesSearch && matchesCampaign && matchesMembership;
   });
   const removeFromCampaign = async (creatorId: string, campaign: CreatorCampaign) => {
@@ -934,7 +930,7 @@ export function CreatorsTab({
                   </SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={membershipFilter} onValueChange={(v) => setMembershipFilter(v as MembershipFilter)}>
+            <Select value={membershipFilter} onValueChange={v => setMembershipFilter(v as MembershipFilter)}>
               <SelectTrigger className="h-9 bg-muted/30 border-transparent text-sm flex-1">
                 <SelectValue placeholder="All members" />
               </SelectTrigger>
@@ -1059,19 +1055,7 @@ export function CreatorsTab({
               </div>
 
               {/* Social Accounts */}
-              <div>
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
-                <div className="space-y-1.5">
-                  {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
-                      <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-medium truncate block">{account.username}</span>
-                        {account.follower_count && account.follower_count > 0 && <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>}
-                      </div>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                    </div>)}
-                </div>
-              </div>
+              
 
               {/* Campaigns */}
               <div>
