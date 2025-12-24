@@ -330,9 +330,7 @@ export function CampaignApplicationsView({
                           <p className="font-medium tracking-[-0.5px] truncate">
                             {app.profile?.full_name || app.profile?.username || "Unknown"}
                           </p>
-                          {app.status !== 'pending' && <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${app.status === 'approved' || app.status === 'accepted' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
-                              {app.status === 'approved' || app.status === 'accepted' ? 'Approved' : 'Rejected'}
-                            </span>}
+                          {app.status !== 'pending'}
                         </div>
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                           {capitalizedTime}
@@ -387,22 +385,16 @@ export function CampaignApplicationsView({
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
                       {/* Trust & Audience Scores */}
-                      {(selectedApp.profile?.trust_score !== null || selectedApp.profile?.audience_quality_score !== null) && (
-                        <div className="flex items-center gap-2 pt-1">
-                          {selectedApp.profile?.trust_score !== null && (
-                            <div className="flex items-center gap-1 text-xs text-emerald-500">
+                      {(selectedApp.profile?.trust_score !== null || selectedApp.profile?.audience_quality_score !== null) && <div className="flex items-center gap-2 pt-1">
+                          {selectedApp.profile?.trust_score !== null && <div className="flex items-center gap-1 text-xs text-emerald-500">
                               <Shield className="h-3 w-3" />
                               <span>{selectedApp.profile.trust_score}%</span>
-                            </div>
-                          )}
-                          {selectedApp.profile?.audience_quality_score !== null && (
-                            <div className="flex items-center gap-1 text-xs text-blue-500">
+                            </div>}
+                          {selectedApp.profile?.audience_quality_score !== null && <div className="flex items-center gap-1 text-xs text-blue-500">
                               <Users className="h-3 w-3" />
                               <span>{selectedApp.profile.audience_quality_score}%</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                            </div>}
+                        </div>}
                     </div>
                   </div>
                   {getStatusBadge(selectedApp.status)}
