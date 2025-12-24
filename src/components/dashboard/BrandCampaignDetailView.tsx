@@ -373,19 +373,6 @@ export function BrandCampaignDetailView({
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Copy Invite URL - only when specific entity selected */}
-            {!isAllMode && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-1.5 h-8 text-xs px-2 sm:px-3"
-                onClick={handleCopyInviteUrl}
-              >
-                <Copy className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Copy URL</span>
-              </Button>
-            )}
-
             {/* Timeframe selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -408,19 +395,6 @@ export function BrandCampaignDetailView({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Top Up button (boosts only) */}
-            {isBoost && !isAllMode && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-2 sm:px-3"
-                onClick={() => setTopUpDialogOpen(true)}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Top Up</span>
-              </Button>
-            )}
-
             {/* Edit button - only when specific entity selected */}
             {!isAllMode && (
               <Button
@@ -431,14 +405,6 @@ export function BrandCampaignDetailView({
               >
                 <Pencil className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
-              </Button>
-            )}
-
-            {/* Top Up Budget (campaigns only) */}
-            {!isBoost && !isAllMode && (
-              <Button size="sm" className="gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3">
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Top Up Budget</span>
               </Button>
             )}
           </div>
