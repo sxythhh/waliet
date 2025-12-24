@@ -48,6 +48,7 @@ interface PayoutItem {
   status?: string;
   approved_at?: string | null;
   approved_by?: string | null;
+  views_at_request?: number | null;  // Snapshot of unpaid views when payout was requested
   video_submission?: {
     video_url: string;
     video_title: string | null;
@@ -58,6 +59,7 @@ interface PayoutItem {
     views: number | null;
     likes: number | null;
     video_author_username: string | null;
+    paid_views?: number | null;
   };
 }
 
@@ -284,7 +286,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
       const itemSubmissionIds = [...new Set(itemsData.map(item => item.submission_id))];
       const { data: videoSubmissions } = await supabase
         .from('video_submissions')
-        .select('id, video_url, video_title, video_description, video_thumbnail_url, video_author_avatar, platform, views, likes, video_author_username')
+        .select('id, video_url, video_title, video_description, video_thumbnail_url, video_author_avatar, platform, views, likes, video_author_username, paid_views')
         .in('id', itemSubmissionIds);
 
       // Fetch the payout requests
@@ -532,14 +534,31 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       if (txError) throw txError;
 
-      // Update video_submissions payout_status to 'paid' for only the approved submissions
-      const { error: payoutStatusError } = await supabase
-        .from('video_submissions')
-        .update({ payout_status: 'paid' })
-        .in('id', submissionIds);
-      
-      if (payoutStatusError) {
-        console.error('Error updating payout_status to paid:', payoutStatusError);
+      // Update video_submissions: increment paid_views and set payout_status back to 'available'
+      // This allows the video to accrue more views and be paid out again
+      for (const item of filteredItems) {
+        const viewsToAdd = item.views_at_request || 0;
+        
+        // Get current paid_views
+        const { data: currentSub } = await supabase
+          .from('video_submissions')
+          .select('paid_views')
+          .eq('id', item.submission_id)
+          .single();
+        
+        const newPaidViews = (currentSub?.paid_views || 0) + viewsToAdd;
+        
+        const { error: updateSubError } = await supabase
+          .from('video_submissions')
+          .update({ 
+            paid_views: newPaidViews,
+            payout_status: 'available'  // Keep available for future payouts
+          })
+          .eq('id', item.submission_id);
+        
+        if (updateSubError) {
+          console.error('Error updating paid_views:', updateSubError);
+        }
       }
 
       // Update boost budget_used if this is a boost payout

@@ -2649,6 +2649,7 @@ export type Database = {
           source_type: string
           status: string | null
           submission_id: string
+          views_at_request: number | null
         }
         Insert: {
           amount: number
@@ -2669,6 +2670,7 @@ export type Database = {
           source_type: string
           status?: string | null
           submission_id: string
+          views_at_request?: number | null
         }
         Update: {
           amount?: number
@@ -2689,6 +2691,7 @@ export type Database = {
           source_type?: string
           status?: string | null
           submission_id?: string
+          views_at_request?: number | null
         }
         Relationships: [
           {
@@ -2767,6 +2770,7 @@ export type Database = {
           is_flagged: boolean | null
           likes: number | null
           metrics_updated_at: string | null
+          paid_views: number
           payout_amount: number | null
           payout_status: string | null
           platform: string | null
@@ -2803,6 +2807,7 @@ export type Database = {
           is_flagged?: boolean | null
           likes?: number | null
           metrics_updated_at?: string | null
+          paid_views?: number
           payout_amount?: number | null
           payout_status?: string | null
           platform?: string | null
@@ -2839,6 +2844,7 @@ export type Database = {
           is_flagged?: boolean | null
           likes?: number | null
           metrics_updated_at?: string | null
+          paid_views?: number
           payout_amount?: number | null
           payout_status?: string | null
           platform?: string | null
