@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, ExternalLink, Video, DollarSign, ChevronRight, Search, CalendarDays } from "lucide-react";
+import { Check, X, ExternalLink, DollarSign, ChevronRight, Search, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { isSameDay } from "date-fns";
 import { toast } from "sonner";
@@ -400,7 +400,7 @@ export function VideoSubmissionsTab({
               });
               if (filteredCreators.length === 0) {
                 return <div className="text-center py-8 text-muted-foreground">
-                      <Video className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      
                       <p className="text-sm font-inter tracking-[-0.5px]">
                         {userSearchQuery ? "No users found" : "No submissions yet"}
                       </p>
