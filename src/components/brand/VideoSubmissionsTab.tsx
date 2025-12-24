@@ -1034,8 +1034,8 @@ export function VideoSubmissionsTab({
                         </button>
                       </div>}
 
-                    {/* Revert action for approved submissions */}
-                    {submission.status === "approved" && <div className="flex border-t border-border/30">
+                    {/* Revert action for approved or rejected submissions */}
+                    {(submission.status === "approved" || submission.status === "rejected") && <div className="flex border-t border-border/30">
                         <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors tracking-[-0.5px] disabled:opacity-50" onClick={() => handleRevertApproval(submission)} disabled={processing}>
                           <RotateCcw className="h-3.5 w-3.5" />
                           Revert to Pending
