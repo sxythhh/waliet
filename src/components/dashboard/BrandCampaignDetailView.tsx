@@ -304,12 +304,14 @@ export function BrandCampaignDetailView({
     });
   }
 
-  // Payouts tab (for campaigns, boosts, and all mode)
-  detailTabs.push({
-    id: "payouts",
-    label: "Payouts",
-    icon: DollarSign
-  });
+  // Payouts tab (for campaigns and boosts only, not in all mode)
+  if (!isAllMode) {
+    detailTabs.push({
+      id: "payouts",
+      label: "Payouts",
+      icon: DollarSign
+    });
+  }
 
   // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
