@@ -449,7 +449,7 @@ export function BrandCampaignsTab({
               const budgetPercentage = Number(campaign.budget) > 0 ? usedBudget / Number(campaign.budget) * 100 : 0;
               return <Card key={`campaign-${campaign.id}`} className="group bg-card transition-all duration-300 flex flex-col overflow-hidden cursor-pointer" onClick={() => handleCampaignClick(campaign)}>
                           <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                            {campaign.banner_url ? <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                            {campaign.banner_url ? <OptimizedImage src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-transparent flex items-center justify-center">
                                 <span className="text-muted-foreground/50 text-xs font-medium font-['Inter'] tracking-[-0.5px]">
                                   No Banner
                                 </span>
