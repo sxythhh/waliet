@@ -83,6 +83,10 @@ All colors MUST be HSL.
     --accent: 235 86% 65%;
     --accent-foreground: 0 0% 100%;
 
+    /* Skeleton */
+    --skeleton-1: 0 0% 92%;
+    --skeleton-2: 0 0% 96%;
+
     /* Success: Green */
     --success: 145 63% 49%;
     --success-foreground: 0 0% 100%;
@@ -121,7 +125,7 @@ All colors MUST be HSL.
     /* Shadows */
     --shadow-glow: 0 4px 24px -1px hsl(235 86% 65% / 0.1);
     --shadow-card: 0 1px 3px 0 hsl(0 0% 0% / 0.1);
-    
+
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -150,6 +154,10 @@ All colors MUST be HSL.
 
     --accent: 235 86% 65%;
     --accent-foreground: 0 0% 100%;
+
+    /* Skeleton (requested: #0a0a0a + #0e0e0e) */
+    --skeleton-1: 0 0% 4%;
+    --skeleton-2: 0 0% 6%;
 
     /* Success: Green */
     --success: 145 63% 49%;
@@ -187,6 +195,28 @@ All colors MUST be HSL.
     /* Shadows */
     --shadow-glow: 0 0 40px hsl(235 86% 65% / 0.2);
     --shadow-card: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
+  }
+}
+
+@layer utilities {
+  @keyframes skeleton-shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .skeleton-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      hsl(var(--skeleton-1)),
+      hsl(var(--skeleton-2)),
+      hsl(var(--skeleton-1))
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.2s ease-in-out infinite;
   }
 }
 
