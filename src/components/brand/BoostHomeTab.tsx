@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
+import { PerformanceChart, MetricsData } from "./PerformanceChart";
+import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
 
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 
@@ -83,7 +85,11 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
     acceptedCreators: boost.accepted_creators_count,
     maxCreators: boost.max_accepted_creators
   });
+  const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
+  const [topVideos, setTopVideos] = useState<VideoData[]>([]);
+  const [totalVideos, setTotalVideos] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -100,7 +106,7 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
         // Fetch video submissions for this boost
         const { data: submissions } = await supabase
           .from('boost_video_submissions')
-          .select('id, status, payout_amount, submitted_at')
+          .select('id, status, payout_amount, submitted_at, video_url, platform, user_id')
           .eq('bounty_campaign_id', boost.id);
 
         // Fetch wallet transactions for payouts
@@ -145,6 +151,75 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
           acceptedCreators: boost.accepted_creators_count,
           maxCreators: boost.max_accepted_creators
         });
+
+        // Build mock metrics data from submissions (grouped by date)
+        const metricsMap = new Map<string, { views: number; likes: number; shares: number; bookmarks: number; videos: number }>();
+        
+        submissionsData.forEach(sub => {
+          if (sub.submitted_at) {
+            const dateKey = format(new Date(sub.submitted_at), 'MMM d');
+            const existing = metricsMap.get(dateKey) || { views: 0, likes: 0, shares: 0, bookmarks: 0, videos: 0 };
+            existing.videos += 1;
+            metricsMap.set(dateKey, existing);
+          }
+        });
+
+        // Convert to array and add daily calculations
+        const sortedDates = Array.from(metricsMap.entries()).sort((a, b) => 
+          new Date(a[0]).getTime() - new Date(b[0]).getTime()
+        );
+
+        let cumulativeVideos = 0;
+        const formattedMetrics: MetricsData[] = sortedDates.map(([date, data]) => {
+          cumulativeVideos += data.videos;
+          return {
+            date,
+            views: 0,
+            likes: 0,
+            shares: 0,
+            bookmarks: 0,
+            videos: cumulativeVideos,
+            dailyViews: 0,
+            dailyLikes: 0,
+            dailyShares: 0,
+            dailyBookmarks: 0,
+            dailyVideos: data.videos
+          };
+        });
+
+        setMetricsData(formattedMetrics);
+
+        // Map approved submissions to top videos format
+        const approvedVideos = submissionsData
+          .filter(s => s.status === 'approved')
+          .slice(0, 3);
+
+        // Fetch usernames for the videos
+        if (approvedVideos.length > 0) {
+          const userIds = [...new Set(approvedVideos.map(v => v.user_id))];
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, username')
+            .in('id', userIds);
+
+          const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
+
+          const mappedVideos: VideoData[] = approvedVideos.map(v => ({
+            ad_id: v.id,
+            username: profileMap.get(v.user_id) || 'Unknown',
+            platform: v.platform,
+            ad_link: v.video_url,
+            uploaded_at: v.submitted_at,
+            title: 'Boost submission',
+            latest_views: 0,
+            latest_likes: 0,
+            latest_comments: 0,
+            latest_shares: 0
+          }));
+
+          setTopVideos(mappedVideos);
+          setTotalVideos(approvedSubmissions);
+        }
       } catch (error) {
         console.error('Error loading boost stats:', error);
       } finally {
@@ -155,6 +230,12 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
     loadData();
     return () => { isCancelled = true; };
   }, [boost.id, timeframe, boost.accepted_creators_count, boost.max_accepted_creators]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // For boosts, just reload data
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
 
   const budgetTotal = boost.budget || 0;
   const budgetUsed = boost.budget_used || 0;
@@ -184,6 +265,10 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
             ))}
           </div>
           <Skeleton className="h-2 w-full bg-muted-foreground/15" />
+        </div>
+        <div className="p-5 rounded-lg bg-muted/50 space-y-4">
+          <Skeleton className="h-5 w-40 bg-muted-foreground/15" />
+          <Skeleton className="h-64 w-full bg-muted-foreground/15" />
         </div>
       </div>
     );
@@ -278,22 +363,29 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
         </div>
       </div>
 
+      {/* Performance Chart - using shared component */}
+      <PerformanceChart
+        metricsData={metricsData}
+        isRefreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        showHashtagsWarning={false}
+        hashtagsConfigured={true}
+      />
+
+      {/* Top Performing Videos - using shared component */}
+      <TopPerformingVideos
+        videos={topVideos}
+        totalVideos={totalVideos}
+        hashtagsConfigured={true}
+        hashtags={[]}
+      />
+
       {/* About Section */}
       {boost.description && (
         <div>
           <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {boost.description}
-          </p>
-        </div>
-      )}
-
-      {/* Content Requirements */}
-      {boost.content_style_requirements && (
-        <div>
-          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">Content Requirements</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {boost.content_style_requirements}
           </p>
         </div>
       )}
