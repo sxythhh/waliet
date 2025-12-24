@@ -60,11 +60,13 @@ export function BrandCampaignDetailView({
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const {
     isAdmin
   } = useAdminCheck();
   useEffect(() => {
     fetchCampaign();
+    fetchPendingApplicationsCount();
   }, [campaignId]);
   const fetchCampaign = async () => {
     setLoading(true);
@@ -79,6 +81,14 @@ export function BrandCampaignDetailView({
     }
     setLoading(false);
   };
+  const fetchPendingApplicationsCount = async () => {
+    const { count } = await supabase
+      .from("campaign_submissions")
+      .select("id", { count: 'exact', head: true })
+      .eq("campaign_id", campaignId)
+      .eq("status", "pending");
+    setPendingApplicationsCount(count || 0);
+  };
   const handleBack = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.delete("campaign");
@@ -91,7 +101,8 @@ export function BrandCampaignDetailView({
   }, ...(campaign?.requires_application !== false ? [{
     id: "applications" as DetailTab,
     label: "Applications",
-    icon: UserCheck
+    icon: UserCheck,
+    count: pendingApplicationsCount
   }] : []), ...(isAdmin ? [{
     id: "creators" as DetailTab,
     label: "Creators",
@@ -162,6 +173,11 @@ export function BrandCampaignDetailView({
           <nav className="flex gap-0">
             {detailTabs.map(tab => <button key={tab.id} onClick={() => setActiveDetailTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
+                {'count' in tab && tab.count !== undefined && tab.count > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
+                    {tab.count}
+                  </span>
+                )}
               </button>)}
           </nav>
         </div>
@@ -171,7 +187,7 @@ export function BrandCampaignDetailView({
           {activeDetailTab === "home" && campaign.brand_id ? (
             <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} />
           ) : activeDetailTab === "applications" ? (
-            <CampaignApplicationsView campaignId={campaignId} />
+            <CampaignApplicationsView campaignId={campaignId} onApplicationReviewed={fetchPendingApplicationsCount} />
           ) : activeDetailTab === "creators" ? (
             <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" />
           ) : (

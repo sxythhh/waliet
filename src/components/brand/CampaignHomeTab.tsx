@@ -93,6 +93,8 @@ interface StatsData {
   payoutsLastWeek: number;
   viewsChangePercent: number;
   payoutsChangePercent: number;
+  totalSubmissions: number;
+  approvedSubmissions: number;
 }
 interface MetricsData {
   date: string;
@@ -150,7 +152,9 @@ export function CampaignHomeTab({
     viewsLastWeek: 0,
     payoutsLastWeek: 0,
     viewsChangePercent: 0,
-    payoutsChangePercent: 0
+    payoutsChangePercent: 0,
+    totalSubmissions: 0,
+    approvedSubmissions: 0
   });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -186,6 +190,7 @@ export function CampaignHomeTab({
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
+        const submissionsQuery = supabase.from('campaign_submissions').select('id, status').eq('campaign_id', campaignId);
         let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', {
           ascending: false
         }).limit(1);
@@ -206,7 +211,7 @@ export function CampaignHomeTab({
         }
 
         // Execute ALL queries in parallel
-        const [brandResult, campaignResult, allTransactionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([brandQuery, campaignQuery, allTransactionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery]);
+        const [brandResult, campaignResult, allTransactionsResult, submissionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([brandQuery, campaignQuery, allTransactionsQuery, submissionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery]);
         if (isCancelled) return;
         const brandData = brandResult.data;
         setBrand(brandData);
@@ -233,6 +238,12 @@ export function CampaignHomeTab({
         const totalViews = metricsRangeResult.data?.[0]?.total_views || 0;
         const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
         const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
+        
+        // Process submissions data
+        const submissionsData = submissionsResult.data || [];
+        const totalSubmissions = submissionsData.length;
+        const approvedSubmissions = submissionsData.filter(s => s.status === 'approved').length;
+        
         setStats({
           totalViews,
           totalPayouts,
@@ -240,7 +251,9 @@ export function CampaignHomeTab({
           viewsLastWeek: viewsLastWeekValue,
           payoutsLastWeek,
           viewsChangePercent,
-          payoutsChangePercent
+          payoutsChangePercent,
+          totalSubmissions,
+          approvedSubmissions
         });
 
         // Process chart metrics
@@ -402,8 +415,8 @@ export function CampaignHomeTab({
   if (isLoading) {
     return <div className="p-4 space-y-4">
         {/* Stats Cards Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[1, 2, 3].map(i => <div key={i} className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => <div key={i} className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
               <Skeleton className="h-4 w-28 dark:bg-muted-foreground/20" />
               <Skeleton className="h-8 w-20 dark:bg-muted-foreground/20" />
               <Skeleton className="h-3 w-24 dark:bg-muted-foreground/20" />
@@ -442,7 +455,7 @@ export function CampaignHomeTab({
   }
   return <div className="p-4 space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
@@ -476,6 +489,19 @@ export function CampaignHomeTab({
               </div>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.payoutsLastWeek)} last week</p>
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Submissions</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.totalSubmissions}</p>
+              <div className="text-xs px-2 py-1 rounded-full tracking-[-0.5px] bg-primary/10 text-primary">
+                {stats.approvedSubmissions} approved
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalSubmissions - stats.approvedSubmissions} pending review</p>
           </div>
         </Card>
       </div>
