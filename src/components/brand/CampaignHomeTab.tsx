@@ -429,7 +429,7 @@ export function CampaignHomeTab({
                         )}
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs bg-zinc-900 text-white border-zinc-800 font-['Inter'] tracking-[-0.5px]">
+                    <TooltipContent side="bottom" className="text-xs bg-[#080808] text-white border-0 font-['Inter'] tracking-[-0.5px]">
                       <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-500" />
