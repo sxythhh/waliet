@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
-import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, ExternalLink, User, Search } from "lucide-react";
+import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, User, Search } from "lucide-react";
 import { toast } from "sonner";
 import creditCardIcon from "@/assets/credit-card-icon.svg";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -816,12 +816,7 @@ export function PayoutRequestsTable({
                                                   Flag
                                                 </Button>}
                                             
-                                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={e => {
-                                        e.stopPropagation();
-                                        window.open(item.video_submission?.video_url, '_blank');
-                                      }}>
-                                              <ExternalLink className="h-3 w-3" />
-                                            </Button>
+                                            
                                           </div>
                                         </div>
                                       </div>
