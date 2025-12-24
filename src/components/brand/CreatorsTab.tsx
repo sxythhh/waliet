@@ -734,7 +734,7 @@ export function CreatorsTab({
             All
           </button>
           <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('unread')}>
-            <div className={`h-1.5 w-1.5 rounded-full ${messageFilter === 'unread' ? 'bg-background' : 'bg-emerald-500'}`} />
+            
             Unread
           </button>
           <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('bookmarked')}>
