@@ -66,26 +66,43 @@ export function DiscordOAuthCallback() {
       if (stateData.userId && window.opener) {
         try {
           const redirectUri = `${window.location.origin}/discord/callback`;
-          
+
           // Exchange code for Discord user data (account linking)
           const { data, error: functionError } = await supabase.functions.invoke('discord-oauth', {
             body: { code, userId: stateData.userId, redirectUri }
           });
 
-          if (functionError) throw functionError;
+          if (functionError) {
+            let msg = functionError.message || 'Failed to link Discord account';
+            const resp = (functionError as any)?.context?.response;
+            if (resp) {
+              try {
+                const json = await resp.json();
+                if (json?.error) msg = json.error;
+              } catch {
+                try {
+                  const text = await resp.text();
+                  if (text) msg = text;
+                } catch {
+                  // ignore
+                }
+              }
+            }
+            throw new Error(msg);
+          }
 
           // Send success message to parent window
           window.opener.postMessage({
             type: 'discord-oauth-success',
             data
           }, window.location.origin);
-          
+
           window.close();
         } catch (error: any) {
           console.error('Error linking Discord:', error);
           window.opener.postMessage({
             type: 'discord-oauth-error',
-            error: error.message
+            error: error?.message || 'Failed to link Discord account'
           }, window.location.origin);
           window.close();
         }

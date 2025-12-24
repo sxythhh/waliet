@@ -64,15 +64,31 @@ export function DiscordLinkDialog({
   const handleUnlinkDiscord = async () => {
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.functions.invoke('discord-oauth', {
+      const { error } = await supabase.functions.invoke('discord-oauth', {
         body: {
           action: 'disconnect',
           userId
         }
       });
-      if (error) throw error;
+
+      if (error) {
+        let msg = error.message || 'Failed to unlink Discord account.';
+        const resp = (error as any)?.context?.response;
+        if (resp) {
+          try {
+            const json = await resp.json();
+            if (json?.error) msg = json.error;
+          } catch {
+            try {
+              const text = await resp.text();
+              if (text) msg = text;
+            } catch {
+              // ignore
+            }
+          }
+        }
+        throw new Error(msg);
+      }
       toast({
         title: "Success!",
         description: "Discord account unlinked successfully."
