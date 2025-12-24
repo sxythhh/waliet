@@ -1728,6 +1728,58 @@ export type Database = {
           },
         ]
       }
+      creator_testimonials: {
+        Row: {
+          brand_id: string
+          content: string
+          created_at: string
+          creator_id: string
+          id: string
+          rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          content: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          content?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          rating?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_testimonials_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_testimonials_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_testimonials_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demographic_submissions: {
         Row: {
           admin_notes: string | null
@@ -2022,6 +2074,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: string
+          audience_quality_score: number | null
           avatar_url: string | null
           billing_address: string | null
           bio: string | null
@@ -2074,6 +2127,7 @@ export type Database = {
         }
         Insert: {
           account_type?: string
+          audience_quality_score?: number | null
           avatar_url?: string | null
           billing_address?: string | null
           bio?: string | null
@@ -2126,6 +2180,7 @@ export type Database = {
         }
         Update: {
           account_type?: string
+          audience_quality_score?: number | null
           avatar_url?: string | null
           billing_address?: string | null
           bio?: string | null

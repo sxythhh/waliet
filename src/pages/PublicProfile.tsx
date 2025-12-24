@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Calendar, ArrowRight, TrendingUp, Briefcase } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, Briefcase, Star, Shield, Users, Quote } from "lucide-react";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -23,6 +23,21 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
+  trust_score: number | null;
+  audience_quality_score: number | null;
+}
+
+interface Testimonial {
+  id: string;
+  content: string;
+  rating: number | null;
+  created_at: string;
+  brand: {
+    id: string;
+    name: string;
+    logo_url: string | null;
+    is_verified: boolean;
+  } | null;
 }
 interface SocialAccount {
   id: string;
@@ -85,6 +100,7 @@ export default function PublicProfile() {
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [campaignParticipations, setCampaignParticipations] = useState<CampaignParticipation[]>([]);
   const [boostParticipations, setBoostParticipations] = useState<BoostParticipation[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -106,7 +122,7 @@ export default function PublicProfile() {
       }
       const {
         data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at").eq("id", user.id).maybeSingle();
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
         navigate(`/@${currentUserProfile.username}`, {
           replace: true
@@ -116,7 +132,7 @@ export default function PublicProfile() {
     }
     const {
       data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at").eq("username", username).maybeSingle();
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("username", username).maybeSingle();
     if (!profileData) {
       if (!user) {
         navigate("/");
@@ -124,7 +140,7 @@ export default function PublicProfile() {
       }
       const {
         data: currentUserProfile
-      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at").eq("id", user.id).maybeSingle();
+      } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, created_at, trust_score, audience_quality_score").eq("id", user.id).maybeSingle();
       if (currentUserProfile?.username) {
         navigate(`/@${currentUserProfile.username}`, {
           replace: true
@@ -136,6 +152,33 @@ export default function PublicProfile() {
     }
     setProfile(profileData);
 
+    // Fetch testimonials
+    const { data: testimonialData } = await supabase
+      .from("creator_testimonials")
+      .select(`
+        id,
+        content,
+        rating,
+        created_at,
+        brands:brand_id (
+          id,
+          name,
+          logo_url,
+          is_verified
+        )
+      `)
+      .eq("creator_id", profileData.id)
+      .order("created_at", { ascending: false });
+
+    if (testimonialData) {
+      setTestimonials(testimonialData.map(t => ({
+        id: t.id,
+        content: t.content,
+        rating: t.rating,
+        created_at: t.created_at,
+        brand: t.brands as any
+      })));
+    }
 
     // Fetch social accounts (exclude hidden ones from public profile)
     const {
@@ -380,6 +423,28 @@ export default function PublicProfile() {
                   </button>)}
               </div>}
 
+            {/* Trust Score & Audience Quality Badges */}
+            {(profile.trust_score !== null || profile.audience_quality_score !== null) && (
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                {profile.trust_score !== null && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-emerald-500">
+                      Trust: {profile.trust_score}%
+                    </span>
+                  </div>
+                )}
+                {profile.audience_quality_score !== null && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                    <Users className="h-3.5 w-3.5 text-blue-500" />
+                    <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-blue-500">
+                      Audience: {profile.audience_quality_score}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Join Date */}
             <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -426,6 +491,9 @@ export default function PublicProfile() {
             </TabsTrigger>
             <TabsTrigger value="boosts" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
               Boosts
+            </TabsTrigger>
+            <TabsTrigger value="testimonials" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+              Reviews {testimonials.length > 0 && `(${testimonials.length})`}
             </TabsTrigger>
           </TabsList>
 
@@ -523,6 +591,65 @@ export default function PublicProfile() {
                     </div>;
             })}
               </div>}
+          </TabsContent>
+
+          {/* Testimonials Tab */}
+          <TabsContent value="testimonials" className="mt-6 space-y-4">
+            {testimonials.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                <Quote className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="font-['Inter'] tracking-[-0.5px]">No reviews yet</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {testimonials.map(testimonial => (
+                  <div key={testimonial.id} className="bg-card/50 border border-border/50 rounded-2xl p-5">
+                    {/* Rating Stars */}
+                    {testimonial.rating && (
+                      <div className="flex items-center gap-0.5 mb-3">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${
+                              i < testimonial.rating! 
+                                ? "text-yellow-500 fill-yellow-500" 
+                                : "text-muted-foreground/30"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Quote */}
+                    <p className="text-foreground font-['Inter'] tracking-[-0.3px] leading-relaxed mb-4">
+                      "{testimonial.content}"
+                    </p>
+                    
+                    {/* Brand Attribution */}
+                    {testimonial.brand && (
+                      <div className="flex items-center gap-3 pt-3 border-t border-border/50">
+                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+                          {testimonial.brand.logo_url ? (
+                            <img src={testimonial.brand.logo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                            {testimonial.brand.name}
+                          </span>
+                          {testimonial.brand.is_verified && <VerifiedBadge size="sm" />}
+                        </div>
+                        <span className="text-xs text-muted-foreground ml-auto font-['Inter'] tracking-[-0.5px]">
+                          {format(new Date(testimonial.created_at), 'MMM yyyy')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
