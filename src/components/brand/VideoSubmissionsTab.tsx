@@ -720,8 +720,7 @@ export function VideoSubmissionsTab({
               <div className="flex items-center gap-2 ml-auto">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn("flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg border transition-all duration-200", dateRange?.from ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15" : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground")}>
-                      <CalendarDays className="h-3.5 w-3.5" />
+                    <button className={cn("flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg transition-all duration-200", dateRange?.from ? "bg-primary/10 text-primary hover:bg-primary/15" : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground")}>
                       {dateRange?.from ? dateRange.to ? <span>
                             {format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}
                           </span> : <span>{format(dateRange.from, "MMM d, yyyy")}</span> : <span>Date Range</span>}
