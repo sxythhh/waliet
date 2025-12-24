@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Shield, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -40,6 +40,8 @@ interface Application {
     full_name: string | null;
     avatar_url: string | null;
     email: string | null;
+    trust_score: number | null;
+    audience_quality_score: number | null;
   };
 }
 interface CampaignApplicationsViewProps {
@@ -161,7 +163,7 @@ export function CampaignApplicationsView({
       if (creatorIds.length > 0) {
         const {
           data: profiles
-        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", creatorIds);
+        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email, trust_score, audience_quality_score").in("id", creatorIds);
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
         const applicationsWithProfiles: Application[] = data?.map(app => ({
           ...app,
@@ -382,6 +384,23 @@ export function CampaignApplicationsView({
                         @{selectedApp.profile?.username}
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
+                      {/* Trust & Audience Scores */}
+                      {(selectedApp.profile?.trust_score !== null || selectedApp.profile?.audience_quality_score !== null) && (
+                        <div className="flex items-center gap-2 pt-1">
+                          {selectedApp.profile?.trust_score !== null && (
+                            <div className="flex items-center gap-1 text-xs text-emerald-500">
+                              <Shield className="h-3 w-3" />
+                              <span>{selectedApp.profile.trust_score}%</span>
+                            </div>
+                          )}
+                          {selectedApp.profile?.audience_quality_score !== null && (
+                            <div className="flex items-center gap-1 text-xs text-blue-500">
+                              <Users className="h-3 w-3" />
+                              <span>{selectedApp.profile.audience_quality_score}%</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {getStatusBadge(selectedApp.status)}
