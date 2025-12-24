@@ -774,18 +774,22 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
-                        <div className="w-32">
-                          <Progress value={getClearingProgress(request)} className="h-1.5" />
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {request.status === 'completed' 
-                              ? 'Completed'
-                              : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
-                            }
+                        {!hasPendingItems ? (
+                          <div className="text-xs text-muted-foreground">—</div>
+                        ) : (
+                          <div className="w-32">
+                            <Progress value={getClearingProgress(request)} className="h-1.5" />
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {request.status === 'completed' 
+                                ? 'Completed'
+                                : `Clears ${formatDistanceToNow(new Date(request.clearing_ends_at), { addSuffix: true })}`
+                              }
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </TableCell>
                       <TableCell className="py-3">
-                        {getStatusBadge(request)}
+                        {!hasPendingItems ? null : getStatusBadge(request)}
                       </TableCell>
                       <TableCell className="py-3 text-right pr-4">
                         <div className="flex items-center justify-end gap-2">
