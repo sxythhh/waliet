@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Video, DollarSign, ExternalLink } from "lucide-react";
+import { Video, Link2, CheckCircle2, Sparkles } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 
 interface Campaign {
   id: string;
@@ -29,21 +31,27 @@ interface SubmitVideoDialogProps {
   onSuccess?: () => void;
 }
 
-const PLATFORM_CONFIG: Record<string, { logo: string; label: string; urlPattern: RegExp }> = {
+const PLATFORM_CONFIG: Record<string, { logo: string; logoDark: string; label: string; urlPattern: RegExp; color: string }> = {
   tiktok: {
-    logo: tiktokLogo,
+    logo: tiktokLogoBlack,
+    logoDark: tiktokLogo,
     label: "TikTok",
-    urlPattern: /tiktok\.com/i
+    urlPattern: /tiktok\.com/i,
+    color: "#000000"
   },
   instagram: {
-    logo: instagramLogo,
+    logo: instagramLogoBlack,
+    logoDark: instagramLogo,
     label: "Instagram",
-    urlPattern: /instagram\.com/i
+    urlPattern: /instagram\.com/i,
+    color: "#E1306C"
   },
   youtube: {
-    logo: youtubeLogo,
+    logo: youtubeLogoBlack,
+    logoDark: youtubeLogo,
     label: "YouTube",
-    urlPattern: /youtube\.com|youtu\.be/i
+    urlPattern: /youtube\.com|youtu\.be/i,
+    color: "#FF0000"
   }
 };
 
@@ -52,9 +60,11 @@ export function SubmitVideoDialog({ campaign, open, onOpenChange, onSuccess }: S
   const [platform, setPlatform] = useState("");
   const [submissionText, setSubmissionText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { resolvedTheme } = useTheme();
 
   const allowedPlatforms = campaign.allowed_platforms || ["tiktok", "instagram", "youtube"];
   const isPayPerPost = campaign.payment_model === "pay_per_post";
+  const isLightMode = resolvedTheme === "light";
 
   // Auto-detect platform from URL
   const detectPlatform = (url: string) => {
@@ -139,7 +149,7 @@ export function SubmitVideoDialog({ campaign, open, onOpenChange, onSuccess }: S
 
       if (error) throw error;
 
-      toast.success("Video submitted successfully! It will be reviewed shortly.");
+      toast.success("Video submitted successfully!");
       setVideoUrl("");
       setPlatform("");
       setSubmissionText("");
@@ -153,99 +163,138 @@ export function SubmitVideoDialog({ campaign, open, onOpenChange, onSuccess }: S
     }
   };
 
+  const getPlatformLogo = (key: string) => {
+    const config = PLATFORM_CONFIG[key];
+    if (!config) return null;
+    return isLightMode ? config.logo : config.logoDark;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5" />
-            Submit Video
-          </DialogTitle>
-          <DialogDescription>
-Submit your video for {campaign.title} to earn{" "}
-            {isPayPerPost ? (
-              <span className="font-semibold text-emerald-500">
-                ${campaign.post_rate?.toFixed(2)} per approved video
-              </span>
-            ) : campaign.rpm_rate ? (
-              <span className="font-semibold text-emerald-500">
-                ${campaign.rpm_rate} per 1K views
-              </span>
-            ) : null}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+        {/* Header */}
+        <div className="p-6 pb-0">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-[#2060df]/10 flex items-center justify-center">
+              <Video className="w-5 h-5 text-[#2060df]" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                Submit Video
+              </h2>
+              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                {campaign.brand_name || campaign.title}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <div className="space-y-4 pt-4">
-          {/* Video URL */}
+        <div className="p-6 pt-4 space-y-5">
+          {/* Earnings Banner */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-[#2060df]/10 via-[#2060df]/5 to-transparent border border-[#2060df]/20">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#2060df]/20 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-[#2060df]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-0.5" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                  {isPayPerPost ? "You'll earn per approved video" : "You'll earn per 1M views"}
+                </p>
+                <p className="text-xl font-bold text-[#2060df]" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  {isPayPerPost 
+                    ? `$${campaign.post_rate?.toFixed(2)}`
+                    : campaign.rpm_rate 
+                      ? `$${(campaign.rpm_rate * 1000).toLocaleString()}`
+                      : "View-based"
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Video URL Input */}
           <div className="space-y-2">
-            <Label htmlFor="video-url">Video URL</Label>
-            <Input
-              id="video-url"
-              placeholder="https://www.tiktok.com/@username/video/..."
-              value={videoUrl}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              className="bg-muted/30"
-            />
-            <p className="text-xs text-muted-foreground">
-              Paste the direct link to your video
-            </p>
+            <label className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Video Link
+            </label>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                <Link2 className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <Input
+                placeholder="Paste your video URL here..."
+                value={videoUrl}
+                onChange={(e) => handleUrlChange(e.target.value)}
+                className="pl-10 h-12 bg-muted/30 border-border/50 rounded-xl text-sm"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+              />
+              {videoUrl && validateUrl(videoUrl) && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Platform Selection */}
           <div className="space-y-2">
-            <Label>Platform</Label>
-            <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="bg-muted/30">
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent>
-                {allowedPlatforms.map((p) => {
-                  const config = PLATFORM_CONFIG[p];
-                  if (!config) return null;
-                  return (
-                    <SelectItem key={p} value={p}>
-                      <div className="flex items-center gap-2">
-                        <img src={config.logo} alt={config.label} className="h-4 w-4" />
-                        {config.label}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            <label className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Platform
+            </label>
+            <div className="flex gap-2">
+              {allowedPlatforms.map((p) => {
+                const config = PLATFORM_CONFIG[p];
+                if (!config) return null;
+                const isSelected = platform === p;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPlatform(p)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border transition-all ${
+                      isSelected 
+                        ? 'bg-[#2060df]/10 border-[#2060df]/50 ring-1 ring-[#2060df]/30' 
+                        : 'bg-muted/30 border-border/50 hover:bg-muted/50'
+                    }`}
+                  >
+                    <img 
+                      src={getPlatformLogo(p) || ''} 
+                      alt={config.label} 
+                      className="w-5 h-5" 
+                    />
+                    <span 
+                      className={`text-sm font-medium ${isSelected ? 'text-[#2060df]' : 'text-foreground'}`}
+                      style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                    >
+                      {config.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Optional Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <label className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              Notes <span className="text-muted-foreground font-normal">(optional)</span>
+            </label>
             <Textarea
-              id="notes"
-              placeholder="Add any notes about your submission..."
+              placeholder="Add any additional context..."
               value={submissionText}
               onChange={(e) => setSubmissionText(e.target.value)}
-              className="bg-muted/30 min-h-[80px]"
+              className="bg-muted/30 border-border/50 rounded-xl min-h-[80px] text-sm resize-none"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
             />
           </div>
 
-          {/* Payout Info */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-emerald-500" />
-              <span className="text-sm font-medium">
-                {isPayPerPost ? "Payout on Approval" : "Earnings Based on Views"}
-              </span>
-            </div>
-<span className="text-sm font-bold text-emerald-500">
-              {isPayPerPost ? `$${campaign.post_rate?.toFixed(2)}` : campaign.rpm_rate ? `$${campaign.rpm_rate}/1K` : "View-based"}
-            </span>
-          </div>
-
-          {/* Submit Button */}
+          {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl font-medium"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
               disabled={isSubmitting}
             >
               Cancel
@@ -253,9 +302,17 @@ Submit your video for {campaign.title} to earn{" "}
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !videoUrl || !platform}
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
+              style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
             >
-              {isSubmitting ? "Submitting..." : "Submit Video"}
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Submitting...
+                </span>
+              ) : (
+                "Submit Video"
+              )}
             </Button>
           </div>
         </div>
