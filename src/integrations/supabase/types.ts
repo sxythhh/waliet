@@ -3076,6 +3076,7 @@ export type Database = {
     }
     Functions: {
       brand_has_no_members: { Args: { _brand_id: string }; Returns: boolean }
+      can_view_payout_item: { Args: { _item_id: string }; Returns: boolean }
       can_view_profile: {
         Args: { _profile_id: string; _viewer_id: string }
         Returns: boolean
@@ -3141,6 +3142,7 @@ export type Database = {
           unmatched_count: number
         }[]
       }
+      owns_payout_request: { Args: { _request_id: string }; Returns: boolean }
       upsert_discord_tokens: {
         Args: {
           p_access_token: string
