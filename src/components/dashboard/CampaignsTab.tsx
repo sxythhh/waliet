@@ -35,7 +35,6 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { SubmissionsTab } from "@/components/dashboard/SubmissionsTab";
-
 interface Campaign {
   id: string;
   title: string;
@@ -653,33 +652,19 @@ export function CampaignsTab({
 
       {/* Tab Navigation */}
       <div className="flex items-center gap-6 border-b border-border">
-        <button
-          onClick={() => setActiveTab('campaigns')}
-          className={`pb-3 text-sm font-medium transition-colors relative ${
-            activeTab === 'campaigns' 
-              ? 'text-foreground' 
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-        >
+        <button onClick={() => setActiveTab('campaigns')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'campaigns' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`} style={{
+        fontFamily: 'Inter',
+        letterSpacing: '-0.5px'
+      }}>
           Campaigns
-          {activeTab === 'campaigns' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />
-          )}
+          {activeTab === 'campaigns' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />}
         </button>
-        <button
-          onClick={() => setActiveTab('submissions')}
-          className={`pb-3 text-sm font-medium transition-colors relative ${
-            activeTab === 'submissions' 
-              ? 'text-foreground' 
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-        >
+        <button onClick={() => setActiveTab('submissions')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'submissions' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`} style={{
+        fontFamily: 'Inter',
+        letterSpacing: '-0.5px'
+      }}>
           Submissions
-          {activeTab === 'submissions' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />
-          )}
+          {activeTab === 'submissions' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />}
         </button>
       </div>
 
@@ -730,19 +715,19 @@ export function CampaignsTab({
 
       {/* Your Campaigns - Moved to appear first */}
       {!hasNoCampaigns && <div className="space-y-3">
-        <h3 className="text-lg font-semibold">Your Campaigns</h3>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
-          const budgetUsed = campaign.budget_used || 0;
-          const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
-          const isPending = campaign.submission_status === 'pending';
-          const isEnded = campaign.status === 'ended';
-          return <Card key={campaign.id} className={`group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
-            if (!isPending) {
-              setSelectedCampaignForDetails(campaign);
-              setCampaignDetailsDialogOpen(true);
-            }
-          }}>
+            const budgetUsed = campaign.budget_used || 0;
+            const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
+            const isPending = campaign.submission_status === 'pending';
+            const isEnded = campaign.status === 'ended';
+            return <Card key={campaign.id} className={`group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
+              if (!isPending) {
+                setSelectedCampaignForDetails(campaign);
+                setCampaignDetailsDialogOpen(true);
+              }
+            }}>
             {/* Banner Image - Top Section */}
             {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
                 <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
@@ -780,11 +765,11 @@ export function CampaignsTab({
                         <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
                       </> : <>
                         <span className="text-base font-bold tabular-nums">${Math.ceil(budgetUsed).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}</span>
+                            maximumFractionDigits: 0
+                          })}</span>
                         <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(campaign.budget).toLocaleString(undefined, {
-                          maximumFractionDigits: 0
-                        })}</span>
+                            maximumFractionDigits: 0
+                          })}</span>
                       </>}
                   </div>
                 </div>
@@ -792,12 +777,12 @@ export function CampaignsTab({
                 {/* Progress Bar */}
                 <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
                   {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
-                    background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
-                    backgroundSize: '200% 200%',
-                    animation: 'slide 2s linear infinite'
-                  }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                    width: `${budgetPercentage}%`
-                  }} />}
+                      background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
+                      backgroundSize: '200% 200%',
+                      animation: 'slide 2s linear infinite'
+                    }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
+                      width: `${budgetPercentage}%`
+                    }} />}
                 </div>
                 
                 {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
@@ -813,10 +798,10 @@ export function CampaignsTab({
                     </span>
                   </div>
                   <Button variant="ghost" size="sm" onClick={e => {
-                  e.stopPropagation();
-                  setSelectedCampaignId(campaign.id);
-                  setWithdrawDialogOpen(true);
-                }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
+                    e.stopPropagation();
+                    setSelectedCampaignId(campaign.id);
+                    setWithdrawDialogOpen(true);
+                  }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
                     <X className="w-3.5 h-3.5 mr-1.5" />
                     Withdraw Application
                   </Button>
@@ -825,7 +810,7 @@ export function CampaignsTab({
               {isEnded && !isPending}
             </CardContent>
           </Card>;
-        })}
+          })}
         </div>
       </div>}
 
@@ -837,31 +822,31 @@ export function CampaignsTab({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {recommendedCampaigns.map(campaign => {
-          const handleClick = () => {
-            setSelectedCampaignForJoin({
-              id: campaign.id,
-              title: campaign.title,
-              description: (campaign as any).description || '',
-              brand_name: campaign.brand_name,
-              brand_logo_url: campaign.brand_logo_url || '',
-              budget: campaign.budget,
-              budget_used: campaign.budget_used || 0,
-              rpm_rate: campaign.rpm_rate,
-              status: (campaign as any).status || 'active',
-              start_date: (campaign as any).start_date || null,
-              banner_url: campaign.banner_url,
-              platforms: campaign.allowed_platforms || [],
-              slug: campaign.slug,
-              guidelines: (campaign as any).guidelines || null,
-              application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
-              requires_application: (campaign as any).requires_application,
-              is_infinite_budget: campaign.is_infinite_budget,
-              blueprint_id: (campaign as any).blueprint_id || null
-            });
-            setJoinCampaignSheetOpen(true);
-          };
-          return <CampaignCard key={campaign.id} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.allowed_platforms || []} onClick={handleClick} showBookmark={false} showFullscreen={false} />;
-        })}
+            const handleClick = () => {
+              setSelectedCampaignForJoin({
+                id: campaign.id,
+                title: campaign.title,
+                description: (campaign as any).description || '',
+                brand_name: campaign.brand_name,
+                brand_logo_url: campaign.brand_logo_url || '',
+                budget: campaign.budget,
+                budget_used: campaign.budget_used || 0,
+                rpm_rate: campaign.rpm_rate,
+                status: (campaign as any).status || 'active',
+                start_date: (campaign as any).start_date || null,
+                banner_url: campaign.banner_url,
+                platforms: campaign.allowed_platforms || [],
+                slug: campaign.slug,
+                guidelines: (campaign as any).guidelines || null,
+                application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
+                requires_application: (campaign as any).requires_application,
+                is_infinite_budget: campaign.is_infinite_budget,
+                blueprint_id: (campaign as any).blueprint_id || null
+              });
+              setJoinCampaignSheetOpen(true);
+            };
+            return <CampaignCard key={campaign.id} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.allowed_platforms || []} onClick={handleClick} showBookmark={false} showFullscreen={false} />;
+          })}
           </div>
         </div>}
 
@@ -873,16 +858,16 @@ export function CampaignsTab({
           <h3 className="text-lg font-semibold">Your Boosts</h3>
           <div className="space-y-3">
           {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
-          id: application.boost_campaigns.id,
-          title: application.boost_campaigns.title,
-          monthly_retainer: application.boost_campaigns.monthly_retainer,
-          videos_per_month: application.boost_campaigns.videos_per_month,
-          brands: application.boost_campaigns.brands,
-          blueprint_id: application.boost_campaigns.blueprint_id,
-          blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
-          content_style_requirements: application.boost_campaigns.content_style_requirements,
-          blueprint: application.boost_campaigns.blueprint
-        }} />)}
+            id: application.boost_campaigns.id,
+            title: application.boost_campaigns.title,
+            monthly_retainer: application.boost_campaigns.monthly_retainer,
+            videos_per_month: application.boost_campaigns.videos_per_month,
+            brands: application.boost_campaigns.brands,
+            blueprint_id: application.boost_campaigns.blueprint_id,
+            blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
+            content_style_requirements: application.boost_campaigns.content_style_requirements,
+            blueprint: application.boost_campaigns.blueprint
+          }} />)}
           </div>
         </div>}
 
@@ -939,15 +924,15 @@ export function CampaignsTab({
         <div className="p-6 pb-4 py-0 px-0">
           <DialogHeader className="space-y-1.5 px-[10px] py-[10px]">
             <DialogTitle className="text-base font-semibold" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.5px'
-            }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
               Link Your Account
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
               Connect a social account to this campaign
             </DialogDescription>
           </DialogHeader>
@@ -955,17 +940,17 @@ export function CampaignsTab({
         
         <div className="pb-6 space-y-2 px-0">
           <button onClick={() => {
-            setDialogOpen(false);
-            navigate("/dashboard?tab=profile");
-          }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
+              setDialogOpen(false);
+              navigate("/dashboard?tab=profile");
+            }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
             <div>
               <p className="text-sm font-medium" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>Link Existing</p>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>Link Existing</p>
               <p className="text-[11px] text-muted-foreground mt-0.5" style={{
-                fontFamily: 'Inter'
-              }}>From connected accounts</p>
+                  fontFamily: 'Inter'
+                }}>From connected accounts</p>
             </div>
             <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -973,17 +958,17 @@ export function CampaignsTab({
           </button>
           
           <button onClick={() => {
-            setDialogOpen(false);
-            setAddAccountDialogOpen(true);
-          }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
+              setDialogOpen(false);
+              setAddAccountDialogOpen(true);
+            }} className="w-full group flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/70 transition-all text-left">
             <div>
               <p className="text-sm font-medium" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>Add New Account</p>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>Add New Account</p>
               <p className="text-[11px] text-muted-foreground mt-0.5" style={{
-                fontFamily: 'Inter'
-              }}>Connect & verify new account</p>
+                  fontFamily: 'Inter'
+                }}>Connect & verify new account</p>
             </div>
             <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -1039,49 +1024,49 @@ export function CampaignsTab({
     
     {selectedAccount && <>
         <ManageAccountDialog open={manageAccountDialogOpen} onOpenChange={setManageAccountDialogOpen} account={{
-        id: selectedAccount.id,
-        username: selectedAccount.username,
-        platform: selectedAccount.platform,
-        account_link: null
-      }} demographicStatus={null} daysUntilNext={null} lastSubmissionDate={null} nextSubmissionDate={null} onUpdate={fetchCampaigns} onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)} platformIcon={<div className="w-6 h-6">
+          id: selectedAccount.id,
+          username: selectedAccount.username,
+          platform: selectedAccount.platform,
+          account_link: null
+        }} demographicStatus={null} daysUntilNext={null} lastSubmissionDate={null} nextSubmissionDate={null} onUpdate={fetchCampaigns} onSubmitDemographics={() => setSubmitDemographicsDialogOpen(true)} platformIcon={<div className="w-6 h-6">
               <img src={getPlatformIcon(selectedAccount.platform) || ''} alt={selectedAccount.platform} className="w-full h-full" />
             </div>} />
         
         <SubmitDemographicsDialog open={submitDemographicsDialogOpen} onOpenChange={setSubmitDemographicsDialogOpen} socialAccountId={selectedAccount.id} platform={selectedAccount.platform} username={selectedAccount.username} onSuccess={() => {
-        setSubmitDemographicsDialogOpen(false);
-        fetchCampaigns();
-      }} />
+          setSubmitDemographicsDialogOpen(false);
+          fetchCampaigns();
+        }} />
       </>}
     
       <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} onConnectAccount={() => {
-      setCampaignDetailsDialogOpen(false);
-      setDialogOpen(true);
-    }} onManageAccount={account => {
-      setCampaignDetailsDialogOpen(false);
-      setSelectedAccount(account);
-      setManageAccountDialogOpen(true);
-    }} />
+        setCampaignDetailsDialogOpen(false);
+        setDialogOpen(true);
+      }} onManageAccount={account => {
+        setCampaignDetailsDialogOpen(false);
+        setSelectedAccount(account);
+        setManageAccountDialogOpen(true);
+      }} />
       
       <JoinCampaignSheet campaign={selectedCampaignForJoin} open={joinCampaignSheetOpen} onOpenChange={setJoinCampaignSheetOpen} onSuccess={() => {
-      // After successful join, open the campaign details dialog
-      if (selectedCampaignForJoin) {
-        // Find the full campaign data from campaigns to get connected accounts
-        const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
-        if (fullCampaign) {
-          setSelectedCampaignForDetails(fullCampaign);
-        } else {
-          // If not found in campaigns yet, use the join data
-          setSelectedCampaignForDetails({
-            ...selectedCampaignForJoin,
-            connected_accounts: []
-          });
+        // After successful join, open the campaign details dialog
+        if (selectedCampaignForJoin) {
+          // Find the full campaign data from campaigns to get connected accounts
+          const fullCampaign = campaigns.find(c => c.id === selectedCampaignForJoin.id);
+          if (fullCampaign) {
+            setSelectedCampaignForDetails(fullCampaign);
+          } else {
+            // If not found in campaigns yet, use the join data
+            setSelectedCampaignForDetails({
+              ...selectedCampaignForJoin,
+              connected_accounts: []
+            });
+          }
+          // Small delay to let the sheet close animation complete
+          setTimeout(() => {
+            setCampaignDetailsDialogOpen(true);
+          }, 300);
         }
-        // Small delay to let the sheet close animation complete
-        setTimeout(() => {
-          setCampaignDetailsDialogOpen(true);
-        }, 300);
-      }
-    }} />
+      }} />
     </>}
     </div>;
 }
