@@ -35,6 +35,7 @@ interface Submission {
   likes?: number | null;
   comments?: number | null;
   shares?: number | null;
+  video_upload_date?: string | null;
   program: {
     id: string;
     title: string;
@@ -149,13 +150,14 @@ export function SubmissionsTab() {
           rejection_reason: video.rejection_reason,
           reviewed_at: video.reviewed_at,
           type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
-          // Video details
-          video_title: video.video_title,
+          // Video details - use video_description as caption, fallback to video_title
+          video_title: video.video_description || video.video_title,
           video_cover_url: video.video_thumbnail_url,
           views: video.views,
           likes: video.likes,
           comments: video.comments,
           shares: video.shares,
+          video_upload_date: video.video_upload_date,
           program: program || { id: video.source_id, title: 'Unknown', brand_name: '', brand_logo_url: null }
         };
       }).filter(s => s.program);
@@ -458,14 +460,16 @@ export function SubmissionsTab() {
                               )}
                             </div>
                             <div className="min-w-0 max-w-[200px]">
-                              <p className="text-sm font-medium truncate group-hover:text-primary transition-colors" style={{
+                              <p className="text-sm font-medium truncate group-hover:underline transition-colors" style={{
                                 fontFamily: 'Inter',
                                 letterSpacing: '-0.3px'
                               }}>
                                 {submission.video_title || 'Untitled Video'}
                               </p>
                               <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {submission.type === 'campaign' ? 'Campaign' : 'Boost'}
+                                {submission.video_upload_date 
+                                  ? format(new Date(submission.video_upload_date), 'MMM d, yyyy')
+                                  : format(new Date(submission.created_at), 'MMM d, yyyy')}
                               </p>
                             </div>
                           </a>
