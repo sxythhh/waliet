@@ -410,7 +410,7 @@ export function CampaignHomeTab({
               const paidPercent = total > 0 ? ((stats.paidViews / total) * 100).toFixed(1) : '0';
               const pendingPercent = total > 0 ? ((stats.unpaidViews / total) * 100).toFixed(1) : '0';
               return (
-                <TooltipProvider>
+              <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden flex cursor-pointer">
@@ -428,7 +428,7 @@ export function CampaignHomeTab({
                         )}
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-xs">
+                    <TooltipContent side="bottom" className="text-xs bg-zinc-900 text-white border-zinc-800 font-['Inter'] tracking-[-0.5px]">
                       <div className="flex flex-col gap-1">
                         <span className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-emerald-500" />
