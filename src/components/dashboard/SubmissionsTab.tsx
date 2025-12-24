@@ -35,6 +35,8 @@ interface Submission {
   video_title?: string | null;
   video_cover_url?: string | null;
   views?: number | null;
+  paid_views?: number | null;
+  unpaid_views?: number | null;
   likes?: number | null;
   comments?: number | null;
   shares?: number | null;
@@ -172,7 +174,12 @@ export function SubmissionsTab() {
         const isBoost = video.source_type === 'boost';
         const program = isBoost ? boostMap[video.source_id] : campaignMap[video.source_id];
 
-        // Calculate estimated payout
+        // Calculate unpaid views (current views minus already paid views)
+        const currentViews = video.views || 0;
+        const paidViews = video.paid_views || 0;
+        const unpaidViews = Math.max(0, currentViews - paidViews);
+
+        // Calculate estimated payout based on UNPAID views only for RPM campaigns
         let estimatedPayout = video.payout_amount;
         if (estimatedPayout === null || estimatedPayout === undefined) {
           if (isBoost && program) {
@@ -182,8 +189,9 @@ export function SubmissionsTab() {
             const campaign = program as typeof campaignMap[string];
             if (campaign.payment_model === 'pay_per_post') {
               estimatedPayout = campaign.post_rate || 0;
-            } else if (campaign.rpm_rate && video.views) {
-              estimatedPayout = video.views / 1000 * campaign.rpm_rate;
+            } else if (campaign.rpm_rate) {
+              // Use unpaid views for RPM calculation
+              estimatedPayout = unpaidViews / 1000 * campaign.rpm_rate;
             }
           }
         }
@@ -204,6 +212,8 @@ export function SubmissionsTab() {
           video_title: video.video_description || video.video_title,
           video_cover_url: video.video_thumbnail_url,
           views: video.views,
+          paid_views: paidViews,
+          unpaid_views: unpaidViews,
           likes: video.likes,
           comments: video.comments,
           shares: video.shares,
@@ -233,9 +243,21 @@ export function SubmissionsTab() {
     }
   };
 
-  // Calculate available payout amount (approved submissions that aren't locked or paid)
-  const availableForPayout = submissions.filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0).reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
-  const availableSubmissions = submissions.filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0);
+  // Calculate available payout amount (approved submissions that aren't locked and have unpaid views/amount)
+  // For RPM campaigns: must have unpaid views > 0
+  // For boost/pay-per-post: must not be locked and have estimated_payout > 0
+  const availableSubmissions = submissions.filter(s => {
+    if (s.status !== 'approved' || s.payout_status === 'locked') return false;
+    
+    // For RPM campaigns, check unpaid views
+    if (s.program.payment_model !== 'pay_per_post' && s.type === 'campaign') {
+      return (s.unpaid_views || 0) > 0 && (s.estimated_payout || 0) > 0;
+    }
+    
+    // For boost or pay-per-post, only allow if never paid (payout_status is 'available')
+    return s.payout_status === 'available' && (s.estimated_payout || 0) > 0;
+  });
+  const availableForPayout = availableSubmissions.reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
   const handleRequestPayout = async () => {
     if (availableForPayout < 1) {
       toast.error('Minimum payout is $1.00');
@@ -263,13 +285,14 @@ export function SubmissionsTab() {
       }).select().single();
       if (requestError) throw requestError;
 
-      // Create payout items for each submission
+      // Create payout items for each submission with views_at_request snapshot
       const payoutItems = availableSubmissions.map(s => ({
         payout_request_id: request.id,
         submission_id: s.id,
         amount: s.estimated_payout || 0,
         source_type: s.type,
-        source_id: s.program.id
+        source_id: s.program.id,
+        views_at_request: s.unpaid_views || 0  // Snapshot of unpaid views being claimed
       }));
       const {
         error: itemsError
