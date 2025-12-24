@@ -41,12 +41,7 @@ const PLAN_PRICES: Record<string, number> = {
   'starter': 99,
   'growth': 249
 };
-const BRAND_COLORS = [
-  "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
-  "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899",
-  "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"
-];
-
+const BRAND_COLORS = ["#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899", "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"];
 interface Brand {
   id: string;
   name: string;
@@ -274,14 +269,17 @@ export function UserSettingsTab() {
     if (!file || !brand?.id) return;
     try {
       setUploadingAvatar(true);
-      
+
       // Get current user for RLS policy compliance
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("You must be logged in to upload");
         return;
       }
-      
       const fileExt = file.name.split('.').pop();
       const fileName = `${brand.id}-${Date.now()}.${fileExt}`;
       // Path must start with user ID to satisfy RLS policy
@@ -472,21 +470,15 @@ export function UserSettingsTab() {
               Manage your workspace and billing
             </p>
           </div>
-          {isBrandMode && brand && (
-            <Button 
-              onClick={() => {
-                if (activeTab === 'general') {
-                  handleSaveBrand();
-                } else if (activeTab === 'integrations') {
-                  handleSaveIntegrations();
-                }
-              }} 
-              disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false}
-              className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90"
-            >
-              {(activeTab === 'general' && savingBrand) || (activeTab === 'integrations' && savingIntegrations) ? "Saving..." : "Save Changes"}
-            </Button>
-          )}
+          {isBrandMode && brand && <Button onClick={() => {
+          if (activeTab === 'general') {
+            handleSaveBrand();
+          } else if (activeTab === 'integrations') {
+            handleSaveIntegrations();
+          }
+        }} disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false} className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90">
+              {activeTab === 'general' && savingBrand || activeTab === 'integrations' && savingIntegrations ? "Saving..." : "Save Changes"}
+            </Button>}
         </div>
 
         {/* Tabs Navigation */}
@@ -512,31 +504,19 @@ export function UserSettingsTab() {
                 
                 <div className="flex items-center gap-2.5">
                   {/* Logo Preview or Initials with Color */}
-                  <div 
-                    className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: brand.logo_url ? undefined : brandColor }}
-                    onClick={() => document.getElementById('brand-logo-upload')?.click()}
-                  >
-                    {brand.logo_url ? (
-                      <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-sm font-semibold font-inter">
+                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" style={{
+                  backgroundColor: brand.logo_url ? undefined : brandColor
+                }} onClick={() => document.getElementById('brand-logo-upload')?.click()}>
+                    {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-white text-sm font-semibold font-inter">
                         {brand.name?.slice(0, 2).toUpperCase() || "B"}
-                      </span>
-                    )}
+                      </span>}
                   </div>
 
                   {/* Color Picker */}
                   <div className="grid grid-cols-7 gap-0.5">
-                    {BRAND_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`}
-                        style={{ backgroundColor: color }}
-                        onClick={() => setBrandColor(color)}
-                      />
-                    ))}
+                    {BRAND_COLORS.map(color => <button key={color} type="button" className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`} style={{
+                    backgroundColor: color
+                  }} onClick={() => setBrandColor(color)} />)}
                   </div>
 
                   {/* Upload/Remove Buttons */}
@@ -544,14 +524,7 @@ export function UserSettingsTab() {
                     <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
                       <Upload className="h-3 w-3" />
                       {brand.logo_url ? 'Change' : 'Upload'}
-                      <input 
-                        id="brand-logo-upload"
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={handleAvatarUpload} 
-                        disabled={uploadingAvatar} 
-                      />
+                      <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
                     </label>
                   </div>
                 </div>
@@ -605,9 +578,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewApplication} onCheckedChange={checked => {
-                  setNotifyNewApplication(checked);
-                  handleSaveNotifications();
-                }} />
+                    setNotifyNewApplication(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
 
                   {/* New boost submission */}
@@ -622,9 +595,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewSale} onCheckedChange={checked => {
-                  setNotifyNewSale(checked);
-                  handleSaveNotifications();
-                }} />
+                    setNotifyNewSale(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
 
                   {/* New message from partner */}
@@ -639,9 +612,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewMessage} onCheckedChange={checked => {
-                  setNotifyNewMessage(checked);
-                  handleSaveNotifications();
-                }} />
+                    setNotifyNewMessage(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
                 </div>
               </div>
@@ -890,9 +863,9 @@ export function UserSettingsTab() {
 
           {/* Subscription Checkout Dialog */}
           {selectedCheckoutPlan && brand && <SubscriptionCheckoutDialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog} planId={selectedCheckoutPlan.id} planName={selectedCheckoutPlan.name} brandId={brand.slug} onComplete={() => {
-          fetchBrand();
-          toast.success("Subscription activated!");
-        }} />}
+            fetchBrand();
+            toast.success("Subscription activated!");
+          }} />}
 
           
 
@@ -907,9 +880,9 @@ export function UserSettingsTab() {
               Legal Business Name
             </Label>
             <Input value={profile.legal_business_name} onChange={e => setProfile({
-            ...profile,
-            legal_business_name: e.target.value
-          })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
+              ...profile,
+              legal_business_name: e.target.value
+            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
           </div>
 
           
@@ -920,17 +893,15 @@ export function UserSettingsTab() {
               Billing Address
             </Label>
             <Input value={profile.billing_address} onChange={e => setProfile({
-            ...profile,
-            billing_address: e.target.value
-          })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
+              ...profile,
+              billing_address: e.target.value
+            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
           
 
           {/* Save Button */}
-          <Button onClick={handleSave} disabled={saving} className="w-full h-11 tracking-[-0.5px]">
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
+          
         </TabsContent>
       </Tabs>
 
