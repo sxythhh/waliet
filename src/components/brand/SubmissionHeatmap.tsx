@@ -16,11 +16,13 @@ interface SubmissionHeatmapProps {
     submitted_at: string;
     status: string;
   }>;
+  onDateClick?: (date: Date) => void;
+  selectedDate?: Date | null;
 }
 
 type TimeRange = "week" | "month" | "3months";
 
-export function SubmissionHeatmap({ submissions }: SubmissionHeatmapProps) {
+export function SubmissionHeatmap({ submissions, onDateClick, selectedDate }: SubmissionHeatmapProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("month");
   
   const { weeks, monthLabels } = useMemo(() => {
@@ -192,11 +194,13 @@ export function SubmissionHeatmap({ submissions }: SubmissionHeatmapProps) {
                 {week.map((day, dayIdx) => {
                   const isFuture = isAfter(day.date, today);
                   const isToday = isSameDay(day.date, today);
+                  const isSelected = selectedDate && isSameDay(day.date, selectedDate);
                   return (
                     <Tooltip key={dayIdx}>
                       <TooltipTrigger asChild>
                         <div
-                          className={`h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)}`}
+                          onClick={() => !isFuture && onDateClick?.(day.date)}
+                          className={`h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)} ${isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
                         />
                       </TooltipTrigger>
                       <TooltipContent 
