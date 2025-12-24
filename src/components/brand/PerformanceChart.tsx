@@ -118,7 +118,7 @@ export function PerformanceChart({
             // Use datetime if available, otherwise fall back to date
             const dataPoint = payload[0]?.payload as MetricsData;
             const displayLabel = dataPoint?.datetime || dataPoint?.date || '';
-            return <div className="bg-popover border border-border rounded-lg px-3 py-2.5 shadow-lg min-w-[140px]">
+            return <div className="bg-black/80 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2.5 shadow-xl min-w-[140px]">
                       <p className="text-sm font-medium font-inter text-foreground tracking-[-0.5px] mb-2">{displayLabel}</p>
                       <div className="space-y-1.5">
                         {payload.map((entry: any) => {
