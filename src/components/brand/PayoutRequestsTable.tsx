@@ -450,6 +450,40 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       if (txError) throw txError;
 
+      // Get payout items to update submission payout_status
+      const { data: payoutItemsForStatus } = await supabase
+        .from('submission_payout_items')
+        .select('submission_id')
+        .eq('payout_request_id', request.id);
+
+      if (payoutItemsForStatus && payoutItemsForStatus.length > 0) {
+        const submissionIdsToUpdate = payoutItemsForStatus.map(item => item.submission_id);
+        
+        // Update video_submissions payout_status to 'paid'
+        await supabase
+          .from('video_submissions')
+          .update({ payout_status: 'paid' })
+          .in('id', submissionIdsToUpdate);
+      }
+
+      // Update boost budget_used if this is a boost payout
+      if (boostId) {
+        const { data: currentBoost } = await supabase
+          .from('bounty_campaigns')
+          .select('budget_used')
+          .eq('id', boostId)
+          .single();
+
+        if (currentBoost) {
+          await supabase
+            .from('bounty_campaigns')
+            .update({
+              budget_used: (currentBoost.budget_used || 0) + request.total_amount
+            })
+            .eq('id', boostId);
+        }
+      }
+
       // Update paid_views in campaign_account_analytics
       if (campaignId) {
         // Fetch payout items to get total views being paid
