@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicNavbar from "@/components/PublicNavbar";
 import { Globe, Instagram } from "lucide-react";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 interface Brand {
   id: string;
   name: string;
@@ -18,6 +19,7 @@ interface Brand {
   tiktok_handle: string | null;
   linkedin_handle: string | null;
   brand_color: string | null;
+  is_verified: boolean;
 }
 interface Campaign {
   id: string;
@@ -62,7 +64,7 @@ export default function BrandPublicPage() {
         const {
           data: brandData,
           error: brandError
-        } = await supabase.from("brands").select("id, name, slug, logo_url, description, home_url, website_url, instagram_handle, tiktok_handle, linkedin_handle, brand_color").eq("slug", slug).eq("is_active", true).single();
+        } = await supabase.from("brands").select("id, name, slug, logo_url, description, home_url, website_url, instagram_handle, tiktok_handle, linkedin_handle, brand_color, is_verified").eq("slug", slug).eq("is_active", true).single();
         if (brandError || !brandData) {
           navigate("/404");
           return;
@@ -148,7 +150,10 @@ export default function BrandPublicPage() {
                 {brand.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <h1 className="text-2xl font-semibold tracking-tight">{brand.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-1.5">
+              {brand.name}
+              {brand.is_verified && <VerifiedBadge size="md" />}
+            </h1>
             {brand.description && <p className="text-muted-foreground text-sm mt-2 max-w-sm font-['Inter'] tracking-[-0.5px]">{brand.description}</p>}
             
             {/* Social Links */}
