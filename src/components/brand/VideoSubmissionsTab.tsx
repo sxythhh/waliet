@@ -97,7 +97,7 @@ export function VideoSubmissionsTab({
   const [rejectionReason, setRejectionReason] = useState("");
   const [processing, setProcessing] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected" | "flagged">("all");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
 
@@ -483,7 +483,7 @@ export function VideoSubmissionsTab({
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status Filter */}
               <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
-                {(["all", "pending", "approved", "rejected"] as const).map(status => <button key={status} onClick={() => setFilterStatus(status)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${filterStatus === status ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => <button key={status} onClick={() => setFilterStatus(status)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${filterStatus === status ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </button>)}
               </div>
@@ -514,7 +514,9 @@ export function VideoSubmissionsTab({
               let filteredSubs = selectedCreator ? submissions.filter(s => s.user_id === selectedCreator) : submissions;
 
               // Apply status filter
-              if (filterStatus !== "all") {
+              if (filterStatus === "flagged") {
+                filteredSubs = filteredSubs.filter(s => s.is_flagged === true);
+              } else if (filterStatus !== "all") {
                 filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
               }
 
