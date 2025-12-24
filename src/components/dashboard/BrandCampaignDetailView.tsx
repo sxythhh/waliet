@@ -12,6 +12,7 @@ import { CampaignApplicationsView } from "@/components/brand/CampaignApplication
 import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
+import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -519,7 +520,7 @@ export function BrandCampaignDetailView({
         <div className="flex-1 overflow-auto">
           {activeDetailTab === "home" ? (
             isAllMode && brandId ? (
-              <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} />
+              <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} />
             ) : isBoost && boost ? (
               <BoostManagementContent boost={boost} onTopUp={() => setTopUpDialogOpen(true)} />
             ) : campaign?.brand_id ? (
@@ -559,33 +560,9 @@ export function BrandCampaignDetailView({
   );
 }
 
-// All Programs Home Content placeholder
-function AllProgramsHomeContent({ brandId, campaigns, boosts }: { brandId: string; campaigns: Campaign[]; boosts: Boost[] }) {
-  const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0) + boosts.reduce((sum, b) => sum + (b.budget || 0), 0);
-  const totalUsed = campaigns.reduce((sum, c) => sum + (c.budget_used || 0), 0) + boosts.reduce((sum, b) => sum + (b.budget_used || 0), 0);
-  
-  return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Active Campaigns</p>
-          <p className="text-2xl font-semibold">{campaigns.filter(c => c.status === "active").length}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Active Boosts</p>
-          <p className="text-2xl font-semibold">{boosts.filter(b => b.status === "active").length}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-          <p className="text-2xl font-semibold">${totalBudget.toLocaleString()}</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
-          <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
-          <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
-        </div>
-      </div>
-    </div>
-  );
+// All Programs Home Content - shows aggregated analytics
+function AllProgramsHomeContent({ brandId, campaigns, boosts, timeframe }: { brandId: string; campaigns: Campaign[]; boosts: Boost[]; timeframe: TimeframeOption }) {
+  return <AllProgramsAnalytics brandId={brandId} timeframe={timeframe} />;
 }
 
 // All Applications View placeholder
