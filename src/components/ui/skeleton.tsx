@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
+
+function Skeleton({ className, style, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-md !bg-muted/60 dark:!bg-muted/20",
-        className,
-      )}
+      className={cn("rounded-md skeleton-shimmer", className)}
+      style={style}
       {...props}
     />
   );
