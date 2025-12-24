@@ -638,7 +638,7 @@ export function VideoSubmissionsTab({
                         </div>
 
                         {/* Bottom: Metrics Row */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between" style={{ fontFamily: 'Inter', letterSpacing: '-0.05em' }}>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <span className="font-medium text-foreground tabular-nums">{formatNumber(submission.views)}</span>
@@ -653,12 +653,9 @@ export function VideoSubmissionsTab({
                               <span>comments</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                            <span className="text-sm font-semibold text-foreground tracking-[-0.5px]">
-                              {(submission.payout_amount || payoutPerVideo).toFixed(2)}
-                            </span>
-                          </div>
+                          <span className="text-sm font-semibold text-foreground">
+                            ${(submission.payout_amount || payoutPerVideo).toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </div>
