@@ -486,12 +486,12 @@ export function SubmissionsTab() {
         </DropdownMenu>
 
         {/* Request Payout Button */}
-        <Button onClick={() => setPayoutDialogOpen(true)} disabled={availableForPayout < 1} style={{
+        <Button onClick={handleRequestPayout} disabled={availableForPayout < 1 || requestingPayout} style={{
         fontFamily: 'Inter',
         letterSpacing: '-0.5px'
       }} className="gap-2 rounded-[9px] px-4 py-2 h-auto text-white disabled:opacity-50 bg-primary">
           
-          <span className="font-medium">Request all payouts</span>
+          <span className="font-medium">{requestingPayout ? 'Requesting...' : 'Request all payouts'}</span>
           {availableForPayout >= 1 && <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
               ${availableForPayout.toFixed(2)}
             </span>}
