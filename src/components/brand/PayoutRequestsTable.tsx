@@ -52,6 +52,20 @@ interface PayoutItem {
   };
 }
 
+interface BoostTransaction {
+  id: string;
+  user_id: string;
+  amount: number;
+  type: string;
+  description: string | null;
+  created_at: string;
+  metadata: any;
+  profiles?: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
 interface PayoutRequestsTableProps {
   campaignId?: string;
   boostId?: string;
@@ -61,6 +75,7 @@ interface PayoutRequestsTableProps {
 
 export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = true }: PayoutRequestsTableProps) {
   const [requests, setRequests] = useState<PayoutRequest[]>([]);
+  const [transactions, setTransactions] = useState<BoostTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -69,6 +84,9 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
   useEffect(() => {
     fetchPayoutRequests();
+    if (boostId) {
+      fetchBoostTransactions();
+    }
     
     // Set up realtime subscription
     const channel = supabase
@@ -80,6 +98,13 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
       }, () => {
         fetchPayoutRequests();
       })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'wallet_transactions'
+      }, () => {
+        if (boostId) fetchBoostTransactions();
+      })
       .subscribe();
 
     return () => {
@@ -87,61 +112,107 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
     };
   }, [campaignId, boostId, brandId]);
 
+  const fetchBoostTransactions = async () => {
+    if (!boostId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .eq('type', 'earning')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Filter by boost_id in metadata
+      const boostTransactions = (data || []).filter(t => {
+        const metadata = t.metadata as Record<string, unknown> | null;
+        return metadata?.boost_id === boostId;
+      });
+
+      // Fetch user profiles
+      const userIds = [...new Set(boostTransactions.map(t => t.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+
+      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+
+      const enrichedTransactions: BoostTransaction[] = boostTransactions.map(t => ({
+        ...t,
+        profiles: profilesMap.get(t.user_id) || undefined
+      }));
+
+      setTransactions(enrichedTransactions);
+    } catch (error) {
+      console.error('Error fetching boost transactions:', error);
+    }
+  };
+
   const fetchPayoutRequests = async () => {
     try {
-      // First, get payout items that match our campaign/brand filter
-      let itemsQuery = supabase
-        .from('submission_payout_items')
-        .select(`
-          id,
-          payout_request_id,
-          submission_id,
-          source_type,
-          source_id,
-          amount,
-          is_locked,
-          flagged_at,
-          flagged_by,
-          flag_reason,
-          video_submissions!inner (
-            video_url,
-            video_title,
-            video_thumbnail_url,
-            platform,
-            views,
-            video_author_username,
-            source_id,
-            source_type
-          )
-        `);
+      // First, get video submissions that match our filter to find their IDs
+      let submissionsQuery = supabase
+        .from('video_submissions')
+        .select('id, source_id, source_type, brand_id');
 
-      // Filter by campaign, boost, or brand via the video_submissions
+      // Filter by campaign, boost, or brand
       if (campaignId) {
-        itemsQuery = itemsQuery
-          .eq('video_submissions.source_id', campaignId)
-          .eq('video_submissions.source_type', 'campaign');
+        submissionsQuery = submissionsQuery
+          .eq('source_id', campaignId)
+          .eq('source_type', 'campaign');
       }
       if (boostId) {
-        itemsQuery = itemsQuery
-          .eq('video_submissions.source_id', boostId)
-          .eq('video_submissions.source_type', 'boost');
+        submissionsQuery = submissionsQuery
+          .eq('source_id', boostId)
+          .eq('source_type', 'boost');
       }
       if (brandId) {
-        itemsQuery = itemsQuery.eq('video_submissions.brand_id', brandId);
+        submissionsQuery = submissionsQuery.eq('brand_id', brandId);
       }
 
-      const { data: itemsData, error: itemsError } = await itemsQuery;
+      const { data: submissionsData, error: submissionsError } = await submissionsQuery;
       
+      if (submissionsError) throw submissionsError;
+
+      const submissionIds = (submissionsData || []).map(s => s.id);
+
+      if (submissionIds.length === 0) {
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get payout items for these submissions
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('submission_payout_items')
+        .select('*')
+        .in('submission_id', submissionIds);
+
       if (itemsError) throw itemsError;
 
+      if (!itemsData || itemsData.length === 0) {
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
       // Get unique payout request IDs
-      const requestIds = [...new Set((itemsData || []).map(item => item.payout_request_id))];
+      const requestIds = [...new Set(itemsData.map(item => item.payout_request_id))];
 
       if (requestIds.length === 0) {
         setRequests([]);
         setLoading(false);
         return;
       }
+
+      // Fetch video submission details for the items
+      const itemSubmissionIds = [...new Set(itemsData.map(item => item.submission_id))];
+      const { data: videoSubmissions } = await supabase
+        .from('video_submissions')
+        .select('id, video_url, video_title, video_thumbnail_url, platform, views, video_author_username')
+        .in('id', itemSubmissionIds);
 
       // Fetch the payout requests
       const { data: requestsData, error: requestsError } = await supabase
@@ -161,13 +232,16 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
 
+      // Create a map of video submissions by ID
+      const videoSubmissionsMap = new Map((videoSubmissions || []).map(v => [v.id, v]));
+
       // Map items to their requests
       const itemsByRequest = new Map<string, PayoutItem[]>();
       (itemsData || []).forEach(item => {
         const items = itemsByRequest.get(item.payout_request_id) || [];
         items.push({
           ...item,
-          video_submission: item.video_submissions as any
+          video_submission: videoSubmissionsMap.get(item.submission_id) || undefined
         });
         itemsByRequest.set(item.payout_request_id, items);
       });
@@ -318,15 +392,17 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
     );
   }
 
-  if (requests.length === 0 && showEmpty) {
+  const hasAnyData = requests.length > 0 || transactions.length > 0;
+
+  if (!hasAnyData && showEmpty) {
     return (
       <Card className="bg-card border-0 h-full">
         <CardContent className="p-6 h-full flex items-center justify-center">
           <div className="text-center py-8">
             <img src={creditCardIcon} alt="" className="h-12 w-12 mx-auto opacity-50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Payout Requests</h3>
+            <h3 className="text-lg font-semibold mb-2">No Payout Activity</h3>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              No payout requests have been made for this campaign yet. When creators request payouts, they'll appear here during the 7-day clearing period.
+              No payout requests or transactions have been made for this {boostId ? 'boost' : 'campaign'} yet. Payout activity will appear here.
             </p>
           </div>
         </CardContent>
@@ -334,7 +410,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
     );
   }
 
-  if (requests.length === 0) {
+  if (!hasAnyData) {
     return null;
   }
 
@@ -620,6 +696,63 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
             );
           })}
         </div>
+
+        {/* Boost Transactions History */}
+        {transactions.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px]">Completed Payments</h3>
+            <div className="rounded-xl overflow-hidden bg-card/30 border border-border/50">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-border/50 hover:bg-transparent">
+                    <TableHead className="text-foreground font-medium text-xs py-3 pl-4">Date</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3">Creator</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3">Description</TableHead>
+                    <TableHead className="text-foreground font-medium text-xs py-3 text-right pr-4">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((txn, index) => {
+                    const isLast = index === transactions.length - 1;
+                    return (
+                      <TableRow 
+                        key={txn.id}
+                        className={`hover:bg-muted/20 transition-colors ${!isLast ? 'border-b border-border/50' : 'border-0'}`}
+                      >
+                        <TableCell className="py-3 pl-4">
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(txn.created_at), 'MMM d, yyyy')}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={txn.profiles?.avatar_url || undefined} />
+                              <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                                {txn.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm">{txn.profiles?.username || 'Unknown'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <span className="text-sm text-muted-foreground">
+                            {txn.description || 'Boost payout'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 text-right pr-4">
+                          <span className="text-sm font-semibold text-emerald-500">
+                            ${Math.abs(txn.amount).toFixed(2)}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Details Dialog */}
         <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
