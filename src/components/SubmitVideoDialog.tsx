@@ -157,20 +157,24 @@ export function SubmitVideoDialog({
     }
   };
 
-  // Fetch video details from TikTok API
+  // Fetch video details from TikTok or Instagram API
   const fetchVideoDetails = async (url: string) => {
-    if (!url.includes('tiktok.com')) {
-      return null; // Only TikTok is supported for now
-    }
-
     setIsFetchingDetails(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
-        body: { videoUrl: url }
-      });
-
-      if (error) throw error;
-      return data?.data || null;
+      if (url.includes('tiktok.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        return data?.data || null;
+      } else if (url.includes('instagram.com')) {
+        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: { postUrl: url }
+        });
+        if (error) throw error;
+        return data?.data || null;
+      }
+      return null; // Platform not supported
     } catch (error) {
       console.error("Error fetching video details:", error);
       return null;
