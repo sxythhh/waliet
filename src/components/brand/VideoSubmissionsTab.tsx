@@ -11,9 +11,13 @@ import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, Rotate
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { isSameDay } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { isSameDay, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubmissionHeatmap } from "./SubmissionHeatmap";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -103,6 +107,7 @@ export function VideoSubmissionsTab({
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
@@ -629,22 +634,94 @@ export function VideoSubmissionsTab({
                 </button>
               </div>
 
-              {/* Sort By */}
-              <div className="flex items-center gap-1 ml-auto">
-                <span className="text-[10px] text-muted-foreground tracking-[-0.5px]">Sort:</span>
-                <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
-                  {(["date", "status", "platform"] as const).map(sort => <button key={sort} onClick={() => setSortBy(sort)} className={`px-2 py-1 text-[10px] tracking-[-0.5px] rounded-md transition-colors ${sortBy === sort ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                      {sort.charAt(0).toUpperCase() + sort.slice(1)}
-                    </button>)}
-                </div>
+              {/* Date Range Picker */}
+              <div className="flex items-center gap-2 ml-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg border transition-all duration-200",
+                        dateRange?.from
+                          ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/15"
+                          : "bg-muted/30 text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground"
+                      )}
+                    >
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <span>
+                            {format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}
+                          </span>
+                        ) : (
+                          <span>{format(dateRange.from, "MMM d, yyyy")}</span>
+                        )
+                      ) : (
+                        <span>Date Range</span>
+                      )}
+                      {dateRange?.from && (
+                        <X
+                          className="h-3 w-3 ml-0.5 hover:text-destructive transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDateRange(undefined);
+                            setSelectedDateFilter(null);
+                          }}
+                        />
+                      )}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
+                    <div className="p-3 border-b border-border">
+                      <p className="text-xs font-medium font-inter tracking-[-0.5px] text-foreground">Select date range</p>
+                      <p className="text-[10px] text-muted-foreground tracking-[-0.5px] mt-0.5">Filter submissions by date</p>
+                    </div>
+                    <Calendar
+                      mode="range"
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={(range) => {
+                        setDateRange(range);
+                        setSelectedDateFilter(null);
+                      }}
+                      numberOfMonths={2}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                    <div className="p-3 border-t border-border flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        {[
+                          { label: "Today", days: 0 },
+                          { label: "7d", days: 7 },
+                          { label: "30d", days: 30 },
+                        ].map(({ label, days }) => (
+                          <button
+                            key={label}
+                            onClick={() => {
+                              const end = new Date();
+                              const start = new Date();
+                              start.setDate(start.getDate() - days);
+                              setDateRange({ from: start, to: end });
+                            }}
+                            className="px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {dateRange?.from && (
+                        <button
+                          onClick={() => {
+                            setDateRange(undefined);
+                            setSelectedDateFilter(null);
+                          }}
+                          className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
-              
-              {/* Date Filter Indicator */}
-              {selectedDateFilter && <button onClick={() => setSelectedDateFilter(null)} className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] tracking-[-0.5px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors">
-                  <CalendarDays className="h-3 w-3" />
-                  <span>{format(selectedDateFilter, "MMM d, yyyy")}</span>
-                  <X className="h-3 w-3 ml-0.5" />
-                </button>}
             </div>
           </div>
 
@@ -661,9 +738,20 @@ export function VideoSubmissionsTab({
                 filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
               }
 
-              // Apply date filter
+              // Apply date filter (single date or range)
               if (selectedDateFilter) {
                 filteredSubs = filteredSubs.filter(s => isSameDay(new Date(s.submitted_at), selectedDateFilter));
+              } else if (dateRange?.from) {
+                filteredSubs = filteredSubs.filter(s => {
+                  const submissionDate = new Date(s.submitted_at);
+                  if (dateRange.to) {
+                    return isWithinInterval(submissionDate, {
+                      start: startOfDay(dateRange.from!),
+                      end: endOfDay(dateRange.to)
+                    });
+                  }
+                  return isSameDay(submissionDate, dateRange.from!);
+                });
               }
 
               // Apply sorting
