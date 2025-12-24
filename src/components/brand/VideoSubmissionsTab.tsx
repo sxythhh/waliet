@@ -448,15 +448,23 @@ export function VideoSubmissionsTab({
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="p-3 border-b border-border space-y-3 min-h-[88px]">
             {/* Header */}
-            <div className="flex items-center gap-2.5">
-              {selectedCreator && profiles[selectedCreator] && <Avatar className="h-7 w-7 ring-2 ring-background">
-                  <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs font-medium bg-muted/60">
-                    {profiles[selectedCreator]?.username?.[0]?.toUpperCase() || "?"}
-                  </AvatarFallback>
-                </Avatar>}
+            <div className="flex items-center gap-2.5 h-8">
+              <Avatar
+                className={`h-7 w-7 ring-2 ring-background shrink-0 ${
+                  selectedCreator && profiles[selectedCreator]
+                    ? ""
+                    : "opacity-0 pointer-events-none"
+                }`}
+              >
+                <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
+                <AvatarFallback className="text-xs font-medium bg-muted/60">
+                  {profiles[selectedCreator]?.username?.[0]?.toUpperCase() || "?"}
+                </AvatarFallback>
+              </Avatar>
               <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]">
-                {selectedCreator ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions` : "Pending Videos"}
+                {selectedCreator
+                  ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Submissions`
+                  : "Pending Videos"}
               </h3>
             </div>
 
