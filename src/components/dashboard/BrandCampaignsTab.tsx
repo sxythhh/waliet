@@ -466,18 +466,7 @@ export function BrandCampaignsTab({
                             </div>
                             <div className="rounded-lg p-2.5 space-y-1.5 px-0 py-0 bg-[#080808]/0">
                               <div className="flex items-baseline justify-between">
-                                <div className="flex items-baseline gap-1.5">
-                                  <span className="text-base font-bold tabular-nums">
-                                    ${Math.ceil(usedBudget).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground font-semibold">
-                                    / ${Math.ceil(Number(campaign.budget)).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}
-                                  </span>
-                                </div>
+                                
                               </div>
                               <div className="relative h-1.5 rounded-full overflow-hidden bg-muted border-t border-[#e0e0e0] dark:border-[#262626]">
                                 <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
@@ -514,14 +503,7 @@ export function BrandCampaignsTab({
                               </h3>
                             </div>
                             <div className="rounded-lg space-y-1.5 py-1">
-                              <div className="flex items-baseline gap-1.5">
-                                <span className="text-base font-bold tabular-nums">
-                                  ${bounty.monthly_retainer.toLocaleString()}
-                                </span>
-                                <span className="text-xs text-muted-foreground font-semibold">
-                                  /month
-                                </span>
-                              </div>
+                              
                               <div className="flex justify-between text-[10px] text-muted-foreground font-semibold">
                                 <span>{bounty.videos_per_month} videos/month</span>
                                 <span>{spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}</span>
