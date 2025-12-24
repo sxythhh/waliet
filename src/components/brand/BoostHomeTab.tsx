@@ -253,9 +253,11 @@ export function BoostHomeTab({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Sync metrics from Shortimize API - this updates video_submissions and aggregates to program_video_metrics
-      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics');
-      
+      // Sync metrics only for this brand (much faster than syncing everything)
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics', {
+        body: { brandId: boost.brand_id }
+      });
+
       if (error) {
         toast.error('Failed to sync metrics');
         console.error('Error syncing metrics:', error);

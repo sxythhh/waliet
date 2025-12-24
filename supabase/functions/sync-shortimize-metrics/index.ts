@@ -34,13 +34,24 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Starting Shortimize metrics sync...");
+    const { brandId, collectionName } = (req.method === "POST" ? (await req.json().catch(() => ({}))) : {}) as {
+      brandId?: string;
+      collectionName?: string;
+    };
 
-    // Fetch all brands with shortimize_api_key configured
-    const { data: brands, error: brandsError } = await supabase
+    console.log("Starting Shortimize metrics sync...", { brandId, collectionName });
+
+    // Fetch brands with shortimize_api_key configured (optionally filtered)
+    let brandsQuery = supabase
       .from("brands")
       .select("id, name, shortimize_api_key, collection_name")
       .not("shortimize_api_key", "is", null);
+
+    if (brandId) {
+      brandsQuery = brandsQuery.eq("id", brandId);
+    }
+
+    const { data: brands, error: brandsError } = await brandsQuery;
 
     if (brandsError) {
       throw new Error(`Failed to fetch brands: ${brandsError.message}`);
@@ -110,20 +121,37 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        console.log(`Found ${collections.size} collections for brand ${brand.name}: ${Array.from(collections).join(", ")}`);
+        // If caller provided a single collectionName, only sync that one for speed
+        if (collectionName) {
+          if (!collections.has(collectionName)) {
+            console.log(`Requested collection not found for brand ${brand.name}: ${collectionName}`);
+            brandResults.push({
+              brandId: brand.id,
+              brandName: brand.name,
+              videosSynced: 0,
+              error: `Collection not configured: ${collectionName}`,
+            });
+            continue;
+          }
+          collections.clear();
+          collections.add(collectionName);
+        }
+
+        console.log(
+          `Found ${collections.size} collections for brand ${brand.name}: ${Array.from(collections).join(", ")}`
+        );
 
         // Fetch videos from Shortimize for each collection
         let brandVideosSynced = 0;
 
         for (const collectionName of collections) {
           try {
-          const response = await fetch(
-              `https://api.shortimize.com/videos?collections=${encodeURIComponent(collectionName)}`,
+            const response = await fetch(
+              `https://api.shortimize.com/videos?collections=${encodeURIComponent(collectionName)}&limit=5000&has_metrics=true&order_by=latest_updated_at&order_direction=desc`,
               {
                 method: "GET",
                 headers: {
                   Authorization: `Bearer ${brand.shortimize_api_key}`,
-                  "Content-Type": "application/json",
                 },
               }
             );
