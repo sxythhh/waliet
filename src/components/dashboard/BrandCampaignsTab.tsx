@@ -339,7 +339,7 @@ export function BrandCampaignsTab({
       }}>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-[#0d0d0d]">
-                  <img src={applicationsIcon} alt="Applications" className="w-5 h-5" />
+                  <img alt="Applications" className="w-5 h-5" src="/lovable-uploads/b97de298-8ca2-4dca-90fc-646d17752143.png" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">
