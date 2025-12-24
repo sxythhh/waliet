@@ -84,6 +84,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<PayoutRequest | null>(null);
   const [flaggingItem, setFlaggingItem] = useState<string | null>(null);
+  const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPayoutRequests();
@@ -373,6 +374,71 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
     return Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
   };
 
+  const handleApprovePayout = async (request: PayoutRequest) => {
+    setApprovingRequest(request.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Update payout request status to completed
+      const { error: updateError } = await supabase
+        .from('submission_payout_requests')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', request.id);
+
+      if (updateError) throw updateError;
+
+      // Fetch current wallet balance
+      const { data: walletData, error: fetchWalletError } = await supabase
+        .from('wallets')
+        .select('balance, total_earned')
+        .eq('user_id', request.user_id)
+        .single();
+
+      if (fetchWalletError) throw fetchWalletError;
+
+      // Credit the creator's wallet
+      const { error: walletUpdateError } = await supabase
+        .from('wallets')
+        .update({
+          balance: (walletData?.balance || 0) + request.total_amount,
+          total_earned: (walletData?.total_earned || 0) + request.total_amount
+        })
+        .eq('user_id', request.user_id);
+
+      if (walletUpdateError) throw walletUpdateError;
+
+      // Create wallet transaction record
+      const { error: txError } = await supabase
+        .from('wallet_transactions')
+        .insert({
+          user_id: request.user_id,
+          amount: request.total_amount,
+          type: 'earning',
+          description: campaignId ? 'Campaign payout' : boostId ? 'Boost payout' : 'Payout',
+          metadata: {
+            payout_request_id: request.id,
+            campaign_id: campaignId || null,
+            boost_id: boostId || null,
+            approved_by: user.id
+          }
+        });
+
+      if (txError) throw txError;
+
+      toast.success(`Payout of $${request.total_amount.toFixed(2)} approved and sent to creator`);
+      fetchPayoutRequests();
+    } catch (error) {
+      console.error('Error approving payout:', error);
+      toast.error('Failed to approve payout');
+    } finally {
+      setApprovingRequest(null);
+    }
+  };
+
   if (loading) {
     return (
       <Card className="bg-card border-0">
@@ -494,9 +560,26 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                         {getStatusBadge(request)}
                       </TableCell>
                       <TableCell className="py-3 text-right pr-4">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          {request.status !== 'completed' && request.status !== 'cancelled' && (
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="h-7 text-xs gap-1"
+                              disabled={approvingRequest === request.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleApprovePayout(request);
+                              }}
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              {approvingRequest === request.id ? 'Approving...' : 'Approve'}
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                     
