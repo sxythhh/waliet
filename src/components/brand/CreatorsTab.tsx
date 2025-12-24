@@ -81,6 +81,7 @@ const getPlatformLogos = (isDark: boolean): Record<string, string> => ({
 });
 type MobileView = 'messages' | 'conversation' | 'creators';
 type MessageFilter = 'all' | 'unread' | 'bookmarked';
+type MembershipFilter = 'all' | 'active' | 'applied';
 interface Campaign {
   id: string;
   title: string;
@@ -110,6 +111,7 @@ export function CreatorsTab({
   const [creatorsCollapsed, setCreatorsCollapsed] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignFilter, setCampaignFilter] = useState<string>('all');
+  const [membershipFilter, setMembershipFilter] = useState<MembershipFilter>('all');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [removingFromCampaign, setRemovingFromCampaign] = useState<{
     creatorId: string;
@@ -547,7 +549,24 @@ export function CreatorsTab({
     const query = searchQuery.toLowerCase();
     const matchesSearch = creator.username.toLowerCase().includes(query) || creator.full_name?.toLowerCase().includes(query) || creator.email?.toLowerCase().includes(query) || creator.social_accounts.some(s => s.username.toLowerCase().includes(query));
     const matchesCampaign = campaignFilter === 'all' || creator.campaigns.some(c => c.id === campaignFilter);
-    return matchesSearch && matchesCampaign;
+    
+    // Membership filter logic
+    let matchesMembership = true;
+    if (membershipFilter !== 'all') {
+      const relevantCampaigns = campaignFilter === 'all' 
+        ? creator.campaigns 
+        : creator.campaigns.filter(c => c.id === campaignFilter);
+      
+      if (membershipFilter === 'active') {
+        // Active: campaigns without status (regular campaigns are active) or accepted boost applications
+        matchesMembership = relevantCampaigns.some(c => !c.status || c.status === 'accepted');
+      } else if (membershipFilter === 'applied') {
+        // Applied: pending boost applications
+        matchesMembership = relevantCampaigns.some(c => c.status === 'pending');
+      }
+    }
+    
+    return matchesSearch && matchesCampaign && matchesMembership;
   });
   const removeFromCampaign = async (creatorId: string, campaign: CreatorCampaign) => {
     try {
@@ -912,6 +931,16 @@ export function CreatorsTab({
               {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>
                   {campaign.title}
                 </SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={membershipFilter} onValueChange={(v) => setMembershipFilter(v as MembershipFilter)}>
+            <SelectTrigger className="h-9 bg-muted/30 border-border text-sm">
+              <SelectValue placeholder="All members" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All members</SelectItem>
+              <SelectItem value="active">Active members</SelectItem>
+              <SelectItem value="applied">Applied only</SelectItem>
             </SelectContent>
           </Select>
         </div>
