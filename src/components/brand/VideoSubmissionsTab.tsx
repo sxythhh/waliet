@@ -702,7 +702,7 @@ export function VideoSubmissionsTab({
                       {filteredSubs.map(submission => {
                         const profile = profiles[submission.user_id];
                         return (
-                          <TableRow key={submission.id} className="hover:bg-muted/30 border-border/30">
+                          <TableRow key={submission.id} className="border-[#0e0e0e]">
                             <TableCell className="max-w-[200px]">
                               <a 
                                 href={submission.video_url} 
