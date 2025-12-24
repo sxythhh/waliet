@@ -609,7 +609,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
   return (
     <TooltipProvider>
-      <div className="space-y-6 font-['Inter'] tracking-[-0.5px]">
+      <div className="space-y-6 font-['Inter'] tracking-[-0.5px] h-full py-[10px]">
 
         {/* Desktop Table */}
         {requests.length > 0 && (
