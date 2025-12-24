@@ -44,6 +44,9 @@ interface PayoutItem {
   flagged_at: string | null;
   flagged_by: string | null;
   flag_reason: string | null;
+  status?: string;
+  approved_at?: string | null;
+  approved_by?: string | null;
   video_submission?: {
     video_url: string;
     video_title: string | null;
@@ -90,22 +93,66 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Helper to get filtered items for a request (only items belonging to current campaign/boost)
+  const getFilteredItemsForRequest = (request: PayoutRequest) => {
+    if (!request.items) return { items: [], total: 0, otherCount: 0 };
+    
+    // If viewing a specific campaign or boost, filter items
+    if (campaignId) {
+      const filtered = request.items.filter(item => 
+        item.source_type === 'campaign' && item.source_id === campaignId
+      );
+      const otherItems = request.items.filter(item => 
+        item.source_type !== 'campaign' || item.source_id !== campaignId
+      );
+      return {
+        items: filtered,
+        total: filtered.reduce((sum, item) => sum + item.amount, 0),
+        otherCount: otherItems.length
+      };
+    }
+    
+    if (boostId) {
+      const filtered = request.items.filter(item => 
+        item.source_type === 'boost' && item.source_id === boostId
+      );
+      const otherItems = request.items.filter(item => 
+        item.source_type !== 'boost' || item.source_id !== boostId
+      );
+      return {
+        items: filtered,
+        total: filtered.reduce((sum, item) => sum + item.amount, 0),
+        otherCount: otherItems.length
+      };
+    }
+    
+    // If viewing all (brandId), show all items
+    return {
+      items: request.items,
+      total: request.total_amount,
+      otherCount: 0
+    };
+  };
+
   // Filter requests based on search and status
   const filteredRequests = useMemo(() => {
     return requests.filter(request => {
+      // Get filtered info for this request
+      const { items: filteredItems, total: filteredTotal } = getFilteredItemsForRequest(request);
+      
       // Search filter - match username or amount
       const matchesSearch = searchQuery === "" || 
         request.profiles?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        request.total_amount.toFixed(2).includes(searchQuery);
+        filteredTotal.toFixed(2).includes(searchQuery);
       
       // Status filter
       const matchesStatus = statusFilter === "all" || 
-        (statusFilter === "flagged" && request.items?.some(i => i.flagged_at)) ||
+        (statusFilter === "flagged" && filteredItems.some(i => i.flagged_at)) ||
         (statusFilter !== "flagged" && request.status === statusFilter);
       
       return matchesSearch && matchesStatus;
     });
-  }, [requests, searchQuery, statusFilter]);
+  }, [requests, searchQuery, statusFilter, campaignId, boostId]);
 
   useEffect(() => {
     fetchPayoutRequests();
@@ -401,16 +448,49 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Update payout request status to completed
-      const { error: updateError } = await supabase
-        .from('submission_payout_requests')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', request.id);
+      // Get the filtered items for this campaign/boost only
+      const { items: filteredItems, total: filteredTotal } = getFilteredItemsForRequest(request);
+      
+      if (filteredItems.length === 0) {
+        toast.error('No items to approve for this campaign');
+        return;
+      }
 
-      if (updateError) throw updateError;
+      const itemIds = filteredItems.map(item => item.id);
+      const submissionIds = filteredItems.map(item => item.submission_id);
+
+      // Update the status of only these items to 'approved'
+      const { error: itemsUpdateError } = await supabase
+        .from('submission_payout_items')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user.id
+        })
+        .in('id', itemIds);
+
+      if (itemsUpdateError) throw itemsUpdateError;
+
+      // Check if ALL items in this request are now approved
+      const { data: allItems } = await supabase
+        .from('submission_payout_items')
+        .select('id, status')
+        .eq('payout_request_id', request.id);
+
+      const allApproved = allItems?.every(item => item.status === 'approved') || false;
+
+      // If all items approved, mark the request as completed
+      if (allApproved) {
+        const { error: updateError } = await supabase
+          .from('submission_payout_requests')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', request.id);
+
+        if (updateError) throw updateError;
+      }
 
       // Fetch current wallet balance
       const { data: walletData, error: fetchWalletError } = await supabase
@@ -421,53 +501,44 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       if (fetchWalletError) throw fetchWalletError;
 
-      // Credit the creator's wallet
+      // Credit the creator's wallet with only the filtered amount
       const { error: walletUpdateError } = await supabase
         .from('wallets')
         .update({
-          balance: (walletData?.balance || 0) + request.total_amount,
-          total_earned: (walletData?.total_earned || 0) + request.total_amount
+          balance: (walletData?.balance || 0) + filteredTotal,
+          total_earned: (walletData?.total_earned || 0) + filteredTotal
         })
         .eq('user_id', request.user_id);
 
       if (walletUpdateError) throw walletUpdateError;
 
-      // Create wallet transaction record
+      // Create wallet transaction record with only the filtered amount
       const { error: txError } = await supabase
         .from('wallet_transactions')
         .insert({
           user_id: request.user_id,
-          amount: request.total_amount,
+          amount: filteredTotal,
           type: 'earning',
           description: campaignId ? 'Campaign payout' : boostId ? 'Boost payout' : 'Payout',
           metadata: {
             payout_request_id: request.id,
             campaign_id: campaignId || null,
             boost_id: boostId || null,
-            approved_by: user.id
+            approved_by: user.id,
+            item_ids: itemIds
           }
         });
 
       if (txError) throw txError;
 
-      // Get payout items to update submission payout_status
-      const { data: payoutItemsForStatus } = await supabase
-        .from('submission_payout_items')
-        .select('submission_id')
-        .eq('payout_request_id', request.id);
-
-      if (payoutItemsForStatus && payoutItemsForStatus.length > 0) {
-        const submissionIdsToUpdate = payoutItemsForStatus.map(item => item.submission_id);
-        
-        // Update video_submissions payout_status to 'paid'
-        const { error: payoutStatusError } = await supabase
-          .from('video_submissions')
-          .update({ payout_status: 'paid' })
-          .in('id', submissionIdsToUpdate);
-        
-        if (payoutStatusError) {
-          console.error('Error updating payout_status to paid:', payoutStatusError);
-        }
+      // Update video_submissions payout_status to 'paid' for only the approved submissions
+      const { error: payoutStatusError } = await supabase
+        .from('video_submissions')
+        .update({ payout_status: 'paid' })
+        .in('id', submissionIds);
+      
+      if (payoutStatusError) {
+        console.error('Error updating payout_status to paid:', payoutStatusError);
       }
 
       // Update boost budget_used if this is a boost payout
@@ -482,7 +553,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
           await supabase
             .from('bounty_campaigns')
             .update({
-              budget_used: (currentBoost.budget_used || 0) + request.total_amount
+              budget_used: (currentBoost.budget_used || 0) + filteredTotal
             })
             .eq('id', boostId);
         }
@@ -490,70 +561,61 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
 
       // Update paid_views in campaign_account_analytics
       if (campaignId) {
-        // Fetch payout items to get total views being paid
-        const { data: payoutItems } = await supabase
-          .from('submission_payout_items')
-          .select('submission_id')
-          .eq('payout_request_id', request.id);
+        // Get total views from approved submissions
+        const { data: submissions, error: submissionsError } = await supabase
+          .from('video_submissions')
+          .select('views, video_author_username, platform')
+          .in('id', submissionIds);
 
-        if (payoutItems && payoutItems.length > 0) {
-          const submissionIds = payoutItems.map(item => item.submission_id);
+        if (submissionsError) {
+          console.error('Error fetching submissions for paid views:', submissionsError);
+        }
+
+        if (submissions && submissions.length > 0) {
+          const totalViewsPaid = submissions.reduce((sum, sub) => sum + (sub.views || 0), 0);
           
-          // Get total views from these submissions - use video_submissions table
-          const { data: submissions, error: submissionsError } = await supabase
-            .from('video_submissions')
-            .select('views, video_author_username, platform')
-            .in('id', submissionIds);
+          // Get unique usernames and platforms
+          const uniqueAccounts = new Map<string, string>();
+          submissions.forEach(sub => {
+            if (sub.video_author_username && sub.platform) {
+              uniqueAccounts.set(`${sub.video_author_username}-${sub.platform}`, sub.platform);
+            }
+          });
 
-          if (submissionsError) {
-            console.error('Error fetching submissions for paid views:', submissionsError);
-          }
-
-          if (submissions && submissions.length > 0) {
-            const totalViewsPaid = submissions.reduce((sum, sub) => sum + (sub.views || 0), 0);
+          // Update campaign_account_analytics for each account
+          for (const [key, platform] of uniqueAccounts) {
+            const username = key.split('-')[0];
             
-            // Get unique usernames and platforms
-            const uniqueAccounts = new Map<string, string>();
-            submissions.forEach(sub => {
-              if (sub.video_author_username && sub.platform) {
-                uniqueAccounts.set(`${sub.video_author_username}-${sub.platform}`, sub.platform);
-              }
-            });
+            const { data: analytics } = await supabase
+              .from('campaign_account_analytics')
+              .select('paid_views')
+              .eq('campaign_id', campaignId)
+              .eq('account_username', username)
+              .eq('platform', platform)
+              .single();
 
-            // Update campaign_account_analytics for each account
-            for (const [key, platform] of uniqueAccounts) {
-              const username = key.split('-')[0];
-              
-              const { data: analytics } = await supabase
+            if (analytics) {
+              const { error: updateError } = await supabase
                 .from('campaign_account_analytics')
-                .select('paid_views')
+                .update({
+                  paid_views: (analytics.paid_views || 0) + totalViewsPaid,
+                  last_payment_amount: filteredTotal,
+                  last_payment_date: new Date().toISOString()
+                })
                 .eq('campaign_id', campaignId)
                 .eq('account_username', username)
-                .eq('platform', platform)
-                .single();
-
-              if (analytics) {
-                const { error: updateError } = await supabase
-                  .from('campaign_account_analytics')
-                  .update({
-                    paid_views: (analytics.paid_views || 0) + totalViewsPaid,
-                    last_payment_amount: request.total_amount,
-                    last_payment_date: new Date().toISOString()
-                  })
-                  .eq('campaign_id', campaignId)
-                  .eq('account_username', username)
-                  .eq('platform', platform);
-                
-                if (updateError) {
-                  console.error('Error updating paid_views in analytics:', updateError);
-                }
+                .eq('platform', platform);
+              
+              if (updateError) {
+                console.error('Error updating paid_views in analytics:', updateError);
               }
             }
           }
         }
       }
 
-      toast.success(`Payout of $${request.total_amount.toFixed(2)} approved and sent to creator`);
+      const statusNote = allApproved ? '' : ' (other items still pending in different campaigns)';
+      toast.success(`Payout of $${filteredTotal.toFixed(2)} approved and sent to creator${statusNote}`);
       fetchPayoutRequests();
     } catch (error) {
       console.error('Error approving payout:', error);
@@ -658,7 +720,10 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
               {filteredRequests.map((request, index) => {
                 const isExpanded = expandedRequest === request.id;
                 const isLast = index === filteredRequests.length - 1;
-                const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
+                const { items: displayItems, total: displayTotal, otherCount } = getFilteredItemsForRequest(request);
+                const flaggedItems = displayItems.filter(i => i.flagged_at) || [];
+                const approvedItems = displayItems.filter(i => i.status === 'approved') || [];
+                const hasPendingItems = displayItems.some(i => i.status !== 'approved');
                 
                 return (
                   <>
@@ -684,11 +749,23 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
-                        <span className="text-lg font-semibold">${request.total_amount.toFixed(2)}</span>
+                        <div className="flex flex-col">
+                          <span className="text-lg font-semibold">${displayTotal.toFixed(2)}</span>
+                          {otherCount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              +{otherCount} other {otherCount === 1 ? 'item' : 'items'}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{request.items?.length || 0} submissions</span>
+                          <span className="text-sm">{displayItems.length} submissions</span>
+                          {approvedItems.length > 0 && approvedItems.length < displayItems.length && (
+                            <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-xs">
+                              {approvedItems.length} approved
+                            </Badge>
+                          )}
                           {flaggedItems.length > 0 && (
                             <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-xs">
                               {flaggedItems.length} flagged
@@ -712,7 +789,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                       </TableCell>
                       <TableCell className="py-3 text-right pr-4">
                         <div className="flex items-center justify-end gap-2">
-                          {request.status !== 'completed' && request.status !== 'cancelled' && (
+                          {request.status !== 'completed' && request.status !== 'cancelled' && hasPendingItems && (
                             <Button 
                               variant="default" 
                               size="sm" 
@@ -724,8 +801,13 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                               }}
                             >
                               <CheckCircle className="h-3 w-3" />
-                              {approvingRequest === request.id ? 'Approving...' : 'Approve'}
+                              {approvingRequest === request.id ? 'Approving...' : `Approve $${displayTotal.toFixed(2)}`}
                             </Button>
+                          )}
+                          {!hasPendingItems && displayItems.length > 0 && (
+                            <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs">
+                              Approved
+                            </Badge>
                           )}
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -739,19 +821,31 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                       <TableRow className={`bg-muted/10 ${!isLast ? 'border-b border-border/50' : ''}`}>
                         <TableCell colSpan={6} className="p-0">
                           <div className="p-4 space-y-3">
-                            <div className="text-xs font-medium text-muted-foreground mb-3">Submission Items</div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="text-xs font-medium text-muted-foreground">
+                                Submission Items ({displayItems.length})
+                              </div>
+                              {otherCount > 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  {otherCount} more {otherCount === 1 ? 'item' : 'items'} in other campaigns
+                                </span>
+                              )}
+                            </div>
                             <div className="grid gap-3">
-                              {request.items?.map(item => {
+                              {displayItems.map(item => {
                                 const platformIcon = getPlatformIcon(item.video_submission?.platform || null);
                                 const isFlagged = !!item.flagged_at;
+                                const isApproved = item.status === 'approved';
                                 
                                 return (
                                   <div 
                                     key={item.id}
                                     className={`group rounded-xl border overflow-hidden transition-all hover:border-border/60 ${
-                                      isFlagged 
-                                        ? 'bg-amber-500/5 border-amber-500/20' 
-                                        : 'bg-card/40 border-border/40'
+                                      isApproved
+                                        ? 'bg-emerald-500/5 border-emerald-500/20'
+                                        : isFlagged 
+                                          ? 'bg-amber-500/5 border-amber-500/20' 
+                                          : 'bg-card/40 border-border/40'
                                     }`}
                                   >
                                     {/* Main Content - Horizontal Layout */}
@@ -796,6 +890,11 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                                               {item.video_submission?.video_title || item.video_submission?.video_description || 'Untitled Video'}
                                             </a>
                                             <div className="flex items-center gap-2 flex-shrink-0">
+                                              {isApproved && (
+                                                <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] py-0 h-5">
+                                                  Paid
+                                                </Badge>
+                                              )}
                                               <span className="text-sm font-semibold text-emerald-500 tabular-nums">
                                                 ${item.amount.toFixed(2)}
                                               </span>
@@ -948,7 +1047,9 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
             </div>
           ) : (
             filteredRequests.map(request => {
-              const flaggedItems = request.items?.filter(i => i.flagged_at) || [];
+              const { items: displayItems, total: displayTotal, otherCount } = getFilteredItemsForRequest(request);
+              const flaggedItems = displayItems.filter(i => i.flagged_at) || [];
+              const hasPendingItems = displayItems.some(i => i.status !== 'approved');
               
               return (
                 <Card 
@@ -979,16 +1080,23 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                     </div>
                     
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-2xl font-bold">${request.total_amount.toFixed(2)}</span>
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-bold">${displayTotal.toFixed(2)}</span>
+                        {otherCount > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{otherCount} other {otherCount === 1 ? 'item' : 'items'}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-muted-foreground">
-                        {request.items?.length || 0} items
+                        {displayItems.length} items
                         {flaggedItems.length > 0 && (
                           <span className="text-amber-500 ml-1">({flaggedItems.length} flagged)</span>
                         )}
                       </div>
                     </div>
                     
-                    <div>
+                    <div className="mb-3">
                       <Progress value={getClearingProgress(request)} className="h-1.5 mb-1" />
                       <div className="text-xs text-muted-foreground">
                         {request.status === 'completed' 
@@ -997,6 +1105,27 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                         }
                       </div>
                     </div>
+
+                    {request.status !== 'completed' && request.status !== 'cancelled' && hasPendingItems && (
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="w-full h-8 text-xs gap-1"
+                        disabled={approvingRequest === request.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApprovePayout(request);
+                        }}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        {approvingRequest === request.id ? 'Approving...' : `Approve $${displayTotal.toFixed(2)}`}
+                      </Button>
+                    )}
+                    {!hasPendingItems && displayItems.length > 0 && (
+                      <Badge className="w-full justify-center bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs py-1">
+                        Approved
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               );
