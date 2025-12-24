@@ -64,7 +64,7 @@ export function BudgetProgressCard({
               className="absolute -top-0 transform -translate-x-1/2 transition-all duration-500"
               style={{ left: `${Math.min(Math.max(budgetPercentage, 5), 95)}%` }}
             >
-              <div className="bg-emerald-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg">
+              <div className="bg-emerald-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-lg">
                 {budgetPercentage.toFixed(0)}%
               </div>
               <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-emerald-500 mx-auto" />
