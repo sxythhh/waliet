@@ -809,7 +809,7 @@ export function PayoutRequestsTable({ campaignId, boostId, brandId, showEmpty = 
                             </Button>
                           )}
                           {!hasPendingItems && displayItems.length > 0 && (
-                            <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs">
+                            <Badge className="bg-emerald-500/10 text-emerald-500 border-transparent text-xs hover:bg-emerald-500/10">
                               Approved
                             </Badge>
                           )}
