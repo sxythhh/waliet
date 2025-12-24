@@ -165,8 +165,24 @@ export function AllProgramsAnalytics({
           .eq('brand_id', brandId)
       ]);
 
-      // Aggregate metrics by date
+      // Aggregate metrics by date - taking only the LATEST record per source per day
       const rawMetrics = metricsResult.data || [];
+      
+      // First, group by source_id + date and keep only the latest record per source per day
+      const latestBySourceAndDate = new Map<string, typeof rawMetrics[0]>();
+      
+      rawMetrics.forEach(m => {
+        const dateKey = format(new Date(m.recorded_at), 'yyyy-MM-dd');
+        const sourceKey = `${m.source_type}_${m.source_id}_${dateKey}`;
+        const existing = latestBySourceAndDate.get(sourceKey);
+        
+        // Keep the record with the latest recorded_at timestamp
+        if (!existing || new Date(m.recorded_at) > new Date(existing.recorded_at)) {
+          latestBySourceAndDate.set(sourceKey, m);
+        }
+      });
+      
+      // Now aggregate the latest records by date (summing across different sources)
       const metricsByDate = new Map<string, {
         views: number;
         likes: number;
@@ -175,7 +191,7 @@ export function AllProgramsAnalytics({
         videos: number;
       }>();
 
-      rawMetrics.forEach(m => {
+      latestBySourceAndDate.forEach(m => {
         const dateKey = format(new Date(m.recorded_at), 'yyyy-MM-dd');
         const existing = metricsByDate.get(dateKey) || {
           views: 0,
