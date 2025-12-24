@@ -90,6 +90,7 @@ export function CampaignHomeTab({
     shortimize_api_key: string | null;
   } | null>(null);
   const [campaignHashtags, setCampaignHashtags] = useState<string[]>([]);
+  const [campaignCollectionName, setCampaignCollectionName] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Reset videos when timeframe changes to prevent stale data
@@ -111,7 +112,7 @@ export function CampaignHomeTab({
 
         // Build all queries
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
-        const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
+        const campaignQuery = supabase.from('campaigns').select('hashtags, shortimize_collection_name').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
         
         // Query video_submissions directly for accurate metrics (refreshed every 8 hours from Shortimize)
@@ -136,6 +137,7 @@ export function CampaignHomeTab({
         const brandData = brandResult.data;
         setBrand(brandData);
         setCampaignHashtags(campaignResult.data?.hashtags || []);
+        setCampaignCollectionName(campaignResult.data?.shortimize_collection_name || null);
 
         // Process video submissions for stats - get accurate metrics directly from video-level data
         const allSubmissions = (videoSubmissionsResult.data || []) as { 
@@ -284,9 +286,16 @@ export function CampaignHomeTab({
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Sync metrics from Shortimize API - this updates video_submissions and aggregates to program_video_metrics
-      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics');
-      
+      const collectionName = campaignCollectionName || brand?.collection_name;
+      if (!collectionName) {
+        toast.error('No collection configured for this campaign');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics', {
+        body: { brandId, collectionName }
+      });
+
       if (error) {
         toast.error('Failed to sync metrics: ' + error.message);
         return;
