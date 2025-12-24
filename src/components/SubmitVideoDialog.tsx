@@ -85,7 +85,6 @@ export function SubmitVideoDialog({
   onSuccess
 }: SubmitVideoDialogProps) {
   const [videoUrl, setVideoUrl] = useState("");
-  const [videoTitle, setVideoTitle] = useState("");
   const [platform, setPlatform] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
@@ -181,10 +180,6 @@ export function SubmitVideoDialog({
   };
 
   const handleSubmit = async () => {
-    if (!videoTitle.trim()) {
-      toast.error("Please enter a video title");
-      return;
-    }
     if (!videoUrl.trim()) {
       toast.error("Please enter a video URL");
       return;
@@ -240,7 +235,6 @@ export function SubmitVideoDialog({
         creator_id: user.id,
         video_url: videoUrl.trim(),
         platform: platform,
-        video_title: videoTitle.trim(),
         social_account_id: selectedAccountId,
         status: "pending",
         estimated_payout: estimatedPayout,
@@ -262,7 +256,6 @@ export function SubmitVideoDialog({
 
       toast.success("Video submitted successfully!");
       setVideoUrl("");
-      setVideoTitle("");
       setPlatform("");
       setSelectedAccountId("");
       setAcknowledged(false);
@@ -333,63 +326,28 @@ export function SubmitVideoDialog({
             </button>
 
             <div className="space-y-5">
-              {/* Title Input */}
+              {/* Account Selection - First */}
               <div className="space-y-2">
                 <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
-                  Title <span className="text-amber-500">*</span>
-                </label>
-                <Input
-                  placeholder="Enter video title"
-                  value={videoTitle}
-                  onChange={(e) => setVideoTitle(e.target.value)}
-                  className="h-12 bg-muted/30 border-amber-500/30 rounded-xl text-sm focus:border-amber-500/50 focus:ring-amber-500/20"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                />
-              </div>
-
-              {/* Video URL Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
-                  Link <span className="text-amber-500">*</span>
-                </label>
-                <div className="relative">
-                  <Input
-                    placeholder="https://tiktok.com/@username/video/..."
-                    value={videoUrl}
-                    onChange={(e) => handleUrlChange(e.target.value)}
-                    className="h-12 bg-muted/30 border-amber-500/30 rounded-xl text-sm focus:border-amber-500/50 focus:ring-amber-500/20"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  />
-                  {videoUrl && validateUrl(videoUrl) && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Account Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
-                  Your Account <span className="text-amber-500">*</span>
+                  Your Account <span className="text-[#2060df]">*</span>
                 </label>
                 {loadingAccounts ? (
                   <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   </div>
                 ) : filteredAccounts.length === 0 ? (
-                  <div className="h-12 bg-muted/30 border border-amber-500/30 rounded-xl flex items-center gap-2 px-3">
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
+                  <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center gap-2 px-3">
+                    <AlertCircle className="w-4 h-4 text-[#2060df]" />
                     <span className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
                       {platform ? `No ${PLATFORM_CONFIG[platform]?.label || platform} accounts connected` : 'Select a platform first by entering a video URL'}
                     </span>
                   </div>
                 ) : (
                   <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                    <SelectTrigger className="h-12 bg-muted/30 border-amber-500/30 rounded-xl focus:border-amber-500/50 focus:ring-amber-500/20">
+                    <SelectTrigger className="h-12 bg-muted/30 border-border/50 rounded-xl focus:border-[#2060df]/50 focus:ring-[#2060df]/20">
                       <SelectValue placeholder="Select your account" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border-border">
                       {filteredAccounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           <div className="flex items-center gap-2">
@@ -420,13 +378,34 @@ export function SubmitVideoDialog({
                 )}
               </div>
 
+              {/* Video URL Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
+                  Link <span className="text-[#2060df]">*</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    placeholder="https://tiktok.com/@username/video/..."
+                    value={videoUrl}
+                    onChange={(e) => handleUrlChange(e.target.value)}
+                    className="h-12 bg-muted/30 border-border/50 rounded-xl text-sm focus:border-[#2060df]/50 focus:ring-[#2060df]/20"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  />
+                  {videoUrl && validateUrl(videoUrl) && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Acknowledgment Checkbox */}
               <div className="flex items-start gap-3 p-4 bg-muted/20 border border-border/50 rounded-xl">
                 <Checkbox
                   id="acknowledge"
                   checked={acknowledged}
                   onCheckedChange={(checked) => setAcknowledged(checked === true)}
-                  className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-[#2060df] data-[state=checked]:border-[#2060df]"
                 />
                 <label
                   htmlFor="acknowledge"
@@ -441,8 +420,8 @@ export function SubmitVideoDialog({
               <div className="flex justify-end pt-2">
                 <Button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !videoUrl || !videoTitle || !platform || !selectedAccountId || !acknowledged}
-                  className="h-11 px-6 rounded-xl font-medium bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white border border-amber-500/30"
+                  disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged}
+                  className="h-11 px-6 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
                   style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
                 >
                   {isSubmitting ? (
