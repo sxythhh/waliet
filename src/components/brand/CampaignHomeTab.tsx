@@ -283,7 +283,7 @@ export function CampaignHomeTab({
         {/* Stats Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="p-4 rounded-lg bg-muted/50 dark:bg-muted/25 space-y-3">
+            <div key={i} className="p-4 rounded-lg bg-transparent space-y-3">
               <Skeleton className="h-4 w-28 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
               <Skeleton className="h-8 w-20 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
               <Skeleton className="h-3 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
@@ -291,7 +291,7 @@ export function CampaignHomeTab({
           ))}
         </div>
         {/* Chart Skeleton */}
-        <div className="p-5 rounded-lg bg-muted/50 dark:bg-muted/25 space-y-4">
+        <div className="p-5 rounded-lg bg-transparent space-y-4">
           <div className="flex items-center justify-between">
             <Skeleton className="h-5 w-40 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
             <Skeleton className="h-8 w-8 rounded bg-muted-foreground/15 dark:bg-muted-foreground/30" />
@@ -311,7 +311,7 @@ export function CampaignHomeTab({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="p-4 rounded-lg bg-muted/50 dark:bg-muted/25 flex gap-4">
+              <div key={i} className="p-4 rounded-lg bg-transparent flex gap-4">
                 <Skeleton className="w-24 h-36 rounded-lg bg-muted-foreground/15 dark:bg-muted-foreground/30" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
