@@ -158,8 +158,8 @@ export function TeamMembersTab({
             Invite and manage team members
           </p>
         </div>
-        {canManageTeam && <button onClick={() => setInviteDialogOpen(true)} className="py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-2">
-            <img src={personAddIcon} alt="" className="h-4 w-4" />
+        {canManageTeam && <button onClick={() => setInviteDialogOpen(true)} className="bg-[#1f60dd] border-t border-[#4b85f7] font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-2 px-[20px] py-[6px] rounded-md">
+            
             Invite
           </button>}
       </div>
