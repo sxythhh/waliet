@@ -34,6 +34,10 @@ interface VideoSubmission {
   reviewed_at: string | null;
   rejection_reason: string | null;
   is_flagged: boolean | null;
+  video_description: string | null;
+  video_thumbnail_url: string | null;
+  video_author_username: string | null;
+  video_author_avatar: string | null;
 }
 interface Profile {
   id: string;
@@ -143,7 +147,11 @@ export function VideoSubmissionsTab({
         submitted_at: v.submitted_at,
         reviewed_at: v.reviewed_at,
         rejection_reason: v.rejection_reason,
-        is_flagged: v.is_flagged
+        is_flagged: v.is_flagged,
+        video_description: v.video_description,
+        video_thumbnail_url: v.video_thumbnail_url,
+        video_author_username: v.video_author_username,
+        video_author_avatar: v.video_author_avatar
       }));
 
       setSubmissions(submissionsData);
@@ -555,6 +563,36 @@ export function VideoSubmissionsTab({
 
                       {/* Content */}
                       <div className="p-4 space-y-3">
+                        {/* Video thumbnail and details */}
+                        {submission.video_thumbnail_url && (
+                          <div className="relative rounded-lg overflow-hidden bg-muted/20">
+                            <img 
+                              src={submission.video_thumbnail_url} 
+                              alt="Video thumbnail" 
+                              className="w-full h-32 object-cover"
+                            />
+                            {submission.video_author_username && (
+                              <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/70 rounded-full px-2 py-1">
+                                {submission.video_author_avatar && (
+                                  <img 
+                                    src={submission.video_author_avatar} 
+                                    alt="" 
+                                    className="h-4 w-4 rounded-full"
+                                  />
+                                )}
+                                <span className="text-xs text-white font-medium">@{submission.video_author_username}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Video description */}
+                        {submission.video_description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 tracking-[-0.3px]">
+                            {submission.video_description}
+                          </p>
+                        )}
+
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2.5">
                             <div className="h-7 w-7 rounded-lg bg-muted/40 flex items-center justify-center">
