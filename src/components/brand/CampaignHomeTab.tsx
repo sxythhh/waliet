@@ -231,6 +231,7 @@ export function CampaignHomeTab({
             const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
             return {
               date: format(new Date(m.recorded_at), 'MMM d'),
+              datetime: format(new Date(m.recorded_at), 'MMM d, yyyy h:mm a'),
               views,
               likes,
               shares,
