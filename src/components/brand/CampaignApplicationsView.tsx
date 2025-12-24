@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, X, User, ChevronUp, ChevronDown, Shield, Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -62,6 +62,8 @@ export function CampaignApplicationsView({
   onApplicationReviewed
 }: CampaignApplicationsViewProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const workspace = searchParams.get('workspace');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -452,10 +454,10 @@ export function CampaignApplicationsView({
                 <div className="flex gap-2">
                   <Button onClick={() => {
               const creatorId = selectedApp.creator_id || selectedApp.user_id;
-              if (creatorId) {
-                navigate(`/dashboard?tab=creators&creator=${creatorId}`);
+              if (creatorId && workspace) {
+                navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=messages&creator=${creatorId}`);
               }
-            }} className="h-11 px-4 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100">
+            }} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100">
                     Message
                   </Button>
                   <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400">
