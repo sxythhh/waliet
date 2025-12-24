@@ -265,38 +265,49 @@ export function CampaignApplicationsView({
               <div className="p-4 text-center text-sm text-muted-foreground">
                 No {statusFilter} applications
               </div>
-            ) : filteredApplications.map(app => <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-colors ${selectedAppId === app.id ? "bg-primary/10 border border-primary/20" : "hover:bg-muted/50"}`}>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={app.profile?.avatar_url || ""} />
-                    <AvatarFallback>
-                      {app.profile?.username?.[0]?.toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium truncate">
-                        {app.profile?.full_name || app.profile?.username || "Unknown"}
-                      </p>
-                      {app.status !== 'pending' && (
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                          app.status === 'approved' || app.status === 'accepted' 
-                            ? 'bg-emerald-500/10 text-emerald-500' 
-                            : 'bg-red-500/10 text-red-500'
-                        }`}>
-                          {app.status === 'approved' || app.status === 'accepted' ? 'Approved' : 'Rejected'}
-                        </span>
-                      )}
+            ) : filteredApplications.map(app => {
+                const timeAgo = formatDistanceToNow(new Date(getSubmittedAt(app) || new Date()), { addSuffix: true });
+                const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
+                return (
+                  <button 
+                    key={app.id} 
+                    onClick={() => setSelectedAppId(app.id)} 
+                    className={`w-full p-3 rounded-lg text-left transition-all border ${
+                      selectedAppId === app.id 
+                        ? "border-[#5966f3]" 
+                        : "border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={app.profile?.avatar_url || ""} />
+                        <AvatarFallback>
+                          {app.profile?.username?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium tracking-[-0.5px] truncate">
+                            {app.profile?.full_name || app.profile?.username || "Unknown"}
+                          </p>
+                          {app.status !== 'pending' && (
+                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                              app.status === 'approved' || app.status === 'accepted' 
+                                ? 'bg-emerald-500/10 text-emerald-500' 
+                                : 'bg-red-500/10 text-red-500'
+                            }`}>
+                              {app.status === 'approved' || app.status === 'accepted' ? 'Approved' : 'Rejected'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+                          {capitalizedTime}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {app.platform && PLATFORM_LOGOS[app.platform] && <img src={PLATFORM_LOGOS[app.platform]} alt={app.platform} className="h-3 w-3" />}
-                      <span>{formatDistanceToNow(new Date(getSubmittedAt(app) || new Date()), {
-                      addSuffix: true
-                    })}</span>
-                    </div>
-                  </div>
-                </div>
-              </button>)}
+                  </button>
+                );
+              })}
           </div>
         </ScrollArea>
       </div>
