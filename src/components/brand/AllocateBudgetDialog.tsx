@@ -144,8 +144,8 @@ export function AllocateBudgetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] text-white max-w-md p-0 overflow-hidden">
-        <div className="p-6 pb-0">
+      <DialogContent className="bg-[#0a0a0a] text-white max-w-md p-0 overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="p-6 pb-0 flex-shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-medium tracking-tight">
               Allocate Budget
@@ -153,7 +153,7 @@ export function AllocateBudgetDialog({
           </DialogHeader>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Virality Balance */}
           <div className="bg-white/[0.03] rounded-xl p-5">
             <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Virality Balance</p>
