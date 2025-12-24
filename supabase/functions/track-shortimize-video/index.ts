@@ -158,6 +158,13 @@ Deno.serve(async (req) => {
 
     // Handle potentially empty or non-JSON responses
     const responseText = await shortimizeResponse.text();
+    console.log('Shortimize raw response:', { 
+      status: shortimizeResponse.status, 
+      statusText: shortimizeResponse.statusText,
+      responseLength: responseText.length,
+      responseText: responseText.substring(0, 500) // Log first 500 chars
+    });
+
     let shortimizeResult: { error?: string; message?: string; videoId?: string; id?: string; directUrl?: string } = {};
     
     if (responseText) {
@@ -167,12 +174,11 @@ Deno.serve(async (req) => {
         console.error('Failed to parse Shortimize response:', responseText);
         shortimizeResult = { error: 'Invalid JSON response' };
       }
+    } else {
+      console.log('Shortimize returned empty response body');
     }
 
-    console.log('Shortimize API response:', { 
-      status: shortimizeResponse.status, 
-      result: shortimizeResult 
-    });
+    console.log('Shortimize parsed result:', shortimizeResult);
 
     if (!shortimizeResponse.ok) {
       // Check if it's a duplicate video error (already tracked)
