@@ -922,27 +922,29 @@ export function CreatorsTab({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-border text-sm" />
           </div>
-          <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-            <SelectTrigger className="h-9 bg-muted/30 border-border text-sm">
-              <SelectValue placeholder="All campaigns" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All campaigns</SelectItem>
-              {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>
-                  {campaign.title}
-                </SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={membershipFilter} onValueChange={(v) => setMembershipFilter(v as MembershipFilter)}>
-            <SelectTrigger className="h-9 bg-muted/30 border-border text-sm">
-              <SelectValue placeholder="All members" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All members</SelectItem>
-              <SelectItem value="active">Active members</SelectItem>
-              <SelectItem value="applied">Applied only</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+              <SelectTrigger className="h-9 bg-muted/30 border-transparent text-sm flex-1">
+                <SelectValue placeholder="All campaigns" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All campaigns</SelectItem>
+                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>
+                    {campaign.title}
+                  </SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={membershipFilter} onValueChange={(v) => setMembershipFilter(v as MembershipFilter)}>
+              <SelectTrigger className="h-9 bg-muted/30 border-transparent text-sm flex-1">
+                <SelectValue placeholder="All members" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All members</SelectItem>
+                <SelectItem value="active">Active members</SelectItem>
+                <SelectItem value="applied">Applied only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <ScrollArea className="flex-1">
