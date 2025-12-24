@@ -32,6 +32,7 @@ interface Application {
 
 interface CampaignApplicationsViewProps {
   campaignId: string;
+  onApplicationReviewed?: () => void;
 }
 
 const PLATFORM_LOGOS: Record<string, string> = {
@@ -40,7 +41,7 @@ const PLATFORM_LOGOS: Record<string, string> = {
   youtube: youtubeLogoWhite,
 };
 
-export function CampaignApplicationsView({ campaignId }: CampaignApplicationsViewProps) {
+export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: CampaignApplicationsViewProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
@@ -133,6 +134,9 @@ export function CampaignApplicationsView({ campaignId }: CampaignApplicationsVie
       } else {
         setSelectedAppId(null);
       }
+
+      // Notify parent that an application was reviewed
+      onApplicationReviewed?.();
 
       toast.success(`Application ${newStatus}`);
     } catch (error) {
