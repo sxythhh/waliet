@@ -14,15 +14,21 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 
 interface Application {
   id: string;
-  campaign_id: string;
-  creator_id: string;
-  platform: string;
-  content_url: string;
+  campaign_id?: string;
+  bounty_campaign_id?: string;
+  creator_id?: string;
+  user_id?: string;
+  platform?: string;
+  content_url?: string;
+  video_url?: string;
   status: string;
-  submitted_at: string;
+  submitted_at?: string;
+  applied_at?: string;
   reviewed_at: string | null;
-  application_answers: { question: string; answer: string }[] | null;
+  application_answers?: { question: string; answer: string }[] | null;
+  application_text?: string | null;
   profile?: {
+    id: string;
     username: string;
     full_name: string | null;
     avatar_url: string | null;
@@ -31,7 +37,8 @@ interface Application {
 }
 
 interface CampaignApplicationsViewProps {
-  campaignId: string;
+  campaignId?: string;
+  boostId?: string;
   onApplicationReviewed?: () => void;
 }
 
@@ -41,48 +48,73 @@ const PLATFORM_LOGOS: Record<string, string> = {
   youtube: youtubeLogoWhite,
 };
 
-export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: CampaignApplicationsViewProps) {
+export function CampaignApplicationsView({ campaignId, boostId, onApplicationReviewed }: CampaignApplicationsViewProps) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
+  const isBoost = !!boostId;
+
   useEffect(() => {
     fetchApplications();
-  }, [campaignId]);
+  }, [campaignId, boostId]);
 
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("campaign_submissions")
-        .select("*")
-        .eq("campaign_id", campaignId)
-        .in("status", ["pending"])
-        .order("submitted_at", { ascending: false });
+      let data: any[] = [];
+      
+      if (isBoost) {
+        // Fetch boost applications
+        const { data: boostData, error } = await supabase
+          .from("bounty_applications")
+          .select("*")
+          .eq("bounty_campaign_id", boostId)
+          .in("status", ["pending"])
+          .order("applied_at", { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
+        data = boostData || [];
+      } else if (campaignId) {
+        // Fetch campaign applications
+        const { data: campaignData, error } = await supabase
+          .from("campaign_submissions")
+          .select("*")
+          .eq("campaign_id", campaignId)
+          .in("status", ["pending"])
+          .order("submitted_at", { ascending: false });
+
+        if (error) throw error;
+        data = campaignData || [];
+      }
 
       // Fetch profiles for all creators
-      const creatorIds = [...new Set(data?.map(a => a.creator_id) || [])];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, full_name, avatar_url, email")
-        .in("id", creatorIds);
-
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-
-      const applicationsWithProfiles: Application[] = data?.map(app => ({
-        ...app,
-        application_answers: app.application_answers as { question: string; answer: string }[] | null,
-        profile: profileMap.get(app.creator_id),
-      })) || [];
-
-      setApplications(applicationsWithProfiles);
+      const userIdField = isBoost ? "user_id" : "creator_id";
+      const creatorIds = [...new Set(data?.map(a => a[userIdField]) || [])];
       
-      // Auto-select first pending application
-      if (applicationsWithProfiles.length > 0 && !selectedAppId) {
-        setSelectedAppId(applicationsWithProfiles[0].id);
+      if (creatorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", creatorIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+        const applicationsWithProfiles: Application[] = data?.map(app => ({
+          ...app,
+          application_answers: app.application_answers as { question: string; answer: string }[] | null,
+          profile: profileMap.get(app[userIdField]),
+        })) || [];
+
+        setApplications(applicationsWithProfiles);
+        
+        // Auto-select first pending application
+        if (applicationsWithProfiles.length > 0 && !selectedAppId) {
+          setSelectedAppId(applicationsWithProfiles[0].id);
+        }
+      } else {
+        setApplications([]);
       }
     } catch (error) {
       console.error("Error fetching applications:", error);
@@ -92,23 +124,26 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
     }
   };
 
-  const handleUpdateStatus = async (applicationId: string, newStatus: 'approved' | 'rejected') => {
+  const handleUpdateStatus = async (applicationId: string, newStatus: 'approved' | 'rejected' | 'accepted') => {
     setProcessing(applicationId);
     try {
+      const tableName = isBoost ? "bounty_applications" : "campaign_submissions";
+      const finalStatus = isBoost && newStatus === 'approved' ? 'accepted' : newStatus;
+      
       const { error } = await supabase
-        .from("campaign_submissions")
+        .from(tableName)
         .update({
-          status: newStatus,
+          status: finalStatus,
           reviewed_at: new Date().toISOString(),
         })
         .eq("id", applicationId);
 
       if (error) throw error;
 
-      // If approved, need to track the account in Shortimize
-      if (newStatus === 'approved') {
+      // If approved (campaign), need to track the account in Shortimize
+      if (!isBoost && newStatus === 'approved') {
         const application = applications.find(a => a.id === applicationId);
-        if (application) {
+        if (application && campaignId) {
           try {
             await supabase.functions.invoke('track-campaign-user', {
               body: {
@@ -138,7 +173,7 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
       // Notify parent that an application was reviewed
       onApplicationReviewed?.();
 
-      toast.success(`Application ${newStatus}`);
+      toast.success(`Application ${finalStatus}`);
     } catch (error) {
       console.error("Error updating application:", error);
       toast.error("Failed to update application");
@@ -149,14 +184,18 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
 
   const pendingCount = applications.length;
   const selectedApp = applications.find(a => a.id === selectedAppId);
+  
+  // Get the URL for the application (either content_url for campaigns or video_url for boosts)
+  const getAppUrl = (app: Application) => app.content_url || app.video_url;
+  const getSubmittedAt = (app: Application) => app.submitted_at || app.applied_at;
 
   if (loading) {
     return (
       <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-8 w-48 bg-muted/50 dark:bg-muted-foreground/20" />
         <div className="grid grid-cols-3 gap-4">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64 col-span-2" />
+          <Skeleton className="h-64 bg-muted/50 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-64 col-span-2 bg-muted/50 dark:bg-muted-foreground/20" />
         </div>
       </div>
     );
@@ -168,7 +207,7 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
         <User className="h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-semibold mb-2">No pending applications</h3>
         <p className="text-muted-foreground text-sm">
-          When creators apply to this campaign, they'll appear here for review.
+          When creators apply to this {isBoost ? "boost" : "campaign"}, they'll appear here for review.
         </p>
       </div>
     );
@@ -206,14 +245,14 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
                       {app.profile?.full_name || app.profile?.username || "Unknown"}
                     </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {PLATFORM_LOGOS[app.platform] && (
+                      {app.platform && PLATFORM_LOGOS[app.platform] && (
                         <img 
                           src={PLATFORM_LOGOS[app.platform]} 
                           alt={app.platform}
                           className="h-3 w-3"
                         />
                       )}
-                      <span>{formatDistanceToNow(new Date(app.submitted_at), { addSuffix: true })}</span>
+                      <span>{formatDistanceToNow(new Date(getSubmittedAt(app) || new Date()), { addSuffix: true })}</span>
                     </div>
                   </div>
                 </div>
@@ -249,32 +288,46 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
               <Badge variant="outline">Pending</Badge>
             </div>
 
-            {/* Platform & Account */}
-            <div className="p-4 rounded-lg bg-muted/30">
-              <div className="flex items-center gap-3">
-                {PLATFORM_LOGOS[selectedApp.platform] && (
-                  <img 
-                    src={PLATFORM_LOGOS[selectedApp.platform]} 
-                    alt={selectedApp.platform}
-                    className="h-6 w-6"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="font-medium capitalize">{selectedApp.platform}</p>
-                  <a 
-                    href={selectedApp.content_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                  >
-                    {selectedApp.content_url}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+            {/* Platform & Account / Video URL */}
+            {getAppUrl(selectedApp) && (
+              <div className="p-4 rounded-lg bg-muted/30">
+                <div className="flex items-center gap-3">
+                  {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
+                    <img 
+                      src={PLATFORM_LOGOS[selectedApp.platform]} 
+                      alt={selectedApp.platform}
+                      className="h-6 w-6"
+                    />
+                  )}
+                  <div className="flex-1">
+                    {selectedApp.platform && (
+                      <p className="font-medium capitalize">{selectedApp.platform}</p>
+                    )}
+                    <a 
+                      href={getAppUrl(selectedApp)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                    >
+                      {isBoost ? "View submitted video" : getAppUrl(selectedApp)}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Application Answers */}
+            {/* Application Text (for boosts) */}
+            {selectedApp.application_text && (
+              <div className="space-y-4">
+                <h3 className="font-semibold">Application Note</h3>
+                <div className="p-4 rounded-lg bg-muted/30">
+                  <p className="text-foreground">{selectedApp.application_text}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Application Answers (for campaigns) */}
             {selectedApp.application_answers && selectedApp.application_answers.length > 0 && (
               <div className="space-y-4">
                 <h3 className="font-semibold">Application Answers</h3>
@@ -299,7 +352,7 @@ export function CampaignApplicationsView({ campaignId, onApplicationReviewed }: 
                 Reject
               </Button>
               <Button
-                onClick={() => handleUpdateStatus(selectedApp.id, 'approved')}
+                onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')}
                 disabled={processing === selectedApp.id}
                 className="flex-1"
               >
