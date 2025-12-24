@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User } from "lucide-react";
+import { Check, X, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -409,6 +409,33 @@ export function CampaignApplicationsView({
                 {/* Creator Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    {/* Navigation Arrows */}
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          const currentIndex = filteredApplications.findIndex(a => a.id === selectedApp.id);
+                          if (currentIndex > 0) {
+                            setSelectedAppId(filteredApplications[currentIndex - 1].id);
+                          }
+                        }}
+                        disabled={filteredApplications.findIndex(a => a.id === selectedApp.id) === 0}
+                        className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const currentIndex = filteredApplications.findIndex(a => a.id === selectedApp.id);
+                          if (currentIndex < filteredApplications.length - 1) {
+                            setSelectedAppId(filteredApplications[currentIndex + 1].id);
+                          }
+                        }}
+                        disabled={filteredApplications.findIndex(a => a.id === selectedApp.id) === filteredApplications.length - 1}
+                        className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                     <Avatar className="h-12 w-12 ring-2 ring-border/50">
                       <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
                       <AvatarFallback className="text-base font-medium tracking-[-0.5px]">
