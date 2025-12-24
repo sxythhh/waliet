@@ -341,7 +341,7 @@ export function BrandCampaignDetailView({
                     <DropdownMenuItem
                       key={c.id}
                       onClick={() => handleSelectEntity({ type: "campaign", id: c.id })}
-                      className={`focus:bg-white/10 focus:text-foreground ${campaignId === c.id ? "bg-white/15" : ""}`}
+                      className={`focus:bg-white/5 focus:text-foreground ${campaignId === c.id ? "bg-white/8" : ""}`}
                     >
                       <span className="truncate">{c.title}</span>
                       <Badge variant="outline" className="ml-auto text-[10px] capitalize">{c.status}</Badge>
@@ -351,7 +351,7 @@ export function BrandCampaignDetailView({
                     <DropdownMenuItem
                       key={b.id}
                       onClick={() => handleSelectEntity({ type: "boost", id: b.id })}
-                      className={`focus:bg-white/10 focus:text-foreground ${boostId === b.id ? "bg-white/15" : ""}`}
+                      className={`focus:bg-white/5 focus:text-foreground ${boostId === b.id ? "bg-white/8" : ""}`}
                     >
                       <span className="truncate">{b.title}</span>
                       <Badge variant="outline" className="ml-auto text-[10px] capitalize">{b.status}</Badge>
