@@ -414,7 +414,7 @@ export function VideoSubmissionsTab({
         {/* Left: Creator List */}
         <div className="w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
           {/* Header with title and search */}
-          <div className="p-3 border-b space-y-2 border-[#141414]/0">
+          <div className="p-3 border-b space-y-2 border-[#141414]/0 py-[6px]">
             
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
