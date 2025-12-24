@@ -154,6 +154,23 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Failed to update profile:', updateError);
+
+      // Likely: this Discord account is already linked to another profile
+      if ((updateError as any).code === '23505') {
+        // Clean up tokens we just stored for this user to avoid orphaned credentials
+        await supabaseClient.from('discord_tokens').delete().eq('user_id', userId);
+
+        return new Response(
+          JSON.stringify({
+            error: 'This Discord account is already linked to another account. Disconnect it there first, then try again.'
+          }),
+          {
+            status: 409,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
       throw updateError;
     }
 
