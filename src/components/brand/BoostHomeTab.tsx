@@ -323,43 +323,46 @@ export function BoostHomeTab({ boost, timeframe = "this_month", onTopUp }: Boost
       </div>
 
       {/* Budget Card */}
-      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold tracking-[-0.5px]">Balance</h3>
+      <div className="rounded-xl bg-muted/30 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-inter font-semibold tracking-[-0.5px] uppercase text-muted-foreground">Balance</h3>
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
-            className="gap-1.5 h-7 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500" 
+            className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50" 
             onClick={onTopUp}
           >
-            <Plus className="h-3 w-3" />
+            <Plus className="h-3.5 w-3.5" />
             Add Funds
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-6">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-            <p className="text-xl font-semibold">${budgetTotal.toLocaleString()}</p>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-background/50 rounded-lg p-4">
+            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-2">Total Budget</p>
+            <p className="text-2xl font-inter font-bold tracking-[-0.5px]">${budgetTotal.toLocaleString()}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Spent</p>
-            <p className="text-xl font-semibold">${budgetUsed.toLocaleString()}</p>
+          <div className="bg-background/50 rounded-lg p-4">
+            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-2">Spent</p>
+            <p className="text-2xl font-inter font-bold tracking-[-0.5px]">${budgetUsed.toLocaleString()}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Remaining</p>
-            <p className="text-xl font-semibold text-emerald-500">${budgetRemaining.toLocaleString()}</p>
+          <div className="bg-background/50 rounded-lg p-4">
+            <p className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-2">Remaining</p>
+            <p className="text-2xl font-inter font-bold tracking-[-0.5px] text-emerald-500">${budgetRemaining.toLocaleString()}</p>
           </div>
         </div>
-        <div className="mt-4">
-          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+        
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground uppercase">Budget Usage</span>
+            <span className="text-xs font-inter font-medium tracking-[-0.5px]">{progressPercentage.toFixed(1)}%</span>
+          </div>
+          <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden">
             <div 
               className="h-full bg-emerald-500 rounded-full transition-all" 
               style={{ width: `${Math.min(progressPercentage, 100)}%` }} 
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {progressPercentage.toFixed(1)}% of budget used
-          </p>
         </div>
       </div>
 
