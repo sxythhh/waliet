@@ -407,25 +407,14 @@ export function SubmitVideoDialog({
                       {filteredAccounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           <div className="flex items-center gap-2">
-                            <Avatar className="w-5 h-5">
-                              <AvatarImage src={account.avatar_url || ''} />
-                              <AvatarFallback className="text-xs">
-                                {account.username.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                              @{account.username}
-                            </span>
-                            {account.follower_count && (
-                              <span className="text-xs text-muted-foreground">
-                                ({(account.follower_count / 1000).toFixed(1)}K)
-                              </span>
-                            )}
                             <img
                               src={getPlatformLogo(account.platform) || ''}
                               alt={account.platform}
-                              className="w-4 h-4 ml-1"
+                              className="w-4 h-4"
                             />
+                            <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              @{account.username}
+                            </span>
                           </div>
                         </SelectItem>
                       ))}
