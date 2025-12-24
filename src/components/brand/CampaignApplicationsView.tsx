@@ -245,7 +245,7 @@ export function CampaignApplicationsView({
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold">Applications</h3>
             <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-              <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
+              <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-muted/50 hover:bg-muted focus:ring-0 focus:ring-offset-0 gap-1 px-2.5">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
