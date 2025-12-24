@@ -21,6 +21,7 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
+import flagIcon from "@/assets/flag-icon.svg";
 
 interface VideoSubmission {
   id: string;
@@ -33,6 +34,7 @@ interface VideoSubmission {
   submitted_at: string;
   reviewed_at: string | null;
   rejection_reason: string | null;
+  is_flagged: boolean | null;
 }
 
 interface Profile {
@@ -336,6 +338,44 @@ export function VideoSubmissionsTab({
     } catch (error) {
       console.error("Error rejecting:", error);
       toast.error("Failed to reject video");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleFlag = async (submission: VideoSubmission) => {
+    setProcessing(true);
+    
+    try {
+      const newFlagState = !submission.is_flagged;
+      
+      if (isBoost) {
+        const { error } = await supabase
+          .from("boost_video_submissions")
+          .update({
+            is_flagged: newFlagState,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", submission.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("campaign_videos")
+          .update({
+            is_flagged: newFlagState,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", submission.id);
+
+        if (error) throw error;
+      }
+
+      toast.success(newFlagState ? "Submission flagged" : "Flag removed");
+      fetchSubmissions();
+    } catch (error) {
+      console.error("Error flagging:", error);
+      toast.error("Failed to flag submission");
     } finally {
       setProcessing(false);
     }
@@ -690,6 +730,19 @@ export function VideoSubmissionsTab({
                           >
                             <X className="h-4 w-4" />
                             Reject
+                          </button>
+                          <div className="w-px bg-border/20" />
+                          <button
+                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${
+                              submission.is_flagged 
+                                ? "text-orange-400 bg-orange-500/10" 
+                                : "text-orange-400 hover:bg-orange-500/5"
+                            }`}
+                            onClick={() => handleFlag(submission)}
+                            disabled={processing}
+                          >
+                            <img src={flagIcon} alt="" className="h-4 w-4" />
+                            {submission.is_flagged ? "Flagged" : "Flag"}
                           </button>
                           <div className="w-px bg-border/20" />
                           <button
