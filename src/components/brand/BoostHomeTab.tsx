@@ -154,7 +154,17 @@ export function BoostHomeTab({
         const submissionsData = submissions || [];
         const transactionsData = transactions || [];
 
-        // Filter by date range if applicable
+        // Filter submissions by date range if applicable (based on submitted_at)
+        let filteredSubmissions = submissionsData;
+        if (dateRange) {
+          filteredSubmissions = submissionsData.filter(s => {
+            if (!s.submitted_at) return false;
+            const date = new Date(s.submitted_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+
+        // Filter transactions by date range if applicable
         let filteredTransactions = transactionsData;
         if (dateRange) {
           filteredTransactions = transactionsData.filter(t => {
@@ -163,19 +173,19 @@ export function BoostHomeTab({
           });
         }
 
-        // Calculate stats including metrics
+        // Calculate stats from filtered data
         const totalPayouts = filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
         const payoutsLastWeek = transactionsData.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0);
-        const totalSubmissions = submissionsData.length;
-        const approvedSubmissions = submissionsData.filter(s => s.status === 'approved').length;
-        const pendingSubmissions = submissionsData.filter(s => s.status === 'pending').length;
-        const rejectedSubmissions = submissionsData.filter(s => s.status === 'rejected').length;
+        const totalSubmissions = filteredSubmissions.length;
+        const approvedSubmissions = filteredSubmissions.filter(s => s.status === 'approved').length;
+        const pendingSubmissions = filteredSubmissions.filter(s => s.status === 'pending').length;
+        const rejectedSubmissions = filteredSubmissions.filter(s => s.status === 'rejected').length;
         
-        // Calculate total metrics from all submissions
-        const totalViews = submissionsData.reduce((sum, s) => sum + (Number(s.views) || 0), 0);
-        const totalLikes = submissionsData.reduce((sum, s) => sum + (Number(s.likes) || 0), 0);
-        const totalShares = submissionsData.reduce((sum, s) => sum + (Number(s.shares) || 0), 0);
-        const totalBookmarks = submissionsData.reduce((sum, s) => sum + (Number(s.bookmarks) || 0), 0);
+        // Calculate total metrics from filtered submissions
+        const totalViews = filteredSubmissions.reduce((sum, s) => sum + (Number(s.views) || 0), 0);
+        const totalLikes = filteredSubmissions.reduce((sum, s) => sum + (Number(s.likes) || 0), 0);
+        const totalShares = filteredSubmissions.reduce((sum, s) => sum + (Number(s.shares) || 0), 0);
+        const totalBookmarks = filteredSubmissions.reduce((sum, s) => sum + (Number(s.bookmarks) || 0), 0);
         
         // Calculate CPM (Cost Per Mille - cost per 1000 views)
         const cpm = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
@@ -203,7 +213,7 @@ export function BoostHomeTab({
           .sort((a, b) => b - a)[0];
         setLastSyncedAt(latestSync ? new Date(latestSync).toISOString() : null);
 
-        // Build metrics data from submissions (grouped by date) with actual view data
+        // Build metrics data from filtered submissions (grouped by date) with actual view data
         const metricsMap = new Map<string, {
           views: number;
           likes: number;
@@ -211,7 +221,7 @@ export function BoostHomeTab({
           bookmarks: number;
           videos: number;
         }>();
-        submissionsData.forEach(sub => {
+        filteredSubmissions.forEach(sub => {
           if (sub.submitted_at) {
             const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
             const existing = metricsMap.get(dateKey) || {
@@ -261,8 +271,8 @@ export function BoostHomeTab({
         });
         setMetricsData(formattedMetrics);
 
-        // Map approved submissions to top videos format - sort by views descending
-        const approvedVideos = submissionsData
+        // Map approved submissions from filtered data to top videos format - sort by views descending
+        const approvedVideos = filteredSubmissions
           .filter(s => s.status === 'approved')
           .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
           .slice(0, 3);
