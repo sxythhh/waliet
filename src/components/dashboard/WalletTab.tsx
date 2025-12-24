@@ -107,6 +107,7 @@ export function WalletTab() {
   const [copiedId, setCopiedId] = useState(false);
   const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
   const [pendingBoostEarnings, setPendingBoostEarnings] = useState(0);
+  const [clearingPayouts, setClearingPayouts] = useState(0);
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -134,6 +135,7 @@ export function WalletTab() {
   useEffect(() => {
     fetchWallet();
     fetchPendingBoostEarnings();
+    fetchClearingPayouts();
 
     // Set up real-time listener for payout requests
     const channel = supabase.channel('payout-updates').on('postgres_changes', {
@@ -145,11 +147,30 @@ export function WalletTab() {
       // Refetch wallet and transactions when payout request changes
       fetchWallet();
       fetchTransactions();
+      fetchClearingPayouts();
     }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
+  
+  const fetchClearingPayouts = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    
+    const { data: requests } = await supabase
+      .from('submission_payout_requests')
+      .select('total_amount')
+      .eq('user_id', session.user.id)
+      .in('status', ['clearing']);
+    
+    if (requests && requests.length > 0) {
+      const total = requests.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+      setClearingPayouts(total);
+    } else {
+      setClearingPayouts(0);
+    }
+  };
   
   const fetchPendingBoostEarnings = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -1461,9 +1482,9 @@ export function WalletTab() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-                {pendingWithdrawals > 0 && (
+                {clearingPayouts > 0 && (
                   <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                    ${pendingWithdrawals.toFixed(2)} Pending
+                    ${clearingPayouts.toFixed(2)} Pending
                   </span>
                 )}
               </div>
