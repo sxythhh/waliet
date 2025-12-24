@@ -28,6 +28,10 @@ interface Submission {
   estimated_payout?: number | null;
   rejection_reason?: string | null;
   reviewed_at?: string | null;
+  video_description?: string | null;
+  video_thumbnail_url?: string | null;
+  video_author_username?: string | null;
+  video_author_avatar?: string | null;
   type: 'campaign' | 'boost';
   program: {
     id: string;
@@ -95,7 +99,11 @@ export function SubmissionsTab() {
           comments,
           shares,
           bookmarks,
-          metrics_updated_at
+          metrics_updated_at,
+          video_description,
+          video_thumbnail_url,
+          video_author_username,
+          video_author_avatar
         `)
         .eq('creator_id', user.id)
         .order('created_at', { ascending: false });
@@ -137,6 +145,10 @@ export function SubmissionsTab() {
           estimated_payout: video.payout_amount,
           rejection_reason: video.rejection_reason,
           reviewed_at: video.reviewed_at,
+          video_description: video.video_description,
+          video_thumbnail_url: video.video_thumbnail_url,
+          video_author_username: video.video_author_username,
+          video_author_avatar: video.video_author_avatar,
           type: video.source_type as 'campaign' | 'boost',
           program: {
             id: video.source_id,
@@ -421,6 +433,7 @@ export function SubmissionsTab() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
+                    <TableHead className="text-foreground font-medium text-sm h-12" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Details</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Program</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Type</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>Platform</TableHead>
@@ -437,6 +450,42 @@ export function SubmissionsTab() {
                       key={submission.id} 
                       className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]"
                     >
+                      {/* Details - Thumbnail, Description, Author */}
+                      <TableCell className="py-4">
+                        <div className="flex items-center gap-3">
+                          {submission.video_thumbnail_url ? (
+                            <div className="w-16 h-10 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+                              <img 
+                                src={submission.video_thumbnail_url} 
+                                alt="Video thumbnail" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                              <Video className="w-4 h-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex flex-col min-w-0 max-w-[200px]">
+                            <span className="text-sm font-medium truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                              {submission.video_description || 'No description'}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {submission.video_author_avatar ? (
+                                <img 
+                                  src={submission.video_author_avatar} 
+                                  alt={submission.video_author_username || 'Author'} 
+                                  className="w-4 h-4 rounded-full object-cover"
+                                />
+                              ) : null}
+                              <span className="text-xs text-muted-foreground truncate">
+                                @{submission.video_author_username || 'unknown'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+
                       {/* Program */}
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">
