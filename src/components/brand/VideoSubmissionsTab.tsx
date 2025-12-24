@@ -432,11 +432,7 @@ export function VideoSubmissionsTab({
                     <button
                       key={creator.userId}
                       onClick={() => setSelectedCreator(isSelected ? null : creator.userId)}
-                      className={`w-full rounded-xl p-4 text-left transition-all ${
-                        isSelected
-                          ? "bg-primary/10 border border-primary/30"
-                          : "bg-card/30 hover:bg-card/50 border border-border/30"
-                      }`}
+                      className="w-full rounded-xl p-4 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <Avatar className="h-10 w-10 border border-border/40">
