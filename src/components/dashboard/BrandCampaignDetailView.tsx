@@ -3,15 +3,21 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
+import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
+import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
+
 const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
   all_time: "All time",
   today: "Today",
@@ -20,6 +26,8 @@ const TIMEFRAME_LABELS: Record<TimeframeOption, string> = {
   this_month: "This month",
   last_month: "Last month"
 };
+
+// Campaign interface for CPM campaigns
 interface Campaign {
   id: string;
   title: string;
@@ -50,33 +58,73 @@ interface Campaign {
   payment_model?: string | null;
   post_rate?: number | null;
 }
-interface BrandCampaignDetailViewProps {
-  campaignId: string;
+
+// Boost interface for bounty campaigns
+interface Boost {
+  id: string;
+  title: string;
+  description: string | null;
+  monthly_retainer: number;
+  videos_per_month: number;
+  content_style_requirements: string;
+  max_accepted_creators: number;
+  accepted_creators_count: number;
+  banner_url: string | null;
+  status: string;
+  is_private: boolean;
+  brand_id: string;
+  discord_guild_id: string | null;
+  budget: number | null;
+  budget_used: number | null;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts";
+
+interface BrandCampaignDetailViewProps {
+  campaignId?: string;
+  boostId?: string;
+  onBack?: () => void;
+}
+
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "management";
+
 export function BrandCampaignDetailView({
-  campaignId
+  campaignId,
+  boostId,
+  onBack
 }: BrandCampaignDetailViewProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [boost, setBoost] = useState<Boost | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
-  const {
-    isAdmin
-  } = useAdminCheck();
+  const { isAdmin } = useAdminCheck();
+
+  const isBoost = !!boostId;
+  const entityId = isBoost ? boostId : campaignId;
+  const entityTitle = isBoost ? boost?.title : campaign?.title;
+  const entityBrandId = isBoost ? boost?.brand_id : campaign?.brand_id;
+
   useEffect(() => {
-    fetchCampaign();
+    if (isBoost) {
+      fetchBoost();
+    } else {
+      fetchCampaign();
+    }
     fetchPendingApplicationsCount();
-  }, [campaignId]);
+  }, [campaignId, boostId]);
+
   const fetchCampaign = async () => {
+    if (!campaignId) return;
     setLoading(true);
-    const {
-      data,
-      error
-    } = await supabase.from("campaigns").select("*").eq("id", campaignId).single();
+    const { data, error } = await supabase
+      .from("campaigns")
+      .select("*")
+      .eq("id", campaignId)
+      .single();
+    
     if (error) {
       console.error("Error fetching campaign:", error);
     } else {
@@ -84,125 +132,543 @@ export function BrandCampaignDetailView({
     }
     setLoading(false);
   };
+
+  const fetchBoost = async () => {
+    if (!boostId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("bounty_campaigns")
+      .select("*")
+      .eq("id", boostId)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching boost:", error);
+    } else {
+      setBoost(data);
+    }
+    setLoading(false);
+  };
+
   const fetchPendingApplicationsCount = async () => {
-    const { count } = await supabase
-      .from("campaign_submissions")
-      .select("id", { count: 'exact', head: true })
-      .eq("campaign_id", campaignId)
-      .eq("status", "pending");
-    setPendingApplicationsCount(count || 0);
+    if (isBoost && boostId) {
+      const { count } = await supabase
+        .from("bounty_applications")
+        .select("id", { count: 'exact', head: true })
+        .eq("bounty_campaign_id", boostId)
+        .eq("status", "pending");
+      setPendingApplicationsCount(count || 0);
+    } else if (campaignId) {
+      const { count } = await supabase
+        .from("campaign_submissions")
+        .select("id", { count: 'exact', head: true })
+        .eq("campaign_id", campaignId)
+        .eq("status", "pending");
+      setPendingApplicationsCount(count || 0);
+    }
   };
+
   const handleBack = () => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete("campaign");
-    setSearchParams(newParams);
+    if (onBack) {
+      onBack();
+    } else {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("campaign");
+      newParams.delete("boost");
+      setSearchParams(newParams);
+    }
   };
-  const detailTabs = [{
-    id: "home" as DetailTab,
-    label: "Home",
-    icon: Home
-  }, ...(campaign?.requires_application !== false ? [{
-    id: "applications" as DetailTab,
-    label: "Applications",
-    icon: UserCheck,
-    count: pendingApplicationsCount
-  }] : []), {
-    id: "videos" as DetailTab,
-    label: "Videos",
-    icon: Video
-  }, ...(isAdmin ? [{
-    id: "creators" as DetailTab,
-    label: "Creators",
-    icon: Users
-  }] : []), {
-    id: "payouts" as DetailTab,
-    label: "Payouts",
-    icon: DollarSign
-  }];
+
+  const handleCopyInviteUrl = () => {
+    const url = isBoost 
+      ? `${window.location.origin}/boost/${boostId}`
+      : `${window.location.origin}/c/${campaign?.slug}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Invite URL copied to clipboard");
+  };
+
+  // Build tabs based on entity type
+  const detailTabs: { id: DetailTab; label: string; icon: any; count?: number }[] = [
+    { id: "home", label: "Home", icon: Home },
+  ];
+
+  // Add applications tab for campaigns that require application or for boosts
+  if (isBoost || campaign?.requires_application !== false) {
+    detailTabs.push({
+      id: "applications",
+      label: "Applications",
+      icon: UserCheck,
+      count: pendingApplicationsCount
+    });
+  }
+
+  // Videos tab
+  detailTabs.push({ id: "videos", label: "Videos", icon: Video });
+
+  // Creators tab (admin only)
+  if (isAdmin && !isBoost) {
+    detailTabs.push({ id: "creators", label: "Creators", icon: Users });
+  }
+
+  // Payouts tab (for campaigns only)
+  if (!isBoost) {
+    detailTabs.push({ id: "payouts", label: "Payouts", icon: DollarSign });
+  }
+
   if (loading) {
-    return <div className="flex flex-col h-full">
+    return (
+      <div className="flex flex-col h-full">
         <div className="flex-1 p-6">
           <Skeleton className="h-8 w-48 mb-4" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>;
+      </div>
+    );
   }
-  if (!campaign) {
-    return <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Campaign not found</p>
-      </div>;
+
+  if (!campaign && !boost) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">
+          {isBoost ? "Boost" : "Campaign"} not found
+        </p>
+      </div>
+    );
   }
-  return <div className="p-[10px] h-full flex flex-col">
+
+  return (
+    <div className="p-[10px] h-full flex flex-col">
       <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
-        {/* Header with back button and campaign title - Fixed */}
+        {/* Header with back button and title */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 sm:px-[5px] py-[10px] bg-background gap-2">
           <div className="flex items-center gap-0 min-w-0 flex-1">
             <Button variant="ghost" size="icon" onClick={handleBack} className="h-8 w-8 hover:bg-transparent shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <button onClick={handleBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline truncate">
-              {campaign.title}
+            <button onClick={handleBack} className="text-lg font-semibold tracking-[-0.5px] hover:underline truncate flex items-center gap-2">
+              {entityTitle}
+              {isBoost && boost?.is_private && (
+                <Badge variant="outline" className="bg-muted/10 text-muted-foreground border-muted/20">
+                  Private
+                </Badge>
+              )}
             </button>
           </div>
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3">
-                  <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
-                  <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover">
-                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} className="focus:bg-muted focus:text-foreground" onClick={() => setTimeframe(option)}>
-                    {TIMEFRAME_LABELS[option]}
-                  </DropdownMenuItem>)}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3" onClick={() => setEditDialogOpen(true)}>
+            {/* Copy Invite URL */}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-1.5 h-8 text-xs px-2 sm:px-3"
+              onClick={handleCopyInviteUrl}
+            >
+              <Copy className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Copy URL</span>
+            </Button>
+
+            {/* Timeframe selector (campaigns only) */}
+            {!isBoost && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3">
+                    <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
+                    <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover">
+                  {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => (
+                    <DropdownMenuItem
+                      key={option}
+                      className="focus:bg-muted focus:text-foreground"
+                      onClick={() => setTimeframe(option)}
+                    >
+                      {TIMEFRAME_LABELS[option]}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Top Up button (boosts) */}
+            {isBoost && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 font-inter tracking-[-0.5px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-2 sm:px-3"
+                onClick={() => setTopUpDialogOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Top Up</span>
+              </Button>
+            )}
+
+            {/* Edit button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-2 sm:px-3"
+              onClick={() => setEditDialogOpen(true)}
+            >
               <Pencil className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Edit Campaign</span>
+              <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
             </Button>
-            <Button size="sm" className="gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3">
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Top Up Budget</span>
-            </Button>
+
+            {/* Top Up Budget (campaigns) */}
+            {!isBoost && (
+              <Button size="sm" className="gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3">
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Top Up Budget</span>
+              </Button>
+            )}
           </div>
         </div>
 
-        {campaign.brand_id && <CampaignCreationWizard brandId={campaign.brand_id} brandName={campaign.brand_name || ""} brandLogoUrl={campaign.brand_logo_url || undefined} campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
-        fetchCampaign();
-        setEditDialogOpen(false);
-      }} />}
+        {/* Campaign Edit Dialog */}
+        {campaign?.brand_id && !isBoost && (
+          <CampaignCreationWizard
+            brandId={campaign.brand_id}
+            brandName={campaign.brand_name || ""}
+            brandLogoUrl={campaign.brand_logo_url || undefined}
+            campaign={campaign}
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            onSuccess={() => {
+              fetchCampaign();
+              setEditDialogOpen(false);
+            }}
+          />
+        )}
 
-        {/* Tab Navigation - Horizontal bottom style */}
+{/* Boost Edit Dialog */}
+        {isBoost && boost && (
+          <EditBountyDialog
+            bountyId={boostId!}
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            onSuccess={() => {
+              fetchBoost();
+              setEditDialogOpen(false);
+            }}
+          />
+        )}
+
+        {/* Boost Top Up Dialog */}
+        {isBoost && boost && (
+          <TopUpBalanceDialog
+            boostId={boostId!}
+            boostTitle={boost.title}
+            currentBalance={boost.budget || 0}
+            open={topUpDialogOpen}
+            onOpenChange={setTopUpDialogOpen}
+            onSuccess={fetchBoost}
+          />
+        )}
+
+        {/* Tab Navigation */}
         <div className="flex-shrink-0 border-b border-border bg-background">
           <nav className="flex gap-0">
-            {detailTabs.map(tab => <button key={tab.id} onClick={() => setActiveDetailTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+            {detailTabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveDetailTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
+                  activeDetailTab === tab.id
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
                 {tab.label}
-                {'count' in tab && tab.count !== undefined && tab.count > 0 && (
+                {tab.count !== undefined && tab.count > 0 && (
                   <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
                     {tab.count}
                   </span>
                 )}
-              </button>)}
+              </button>
+            ))}
           </nav>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" && campaign.brand_id ? (
-            <CampaignHomeTab campaignId={campaignId} brandId={campaign.brand_id} timeframe={timeframe} />
+          {activeDetailTab === "home" && entityBrandId ? (
+            isBoost && boost ? (
+              <BoostManagementContent boost={boost} onTopUp={() => setTopUpDialogOpen(true)} />
+            ) : campaign?.brand_id ? (
+              <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} />
+            ) : null
           ) : activeDetailTab === "applications" ? (
-            <CampaignApplicationsView campaignId={campaignId} onApplicationReviewed={fetchPendingApplicationsCount} />
+            isBoost ? (
+              <BoostApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : (
+              <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            )
           ) : activeDetailTab === "videos" ? (
-            <VideoSubmissionsTab campaign={campaign} />
+            isBoost && boost ? (
+              <VideoSubmissionsTab
+                boostId={boostId}
+                monthlyRetainer={boost.monthly_retainer}
+                videosPerMonth={boost.videos_per_month}
+                onSubmissionReviewed={fetchPendingApplicationsCount}
+              />
+            ) : campaign ? (
+              <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} />
+            ) : null
           ) : activeDetailTab === "creators" ? (
-            <CampaignAnalyticsTable campaignId={campaignId} view="analytics" className="px-[10px] py-0 pb-[10px]" />
-          ) : (
-            <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
-          )}
+            <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
+          ) : activeDetailTab === "payouts" ? (
+            <CampaignAnalyticsTable campaignId={campaignId!} view="transactions" className="px-[10px] py-0" />
+          ) : null}
         </div>
       </div>
-    </div>;
+    </div>
+  );
+}
+
+// Boost Management Content (inline component for boost home tab)
+function BoostManagementContent({ boost, onTopUp }: { boost: Boost; onTopUp: () => void }) {
+  const budgetTotal = boost.budget || 0;
+  const budgetUsed = boost.budget_used || 0;
+  const budgetRemaining = budgetTotal - budgetUsed;
+  const progressPercentage = budgetTotal > 0 ? (budgetUsed / budgetTotal) * 100 : 0;
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* About Section */}
+      {boost.description && (
+        <div>
+          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">About</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {boost.description}
+          </p>
+        </div>
+      )}
+
+      {/* Budget Card */}
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold tracking-[-0.5px]">Balance</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 h-7 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500"
+            onClick={onTopUp}
+          >
+            <Plus className="h-3 w-3" />
+            Add Funds
+          </Button>
+        </div>
+        <div className="grid grid-cols-3 gap-6">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
+            <p className="text-xl font-semibold">${budgetTotal.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Spent</p>
+            <p className="text-xl font-semibold">${budgetUsed.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Remaining</p>
+            <p className="text-xl font-semibold text-emerald-500">${budgetRemaining.toLocaleString()}</p>
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-500 rounded-full transition-all"
+              style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {progressPercentage.toFixed(1)}% of budget used
+          </p>
+        </div>
+      </div>
+
+      {/* Details Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Monthly Rate</p>
+          <p className="text-lg font-semibold">${boost.monthly_retainer}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Videos/Month</p>
+          <p className="text-lg font-semibold">{boost.videos_per_month}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Per Video</p>
+          <p className="text-lg font-semibold">
+            ${(boost.monthly_retainer / boost.videos_per_month).toFixed(2)}
+          </p>
+        </div>
+        <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+          <p className="text-xs text-muted-foreground mb-1">Creators</p>
+          <p className="text-lg font-semibold">
+            {boost.accepted_creators_count}/{boost.max_accepted_creators}
+          </p>
+        </div>
+      </div>
+
+      {/* Content Requirements */}
+      {boost.content_style_requirements && (
+        <div>
+          <h2 className="text-lg font-semibold tracking-[-0.5px] mb-3">Content Requirements</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+            {boost.content_style_requirements}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Boost Applications View (inline component)
+function BoostApplicationsView({ 
+  boostId, 
+  onApplicationReviewed 
+}: { 
+  boostId: string; 
+  onApplicationReviewed?: () => void 
+}) {
+  const [applications, setApplications] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [boostId]);
+
+  const fetchApplications = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("bounty_applications")
+      .select("*")
+      .eq("bounty_campaign_id", boostId)
+      .order("applied_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching applications:", error);
+      setLoading(false);
+      return;
+    }
+
+    setApplications(data || []);
+
+    // Fetch profiles
+    if (data && data.length > 0) {
+      const userIds = data.map(a => a.user_id);
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds);
+      
+      if (profilesData) {
+        const profileMap: Record<string, any> = {};
+        profilesData.forEach(p => { profileMap[p.id] = p; });
+        setProfiles(profileMap);
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleUpdateStatus = async (applicationId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from("bounty_applications")
+      .update({ status: newStatus })
+      .eq("id", applicationId);
+
+    if (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update application status");
+      return;
+    }
+
+    toast.success(`Application ${newStatus}`);
+    fetchApplications();
+    onApplicationReviewed?.();
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+      </div>
+    );
+  }
+
+  if (applications.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <UserCheck className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">No applications yet</h3>
+        <p className="text-muted-foreground text-sm">
+          Applications will appear here when creators apply.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-3">
+      {applications.map(app => {
+        const profile = profiles[app.user_id];
+        return (
+          <div key={app.id} className="p-4 rounded-xl border border-border/40 bg-card/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                  ) : (
+                    <span className="text-sm font-medium">{profile?.username?.[0]?.toUpperCase() || "?"}</span>
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium">{profile?.full_name || profile?.username || "Unknown"}</p>
+                  <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className={
+                  app.status === "accepted" ? "bg-emerald-500/10 text-emerald-500" :
+                  app.status === "rejected" ? "bg-red-500/10 text-red-500" :
+                  "bg-amber-500/10 text-amber-500"
+                }>
+                  {app.status}
+                </Badge>
+                {app.status === "pending" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUpdateStatus(app.id, "rejected")}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleUpdateStatus(app.id, "accepted")}
+                    >
+                      Accept
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            {app.video_url && (
+              <a
+                href={app.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 text-sm text-primary hover:underline block"
+              >
+                View submitted video →
+              </a>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
