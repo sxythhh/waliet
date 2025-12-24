@@ -300,16 +300,16 @@ export function AllProgramsAnalytics({ brandId, timeframe = "this_month" }: AllP
       <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="p-4 rounded-lg bg-muted/50 dark:bg-muted/50 space-y-3">
-              <Skeleton className="h-4 w-28 dark:bg-muted-foreground/20" />
-              <Skeleton className="h-8 w-20 dark:bg-muted-foreground/20" />
-              <Skeleton className="h-3 w-24 dark:bg-muted-foreground/20" />
+            <div key={i} className="p-4 rounded-lg bg-muted/50 dark:bg-muted/25 space-y-3">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-3 w-24" />
             </div>
           ))}
         </div>
-        <div className="p-5 rounded-lg bg-muted/50 dark:bg-muted/50 space-y-4">
-          <Skeleton className="h-5 w-40 dark:bg-muted-foreground/20" />
-          <Skeleton className="h-64 w-full dark:bg-muted-foreground/20" />
+        <div className="p-5 rounded-lg bg-muted/50 dark:bg-muted/25 space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     );
