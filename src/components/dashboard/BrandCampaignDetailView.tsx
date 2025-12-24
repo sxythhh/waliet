@@ -313,7 +313,7 @@ export function BrandCampaignDetailView({
 
   // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
-  if (!isAllMode && !campaign && !boost) {
+  if (!isAllMode && !campaign && !boost && !loading) {
     return <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
           {isBoost ? "Boost" : "Campaign"} not found
