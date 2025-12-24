@@ -128,7 +128,7 @@ export function CampaignVideoPlayer({
     try {
       const {
         error
-      } = await supabase.from('campaign_videos').update({
+      } = await supabase.from('video_submissions').update({
         is_flagged: !videoData.is_flagged
       }).eq('id', videoData.id);
       if (error) throw error;

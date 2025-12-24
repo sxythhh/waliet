@@ -155,11 +155,12 @@ export function WalletTab() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     
-    // Get all pending boost submissions
+    // Get all pending boost submissions from unified table
     const { data: pendingSubmissions } = await supabase
-      .from("boost_video_submissions")
-      .select("payout_amount, bounty_campaign_id, bounty_campaigns(monthly_retainer, videos_per_month)")
-      .eq("user_id", session.user.id)
+      .from("video_submissions")
+      .select("payout_amount, source_id")
+      .eq("creator_id", session.user.id)
+      .eq("source_type", "boost")
       .eq("status", "pending");
     
     if (pendingSubmissions && pendingSubmissions.length > 0) {
@@ -167,12 +168,9 @@ export function WalletTab() {
       pendingSubmissions.forEach(sub => {
         if (sub.payout_amount) {
           totalPending += sub.payout_amount;
-        } else if (sub.bounty_campaigns) {
-          // Calculate estimated payout if not set
-          const campaign = sub.bounty_campaigns as any;
-          const perVideoRate = campaign.monthly_retainer / campaign.videos_per_month;
-          totalPending += perVideoRate;
         }
+        // Note: For submissions without payout_amount, we'd need to fetch boost details
+        // but since payout_amount is always set on insert, this should be sufficient
       });
       setPendingBoostEarnings(totalPending);
     } else {

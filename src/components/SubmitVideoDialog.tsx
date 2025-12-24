@@ -291,6 +291,8 @@ export function SubmitVideoDialog({
         status: "pending",
         payout_amount: estimatedPayout,
         submitted_at: new Date().toISOString(),
+        // Link to the social account used for submission
+        social_account_id: selectedAccountId || null,
         // Add video metadata if fetched
         ...(videoDetails && {
           views: videoDetails.views || 0,
@@ -301,6 +303,8 @@ export function SubmitVideoDialog({
           video_thumbnail_url: videoDetails.coverUrl || null,
           video_author_username: videoDetails.authorUsername || null,
           video_author_avatar: videoDetails.authorAvatar || null,
+          video_title: videoDetails.title || null,
+          video_upload_date: videoDetails.uploadDate || null,
         })
       });
 

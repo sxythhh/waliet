@@ -154,9 +154,10 @@ export function CampaignDetailsDialog({
       if (!user) return;
 
       const { data: submissions } = await supabase
-        .from('campaign_videos')
+        .from('video_submissions')
         .select('status')
-        .eq('campaign_id', campaign.id)
+        .eq('source_type', 'campaign')
+        .eq('source_id', campaign.id)
         .eq('creator_id', user.id);
 
       if (submissions) {
@@ -595,9 +596,10 @@ export function CampaignDetailsDialog({
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) return;
               const { data: submissions } = await supabase
-                .from('campaign_videos')
+                .from('video_submissions')
                 .select('status')
-                .eq('campaign_id', campaign.id)
+                .eq('source_type', 'campaign')
+                .eq('source_id', campaign.id)
                 .eq('creator_id', user.id);
               if (submissions) {
                 setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);

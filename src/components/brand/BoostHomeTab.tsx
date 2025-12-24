@@ -125,10 +125,13 @@ export function BoostHomeTab({
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        // Fetch video submissions for this boost
+        // Fetch video submissions for this boost from unified table
         const {
           data: submissions
-        } = await supabase.from('boost_video_submissions').select('id, status, payout_amount, submitted_at, video_url, platform, user_id').eq('bounty_campaign_id', boost.id);
+        } = await supabase.from('video_submissions')
+          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id')
+          .eq('source_type', 'boost')
+          .eq('source_id', boost.id);
 
         // Fetch wallet transactions for payouts
         const {
@@ -214,14 +217,14 @@ export function BoostHomeTab({
 
         // Fetch usernames for the videos
         if (approvedVideos.length > 0) {
-          const userIds = [...new Set(approvedVideos.map(v => v.user_id))];
+          const userIds = [...new Set(approvedVideos.map(v => v.creator_id))];
           const {
             data: profiles
           } = await supabase.from('profiles').select('id, username').in('id', userIds);
           const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
           const mappedVideos: VideoData[] = approvedVideos.map(v => ({
             ad_id: v.id,
-            username: profileMap.get(v.user_id) || 'Unknown',
+            username: profileMap.get(v.creator_id) || 'Unknown',
             platform: v.platform,
             ad_link: v.video_url,
             uploaded_at: v.submitted_at,

@@ -78,14 +78,25 @@ export function UploadCampaignVideoDialog({
         .from('campaign-videos')
         .getPublicUrl(fileName);
 
-      // Insert video record
+      // Get campaign brand_id
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('brand_id')
+        .eq('id', campaignId)
+        .single();
+
+      // Insert video record into unified table
       const { error: insertError } = await supabase
-        .from('campaign_videos')
+        .from('video_submissions')
         .insert({
-          campaign_id: campaignId,
+          source_type: 'campaign',
+          source_id: campaignId,
+          brand_id: campaignData?.brand_id || null,
           creator_id: selectedCreatorId,
           video_url: publicUrl,
-          platform: selectedPlatform
+          platform: selectedPlatform,
+          status: 'pending',
+          submitted_at: new Date().toISOString()
         });
 
       if (insertError) throw insertError;
