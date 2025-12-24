@@ -238,12 +238,11 @@ export function CampaignHomeTab({
         const totalViews = metricsRangeResult.data?.[0]?.total_views || 0;
         const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
         const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
-        
+
         // Process video submissions data (campaign_videos for pay per post)
         const videoSubmissionsData = videoSubmissionsResult.data || [];
         const totalSubmissions = videoSubmissionsData.length;
         const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
-        
         setStats({
           totalViews,
           totalPayouts,
@@ -461,9 +460,7 @@ export function CampaignHomeTab({
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews)}</p>
-              <div className={`text-xs px-2 py-1 rounded-full tracking-[-0.5px] ${stats.viewsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80]' : 'bg-[#3e1717] text-[#f87171]'}`}>
-                {stats.viewsChangePercent >= 0 ? '+' : ''}{stats.viewsChangePercent.toFixed(1)}%
-              </div>
+              
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.viewsLastWeek)} last week</p>
           </div>
@@ -484,9 +481,7 @@ export function CampaignHomeTab({
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
-              <div className={`text-xs px-2 py-1 rounded-full tracking-[-0.5px] ${stats.payoutsChangePercent >= 0 ? 'bg-[#173e23] text-[#4ade80]' : 'bg-[#3e1717] text-[#f87171]'}`}>
-                {stats.payoutsChangePercent >= 0 ? '+' : ''}{stats.payoutsChangePercent.toFixed(1)}%
-              </div>
+              
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.payoutsLastWeek)} last week</p>
           </div>
