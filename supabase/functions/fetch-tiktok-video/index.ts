@@ -14,12 +14,14 @@ function extractTikTokVideoId(url: string): string | null {
   try {
     // Handle various TikTok URL formats
     // https://www.tiktok.com/@username/video/7306132438047116586
+    // https://www.tiktok.com/@username/photo/7579016669914336523
     // https://vm.tiktok.com/ABC123/
     // https://www.tiktok.com/t/ABC123/
     
-    const videoMatch = url.match(/\/video\/(\d+)/);
+    // Match both /video/ and /photo/ URLs
+    const videoMatch = url.match(/\/(video|photo)\/(\d+)/);
     if (videoMatch) {
-      return videoMatch[1];
+      return videoMatch[2];
     }
     
     // For shortened URLs, we'd need to follow redirects - return null for now

@@ -38,6 +38,11 @@ interface VideoSubmission {
   video_thumbnail_url: string | null;
   video_author_username: string | null;
   video_author_avatar: string | null;
+  video_title: string | null;
+  views: number | null;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
 }
 interface Profile {
   id: string;
@@ -151,7 +156,12 @@ export function VideoSubmissionsTab({
         video_description: v.video_description,
         video_thumbnail_url: v.video_thumbnail_url,
         video_author_username: v.video_author_username,
-        video_author_avatar: v.video_author_avatar
+        video_author_avatar: v.video_author_avatar,
+        video_title: v.video_title,
+        views: v.views,
+        likes: v.likes,
+        comments: v.comments,
+        shares: v.shares
       }));
 
       setSubmissions(submissionsData);
@@ -537,107 +547,180 @@ export function VideoSubmissionsTab({
               }
               return filteredSubs.map(submission => {
                 const profile = profiles[submission.user_id];
-                return <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
-                      {/* Header */}
-                      <div className="flex items-center justify-between p-4 border-b border-border/20">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 ring-2 ring-background">
-                            <AvatarImage src={profile?.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs font-medium bg-muted/60">
-                              {profile?.username?.[0]?.toUpperCase() || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium tracking-[-0.5px]">
-                              {profile?.full_name || profile?.username}
-                            </p>
-                            <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                              {format(new Date(submission.submitted_at), "MMM d, yyyy")}
-                            </p>
+                
+                const formatNumber = (num: number | null | undefined) => {
+                  if (!num) return '—';
+                  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+                  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+                  return num.toString();
+                };
+
+                return (
+                  <div key={submission.id} className="group rounded-xl bg-card/40 border border-border/40 overflow-hidden transition-all hover:border-border/60">
+                    {/* Main Content - Horizontal Layout */}
+                    <div className="flex gap-4 p-4">
+                      {/* 9:16 Video Thumbnail */}
+                      <a 
+                        href={submission.video_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="relative w-20 h-[120px] rounded-lg overflow-hidden bg-muted/30 flex-shrink-0 group/thumb"
+                      >
+                        {submission.video_thumbnail_url ? (
+                          <img 
+                            src={submission.video_thumbnail_url} 
+                            alt={submission.video_title || "Video"} 
+                            className="w-full h-full object-cover transition-transform group-hover/thumb:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <img src={videoLibraryIcon} alt="" className="w-6 h-6 opacity-40" />
                           </div>
+                        )}
+                        {/* Platform badge */}
+                        <div className="absolute bottom-1.5 right-1.5 h-5 w-5 rounded-full bg-black/60 flex items-center justify-center">
+                          <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-3 w-3" />
                         </div>
-                        <Badge className={`text-[11px] font-medium ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : submission.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" : "bg-amber-500/10 text-amber-500 border-amber-500/20"}`}>
-                          {submission.status}
-                        </Badge>
-                      </div>
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover/thumb:bg-black/20 transition-colors flex items-center justify-center">
+                          <ExternalLink className="w-5 h-5 text-white opacity-0 group-hover/thumb:opacity-100 transition-opacity" />
+                        </div>
+                      </a>
 
-                      {/* Content */}
-                      <div className="p-4 space-y-3">
-                        {/* Video thumbnail and details */}
-                        {submission.video_thumbnail_url && (
-                          <div className="relative rounded-lg overflow-hidden bg-muted/20">
-                            <img 
-                              src={submission.video_thumbnail_url} 
-                              alt="Video thumbnail" 
-                              className="w-full h-32 object-cover"
-                            />
-                            {submission.video_author_username && (
-                              <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/70 rounded-full px-2 py-1">
-                                {submission.video_author_avatar && (
-                                  <img 
-                                    src={submission.video_author_avatar} 
-                                    alt="" 
-                                    className="h-4 w-4 rounded-full"
-                                  />
-                                )}
-                                <span className="text-xs text-white font-medium">@{submission.video_author_username}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Video description */}
-                        {submission.video_description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 tracking-[-0.3px]">
-                            {submission.video_description}
-                          </p>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-7 w-7 rounded-lg bg-muted/40 flex items-center justify-center">
-                              <img src={getPlatformLogo(submission.platform)} alt={submission.platform} className="h-4 w-4" />
-                            </div>
-                            <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1.5 tracking-[-0.5px]">
-                              <ExternalLink className="h-3.5 w-3.5" />
-                              View Video
+                      {/* Video Details */}
+                      <div className="flex-1 min-w-0 flex flex-col justify-between">
+                        {/* Top: Title & Status */}
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <a 
+                              href={submission.video_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium tracking-[-0.3px] line-clamp-2 hover:text-primary transition-colors"
+                            >
+                              {submission.video_title || submission.video_description || "Untitled Video"}
                             </a>
+                            <Badge className={`text-[10px] font-medium flex-shrink-0 ${
+                              submission.status === "approved" 
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                                : submission.status === "rejected" 
+                                  ? "bg-red-500/10 text-red-500 border-red-500/20" 
+                                  : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                            }`}>
+                              {submission.status}
+                            </Badge>
                           </div>
-                          <span className="text-sm font-semibold text-foreground tracking-[-0.5px]">
-                            ${(submission.payout_amount || payoutPerVideo).toFixed(2)}
-                          </span>
+                          
+                          {/* Author info */}
+                          <div className="flex items-center gap-2 mb-2">
+                            {submission.video_author_avatar ? (
+                              <img 
+                                src={submission.video_author_avatar} 
+                                alt="" 
+                                className="h-4 w-4 rounded-full"
+                              />
+                            ) : (
+                              <Avatar className="h-4 w-4">
+                                <AvatarImage src={profile?.avatar_url || undefined} />
+                                <AvatarFallback className="text-[8px]">
+                                  {profile?.username?.[0]?.toUpperCase() || "?"}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              @{submission.video_author_username || profile?.username}
+                            </span>
+                            <span className="text-xs text-muted-foreground/50">•</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(submission.submitted_at), { addSuffix: true })}
+                            </span>
+                          </div>
                         </div>
 
-                        {submission.submission_notes && <p className="text-sm text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 tracking-[-0.5px]">
-                            {submission.submission_notes}
-                          </p>}
-
-                        {submission.rejection_reason && <p className="text-sm text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 tracking-[-0.5px]">
-                            {submission.rejection_reason}
-                          </p>}
+                        {/* Bottom: Metrics Row */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-foreground tabular-nums">{formatNumber(submission.views)}</span>
+                              <span>views</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-foreground tabular-nums">{formatNumber(submission.likes)}</span>
+                              <span>likes</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-foreground tabular-nums">{formatNumber(submission.comments)}</span>
+                              <span>comments</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
+                            <span className="text-sm font-semibold text-foreground tracking-[-0.5px]">
+                              {(submission.payout_amount || payoutPerVideo).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
+                    </div>
 
-                      {/* Actions */}
-                      {submission.status === "pending" && <div className="flex border-t border-[#0d0d0d]">
-                          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-red-400 hover:bg-red-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" onClick={() => {
-                      setSelectedSubmission(submission);
-                      setRejectDialogOpen(true);
-                    }} disabled={processing}>
-                            <X className="h-4 w-4" />
-                            Reject
-                          </button>
-                          <div className="w-px bg-border/20" />
-                          <button className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${submission.is_flagged ? "text-orange-400 bg-orange-500/10" : "text-orange-400 hover:bg-orange-500/5"}`} onClick={() => handleFlag(submission)} disabled={processing}>
-                            <img alt="" className="h-4 w-4" src="/lovable-uploads/cefe6d19-6933-495c-affa-26b57ccee741.png" />
-                            {submission.is_flagged ? "Flagged" : "Flag"}
-                          </button>
-                          <div className="w-px bg-border/20" />
-                          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-medium text-emerald-400 hover:bg-emerald-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" onClick={() => handleApprove(submission)} disabled={processing}>
-                            <Check className="h-4 w-4" />
-                            Approve
-                          </button>
-                        </div>}
-                    </div>;
+                    {/* Notes */}
+                    {submission.submission_notes && (
+                      <div className="px-4 pb-3">
+                        <p className="text-xs text-muted-foreground bg-muted/20 rounded-lg px-3 py-2 tracking-[-0.3px]">
+                          {submission.submission_notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Rejection reason */}
+                    {submission.rejection_reason && (
+                      <div className="px-4 pb-3">
+                        <p className="text-xs text-red-400 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2 tracking-[-0.3px]">
+                          {submission.rejection_reason}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    {submission.status === "pending" && (
+                      <div className="flex border-t border-border/30">
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-red-400 hover:bg-red-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" 
+                          onClick={() => {
+                            setSelectedSubmission(submission);
+                            setRejectDialogOpen(true);
+                          }} 
+                          disabled={processing}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Reject
+                        </button>
+                        <div className="w-px bg-border/30" />
+                        <button 
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors tracking-[-0.5px] disabled:opacity-50 ${
+                            submission.is_flagged 
+                              ? "text-orange-400 bg-orange-500/10" 
+                              : "text-orange-400 hover:bg-orange-500/5"
+                          }`} 
+                          onClick={() => handleFlag(submission)} 
+                          disabled={processing}
+                        >
+                          <img alt="" className="h-3.5 w-3.5" src={flagIcon} />
+                          {submission.is_flagged ? "Flagged" : "Flag"}
+                        </button>
+                        <div className="w-px bg-border/30" />
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-emerald-400 hover:bg-emerald-500/5 transition-colors tracking-[-0.5px] disabled:opacity-50" 
+                          onClick={() => handleApprove(submission)} 
+                          disabled={processing}
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          Approve
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
               });
             })()}
             </div>
