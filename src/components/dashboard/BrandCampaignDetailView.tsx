@@ -450,7 +450,7 @@ export function BrandCampaignDetailView({
             setSearchParams(newParams);
           }} className={`flex items-center gap-2 px-4 py-1.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeDetailTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
-                {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
+                {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-[10px] w-4 h-4 rounded-full flex items-center justify-center">
                     {tab.count}
                   </span>}
               </button>)}
