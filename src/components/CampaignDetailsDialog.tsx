@@ -1,11 +1,12 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, ExternalLink, CheckCircle, TrendingUp, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone, LogOut } from "lucide-react";
+import { Check, ExternalLink, CheckCircle, TrendingUp, MessageSquare, ChevronDown, ChevronUp, Plus, Link2, Megaphone, LogOut, Video } from "lucide-react";
 import addDiamondIcon from "@/assets/add-diamond-icon.svg";
 import warningIcon from "@/assets/warning-icon.svg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
+import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
 import tiktokIcon from "@/assets/tiktok-logo-white.png";
 import tiktokIconBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramIcon from "@/assets/instagram-logo-white.png";
@@ -47,6 +48,8 @@ interface Campaign {
   campaign_update_at?: string | null;
   payout_day_of_week?: number | null;
   blueprint_id?: string | null;
+  payment_model?: string | null;
+  post_rate?: number | null;
 }
 interface CampaignDetailsDialogProps {
   campaign: Campaign | null;
@@ -134,9 +137,35 @@ export function CampaignDetailsDialog({
   } | null>(null);
   const [blueprintContent, setBlueprintContent] = useState<string | null>(null);
   const [blueprintAssets, setBlueprintAssets] = useState<AssetLink[] | null>(null);
+  const [showSubmitVideoDialog, setShowSubmitVideoDialog] = useState(false);
+  const [pendingSubmissions, setPendingSubmissions] = useState(0);
+  const [approvedSubmissions, setApprovedSubmissions] = useState(0);
   const {
     resolvedTheme
   } = useTheme();
+
+  // Fetch submission stats
+  useEffect(() => {
+    const fetchSubmissionStats = async () => {
+      if (!campaign?.id || !open) return;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: submissions } = await supabase
+        .from('campaign_videos')
+        .select('status')
+        .eq('campaign_id', campaign.id)
+        .eq('creator_id', user.id);
+
+      if (submissions) {
+        setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);
+        setApprovedSubmissions(submissions.filter(s => s.status === 'approved').length);
+      }
+    };
+
+    fetchSubmissionStats();
+  }, [campaign?.id, open]);
 
   // Fetch blueprint content and assets if campaign has a blueprint_id
   useEffect(() => {
@@ -490,6 +519,61 @@ export function CampaignDetailsDialog({
           </div>
         </div>
 
+        {/* Submit Video Section */}
+        {hasConnectedAccounts && (
+          <div className="mb-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#2060df]/10 via-[#2060df]/5 to-transparent border border-[#2060df]/20">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-[#2060df]/20 flex items-center justify-center flex-shrink-0">
+                  <Video className="w-6 h-6 text-[#2060df]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-sm mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                    Submit Your Video
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-3" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                    Upload your video link to get paid. You'll earn{' '}
+                    {campaign.payment_model === 'pay_per_post' ? (
+                      <span className="font-medium text-[#2060df]">${campaign.post_rate?.toFixed(2)} per approved video</span>
+                    ) : (
+                      <span className="font-medium text-[#2060df]">${(campaign.rpm_rate * 1000).toLocaleString()} per 1M views</span>
+                    )}
+                  </p>
+                  
+                  {/* Submission Stats */}
+                  <div className="flex items-center gap-4 mb-3">
+                    {pendingSubmissions > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          {pendingSubmissions} pending
+                        </span>
+                      </div>
+                    )}
+                    {approvedSubmissions > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                          {approvedSubmissions} approved
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button
+                    onClick={() => setShowSubmitVideoDialog(true)}
+                    className="w-full sm:w-auto h-10 px-6 rounded-full font-semibold text-sm bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7]"
+                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Submit Video
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Connected Accounts Section */}
         {(onConnectAccount || onManageAccount) && <div className="mb-4">
             <div className="flex items-center justify-between mb-3">
@@ -529,6 +613,38 @@ export function CampaignDetailsDialog({
                 </div>
               </div>}
           </div>}
+
+        {/* Submit Video Dialog */}
+        <SubmitVideoDialog
+          campaign={{
+            id: campaign.id,
+            title: campaign.title,
+            brand_name: campaign.brand_name,
+            payment_model: campaign.payment_model,
+            rpm_rate: campaign.rpm_rate,
+            post_rate: campaign.post_rate,
+            allowed_platforms: campaign.allowed_platforms || undefined
+          }}
+          open={showSubmitVideoDialog}
+          onOpenChange={setShowSubmitVideoDialog}
+          onSuccess={() => {
+            // Refresh submission stats
+            const fetchStats = async () => {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) return;
+              const { data: submissions } = await supabase
+                .from('campaign_videos')
+                .select('status')
+                .eq('campaign_id', campaign.id)
+                .eq('creator_id', user.id);
+              if (submissions) {
+                setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);
+                setApprovedSubmissions(submissions.filter(s => s.status === 'approved').length);
+              }
+            };
+            fetchStats();
+          }}
+        />
 
         {/* Asset Links Section - show blueprint assets or campaign assets */}
         {(blueprintAssets && blueprintAssets.length > 0 ? blueprintAssets : hasAssetLinks ? campaign.asset_links : null) && <div className="mb-4">
