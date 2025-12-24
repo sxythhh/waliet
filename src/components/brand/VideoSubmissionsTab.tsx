@@ -620,7 +620,7 @@ export function VideoSubmissionsTab({
             </div>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2 py-0">
               {(() => {
               const filteredCreators = creatorStats.filter(creator => {
                 if (!userSearchQuery.trim()) return true;
@@ -654,18 +654,16 @@ export function VideoSubmissionsTab({
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
 
-                      {/* Submission Heatmap - only show when selected */}
-                      {isSelected && (
-                        <div className="mt-3">
-                          <SubmissionHeatmap submissions={creator.submissions.map(s => ({
-                        submitted_at: s.submitted_at,
-                        status: s.status
-                      }))} onDateClick={date => {
-                        setSelectedCreator(creator.userId);
-                        setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
-                      }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
-                        </div>
-                      )}
+                      {/* Submission Heatmap */}
+                      <div className="mt-3">
+                        <SubmissionHeatmap submissions={creator.submissions.map(s => ({
+                      submitted_at: s.submitted_at,
+                      status: s.status
+                    }))} onDateClick={date => {
+                      setSelectedCreator(creator.userId);
+                      setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
+                    }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
+                      </div>
                     </button>;
               });
             })()}
@@ -694,7 +692,7 @@ export function VideoSubmissionsTab({
               {/* Status Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 bg-muted/30 rounded-md px-2.5 py-1.5 text-xs tracking-[-0.5px] transition-colors">
+                  <button className="flex items-center gap-1 bg-muted/30 rounded-lg px-2 py-1 text-[10px] tracking-[-0.5px] transition-colors">
                     <span className={filterStatus === "all" ? "text-muted-foreground" : "text-foreground"}>
                       {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
                     </span>
@@ -850,6 +848,7 @@ export function VideoSubmissionsTab({
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
+                        <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
                         <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
@@ -878,11 +877,11 @@ export function VideoSubmissionsTab({
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium font-['Inter'] tracking-[-0.5px] ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : submission.status === "rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
+                              <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${submission.status === "approved" ? "bg-emerald-500/10 text-emerald-500" : submission.status === "rejected" ? "bg-red-500/10 text-red-500" : "bg-amber-500/10 text-amber-500"}`}>
                                 {submission.status === "approved" && <Check className="h-3 w-3" />}
                                 {submission.status === "rejected" && <X className="h-3 w-3" />}
                                 {submission.status === "pending" && <Clock className="h-3 w-3" />}
-                                {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                                {submission.status}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -974,7 +973,7 @@ export function VideoSubmissionsTab({
                               {submission.status === "approved" && <Check className="h-3 w-3" />}
                               {submission.status === "rejected" && <X className="h-3 w-3" />}
                               {submission.status === "pending" && <Clock className="h-3 w-3" />}
-                              {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                              {submission.status}
                             </div>
                           </div>
                           
