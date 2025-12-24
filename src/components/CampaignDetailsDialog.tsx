@@ -27,6 +27,7 @@ interface AssetLink {
 interface Campaign {
   id: string;
   title: string;
+  slug: string;
   brand_name: string;
   brand_logo_url: string | null;
   description: string | null;
@@ -268,8 +269,8 @@ export function CampaignDetailsDialog({
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
                 }}
-                onClick={() => window.location.href = '/c'}
-              >{campaign.brand_name}</h2>
+                onClick={() => window.location.href = `/c/${campaign.slug}`}
+              >{campaign.title}</h2>
               {campaign.status === 'ended' && onLeaveCampaign && (
                 <button
                   onClick={onLeaveCampaign}
