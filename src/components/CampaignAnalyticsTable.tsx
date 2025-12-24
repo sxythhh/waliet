@@ -1559,7 +1559,6 @@ export function CampaignAnalyticsTable({
         {activeTab === 'transactions' && <>
             {/* Payout Requests Section */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-foreground mb-3 tracking-[-0.3px]">Payout Requests</h3>
               <PayoutRequestsTable campaignId={campaignId} showEmpty={false} />
             </div>
             
