@@ -9,21 +9,19 @@ interface ShortimizeVideo {
   ad_id: string;
   username: string;
   platform: string;
+  ad_link: string;
   latest_views: number;
   latest_likes: number;
   latest_comments: number;
   latest_shares: number;
   latest_bookmarks: number;
-  video_url: string;
   uploaded_at: string;
-  thumbnail_url?: string;
   title?: string;
-  caption?: string;
 }
 
 interface ShortimizeApiResponse {
-  videos: ShortimizeVideo[];
-  total_count: number;
+  data: ShortimizeVideo[];
+  pagination: { total: number };
 }
 
 Deno.serve(async (req) => {
@@ -119,8 +117,8 @@ Deno.serve(async (req) => {
 
         for (const collectionName of collections) {
           try {
-            const response = await fetch(
-              `https://shortimize.com/api/v1/videos?collections=${encodeURIComponent(collectionName)}`,
+          const response = await fetch(
+              `https://api.shortimize.com/videos?collections=${encodeURIComponent(collectionName)}`,
               {
                 method: "GET",
                 headers: {
@@ -136,14 +134,14 @@ Deno.serve(async (req) => {
             }
 
             const apiData: ShortimizeApiResponse = await response.json();
-            console.log(`Fetched ${apiData.videos?.length || 0} videos from collection ${collectionName}`);
+            console.log(`Fetched ${apiData.data?.length || 0} videos from collection ${collectionName}`);
 
-            if (!apiData.videos || apiData.videos.length === 0) {
+            if (!apiData.data || apiData.data.length === 0) {
               continue;
             }
 
             // Update video_submissions with metrics for each video
-            for (const video of apiData.videos) {
+            for (const video of apiData.data) {
               const { error: updateError } = await supabase
                 .from("video_submissions")
                 .update({
