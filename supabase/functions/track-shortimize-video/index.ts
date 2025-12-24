@@ -156,7 +156,18 @@ Deno.serve(async (req) => {
       }),
     });
 
-    const shortimizeResult = await shortimizeResponse.json();
+    // Handle potentially empty or non-JSON responses
+    const responseText = await shortimizeResponse.text();
+    let shortimizeResult: { error?: string; message?: string; videoId?: string; id?: string; directUrl?: string } = {};
+    
+    if (responseText) {
+      try {
+        shortimizeResult = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse Shortimize response:', responseText);
+        shortimizeResult = { error: 'Invalid JSON response' };
+      }
+    }
 
     console.log('Shortimize API response:', { 
       status: shortimizeResponse.status, 
