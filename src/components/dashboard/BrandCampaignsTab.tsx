@@ -374,7 +374,13 @@ export function BrandCampaignsTab({
               <Button 
                 variant="outline" 
                 size="sm"
-                className="border-blue-500/50 text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0"
+                className="border-transparent text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0"
+                onClick={() => {
+                  const newParams = new URLSearchParams(searchParams);
+                  newParams.set("tab", "all-programs");
+                  newParams.set("programTab", "applications");
+                  setSearchParams(newParams);
+                }}
               >
                 Review applications
               </Button>
