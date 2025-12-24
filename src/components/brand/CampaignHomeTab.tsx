@@ -113,24 +113,22 @@ export function CampaignHomeTab({
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
-        const videoSubmissionsQuery = supabase.from('video_submissions').select('id, status').eq('source_type', 'campaign').eq('source_id', campaignId);
         
-        let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', { ascending: false }).limit(1);
-        if (dateRange) {
-          metricsRangeQuery = metricsRangeQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
-        }
+        // Query video_submissions directly for accurate metrics (refreshed every 8 hours from Shortimize)
+        const videoSubmissionsQuery = supabase
+          .from('video_submissions')
+          .select('id, status, views, likes, comments, shares, bookmarks, submitted_at')
+          .eq('source_type', 'campaign')
+          .eq('source_id', campaignId);
         
-        const metricsThisWeekQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', { ascending: false }).limit(1);
-        const metricsLastWeekQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).gte('recorded_at', twoWeeksAgo.toISOString()).lt('recorded_at', oneWeekAgo.toISOString()).order('recorded_at', { ascending: false }).limit(1);
-        
-        let chartMetricsQuery = supabase.from('campaign_video_metrics').select('*').eq('campaign_id', campaignId).order('recorded_at', { ascending: true });
+        let chartMetricsQuery = supabase.from('program_video_metrics').select('*').eq('source_type', 'campaign').eq('source_id', campaignId).order('recorded_at', { ascending: true });
         if (dateRange) {
           chartMetricsQuery = chartMetricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
         }
 
         // Execute ALL queries in parallel
-        const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([
-          brandQuery, campaignQuery, allTransactionsQuery, videoSubmissionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery
+        const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, chartMetricsResult] = await Promise.all([
+          brandQuery, campaignQuery, allTransactionsQuery, videoSubmissionsQuery, chartMetricsQuery
         ]);
         
         if (isCancelled) return;
@@ -138,6 +136,49 @@ export function CampaignHomeTab({
         const brandData = brandResult.data;
         setBrand(brandData);
         setCampaignHashtags(campaignResult.data?.hashtags || []);
+
+        // Process video submissions for stats - get accurate metrics directly from video-level data
+        const allSubmissions = (videoSubmissionsResult.data || []) as { 
+          id: string; 
+          status: string; 
+          views: number | null;
+          likes: number | null;
+          comments: number | null;
+          shares: number | null;
+          bookmarks: number | null;
+          submitted_at: string | null;
+        }[];
+        
+        // Filter by date range if needed
+        let filteredSubmissions = allSubmissions;
+        if (dateRange) {
+          filteredSubmissions = allSubmissions.filter(s => {
+            if (!s.submitted_at) return false;
+            const date = new Date(s.submitted_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+        
+        // Calculate totals from approved submissions only
+        const approvedSubmissions = filteredSubmissions.filter(s => s.status === 'approved');
+        const totalViews = approvedSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
+        const totalLikes = approvedSubmissions.reduce((sum, s) => sum + (s.likes || 0), 0);
+        const totalComments = approvedSubmissions.reduce((sum, s) => sum + (s.comments || 0), 0);
+        const totalShares = approvedSubmissions.reduce((sum, s) => sum + (s.shares || 0), 0);
+        
+        // Calculate views from last week for comparison
+        const submissionsThisWeek = allSubmissions.filter(s => {
+          if (!s.submitted_at || s.status !== 'approved') return false;
+          return new Date(s.submitted_at) >= oneWeekAgo;
+        });
+        const submissionsLastWeek = allSubmissions.filter(s => {
+          if (!s.submitted_at || s.status !== 'approved') return false;
+          const date = new Date(s.submitted_at);
+          return date >= twoWeeksAgo && date < oneWeekAgo;
+        });
+        
+        const viewsThisWeekValue = submissionsThisWeek.reduce((sum, s) => sum + (s.views || 0), 0);
+        const viewsLastWeekValue = submissionsLastWeek.reduce((sum, s) => sum + (s.views || 0), 0);
 
         // Process transactions
         const allTransactionsData = allTransactionsResult.data || [];
@@ -155,18 +196,14 @@ export function CampaignHomeTab({
           return date >= twoWeeksAgo && date < oneWeekAgo;
         }).reduce((sum, t) => sum + (t.amount || 0), 0);
         
-        const viewsThisWeekValue = metricsThisWeekResult.data?.[0]?.total_views || 0;
-        const viewsLastWeekValue = metricsLastWeekResult.data?.[0]?.total_views || 0;
         const viewsChangePercent = viewsLastWeekValue > 0 ? (viewsThisWeekValue - viewsLastWeekValue) / viewsLastWeekValue * 100 : 0;
         const payoutsChangePercent = payoutsLastWeek > 0 ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 : 0;
-        const totalViews = metricsRangeResult.data?.[0]?.total_views || 0;
         const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
         const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
 
-        // Process video submissions data
-        const videoSubmissionsData = (videoSubmissionsResult.data || []) as unknown as { id: string; status: string }[];
-        const totalSubmissions = videoSubmissionsData.length;
-        const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
+        // Submission counts
+        const totalSubmissionsCount = filteredSubmissions.length;
+        const approvedSubmissionsCount = approvedSubmissions.length;
         
         setStats({
           totalViews,
@@ -176,8 +213,8 @@ export function CampaignHomeTab({
           payoutsLastWeek,
           viewsChangePercent,
           payoutsChangePercent,
-          totalSubmissions,
-          approvedSubmissions
+          totalSubmissions: totalSubmissionsCount,
+          approvedSubmissions: approvedSubmissionsCount
         });
 
         // Process chart metrics
