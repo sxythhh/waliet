@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw } from "lucide-react";
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { PerformanceChart, MetricsData } from "./PerformanceChart";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 interface AllProgramsAnalyticsProps {
   brandId: string;
@@ -76,27 +74,6 @@ interface StatsData {
   totalSubmissions: number;
   approvedSubmissions: number;
 }
-interface MetricsData {
-  date: string;
-  views: number;
-  likes: number;
-  shares: number;
-  bookmarks: number;
-  videos: number;
-  dailyViews: number;
-  dailyLikes: number;
-  dailyShares: number;
-  dailyBookmarks: number;
-  dailyVideos: number;
-}
-type MetricType = 'views' | 'likes' | 'shares' | 'bookmarks' | 'videos';
-const METRIC_COLORS: Record<MetricType, string> = {
-  views: '#3b82f6',
-  likes: '#ef4444',
-  shares: '#22c55e',
-  bookmarks: '#f59e0b',
-  videos: '#a855f7'
-};
 const formatNumber = (num: number): string => {
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
@@ -125,19 +102,8 @@ export function AllProgramsAnalytics({
     approvedSubmissions: 0
   });
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
-  const [chartMode, setChartMode] = useState<'daily' | 'cumulative'>('cumulative');
-  const [activeMetrics, setActiveMetrics] = useState<MetricType[]>(['views']);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const toggleMetric = (metric: MetricType) => {
-    if (activeMetrics.includes(metric)) {
-      if (activeMetrics.length > 1) {
-        setActiveMetrics(activeMetrics.filter(m => m !== metric));
-      }
-    } else {
-      setActiveMetrics([...activeMetrics, metric]);
-    }
-  };
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await loadData();
@@ -348,12 +314,6 @@ export function AllProgramsAnalytics({
   useEffect(() => {
     loadData();
   }, [brandId, timeframe]);
-  const getChartDataKey = (metric: MetricType) => {
-    if (chartMode === 'daily') {
-      return `daily${metric.charAt(0).toUpperCase() + metric.slice(1)}` as keyof MetricsData;
-    }
-    return metric as keyof MetricsData;
-  };
   if (isLoading) {
     return <div className="p-4 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -419,72 +379,10 @@ export function AllProgramsAnalytics({
       </div>
 
       {/* Metrics Chart */}
-      <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
-          <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
-          <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={isRefreshing} className="h-8 px-2">
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-
-        {/* Controls Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
-          {/* Metric Toggles */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <button key={metric} onClick={() => toggleMetric(metric)} className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${activeMetrics.includes(metric) ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
-                <div className={`w-2 h-2 rounded-full transition-opacity ${activeMetrics.includes(metric) ? 'opacity-100' : 'opacity-40'}`} style={{
-              backgroundColor: METRIC_COLORS[metric]
-            }} />
-                <span className="capitalize">{metric}</span>
-              </button>)}
-          </div>
-
-          {/* Daily/Cumulative Toggle */}
-          <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5 self-start sm:self-auto">
-            <button onClick={() => setChartMode('daily')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'daily' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
-              Daily
-            </button>
-            <button onClick={() => setChartMode('cumulative')} className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${chartMode === 'cumulative' ? 'bg-white/10 text-white' : 'text-muted-foreground hover:text-foreground'}`}>
-              Cumulative
-            </button>
-          </div>
-        </div>
-
-        <div className="h-56 sm:h-72">
-          {metricsData.length > 0 ? <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={metricsData} margin={{
-            top: 10,
-            right: 10,
-            left: 0,
-            bottom: 0
-          }}>
-                <defs>
-                  {(['views', 'likes', 'shares', 'bookmarks', 'videos'] as MetricType[]).map(metric => <linearGradient key={metric} id={`gradient-${metric}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={METRIC_COLORS[metric]} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={METRIC_COLORS[metric]} stopOpacity={0} />
-                    </linearGradient>)}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="date" stroke="rgba(255,255,255,0.3)" tick={{
-              fill: 'rgba(255,255,255,0.5)',
-              fontSize: 11
-            }} />
-                <YAxis stroke="rgba(255,255,255,0.3)" tick={{
-              fill: 'rgba(255,255,255,0.5)',
-              fontSize: 11
-            }} tickFormatter={formatNumber} />
-                <Tooltip contentStyle={{
-              backgroundColor: 'rgba(0,0,0,0.9)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              fontSize: '12px'
-            }} formatter={(value: number) => [formatNumber(value), '']} />
-                {activeMetrics.map(metric => <Area key={metric} type="monotone" dataKey={getChartDataKey(metric)} stroke={METRIC_COLORS[metric]} fill={`url(#gradient-${metric})`} strokeWidth={2} name={metric} />)}
-              </AreaChart>
-            </ResponsiveContainer> : <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              No data available for the selected timeframe
-            </div>}
-        </div>
-      </Card>
+      <PerformanceChart
+        metricsData={metricsData}
+        isRefreshing={isRefreshing}
+        onRefresh={handleRefresh}
+      />
     </div>;
 }
