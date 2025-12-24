@@ -212,6 +212,8 @@ export default function Dashboard() {
       switch (currentTab) {
         case "campaigns":
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
+        case "analytics":
+          return <BrandCampaignDetailView brandId={currentBrand.id} />;
         case "blueprints":
           return <BlueprintsTab brandId={currentBrand.id} />;
         case "scope":
