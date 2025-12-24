@@ -13,6 +13,8 @@ import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
+import { AllApplicationsView } from "@/components/brand/AllApplicationsView";
+import { AllVideosView } from "@/components/brand/AllVideosView";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -536,9 +538,7 @@ export function BrandCampaignDetailView({
             )
           ) : activeDetailTab === "videos" ? (
             isAllMode && brandId ? (
-              <div className="p-6 text-center text-muted-foreground">
-                Video submissions across all programs will be displayed here.
-              </div>
+              <AllVideosView brandId={brandId} onSubmissionReviewed={fetchPendingApplicationsCount} />
             ) : isBoost && boost ? (
               <VideoSubmissionsTab
                 boostId={boostId}
@@ -565,16 +565,6 @@ function AllProgramsHomeContent({ brandId, campaigns, boosts, timeframe }: { bra
   return <AllProgramsAnalytics brandId={brandId} timeframe={timeframe} />;
 }
 
-// All Applications View placeholder
-function AllApplicationsView({ brandId, onApplicationReviewed }: { brandId: string; onApplicationReviewed?: () => void }) {
-  return (
-    <div className="p-6">
-      <p className="text-muted-foreground text-center py-12">
-        Applications across all programs will be displayed here.
-      </p>
-    </div>
-  );
-}
 
 // Boost Management Content (inline component for boost home tab)
 function BoostManagementContent({ boost, onTopUp }: { boost: Boost; onTopUp: () => void }) {
