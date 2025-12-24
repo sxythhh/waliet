@@ -176,7 +176,7 @@ export function CampaignCard({
             </>
           ) : (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between opacity-50">
                 <div className="flex items-baseline gap-1.5">
                   <span
                     className="text-xs font-semibold font-['Inter'] tracking-[-0.5px]"
