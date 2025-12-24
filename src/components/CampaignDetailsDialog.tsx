@@ -262,10 +262,14 @@ export function CampaignDetailsDialog({
             </div>}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-base sm:text-lg font-semibold" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.5px'
-              }}>{campaign.brand_name}</h2>
+              <h2 
+                className="text-base sm:text-lg font-semibold cursor-pointer hover:underline" 
+                style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.5px'
+                }}
+                onClick={() => window.location.href = '/c'}
+              >{campaign.brand_name}</h2>
               {campaign.status === 'ended' && onLeaveCampaign && (
                 <button
                   onClick={onLeaveCampaign}
