@@ -50,6 +50,8 @@ interface BountyCampaign {
   banner_url: string | null;
   status: string;
   created_at: string;
+  budget: number | null;
+  budget_used: number | null;
 }
 interface BrandCampaignsTabProps {
   brandId: string;
@@ -251,8 +253,8 @@ export function BrandCampaignsTab({
         </div>
       </div>;
   }
-  const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0);
-  const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0);
+  const totalBudget = campaigns.reduce((sum, c) => sum + Number(c.budget), 0) + bounties.reduce((sum, b) => sum + Number(b.budget || 0), 0);
+  const totalUsed = campaigns.reduce((sum, c) => sum + Number(c.budget_used || 0), 0) + bounties.reduce((sum, b) => sum + Number(b.budget_used || 0), 0);
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
   return <div className={`relative ${selectedBoostId ? "h-full flex flex-col" : "space-y-6 px-4 sm:px-6 md:px-8 py-6"}`}>
       {/* Beta Gate Overlay for non-admin users with inactive subscription */}
@@ -293,6 +295,28 @@ export function BrandCampaignsTab({
           setCreateBountyOpen(true);
         }} />
           </div>
+
+          {/* Summary Stats - Show when there are programs */}
+          {(campaigns.length > 0 || bounties.length > 0) && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+                <p className="text-xs text-muted-foreground mb-1">Active Campaigns</p>
+                <p className="text-2xl font-semibold">{activeCampaigns}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+                <p className="text-xs text-muted-foreground mb-1">Active Boosts</p>
+                <p className="text-2xl font-semibold">{bounties.filter(b => b.status === "active").length}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+                <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
+                <p className="text-2xl font-semibold">${totalBudget.toLocaleString()}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/30">
+                <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
+                <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
+              </div>
+            </div>
+          )}
 
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
