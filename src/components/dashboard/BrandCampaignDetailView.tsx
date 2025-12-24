@@ -265,6 +265,9 @@ export function BrandCampaignDetailView({
     { id: "home", label: "Home", icon: Home },
   ];
 
+  // Videos tab
+  detailTabs.push({ id: "videos", label: "Videos", icon: Video });
+
   // Add applications tab (always available in all mode, or when specific entity allows)
   if (isAllMode || isBoost || campaign?.requires_application !== false) {
     detailTabs.push({
@@ -274,9 +277,6 @@ export function BrandCampaignDetailView({
       count: pendingApplicationsCount
     });
   }
-
-  // Videos tab
-  detailTabs.push({ id: "videos", label: "Videos", icon: Video });
 
   // Creators tab (admin only, not in all mode)
   if (isAdmin && !isBoost && !isAllMode) {
