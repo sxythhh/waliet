@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageSquare } from "lucide-react";
 import { Check, X, ExternalLink, User } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -246,7 +247,7 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
         {selectedApp ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="p-4 border-b border-border">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
@@ -262,27 +263,6 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
                     @{selectedApp.profile?.username} · {selectedApp.campaign_title}
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUpdateStatus(selectedApp.id, "rejected")}
-                  disabled={processing === selectedApp.id}
-                  className="gap-1"
-                >
-                  <X className="h-4 w-4" />
-                  Reject
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => handleUpdateStatus(selectedApp.id, "approved")}
-                  disabled={processing === selectedApp.id}
-                  className="gap-1"
-                >
-                  <Check className="h-4 w-4" />
-                  Accept
-                </Button>
               </div>
             </div>
 
@@ -329,6 +309,38 @@ export function AllApplicationsView({ brandId, onApplicationReviewed }: AllAppli
                 )}
               </div>
             </ScrollArea>
+
+            {/* Fixed Footer Actions */}
+            <div className="p-4 border-t border-border bg-background flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Message
+              </Button>
+              <div className="flex-1" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleUpdateStatus(selectedApp.id, "rejected")}
+                disabled={processing === selectedApp.id}
+                className="gap-1"
+              >
+                <X className="h-4 w-4" />
+                Reject
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleUpdateStatus(selectedApp.id, "approved")}
+                disabled={processing === selectedApp.id}
+                className="gap-1"
+              >
+                <Check className="h-4 w-4" />
+                Accept
+              </Button>
+            </div>
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
