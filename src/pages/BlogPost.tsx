@@ -1,13 +1,14 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, User, ArrowRight } from "lucide-react";
+import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
-import { Helmet } from "react-helmet-async";
 import { Skeleton } from "@/components/ui/skeleton";
 import DOMPurify from "dompurify";
 import PublicNavbar from "@/components/PublicNavbar";
+import { SEOHead } from "@/components/SEOHead";
+import { generateArticleSchema, getCanonicalUrl } from "@/lib/seo";
 interface BlogPost {
   id: string;
   title: string;
@@ -90,31 +91,14 @@ export default function BlogPostPage() {
   }) : '';
 
   // Generate structured data for SEO
-  const articleStructuredData = post ? {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": post.title,
-    "description": post.excerpt || "",
-    "image": post.image_url || "",
-    "datePublished": formatISODate(post.published_at),
-    "dateModified": formatISODate(post.published_at),
-    "author": {
-      "@type": "Person",
-      "name": post.author
-    },
-    "publisher": {
-      "@type": "Organization",
-      "name": "Virality",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://app.virality.gg/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png"
-      }
-    },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `https://app.virality.gg/blog/${post.slug}`
-    }
-  } : null;
+  const articleStructuredData = post ? generateArticleSchema({
+    title: post.title,
+    description: post.excerpt || '',
+    author: post.author,
+    publishedTime: formatISODate(post.published_at),
+    image: post.image_url || undefined,
+    url: `/blog/${post.slug}`,
+  }) : null;
   if (loading) {
     return <div className="h-[100dvh] bg-background overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -132,6 +116,11 @@ export default function BlogPostPage() {
   }
   if (notFound || !post) {
     return <div className="h-[100dvh] bg-background overflow-y-auto flex items-center justify-center">
+        <SEOHead
+          title="Article Not Found"
+          description="The article you're looking for doesn't exist or has been removed."
+          noIndex={true}
+        />
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-foreground mb-4">Article not found</h1>
           <p className="text-muted-foreground mb-6">The article you're looking for doesn't exist or has been removed.</p>
@@ -143,19 +132,22 @@ export default function BlogPostPage() {
       </div>;
   }
   return <div className="h-[100dvh] flex flex-col bg-background">
-      <Helmet>
-        <title>{post.title} | Virality</title>
-        <meta name="description" content={post.excerpt || `Read ${post.title} on Virality`} />
-        <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={post.excerpt || ""} />
-        {post.image_url && <meta property="og:image" content={post.image_url} />}
-        <meta property="og:type" content="article" />
-        <meta property="og:url" content={`https://app.virality.gg/blog/${post.slug}`} />
-        <link rel="canonical" href={`https://app.virality.gg/blog/${post.slug}`} />
-        {articleStructuredData && <script type="application/ld+json">
-            {JSON.stringify(articleStructuredData)}
-          </script>}
-      </Helmet>
+      <SEOHead
+        title={post.title}
+        description={post.excerpt || `Read ${post.title} on Virality`}
+        ogImage={post.image_url || undefined}
+        ogType="article"
+        canonical={getCanonicalUrl(`/blog/${post.slug}`)}
+        author={post.author}
+        publishedTime={formatISODate(post.published_at)}
+        keywords={post.tags || undefined}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Resources', url: '/resources' },
+          { name: post.title, url: `/blog/${post.slug}` },
+        ]}
+        structuredData={articleStructuredData || undefined}
+      />
 
       <PublicNavbar />
 

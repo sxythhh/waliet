@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
+import { SEOHead } from "@/components/SEOHead";
 
 export default function Privacy() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,6 +21,15 @@ export default function Privacy() {
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#0a0a0a]">
+      <SEOHead
+        title="Privacy Policy"
+        description="Read the Virality Privacy Policy. Learn how we collect, use, and protect your personal information on our platform."
+        keywords={['privacy policy', 'data protection', 'privacy']}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Privacy Policy', url: '/privacy' },
+        ]}
+      />
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -57,6 +67,7 @@ export default function Privacy() {
           src="https://join.virality.gg/legal/creator-terms"
           className="w-full h-full border-0"
           title="Privacy Policy"
+          loading="lazy"
         />
       </div>
 
