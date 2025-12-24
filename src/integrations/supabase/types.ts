@@ -1325,10 +1325,21 @@ export type Database = {
           is_flagged: boolean | null
           platform: string | null
           shortimize_video_id: string | null
+          social_account_id: string | null
           status: string | null
           submission_text: string | null
           updated_at: string | null
+          video_author_avatar: string | null
+          video_author_username: string | null
+          video_comments: number | null
+          video_cover_url: string | null
+          video_description: string | null
+          video_likes: number | null
+          video_shares: number | null
+          video_title: string | null
+          video_upload_date: string | null
           video_url: string
+          video_views: number | null
         }
         Insert: {
           bot_score?: number | null
@@ -1341,10 +1352,21 @@ export type Database = {
           is_flagged?: boolean | null
           platform?: string | null
           shortimize_video_id?: string | null
+          social_account_id?: string | null
           status?: string | null
           submission_text?: string | null
           updated_at?: string | null
+          video_author_avatar?: string | null
+          video_author_username?: string | null
+          video_comments?: number | null
+          video_cover_url?: string | null
+          video_description?: string | null
+          video_likes?: number | null
+          video_shares?: number | null
+          video_title?: string | null
+          video_upload_date?: string | null
           video_url: string
+          video_views?: number | null
         }
         Update: {
           bot_score?: number | null
@@ -1357,10 +1379,21 @@ export type Database = {
           is_flagged?: boolean | null
           platform?: string | null
           shortimize_video_id?: string | null
+          social_account_id?: string | null
           status?: string | null
           submission_text?: string | null
           updated_at?: string | null
+          video_author_avatar?: string | null
+          video_author_username?: string | null
+          video_comments?: number | null
+          video_cover_url?: string | null
+          video_description?: string | null
+          video_likes?: number | null
+          video_shares?: number | null
+          video_title?: string | null
+          video_upload_date?: string | null
           video_url?: string
+          video_views?: number | null
         }
         Relationships: [
           {
@@ -1375,6 +1408,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_videos_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
         ]
