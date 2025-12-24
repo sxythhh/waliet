@@ -190,7 +190,7 @@ export function CampaignHomeTab({
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
-        const submissionsQuery = supabase.from('campaign_submissions').select('id, status').eq('campaign_id', campaignId);
+        const videoSubmissionsQuery = supabase.from('campaign_videos').select('id, status').eq('campaign_id', campaignId);
         let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', {
           ascending: false
         }).limit(1);
@@ -211,7 +211,7 @@ export function CampaignHomeTab({
         }
 
         // Execute ALL queries in parallel
-        const [brandResult, campaignResult, allTransactionsResult, submissionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([brandQuery, campaignQuery, allTransactionsQuery, submissionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery]);
+        const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, metricsRangeResult, metricsThisWeekResult, metricsLastWeekResult, chartMetricsResult] = await Promise.all([brandQuery, campaignQuery, allTransactionsQuery, videoSubmissionsQuery, metricsRangeQuery, metricsThisWeekQuery, metricsLastWeekQuery, chartMetricsQuery]);
         if (isCancelled) return;
         const brandData = brandResult.data;
         setBrand(brandData);
@@ -239,10 +239,10 @@ export function CampaignHomeTab({
         const totalPayouts = transactionsData.reduce((sum, t) => sum + (t.amount || 0), 0);
         const effectiveCPM = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
         
-        // Process submissions data
-        const submissionsData = submissionsResult.data || [];
-        const totalSubmissions = submissionsData.length;
-        const approvedSubmissions = submissionsData.filter(s => s.status === 'approved').length;
+        // Process video submissions data (campaign_videos for pay per post)
+        const videoSubmissionsData = videoSubmissionsResult.data || [];
+        const totalSubmissions = videoSubmissionsData.length;
+        const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
         
         setStats({
           totalViews,

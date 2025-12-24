@@ -164,9 +164,9 @@ export function AllProgramsAnalytics({ brandId, timeframe = "this_month" }: AllP
           .lte('recorded_at', dateRange.end.toISOString());
       }
 
-      const [metricsResult, submissionsResult] = await Promise.all([
+      const [metricsResult, videoSubmissionsResult] = await Promise.all([
         metricsQuery,
-        supabase.from('campaign_submissions').select('id, status').in('campaign_id', campaignIds)
+        supabase.from('campaign_videos').select('id, status').in('campaign_id', campaignIds)
       ]);
 
       // Aggregate metrics by date
@@ -261,10 +261,10 @@ export function AllProgramsAnalytics({ brandId, timeframe = "this_month" }: AllP
         ? ((payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek) * 100 
         : 0;
 
-      // Submissions
-      const submissionsData = submissionsResult.data || [];
-      const totalSubmissions = submissionsData.length;
-      const approvedSubmissions = submissionsData.filter(s => s.status === 'approved').length;
+      // Video Submissions (campaign_videos for pay per post)
+      const videoSubmissionsData = videoSubmissionsResult.data || [];
+      const totalSubmissions = videoSubmissionsData.length;
+      const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
 
       setStats({
         totalViews: latestViews,
