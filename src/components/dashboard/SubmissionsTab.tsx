@@ -501,13 +501,12 @@ export function SubmissionsTab() {
         {payoutRequests.length > 0 && <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
-                  <Lock className="h-4 w-4" />
+                <div className="flex items-center px-3 py-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
                   <span className="text-sm font-medium" style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
               }}>
-                    ${payoutRequests.reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)} clearing
+                    ${payoutRequests.reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)} Pending
                   </span>
                 </div>
               </TooltipTrigger>
