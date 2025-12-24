@@ -692,7 +692,7 @@ export function VideoSubmissionsTab({
               {/* Status Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 bg-muted/30 rounded-lg px-2 py-1 text-[10px] tracking-[-0.5px] transition-colors">
+                  <button className="flex items-center gap-1 bg-muted/30 rounded-md px-2.5 py-1.5 text-xs tracking-[-0.5px] transition-colors">
                     <span className={filterStatus === "all" ? "text-muted-foreground" : "text-foreground"}>
                       {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
                     </span>
