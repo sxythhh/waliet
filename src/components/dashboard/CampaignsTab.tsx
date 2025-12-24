@@ -715,7 +715,7 @@ export function CampaignsTab({
             {/* Content Section */}
             <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
               {/* Brand Logo + Title */}
-              <div className="flex items-start gap-2.5">
+              <div className="gap-2.5 flex items-center justify-start">
                 {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
                     <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
                   </div>}
@@ -728,7 +728,7 @@ export function CampaignsTab({
                       Ended
                     </Badge>}
                   </div>
-                  <p className="text-xs text-foreground font-semibold flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">{campaign.brand_name}{campaign.brand_is_verified && <VerifiedBadge size="sm" />}</p>
+                  
                 </div>
               </div>
 
@@ -798,46 +798,31 @@ export function CampaignsTab({
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
             {recommendedCampaigns.map(campaign => {
-              const handleClick = () => {
-                setSelectedCampaignForJoin({
-                  id: campaign.id,
-                  title: campaign.title,
-                  description: (campaign as any).description || '',
-                  brand_name: campaign.brand_name,
-                  brand_logo_url: campaign.brand_logo_url || '',
-                  budget: campaign.budget,
-                  budget_used: campaign.budget_used || 0,
-                  rpm_rate: campaign.rpm_rate,
-                  status: (campaign as any).status || 'active',
-                  start_date: (campaign as any).start_date || null,
-                  banner_url: campaign.banner_url,
-                  platforms: campaign.allowed_platforms || [],
-                  slug: campaign.slug,
-                  guidelines: (campaign as any).guidelines || null,
-                  application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
-                  requires_application: (campaign as any).requires_application,
-                  is_infinite_budget: campaign.is_infinite_budget,
-                  blueprint_id: (campaign as any).blueprint_id || null
-                });
-                setJoinCampaignSheetOpen(true);
-              };
-              return <CampaignCard
-                key={campaign.id}
-                id={campaign.id}
-                title={campaign.title}
-                brand_name={campaign.brand_name}
-                brand_logo_url={campaign.brand_logo_url}
-                brand_is_verified={campaign.brand_is_verified}
-                banner_url={campaign.banner_url}
-                budget={campaign.budget}
-                budget_used={campaign.budget_used}
-                is_infinite_budget={campaign.is_infinite_budget}
-                platforms={campaign.allowed_platforms || []}
-                onClick={handleClick}
-                showBookmark={false}
-                showFullscreen={false}
-              />;
-            })}
+          const handleClick = () => {
+            setSelectedCampaignForJoin({
+              id: campaign.id,
+              title: campaign.title,
+              description: (campaign as any).description || '',
+              brand_name: campaign.brand_name,
+              brand_logo_url: campaign.brand_logo_url || '',
+              budget: campaign.budget,
+              budget_used: campaign.budget_used || 0,
+              rpm_rate: campaign.rpm_rate,
+              status: (campaign as any).status || 'active',
+              start_date: (campaign as any).start_date || null,
+              banner_url: campaign.banner_url,
+              platforms: campaign.allowed_platforms || [],
+              slug: campaign.slug,
+              guidelines: (campaign as any).guidelines || null,
+              application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
+              requires_application: (campaign as any).requires_application,
+              is_infinite_budget: campaign.is_infinite_budget,
+              blueprint_id: (campaign as any).blueprint_id || null
+            });
+            setJoinCampaignSheetOpen(true);
+          };
+          return <CampaignCard key={campaign.id} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.allowed_platforms || []} onClick={handleClick} showBookmark={false} showFullscreen={false} />;
+        })}
           </div>
         </div>}
 
