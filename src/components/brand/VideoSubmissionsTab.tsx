@@ -7,8 +7,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, ExternalLink, Video, DollarSign, ChevronRight, Search } from "lucide-react";
+import { Check, X, ExternalLink, Video, DollarSign, ChevronRight, Search, CalendarDays } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { isSameDay } from "date-fns";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, startOfMonth, endOfMonth } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
@@ -89,6 +90,7 @@ export function VideoSubmissionsTab({
   const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
 
   // Determine if this is a boost or campaign
   const isBoost = !!boostId;
@@ -465,6 +467,13 @@ export function VideoSubmissionsTab({
                             submitted_at: s.submitted_at,
                             status: s.status,
                           }))}
+                          onDateClick={(date) => {
+                            setSelectedCreator(creator.userId);
+                            setSelectedDateFilter(prev => 
+                              prev && isSameDay(prev, date) ? null : date
+                            );
+                          }}
+                          selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null}
                         />
                       </div>
                     </button>
@@ -533,6 +542,18 @@ export function VideoSubmissionsTab({
                   ))}
                 </div>
               </div>
+              
+              {/* Date Filter Indicator */}
+              {selectedDateFilter && (
+                <button
+                  onClick={() => setSelectedDateFilter(null)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] tracking-[-0.5px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
+                >
+                  <CalendarDays className="h-3 w-3" />
+                  <span>{format(selectedDateFilter, "MMM d, yyyy")}</span>
+                  <X className="h-3 w-3 ml-0.5" />
+                </button>
+              )}
             </div>
           </div>
 
@@ -547,6 +568,13 @@ export function VideoSubmissionsTab({
                 // Apply status filter
                 if (filterStatus !== "all") {
                   filteredSubs = filteredSubs.filter(s => s.status === filterStatus);
+                }
+
+                // Apply date filter
+                if (selectedDateFilter) {
+                  filteredSubs = filteredSubs.filter(s => 
+                    isSameDay(new Date(s.submitted_at), selectedDateFilter)
+                  );
                 }
 
                 // Apply sorting
