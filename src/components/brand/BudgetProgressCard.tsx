@@ -51,9 +51,6 @@ export function BudgetProgressCard({
         {/* Budget Usage Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            </div>
             <span className="text-sm font-medium text-foreground tracking-[-0.5px]">Budget Usage</span>
           </div>
           
@@ -99,9 +96,6 @@ export function BudgetProgressCard({
         {/* Creators Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-              <Users className="w-3 h-3 text-violet-500" />
-            </div>
             <span className="text-sm font-medium text-foreground tracking-[-0.5px]">Creators</span>
           </div>
           
@@ -130,9 +124,19 @@ export function BudgetProgressCard({
                   stroke="url(#creatorGradient)"
                   strokeWidth="14"
                   strokeLinecap="round"
-                  strokeDasharray={`${Math.max(0, (creatorPercentage / 100) * (Math.PI * 75) - 4)} 4 ${Math.PI * 75}`}
+                  strokeDasharray={`${(creatorPercentage / 100) * (Math.PI * 75)} ${Math.PI * 75}`}
                   className="transition-all duration-700"
                 />
+                
+                {/* Gap overlay - creates visual separation */}
+                {creatorPercentage > 0 && creatorPercentage < 100 && (
+                  <circle
+                    cx={90 + 75 * Math.cos(Math.PI - (creatorPercentage / 100) * Math.PI)}
+                    cy={90 - 75 * Math.sin(Math.PI - (creatorPercentage / 100) * Math.PI)}
+                    r="8"
+                    fill="#0a0a0a"
+                  />
+                )}
                 
                 {/* Gradient definition */}
                 <defs>
