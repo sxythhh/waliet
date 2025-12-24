@@ -113,7 +113,7 @@ export function CampaignHomeTab({
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
         const campaignQuery = supabase.from('campaigns').select('hashtags').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
-        const videoSubmissionsQuery = supabase.from('video_submissions' as any).select('id, status').eq('campaign_id', campaignId);
+        const videoSubmissionsQuery = supabase.from('video_submissions').select('id, status').eq('source_type', 'campaign').eq('source_id', campaignId);
         
         let metricsRangeQuery = supabase.from('campaign_video_metrics').select('total_views').eq('campaign_id', campaignId).order('recorded_at', { ascending: false }).limit(1);
         if (dateRange) {
