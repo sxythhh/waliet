@@ -1459,7 +1459,14 @@ export function WalletTab() {
             </p>
             <Separator className="my-2" />
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
+                {pendingWithdrawals > 0 && (
+                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                    ${pendingWithdrawals.toFixed(2)} Pending
+                  </span>
+                )}
+              </div>
               <span className="text-base font-semibold text-amber-500">{isBalanceVisible ? `$${pendingBoostEarnings.toFixed(2)}` : "••••••"}</span>
             </div>
             <div className="flex items-center justify-between mb-3">
