@@ -48,6 +48,7 @@ export default function Dashboard() {
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
+  const selectedBoostId = searchParams.get("boost");
   const selectedBlueprintId = searchParams.get("blueprint");
 
   const isCreatorMode = workspace === "creator";
@@ -201,6 +202,11 @@ export default function Dashboard() {
       // Brand mode with selected campaign - show detail view
       if (selectedCampaignId) {
         return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
+      }
+
+      // Brand mode with selected boost - show detail view
+      if (selectedBoostId) {
+        return <BrandCampaignDetailView boostId={selectedBoostId} />;
       }
 
       // Brand mode with selected blueprint - show editor
