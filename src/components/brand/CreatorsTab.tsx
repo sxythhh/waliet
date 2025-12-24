@@ -967,9 +967,7 @@ export function CreatorsTab({
                         <p className="font-medium text-sm truncate">
                           {creator.full_name || creator.username}
                         </p>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">
-                          {creator.campaigns.length} campaign{creator.campaigns.length !== 1 ? 's' : ''}
-                        </span>
+                        
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">
                         @{creator.username}
