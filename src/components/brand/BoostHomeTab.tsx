@@ -127,6 +127,7 @@ export function BoostHomeTab({
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   useEffect(() => {
     let isCancelled = false;
     const loadData = async () => {
@@ -141,7 +142,7 @@ export function BoostHomeTab({
         const {
           data: submissions
         } = await supabase.from('video_submissions')
-          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments, video_title, video_thumbnail_url, video_author_username, video_description')
+          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments, video_title, video_thumbnail_url, video_author_username, video_description, metrics_updated_at')
           .eq('source_type', 'boost')
           .eq('source_id', boost.id);
 
@@ -194,6 +195,13 @@ export function BoostHomeTab({
           totalBookmarks,
           cpm
         });
+        
+        // Get the most recent metrics_updated_at for the sync time display
+        const latestSync = submissionsData
+          .filter(s => s.metrics_updated_at)
+          .map(s => new Date(s.metrics_updated_at!).getTime())
+          .sort((a, b) => b - a)[0];
+        setLastSyncedAt(latestSync ? new Date(latestSync).toISOString() : null);
 
         // Build metrics data from submissions (grouped by date) with actual view data
         const metricsMap = new Map<string, {
@@ -443,7 +451,7 @@ export function BoostHomeTab({
       </div>
 
       {/* Performance Chart - using shared component */}
-      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} />
+      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} lastSyncedAt={lastSyncedAt} />
 
       {/* Top Performing Videos - using shared component */}
       <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} />
