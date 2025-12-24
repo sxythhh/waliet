@@ -180,7 +180,7 @@ export function BoostHomeTab({
         }>();
         submissionsData.forEach(sub => {
           if (sub.submitted_at) {
-            const dateKey = format(new Date(sub.submitted_at), 'MMM d');
+            const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
             const existing = metricsMap.get(dateKey) || {
               views: 0,
               likes: 0,
@@ -196,10 +196,12 @@ export function BoostHomeTab({
         // Convert to array and add daily calculations
         const sortedDates = Array.from(metricsMap.entries()).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
         let cumulativeVideos = 0;
-        const formattedMetrics: MetricsData[] = sortedDates.map(([date, data]) => {
+        const formattedMetrics: MetricsData[] = sortedDates.map(([dateKey, data]) => {
           cumulativeVideos += data.videos;
+          const dateObj = new Date(dateKey);
           return {
-            date,
+            date: format(dateObj, 'MMM d'),
+            datetime: format(dateObj, 'MMM d, yyyy'),
             views: 0,
             likes: 0,
             shares: 0,
