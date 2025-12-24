@@ -246,11 +246,13 @@ export type Database = {
           bounty_campaign_id: string
           created_at: string
           id: string
+          is_flagged: boolean | null
           payout_amount: number | null
           platform: string
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          shortimize_video_id: string | null
           status: string
           submission_notes: string | null
           submitted_at: string
@@ -262,11 +264,13 @@ export type Database = {
           bounty_campaign_id: string
           created_at?: string
           id?: string
+          is_flagged?: boolean | null
           payout_amount?: number | null
           platform: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          shortimize_video_id?: string | null
           status?: string
           submission_notes?: string | null
           submitted_at?: string
@@ -278,11 +282,13 @@ export type Database = {
           bounty_campaign_id?: string
           created_at?: string
           id?: string
+          is_flagged?: boolean | null
           payout_amount?: number | null
           platform?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          shortimize_video_id?: string | null
           status?: string
           submission_notes?: string | null
           submitted_at?: string
@@ -401,6 +407,7 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type: string | null
+          shortimize_collection_name: string | null
           slug: string | null
           start_date: string | null
           status: string
@@ -431,6 +438,7 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type?: string | null
+          shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
           status?: string
@@ -461,6 +469,7 @@ export type Database = {
           max_accepted_creators?: number
           monthly_retainer?: number
           position_type?: string | null
+          shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
           status?: string
@@ -1315,6 +1324,7 @@ export type Database = {
           id: string
           is_flagged: boolean | null
           platform: string | null
+          shortimize_video_id: string | null
           status: string | null
           submission_text: string | null
           updated_at: string | null
@@ -1330,6 +1340,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean | null
           platform?: string | null
+          shortimize_video_id?: string | null
           status?: string | null
           submission_text?: string | null
           updated_at?: string | null
@@ -1345,6 +1356,7 @@ export type Database = {
           id?: string
           is_flagged?: boolean | null
           platform?: string | null
+          shortimize_video_id?: string | null
           status?: string | null
           submission_text?: string | null
           updated_at?: string | null
@@ -1404,6 +1416,7 @@ export type Database = {
           requirements: string[] | null
           requires_application: boolean
           rpm_rate: number
+          shortimize_collection_name: string | null
           slug: string
           start_date: string | null
           status: string | null
@@ -1446,6 +1459,7 @@ export type Database = {
           requirements?: string[] | null
           requires_application?: boolean
           rpm_rate: number
+          shortimize_collection_name?: string | null
           slug: string
           start_date?: string | null
           status?: string | null
@@ -1488,6 +1502,7 @@ export type Database = {
           requirements?: string[] | null
           requires_application?: boolean
           rpm_rate?: number
+          shortimize_collection_name?: string | null
           slug?: string
           start_date?: string | null
           status?: string | null

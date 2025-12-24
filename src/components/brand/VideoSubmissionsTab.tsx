@@ -259,6 +259,34 @@ export function VideoSubmissionsTab({
           }
         }
       }
+
+      // Track video on Shortimize (fire and forget - don't block approval)
+      try {
+        const { data: trackResult, error: trackError } = await supabase.functions.invoke("track-shortimize-video", {
+          body: {
+            videoUrl: submission.video_url,
+            campaignId: isBoost ? undefined : entityId,
+            boostId: isBoost ? entityId : undefined,
+            submissionId: submission.id,
+            isBoost
+          }
+        });
+        
+        if (trackError) {
+          console.error("Shortimize tracking error:", trackError);
+        } else if (trackResult?.success) {
+          console.log("Video tracked on Shortimize:", trackResult);
+          if (!trackResult.skipped && !trackResult.alreadyTracked) {
+            toast.success("Video tracked on Shortimize", { duration: 2000 });
+          }
+        } else if (trackResult?.skipped) {
+          console.log("Shortimize tracking skipped:", trackResult.message);
+        }
+      } catch (trackError) {
+        console.error("Shortimize tracking failed:", trackError);
+        // Don't show error to user - tracking failure shouldn't affect approval
+      }
+
       toast.success(isPayPerPost ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.` : "Video approved!");
       fetchSubmissions();
       setSelectedSubmission(null);
