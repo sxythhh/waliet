@@ -8,7 +8,7 @@ import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
-import { BoostDetailView } from "@/components/brand/BoostDetailView";
+import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
@@ -275,7 +275,7 @@ export function BrandCampaignsTab({
           </div>
         </div>}
 
-      {selectedBoostId ? <BoostDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
+      {selectedBoostId ? <BrandCampaignDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
