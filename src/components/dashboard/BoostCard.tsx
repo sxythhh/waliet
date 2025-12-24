@@ -179,9 +179,10 @@ export function BoostCard({
       const now = new Date();
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
+      // Only count non-rejected submissions for monthly limit
       const thisMonthSubmissions = submissions.filter(s => {
         const submitDate = new Date(s.submitted_at);
-        return submitDate >= monthStart && submitDate <= monthEnd;
+        return submitDate >= monthStart && submitDate <= monthEnd && s.status !== 'rejected';
       });
       if (thisMonthSubmissions.length >= boost.videos_per_month) {
         toast.error(`You've reached your monthly limit of ${boost.videos_per_month} videos`);
@@ -189,9 +190,10 @@ export function BoostCard({
         return;
       }
       const dailyLimit = Math.ceil(boost.videos_per_month / 30);
+      // Only count non-rejected submissions for daily limit
       const last24Hours = submissions.filter(s => {
         const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
-        return hoursDiff < 24;
+        return hoursDiff < 24 && s.status !== 'rejected';
       });
       if (last24Hours.length >= dailyLimit) {
         toast.error(`You can only submit ${dailyLimit} video(s) per day`);
