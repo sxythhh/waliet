@@ -306,6 +306,44 @@ export type Database = {
           },
         ]
       }
+      boost_view_bonuses: {
+        Row: {
+          bonus_amount: number
+          bounty_campaign_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          updated_at: string
+          view_threshold: number
+        }
+        Insert: {
+          bonus_amount: number
+          bounty_campaign_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          view_threshold: number
+        }
+        Update: {
+          bonus_amount?: number
+          bounty_campaign_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string
+          view_threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_view_bonuses_bounty_campaign_id_fkey"
+            columns: ["bounty_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bounty_applications: {
         Row: {
           application_text: string | null
@@ -415,6 +453,7 @@ export type Database = {
           title: string
           updated_at: string
           videos_per_month: number
+          view_bonuses_enabled: boolean | null
           work_location: string | null
         }
         Insert: {
@@ -446,6 +485,7 @@ export type Database = {
           title: string
           updated_at?: string
           videos_per_month: number
+          view_bonuses_enabled?: boolean | null
           work_location?: string | null
         }
         Update: {
@@ -477,6 +517,7 @@ export type Database = {
           title?: string
           updated_at?: string
           videos_per_month?: number
+          view_bonuses_enabled?: boolean | null
           work_location?: string | null
         }
         Relationships: [
@@ -3108,6 +3149,64 @@ export type Database = {
             columns: ["social_account_id"]
             isOneToOne: false
             referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      view_bonus_payouts: {
+        Row: {
+          amount_paid: number
+          bonus_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          paid_at: string
+          transaction_id: string | null
+          video_submission_id: string
+          views_at_payout: number
+        }
+        Insert: {
+          amount_paid: number
+          bonus_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          paid_at?: string
+          transaction_id?: string | null
+          video_submission_id: string
+          views_at_payout: number
+        }
+        Update: {
+          amount_paid?: number
+          bonus_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          paid_at?: string
+          transaction_id?: string | null
+          video_submission_id?: string
+          views_at_payout?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "view_bonus_payouts_bonus_id_fkey"
+            columns: ["bonus_id"]
+            isOneToOne: false
+            referencedRelation: "boost_view_bonuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "view_bonus_payouts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "view_bonus_payouts_video_submission_id_fkey"
+            columns: ["video_submission_id"]
+            isOneToOne: false
+            referencedRelation: "video_submissions"
             referencedColumns: ["id"]
           },
         ]
