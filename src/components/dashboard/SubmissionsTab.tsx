@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink, Video } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink, Video, DollarSign, Lock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { format } from "date-fns";
+import { format, addDays, formatDistanceToNow } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
+import { toast } from "sonner";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -28,6 +30,7 @@ interface Submission {
   rejection_reason?: string | null;
   reviewed_at?: string | null;
   type: 'campaign' | 'boost';
+  payout_status?: 'available' | 'locked' | 'paid';
   // Video details
   video_title?: string | null;
   video_cover_url?: string | null;
@@ -42,11 +45,28 @@ interface Submission {
     title: string;
     brand_name?: string;
     brand_logo_url?: string | null;
+    rpm_rate?: number;
+    payment_model?: string | null;
+    post_rate?: number | null;
+    monthly_retainer?: number;
+    videos_per_month?: number;
   };
 }
+
+interface PayoutRequest {
+  id: string;
+  total_amount: number;
+  status: 'clearing' | 'completed' | 'cancelled';
+  clearing_ends_at: string;
+  created_at: string;
+}
+
 export function SubmissionsTab() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
+  const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
+  const [requestingPayout, setRequestingPayout] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterSubmenu, setFilterSubmenu] = useState<'main' | 'status' | 'type' | 'program'>('main');
   const [filterSearch, setFilterSearch] = useState('');
@@ -169,6 +189,7 @@ export function SubmissionsTab() {
           rejection_reason: video.rejection_reason,
           reviewed_at: video.reviewed_at,
           type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
+          payout_status: (video.payout_status || 'available') as 'available' | 'locked' | 'paid',
           // Video details - use video_description as caption, fallback to video_title
           video_title: video.video_description || video.video_title,
           video_cover_url: video.video_thumbnail_url,
@@ -183,10 +204,91 @@ export function SubmissionsTab() {
       }).filter(s => s.program);
 
       setSubmissions(allSubmissions);
+
+      // Fetch active payout requests
+      const { data: requests } = await supabase
+        .from('submission_payout_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['clearing'])
+        .order('created_at', { ascending: false });
+      
+      setPayoutRequests((requests || []) as PayoutRequest[]);
     } catch (error) {
       console.error('Error fetching submissions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Calculate available payout amount (approved submissions that aren't locked or paid)
+  const availableForPayout = submissions
+    .filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0)
+    .reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
+
+  const availableSubmissions = submissions.filter(
+    s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0
+  );
+
+  const handleRequestPayout = async () => {
+    if (availableForPayout < 1) {
+      toast.error('Minimum payout is $1.00');
+      return;
+    }
+
+    setRequestingPayout(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Create payout request with 7-day clearing period
+      const clearingEndsAt = addDays(new Date(), 7);
+      
+      const { data: request, error: requestError } = await supabase
+        .from('submission_payout_requests')
+        .insert({
+          user_id: user.id,
+          total_amount: availableForPayout,
+          clearing_ends_at: clearingEndsAt.toISOString(),
+          status: 'clearing'
+        })
+        .select()
+        .single();
+
+      if (requestError) throw requestError;
+
+      // Create payout items for each submission
+      const payoutItems = availableSubmissions.map(s => ({
+        payout_request_id: request.id,
+        submission_id: s.id,
+        amount: s.estimated_payout || 0,
+        source_type: s.type,
+        source_id: s.program.id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('submission_payout_items')
+        .insert(payoutItems);
+
+      if (itemsError) throw itemsError;
+
+      // Update submission payout_status to 'locked'
+      const submissionIds = availableSubmissions.map(s => s.id);
+      const { error: updateError } = await supabase
+        .from('video_submissions')
+        .update({ payout_status: 'locked' })
+        .in('id', submissionIds);
+
+      if (updateError) throw updateError;
+
+      toast.success(`Payout of $${availableForPayout.toFixed(2)} requested! 7-day clearing period started.`);
+      setPayoutDialogOpen(false);
+      fetchSubmissions();
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      toast.error('Failed to request payout');
+    } finally {
+      setRequestingPayout(false);
     }
   };
   const filteredSubmissions = submissions.filter(submission => {
@@ -206,8 +308,8 @@ export function SubmissionsTab() {
       </div>;
   }
   return <Card className="bg-card border rounded-xl overflow-hidden border-[#141414]/0">
-      {/* Filter Button */}
-      <div className="pt-5 pb-4 px-0">
+      {/* Filter and Payout Buttons */}
+      <div className="pt-5 pb-4 px-0 flex items-center gap-3">
         <DropdownMenu open={filterOpen} onOpenChange={open => {
         setFilterOpen(open);
         if (!open) {
@@ -379,7 +481,122 @@ export function SubmissionsTab() {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Request Payout Button */}
+        <Button 
+          onClick={() => setPayoutDialogOpen(true)}
+          disabled={availableForPayout < 1}
+          className="gap-2 rounded-[9px] px-4 py-2 h-auto bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+        >
+          <DollarSign className="h-4 w-4" />
+          <span className="font-medium">Request all payouts</span>
+          {availableForPayout >= 1 && (
+            <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
+              ${availableForPayout.toFixed(2)}
+            </span>
+          )}
+        </Button>
+
+        {/* Active clearing info */}
+        {payoutRequests.length > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
+                  <Lock className="h-4 w-4" />
+                  <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                    ${payoutRequests.reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)} clearing
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                <div className="space-y-2">
+                  {payoutRequests.map(r => (
+                    <div key={r.id} className="text-sm">
+                      <p className="font-medium">${r.total_amount.toFixed(2)}</p>
+                      <p className="text-muted-foreground">
+                        Clears {formatDistanceToNow(new Date(r.clearing_ends_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
+
+      {/* Payout Request Dialog */}
+      <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+              Request Payout
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Request your approved earnings to be paid out.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Amount */}
+            <div className="text-center">
+              <p className="text-4xl font-bold text-green-600 dark:text-green-400" style={{ fontFamily: 'Inter' }}>
+                ${availableForPayout.toFixed(2)}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                from {availableSubmissions.length} approved video{availableSubmissions.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-4 bg-muted/30 rounded-xl p-4">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+                <div>
+                  <p className="font-medium text-sm">Submission approved → Request payout</p>
+                  <p className="text-xs text-muted-foreground">Once approved, click "Request all payouts" (minimum $1.00).</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+                <div>
+                  <p className="font-medium text-sm">7-day clearing period</p>
+                  <p className="text-xs text-muted-foreground">Brands can flag videos for review (days 1-4). Your earnings are locked but new ones still accumulate.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">3</div>
+                <div>
+                  <p className="font-medium text-sm">Funds paid out</p>
+                  <p className="text-xs text-muted-foreground">After 7 days, funds are sent automatically to your wallet. Request new accumulated earnings afterwards.</p>
+                </div>
+              </div>
+            </div>
+
+            {availableForPayout < 1 && (
+              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-lg p-3">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <p className="text-sm">Minimum payout is $1.00. Keep creating to earn more!</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRequestPayout}
+              disabled={availableForPayout < 1 || requestingPayout}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {requestingPayout ? 'Requesting...' : `Request $${availableForPayout.toFixed(2)}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Submissions Table */}
       <div className="pb-6 px-0">
