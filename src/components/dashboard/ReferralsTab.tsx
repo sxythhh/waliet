@@ -264,12 +264,7 @@ export function ReferralsTab(): JSX.Element {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="group gap-2 text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
-          onClick={() => window.open('https://join.virality.gg/affiliate', '_blank')}
-        >
+        <Button variant="ghost" size="sm" className="group gap-2 text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]" onClick={() => window.open('https://join.virality.gg/affiliate', '_blank')}>
           <img src={quizIcon} alt="" className="w-5 h-5 group-hover:hidden" />
           <img src={quizIconWhite} alt="" className="w-5 h-5 hidden group-hover:block" />
           How Referrals Work
@@ -284,10 +279,10 @@ export function ReferralsTab(): JSX.Element {
         <Card className="bg-card border-0">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-muted-foreground" style={{
+              <p style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
-              }}>Referral Activity</p>
+              }} className="text-sm font-medium text-primary-foreground">Referral Activity</p>
             </div>
             
             {/* Stats inline */}
@@ -299,7 +294,7 @@ export function ReferralsTab(): JSX.Element {
                 <p className="text-[10px] text-muted-foreground" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>referrals</p>
+                }}>Referrals</p>
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-baseline gap-1.5">
@@ -309,7 +304,7 @@ export function ReferralsTab(): JSX.Element {
                 <p className="text-[10px] text-muted-foreground" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>successful</p>
+                }}>Successful</p>
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-baseline gap-1.5">
@@ -319,7 +314,7 @@ export function ReferralsTab(): JSX.Element {
                 <p className="text-[10px] text-muted-foreground" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>earned</p>
+                }}>Earned</p>
               </div>
             </div>
             
