@@ -2574,6 +2574,89 @@ export type Database = {
           },
         ]
       }
+      submission_payout_items: {
+        Row: {
+          amount: number
+          created_at: string
+          flag_reason: string | null
+          flagged_at: string | null
+          flagged_by: string | null
+          id: string
+          is_locked: boolean
+          payout_request_id: string
+          source_id: string
+          source_type: string
+          submission_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          flag_reason?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          id?: string
+          is_locked?: boolean
+          payout_request_id: string
+          source_id: string
+          source_type: string
+          submission_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          flag_reason?: string | null
+          flagged_at?: string | null
+          flagged_by?: string | null
+          id?: string
+          is_locked?: boolean
+          payout_request_id?: string
+          source_id?: string
+          source_type?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submission_payout_items_payout_request_id_fkey"
+            columns: ["payout_request_id"]
+            isOneToOne: false
+            referencedRelation: "submission_payout_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      submission_payout_requests: {
+        Row: {
+          clearing_ends_at: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clearing_ends_at: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clearing_ends_at?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2609,6 +2692,7 @@ export type Database = {
           likes: number | null
           metrics_updated_at: string | null
           payout_amount: number | null
+          payout_status: string | null
           platform: string | null
           rejection_reason: string | null
           reviewed_at: string | null
@@ -2644,6 +2728,7 @@ export type Database = {
           likes?: number | null
           metrics_updated_at?: string | null
           payout_amount?: number | null
+          payout_status?: string | null
           platform?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
@@ -2679,6 +2764,7 @@ export type Database = {
           likes?: number | null
           metrics_updated_at?: string | null
           payout_amount?: number | null
+          payout_status?: string | null
           platform?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
