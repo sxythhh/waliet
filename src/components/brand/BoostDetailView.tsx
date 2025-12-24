@@ -366,7 +366,7 @@ export function BoostDetailView({
           <nav className="flex gap-0">
             {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-6 py-3 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
-                {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                {tab.count !== undefined && tab.count > 0 && <span className="bg-primary text-primary-foreground text-xs py-0.5 rounded-full px-[7px]">
                     {tab.count}
                   </span>}
               </button>)}
