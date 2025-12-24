@@ -137,29 +137,29 @@ export function BrandCampaignsTab({
       // Fetch pending applications count for campaigns
       const campaignIds = (campaignsData || []).map(c => c.id);
       const bountyIds = (bountiesData || []).map(b => b.id);
-      
       let totalPending = 0;
-      
+
       // Count pending campaign submissions
       if (campaignIds.length > 0) {
-        const { count: campaignPending } = await supabase
-          .from("campaign_submissions")
-          .select("*", { count: "exact", head: true })
-          .in("campaign_id", campaignIds)
-          .eq("status", "pending");
+        const {
+          count: campaignPending
+        } = await supabase.from("campaign_submissions").select("*", {
+          count: "exact",
+          head: true
+        }).in("campaign_id", campaignIds).eq("status", "pending");
         totalPending += campaignPending || 0;
       }
-      
+
       // Count pending bounty applications
       if (bountyIds.length > 0) {
-        const { count: bountyPending } = await supabase
-          .from("bounty_applications")
-          .select("*", { count: "exact", head: true })
-          .in("bounty_campaign_id", bountyIds)
-          .eq("status", "pending");
+        const {
+          count: bountyPending
+        } = await supabase.from("bounty_applications").select("*", {
+          count: "exact",
+          head: true
+        }).in("bounty_campaign_id", bountyIds).eq("status", "pending");
         totalPending += bountyPending || 0;
       }
-      
       setPendingApplicationsCount(totalPending);
     } catch (error) {
       console.error("Error fetching brand data:", error);
@@ -326,8 +326,7 @@ export function BrandCampaignsTab({
           </div>
 
           {/* Summary Stats - Show when there are programs */}
-          {(campaigns.length > 0 || bounties.length > 0) && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+          {(campaigns.length > 0 || bounties.length > 0) && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
               <div className="p-4 rounded-xl bg-card/50 border border-border/30">
                 <p className="text-xs text-muted-foreground mb-1">Active Campaigns</p>
                 <p className="text-2xl font-semibold">{activeCampaigns}</p>
@@ -344,24 +343,19 @@ export function BrandCampaignsTab({
                 <p className="text-xs text-muted-foreground mb-1">Budget Used</p>
                 <p className="text-2xl font-semibold">${totalUsed.toLocaleString()}</p>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Pending Applications Banner */}
-          {pendingApplicationsCount > 0 && (
-            <div 
-              className="mt-4 bg-popover/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-popover transition-colors font-inter tracking-[-0.5px]"
-              onClick={() => {
-                const newParams = new URLSearchParams(searchParams);
-                newParams.set("tab", "analytics");
-                newParams.set("subtab", "applications");
-                newParams.delete("campaign");
-                newParams.delete("boost");
-                setSearchParams(newParams);
-              }}
-            >
+          {pendingApplicationsCount > 0 && <div className="mt-4 bg-popover/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-popover transition-colors font-inter tracking-[-0.5px]" onClick={() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("tab", "analytics");
+        newParams.set("subtab", "applications");
+        newParams.delete("campaign");
+        newParams.delete("boost");
+        setSearchParams(newParams);
+      }}>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
+                <div className="p-2 rounded-lg bg-[#0d0d0d]">
                   <img src={applicationsIcon} alt="Applications" className="w-5 h-5" />
                 </div>
                 <div>
@@ -373,24 +367,18 @@ export function BrandCampaignsTab({
                   </p>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="border-transparent text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const newParams = new URLSearchParams(searchParams);
-                  newParams.set("tab", "analytics");
-                  newParams.set("subtab", "applications");
-                  newParams.delete("campaign");
-                  newParams.delete("boost");
-                  setSearchParams(newParams);
-                }}
-              >
+              <Button variant="outline" size="sm" className="border-transparent text-blue-500 hover:bg-blue-500/10 hover:text-blue-400 shrink-0" onClick={e => {
+          e.stopPropagation();
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set("tab", "analytics");
+          newParams.set("subtab", "applications");
+          newParams.delete("campaign");
+          newParams.delete("boost");
+          setSearchParams(newParams);
+        }}>
                 Review applications
               </Button>
-            </div>
-          )}
+            </div>}
 
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
