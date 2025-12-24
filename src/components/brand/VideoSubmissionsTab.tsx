@@ -446,7 +446,7 @@ export function VideoSubmissionsTab({
 
         {/* Right: Pending Videos / Creator Videos */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="p-2.5 border-b border-border space-y-2 py-[9px]">
+          <div className="p-2.5 border-b border-border space-y-2 py-[8px]">
             {/* Header */}
             <div className="flex items-center gap-2.5 h-8">
               <Avatar className={`h-7 w-7 ring-2 ring-background shrink-0 ${selectedCreator && profiles[selectedCreator] ? "" : "opacity-0 pointer-events-none"}`}>
