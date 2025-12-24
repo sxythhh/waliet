@@ -1063,19 +1063,9 @@ export function CreatorsTab({
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Connected Accounts</h4>
                 <div className="space-y-1.5">
                   {selectedCreator.social_accounts.map((account, idx) => <div key={idx} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => account.account_link && window.open(account.account_link, "_blank")}>
-                      {account.avatar_url ? <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
-                          <AvatarImage src={account.avatar_url} />
-                          <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                            {account.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar> : <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
-                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4 object-contain" />
-                        </div>}
+                      <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-4 w-4 object-contain shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <img src={PLATFORM_LOGOS[account.platform.toLowerCase()]} alt={account.platform} className="h-3 w-3 object-contain shrink-0" />
-                          <span className="text-xs font-medium truncate">@{account.username}</span>
-                        </div>
+                        <span className="text-xs font-medium truncate block">{account.username}</span>
                         {account.follower_count && account.follower_count > 0 && <p className="text-[10px] text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>}
                       </div>
                       <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
