@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink, Video, DollarSign, Lock, AlertCircle } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, ChevronLeft, Check, Clock, X, ExternalLink, Video, Lock, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format, addDays, formatDistanceToNow } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
@@ -52,7 +52,6 @@ interface Submission {
     videos_per_month?: number;
   };
 }
-
 interface PayoutRequest {
   id: string;
   total_amount: number;
@@ -60,7 +59,6 @@ interface PayoutRequest {
   clearing_ends_at: string;
   created_at: string;
 }
-
 export function SubmissionsTab() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,12 +103,12 @@ export function SubmissionsTab() {
       if (!user) return;
 
       // Fetch all video submissions from unified table
-      const { data: videoSubmissions, error } = await supabase
-        .from('video_submissions')
-        .select('*')
-        .eq('creator_id', user.id)
-        .order('submitted_at', { ascending: false });
-
+      const {
+        data: videoSubmissions,
+        error
+      } = await supabase.from('video_submissions').select('*').eq('creator_id', user.id).order('submitted_at', {
+        ascending: false
+      });
       if (error) {
         console.error('Error fetching submissions:', error);
         setLoading(false);
@@ -122,12 +120,19 @@ export function SubmissionsTab() {
       const boostIds = [...new Set(videoSubmissions?.filter(v => v.source_type === 'boost').map(v => v.source_id) || [])];
 
       // Fetch campaign details
-      let campaignMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; rpm_rate: number; payment_model: string | null; post_rate: number | null }> = {};
+      let campaignMap: Record<string, {
+        id: string;
+        title: string;
+        brand_name: string;
+        brand_logo_url: string | null;
+        rpm_rate: number;
+        payment_model: string | null;
+        post_rate: number | null;
+      }> = {};
       if (campaignIds.length > 0) {
-        const { data: campaigns } = await supabase
-          .from('campaigns')
-          .select('id, title, brand_name, brand_logo_url, rpm_rate, payment_model, post_rate')
-          .in('id', campaignIds);
+        const {
+          data: campaigns
+        } = await supabase.from('campaigns').select('id, title, brand_name, brand_logo_url, rpm_rate, payment_model, post_rate').in('id', campaignIds);
         if (campaigns) {
           campaigns.forEach(c => {
             campaignMap[c.id] = c;
@@ -136,12 +141,18 @@ export function SubmissionsTab() {
       }
 
       // Fetch boost details with brand info
-      let boostMap: Record<string, { id: string; title: string; brand_name: string; brand_logo_url: string | null; monthly_retainer: number; videos_per_month: number }> = {};
+      let boostMap: Record<string, {
+        id: string;
+        title: string;
+        brand_name: string;
+        brand_logo_url: string | null;
+        monthly_retainer: number;
+        videos_per_month: number;
+      }> = {};
       if (boostIds.length > 0) {
-        const { data: boosts } = await supabase
-          .from('bounty_campaigns')
-          .select('id, title, monthly_retainer, videos_per_month, brands(name, logo_url)')
-          .in('id', boostIds);
+        const {
+          data: boosts
+        } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month, brands(name, logo_url)').in('id', boostIds);
         if (boosts) {
           boosts.forEach((b: any) => {
             boostMap[b.id] = {
@@ -160,7 +171,7 @@ export function SubmissionsTab() {
       const allSubmissions: Submission[] = (videoSubmissions || []).map(video => {
         const isBoost = video.source_type === 'boost';
         const program = isBoost ? boostMap[video.source_id] : campaignMap[video.source_id];
-        
+
         // Calculate estimated payout
         let estimatedPayout = video.payout_amount;
         if (estimatedPayout === null || estimatedPayout === undefined) {
@@ -172,11 +183,10 @@ export function SubmissionsTab() {
             if (campaign.payment_model === 'pay_per_post') {
               estimatedPayout = campaign.post_rate || 0;
             } else if (campaign.rpm_rate && video.views) {
-              estimatedPayout = (video.views / 1000) * campaign.rpm_rate;
+              estimatedPayout = video.views / 1000 * campaign.rpm_rate;
             }
           }
         }
-        
         return {
           id: video.id,
           video_url: video.video_url,
@@ -199,20 +209,22 @@ export function SubmissionsTab() {
           shares: video.shares,
           video_upload_date: video.video_upload_date,
           video_author_username: video.video_author_username,
-          program: program || { id: video.source_id, title: 'Unknown', brand_name: '', brand_logo_url: null }
+          program: program || {
+            id: video.source_id,
+            title: 'Unknown',
+            brand_name: '',
+            brand_logo_url: null
+          }
         };
       }).filter(s => s.program);
-
       setSubmissions(allSubmissions);
 
       // Fetch active payout requests
-      const { data: requests } = await supabase
-        .from('submission_payout_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('status', ['clearing'])
-        .order('created_at', { ascending: false });
-      
+      const {
+        data: requests
+      } = await supabase.from('submission_payout_requests').select('*').eq('user_id', user.id).in('status', ['clearing']).order('created_at', {
+        ascending: false
+      });
       setPayoutRequests((requests || []) as PayoutRequest[]);
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -222,39 +234,33 @@ export function SubmissionsTab() {
   };
 
   // Calculate available payout amount (approved submissions that aren't locked or paid)
-  const availableForPayout = submissions
-    .filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0)
-    .reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
-
-  const availableSubmissions = submissions.filter(
-    s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0
-  );
-
+  const availableForPayout = submissions.filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0).reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
+  const availableSubmissions = submissions.filter(s => s.status === 'approved' && s.payout_status === 'available' && (s.estimated_payout || 0) > 0);
   const handleRequestPayout = async () => {
     if (availableForPayout < 1) {
       toast.error('Minimum payout is $1.00');
       return;
     }
-
     setRequestingPayout(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       // Create payout request with 7-day clearing period
       const clearingEndsAt = addDays(new Date(), 7);
-      
-      const { data: request, error: requestError } = await supabase
-        .from('submission_payout_requests')
-        .insert({
-          user_id: user.id,
-          total_amount: availableForPayout,
-          clearing_ends_at: clearingEndsAt.toISOString(),
-          status: 'clearing'
-        })
-        .select()
-        .single();
-
+      const {
+        data: request,
+        error: requestError
+      } = await supabase.from('submission_payout_requests').insert({
+        user_id: user.id,
+        total_amount: availableForPayout,
+        clearing_ends_at: clearingEndsAt.toISOString(),
+        status: 'clearing'
+      }).select().single();
       if (requestError) throw requestError;
 
       // Create payout items for each submission
@@ -265,22 +271,19 @@ export function SubmissionsTab() {
         source_type: s.type,
         source_id: s.program.id
       }));
-
-      const { error: itemsError } = await supabase
-        .from('submission_payout_items')
-        .insert(payoutItems);
-
+      const {
+        error: itemsError
+      } = await supabase.from('submission_payout_items').insert(payoutItems);
       if (itemsError) throw itemsError;
 
       // Update submission payout_status to 'locked'
       const submissionIds = availableSubmissions.map(s => s.id);
-      const { error: updateError } = await supabase
-        .from('video_submissions')
-        .update({ payout_status: 'locked' })
-        .in('id', submissionIds);
-
+      const {
+        error: updateError
+      } = await supabase.from('video_submissions').update({
+        payout_status: 'locked'
+      }).in('id', submissionIds);
       if (updateError) throw updateError;
-
       toast.success(`Payout of $${availableForPayout.toFixed(2)} requested! 7-day clearing period started.`);
       setPayoutDialogOpen(false);
       fetchSubmissions();
@@ -483,55 +486,55 @@ export function SubmissionsTab() {
         </DropdownMenu>
 
         {/* Request Payout Button */}
-        <Button 
-          onClick={() => setPayoutDialogOpen(true)}
-          disabled={availableForPayout < 1}
-          className="gap-2 rounded-[9px] px-4 py-2 h-auto bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
-          style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-        >
-          <DollarSign className="h-4 w-4" />
+        <Button onClick={() => setPayoutDialogOpen(true)} disabled={availableForPayout < 1} style={{
+        fontFamily: 'Inter',
+        letterSpacing: '-0.5px'
+      }} className="gap-2 rounded-[9px] px-4 py-2 h-auto text-white disabled:opacity-50 bg-primary">
+          
           <span className="font-medium">Request all payouts</span>
-          {availableForPayout >= 1 && (
-            <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
+          {availableForPayout >= 1 && <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs">
               ${availableForPayout.toFixed(2)}
-            </span>
-          )}
+            </span>}
         </Button>
 
         {/* Active clearing info */}
-        {payoutRequests.length > 0 && (
-          <TooltipProvider>
+        {payoutRequests.length > 0 && <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 rounded-lg text-orange-600 dark:text-orange-400">
                   <Lock className="h-4 w-4" />
-                  <span className="text-sm font-medium" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+                  <span className="text-sm font-medium" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.5px'
+              }}>
                     ${payoutRequests.reduce((sum, r) => sum + r.total_amount, 0).toFixed(2)} clearing
                   </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs">
                 <div className="space-y-2">
-                  {payoutRequests.map(r => (
-                    <div key={r.id} className="text-sm">
+                  {payoutRequests.map(r => <div key={r.id} className="text-sm">
                       <p className="font-medium">${r.total_amount.toFixed(2)}</p>
                       <p className="text-muted-foreground">
-                        Clears {formatDistanceToNow(new Date(r.clearing_ends_at), { addSuffix: true })}
+                        Clears {formatDistanceToNow(new Date(r.clearing_ends_at), {
+                    addSuffix: true
+                  })}
                       </p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        )}
+          </TooltipProvider>}
       </div>
 
       {/* Payout Request Dialog */}
       <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
+            <DialogTitle className="text-xl font-semibold" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>
               Request Payout
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -542,7 +545,9 @@ export function SubmissionsTab() {
           <div className="space-y-6 py-4">
             {/* Amount */}
             <div className="text-center">
-              <p className="text-4xl font-bold text-green-600 dark:text-green-400" style={{ fontFamily: 'Inter' }}>
+              <p className="text-4xl font-bold text-green-600 dark:text-green-400" style={{
+              fontFamily: 'Inter'
+            }}>
                 ${availableForPayout.toFixed(2)}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
@@ -575,23 +580,17 @@ export function SubmissionsTab() {
               </div>
             </div>
 
-            {availableForPayout < 1 && (
-              <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-lg p-3">
+            {availableForPayout < 1 && <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-lg p-3">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
                 <p className="text-sm">Minimum payout is $1.00. Keep creating to earn more!</p>
-              </div>
-            )}
+              </div>}
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleRequestPayout}
-              disabled={availableForPayout < 1 || requestingPayout}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
+            <Button onClick={handleRequestPayout} disabled={availableForPayout < 1 || requestingPayout} className="bg-green-600 hover:bg-green-700 text-white">
               {requestingPayout ? 'Requesting...' : `Request $${availableForPayout.toFixed(2)}`}
             </Button>
           </DialogFooter>
@@ -655,58 +654,35 @@ export function SubmissionsTab() {
                 </TableHeader>
                 <TableBody>
                   {paginatedSubmissions.map(submission => {
-                    const formatNumber = (num: number | null | undefined) => {
-                      if (!num) return '—';
-                      if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-                      if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-                      return num.toString();
-                    };
-
-                    return (
-                      <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
+                const formatNumber = (num: number | null | undefined) => {
+                  if (!num) return '—';
+                  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+                  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+                  return num.toString();
+                };
+                return <TableRow key={submission.id} className="hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Video Thumbnail & Title */}
                         <TableCell className="py-3">
-                          <a 
-                            href={submission.video_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-3 group"
-                          >
+                          <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
                             {/* 9:16 aspect ratio thumbnail */}
                             <div className="w-10 h-[60px] rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
-                              {submission.video_cover_url ? (
-                                <img 
-                                  src={submission.video_cover_url} 
-                                  alt={submission.video_title || 'Video'} 
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
+                              {submission.video_cover_url ? <img src={submission.video_cover_url} alt={submission.video_title || 'Video'} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">
                                   <Video className="w-4 h-4 text-muted-foreground" />
-                                </div>
-                              )}
+                                </div>}
                               {/* Platform badge */}
-                              {getPlatformIcon(submission.platform) && (
-                                <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center">
-                                  <img 
-                                    src={getPlatformIcon(submission.platform)!} 
-                                    alt={submission.platform} 
-                                    className="w-2.5 h-2.5"
-                                  />
-                                </div>
-                              )}
+                              {getPlatformIcon(submission.platform) && <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center">
+                                  <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-2.5 h-2.5" />
+                                </div>}
                             </div>
                             <div className="min-w-0 max-w-[200px]">
                               <p className="text-sm font-medium truncate group-hover:underline transition-colors" style={{
-                                fontFamily: 'Inter',
-                                letterSpacing: '-0.3px'
-                              }}>
+                          fontFamily: 'Inter',
+                          letterSpacing: '-0.3px'
+                        }}>
                                 {submission.video_title || 'Untitled Video'}
                               </p>
                               <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {submission.video_upload_date 
-                                  ? format(new Date(submission.video_upload_date), 'MMM d, yyyy')
-                                  : format(new Date(submission.created_at), 'MMM d, yyyy')}
+                                {submission.video_upload_date ? format(new Date(submission.video_upload_date), 'MMM d, yyyy') : format(new Date(submission.created_at), 'MMM d, yyyy')}
                               </p>
                             </div>
                           </a>
@@ -715,21 +691,17 @@ export function SubmissionsTab() {
                         {/* Program */}
                         <TableCell className="py-3">
                           <div className="flex items-center gap-2">
-                            {submission.program.brand_logo_url ? (
-                              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                            {submission.program.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
                                 <img src={submission.program.brand_logo_url} alt={submission.program.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                              </div>
-                            ) : (
-                              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                              </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                                 <span className="text-xs text-foreground font-medium">
                                   {submission.program.title.charAt(0).toUpperCase()}
                                 </span>
-                              </div>
-                            )}
+                              </div>}
                             <span className="text-sm font-medium truncate max-w-[120px]" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                               {submission.program.title}
                             </span>
                           </div>
@@ -740,9 +712,9 @@ export function SubmissionsTab() {
                           <div className="flex items-center gap-2">
                             {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-4 h-4" />}
                             <span className="text-sm text-white dark:text-white" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                               {submission.video_author_username || '—'}
                             </span>
                           </div>
@@ -755,9 +727,9 @@ export function SubmissionsTab() {
                             {submission.status === 'pending' && <Clock className="h-3 w-3" />}
                             {submission.status === 'rejected' && <X className="h-3 w-3" />}
                             <span style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                               {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
                             </span>
                           </span>
@@ -769,14 +741,13 @@ export function SubmissionsTab() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="text-sm font-medium tabular-nums cursor-default" style={{
-                                  fontFamily: 'Inter',
-                                  letterSpacing: '-0.3px'
-                                }}>
+                            fontFamily: 'Inter',
+                            letterSpacing: '-0.3px'
+                          }}>
                                   {formatNumber(submission.views)}
                                 </span>
                               </TooltipTrigger>
-                              {(submission.likes || submission.comments || submission.shares) && (
-                                <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3">
+                              {(submission.likes || submission.comments || submission.shares) && <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3">
                                   <div className="space-y-1.5 text-sm">
                                     <div className="flex items-center justify-between gap-4">
                                       <span className="text-muted-foreground">Views</span>
@@ -795,8 +766,7 @@ export function SubmissionsTab() {
                                       <span className="font-medium tabular-nums">{submission.shares?.toLocaleString() || '—'}</span>
                                     </div>
                                   </div>
-                                </TooltipContent>
-                              )}
+                                </TooltipContent>}
                             </Tooltip>
                           </TooltipProvider>
                         </TableCell>
@@ -807,9 +777,9 @@ export function SubmissionsTab() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground" style={{
-                                  fontFamily: 'Inter',
-                                  letterSpacing: '-0.3px'
-                                }}>
+                            fontFamily: 'Inter',
+                            letterSpacing: '-0.3px'
+                          }}>
                                   {format(new Date(submission.created_at), 'MMM d')}
                                 </span>
                               </TooltipTrigger>
@@ -826,23 +796,20 @@ export function SubmissionsTab() {
                         
                         {/* Payout */}
                         <TableCell className="py-3 text-right">
-                          {submission.status === 'approved' && submission.estimated_payout ? (
-                            <span className="text-sm font-semibold text-green-600 dark:text-green-400" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.5px'
-                            }}>
+                          {submission.status === 'approved' && submission.estimated_payout ? <span className="text-sm font-semibold text-green-600 dark:text-green-400" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>
                               ${submission.estimated_payout.toFixed(2)}
-                            </span>
-                          ) : submission.status === 'pending' && submission.estimated_payout ? (
-                            <span className="text-sm text-muted-foreground" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.5px'
-                            }}>
+                            </span> : submission.status === 'pending' && submission.estimated_payout ? <span className="text-sm text-muted-foreground" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>
                               ~${submission.estimated_payout.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground/50" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>—</span>
-                          )}
+                            </span> : <span className="text-sm text-muted-foreground/50" style={{
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>—</span>}
                         </TableCell>
                         
                         {/* Link */}
@@ -851,9 +818,8 @@ export function SubmissionsTab() {
                             <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                           </a>
                         </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                      </TableRow>;
+              })}
                 </TableBody>
               </Table>
             </div>
