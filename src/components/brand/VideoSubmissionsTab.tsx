@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, ExternalLink, DollarSign, ChevronRight, Search, CalendarDays, Clock } from "lucide-react";
+import { Check, X, ExternalLink, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { isSameDay } from "date-fns";
 import { toast } from "sonner";
@@ -357,6 +357,35 @@ export function VideoSubmissionsTab({
     } catch (error) {
       console.error("Error flagging:", error);
       toast.error("Failed to flag submission");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleRevertApproval = async (submission: VideoSubmission) => {
+    setProcessing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Update status back to pending
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
+          status: "pending",
+          reviewed_at: null,
+          reviewed_by: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", submission.id);
+      if (error) throw error;
+
+      toast.success("Approval reverted to pending");
+      fetchSubmissions();
+      onSubmissionReviewed?.();
+    } catch (error) {
+      console.error("Error reverting approval:", error);
+      toast.error("Failed to revert approval");
     } finally {
       setProcessing(false);
     }
@@ -720,6 +749,20 @@ export function VideoSubmissionsTab({
                         >
                           <Check className="h-3.5 w-3.5" />
                           Approve
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Revert action for approved submissions */}
+                    {submission.status === "approved" && (
+                      <div className="flex border-t border-border/30">
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors tracking-[-0.5px] disabled:opacity-50" 
+                          onClick={() => handleRevertApproval(submission)} 
+                          disabled={processing}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          Revert to Pending
                         </button>
                       </div>
                     )}
