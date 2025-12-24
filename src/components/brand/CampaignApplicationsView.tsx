@@ -263,104 +263,110 @@ export function CampaignApplicationsView({ campaignId, boostId, onApplicationRev
       </div>
 
       {/* Application Details - Right Column */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 flex flex-col relative">
         {selectedApp ? (
-          <div className="space-y-6">
-            {/* Creator Info */}
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
-                  <AvatarFallback className="text-xl">
-                    {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="text-xl font-semibold">
-                    {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
-                  </h2>
-                  <p className="text-muted-foreground">@{selectedApp.profile?.username}</p>
-                  {selectedApp.profile?.email && (
-                    <p className="text-sm text-muted-foreground">{selectedApp.profile.email}</p>
-                  )}
+          <>
+            <div className="flex-1 overflow-auto p-6 pb-24">
+              <div className="space-y-6">
+                {/* Creator Info */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={selectedApp.profile?.avatar_url || ""} />
+                      <AvatarFallback className="text-xl">
+                        {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h2 className="text-xl font-semibold">
+                        {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
+                      </h2>
+                      <p className="text-muted-foreground">@{selectedApp.profile?.username}</p>
+                      {selectedApp.profile?.email && (
+                        <p className="text-sm text-muted-foreground">{selectedApp.profile.email}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant="outline">Pending</Badge>
                 </div>
+
+                {/* Platform & Account / Video URL */}
+                {getAppUrl(selectedApp) && (
+                  <div className="p-4 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
+                        <img 
+                          src={PLATFORM_LOGOS[selectedApp.platform]} 
+                          alt={selectedApp.platform}
+                          className="h-6 w-6"
+                        />
+                      )}
+                      <div className="flex-1">
+                        {selectedApp.platform && (
+                          <p className="font-medium capitalize">{selectedApp.platform}</p>
+                        )}
+                        <a 
+                          href={getAppUrl(selectedApp)!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline flex items-center gap-1"
+                        >
+                          {isBoost ? "View submitted video" : getAppUrl(selectedApp)}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Application Text (for boosts) */}
+                {selectedApp.application_text && (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Application Note</h3>
+                    <div className="p-4 rounded-lg bg-muted/30">
+                      <p className="text-foreground">{selectedApp.application_text}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Application Answers (for campaigns) */}
+                {selectedApp.application_answers && selectedApp.application_answers.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Application Answers</h3>
+                    {selectedApp.application_answers.map((qa, index) => (
+                      <div key={index} className="p-4 rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground mb-2">{qa.question}</p>
+                        <p className="text-foreground">{qa.answer || "No answer provided"}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <Badge variant="outline">Pending</Badge>
             </div>
 
-            {/* Platform & Account / Video URL */}
-            {getAppUrl(selectedApp) && (
-              <div className="p-4 rounded-lg bg-muted/30">
-                <div className="flex items-center gap-3">
-                  {selectedApp.platform && PLATFORM_LOGOS[selectedApp.platform] && (
-                    <img 
-                      src={PLATFORM_LOGOS[selectedApp.platform]} 
-                      alt={selectedApp.platform}
-                      className="h-6 w-6"
-                    />
-                  )}
-                  <div className="flex-1">
-                    {selectedApp.platform && (
-                      <p className="font-medium capitalize">{selectedApp.platform}</p>
-                    )}
-                    <a 
-                      href={getAppUrl(selectedApp)!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-primary hover:underline flex items-center gap-1"
-                    >
-                      {isBoost ? "View submitted video" : getAppUrl(selectedApp)}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-                </div>
+            {/* Action Buttons - Fixed at bottom */}
+            <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border">
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
+                  variant="outline"
+                  disabled={processing === selectedApp.id}
+                  className="flex-1"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Reject
+                </Button>
+                <Button
+                  onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')}
+                  disabled={processing === selectedApp.id}
+                  className="flex-1"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Accept
+                </Button>
               </div>
-            )}
-
-            {/* Application Text (for boosts) */}
-            {selectedApp.application_text && (
-              <div className="space-y-4">
-                <h3 className="font-semibold">Application Note</h3>
-                <div className="p-4 rounded-lg bg-muted/30">
-                  <p className="text-foreground">{selectedApp.application_text}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Application Answers (for campaigns) */}
-            {selectedApp.application_answers && selectedApp.application_answers.length > 0 && (
-              <div className="space-y-4">
-                <h3 className="font-semibold">Application Answers</h3>
-                {selectedApp.application_answers.map((qa, index) => (
-                  <div key={index} className="p-4 rounded-lg bg-muted/30">
-                    <p className="text-sm text-muted-foreground mb-2">{qa.question}</p>
-                    <p className="text-foreground">{qa.answer || "No answer provided"}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button
-                onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')}
-                variant="outline"
-                disabled={processing === selectedApp.id}
-                className="flex-1"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Reject
-              </Button>
-              <Button
-                onClick={() => handleUpdateStatus(selectedApp.id, isBoost ? 'accepted' : 'approved')}
-                disabled={processing === selectedApp.id}
-                className="flex-1"
-              >
-                <Check className="h-4 w-4 mr-2" />
-                Accept
-              </Button>
             </div>
-          </div>
+          </>
         ) : (
           <div className="flex items-center justify-center h-full text-muted-foreground">
             Select an application to review
