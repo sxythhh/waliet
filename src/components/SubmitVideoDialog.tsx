@@ -157,7 +157,7 @@ export function SubmitVideoDialog({
     }
   };
 
-  // Fetch video details from TikTok or Instagram API
+  // Fetch video details from TikTok, Instagram, or YouTube API
   const fetchVideoDetails = async (url: string) => {
     setIsFetchingDetails(true);
     try {
@@ -173,6 +173,26 @@ export function SubmitVideoDialog({
         });
         if (error) throw error;
         return data?.data || null;
+      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: { videoUrl: url }
+        });
+        if (error) throw error;
+        // Map YouTube response to common format
+        if (data) {
+          return {
+            description: data.title || data.description,
+            coverUrl: data.thumbnail_url,
+            authorUsername: data.author_username,
+            authorAvatar: data.author_avatar,
+            uploadDate: data.published_date,
+            views: data.view_count,
+            likes: data.like_count,
+            comments: 0,
+            shares: 0,
+          };
+        }
+        return null;
       }
       return null; // Platform not supported
     } catch (error) {
