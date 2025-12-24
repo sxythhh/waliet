@@ -36,6 +36,11 @@ interface StatsData {
   rejectedSubmissions: number;
   acceptedCreators: number;
   maxCreators: number;
+  totalViews: number;
+  totalLikes: number;
+  totalShares: number;
+  totalBookmarks: number;
+  cpm: number;
 }
 const getDateRange = (timeframe: TimeframeOption): {
   start: Date;
@@ -109,7 +114,12 @@ export function BoostHomeTab({
     pendingSubmissions: 0,
     rejectedSubmissions: 0,
     acceptedCreators: boost.accepted_creators_count,
-    maxCreators: boost.max_accepted_creators
+    maxCreators: boost.max_accepted_creators,
+    totalViews: 0,
+    totalLikes: 0,
+    totalShares: 0,
+    totalBookmarks: 0,
+    cpm: 0
   });
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
@@ -127,11 +137,11 @@ export function BoostHomeTab({
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        // Fetch video submissions for this boost from unified table
+        // Fetch video submissions for this boost from unified table with metrics
         const {
           data: submissions
         } = await supabase.from('video_submissions')
-          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id')
+          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments')
           .eq('source_type', 'boost')
           .eq('source_id', boost.id);
 
@@ -152,13 +162,23 @@ export function BoostHomeTab({
           });
         }
 
-        // Calculate stats
+        // Calculate stats including metrics
         const totalPayouts = filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
         const payoutsLastWeek = transactionsData.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0);
         const totalSubmissions = submissionsData.length;
         const approvedSubmissions = submissionsData.filter(s => s.status === 'approved').length;
         const pendingSubmissions = submissionsData.filter(s => s.status === 'pending').length;
         const rejectedSubmissions = submissionsData.filter(s => s.status === 'rejected').length;
+        
+        // Calculate total metrics from all submissions
+        const totalViews = submissionsData.reduce((sum, s) => sum + (Number(s.views) || 0), 0);
+        const totalLikes = submissionsData.reduce((sum, s) => sum + (Number(s.likes) || 0), 0);
+        const totalShares = submissionsData.reduce((sum, s) => sum + (Number(s.shares) || 0), 0);
+        const totalBookmarks = submissionsData.reduce((sum, s) => sum + (Number(s.bookmarks) || 0), 0);
+        
+        // Calculate CPM (Cost Per Mille - cost per 1000 views)
+        const cpm = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
+        
         setStats({
           totalPayouts,
           payoutsLastWeek,
@@ -167,10 +187,15 @@ export function BoostHomeTab({
           pendingSubmissions,
           rejectedSubmissions,
           acceptedCreators: boost.accepted_creators_count,
-          maxCreators: boost.max_accepted_creators
+          maxCreators: boost.max_accepted_creators,
+          totalViews,
+          totalLikes,
+          totalShares,
+          totalBookmarks,
+          cpm
         });
 
-        // Build mock metrics data from submissions (grouped by date)
+        // Build metrics data from submissions (grouped by date) with actual view data
         const metricsMap = new Map<string, {
           views: number;
           likes: number;
@@ -188,29 +213,41 @@ export function BoostHomeTab({
               bookmarks: 0,
               videos: 0
             };
+            existing.views += Number(sub.views) || 0;
+            existing.likes += Number(sub.likes) || 0;
+            existing.shares += Number(sub.shares) || 0;
+            existing.bookmarks += Number(sub.bookmarks) || 0;
             existing.videos += 1;
             metricsMap.set(dateKey, existing);
           }
         });
 
-        // Convert to array and add daily calculations
+        // Convert to array and add daily/cumulative calculations
         const sortedDates = Array.from(metricsMap.entries()).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+        let cumulativeViews = 0;
+        let cumulativeLikes = 0;
+        let cumulativeShares = 0;
+        let cumulativeBookmarks = 0;
         let cumulativeVideos = 0;
         const formattedMetrics: MetricsData[] = sortedDates.map(([dateKey, data]) => {
+          cumulativeViews += data.views;
+          cumulativeLikes += data.likes;
+          cumulativeShares += data.shares;
+          cumulativeBookmarks += data.bookmarks;
           cumulativeVideos += data.videos;
           const dateObj = new Date(dateKey);
           return {
             date: format(dateObj, 'MMM d'),
             datetime: format(dateObj, 'MMM d, yyyy'),
-            views: 0,
-            likes: 0,
-            shares: 0,
-            bookmarks: 0,
+            views: cumulativeViews,
+            likes: cumulativeLikes,
+            shares: cumulativeShares,
+            bookmarks: cumulativeBookmarks,
             videos: cumulativeVideos,
-            dailyViews: 0,
-            dailyLikes: 0,
-            dailyShares: 0,
-            dailyBookmarks: 0,
+            dailyViews: data.views,
+            dailyLikes: data.likes,
+            dailyShares: data.shares,
+            dailyBookmarks: data.bookmarks,
             dailyVideos: data.videos
           };
         });
@@ -233,10 +270,10 @@ export function BoostHomeTab({
             ad_link: v.video_url,
             uploaded_at: v.submitted_at,
             title: 'Boost submission',
-            latest_views: 0,
-            latest_likes: 0,
-            latest_comments: 0,
-            latest_shares: 0
+            latest_views: Number(v.views) || 0,
+            latest_likes: Number(v.likes) || 0,
+            latest_comments: Number(v.comments) || 0,
+            latest_shares: Number(v.shares) || 0
           }));
           setTopVideos(mappedVideos);
           setTotalVideos(approvedSubmissions);
@@ -310,7 +347,27 @@ export function BoostHomeTab({
   }
   return <div className="p-4 space-y-4">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Views</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.totalViews.toLocaleString()}</p>
+            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalLikes.toLocaleString()} likes</p>
+          </div>
+        </Card>
+
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">CPM</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.cpm)}</p>
+            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">Cost per 1K views</p>
+          </div>
+        </Card>
+
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
@@ -341,16 +398,6 @@ export function BoostHomeTab({
               <p className="text-3xl font-bold tracking-[-0.5px]">{stats.acceptedCreators}/{stats.maxCreators}</p>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">Active creators in program</p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-stats-card border-table-border">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Per Video Rate</p>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(boost.monthly_retainer / boost.videos_per_month)}</p>
-            </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{boost.videos_per_month} videos/month @ {formatCurrency(boost.monthly_retainer)}</p>
           </div>
         </Card>
       </div>
