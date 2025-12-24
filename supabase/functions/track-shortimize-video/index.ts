@@ -192,6 +192,13 @@ Deno.serve(async (req) => {
     const shortimizeVideoId = shortimizeResult.videoId || shortimizeResult.id;
     
     if (shortimizeVideoId && submissionId) {
+      // Update the unified video_submissions table
+      await supabase
+        .from('video_submissions')
+        .update({ shortimize_video_id: shortimizeVideoId })
+        .eq('id', submissionId);
+
+      // Also update legacy tables for backward compatibility
       if (isBoost) {
         await supabase
           .from('boost_video_submissions')

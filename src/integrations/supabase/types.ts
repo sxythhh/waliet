@@ -2138,6 +2138,59 @@ export type Database = {
         }
         Relationships: []
       }
+      program_video_metrics: {
+        Row: {
+          brand_id: string
+          created_at: string | null
+          id: string
+          recorded_at: string | null
+          source_id: string
+          source_type: string
+          total_bookmarks: number | null
+          total_comments: number | null
+          total_likes: number | null
+          total_shares: number | null
+          total_videos: number | null
+          total_views: number | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          recorded_at?: string | null
+          source_id: string
+          source_type: string
+          total_bookmarks?: number | null
+          total_comments?: number | null
+          total_likes?: number | null
+          total_shares?: number | null
+          total_videos?: number | null
+          total_views?: number | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          recorded_at?: string | null
+          source_id?: string
+          source_type?: string
+          total_bookmarks?: number | null
+          total_comments?: number | null
+          total_likes?: number | null
+          total_shares?: number | null
+          total_videos?: number | null
+          total_views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_video_metrics_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_milestone_rewards: {
         Row: {
           awarded_at: string
@@ -2501,6 +2554,101 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_submissions: {
+        Row: {
+          bookmarks: number | null
+          bot_score: number | null
+          brand_id: string | null
+          comments: number | null
+          created_at: string | null
+          creator_id: string
+          flag_deadline: string | null
+          id: string
+          is_flagged: boolean | null
+          likes: number | null
+          metrics_updated_at: string | null
+          payout_amount: number | null
+          platform: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          shares: number | null
+          shortimize_video_id: string | null
+          source_id: string
+          source_type: string
+          status: string | null
+          submission_notes: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          video_url: string
+          views: number | null
+        }
+        Insert: {
+          bookmarks?: number | null
+          bot_score?: number | null
+          brand_id?: string | null
+          comments?: number | null
+          created_at?: string | null
+          creator_id: string
+          flag_deadline?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          likes?: number | null
+          metrics_updated_at?: string | null
+          payout_amount?: number | null
+          platform?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shares?: number | null
+          shortimize_video_id?: string | null
+          source_id: string
+          source_type: string
+          status?: string | null
+          submission_notes?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          video_url: string
+          views?: number | null
+        }
+        Update: {
+          bookmarks?: number | null
+          bot_score?: number | null
+          brand_id?: string | null
+          comments?: number | null
+          created_at?: string | null
+          creator_id?: string
+          flag_deadline?: string | null
+          id?: string
+          is_flagged?: boolean | null
+          likes?: number | null
+          metrics_updated_at?: string | null
+          payout_amount?: number | null
+          platform?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shares?: number | null
+          shortimize_video_id?: string | null
+          source_id?: string
+          source_type?: string
+          status?: string | null
+          submission_notes?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          video_url?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_submissions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wallet_transactions: {
         Row: {

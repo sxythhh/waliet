@@ -121,48 +121,41 @@ export function VideoSubmissionsTab({
     if (!entityId) return;
     setLoading(true);
     try {
-      let submissionsData: any[] = [];
-      if (isBoost) {
-        // Fetch from boost_video_submissions
-        const {
-          data,
-          error
-        } = await supabase.from("boost_video_submissions").select("*").eq("bounty_campaign_id", entityId).order("submitted_at", {
-          ascending: false
-        });
-        if (error) throw error;
-        submissionsData = data || [];
-      } else {
-        // Fetch from campaign_videos
-        const {
-          data,
-          error
-        } = await supabase.from("campaign_videos").select("*").eq("campaign_id", entityId).order("created_at", {
-          ascending: false
-        });
-        if (error) throw error;
-        // Normalize campaign_videos to match boost structure
-        submissionsData = (data || []).map(v => ({
-          id: v.id,
-          user_id: v.creator_id,
-          video_url: v.video_url,
-          platform: v.platform || "unknown",
-          submission_notes: v.submission_text,
-          status: v.status || "pending",
-          payout_amount: v.estimated_payout,
-          submitted_at: v.created_at,
-          reviewed_at: v.updated_at,
-          rejection_reason: null
-        }));
-      }
+      // Fetch from unified video_submissions table
+      const { data, error } = await supabase
+        .from("video_submissions")
+        .select("*")
+        .eq("source_type", isBoost ? "boost" : "campaign")
+        .eq("source_id", entityId)
+        .order("submitted_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Map to the expected format
+      const submissionsData: VideoSubmission[] = (data || []).map(v => ({
+        id: v.id,
+        user_id: v.creator_id,
+        video_url: v.video_url,
+        platform: v.platform || "unknown",
+        submission_notes: v.submission_notes,
+        status: v.status || "pending",
+        payout_amount: v.payout_amount,
+        submitted_at: v.submitted_at,
+        reviewed_at: v.reviewed_at,
+        rejection_reason: v.rejection_reason,
+        is_flagged: v.is_flagged
+      }));
+
       setSubmissions(submissionsData);
 
       // Fetch profiles for all users
       if (submissionsData.length > 0) {
         const userIds = [...new Set(submissionsData.map(s => s.user_id))];
-        const {
-          data: profilesData
-        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", userIds);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", userIds);
+
         if (profilesData) {
           const profileMap: Record<string, Profile> = {};
           profilesData.forEach(p => {
@@ -187,21 +180,25 @@ export function VideoSubmissionsTab({
         }
       } = await supabase.auth.getUser();
       if (!user) return;
-      if (isBoost) {
-        // Update boost submission status
-        const {
-          error: updateError
-        } = await supabase.from("boost_video_submissions").update({
+      // Update unified video_submissions table
+      const { error: updateError } = await supabase
+        .from("video_submissions")
+        .update({
           status: "approved",
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id
-        }).eq("id", submission.id);
-        if (updateError) throw updateError;
+        })
+        .eq("id", submission.id);
+      if (updateError) throw updateError;
 
-        // Credit creator's wallet
-        const {
-          data: wallet
-        } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", submission.user_id).single();
+      if (isBoost) {
+        // Credit creator's wallet for boost
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("balance, total_earned")
+          .eq("user_id", submission.user_id)
+          .single();
+
         if (wallet) {
           const payout = submission.payout_amount || payoutPerVideo;
           const newBalance = (wallet.balance || 0) + payout;
@@ -226,21 +223,10 @@ export function VideoSubmissionsTab({
           });
         }
       } else {
-        // Update campaign video status
-        const {
-          error: updateError
-        } = await supabase.from("campaign_videos").update({
-          status: "approved",
-          updated_at: new Date().toISOString()
-        }).eq("id", submission.id);
-        if (updateError) throw updateError;
-
-        // If pay_per_post, process payment
+        // If pay_per_post, process payment for campaign
         if (isPayPerPost && payoutPerVideo > 0) {
           try {
-            const {
-              error: paymentError
-            } = await supabase.functions.invoke("create-campaign-payment", {
+            const { error: paymentError } = await supabase.functions.invoke("create-campaign-payment", {
               body: {
                 campaign_id: entityId,
                 user_id: submission.user_id,
@@ -305,31 +291,21 @@ export function VideoSubmissionsTab({
     if (!selectedSubmission) return;
     setProcessing(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      if (isBoost) {
-        const {
-          error
-        } = await supabase.from("boost_video_submissions").update({
+
+      // Update unified video_submissions table
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
           status: "rejected",
           reviewed_at: new Date().toISOString(),
           reviewed_by: user.id,
           rejection_reason: rejectionReason.trim() || null
-        }).eq("id", selectedSubmission.id);
-        if (error) throw error;
-      } else {
-        const {
-          error
-        } = await supabase.from("campaign_videos").update({
-          status: "rejected",
-          updated_at: new Date().toISOString()
-        }).eq("id", selectedSubmission.id);
-        if (error) throw error;
-      }
+        })
+        .eq("id", selectedSubmission.id);
+      if (error) throw error;
+
       toast.success("Video rejected");
       fetchSubmissions();
       setRejectDialogOpen(false);
@@ -347,23 +323,17 @@ export function VideoSubmissionsTab({
     setProcessing(true);
     try {
       const newFlagState = !submission.is_flagged;
-      if (isBoost) {
-        const {
-          error
-        } = await supabase.from("boost_video_submissions").update({
+      
+      // Update unified video_submissions table
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
           is_flagged: newFlagState,
           updated_at: new Date().toISOString()
-        }).eq("id", submission.id);
-        if (error) throw error;
-      } else {
-        const {
-          error
-        } = await supabase.from("campaign_videos").update({
-          is_flagged: newFlagState,
-          updated_at: new Date().toISOString()
-        }).eq("id", submission.id);
-        if (error) throw error;
-      }
+        })
+        .eq("id", submission.id);
+      if (error) throw error;
+
       toast.success(newFlagState ? "Submission flagged" : "Flag removed");
       fetchSubmissions();
     } catch (error) {

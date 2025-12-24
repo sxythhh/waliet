@@ -74,31 +74,9 @@ export function SubmissionsTab() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch campaign video submissions
-      const { data: campaignVideos } = await supabase
-        .from('campaign_videos')
-        .select(`
-          id,
-          video_url,
-          platform,
-          status,
-          created_at,
-          updated_at,
-          submission_text,
-          estimated_payout,
-          campaigns (
-            id,
-            title,
-            brand_name,
-            brand_logo_url
-          )
-        `)
-        .eq('creator_id', user.id)
-        .order('created_at', { ascending: false });
-
-      // Fetch boost video submissions
-      const { data: boostVideos } = await supabase
-        .from('boost_video_submissions')
+      // Fetch from unified video_submissions table
+      const { data: submissions } = await supabase
+        .from('video_submissions')
         .select(`
           id,
           video_url,
@@ -110,74 +88,64 @@ export function SubmissionsTab() {
           payout_amount,
           rejection_reason,
           reviewed_at,
-          bounty_campaigns (
-            id,
-            title,
-            brands (
-              name,
-              logo_url
-            )
-          )
+          source_type,
+          source_id,
+          views,
+          likes,
+          comments,
+          shares,
+          bookmarks,
+          metrics_updated_at
         `)
-        .eq('user_id', user.id)
+        .eq('creator_id', user.id)
         .order('created_at', { ascending: false });
 
-      const allSubmissions: Submission[] = [];
-
-      // Map campaign videos
-      if (campaignVideos) {
-        campaignVideos.forEach((video: any) => {
-          if (video.campaigns) {
-            allSubmissions.push({
-              id: video.id,
-              video_url: video.video_url,
-              platform: video.platform || 'unknown',
-              status: video.status || 'pending',
-              created_at: video.created_at,
-              updated_at: video.updated_at,
-              submission_text: video.submission_text,
-              estimated_payout: video.estimated_payout,
-              type: 'campaign',
-              program: {
-                id: video.campaigns.id,
-                title: video.campaigns.title,
-                brand_name: video.campaigns.brand_name,
-                brand_logo_url: video.campaigns.brand_logo_url
-              }
-            });
-          }
-        });
+      if (!submissions) {
+        setSubmissions([]);
+        return;
       }
 
-      // Map boost videos
-      if (boostVideos) {
-        boostVideos.forEach((video: any) => {
-          if (video.bounty_campaigns) {
-            allSubmissions.push({
-              id: video.id,
-              video_url: video.video_url,
-              platform: video.platform || 'unknown',
-              status: video.status || 'pending',
-              created_at: video.created_at,
-              updated_at: video.updated_at,
-              submission_text: video.submission_notes,
-              estimated_payout: video.payout_amount,
-              rejection_reason: video.rejection_reason,
-              reviewed_at: video.reviewed_at,
-              type: 'boost',
-              program: {
-                id: video.bounty_campaigns.id,
-                title: video.bounty_campaigns.title,
-                brand_name: video.bounty_campaigns.brands?.name,
-                brand_logo_url: video.bounty_campaigns.brands?.logo_url
-              }
-            });
-          }
-        });
-      }
+      // Get unique source IDs for campaigns and boosts
+      const campaignIds = [...new Set(submissions.filter(s => s.source_type === 'campaign').map(s => s.source_id))];
+      const boostIds = [...new Set(submissions.filter(s => s.source_type === 'boost').map(s => s.source_id))];
 
-      // Sort by created_at descending
-      allSubmissions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Fetch campaign and boost details in parallel
+      const [campaignsResult, boostsResult] = await Promise.all([
+        campaignIds.length > 0 
+          ? supabase.from('campaigns').select('id, title, brand_name, brand_logo_url').in('id', campaignIds)
+          : { data: [] },
+        boostIds.length > 0
+          ? supabase.from('bounty_campaigns').select('id, title, brands(name, logo_url)').in('id', boostIds)
+          : { data: [] }
+      ]);
+
+      const campaignsMap = new Map((campaignsResult.data || []).map((c: any) => [c.id, c]));
+      const boostsMap = new Map((boostsResult.data || []).map((b: any) => [b.id, b]));
+
+      const allSubmissions: Submission[] = submissions.map((video: any) => {
+        const isCampaign = video.source_type === 'campaign';
+        const source = isCampaign ? campaignsMap.get(video.source_id) : boostsMap.get(video.source_id);
+        
+        return {
+          id: video.id,
+          video_url: video.video_url,
+          platform: video.platform || 'unknown',
+          status: video.status || 'pending',
+          created_at: video.created_at,
+          updated_at: video.updated_at,
+          submission_text: video.submission_notes,
+          estimated_payout: video.payout_amount,
+          rejection_reason: video.rejection_reason,
+          reviewed_at: video.reviewed_at,
+          type: video.source_type as 'campaign' | 'boost',
+          program: {
+            id: video.source_id,
+            title: source?.title || 'Unknown Program',
+            brand_name: isCampaign ? source?.brand_name : source?.brands?.name,
+            brand_logo_url: isCampaign ? source?.brand_logo_url : source?.brands?.logo_url
+          }
+        };
+      });
 
       setSubmissions(allSubmissions);
     } catch (error) {

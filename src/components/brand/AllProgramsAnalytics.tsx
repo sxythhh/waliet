@@ -151,12 +151,16 @@ export function AllProgramsAnalytics({
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-      // First get all campaign IDs for this brand
-      const {
-        data: campaignsData
-      } = await supabase.from('campaigns').select('id').eq('brand_id', brandId);
-      const campaignIds = campaignsData?.map(c => c.id) || [];
-      if (campaignIds.length === 0) {
+      // Fetch all campaign and boost IDs for this brand
+      const [campaignsData, boostsData] = await Promise.all([
+        supabase.from('campaigns').select('id').eq('brand_id', brandId),
+        supabase.from('bounty_campaigns').select('id').eq('brand_id', brandId)
+      ]);
+
+      const campaignIds = campaignsData.data?.map(c => c.id) || [];
+      const boostIds = boostsData.data?.map(b => b.id) || [];
+
+      if (campaignIds.length === 0 && boostIds.length === 0) {
         setStats({
           totalViews: 0,
           totalPayouts: 0,
@@ -173,14 +177,27 @@ export function AllProgramsAnalytics({
         return;
       }
 
-      // Fetch metrics for all campaigns
-      let metricsQuery = supabase.from('campaign_video_metrics').select('*').in('campaign_id', campaignIds).order('recorded_at', {
-        ascending: true
-      });
+      // Fetch metrics from unified program_video_metrics table
+      let metricsQuery = supabase
+        .from('program_video_metrics')
+        .select('*')
+        .eq('brand_id', brandId)
+        .order('recorded_at', { ascending: true });
+
       if (dateRange) {
-        metricsQuery = metricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
+        metricsQuery = metricsQuery
+          .gte('recorded_at', dateRange.start.toISOString())
+          .lte('recorded_at', dateRange.end.toISOString());
       }
-      const [metricsResult, videoSubmissionsResult] = await Promise.all([metricsQuery, supabase.from('campaign_videos').select('id, status').in('campaign_id', campaignIds)]);
+
+      // Fetch video submissions from unified table
+      const [metricsResult, videoSubmissionsResult] = await Promise.all([
+        metricsQuery,
+        supabase
+          .from('video_submissions')
+          .select('id, status, views, likes, comments, shares, bookmarks')
+          .eq('brand_id', brandId)
+      ]);
 
       // Aggregate metrics by date
       const rawMetrics = metricsResult.data || [];
@@ -191,6 +208,7 @@ export function AllProgramsAnalytics({
         bookmarks: number;
         videos: number;
       }>();
+
       rawMetrics.forEach(m => {
         const dateKey = format(new Date(m.recorded_at), 'yyyy-MM-dd');
         const existing = metricsByDate.get(dateKey) || {
@@ -208,6 +226,27 @@ export function AllProgramsAnalytics({
           videos: existing.videos + (m.total_videos || 0)
         });
       });
+
+      // If no historical metrics, calculate from current video submissions
+      if (metricsByDate.size === 0 && videoSubmissionsResult.data) {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const totals = videoSubmissionsResult.data.reduce((acc, v) => ({
+          views: acc.views + (v.views || 0),
+          likes: acc.likes + (v.likes || 0),
+          comments: acc.comments + (v.comments || 0),
+          shares: acc.shares + (v.shares || 0),
+          bookmarks: acc.bookmarks + (v.bookmarks || 0),
+          videos: acc.videos + 1
+        }), { views: 0, likes: 0, comments: 0, shares: 0, bookmarks: 0, videos: 0 });
+
+        metricsByDate.set(today, {
+          views: totals.views,
+          likes: totals.likes,
+          shares: totals.shares,
+          bookmarks: totals.bookmarks,
+          videos: totals.videos
+        });
+      }
 
       // Convert to sorted array
       const sortedDates = Array.from(metricsByDate.keys()).sort();
@@ -230,19 +269,27 @@ export function AllProgramsAnalytics({
       });
       setMetricsData(formattedMetrics);
 
-      // Calculate totals
-      const latestViews = formattedMetrics.length > 0 ? formattedMetrics[formattedMetrics.length - 1].views : 0;
+      // Calculate totals from video submissions
+      const videoSubmissionsData = videoSubmissionsResult.data || [];
+      const latestViews = videoSubmissionsData.reduce((sum, v) => sum + (v.views || 0), 0);
+      const totalSubmissions = videoSubmissionsData.length;
+      const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
 
       // Get transactions for payouts
-      const {
-        data: transactionsData
-      } = await supabase.from('wallet_transactions').select('amount, created_at, metadata').eq('type', 'earning');
+      const { data: transactionsData } = await supabase
+        .from('wallet_transactions')
+        .select('amount, created_at, metadata')
+        .eq('type', 'earning');
 
-      // Filter transactions for this brand's campaigns
+      // Filter transactions for this brand's campaigns and boosts
       const brandTransactions = (transactionsData || []).filter(t => {
         const metadata = t.metadata as any;
-        return metadata?.campaign_id && campaignIds.includes(metadata.campaign_id);
+        return (
+          (metadata?.campaign_id && campaignIds.includes(metadata.campaign_id)) ||
+          (metadata?.boost_id && boostIds.includes(metadata.boost_id))
+        );
       });
+
       let filteredTransactions = brandTransactions;
       if (dateRange) {
         filteredTransactions = brandTransactions.filter(t => {
@@ -250,27 +297,37 @@ export function AllProgramsAnalytics({
           return date >= dateRange.start && date <= dateRange.end;
         });
       }
+
       const totalPayouts = filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
       const effectiveCPM = latestViews > 0 ? totalPayouts / latestViews * 1000 : 0;
 
       // Calculate week over week changes
-      const viewsThisWeek = rawMetrics.filter(m => new Date(m.recorded_at) >= oneWeekAgo).reduce((sum, m) => sum + (m.total_views || 0), 0);
-      const viewsLastWeekValue = rawMetrics.filter(m => {
-        const date = new Date(m.recorded_at);
-        return date >= twoWeeksAgo && date < oneWeekAgo;
-      }).reduce((sum, m) => sum + (m.total_views || 0), 0);
-      const payoutsThisWeek = brandTransactions.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0);
-      const payoutsLastWeek = brandTransactions.filter(t => {
-        const date = new Date(t.created_at);
-        return date >= twoWeeksAgo && date < oneWeekAgo;
-      }).reduce((sum, t) => sum + (t.amount || 0), 0);
-      const viewsChangePercent = viewsLastWeekValue > 0 ? (viewsThisWeek - viewsLastWeekValue) / viewsLastWeekValue * 100 : 0;
-      const payoutsChangePercent = payoutsLastWeek > 0 ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 : 0;
+      const viewsThisWeek = rawMetrics
+        .filter(m => new Date(m.recorded_at) >= oneWeekAgo)
+        .reduce((sum, m) => sum + (m.total_views || 0), 0);
+      const viewsLastWeekValue = rawMetrics
+        .filter(m => {
+          const date = new Date(m.recorded_at);
+          return date >= twoWeeksAgo && date < oneWeekAgo;
+        })
+        .reduce((sum, m) => sum + (m.total_views || 0), 0);
+      const payoutsThisWeek = brandTransactions
+        .filter(t => new Date(t.created_at) >= oneWeekAgo)
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      const payoutsLastWeek = brandTransactions
+        .filter(t => {
+          const date = new Date(t.created_at);
+          return date >= twoWeeksAgo && date < oneWeekAgo;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-      // Video Submissions (campaign_videos for pay per post)
-      const videoSubmissionsData = videoSubmissionsResult.data || [];
-      const totalSubmissions = videoSubmissionsData.length;
-      const approvedSubmissions = videoSubmissionsData.filter(s => s.status === 'approved').length;
+      const viewsChangePercent = viewsLastWeekValue > 0 
+        ? (viewsThisWeek - viewsLastWeekValue) / viewsLastWeekValue * 100 
+        : 0;
+      const payoutsChangePercent = payoutsLastWeek > 0 
+        ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 
+        : 0;
+
       setStats({
         totalViews: latestViews,
         totalPayouts,
