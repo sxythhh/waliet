@@ -850,7 +850,10 @@ export function CreatorsTab({
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-inter tracking-[-0.5px] font-medium text-sm flex-1">
+              <span 
+                className="font-inter tracking-[-0.5px] font-medium text-sm flex-1 hover:underline cursor-pointer"
+                onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}
+              >
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
               <div className="flex items-center gap-2">
