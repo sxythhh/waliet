@@ -199,8 +199,16 @@ export function SubmissionHeatmap({ submissions, onDateClick, selectedDate }: Su
                     <Tooltip key={dayIdx}>
                       <TooltipTrigger asChild>
                         <div
-                          onClick={() => !isFuture && onDateClick?.(day.date)}
-                          className={`h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)} ${isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isFuture) onDateClick?.(day.date);
+                          }}
+                          className={`h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer ${getColorClass(day, isFuture, isToday)}`}
+                          style={isSelected ? { 
+                            boxShadow: '0 0 0 2px hsl(var(--primary))',
+                            position: 'relative',
+                            zIndex: 10
+                          } : undefined}
                         />
                       </TooltipTrigger>
                       <TooltipContent 
