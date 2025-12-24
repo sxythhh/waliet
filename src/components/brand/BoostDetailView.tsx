@@ -11,6 +11,7 @@ import mailIcon from "@/assets/mail-icon.svg";
 import { EditBountyDialog } from "./EditBountyDialog";
 import { BoostVideosTab } from "./BoostVideosTab";
 import { TopUpBalanceDialog } from "./TopUpBalanceDialog";
+import { SemiCircleProgress } from "./SemiCircleProgress";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -478,30 +479,13 @@ export function BoostDetailView({
 
               {/* Applicants Details Card */}
               <div className="rounded-xl border border-muted-foreground/10 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold tracking-[-0.5px]">Applicants details</h3>
-                </div>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-4xl font-semibold tracking-[-1px]">{applications.length}</span>
-                  <span className="text-sm text-muted-foreground tracking-[-0.3px]">Total applicants</span>
-                </div>
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Pending</span>
-                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'pending').length}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Accepted</span>
-                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'accepted').length}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                    <span className="text-xs text-muted-foreground tracking-[-0.3px]">Rejected</span>
-                    <span className="text-xs font-medium ml-auto">{applications.filter(a => a.status === 'rejected').length}</span>
-                  </div>
-                </div>
+                <h3 className="text-sm font-semibold tracking-[-0.5px] text-center mb-4">Applicants</h3>
+                <SemiCircleProgress
+                  total={applications.length}
+                  pending={applications.filter(a => a.status === 'pending').length}
+                  accepted={applications.filter(a => a.status === 'accepted').length}
+                  rejected={applications.filter(a => a.status === 'rejected').length}
+                />
               </div>
             </div>
           </div>}
