@@ -1,4 +1,10 @@
 import verifiedBadgeIcon from "@/assets/verified-badge.svg";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface VerifiedBadgeProps {
   className?: string;
@@ -13,11 +19,22 @@ export function VerifiedBadge({ className = "", size = "sm" }: VerifiedBadgeProp
   };
 
   return (
-    <img 
-      src={verifiedBadgeIcon} 
-      alt="Verified" 
-      className={`inline-block flex-shrink-0 ${sizeClasses[size]} ${className}`}
-      title="Verified Brand"
-    />
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <img 
+            src={verifiedBadgeIcon} 
+            alt="Verified" 
+            className={`inline-block flex-shrink-0 cursor-pointer ${sizeClasses[size]} ${className}`}
+          />
+        </TooltipTrigger>
+        <TooltipContent 
+          className="bg-foreground text-background px-3 py-1.5 text-xs font-medium tracking-[-0.5px] font-['Inter'] rounded-md shadow-lg border-0"
+          sideOffset={4}
+        >
+          Verified Brand
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
