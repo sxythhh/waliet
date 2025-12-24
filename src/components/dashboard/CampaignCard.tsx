@@ -50,7 +50,7 @@ export function CampaignCard({
 
   return (
     <Card
-      className={`group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+      className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border border-[#dce1eb] dark:border-[#0f0f0f] relative dark:hover:bg-[#0f0f0f] cursor-pointer"
       onClick={onClick}
     >
       {/* Action Buttons */}
