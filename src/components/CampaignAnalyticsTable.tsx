@@ -27,6 +27,7 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import creditCardIcon from "@/assets/credit-card-icon.svg";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { CampaignUpdateDialog } from "./CampaignUpdateDialog";
+import { PayoutRequestsTable } from "./brand/PayoutRequestsTable";
 const getTrustScoreDiamonds = (score: number) => {
   if (score < 20) {
     return {
@@ -1251,17 +1252,11 @@ export function CampaignAnalyticsTable({
       </Card>;
   }
   if (transactions.length === 0 && activeTab === 'transactions') {
-    return <Card className="bg-card border-0 h-full">
-        <CardContent className="p-6 h-full flex items-center justify-center">
-          <div className="text-center py-8">
-            <img src={creditCardIcon} alt="" className="h-12 w-12 mx-auto opacity-50 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Payout Transactions</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">
-              No payments have been made for this campaign yet. Payouts will appear here once creators receive payments.
-            </p>
-          </div>
-        </CardContent>
-      </Card>;
+    return (
+      <div className={`space-y-4 ${className || ''}`}>
+        <PayoutRequestsTable campaignId={campaignId} />
+      </div>
+    );
   }
   return <>
       <div className={`space-y-4 ${className || ''}`}>
@@ -1567,6 +1562,13 @@ export function CampaignAnalyticsTable({
 
         {/* Transactions View */}
         {activeTab === 'transactions' && <>
+            {/* Payout Requests Section */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 tracking-[-0.3px]">Payout Requests</h3>
+              <PayoutRequestsTable campaignId={campaignId} showEmpty={false} />
+            </div>
+            
+            <h3 className="text-sm font-semibold text-foreground mb-3 tracking-[-0.3px]">Transaction History</h3>
             {/* Export Dialog */}
             <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
               <DialogContent className="sm:max-w-[400px]">
