@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -196,9 +197,12 @@ export function CreatorDatabaseTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCampaignFilter, setSelectedCampaignFilter] = useState<string>("all");
   const [selectedCreators, setSelectedCreators] = useState<Set<string>>(new Set());
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [addCreatorsDialogOpen, setAddCreatorsDialogOpen] = useState(false);
+  const [addCreatorsMode, setAddCreatorsMode] = useState<'search' | 'import' | 'manual'>('search');
   const [importData, setImportData] = useState("");
   const [importLoading, setImportLoading] = useState(false);
+  const [manualCreator, setManualCreator] = useState({ username: '', name: '', email: '', phone: '' });
+  const [manualAddLoading, setManualAddLoading] = useState(false);
   const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
   const [selectedCampaignToAdd, setSelectedCampaignToAdd] = useState<string>("");
   const [addingToCampaign, setAddingToCampaign] = useState(false);
@@ -541,7 +545,7 @@ export function CreatorDatabaseTab({
 
       // Here you could add logic to track these accounts or invite them
       toast.success(`Parsed ${imported.length} creators. Import functionality coming soon.`);
-      setImportDialogOpen(false);
+      setAddCreatorsDialogOpen(false);
       setImportData('');
     } catch (error) {
       console.error('Import error:', error);
@@ -766,33 +770,30 @@ export function CreatorDatabaseTab({
       <div className="p-4 md:p-6 border-b border-border">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold font-instrument tracking-tight">
-              {showFindCreators ? 'Find Creators' : 'Creator Database'}
-            </h2>
+            <h2 className="text-xl font-semibold font-instrument tracking-tight">Creator Database</h2>
             <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-              {showFindCreators ? 'Discover and reach out to creators for your campaigns' : `${creators.length} creators across all campaigns`}
+              {creators.length} creators across all campaigns
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant={showFindCreators ? "default" : "outline"} size="sm" onClick={() => setShowFindCreators(!showFindCreators)} className="gap-2">
-              <Users className="h-4 w-4" />
-              {showFindCreators ? 'View Database' : 'Find Creators'}
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => setAddCreatorsDialogOpen(true)} 
+              className="gap-2 bg-primary hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              Add Creators
             </Button>
-            {!showFindCreators && <>
-                <Button variant="outline" size="sm" onClick={() => setImportDialogOpen(true)} className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Import
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
-              </>}
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
           </div>
         </div>
 
         {/* Database Filters */}
-        {!showFindCreators && <div className="flex flex-col md:flex-row gap-3 mt-4">
+        <div className="flex flex-col md:flex-row gap-3 mt-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search by name, email, or social handle..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/30 border-border" />
@@ -806,210 +807,11 @@ export function CreatorDatabaseTab({
                 {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>}
-
-        {/* Find Creators Filters */}
-        {showFindCreators && hasActivePlan && <div className="mt-4 space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search by name, niche, or username..." value={discoverSearch} onChange={e => setDiscoverSearch(e.target.value)} className="pl-10 h-10 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
-              </div>
-              <Button variant={showFilters ? "secondary" : "outline"} size="icon" className="h-10 w-10 shrink-0" onClick={() => setShowFilters(!showFilters)}>
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {showFilters && <div className="flex flex-wrap gap-2 items-center">
-                <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-[130px] h-9 text-xs bg-muted/30 border-0">
-                    <SelectValue placeholder="Platform" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Platforms</SelectItem>
-                    {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-
-                <Select value={followerFilter} onValueChange={setFollowerFilter}>
-                  <SelectTrigger className="w-[120px] h-9 text-xs bg-muted/30 border-0">
-                    <SelectValue placeholder="Followers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {FOLLOWER_RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-
-                <Select value={countryFilter} onValueChange={setCountryFilter}>
-                  <SelectTrigger className="w-[140px] h-9 text-xs bg-muted/30 border-0">
-                    <SelectValue placeholder="Country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-
-                {hasActiveFilters && <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={clearDiscoverFilters}>
-                    <X className="h-3 w-3 mr-1" />
-                    Clear
-                  </Button>}
-              </div>}
-          </div>}
+          </div>
       </div>
 
-      {/* Find Creators View */}
-      {showFindCreators ? <ScrollArea className="flex-1">
-          <div className="p-6">
-            {/* Subscription Gate */}
-            {hasActivePlan === false && <div className="relative">
-                <div className="blur-sm pointer-events-none select-none">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[...Array(6)].map((_, i) => <div key={i} className="rounded-xl border border-border/50 bg-card/30 p-5">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="h-4 w-20 bg-muted rounded" />
-                          <div className="flex gap-2">
-                            <div className="h-5 w-5 bg-muted rounded" />
-                            <div className="h-5 w-5 bg-muted rounded" />
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3 mb-4">
-                          <div className="h-12 w-12 bg-muted rounded-full" />
-                          <div className="flex-1">
-                            <div className="h-5 w-28 bg-muted rounded mb-1.5" />
-                            <div className="h-3 w-36 bg-muted rounded" />
-                          </div>
-                        </div>
-                        <div className="h-12 w-full bg-muted rounded mb-4" />
-                        <div className="h-9 w-full bg-muted rounded-full" />
-                      </div>)}
-                  </div>
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-                  <div className="text-center p-8 max-w-sm">
-                    <div className="w-16 h-16 rounded-2xl bg-muted/80 flex items-center justify-center mx-auto mb-5">
-                      <img src={vpnKeyIcon} alt="Key" className="h-8 w-8" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2 tracking-[-0.5px]">
-                      Upgrade to Access
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-5 font-inter tracking-[-0.5px]">
-                      Subscribe to browse and message creators for your campaigns
-                    </p>
-                    <button onClick={() => setSubscriptionGateOpen(true)} className="mx-auto py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2">
-                      <img src={vpnKeyIcon} alt="" className="h-4 w-4" />
-                      Upgrade Plan
-                    </button>
-                  </div>
-                </div>
-              </div>}
-
-            {/* Loading State */}
-            {hasActivePlan && discoverLoading && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...Array(6)].map((_, i) => <div key={i} className="rounded-xl border border-border/50 bg-card/30 p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <Skeleton className="h-4 w-20 rounded-full" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-5 w-5 rounded" />
-                        <Skeleton className="h-5 w-5 rounded" />
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 mb-4">
-                      <Skeleton className="h-12 w-12 rounded-full" />
-                      <div className="flex-1">
-                        <Skeleton className="h-5 w-28 mb-1.5 rounded" />
-                        <Skeleton className="h-3 w-36 rounded" />
-                      </div>
-                    </div>
-                    <Skeleton className="h-12 w-full mb-4 rounded" />
-                    <Skeleton className="h-9 w-full rounded-full" />
-                  </div>)}
-              </div>}
-
-            {/* Empty State */}
-            {hasActivePlan && !discoverLoading && discoverableCreators.length === 0 && <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-5">
-                  <Users className="h-8 w-8 text-muted-foreground/60" />
-                </div>
-                <h3 className="font-semibold text-base mb-2">No creators found</h3>
-                <p className="text-sm text-muted-foreground max-w-[280px] font-inter tracking-[-0.5px]">
-                  {discoverSearch || hasActiveFilters ? "Try adjusting your search or filters" : "No verified creators are available yet"}
-                </p>
-                {hasActiveFilters && <Button variant="outline" size="sm" className="mt-4" onClick={clearDiscoverFilters}>
-                    Clear Filters
-                  </Button>}
-              </div>}
-
-            {/* Creator Grid */}
-            {hasActivePlan && !discoverLoading && discoverableCreators.length > 0 && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {discoverableCreators.map(creator => <div key={creator.id} className="rounded-xl border border-border/50 bg-card/30 hover:bg-muted/30 transition-all duration-200 overflow-hidden">
-                    {/* Status & Platforms Row */}
-                    <div className="px-5 pt-4 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                        Active now
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {creator.social_accounts.slice(0, 3).map(account => <a key={`${account.platform}-${account.username}`} href={account.account_link || "#"} target="_blank" rel="noopener noreferrer" className="opacity-50 hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                            <img src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-4 w-4 object-contain" />
-                          </a>)}
-                      </div>
-                    </div>
-
-                    {/* Creator Info */}
-                    <div className="px-5 py-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <Avatar className="h-12 w-12 ring-1 ring-border">
-                          <AvatarImage src={creator.avatar_url || undefined} />
-                          <AvatarFallback className="bg-muted text-muted-foreground text-sm font-medium">
-                            {creator.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate">
-                            {creator.full_name || creator.username}
-                          </h4>
-                          <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">
-                            {[creator.city, creator.country].filter(Boolean).join(" • ") || `@${creator.username}`}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Bio */}
-                      {creator.bio && <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3 font-inter tracking-[-0.5px]">
-                          {creator.bio}
-                        </p>}
-
-                      {/* Niches/Tags */}
-                      {creator.content_niches && creator.content_niches.length > 0 && <div className="flex flex-wrap gap-1.5 mb-4">
-                          {creator.content_niches.slice(0, 2).map(niche => <Badge key={niche} variant="secondary" className="text-[10px] px-2.5 py-0.5 rounded-full bg-muted/50 text-foreground font-inter tracking-[-0.5px]">
-                              {niche}
-                            </Badge>)}
-                        </div>}
-
-                      {/* Follower Count Summary */}
-                      {creator.social_accounts.some(a => a.follower_count) && <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          {creator.social_accounts.filter(a => a.follower_count).slice(0, 2).map(account => <span key={account.platform} className="flex items-center gap-1">
-                              <img src={PLATFORM_LOGOS[account.platform]} alt={account.platform} className="h-3 w-3 object-contain" />
-                              {formatFollowerCount(account.follower_count)}
-                            </span>)}
-                        </div>}
-
-                      {/* CTA Button */}
-                      <Button size="sm" className="w-full h-9 rounded-full text-xs font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90" onClick={() => {
-                if (onStartConversation) {
-                  onStartConversation(creator.id, creator.full_name || creator.username);
-                }
-              }}>
-                        <MessageSquare className="h-3.5 w-3.5 mr-2" />
-                        Send Message
-                      </Button>
-                    </div>
-                  </div>)}
-              </div>}
-          </div>
-        </ScrollArea> : <>
-          {/* Table */}
-          <div className="flex flex-col flex-1 h-full overflow-hidden">
+      {/* Table */}
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
           <ScrollArea className="flex-1 p-[5px]">
             <TooltipProvider delayDuration={100}>
               <Table>
@@ -1392,33 +1194,249 @@ export function CreatorDatabaseTab({
         </DialogContent>
       </Dialog>
 
-      {/* Import Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent>
+      {/* Add Creators Dialog */}
+      <Dialog open={addCreatorsDialogOpen} onOpenChange={setAddCreatorsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="font-instrument tracking-tight">Import Creators</DialogTitle>
+            <DialogTitle className="font-instrument tracking-tight text-lg">Add Creators</DialogTitle>
             <DialogDescription className="font-inter tracking-[-0.3px]">
-              Import creators from a CSV file or paste data directly. Format: platform,username (one per line)
+              Add creators to your database via search, manual entry, or CSV import
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="font-inter tracking-[-0.3px]">Paste CSV Data</Label>
-              <Textarea placeholder="tiktok,@username&#10;instagram,@anotheruser&#10;youtube,@creator" value={importData} onChange={e => setImportData(e.target.value)} className="mt-2 min-h-[150px] font-mono text-sm" />
-            </div>
-            <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                Imported creators will be added to your database for tracking. You can then invite them to campaigns.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleImport} disabled={importLoading}>
-              {importLoading ? 'Importing...' : 'Import Creators'}
-            </Button>
-          </DialogFooter>
+          
+          <Tabs value={addCreatorsMode} onValueChange={(v) => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+              <TabsTrigger value="search" className="gap-2 text-xs font-inter">
+                <Users className="h-3.5 w-3.5" />
+                Find Creators
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="gap-2 text-xs font-inter">
+                <UserPlus className="h-3.5 w-3.5" />
+                Manual Add
+              </TabsTrigger>
+              <TabsTrigger value="import" className="gap-2 text-xs font-inter">
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+                Import CSV
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Find Creators Tab */}
+            <TabsContent value="search" className="flex-1 min-h-0 mt-4">
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      placeholder="Search by name, niche, or username..." 
+                      value={discoverSearch} 
+                      onChange={e => setDiscoverSearch(e.target.value)} 
+                      className="pl-10 h-10 bg-muted/30 border-0 font-inter tracking-[-0.5px]" 
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/30 border-0">
+                      <SelectValue placeholder="Platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Platforms</SelectItem>
+                      {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={followerFilter} onValueChange={setFollowerFilter}>
+                    <SelectTrigger className="w-[100px] h-8 text-xs bg-muted/30 border-0">
+                      <SelectValue placeholder="Followers" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FOLLOWER_RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={countryFilter} onValueChange={setCountryFilter}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/30 border-0">
+                      <SelectValue placeholder="Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Countries</SelectItem>
+                      {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <ScrollArea className="flex-1 min-h-[280px] max-h-[320px]">
+                  {hasActivePlan === false ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
+                        <img src={vpnKeyIcon} alt="Key" className="h-6 w-6" />
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1">Upgrade to Access</h3>
+                      <p className="text-xs text-muted-foreground mb-4 font-inter">Subscribe to browse creators</p>
+                      <Button size="sm" onClick={() => { setAddCreatorsDialogOpen(false); setSubscriptionGateOpen(true); }}>
+                        Upgrade Plan
+                      </Button>
+                    </div>
+                  ) : discoverLoading ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+                    </div>
+                  ) : discoverableCreators.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Users className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                      <p className="text-sm text-muted-foreground font-inter">No creators found</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3 pr-2">
+                      {discoverableCreators.slice(0, 8).map(creator => (
+                        <div key={creator.id} className="rounded-lg border border-border/50 bg-card/30 p-3 hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-2.5 mb-2">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={creator.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs">{creator.username.slice(0,2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{creator.full_name || creator.username}</p>
+                              <p className="text-[11px] text-muted-foreground truncate">@{creator.username}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex gap-1.5">
+                              {creator.social_accounts.slice(0, 2).map(acc => (
+                                <img key={acc.platform} src={PLATFORM_LOGOS[acc.platform]} alt={acc.platform} className="h-3.5 w-3.5 opacity-60" />
+                              ))}
+                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 text-xs px-2.5"
+                              onClick={async () => {
+                                try {
+                                  await supabase.from('brand_creator_relationships').insert({
+                                    brand_id: brandId,
+                                    user_id: creator.id,
+                                    source_type: 'manual_add'
+                                  });
+                                  toast.success(`Added ${creator.full_name || creator.username}`);
+                                  fetchCreators();
+                                } catch (e) {
+                                  toast.error('Failed to add creator');
+                                }
+                              }}
+                            >
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            </TabsContent>
+            
+            {/* Manual Add Tab */}
+            <TabsContent value="manual" className="mt-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-inter">Username</Label>
+                    <Input 
+                      placeholder="@username" 
+                      value={manualCreator.username}
+                      onChange={e => setManualCreator(prev => ({ ...prev, username: e.target.value }))}
+                      className="mt-1.5 bg-muted/30 border-0"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-inter">Full Name</Label>
+                    <Input 
+                      placeholder="John Doe" 
+                      value={manualCreator.name}
+                      onChange={e => setManualCreator(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1.5 bg-muted/30 border-0"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-inter">Email</Label>
+                    <Input 
+                      type="email"
+                      placeholder="email@example.com" 
+                      value={manualCreator.email}
+                      onChange={e => setManualCreator(prev => ({ ...prev, email: e.target.value }))}
+                      className="mt-1.5 bg-muted/30 border-0"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-inter">Phone (optional)</Label>
+                    <Input 
+                      placeholder="+1 234 567 8900" 
+                      value={manualCreator.phone}
+                      onChange={e => setManualCreator(prev => ({ ...prev, phone: e.target.value }))}
+                      className="mt-1.5 bg-muted/30 border-0"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
+                  <p className="text-xs text-muted-foreground font-inter">
+                    Manually added creators will be marked as external contacts until they join the platform.
+                  </p>
+                </div>
+                <Button 
+                  className="w-full"
+                  disabled={manualAddLoading || (!manualCreator.username && !manualCreator.email)}
+                  onClick={async () => {
+                    setManualAddLoading(true);
+                    try {
+                      await supabase.from('brand_creator_relationships').insert({
+                        brand_id: brandId,
+                        external_name: manualCreator.name || null,
+                        external_email: manualCreator.email || null,
+                        external_handle: manualCreator.username.replace('@', '') || null,
+                        source_type: 'manual_add'
+                      });
+                      toast.success('Creator added successfully');
+                      setManualCreator({ username: '', name: '', email: '', phone: '' });
+                      fetchCreators();
+                      setAddCreatorsDialogOpen(false);
+                    } catch (e) {
+                      toast.error('Failed to add creator');
+                    } finally {
+                      setManualAddLoading(false);
+                    }
+                  }}
+                >
+                  {manualAddLoading ? 'Adding...' : 'Add Creator'}
+                </Button>
+              </div>
+            </TabsContent>
+            
+            {/* Import CSV Tab */}
+            <TabsContent value="import" className="mt-4">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs font-inter">Paste CSV Data</Label>
+                  <Textarea 
+                    placeholder="tiktok,@username&#10;instagram,@anotheruser&#10;youtube,@creator" 
+                    value={importData} 
+                    onChange={e => setImportData(e.target.value)} 
+                    className="mt-1.5 min-h-[160px] font-mono text-sm bg-muted/30 border-0" 
+                  />
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                  <p className="text-xs text-muted-foreground font-inter">
+                    Format: <code className="bg-muted px-1 rounded">platform,username</code> (one per line). Imported creators will be added to your database.
+                  </p>
+                </div>
+                <Button onClick={handleImport} disabled={importLoading || !importData.trim()} className="w-full">
+                  {importLoading ? 'Importing...' : 'Import Creators'}
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
@@ -1461,6 +1479,5 @@ export function CreatorDatabaseTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-        </>}
     </div>;
 }
