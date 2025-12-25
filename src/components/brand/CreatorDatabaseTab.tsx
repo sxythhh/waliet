@@ -803,12 +803,7 @@ export function CreatorDatabaseTab({
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold font-instrument tracking-tight">Creator Database</h2>
-            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-              {creators.length} creators across all campaigns
-            </p>
-          </div>
+          
           <div className="flex items-center gap-2">
             <Button variant="default" size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
               <Plus className="h-4 w-4" />
@@ -825,12 +820,7 @@ export function CreatorDatabaseTab({
         <div className="mt-4 flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-[280px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input 
-              placeholder="Search creators..." 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-9 h-9 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" 
-            />
+            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" />
           </div>
 
           <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
@@ -879,20 +869,15 @@ export function CreatorDatabaseTab({
             </SelectContent>
           </Select>
 
-          {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && (
-            <button 
-              onClick={() => {
-                setSelectedCampaignFilter('all');
-                setPlatformFilter('all');
-                setStatusFilter('all');
-                setSourceFilter('all');
-                setSearchQuery('');
-              }}
-              className="h-9 px-3 font-inter tracking-[-0.5px] text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+          {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && <button onClick={() => {
+          setSelectedCampaignFilter('all');
+          setPlatformFilter('all');
+          setStatusFilter('all');
+          setSourceFilter('all');
+          setSearchQuery('');
+        }} className="h-9 px-3 font-inter tracking-[-0.5px] text-sm text-muted-foreground hover:text-foreground transition-colors">
               Clear
-            </button>
-          )}
+            </button>}
         </div>
       </div>
 
