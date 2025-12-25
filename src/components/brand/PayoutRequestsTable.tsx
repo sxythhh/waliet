@@ -1099,17 +1099,17 @@ export function PayoutRequestsTable({
             setSelectedFlagReason(null);
           }
         }}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader className="flex-row items-center gap-2 space-y-0">
-              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-500/10">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-sm shadow-xl">
+            <DialogHeader className="flex-row items-center gap-2.5 space-y-0">
+              <div className="flex items-center justify-center h-7 w-7 rounded-full bg-amber-500/10">
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
               </div>
-              <DialogTitle className="text-base">Flag this payout?</DialogTitle>
+              <DialogTitle className="text-sm font-medium tracking-[-0.5px]">Flag this payout?</DialogTitle>
               <div className="flex-1" />
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 size="sm" 
-                className="h-8 text-xs"
+                className="h-7 text-xs font-medium tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
                 onClick={submitFlag}
                 disabled={flaggingItem !== null || (!flagReason.trim() && !selectedFlagReason)}
               >
@@ -1118,14 +1118,14 @@ export function PayoutRequestsTable({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 text-xs text-muted-foreground"
+                className="h-7 text-xs font-medium tracking-[-0.5px] text-muted-foreground hover:text-foreground"
                 onClick={() => setFlagDialogOpen(false)}
               >
                 Cancel
               </Button>
             </DialogHeader>
             
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               <Input 
                 placeholder="Reason for flagging..." 
                 value={flagReason}
@@ -1135,19 +1135,19 @@ export function PayoutRequestsTable({
                     setSelectedFlagReason(null);
                   }
                 }}
-                className="h-10"
+                className="h-10 border-0 bg-muted/50 text-sm tracking-[-0.5px] placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-border"
               />
               
               <div className="flex flex-wrap gap-2">
                 {FLAG_REASON_OPTIONS.map((reason) => (
                   <Button
                     key={reason}
-                    variant={selectedFlagReason === reason ? "default" : "outline"}
+                    variant="ghost"
                     size="sm"
-                    className={`h-8 text-xs ${
+                    className={`h-8 text-xs font-medium tracking-[-0.5px] rounded-full px-3.5 ${
                       selectedFlagReason === reason 
                         ? "bg-foreground text-background hover:bg-foreground/90" 
-                        : "hover:bg-muted"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => {
                       setSelectedFlagReason(selectedFlagReason === reason ? null : reason);
