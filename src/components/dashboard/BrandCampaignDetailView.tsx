@@ -374,7 +374,7 @@ export function BrandCampaignDetailView({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64 z-50 bg-[#080808] rounded-[7px]">
                 {/* All Programs option */}
-                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={`focus:bg-white/10 focus:text-foreground ${isAllMode ? "bg-white/10" : ""}`}>
+                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={`focus:bg-white/5 focus:text-foreground ${isAllMode ? "bg-white/8" : ""}`}>
                   <span className="font-medium">All Programs</span>
                 </DropdownMenuItem>
                 
