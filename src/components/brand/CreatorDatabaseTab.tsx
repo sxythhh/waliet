@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -237,6 +237,11 @@ export function CreatorDatabaseTab({
   // Sorting state
   const [sortBy, setSortBy] = useState<'views' | 'earnings' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100];
 
   const handleSort = (column: 'views' | 'earnings') => {
     if (sortBy === column) {
@@ -487,7 +492,7 @@ export function CreatorDatabaseTab({
       setLoading(false);
     }
   };
-  const filteredCreators = useMemo(() => {
+  const filteredAndSortedCreators = useMemo(() => {
     let filtered = creators;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -506,6 +511,18 @@ export function CreatorDatabaseTab({
     }
     return filtered;
   }, [creators, searchQuery, selectedCampaignFilter, sortBy, sortOrder]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedCreators.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const filteredCreators = filteredAndSortedCreators.slice(startIndex, endIndex);
+  const totalCreators = filteredAndSortedCreators.length;
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCampaignFilter, sortBy, sortOrder, itemsPerPage]);
   const handleExportCSV = () => {
     const headers = ['Username', 'Full Name', 'Email', 'Country', 'Total Views', 'Total Earnings', 'Social Accounts', 'Campaigns'];
     const rows = filteredCreators.map(c => [c.username, c.full_name || '', c.email || '', c.country || '', c.total_views, c.total_earnings.toFixed(2), c.social_accounts.map(s => `${s.platform}:@${s.username}`).join('; '), c.campaigns.map(camp => camp.title).join('; ')]);
@@ -1151,6 +1168,70 @@ export function CreatorDatabaseTab({
               </Table>
             </TooltipProvider>
           </ScrollArea>
+
+          {/* Pagination */}
+          {totalCreators > 0 && (
+            <div className="border-t border-border/40 bg-background/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                <span>Show</span>
+                <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
+                  <SelectTrigger className="h-7 w-[70px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
+                      <SelectItem key={option} value={option.toString()} className="text-xs">
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span>of {totalCreators.toLocaleString()} creators</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mr-2">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          )}
 
       {/* Creator Details Panel - Floating Overlay */}
       {selectedCreatorPanel && (
