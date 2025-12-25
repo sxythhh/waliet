@@ -874,7 +874,7 @@ export function CreatorDatabaseTab({
   }
   return <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border py-[5px]">
+      <div className="p-4 md:p-6 border-b border-border px-[12px] py-[7px]">
         {/* Search, Filters & Actions - Single Row */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative min-w-[180px] max-w-[220px]">
@@ -884,33 +884,26 @@ export function CreatorDatabaseTab({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 ${(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' ? 'text-foreground' : 'text-muted-foreground'}`}>
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && (
-                  <span className="ml-1 h-4 w-4 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center">
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <span className="ml-1 h-4 w-4 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center">
                     {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all'].filter(Boolean).length}
-                  </span>
-                )}
+                  </span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[280px] p-3 bg-background border border-border shadow-lg z-50" align="start">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Filters</span>
-                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && (
-                    <button 
-                      onClick={() => {
-                        setSelectedCampaignFilter('all');
-                        setPlatformFilter('all');
-                        setStatusFilter('all');
-                        setSourceFilter('all');
-                      }} 
-                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
+                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <button onClick={() => {
+                  setSelectedCampaignFilter('all');
+                  setPlatformFilter('all');
+                  setStatusFilter('all');
+                  setSourceFilter('all');
+                }} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
                       Clear all
-                    </button>
-                  )}
+                    </button>}
                 </div>
                 
                 <div className="space-y-2">
