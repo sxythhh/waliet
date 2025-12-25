@@ -3704,6 +3704,13 @@ export type Database = {
       encrypt_discord_token: { Args: { token: string }; Returns: string }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
       generate_short_code: { Args: never; Returns: string }
+      get_brand_creator_earnings: {
+        Args: { p_brand_id: string }
+        Returns: {
+          total_earnings: number
+          user_id: string
+        }[]
+      }
       get_current_user_email: { Args: never; Returns: string }
       get_discord_tokens: {
         Args: { p_user_id: string }
