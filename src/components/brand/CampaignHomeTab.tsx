@@ -90,6 +90,8 @@ interface StatsData {
   viewsDifference: number;
   periodViews: number; // Views generated during the selected period
   allTimeViews: number; // All-time cumulative views
+  expectedPayout: number; // Expected payout from pending views
+  rpmRate: number; // Campaign CPM rate
 }
 
 const formatNumber = (num: number) => {
@@ -123,7 +125,9 @@ export function CampaignHomeTab({
     previousPeriodViews: 0,
     viewsDifference: 0,
     periodViews: 0,
-    allTimeViews: 0
+    allTimeViews: 0,
+    expectedPayout: 0,
+    rpmRate: 0
   });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -159,7 +163,7 @@ export function CampaignHomeTab({
 
         // Build all queries
         const brandQuery = supabase.from('brands').select('collection_name, shortimize_api_key').eq('id', brandId).single();
-        const campaignQuery = supabase.from('campaigns').select('hashtags, shortimize_collection_name').eq('id', campaignId).single();
+        const campaignQuery = supabase.from('campaigns').select('hashtags, shortimize_collection_name, rpm_rate').eq('id', campaignId).single();
         const allTransactionsQuery = supabase.from('wallet_transactions').select('amount, created_at').eq('metadata->>campaign_id', campaignId).eq('type', 'earning');
         
         // Query video_submissions directly for accurate metrics (refreshed every 8 hours from Shortimize)
@@ -191,6 +195,7 @@ export function CampaignHomeTab({
         setBrand(brandData);
         setCampaignHashtags(campaignResult.data?.hashtags || []);
         setCampaignCollectionName(campaignResult.data?.shortimize_collection_name || null);
+        const campaignRpmRate = campaignResult.data?.rpm_rate || 0;
 
         // Process video submissions for stats - get accurate metrics directly from video-level data
         const allSubmissions = (videoSubmissionsResult.data || []) as { 
@@ -382,6 +387,7 @@ export function CampaignHomeTab({
         
         // Update stats with period-specific views
         const periodViewsDifference = periodViews - periodPreviousViews;
+        const expectedPayout = (unpaidViews * campaignRpmRate) / 1000;
         
         setStats({
           totalViews,
@@ -398,7 +404,9 @@ export function CampaignHomeTab({
           previousPeriodViews: periodPreviousViews,
           viewsDifference: periodViewsDifference,
           periodViews,
-          allTimeViews: allTimeTotalViews
+          allTimeViews: allTimeTotalViews,
+          expectedPayout,
+          rpmRate: campaignRpmRate
         });
         // Calculate activity data (submissions and unique creators over time)
         const activityMapWithCreators = new Map<string, { submissions: number; creatorIds: Set<string>; applications: number }>();
@@ -676,11 +684,13 @@ export function CampaignHomeTab({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Effective CPM</p>
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Expected CPM</p>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.effectiveCPM)}</p>
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.expectedPayout)}</p>
             </div>
-            <p className="text-xs text-muted-foreground tracking-[-0.5px]">Cost per 1K views</p>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+              {formatNumber(stats.unpaidViews)} pending views @ {formatCurrency(stats.rpmRate)} CPM
+            </p>
           </div>
         </Card>
 
