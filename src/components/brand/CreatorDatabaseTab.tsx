@@ -1189,41 +1189,35 @@ export function CreatorDatabaseTab({
           </ScrollArea>
 
           {/* Action Buttons */}
-          <div className="p-4 border-t border-border/50 space-y-2">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-xs font-inter tracking-[-0.3px]"
+          <div className="p-4 border-t border-border/50 flex flex-col gap-2">
+            <button 
+              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 handleViewProfile(selectedCreatorPanel);
               }}
             >
-              <ExternalLink className="h-3.5 w-3.5 mr-2" />
               View Profile
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-xs font-inter tracking-[-0.3px]"
+            </button>
+            <button 
+              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/60 text-foreground rounded-lg hover:bg-muted transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSendMessage(selectedCreatorPanel);
               }}
             >
-              <MessageSquare className="h-3.5 w-3.5 mr-2" />
               Send Message
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start text-xs font-inter tracking-[-0.3px] text-destructive hover:text-destructive hover:bg-destructive/10"
+            </button>
+            <button 
+              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={(e) => {
                 e.stopPropagation();
                 initiateRemoveCreator(selectedCreatorPanel);
               }}
               disabled={selectedCreatorPanel.campaigns.length > 0}
             >
-              <Trash2 className="h-3.5 w-3.5 mr-2" />
-              Remove from Database
-            </Button>
+              Remove
+            </button>
           </div>
         </div>
         </>
