@@ -86,6 +86,29 @@ const formatCurrency = (num: number): string => {
     minimumFractionDigits: 2
   }).format(num);
 };
+
+const formatTimeframeLabel = (timeframe: TimeframeOption): string => {
+  const dateRange = getDateRange(timeframe);
+  
+  if (!dateRange) {
+    return "All time";
+  }
+  
+  const { start, end } = dateRange;
+  
+  // If same day, just show one date
+  if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
+    return format(start, 'MMMM d');
+  }
+  
+  // If same month and year, show "Month d - d"
+  if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
+    return `${format(start, 'MMMM d')} - ${format(end, 'd')}`;
+  }
+  
+  // Different months, show full dates
+  return `${format(start, 'MMMM d')} - ${format(end, 'MMMM d')}`;
+};
 export function AllProgramsAnalytics({
   brandId,
   timeframe = "this_month"
@@ -372,6 +395,11 @@ export function AllProgramsAnalytics({
       </div>;
   }
   return <div className="p-4 space-y-4">
+      {/* Date Range Label */}
+      <p className="text-sm text-muted-foreground font-['Geist'] tracking-[-0.3px]">
+        {formatTimeframeLabel(timeframe)}
+      </p>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
