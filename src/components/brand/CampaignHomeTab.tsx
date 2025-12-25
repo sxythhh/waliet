@@ -283,19 +283,7 @@ export function CampaignHomeTab({
         }
         
         // Calculate activity data (submissions and unique creators over time)
-        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string> }>();
-        filteredSubmissions.forEach(sub => {
-          if (sub.submitted_at) {
-            const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
-            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
-            existing.submissions += 1;
-            // We don't have creator_id in filteredSubmissions here, but we can get it from allSubmissions
-            activityMap.set(dateKey, existing);
-          }
-        });
-
-        // Re-process with creator IDs from full video submissions query
-        const activityMapWithCreators = new Map<string, { submissions: number; creatorIds: Set<string> }>();
+        const activityMapWithCreators = new Map<string, { submissions: number; creatorIds: Set<string>; applications: number }>();
         const videoSubmissionsForActivity = await supabase
           .from('video_submissions')
           .select('submitted_at, creator_id')
@@ -315,11 +303,35 @@ export function CampaignHomeTab({
         filteredActivitySubmissions.forEach(sub => {
           if (sub.submitted_at) {
             const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
-            const existing = activityMapWithCreators.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
+            const existing = activityMapWithCreators.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
             existing.submissions += 1;
             if (sub.creator_id) {
               existing.creatorIds.add(sub.creator_id);
             }
+            activityMapWithCreators.set(dateKey, existing);
+          }
+        });
+
+        // Fetch and add applications data from campaign_submissions
+        const { data: applicationsData } = await supabase
+          .from('campaign_submissions')
+          .select('submitted_at, creator_id')
+          .eq('campaign_id', campaignId);
+        
+        let filteredApplications = applicationsData || [];
+        if (dateRange) {
+          filteredApplications = filteredApplications.filter(app => {
+            if (!app.submitted_at) return false;
+            const date = new Date(app.submitted_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+        
+        filteredApplications.forEach(app => {
+          if (app.submitted_at) {
+            const dateKey = format(new Date(app.submitted_at), 'yyyy-MM-dd');
+            const existing = activityMapWithCreators.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
+            existing.applications += 1;
             activityMapWithCreators.set(dateKey, existing);
           }
         });
@@ -330,9 +342,11 @@ export function CampaignHomeTab({
         );
         
         let cumulativeSubmissions = 0;
+        let cumulativeApplications = 0;
         const allCreatorIds = new Set<string>();
         const formattedActivityData: ActivityData[] = sortedActivityDates.map(([dateKey, data]) => {
           cumulativeSubmissions += data.submissions;
+          cumulativeApplications += data.applications;
           data.creatorIds.forEach(id => allCreatorIds.add(id));
           const dateObj = new Date(dateKey);
           return {
@@ -340,8 +354,10 @@ export function CampaignHomeTab({
             datetime: format(dateObj, 'MMM d, yyyy'),
             submissions: cumulativeSubmissions,
             creators: allCreatorIds.size,
+            applications: cumulativeApplications,
             dailySubmissions: data.submissions,
-            dailyCreators: data.creatorIds.size
+            dailyCreators: data.creatorIds.size,
+            dailyApplications: data.applications
           };
         });
         setActivityData(formattedActivityData);

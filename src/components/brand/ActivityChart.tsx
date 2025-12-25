@@ -7,15 +7,18 @@ export interface ActivityData {
   datetime?: string;
   submissions: number;
   creators: number;
+  applications: number;
   dailySubmissions: number;
   dailyCreators: number;
+  dailyApplications: number;
 }
 
-export type ActivityMetricType = 'submissions' | 'creators';
+export type ActivityMetricType = 'submissions' | 'creators' | 'applications';
 
 export const ACTIVITY_METRIC_COLORS: Record<ActivityMetricType, string> = {
   submissions: '#06b6d4', // cyan
-  creators: '#ec4899'     // pink
+  creators: '#ec4899',    // pink
+  applications: '#f59e0b' // amber
 };
 
 interface ActivityChartProps {
@@ -57,7 +60,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
         {/* Metric Toggles */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          {(['submissions', 'creators'] as ActivityMetricType[]).map(metric => (
+          {(['submissions', 'creators', 'applications'] as ActivityMetricType[]).map(metric => (
             <button
               key={metric}
               onClick={() => toggleMetric(metric)}
@@ -105,7 +108,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
               margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
               <defs>
-                {(['submissions', 'creators'] as ActivityMetricType[]).map(metric => (
+                {(['submissions', 'creators', 'applications'] as ActivityMetricType[]).map(metric => (
                   <linearGradient key={metric} id={`gradient-activity-${metric}`} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={ACTIVITY_METRIC_COLORS[metric]} stopOpacity={0.2} />
                     <stop offset="100%" stopColor={ACTIVITY_METRIC_COLORS[metric]} stopOpacity={0} />
