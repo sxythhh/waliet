@@ -411,15 +411,6 @@ export function CreatorContractsTab({
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Creator Email</Label>
-              <Input type="email" placeholder="creator@email.com" value={newContract.creator_email} onChange={e => setNewContract({
-              ...newContract,
-              creator_email: e.target.value
-            })} className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]" />
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Monthly Rate</Label>
