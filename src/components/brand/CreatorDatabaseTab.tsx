@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -169,6 +169,9 @@ export function CreatorDatabaseTab({
   const [creatorToRemove, setCreatorToRemove] = useState<Creator | null>(null);
   const [removingCreator, setRemovingCreator] = useState(false);
   const [kickFromCampaignDialogOpen, setKickFromCampaignDialogOpen] = useState(false);
+
+  // Selected creator panel state
+  const [selectedCreatorPanel, setSelectedCreatorPanel] = useState<Creator | null>(null);
   const [campaignToKickFrom, setCampaignToKickFrom] = useState<{
     creatorId: string;
     campaignId: string;
@@ -933,6 +936,7 @@ export function CreatorDatabaseTab({
           </div>
         </ScrollArea> : <>
           {/* Table */}
+          <div className="flex flex-1 h-full overflow-hidden">
           <ScrollArea className="flex-1 h-full p-[5px]">
             <TooltipProvider delayDuration={100}>
               <Table>
@@ -975,7 +979,6 @@ export function CreatorDatabaseTab({
                       </div>
                     </TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Joined</TableHead>
-                    <TableHead className="w-[40px] h-11"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -983,8 +986,12 @@ export function CreatorDatabaseTab({
                       <TableCell colSpan={8} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
                         {searchQuery || selectedCampaignFilter !== 'all' ? 'No creators match your filters' : 'No creators in your database yet'}
                       </TableCell>
-                    </TableRow> : filteredCreators.map(creator => <TableRow key={creator.id} className="hover:bg-muted/20 border-0 group">
-                        <TableCell className="py-3 w-[32px]">
+                    </TableRow> : filteredCreators.map(creator => <TableRow 
+                      key={creator.id} 
+                      className={`hover:bg-muted/20 border-0 group cursor-pointer ${selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''}`}
+                      onClick={() => setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)}
+                    >
+                        <TableCell className="py-3 w-[32px]" onClick={(e) => e.stopPropagation()}>
                           <Checkbox checked={selectedCreators.has(creator.id)} onCheckedChange={() => toggleCreatorSelection(creator.id)} className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                         </TableCell>
                         <TableCell className="py-3">
@@ -996,7 +1003,7 @@ export function CreatorDatabaseTab({
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate">
+                              <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
                                 {creator.full_name || creator.username}
                               </p>
                               <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
@@ -1045,58 +1052,175 @@ export function CreatorDatabaseTab({
                         <TableCell className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
                           {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
                         </TableCell>
-                        <TableCell className="py-3">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="font-inter tracking-[-0.3px] w-48">
-                              <DropdownMenuItem onClick={() => handleViewProfile(creator)}>
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                View Profile
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleSendMessage(creator)}>
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Send Message
-                              </DropdownMenuItem>
-                              {creator.campaigns.length > 0 && <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>
-                                      <UserX className="h-4 w-4 mr-2" />
-                                      Remove from Campaign
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuSubContent className="font-inter tracking-[-0.3px]">
-                                      {creator.campaigns.map(campaign => <DropdownMenuItem key={campaign.id} onClick={() => {
-                              setCampaignToKickFrom({
-                                creatorId: creator.id,
-                                campaignId: campaign.id,
-                                campaignTitle: campaign.title,
-                                campaignType: campaign.type
-                              });
-                              setKickFromCampaignDialogOpen(true);
-                            }} className="text-amber-600">
-                                          {campaign.title}
-                                        </DropdownMenuItem>)}
-                                    </DropdownMenuSubContent>
-                                  </DropdownMenuSub>
-                                </>}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive" onClick={() => initiateRemoveCreator(creator)} disabled={creator.campaigns.length > 0}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove from Database
-                                {creator.campaigns.length > 0 && <span className="ml-auto text-[10px] text-muted-foreground">({creator.campaigns.length} active)</span>}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
                       </TableRow>)}
                 </TableBody>
               </Table>
             </TooltipProvider>
           </ScrollArea>
+
+      {/* Creator Details Panel */}
+      {selectedCreatorPanel && (
+        <div className="w-80 border-l border-border/50 bg-background flex flex-col shrink-0">
+          <div className="p-4 border-b border-border/50 flex items-center justify-between">
+            <h3 className="font-instrument text-sm font-medium tracking-tight">Creator Details</h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedCreatorPanel(null)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-4 space-y-4">
+              {/* Profile Header */}
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedCreatorPanel.avatar_url || undefined} />
+                  <AvatarFallback className="bg-muted/60 text-sm font-medium">
+                    {selectedCreatorPanel.username?.charAt(0).toUpperCase() || 'C'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
+                    {selectedCreatorPanel.full_name || selectedCreatorPanel.username}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    @{selectedCreatorPanel.username}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Total Views</p>
+                  <p className="text-lg font-medium font-inter tracking-[-0.5px]">{formatNumber(selectedCreatorPanel.total_views)}</p>
+                </div>
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Earnings</p>
+                  <p className="text-lg font-medium font-inter tracking-[-0.5px] text-emerald-500">${selectedCreatorPanel.total_earnings.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3">
+                {selectedCreatorPanel.email && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Email</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.email}</p>
+                  </div>
+                )}
+                {selectedCreatorPanel.country && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Country</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.country}</p>
+                  </div>
+                )}
+                {selectedCreatorPanel.date_joined && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Joined</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Social Accounts */}
+              {selectedCreatorPanel.social_accounts.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-2">Social Accounts</p>
+                  <div className="space-y-2">
+                    {selectedCreatorPanel.social_accounts.map((account, idx) => (
+                      <a 
+                        key={idx}
+                        href={account.account_link || `https://${account.platform}.com/@${account.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
+                        <span className="text-xs font-inter tracking-[-0.5px] flex-1">@{account.username}</span>
+                        {account.follower_count && (
+                          <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">{formatNumber(account.follower_count)}</span>
+                        )}
+                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Campaigns */}
+              {selectedCreatorPanel.campaigns.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-2">Active Campaigns</p>
+                  <div className="space-y-1">
+                    {selectedCreatorPanel.campaigns.map(campaign => (
+                      <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                        <span className="text-xs font-inter tracking-[-0.5px]">{campaign.title}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-[10px] text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCampaignToKickFrom({
+                              creatorId: selectedCreatorPanel.id,
+                              campaignId: campaign.id,
+                              campaignTitle: campaign.title,
+                              campaignType: campaign.type
+                            });
+                            setKickFromCampaignDialogOpen(true);
+                          }}
+                        >
+                          <UserX className="h-3 w-3 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-border/50 space-y-2">
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-xs font-inter tracking-[-0.3px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewProfile(selectedCreatorPanel);
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5 mr-2" />
+              View Profile
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-xs font-inter tracking-[-0.3px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSendMessage(selectedCreatorPanel);
+              }}
+            >
+              <MessageSquare className="h-3.5 w-3.5 mr-2" />
+              Send Message
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-xs font-inter tracking-[-0.3px] text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                initiateRemoveCreator(selectedCreatorPanel);
+              }}
+              disabled={selectedCreatorPanel.campaigns.length > 0}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-2" />
+              Remove from Database
+            </Button>
+          </div>
+        </div>
+      )}
+      </div>
 
       {/* Bulk Actions Bar */}
       {selectedCreators.size > 0 && <div className="border-t border-border/50 px-4 py-3 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm flex items-center justify-between">
