@@ -874,29 +874,15 @@ export function CreatorDatabaseTab({
   return <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border py-[5px]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-2">
-            <Button variant="default" size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4" />
-              Add Creators
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
-          </div>
-        </div>
-
-        {/* Search & Filters - Single Row */}
-        <div className="mt-4 flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-[280px]">
+        {/* Search, Filters & Actions - Single Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative min-w-[180px] max-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" />
+            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" />
           </div>
 
           <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
-            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[130px]">
+            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[100px]">
               <SelectValue placeholder="Campaign" />
             </SelectTrigger>
             <SelectContent>
@@ -906,7 +892,7 @@ export function CreatorDatabaseTab({
           </Select>
 
           <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[110px]">
+            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[90px]">
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
             <SelectContent>
@@ -918,7 +904,7 @@ export function CreatorDatabaseTab({
           </Select>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[100px]">
+            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[80px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -929,7 +915,7 @@ export function CreatorDatabaseTab({
           </Select>
 
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[100px]">
+            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[80px]">
               <SelectValue placeholder="Source" />
             </SelectTrigger>
             <SelectContent>
@@ -947,9 +933,20 @@ export function CreatorDatabaseTab({
           setStatusFilter('all');
           setSourceFilter('all');
           setSearchQuery('');
-        }} className="h-9 px-3 font-inter tracking-[-0.5px] text-sm text-muted-foreground hover:text-foreground transition-colors">
+        }} className="h-8 px-2.5 font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
               Clear
             </button>}
+
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Button size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
+              <Plus className="h-3.5 w-3.5" />
+              Add Creators
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs">
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </Button>
+          </div>
         </div>
       </div>
 
