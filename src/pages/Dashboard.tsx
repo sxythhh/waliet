@@ -19,6 +19,9 @@ import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { BlueprintsTab } from "@/components/brand/BlueprintsTab";
 import { BlueprintEditor } from "@/components/brand/BlueprintEditor";
 import { CreatorsTab } from "@/components/brand/CreatorsTab";
+import { CreatorDatabaseTab } from "@/components/brand/CreatorDatabaseTab";
+import { CreatorContractsTab } from "@/components/brand/CreatorContractsTab";
+import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 
@@ -50,6 +53,7 @@ export default function Dashboard() {
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBoostId = searchParams.get("boost");
   const selectedBlueprintId = searchParams.get("blueprint");
+  const currentSubtab = searchParams.get("subtab") || "messages";
 
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
@@ -225,7 +229,19 @@ export default function Dashboard() {
         case "scope":
           return <div className="p-8 text-center text-muted-foreground">Scope feature has been removed</div>;
         case "creators":
-          return <CreatorsTab brandId={currentBrand.id} />;
+          // Handle creator subtabs
+          switch (currentSubtab) {
+            case "messages":
+              return <CreatorsTab brandId={currentBrand.id} />;
+            case "database":
+              return <CreatorDatabaseTab brandId={currentBrand.id} />;
+            case "contracts":
+              return <CreatorContractsTab brandId={currentBrand.id} />;
+            case "leaderboard":
+              return <CreatorLeaderboardTab brandId={currentBrand.id} />;
+            default:
+              return <CreatorsTab brandId={currentBrand.id} />;
+          }
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
         case "profile":

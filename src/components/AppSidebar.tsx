@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
@@ -63,7 +63,14 @@ interface BrandMembership {
     brand_color: string | null;
   };
 }
-const creatorMenuItems = [{
+interface MenuItem {
+  title: string;
+  tab: string;
+  icon: any;
+  subItems?: { title: string; subtab: string; icon: any }[];
+}
+
+const creatorMenuItems: MenuItem[] = [{
   title: "Home",
   tab: "campaigns",
   icon: null as any
@@ -84,7 +91,7 @@ const creatorMenuItems = [{
   tab: "profile",
   icon: CircleUser
 }];
-const brandMenuItems = [{
+const brandMenuItems: MenuItem[] = [{
   title: "Home",
   tab: "campaigns",
   icon: null as any
@@ -99,7 +106,13 @@ const brandMenuItems = [{
 }, {
   title: "Creators",
   tab: "creators",
-  icon: null as any
+  icon: null as any,
+  subItems: [
+    { title: "Messages", subtab: "messages", icon: MessageSquare },
+    { title: "Database", subtab: "database", icon: Database },
+    { title: "Contracts", subtab: "contracts", icon: FileText },
+    { title: "Leaderboard", subtab: "leaderboard", icon: Trophy },
+  ]
 }, {
   title: "Settings",
   tab: "profile",
@@ -140,7 +153,9 @@ export function AppSidebar() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [currentBrandMemberCount, setCurrentBrandMemberCount] = useState<number>(0);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
+  const [creatorsExpanded, setCreatorsExpanded] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
+  const currentSubtab = searchParams.get("subtab") || "messages";
 
   // Get current brand ID for subscription dialog
   const currentBrandId = !isCreatorMode && workspace ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '' : '';
@@ -237,7 +252,7 @@ export function AppSidebar() {
   const getInitial = () => {
     return displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
   };
-  const handleTabClick = (tab: string) => {
+  const handleTabClick = (tab: string, subtab?: string) => {
     // If clicking scope without an active subscription, show upgrade popup
     if (tab === "scope" && !isCreatorMode && currentBrandSubscriptionStatus !== "active") {
       setSubscriptionGateOpen(true);
@@ -246,6 +261,21 @@ export function AppSidebar() {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", tab);
     // Clear blueprint, campaign, and boost params when switching tabs
+    newParams.delete("blueprint");
+    newParams.delete("campaign");
+    newParams.delete("boost");
+    if (subtab) {
+      newParams.set("subtab", subtab);
+    } else {
+      newParams.delete("subtab");
+    }
+    setSearchParams(newParams);
+  };
+
+  const handleSubtabClick = (subtab: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "creators");
+    newParams.set("subtab", subtab);
     newParams.delete("blueprint");
     newParams.delete("campaign");
     newParams.delete("boost");
@@ -563,6 +593,61 @@ export function AppSidebar() {
           <div className="flex flex-col gap-1">
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
+            const hasSubItems = item.subItems && item.subItems.length > 0;
+            
+            // For items with subitems (like Creators), render expandable menu
+            if (hasSubItems) {
+              return (
+                <div key={item.title}>
+                  <button 
+                    onClick={() => {
+                      if (isCollapsed) {
+                        handleTabClick(item.tab, "messages");
+                      } else {
+                        setCreatorsExpanded(!creatorsExpanded);
+                        if (!creatorsExpanded) {
+                          handleTabClick(item.tab, currentSubtab || "messages");
+                        }
+                      }
+                    }} 
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-[#0e0e0e] ${isActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`} 
+                    title={isCollapsed ? item.title : undefined}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-[24px] w-[24px]">
+                        <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                        <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                      </div>
+                      {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
+                    </div>
+                    {!isCollapsed && (
+                      <ChevronDown className={`w-4 h-4 transition-transform ${creatorsExpanded ? 'rotate-180' : ''}`} />
+                    )}
+                  </button>
+                  
+                  {/* Subitems */}
+                  {!isCollapsed && creatorsExpanded && (
+                    <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-[#1f1f1f] pl-3">
+                      {item.subItems.map((subItem: { title: string; subtab: string; icon: any }) => {
+                        const isSubActive = isActive && currentSubtab === subItem.subtab;
+                        const SubIcon = subItem.icon;
+                        return (
+                          <button
+                            key={subItem.subtab}
+                            onClick={() => handleSubtabClick(subItem.subtab)}
+                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-[#0e0e0e] ${isSubActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`}
+                          >
+                            <SubIcon className="h-4 w-4" />
+                            <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px]">{subItem.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-[#0e0e0e] ${isActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -582,9 +667,6 @@ export function AppSidebar() {
                     </div> : item.tab === "scope" ? <div className="relative h-[24px] w-[24px]">
                       <img src={scopeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={scopeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                    </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
-                      <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "referrals" ? <div className="relative h-[24px] w-[24px]">
                       <img src={referralsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={referralsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
