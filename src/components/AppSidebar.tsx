@@ -1,4 +1,5 @@
 import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
+import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
@@ -502,7 +503,7 @@ export function AppSidebar() {
                         </div>}
                     <p className="font-medium text-foreground truncate max-w-[160px] tracking-[-0.5px] text-sm">{isCreatorMode ? 'Switch to workspace' : getWorkspaceDisplayName()}</p>
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${workspaceOpen ? 'rotate-180' : ''}`} />
+                  <img src={unfoldMoreIcon} alt="" className="w-4 h-4" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
