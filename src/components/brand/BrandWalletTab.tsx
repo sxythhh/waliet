@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight } from "lucide-react";
+import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
@@ -330,28 +336,39 @@ export function BrandWalletTab({
       </Card>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
-        <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+      <div className="flex gap-2">
+        <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
           <WalletIcon className="w-4 h-4 mr-1.5" />
           Withdraw
         </Button>
-        <Button onClick={() => setAllocateOpen(true)} disabled={(walletData?.virality_balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-          fontFamily: 'Inter, sans-serif'
-        }}>
-          <ArrowUpRight className="w-4 h-4 mr-1.5" />
-          Fund Campaign
-        </Button>
-        {isAdmin && (
-          <Button onClick={() => setTransferOpen(true)} disabled={(walletData?.virality_balance || 0) <= 0} variant="ghost" className="justify-center sm:justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-            fontFamily: 'Inter, sans-serif'
-          }}>
-            <ArrowRight className="w-4 h-4 mr-1.5" />
-            Transfer to Withdraw
-          </Button>
-        )}
-        <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px]" style={{
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              <ArrowUpRight className="w-4 h-4 mr-1.5" />
+              Transfer
+              <ChevronDown className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => setAllocateOpen(true)}>
+              <ArrowUpRight className="w-4 h-4 mr-2" />
+              Fund Campaign
+            </DropdownMenuItem>
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => setTransferOpen(true)}>
+                <ArrowRight className="w-4 h-4 mr-2" />
+                Transfer to Withdraw
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
           fontFamily: 'Inter, sans-serif'
         }}>
           <Plus className="w-4 h-4 mr-1.5" />
