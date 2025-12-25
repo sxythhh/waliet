@@ -109,7 +109,11 @@ export function PerformanceChart({
         </div>
       </div>
 
-      <div className="h-56 sm:h-72">
+      <div className="h-56 sm:h-72 relative">
+        {/* Watermark */}
+        <span className="absolute top-2 right-3 font-clash font-bold text-white/10 text-sm tracking-[-0.5px] pointer-events-none z-10">
+          VIRALITY
+        </span>
         {metricsData.length > 0 ? <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={metricsData} margin={{
           top: 10,
