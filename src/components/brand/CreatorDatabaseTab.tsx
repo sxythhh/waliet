@@ -33,11 +33,20 @@ import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
 interface Creator {
   id: string;
+  relationship_id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
   country: string | null;
+  is_external: boolean;
+  external_name: string | null;
+  external_email: string | null;
+  external_platform: string | null;
+  external_handle: string | null;
+  source_type: string;
+  source_campaign_title: string | null;
+  first_interaction_at: string | null;
   social_accounts: {
     platform: string;
     username: string;
@@ -134,6 +143,39 @@ const getMinFollowers = (range: string): number => {
       return 1000000;
     default:
       return 0;
+  }
+};
+
+const getSourceLabel = (sourceType: string): string => {
+  switch (sourceType) {
+    case 'campaign_application':
+      return 'Applied';
+    case 'boost_application':
+      return 'Applied';
+    case 'video_submission':
+      return 'Submitted';
+    case 'manual_add':
+      return 'Added';
+    case 'import':
+      return 'Imported';
+    default:
+      return sourceType;
+  }
+};
+
+const getSourceColor = (sourceType: string): string => {
+  switch (sourceType) {
+    case 'campaign_application':
+    case 'boost_application':
+      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+    case 'video_submission':
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+    case 'manual_add':
+      return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+    case 'import':
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+    default:
+      return 'bg-muted/40 text-muted-foreground';
   }
 };
 export function CreatorDatabaseTab({
@@ -307,63 +349,87 @@ export function CreatorDatabaseTab({
       const allCampaigns: Campaign[] = [...(campaignsResult.data || []), ...(boostsResult.data || [])];
       setCampaigns(allCampaigns);
 
-      // Get all video submissions for this brand (include all statuses to show creators who have submitted)
-      const {
-        data: submissions
-      } = await supabase.from('video_submissions').select('creator_id, views, source_type, source_id').eq('brand_id', brandId);
+      // Fetch all creator relationships for this brand
+      const { data: relationships, error: relError } = await supabase
+        .from('brand_creator_relationships')
+        .select('*')
+        .eq('brand_id', brandId);
 
-      // Get all bounty applications for this brand
-      const campaignIds = allCampaigns.map(c => c.id);
-      const {
-        data: applications
-      } = campaignIds.length > 0 
-        ? await supabase.from('bounty_applications').select('user_id, bounty_campaign_id, status').in('bounty_campaign_id', campaignIds)
-        : { data: [] };
+      if (relError) throw relError;
 
-      // Get all wallet transactions for this brand's campaigns
-      const {
-        data: transactions
-      } = await supabase.from('wallet_transactions').select('user_id, amount, metadata').eq('type', 'earning');
-
-      // Get unique creator IDs
-      const creatorIds = new Set<string>();
-      submissions?.forEach(s => creatorIds.add(s.creator_id));
-      applications?.filter(a => a.status === 'accepted').forEach(a => creatorIds.add(a.user_id));
-      if (creatorIds.size === 0) {
+      if (!relationships || relationships.length === 0) {
         setCreators([]);
         setLoading(false);
         return;
       }
 
-      // Fetch creator profiles
-      const {
-        data: profiles
-      } = await supabase.from('profiles').select('id, username, full_name, avatar_url, email, country, created_at').in('id', Array.from(creatorIds));
+      // Get platform creator IDs (non-external)
+      const platformCreatorIds = relationships
+        .filter(r => r.user_id)
+        .map(r => r.user_id as string);
 
-      // Fetch social accounts
-      const {
-        data: socialAccounts
-      } = await supabase.from('social_accounts').select('user_id, platform, username, account_link, follower_count').in('user_id', Array.from(creatorIds));
+      // Fetch profiles for platform creators
+      const { data: profiles } = platformCreatorIds.length > 0
+        ? await supabase.from('profiles')
+            .select('id, username, full_name, avatar_url, email, country, created_at')
+            .in('id', platformCreatorIds)
+        : { data: [] };
 
-      // Build creator objects
+      // Fetch social accounts for platform creators
+      const { data: socialAccounts } = platformCreatorIds.length > 0
+        ? await supabase.from('social_accounts')
+            .select('user_id, platform, username, account_link, follower_count')
+            .in('user_id', platformCreatorIds)
+        : { data: [] };
+
+      // Get video submissions for view counts
+      const { data: submissions } = await supabase
+        .from('video_submissions')
+        .select('creator_id, views, source_type, source_id')
+        .eq('brand_id', brandId);
+
+      // Get wallet transactions for earnings
+      const { data: transactions } = await supabase
+        .from('wallet_transactions')
+        .select('user_id, amount, metadata')
+        .eq('type', 'earning');
+
+      // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
-      profiles?.forEach(profile => {
-        creatorsMap.set(profile.id, {
-          id: profile.id,
-          username: profile.username,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-          email: profile.email,
-          country: profile.country,
+      
+      relationships.forEach(rel => {
+        const profile = profiles?.find(p => p.id === rel.user_id);
+        const isExternal = !rel.user_id;
+        const sourceCampaign = allCampaigns.find(c => c.id === rel.source_id);
+        
+        // Use relationship id as key for external creators, user_id for platform creators
+        const key = rel.user_id || rel.id;
+        
+        creatorsMap.set(key, {
+          id: rel.user_id || rel.id,
+          relationship_id: rel.id,
+          username: profile?.username || rel.external_handle || '',
+          full_name: profile?.full_name || rel.external_name || null,
+          avatar_url: profile?.avatar_url || null,
+          email: profile?.email || rel.external_email || null,
+          country: profile?.country || null,
+          is_external: isExternal,
+          external_name: rel.external_name,
+          external_email: rel.external_email,
+          external_platform: rel.external_platform,
+          external_handle: rel.external_handle,
+          source_type: rel.source_type,
+          source_campaign_title: sourceCampaign?.title || null,
+          first_interaction_at: rel.first_interaction_at,
           social_accounts: [],
           total_views: 0,
           total_earnings: 0,
-          date_joined: profile.created_at,
+          date_joined: profile?.created_at || rel.created_at,
           campaigns: []
         });
       });
 
-      // Add social accounts
+      // Add social accounts for platform creators
       socialAccounts?.forEach(account => {
         const creator = creatorsMap.get(account.user_id);
         if (creator) {
@@ -376,7 +442,7 @@ export function CreatorDatabaseTab({
         }
       });
 
-      // Add views from submissions
+      // Add views and campaign associations from submissions
       submissions?.forEach(submission => {
         const creator = creatorsMap.get(submission.creator_id);
         if (creator) {
@@ -412,6 +478,7 @@ export function CreatorDatabaseTab({
           }
         }
       });
+
       setCreators(Array.from(creatorsMap.values()));
     } catch (error) {
       console.error('Error fetching creators:', error);
@@ -563,7 +630,22 @@ export function CreatorDatabaseTab({
     }
   };
   const handleViewProfile = (creator: Creator) => {
-    window.open(`/@${creator.username}`, '_blank');
+    if (creator.is_external) {
+      // For external creators, try to open their social profile
+      if (creator.external_handle && creator.external_platform) {
+        const platformUrls: Record<string, string> = {
+          tiktok: `https://tiktok.com/@${creator.external_handle}`,
+          instagram: `https://instagram.com/${creator.external_handle}`,
+          youtube: `https://youtube.com/@${creator.external_handle}`,
+          x: `https://x.com/${creator.external_handle}`,
+        };
+        window.open(platformUrls[creator.external_platform] || `https://${creator.external_platform}.com/@${creator.external_handle}`, '_blank');
+      } else {
+        toast.info('No profile link available for this external creator');
+      }
+    } else {
+      window.open(`/@${creator.username}`, '_blank');
+    }
   };
   const handleSendMessage = async (creator: Creator) => {
     try {
@@ -946,6 +1028,7 @@ export function CreatorDatabaseTab({
                       <Checkbox checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0} onCheckedChange={toggleSelectAll} className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]" />
                     </TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Source</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Campaigns</TableHead>
                     <TableHead 
@@ -999,21 +1082,45 @@ export function CreatorDatabaseTab({
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={creator.avatar_url || undefined} />
                               <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
-                                {creator.username?.charAt(0).toUpperCase() || 'C'}
+                                {(creator.full_name || creator.username || creator.external_name)?.charAt(0).toUpperCase() || 'C'}
                               </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                              <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
-                                {creator.full_name || creator.username}
-                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
+                                  {creator.full_name || creator.username || creator.external_name}
+                                </p>
+                                {creator.is_external && (
+                                  <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                                    External
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                @{creator.username}
+                                {creator.is_external 
+                                  ? (creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle')
+                                  : `@${creator.username}`
+                                }
                               </p>
                             </div>
                             {creator.country && <span className="text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded font-inter tracking-[-0.5px]">
                                 {creator.country}
                               </span>}
                           </div>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(creator.source_type)}`}>
+                                {getSourceLabel(creator.source_type)}
+                              </span>
+                            </TooltipTrigger>
+                            {creator.source_campaign_title && (
+                              <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                <p>From: {creator.source_campaign_title}</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
                         </TableCell>
                         <TableCell className="py-3">
                           <div className="flex items-center gap-1">
@@ -1081,15 +1188,25 @@ export function CreatorDatabaseTab({
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={selectedCreatorPanel.avatar_url || undefined} />
                   <AvatarFallback className="bg-muted/60 text-sm font-medium">
-                    {selectedCreatorPanel.username?.charAt(0).toUpperCase() || 'C'}
+                    {(selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name)?.charAt(0).toUpperCase() || 'C'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
-                    {selectedCreatorPanel.full_name || selectedCreatorPanel.username}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
+                      {selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name}
+                    </p>
+                    {selectedCreatorPanel.is_external && (
+                      <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                        External
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    @{selectedCreatorPanel.username}
+                    {selectedCreatorPanel.is_external 
+                      ? (selectedCreatorPanel.external_handle ? `@${selectedCreatorPanel.external_handle}` : selectedCreatorPanel.external_email || 'No handle')
+                      : `@${selectedCreatorPanel.username}`
+                    }
                   </p>
                 </div>
               </div>
@@ -1108,6 +1225,26 @@ export function CreatorDatabaseTab({
 
               {/* Details */}
               <div className="space-y-3">
+                {/* Source */}
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Source</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(selectedCreatorPanel.source_type)}`}>
+                      {getSourceLabel(selectedCreatorPanel.source_type)}
+                    </span>
+                    {selectedCreatorPanel.source_campaign_title && (
+                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                        {selectedCreatorPanel.source_campaign_title}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {selectedCreatorPanel.first_interaction_at && (
+                  <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">First Interaction</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.first_interaction_at), 'MMM d, yyyy')}</p>
+                  </div>
+                )}
                 {selectedCreatorPanel.email && (
                   <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Email</p>
@@ -1122,7 +1259,7 @@ export function CreatorDatabaseTab({
                 )}
                 {selectedCreatorPanel.date_joined && (
                   <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Joined</p>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Joined Platform</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
                   </div>
                 )}
