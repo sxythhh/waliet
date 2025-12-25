@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths } from "date-fns";
+import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, subWeeks, subMonths, subDays } from "date-fns";
 import { toast } from "sonner";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManualMetricsDialog } from "./ManualMetricsDialog";
@@ -43,6 +43,37 @@ const getDateRange = (timeframe: TimeframeOption): { start: Date; end: Date } | 
   }
 };
 
+// Get the previous period date range for comparison
+const getPreviousPeriodRange = (timeframe: TimeframeOption): { start: Date; end: Date } | null => {
+  const now = new Date();
+  switch (timeframe) {
+    case "all_time":
+      return null;
+    case "today": {
+      const yesterday = subDays(now, 1);
+      return { start: startOfDay(yesterday), end: endOfDay(yesterday) };
+    }
+    case "this_week": {
+      const lastWeek = subWeeks(now, 1);
+      return { start: startOfWeek(lastWeek, { weekStartsOn: 1 }), end: endOfWeek(lastWeek, { weekStartsOn: 1 }) };
+    }
+    case "last_week": {
+      const twoWeeksAgo = subWeeks(now, 2);
+      return { start: startOfWeek(twoWeeksAgo, { weekStartsOn: 1 }), end: endOfWeek(twoWeeksAgo, { weekStartsOn: 1 }) };
+    }
+    case "this_month": {
+      const lastMonth = subMonths(now, 1);
+      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+    }
+    case "last_month": {
+      const twoMonthsAgo = subMonths(now, 2);
+      return { start: startOfMonth(twoMonthsAgo), end: endOfMonth(twoMonthsAgo) };
+    }
+    default:
+      return null;
+  }
+};
+
 interface StatsData {
   totalViews: number;
   totalPayouts: number;
@@ -55,6 +86,8 @@ interface StatsData {
   approvedSubmissions: number;
   paidViews: number;
   unpaidViews: number;
+  previousPeriodViews: number;
+  viewsDifference: number;
 }
 
 const formatNumber = (num: number) => {
@@ -84,7 +117,9 @@ export function CampaignHomeTab({
     totalSubmissions: 0,
     approvedSubmissions: 0,
     paidViews: 0,
-    unpaidViews: 0
+    unpaidViews: 0,
+    previousPeriodViews: 0,
+    viewsDifference: 0
   });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -238,6 +273,21 @@ export function CampaignHomeTab({
         const totalPaidViews = paidSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
         const unpaidViews = unpaidSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
         
+        // Calculate previous period views for comparison
+        const previousPeriodRange = getPreviousPeriodRange(timeframe);
+        let previousPeriodViews = 0;
+        if (previousPeriodRange) {
+          const previousPeriodSubmissions = allSubmissions.filter(s => {
+            if (!s.submitted_at || s.status !== 'approved') return false;
+            const date = new Date(s.submitted_at);
+            return date >= previousPeriodRange.start && date <= previousPeriodRange.end;
+          });
+          previousPeriodViews = previousPeriodSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
+        }
+        
+        const currentViews = (totalPaidViews + unpaidViews) > 0 ? (totalPaidViews + unpaidViews) : totalViews;
+        const viewsDifference = currentViews - previousPeriodViews;
+        
         setStats({
           totalViews,
           totalPayouts,
@@ -249,7 +299,9 @@ export function CampaignHomeTab({
           totalSubmissions: totalSubmissionsCount,
           approvedSubmissions: approvedSubmissionsCount,
           paidViews: totalPaidViews,
-          unpaidViews: unpaidViews
+          unpaidViews: unpaidViews,
+          previousPeriodViews,
+          viewsDifference
         });
 
         // Process chart metrics
@@ -495,7 +547,14 @@ export function CampaignHomeTab({
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber((stats.paidViews + stats.unpaidViews) > 0 ? (stats.paidViews + stats.unpaidViews) : (metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews))}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber((stats.paidViews + stats.unpaidViews) > 0 ? (stats.paidViews + stats.unpaidViews) : (metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews))}</p>
+                {stats.viewsDifference !== 0 && timeframe !== 'all_time' && (
+                  <span className={`text-xs font-medium tracking-[-0.5px] ${stats.viewsDifference > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {stats.viewsDifference > 0 ? '+' : ''}{formatNumber(stats.viewsDifference)}
+                  </span>
+                )}
+              </div>
             </div>
             {/* Paid vs Unpaid Progress Bar */}
             {(stats.paidViews > 0 || stats.unpaidViews > 0) && (() => {
