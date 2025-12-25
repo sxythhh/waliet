@@ -1058,9 +1058,16 @@ export function CreatorDatabaseTab({
             </TooltipProvider>
           </ScrollArea>
 
-      {/* Creator Details Panel */}
+      {/* Creator Details Panel - Floating Overlay */}
       {selectedCreatorPanel && (
-        <div className="w-80 border-l border-border/50 bg-background flex flex-col shrink-0">
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 z-40 animate-fade-in"
+            onClick={() => setSelectedCreatorPanel(null)}
+          />
+          {/* Panel */}
+          <div className="fixed top-0 right-0 h-full w-80 border-l border-border/50 bg-background flex flex-col z-50 shadow-2xl animate-slide-in-right">
           <div className="p-4 border-b border-border/50 flex items-center justify-between">
             <h3 className="font-instrument text-sm font-medium tracking-tight">Creator Details</h3>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedCreatorPanel(null)}>
@@ -1219,6 +1226,7 @@ export function CreatorDatabaseTab({
             </Button>
           </div>
         </div>
+        </>
       )}
       </div>
 
