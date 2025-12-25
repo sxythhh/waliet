@@ -1035,8 +1035,8 @@ export function CreatorDatabaseTab({
           </div>
         </ScrollArea> : <>
           {/* Table */}
-          <div className="flex flex-1 h-full overflow-hidden">
-          <ScrollArea className="flex-1 h-full p-[5px]">
+          <div className="flex flex-col flex-1 h-full overflow-hidden">
+          <ScrollArea className="flex-1 p-[5px]">
             <TooltipProvider delayDuration={100}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
@@ -1175,7 +1175,7 @@ export function CreatorDatabaseTab({
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 <span>Show</span>
                 <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
-                  <SelectTrigger className="h-7 w-[70px] text-xs">
+                  <SelectTrigger className="h-7 w-[70px] text-xs border-0 bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1232,6 +1232,7 @@ export function CreatorDatabaseTab({
               </div>
             </div>
           )}
+          </div>
 
       {/* Creator Details Panel - Floating Overlay */}
       {selectedCreatorPanel && (
@@ -1427,7 +1428,6 @@ export function CreatorDatabaseTab({
         </div>
         </>
       )}
-      </div>
 
       {/* Bulk Actions Bar */}
       {selectedCreators.size > 0 && <div className="border-t border-border/50 px-4 py-3 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm flex items-center justify-between">
