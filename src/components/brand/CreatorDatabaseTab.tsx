@@ -201,7 +201,12 @@ export function CreatorDatabaseTab({
   const [addCreatorsMode, setAddCreatorsMode] = useState<'search' | 'import' | 'manual'>('search');
   const [importData, setImportData] = useState("");
   const [importLoading, setImportLoading] = useState(false);
-  const [manualCreator, setManualCreator] = useState({ username: '', name: '', email: '', phone: '' });
+  const [manualCreator, setManualCreator] = useState({
+    username: '',
+    name: '',
+    email: '',
+    phone: ''
+  });
   const [manualAddLoading, setManualAddLoading] = useState(false);
   const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
   const [selectedCampaignToAdd, setSelectedCampaignToAdd] = useState<string>("");
@@ -388,7 +393,9 @@ export function CreatorDatabaseTab({
       // Get earnings using the database function for accurate brand-specific calculation
       const {
         data: earnings
-      } = await supabase.rpc('get_brand_creator_earnings', { p_brand_id: brandId });
+      } = await supabase.rpc('get_brand_creator_earnings', {
+        p_brand_id: brandId
+      });
 
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
@@ -456,7 +463,10 @@ export function CreatorDatabaseTab({
       });
 
       // Add earnings from the database function results
-      earnings?.forEach((earning: { user_id: string; total_earnings: number }) => {
+      earnings?.forEach((earning: {
+        user_id: string;
+        total_earnings: number;
+      }) => {
         const creator = creatorsMap.get(earning.user_id);
         if (creator) {
           creator.total_earnings = Number(earning.total_earnings) || 0;
@@ -776,12 +786,7 @@ export function CreatorDatabaseTab({
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={() => setAddCreatorsDialogOpen(true)} 
-              className="gap-2 bg-primary hover:bg-primary/90"
-            >
+            <Button variant="default" size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
               <Plus className="h-4 w-4" />
               Add Creators
             </Button>
@@ -966,32 +971,20 @@ export function CreatorDatabaseTab({
           <div className="p-4 border-b border-border/50 flex items-center justify-between">
             <h3 className="font-instrument text-sm font-medium tracking-tight">Creator Details</h3>
             <div className="flex items-center gap-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-7 w-7" 
-                onClick={() => {
-                  const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
-                  if (currentIndex > 0) {
-                    setSelectedCreatorPanel(filteredCreators[currentIndex - 1]);
-                  }
-                }}
-                disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0}
-              >
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
+              if (currentIndex > 0) {
+                setSelectedCreatorPanel(filteredCreators[currentIndex - 1]);
+              }
+            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0}>
                 <ChevronUp className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-7 w-7" 
-                onClick={() => {
-                  const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
-                  if (currentIndex < filteredCreators.length - 1) {
-                    setSelectedCreatorPanel(filteredCreators[currentIndex + 1]);
-                  }
-                }}
-                disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1}
-              >
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
+              if (currentIndex < filteredCreators.length - 1) {
+                setSelectedCreatorPanel(filteredCreators[currentIndex + 1]);
+              }
+            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1}>
                 <ChevronDown className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedCreatorPanel(null)}>
@@ -1088,15 +1081,15 @@ export function CreatorDatabaseTab({
                     {selectedCreatorPanel.campaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                         <span className="text-xs font-inter tracking-[-0.5px]">{campaign.title}</span>
                         <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={e => {
-                      e.stopPropagation();
-                      setCampaignToKickFrom({
-                        creatorId: selectedCreatorPanel.id,
-                        campaignId: campaign.id,
-                        campaignTitle: campaign.title,
-                        campaignType: campaign.type
-                      });
-                      setKickFromCampaignDialogOpen(true);
-                    }}>
+                    e.stopPropagation();
+                    setCampaignToKickFrom({
+                      creatorId: selectedCreatorPanel.id,
+                      campaignId: campaign.id,
+                      campaignTitle: campaign.title,
+                      campaignType: campaign.type
+                    });
+                    setKickFromCampaignDialogOpen(true);
+                  }}>
                           <UserX className="h-3 w-3 mr-1" />
                           Remove
                         </Button>
@@ -1109,21 +1102,21 @@ export function CreatorDatabaseTab({
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onClick={e => {
-              e.stopPropagation();
-              handleViewProfile(selectedCreatorPanel);
-            }}>
+            e.stopPropagation();
+            handleViewProfile(selectedCreatorPanel);
+          }}>
               View Profile
             </button>
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/60 text-foreground rounded-lg hover:bg-muted transition-colors" onClick={e => {
-              e.stopPropagation();
-              handleSendMessage(selectedCreatorPanel);
-            }}>
+            e.stopPropagation();
+            handleSendMessage(selectedCreatorPanel);
+          }}>
               Send Message
             </button>
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
-              e.stopPropagation();
-              initiateRemoveCreator(selectedCreatorPanel);
-            }} disabled={selectedCreatorPanel.campaigns.length > 0}>
+            e.stopPropagation();
+            initiateRemoveCreator(selectedCreatorPanel);
+          }} disabled={selectedCreatorPanel.campaigns.length > 0}>
               Remove
             </button>
           </div>
@@ -1198,45 +1191,19 @@ export function CreatorDatabaseTab({
       <Dialog open={addCreatorsDialogOpen} onOpenChange={setAddCreatorsDialogOpen}>
         <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden bg-background">
           {/* Header */}
-          <div className="px-6 pt-6 pb-4">
-            <DialogTitle className="font-instrument tracking-tight text-xl font-semibold">Add Creators</DialogTitle>
-            <DialogDescription className="font-inter tracking-[-0.3px] text-muted-foreground mt-1">
-              Search, add manually, or import from CSV
-            </DialogDescription>
-          </div>
           
-          <Tabs value={addCreatorsMode} onValueChange={(v) => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col">
+          
+          <Tabs value={addCreatorsMode} onValueChange={v => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col">
             {/* Tab Pills */}
             <div className="px-6">
               <div className="flex gap-1 p-1 bg-muted/40 rounded-lg w-fit">
-                <button
-                  onClick={() => setAddCreatorsMode('search')}
-                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
-                    addCreatorsMode === 'search' 
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
+                <button onClick={() => setAddCreatorsMode('search')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'search' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                   Find
                 </button>
-                <button
-                  onClick={() => setAddCreatorsMode('manual')}
-                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
-                    addCreatorsMode === 'manual' 
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
+                <button onClick={() => setAddCreatorsMode('manual')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'manual' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                   Manual
                 </button>
-                <button
-                  onClick={() => setAddCreatorsMode('import')}
-                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
-                    addCreatorsMode === 'import' 
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
+                <button onClick={() => setAddCreatorsMode('import')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'import' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
                   Import
                 </button>
               </div>
@@ -1248,12 +1215,7 @@ export function CreatorDatabaseTab({
                 {/* Search Input */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input 
-                    placeholder="Search creators..." 
-                    value={discoverSearch} 
-                    onChange={e => setDiscoverSearch(e.target.value)} 
-                    className="pl-10 h-11 bg-muted/30 border-0 font-inter text-sm focus-visible:ring-1 focus-visible:ring-primary/20" 
-                  />
+                  <Input placeholder="Search creators..." value={discoverSearch} onChange={e => setDiscoverSearch(e.target.value)} className="pl-10 h-11 bg-muted/30 border-0 font-inter text-sm focus-visible:ring-1 focus-visible:ring-primary/20" />
                 </div>
                 
                 {/* Filters Row */}
@@ -1288,37 +1250,29 @@ export function CreatorDatabaseTab({
                 
                 {/* Results */}
                 <ScrollArea className="h-[300px]">
-                  {hasActivePlan === false ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                  {hasActivePlan === false ? <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="w-14 h-14 rounded-full bg-muted/60 flex items-center justify-center mb-4">
                         <img src={vpnKeyIcon} alt="Key" className="h-6 w-6 opacity-60" />
                       </div>
                       <h3 className="font-semibold text-sm mb-1 font-inter">Upgrade to Access</h3>
                       <p className="text-xs text-muted-foreground mb-5 font-inter">Subscribe to browse creators</p>
-                      <Button size="sm" onClick={() => { setAddCreatorsDialogOpen(false); setSubscriptionGateOpen(true); }}>
+                      <Button size="sm" onClick={() => {
+                    setAddCreatorsDialogOpen(false);
+                    setSubscriptionGateOpen(true);
+                  }}>
                         Upgrade Plan
                       </Button>
-                    </div>
-                  ) : discoverLoading ? (
-                    <div className="space-y-2">
-                      {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
-                    </div>
-                  ) : discoverableCreators.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                    </div> : discoverLoading ? <div className="space-y-2">
+                      {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
+                    </div> : discoverableCreators.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-center">
                       <Users className="h-10 w-10 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground font-inter">No creators found</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {discoverableCreators.slice(0, 10).map(creator => (
-                        <div 
-                          key={creator.id} 
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors group"
-                        >
+                    </div> : <div className="space-y-1">
+                      {discoverableCreators.slice(0, 10).map(creator => <div key={creator.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors group">
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={creator.avatar_url || undefined} />
                             <AvatarFallback className="text-xs font-medium bg-muted/60">
-                              {creator.username.slice(0,2).toUpperCase()}
+                              {creator.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
@@ -1326,36 +1280,27 @@ export function CreatorDatabaseTab({
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-muted-foreground truncate font-inter">@{creator.username}</p>
                               <div className="flex gap-1">
-                                {creator.social_accounts.slice(0, 2).map(acc => (
-                                  <img key={acc.platform} src={PLATFORM_LOGOS[acc.platform]} alt={acc.platform} className="h-3 w-3 opacity-50" />
-                                ))}
+                                {creator.social_accounts.slice(0, 2).map(acc => <img key={acc.platform} src={PLATFORM_LOGOS[acc.platform]} alt={acc.platform} className="h-3 w-3 opacity-50" />)}
                               </div>
                             </div>
                           </div>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-8 px-3 text-xs font-inter opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
-                            onClick={async () => {
-                              try {
-                                await supabase.from('brand_creator_relationships').insert({
-                                  brand_id: brandId,
-                                  user_id: creator.id,
-                                  source_type: 'manual_add'
-                                });
-                                toast.success(`Added ${creator.full_name || creator.username}`);
-                                fetchCreators();
-                              } catch (e) {
-                                toast.error('Failed to add creator');
-                              }
-                            }}
-                          >
+                          <Button size="sm" variant="ghost" className="h-8 px-3 text-xs font-inter opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" onClick={async () => {
+                      try {
+                        await supabase.from('brand_creator_relationships').insert({
+                          brand_id: brandId,
+                          user_id: creator.id,
+                          source_type: 'manual_add'
+                        });
+                        toast.success(`Added ${creator.full_name || creator.username}`);
+                        fetchCreators();
+                      } catch (e) {
+                        toast.error('Failed to add creator');
+                      }
+                    }}>
                             Add
                           </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </div>)}
+                    </div>}
                 </ScrollArea>
               </div>
             </TabsContent>
@@ -1366,71 +1311,63 @@ export function CreatorDatabaseTab({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-inter text-muted-foreground">Username</Label>
-                    <Input 
-                      placeholder="@username" 
-                      value={manualCreator.username}
-                      onChange={e => setManualCreator(prev => ({ ...prev, username: e.target.value }))}
-                      className="h-11 bg-muted/30 border-0 font-inter"
-                    />
+                    <Input placeholder="@username" value={manualCreator.username} onChange={e => setManualCreator(prev => ({
+                    ...prev,
+                    username: e.target.value
+                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-inter text-muted-foreground">Full Name</Label>
-                    <Input 
-                      placeholder="John Doe" 
-                      value={manualCreator.name}
-                      onChange={e => setManualCreator(prev => ({ ...prev, name: e.target.value }))}
-                      className="h-11 bg-muted/30 border-0 font-inter"
-                    />
+                    <Input placeholder="John Doe" value={manualCreator.name} onChange={e => setManualCreator(prev => ({
+                    ...prev,
+                    name: e.target.value
+                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-inter text-muted-foreground">Email</Label>
-                    <Input 
-                      type="email"
-                      placeholder="email@example.com" 
-                      value={manualCreator.email}
-                      onChange={e => setManualCreator(prev => ({ ...prev, email: e.target.value }))}
-                      className="h-11 bg-muted/30 border-0 font-inter"
-                    />
+                    <Input type="email" placeholder="email@example.com" value={manualCreator.email} onChange={e => setManualCreator(prev => ({
+                    ...prev,
+                    email: e.target.value
+                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-inter text-muted-foreground">Phone</Label>
-                    <Input 
-                      placeholder="+1 234 567 8900" 
-                      value={manualCreator.phone}
-                      onChange={e => setManualCreator(prev => ({ ...prev, phone: e.target.value }))}
-                      className="h-11 bg-muted/30 border-0 font-inter"
-                    />
+                    <Input placeholder="+1 234 567 8900" value={manualCreator.phone} onChange={e => setManualCreator(prev => ({
+                    ...prev,
+                    phone: e.target.value
+                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground font-inter">
                   Manually added creators are marked as external until they join.
                 </p>
-                <Button 
-                  className="w-full h-11"
-                  disabled={manualAddLoading || (!manualCreator.username && !manualCreator.email)}
-                  onClick={async () => {
-                    setManualAddLoading(true);
-                    try {
-                      await supabase.from('brand_creator_relationships').insert({
-                        brand_id: brandId,
-                        external_name: manualCreator.name || null,
-                        external_email: manualCreator.email || null,
-                        external_handle: manualCreator.username.replace('@', '') || null,
-                        source_type: 'manual_add'
-                      });
-                      toast.success('Creator added');
-                      setManualCreator({ username: '', name: '', email: '', phone: '' });
-                      fetchCreators();
-                      setAddCreatorsDialogOpen(false);
-                    } catch (e) {
-                      toast.error('Failed to add creator');
-                    } finally {
-                      setManualAddLoading(false);
-                    }
-                  }}
-                >
+                <Button className="w-full h-11" disabled={manualAddLoading || !manualCreator.username && !manualCreator.email} onClick={async () => {
+                setManualAddLoading(true);
+                try {
+                  await supabase.from('brand_creator_relationships').insert({
+                    brand_id: brandId,
+                    external_name: manualCreator.name || null,
+                    external_email: manualCreator.email || null,
+                    external_handle: manualCreator.username.replace('@', '') || null,
+                    source_type: 'manual_add'
+                  });
+                  toast.success('Creator added');
+                  setManualCreator({
+                    username: '',
+                    name: '',
+                    email: '',
+                    phone: ''
+                  });
+                  fetchCreators();
+                  setAddCreatorsDialogOpen(false);
+                } catch (e) {
+                  toast.error('Failed to add creator');
+                } finally {
+                  setManualAddLoading(false);
+                }
+              }}>
                   {manualAddLoading ? 'Adding...' : 'Add Creator'}
                 </Button>
               </div>
@@ -1441,21 +1378,12 @@ export function CreatorDatabaseTab({
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-inter text-muted-foreground">Paste CSV Data</Label>
-                  <Textarea 
-                    placeholder="tiktok,@username&#10;instagram,@creator&#10;youtube,@channel" 
-                    value={importData} 
-                    onChange={e => setImportData(e.target.value)} 
-                    className="min-h-[180px] font-mono text-sm bg-muted/30 border-0 resize-none" 
-                  />
+                  <Textarea placeholder="tiktok,@username&#10;instagram,@creator&#10;youtube,@channel" value={importData} onChange={e => setImportData(e.target.value)} className="min-h-[180px] font-mono text-sm bg-muted/30 border-0 resize-none" />
                 </div>
                 <p className="text-xs text-muted-foreground font-inter">
                   Format: <code className="bg-muted/60 px-1.5 py-0.5 rounded text-[11px]">platform,username</code> per line
                 </p>
-                <Button 
-                  onClick={handleImport} 
-                  disabled={importLoading || !importData.trim()} 
-                  className="w-full h-11"
-                >
+                <Button onClick={handleImport} disabled={importLoading || !importData.trim()} className="w-full h-11">
                   {importLoading ? 'Importing...' : 'Import Creators'}
                 </Button>
               </div>
