@@ -269,12 +269,12 @@ export function CreatorDatabaseTab({
     checkSubscription();
   }, [brandId]);
 
-  // Fetch discoverable creators when toggled or filters change
+  // Fetch discoverable creators when dialog opens with search tab or filters change
   useEffect(() => {
-    if (showFindCreators && hasActivePlan) {
+    if (addCreatorsDialogOpen && addCreatorsMode === 'search' && hasActivePlan) {
       fetchDiscoverableCreators();
     }
-  }, [showFindCreators, hasActivePlan, debouncedDiscoverSearch, platformFilter, followerFilter, countryFilter]);
+  }, [addCreatorsDialogOpen, addCreatorsMode, hasActivePlan, debouncedDiscoverSearch, platformFilter, followerFilter, countryFilter]);
   const checkSubscription = async () => {
     const {
       data
