@@ -76,12 +76,12 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
         </div>
 
         {/* Daily/Cumulative Toggle */}
-        <div className="flex items-center gap-0 bg-muted/30 rounded-lg p-0.5 self-start sm:self-auto">
+        <div className="flex items-center gap-0 bg-transparent rounded-lg p-0.5 self-start sm:self-auto">
           <button
             onClick={() => setChartMode('daily')}
             className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${
               chartMode === 'daily'
-                ? 'bg-white/10 text-white'
+                ? 'bg-[#0a0a0a] text-white'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
@@ -91,7 +91,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
             onClick={() => setChartMode('cumulative')}
             className={`px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium font-inter tracking-[-0.5px] rounded-md transition-all ${
               chartMode === 'cumulative'
-                ? 'bg-white/10 text-white'
+                ? 'bg-[#0a0a0a] text-white'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
