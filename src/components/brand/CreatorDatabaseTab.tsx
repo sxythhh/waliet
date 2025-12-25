@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -842,141 +843,155 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
         <>
           {/* Table */}
           <ScrollArea className="flex-1">
-            <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
-            <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="w-[40px]">
-                <Checkbox 
-                  checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                />
-              </TableHead>
-              <TableHead className="font-inter tracking-[-0.5px]">Creator</TableHead>
-              <TableHead className="font-inter tracking-[-0.5px]">Socials</TableHead>
-              <TableHead className="font-inter tracking-[-0.5px]">Campaigns</TableHead>
-              <TableHead className="font-inter tracking-[-0.5px] text-right">Views</TableHead>
-              <TableHead className="font-inter tracking-[-0.5px] text-right">Earnings</TableHead>
-              <TableHead className="font-inter tracking-[-0.5px]">Joined</TableHead>
-              <TableHead className="w-[40px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCreators.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                  {searchQuery || selectedCampaignFilter !== 'all' 
-                    ? 'No creators match your filters' 
-                    : 'No creators in your database yet'}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredCreators.map((creator) => (
-                <TableRow key={creator.id} className="hover:bg-muted/30 border-b border-border">
-                  <TableCell>
-                    <Checkbox 
-                      checked={selectedCreators.has(creator.id)}
-                      onCheckedChange={() => toggleCreatorSelection(creator.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={creator.avatar_url || undefined} />
-                        <AvatarFallback className="bg-muted text-xs">
-                          {creator.username?.charAt(0).toUpperCase() || 'C'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm font-inter tracking-[-0.5px]">
-                          {creator.full_name || creator.username}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          @{creator.username}
-                        </p>
-                      </div>
-                      {creator.country && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5">
-                          {creator.country}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      {creator.social_accounts.slice(0, 3).map((account, idx) => (
-                        <a 
-                          key={idx}
-                          href={account.account_link || `https://${account.platform}.com/@${account.username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity"
-                          title={`@${account.username}`}
-                        >
-                          <img 
-                            src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} 
-                            alt={account.platform}
-                            className="h-5 w-5"
+            <TooltipProvider delayDuration={100}>
+              <Table>
+                <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+                  <TableRow className="hover:bg-transparent border-0">
+                    <TableHead className="w-[40px] h-11">
+                      <Checkbox 
+                        checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Campaigns</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11">Views</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11">Earnings</TableHead>
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Joined</TableHead>
+                    <TableHead className="w-[40px] h-11"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCreators.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
+                        {searchQuery || selectedCampaignFilter !== 'all' 
+                          ? 'No creators match your filters' 
+                          : 'No creators in your database yet'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCreators.map((creator) => (
+                      <TableRow key={creator.id} className="hover:bg-muted/20 border-0 group">
+                        <TableCell className="py-3">
+                          <Checkbox 
+                            checked={selectedCreators.has(creator.id)}
+                            onCheckedChange={() => toggleCreatorSelection(creator.id)}
                           />
-                        </a>
-                      ))}
-                      {creator.social_accounts.length > 3 && (
-                        <span className="text-xs text-muted-foreground">
-                          +{creator.social_accounts.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {creator.campaigns.slice(0, 2).map((campaign) => (
-                        <Badge key={campaign.id} variant="outline" className="text-[10px]">
-                          {campaign.title}
-                        </Badge>
-                      ))}
-                      {creator.campaigns.length > 2 && (
-                        <Badge variant="secondary" className="text-[10px]">
-                          +{creator.campaigns.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-medium font-inter tracking-[-0.5px]">
-                    {formatNumber(creator.total_views)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium font-inter tracking-[-0.5px]">
-                    ${creator.total_earnings.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                    {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          Send Message
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          Remove from Database
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={creator.avatar_url || undefined} />
+                              <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
+                                {creator.username?.charAt(0).toUpperCase() || 'C'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate">
+                                {creator.full_name || creator.username}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
+                                @{creator.username}
+                              </p>
+                            </div>
+                            {creator.country && (
+                              <span className="text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded font-inter tracking-[-0.5px]">
+                                {creator.country}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex items-center gap-1">
+                            {creator.social_accounts.slice(0, 4).map((account, idx) => (
+                              <Tooltip key={idx}>
+                                <TooltipTrigger asChild>
+                                  <a 
+                                    href={account.account_link || `https://${account.platform}.com/@${account.username}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors"
+                                  >
+                                    <img 
+                                      src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} 
+                                      alt={account.platform}
+                                      className="h-4 w-4"
+                                    />
+                                  </a>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                  <p className="font-medium">@{account.username}</p>
+                                  {account.follower_count && (
+                                    <p className="text-muted-foreground">{formatNumber(account.follower_count)} followers</p>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
+                            ))}
+                            {creator.social_accounts.length > 4 && (
+                              <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
+                                +{creator.social_accounts.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {creator.campaigns.slice(0, 2).map((campaign) => (
+                              <span 
+                                key={campaign.id} 
+                                className="text-[10px] font-inter tracking-[-0.5px] bg-muted/40 text-foreground/80 px-2 py-0.5 rounded-full"
+                              >
+                                {campaign.title}
+                              </span>
+                            ))}
+                            {creator.campaigns.length > 2 && (
+                              <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
+                                +{creator.campaigns.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3">
+                          {formatNumber(creator.total_views)}
+                        </TableCell>
+                        <TableCell className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3 text-emerald-500">
+                          ${creator.total_earnings.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                          {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="font-inter tracking-[-0.5px]">
+                              <DropdownMenuItem>
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                View Profile
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                <MessageSquare className="h-4 w-4 mr-2" />
+                                Send Message
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive">
+                                Remove from Database
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TooltipProvider>
+          </ScrollArea>
 
       {/* Bulk Actions Bar */}
       {selectedCreators.size > 0 && (
