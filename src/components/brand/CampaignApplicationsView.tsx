@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown, Shield, Users } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Users, Database } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -384,18 +384,23 @@ export function CampaignApplicationsView({
                         @{selectedApp.profile?.username}
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
-                      {/* Trust & Audience Scores */}
-                      {selectedApp.profile && (selectedApp.profile.trust_score !== null || selectedApp.profile.audience_quality_score !== null) && <div className="flex items-center gap-2 pt-1">
-                          {selectedApp.profile.trust_score !== null && <div className="flex items-center gap-1 text-xs text-emerald-500">
-                              <Shield className="h-3 w-3" />
-                              <span>{selectedApp.profile.trust_score}%</span>
-                            </div>}
-                          {selectedApp.profile.audience_quality_score !== null && <div className="flex items-center gap-1 text-xs text-blue-500">
-                              <Users className="h-3 w-3" />
-                              <span>{selectedApp.profile.audience_quality_score}%</span>
-                            </div>}
-                        </div>}
                     </div>
+                    {/* View in Database Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const creatorId = selectedApp.creator_id || selectedApp.user_id;
+                        if (creatorId && workspace) {
+                          navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=database&creator=${creatorId}`);
+                        }
+                      }}
+                    >
+                      <Database className="h-3.5 w-3.5" />
+                      <span className="text-xs tracking-[-0.3px]">View</span>
+                    </Button>
                   </div>
                   {getStatusBadge(selectedApp.status)}
                 </div>

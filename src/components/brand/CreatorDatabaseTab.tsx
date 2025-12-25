@@ -397,6 +397,21 @@ export function CreatorDatabaseTab({
     checkSubscription();
   }, [brandId]);
 
+  // Auto-open creator panel from URL param
+  useEffect(() => {
+    const creatorId = searchParams.get('creator');
+    if (creatorId && creators.length > 0 && !selectedCreatorPanel) {
+      const creator = creators.find(c => c.id === creatorId);
+      if (creator) {
+        setSelectedCreatorPanel(creator);
+        // Remove the param after opening
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('creator');
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [searchParams, creators, selectedCreatorPanel]);
+
   // Fetch discoverable creators when dialog opens with search tab or filters change
   useEffect(() => {
     if (addCreatorsDialogOpen && addCreatorsMode === 'search' && hasActivePlan) {
