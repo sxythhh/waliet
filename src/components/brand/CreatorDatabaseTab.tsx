@@ -216,7 +216,6 @@ export function CreatorDatabaseTab({
   }, [discoverSearch]);
   useEffect(() => {
     fetchCreators();
-    fetchCampaigns();
     checkSubscription();
   }, [brandId]);
 
@@ -297,15 +296,26 @@ export function CreatorDatabaseTab({
   const fetchCreators = async () => {
     setLoading(true);
     try {
-      // Get all video submissions for this brand
+      // First fetch campaigns to avoid race condition
+      const [campaignsResult, boostsResult] = await Promise.all([
+        supabase.from('campaigns').select('id, title').eq('brand_id', brandId),
+        supabase.from('bounty_campaigns').select('id, title').eq('brand_id', brandId)
+      ]);
+      const allCampaigns: Campaign[] = [...(campaignsResult.data || []), ...(boostsResult.data || [])];
+      setCampaigns(allCampaigns);
+
+      // Get all video submissions for this brand (include all statuses to show creators who have submitted)
       const {
         data: submissions
-      } = await supabase.from('video_submissions').select('creator_id, views, source_type, source_id').eq('brand_id', brandId).eq('status', 'approved');
+      } = await supabase.from('video_submissions').select('creator_id, views, source_type, source_id').eq('brand_id', brandId);
 
       // Get all bounty applications for this brand
+      const campaignIds = allCampaigns.map(c => c.id);
       const {
         data: applications
-      } = await supabase.from('bounty_applications').select('user_id, bounty_campaign_id, status').in('bounty_campaign_id', campaigns.map(c => c.id));
+      } = campaignIds.length > 0 
+        ? await supabase.from('bounty_applications').select('user_id, bounty_campaign_id, status').in('bounty_campaign_id', campaignIds)
+        : { data: [] };
 
       // Get all wallet transactions for this brand's campaigns
       const {
@@ -370,7 +380,7 @@ export function CreatorDatabaseTab({
           creator.total_views += submission.views || 0;
           const campaignId = submission.source_id;
           if (campaignId && !creator.campaigns.find(c => c.id === campaignId)) {
-            const campaign = campaigns.find(c => c.id === campaignId);
+            const campaign = allCampaigns.find(c => c.id === campaignId);
             if (campaign) {
               creator.campaigns.push({
                 id: campaign.id,
@@ -392,7 +402,7 @@ export function CreatorDatabaseTab({
           } | null;
           if (metadata?.campaign_id || metadata?.boost_id) {
             const campaignId = metadata.campaign_id || metadata.boost_id;
-            const campaign = campaigns.find(c => c.id === campaignId);
+            const campaign = allCampaigns.find(c => c.id === campaignId);
             if (campaign) {
               creator.total_earnings += tx.amount || 0;
             }
