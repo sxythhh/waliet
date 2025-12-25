@@ -373,19 +373,42 @@ export function CreatorDatabaseTab({
       // Get platform creator IDs (non-external)
       const platformCreatorIds = relationships.filter(r => r.user_id).map(r => r.user_id as string);
 
-      // Fetch profiles for platform creators
-      const {
-        data: profiles
-      } = platformCreatorIds.length > 0 ? await supabase.from('profiles').select('id, username, full_name, avatar_url, email, country, created_at').in('id', platformCreatorIds) : {
-        data: []
+      // Batch fetch helper to avoid URL length limits with large ID lists
+      const batchFetch = async <T,>(
+        ids: string[],
+        fetchFn: (batchIds: string[]) => Promise<T[]>,
+        batchSize = 50
+      ): Promise<T[]> => {
+        const results: T[] = [];
+        for (let i = 0; i < ids.length; i += batchSize) {
+          const batchIds = ids.slice(i, i + batchSize);
+          const batchResults = await fetchFn(batchIds);
+          results.push(...batchResults);
+        }
+        return results;
       };
 
-      // Fetch social accounts for platform creators
-      const {
-        data: socialAccounts
-      } = platformCreatorIds.length > 0 ? await supabase.from('social_accounts').select('user_id, platform, username, account_link, follower_count').in('user_id', platformCreatorIds) : {
-        data: []
-      };
+      // Fetch profiles for platform creators in batches
+      const profiles = platformCreatorIds.length > 0 
+        ? await batchFetch(platformCreatorIds, async (batchIds) => {
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, username, full_name, avatar_url, email, country, created_at')
+              .in('id', batchIds);
+            return data || [];
+          })
+        : [];
+
+      // Fetch social accounts for platform creators in batches
+      const socialAccounts = platformCreatorIds.length > 0
+        ? await batchFetch(platformCreatorIds, async (batchIds) => {
+            const { data } = await supabase
+              .from('social_accounts')
+              .select('user_id, platform, username, account_link, follower_count')
+              .in('user_id', batchIds);
+            return data || [];
+          })
+        : [];
 
       // Get video submissions for view counts
       const {
