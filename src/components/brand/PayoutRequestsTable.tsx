@@ -95,6 +95,17 @@ export function PayoutRequestsTable({
   const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagItemId, setFlagItemId] = useState<string | null>(null);
+  const [flagReason, setFlagReason] = useState("");
+  const [selectedFlagReason, setSelectedFlagReason] = useState<string | null>(null);
+
+  const FLAG_REASON_OPTIONS = [
+    "Suspicious activity",
+    "Bot-like behavior",
+    "Content violation",
+    "Duplicate submission"
+  ];
 
   // Helper to get filtered items for a request (only items belonging to current campaign/boost)
   const getFilteredItemsForRequest = (request: PayoutRequest) => {
@@ -320,6 +331,10 @@ export function PayoutRequestsTable({
       }).eq('id', itemId);
       if (error) throw error;
       toast.success('Item flagged for review');
+      setFlagDialogOpen(false);
+      setFlagItemId(null);
+      setFlagReason("");
+      setSelectedFlagReason(null);
       fetchPayoutRequests();
     } catch (error) {
       console.error('Error flagging item:', error);
@@ -328,6 +343,20 @@ export function PayoutRequestsTable({
       setFlaggingItem(null);
     }
   };
+
+  const openFlagDialog = (itemId: string) => {
+    setFlagItemId(itemId);
+    setFlagReason("");
+    setSelectedFlagReason(null);
+    setFlagDialogOpen(true);
+  };
+
+  const submitFlag = () => {
+    if (!flagItemId) return;
+    const reason = flagReason.trim() || selectedFlagReason || "Flagged for review";
+    handleFlagItem(flagItemId, reason);
+  };
+
   const getPlatformIcon = (platform: string | null) => {
     switch (platform?.toLowerCase()) {
       case 'tiktok':
@@ -808,13 +837,19 @@ export function PayoutRequestsTable({
                                                 <TooltipContent>
                                                   <p>{item.flag_reason || 'Flagged for review'}</p>
                                                 </TooltipContent>
-                                              </Tooltip> : request.status === 'clearing' && <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground hover:text-amber-500 px-2" onClick={e => {
-                                        e.stopPropagation();
-                                        handleFlagItem(item.id, 'Flagged by brand for review');
-                                      }} disabled={flaggingItem === item.id}>
-                                                  <Flag className="h-2.5 w-2.5 mr-1" />
-                                                  Flag
-                                                </Button>}
+                                              </Tooltip> : request.status === 'clearing' && <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 hover:border-amber-500/50 px-2.5 gap-1.5 transition-colors" 
+                                                onClick={e => {
+                                                  e.stopPropagation();
+                                                  openFlagDialog(item.id);
+                                                }} 
+                                                disabled={flaggingItem === item.id}
+                                              >
+                                                <Flag className="h-3 w-3" />
+                                                Flag
+                                              </Button>}
                                             
                                             
                                           </div>
@@ -1052,6 +1087,80 @@ export function PayoutRequestsTable({
               })}
                 </div>
               </div>}
+          </DialogContent>
+        </Dialog>
+
+        {/* Flag Reason Dialog */}
+        <Dialog open={flagDialogOpen} onOpenChange={(open) => {
+          setFlagDialogOpen(open);
+          if (!open) {
+            setFlagItemId(null);
+            setFlagReason("");
+            setSelectedFlagReason(null);
+          }
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader className="flex-row items-center gap-2 space-y-0">
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-amber-500/10">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              </div>
+              <DialogTitle className="text-base">Flag this payout?</DialogTitle>
+              <div className="flex-1" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs"
+                onClick={submitFlag}
+                disabled={flaggingItem !== null || (!flagReason.trim() && !selectedFlagReason)}
+              >
+                Give reason
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-xs text-muted-foreground"
+                onClick={() => setFlagDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+            </DialogHeader>
+            
+            <div className="space-y-3 pt-2">
+              <Input 
+                placeholder="Reason for flagging..." 
+                value={flagReason}
+                onChange={(e) => {
+                  setFlagReason(e.target.value);
+                  if (e.target.value.trim()) {
+                    setSelectedFlagReason(null);
+                  }
+                }}
+                className="h-10"
+              />
+              
+              <div className="flex flex-wrap gap-2">
+                {FLAG_REASON_OPTIONS.map((reason) => (
+                  <Button
+                    key={reason}
+                    variant={selectedFlagReason === reason ? "default" : "outline"}
+                    size="sm"
+                    className={`h-8 text-xs ${
+                      selectedFlagReason === reason 
+                        ? "bg-foreground text-background hover:bg-foreground/90" 
+                        : "hover:bg-muted"
+                    }`}
+                    onClick={() => {
+                      setSelectedFlagReason(selectedFlagReason === reason ? null : reason);
+                      if (selectedFlagReason !== reason) {
+                        setFlagReason("");
+                      }
+                    }}
+                  >
+                    {reason}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
