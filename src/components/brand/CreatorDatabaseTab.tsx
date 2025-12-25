@@ -38,6 +38,8 @@ interface Creator {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  phone_number: string | null;
+  discord_username: string | null;
   country: string | null;
   is_external: boolean;
   external_name: string | null;
@@ -393,7 +395,7 @@ export function CreatorDatabaseTab({
         ? await batchFetch(platformCreatorIds, async (batchIds) => {
             const { data } = await supabase
               .from('profiles')
-              .select('id, username, full_name, avatar_url, email, country, created_at')
+              .select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at')
               .in('id', batchIds);
             return data || [];
           })
@@ -438,6 +440,8 @@ export function CreatorDatabaseTab({
           full_name: profile?.full_name || rel.external_name || null,
           avatar_url: profile?.avatar_url || null,
           email: profile?.email || rel.external_email || null,
+          phone_number: profile?.phone_number || null,
+          discord_username: profile?.discord_username || null,
           country: profile?.country || null,
           is_external: isExternal,
           external_name: rel.external_name,
@@ -1122,7 +1126,7 @@ export function CreatorDatabaseTab({
               <div className="space-y-3">
                 {/* Source */}
                 <div>
-                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Source</p>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Source</p>
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(selectedCreatorPanel.source_type)}`}>
                       {getSourceLabel(selectedCreatorPanel.source_type)}
@@ -1133,26 +1137,34 @@ export function CreatorDatabaseTab({
                   </div>
                 </div>
                 {selectedCreatorPanel.first_interaction_at && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">First Interaction</p>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">First Interaction</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.first_interaction_at), 'MMM d, yyyy')}</p>
                   </div>}
                 {selectedCreatorPanel.email && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Email</p>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Email</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.email}</p>
                   </div>}
+                {selectedCreatorPanel.phone_number && <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Phone Number</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.phone_number}</p>
+                  </div>}
+                {selectedCreatorPanel.discord_username && <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Discord Username</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
+                  </div>}
                 {selectedCreatorPanel.country && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Country</p>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Country</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.country}</p>
                   </div>}
                 {selectedCreatorPanel.date_joined && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Joined Platform</p>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-1">Joined Platform</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
                   </div>}
               </div>
 
               {/* Social Accounts */}
               {selectedCreatorPanel.social_accounts.length > 0 && <div>
-                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-2">Social Accounts</p>
+                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3em] mb-2">Social Accounts</p>
                   <div className="space-y-2">
                     {selectedCreatorPanel.social_accounts.map((account, idx) => <a key={idx} href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors" onClick={e => e.stopPropagation()}>
                         <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
