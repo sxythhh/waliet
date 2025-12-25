@@ -138,6 +138,9 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importData, setImportData] = useState("");
   const [importLoading, setImportLoading] = useState(false);
+  const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
+  const [selectedCampaignToAdd, setSelectedCampaignToAdd] = useState<string>("");
+  const [addingToCampaign, setAddingToCampaign] = useState(false);
 
   // Find Creators state
   const [discoverableCreators, setDiscoverableCreators] = useState<DiscoverableCreator[]>([]);
@@ -492,6 +495,72 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
       newSet.add(id);
     }
     setSelectedCreators(newSet);
+  };
+
+  const handleBulkMessage = () => {
+    if (selectedCreators.size === 0) return;
+    
+    // Get first selected creator and start conversation
+    const selectedCreatorIds = Array.from(selectedCreators);
+    const firstCreator = creators.find(c => c.id === selectedCreatorIds[0]);
+    
+    if (firstCreator && onStartConversation) {
+      onStartConversation(firstCreator.id, firstCreator.full_name || firstCreator.username);
+      toast.success(`Opening conversation with ${selectedCreators.size} selected creator${selectedCreators.size > 1 ? 's' : ''}`);
+    } else {
+      toast.info('Messaging functionality requires the Messages tab');
+    }
+  };
+
+  const handleAddToCampaign = async () => {
+    if (!selectedCampaignToAdd || selectedCreators.size === 0) {
+      toast.error('Please select a campaign');
+      return;
+    }
+
+    setAddingToCampaign(true);
+    try {
+      // Check if it's a boost or campaign
+      const isBoost = campaigns.find(c => c.id === selectedCampaignToAdd);
+      const selectedCreatorIds = Array.from(selectedCreators);
+
+      // For now, create invitations or applications
+      for (const creatorId of selectedCreatorIds) {
+        // Check if already in boost
+        const { data: existingApp } = await supabase
+          .from('bounty_applications')
+          .select('id')
+          .eq('bounty_campaign_id', selectedCampaignToAdd)
+          .eq('user_id', creatorId)
+          .single();
+
+        if (!existingApp) {
+          // Get creator's video URL if available
+          const creator = creators.find(c => c.id === creatorId);
+          const videoUrl = creator?.social_accounts[0]?.account_link || '';
+
+          await supabase
+            .from('bounty_applications')
+            .insert({
+              bounty_campaign_id: selectedCampaignToAdd,
+              user_id: creatorId,
+              status: 'accepted',
+              video_url: videoUrl
+            });
+        }
+      }
+
+      toast.success(`Added ${selectedCreatorIds.length} creator${selectedCreatorIds.length > 1 ? 's' : ''} to campaign`);
+      setAddToCampaignDialogOpen(false);
+      setSelectedCampaignToAdd('');
+      setSelectedCreators(new Set());
+      fetchCreators();
+    } catch (error) {
+      console.error('Error adding to campaign:', error);
+      toast.error('Failed to add creators to campaign');
+    } finally {
+      setAddingToCampaign(false);
+    }
   };
 
   if (loading) {
@@ -997,36 +1066,101 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
 
       {/* Bulk Actions Bar */}
       {selectedCreators.size > 0 && (
-        <div className="border-t border-border p-3 bg-muted/30 flex items-center justify-between">
-          <span className="text-sm font-inter tracking-[-0.5px]">
-            {selectedCreators.size} creator{selectedCreators.size > 1 ? 's' : ''} selected
-          </span>
+        <div className="border-t border-border/50 px-4 py-3 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <span className="text-sm font-inter tracking-[-0.3px] text-foreground/80">
+              <span className="font-medium text-foreground">{selectedCreators.size}</span> creator{selectedCreators.size > 1 ? 's' : ''} selected
+            </span>
+          </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setSelectedCreators(new Set())}>
-              Clear Selection
-            </Button>
-            <Button variant="outline" size="sm">
-              Send Bulk Message
-            </Button>
-            <Button size="sm">
+            <button 
+              onClick={() => setSelectedCreators(new Set())}
+              className="px-3 py-1.5 text-xs font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50"
+            >
+              Clear
+            </button>
+            <button 
+              onClick={handleBulkMessage}
+              className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-foreground bg-background border border-border/60 rounded-md hover:bg-muted/50 hover:border-border transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <MessageSquare className="h-3 w-3" />
+              Message
+            </button>
+            <button 
+              onClick={() => setAddToCampaignDialogOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm"
+            >
+              <Plus className="h-3 w-3" />
               Add to Campaign
-            </Button>
+            </button>
           </div>
         </div>
       )}
+
+      {/* Add to Campaign Dialog */}
+      <Dialog open={addToCampaignDialogOpen} onOpenChange={setAddToCampaignDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-instrument tracking-tight">Add to Campaign</DialogTitle>
+            <DialogDescription className="font-inter tracking-[-0.3px]">
+              Add {selectedCreators.size} selected creator{selectedCreators.size > 1 ? 's' : ''} to a campaign.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.3px] text-sm">Select Campaign</Label>
+              <Select value={selectedCampaignToAdd} onValueChange={setSelectedCampaignToAdd}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a campaign..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {campaigns.map((campaign) => (
+                    <SelectItem key={campaign.id} value={campaign.id}>
+                      {campaign.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {campaigns.length === 0 && (
+              <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                  No campaigns available. Create a campaign first to add creators.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setAddToCampaignDialogOpen(false)} className="font-inter tracking-[-0.3px]">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddToCampaign} 
+              disabled={addingToCampaign || !selectedCampaignToAdd}
+              className="font-inter tracking-[-0.3px]"
+            >
+              {addingToCampaign ? 'Adding...' : 'Add to Campaign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Import Dialog */}
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-instrument tracking-tight">Import Creators</DialogTitle>
-            <DialogDescription className="font-inter tracking-[-0.5px]">
+            <DialogDescription className="font-inter tracking-[-0.3px]">
               Import creators from a CSV file or paste data directly. Format: platform,username (one per line)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="font-inter tracking-[-0.5px]">Paste CSV Data</Label>
+              <Label className="font-inter tracking-[-0.3px]">Paste CSV Data</Label>
               <Textarea 
                 placeholder="tiktok,@username&#10;instagram,@anotheruser&#10;youtube,@creator"
                 value={importData}
@@ -1036,7 +1170,7 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
             </div>
             <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
               <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                 Imported creators will be added to your database for tracking. You can then invite them to campaigns.
               </p>
             </div>
