@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -881,61 +882,97 @@ export function CreatorDatabaseTab({
             <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" />
           </div>
 
-          <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
-            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[100px]">
-              <SelectValue placeholder="Campaign" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All campaigns</SelectItem>
-              {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 ${(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Filters
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && (
+                  <span className="ml-1 h-4 w-4 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center">
+                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all'].filter(Boolean).length}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-3 bg-background border border-border shadow-lg z-50" align="start">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Filters</span>
+                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && (
+                    <button 
+                      onClick={() => {
+                        setSelectedCampaignFilter('all');
+                        setPlatformFilter('all');
+                        setStatusFilter('all');
+                        setSourceFilter('all');
+                      }} 
+                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Campaign</Label>
+                  <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All campaigns" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All campaigns</SelectItem>
+                      {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <Select value={platformFilter} onValueChange={setPlatformFilter}>
-            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[90px]">
-              <SelectValue placeholder="Platform" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All platforms</SelectItem>
-              <SelectItem value="tiktok">TikTok</SelectItem>
-              <SelectItem value="youtube">YouTube</SelectItem>
-              <SelectItem value="instagram">Instagram</SelectItem>
-            </SelectContent>
-          </Select>
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Platform</Label>
+                  <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All platforms" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All platforms</SelectItem>
+                      <SelectItem value="tiktok">TikTok</SelectItem>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="instagram">Instagram</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[80px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Status</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="h-8 px-2.5 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-auto min-w-[80px]">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All sources</SelectItem>
-              <SelectItem value="campaign">Campaign</SelectItem>
-              <SelectItem value="boost">Boost</SelectItem>
-              <SelectItem value="manual">Manual</SelectItem>
-              <SelectItem value="import">Import</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && <button onClick={() => {
-          setSelectedCampaignFilter('all');
-          setPlatformFilter('all');
-          setStatusFilter('all');
-          setSourceFilter('all');
-          setSearchQuery('');
-        }} className="h-8 px-2.5 font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Clear
-            </button>}
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Source</Label>
+                  <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All sources" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All sources</SelectItem>
+                      <SelectItem value="campaign">Campaign</SelectItem>
+                      <SelectItem value="boost">Boost</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="import">Import</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <div className="flex items-center gap-1.5 ml-auto">
             <Button size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
