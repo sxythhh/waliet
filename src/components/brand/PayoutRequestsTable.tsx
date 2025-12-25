@@ -95,6 +95,7 @@ export function PayoutRequestsTable({
   const [approvingRequest, setApprovingRequest] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("highest");
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
   const [flagItemId, setFlagItemId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState("");
@@ -143,9 +144,9 @@ export function PayoutRequestsTable({
     };
   };
 
-  // Filter requests based on search and status
+  // Filter and sort requests
   const filteredRequests = useMemo(() => {
-    return requests.filter(request => {
+    const filtered = requests.filter(request => {
       // Get filtered info for this request
       const {
         items: filteredItems,
@@ -159,7 +160,28 @@ export function PayoutRequestsTable({
       const matchesStatus = statusFilter === "all" || statusFilter === "flagged" && filteredItems.some(i => i.flagged_at) || statusFilter !== "flagged" && request.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [requests, searchQuery, statusFilter, campaignId, boostId]);
+
+    // Sort the filtered results
+    return filtered.sort((a, b) => {
+      const { total: totalA } = getFilteredItemsForRequest(a);
+      const { total: totalB } = getFilteredItemsForRequest(b);
+      const clearingA = new Date(a.clearing_ends_at).getTime();
+      const clearingB = new Date(b.clearing_ends_at).getTime();
+
+      switch (sortBy) {
+        case "highest":
+          return totalB - totalA;
+        case "lowest":
+          return totalA - totalB;
+        case "deadline_soon":
+          return clearingA - clearingB;
+        case "deadline_later":
+          return clearingB - clearingA;
+        default:
+          return 0;
+      }
+    });
+  }, [requests, searchQuery, statusFilter, sortBy, campaignId, boostId]);
   useEffect(() => {
     fetchPayoutRequests();
     if (boostId) {
@@ -623,12 +645,19 @@ export function PayoutRequestsTable({
 
         {/* Desktop Table */}
         {requests.length > 0 && <div className="hidden md:block">
-          {/* Search and Filter Bar */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by creator or amount..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
-            </div>
+          {/* Filter Bar */}
+          <div className="flex items-center justify-end gap-3 mb-4">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px] h-9 text-sm border-0 bg-background">
+                <SelectValue placeholder="Highest paid out" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="highest">Highest paid out</SelectItem>
+                <SelectItem value="lowest">Lowest paid out</SelectItem>
+                <SelectItem value="deadline_soon">Deadline ending soon</SelectItem>
+                <SelectItem value="deadline_later">Deadline ending later</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[140px] h-9 text-sm border-0 bg-background">
                 <SelectValue placeholder="All statuses" />
