@@ -132,18 +132,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
                 axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.3 }}
                 tickLine={false}
               />
-              <YAxis
-                tick={{
-                  fontSize: 11,
-                  fill: 'hsl(var(--muted-foreground))',
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={value => formatNumber(value)}
-                width={50}
-              />
+              <YAxis hide />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
