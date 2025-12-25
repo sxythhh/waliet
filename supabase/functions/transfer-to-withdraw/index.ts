@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Whop from "https://esm.sh/@whop/sdk?target=deno";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -98,46 +99,31 @@ serve(async (req) => {
 
     // Generate idempotency key
     const idempotenceKey = crypto.randomUUID();
-    console.log(`Creating Whop transfer: origin=${whopParentCompanyId}, destination=${brand.whop_company_id}, amount=${amount}`);
+    console.log(
+      `Creating Whop transfer: origin=${whopParentCompanyId}, destination=${brand.whop_company_id}, amount=${amount}, key=${idempotenceKey}`,
+    );
 
-    // Call Whop API to create transfer
-    // Transfer from parent company (Virality) to brand's ledger account
-    const whopResponse = await fetch('https://api.whop.com/api/v5/transfers', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${whopApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        origin_id: whopParentCompanyId,
-        destination_id: brand.whop_company_id,
-        amount: amount,
+    // Use Whop SDK (avoids guessing REST base URLs / versions)
+    const whop = new Whop({ apiKey: whopApiKey });
+
+    let whopData: any;
+    try {
+      whopData = await whop.transfers.create({
+        amount,
         currency: 'usd',
-        notes: `Transfer to ${brand.name} withdraw balance`.slice(0, 50), // Max 50 chars
+        destination_id: brand.whop_company_id,
+        origin_id: whopParentCompanyId,
         idempotence_key: idempotenceKey,
-      }),
-    });
-
-    // Handle the response - check for empty body
-    const responseText = await whopResponse.text();
-    console.log('Whop API raw response:', responseText, 'Status:', whopResponse.status);
-    
-    let whopData: any = {};
-    if (responseText) {
-      try {
-        whopData = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse Whop response:', parseError);
-        whopData = { raw: responseText };
-      }
-    }
-    console.log('Whop API parsed response:', JSON.stringify(whopData));
-
-    if (!whopResponse.ok) {
-      console.error('Whop transfer failed:', whopData);
+        notes: `Transfer to ${brand.name} withdraw balance`.slice(0, 50),
+      });
+      console.log('Whop transfer success:', JSON.stringify(whopData));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // The SDK often includes structured fields on the thrown object; log it for visibility.
+      console.error('Whop transfer failed (SDK):', e);
       return new Response(
-        JSON.stringify({ error: whopData.message || whopData.error || `Transfer failed with status ${whopResponse.status}` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: msg || 'Failed to process transfer' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
