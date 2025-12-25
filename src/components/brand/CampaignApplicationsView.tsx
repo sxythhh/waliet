@@ -385,12 +385,12 @@ export function CampaignApplicationsView({
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
                       {/* Trust & Audience Scores */}
-                      {(selectedApp.profile?.trust_score !== null || selectedApp.profile?.audience_quality_score !== null) && <div className="flex items-center gap-2 pt-1">
-                          {selectedApp.profile?.trust_score !== null && <div className="flex items-center gap-1 text-xs text-emerald-500">
+                      {selectedApp.profile && (selectedApp.profile.trust_score !== null || selectedApp.profile.audience_quality_score !== null) && <div className="flex items-center gap-2 pt-1">
+                          {selectedApp.profile.trust_score !== null && <div className="flex items-center gap-1 text-xs text-emerald-500">
                               <Shield className="h-3 w-3" />
                               <span>{selectedApp.profile.trust_score}%</span>
                             </div>}
-                          {selectedApp.profile?.audience_quality_score !== null && <div className="flex items-center gap-1 text-xs text-blue-500">
+                          {selectedApp.profile.audience_quality_score !== null && <div className="flex items-center gap-1 text-xs text-blue-500">
                               <Users className="h-3 w-3" />
                               <span>{selectedApp.profile.audience_quality_score}%</span>
                             </div>}
