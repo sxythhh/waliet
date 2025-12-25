@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,11 +90,18 @@ interface Campaign {
 export function CreatorsTab({
   brandId
 }: CreatorsTabProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     resolvedTheme
   } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
+
+  const navigateToDatabase = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('subtab', 'database');
+    setSearchParams(newParams);
+  };
   const [creators, setCreators] = useState<Creator[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -723,8 +731,8 @@ export function CreatorsTab({
           <div className="flex items-center gap-2">
             <h2 className="font-medium text-sm">Messages</h2>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={() => setRecruitDialogOpen(true)}>
-            <PenSquare className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={navigateToDatabase}>
+            <Database className="h-4 w-4" />
           </Button>
         </div>
 
