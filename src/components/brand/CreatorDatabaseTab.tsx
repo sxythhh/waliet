@@ -1030,7 +1030,7 @@ export function CreatorDatabaseTab({
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Source</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Campaigns</TableHead>
+                    
                     <TableHead 
                       className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
                       onClick={() => handleSort('views')}
@@ -1066,7 +1066,7 @@ export function CreatorDatabaseTab({
                 </TableHeader>
                 <TableBody>
                   {filteredCreators.length === 0 ? <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
+                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
                         {searchQuery || selectedCampaignFilter !== 'all' ? 'No creators match your filters' : 'No creators in your database yet'}
                       </TableCell>
                     </TableRow> : filteredCreators.map(creator => <TableRow 
@@ -1103,9 +1103,6 @@ export function CreatorDatabaseTab({
                                 }
                               </p>
                             </div>
-                            {creator.country && <span className="text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded font-inter tracking-[-0.5px]">
-                                {creator.country}
-                              </span>}
                           </div>
                         </TableCell>
                         <TableCell className="py-3">
@@ -1137,16 +1134,6 @@ export function CreatorDatabaseTab({
                               </Tooltip>)}
                             {creator.social_accounts.length > 4 && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
                                 +{creator.social_accounts.length - 4}
-                              </span>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex flex-wrap gap-1">
-                            {creator.campaigns.slice(0, 2).map(campaign => <span key={campaign.id} className="text-[10px] font-inter tracking-[-0.5px] bg-muted/40 text-foreground/80 px-2 py-0.5 rounded-full">
-                                {campaign.title}
-                              </span>)}
-                            {creator.campaigns.length > 2 && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                +{creator.campaigns.length - 2}
                               </span>}
                           </div>
                         </TableCell>
