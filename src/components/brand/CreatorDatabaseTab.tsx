@@ -842,7 +842,7 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
       ) : (
         <>
           {/* Table */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 h-full p-[5px]">
             <TooltipProvider delayDuration={100}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
