@@ -118,13 +118,25 @@ serve(async (req) => {
       }),
     });
 
-    const whopData = await whopResponse.json();
-    console.log('Whop API response:', JSON.stringify(whopData));
+    // Handle the response - check for empty body
+    const responseText = await whopResponse.text();
+    console.log('Whop API raw response:', responseText, 'Status:', whopResponse.status);
+    
+    let whopData: any = {};
+    if (responseText) {
+      try {
+        whopData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse Whop response:', parseError);
+        whopData = { raw: responseText };
+      }
+    }
+    console.log('Whop API parsed response:', JSON.stringify(whopData));
 
     if (!whopResponse.ok) {
       console.error('Whop transfer failed:', whopData);
       return new Response(
-        JSON.stringify({ error: whopData.message || 'Failed to process transfer with payment provider' }),
+        JSON.stringify({ error: whopData.message || whopData.error || `Transfer failed with status ${whopResponse.status}` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
