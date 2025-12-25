@@ -126,7 +126,7 @@ const brandMenuItems: MenuItem[] = [{
     { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
     { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },
     { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive },
-    { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
+    // { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
   ]
 }, {
   title: "Settings",
