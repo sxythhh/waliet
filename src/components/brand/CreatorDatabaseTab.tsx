@@ -874,10 +874,11 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
                   ) : (
                     filteredCreators.map((creator) => (
                       <TableRow key={creator.id} className="hover:bg-muted/20 border-0 group">
-                        <TableCell className="py-3">
+                        <TableCell className="py-3 w-[32px]">
                           <Checkbox 
                             checked={selectedCreators.has(creator.id)}
                             onCheckedChange={() => toggleCreatorSelection(creator.id)}
+                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                           />
                         </TableCell>
                         <TableCell className="py-3">
