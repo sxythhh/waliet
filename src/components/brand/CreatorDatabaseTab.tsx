@@ -491,6 +491,28 @@ export function CreatorDatabaseTab({
     if (selectedCampaignFilter !== 'all') {
       filtered = filtered.filter(c => c.campaigns.some(camp => camp.id === selectedCampaignFilter));
     }
+    // Platform filter
+    if (platformFilter !== 'all') {
+      filtered = filtered.filter(c => c.social_accounts.some(s => s.platform === platformFilter));
+    }
+    // Source filter
+    if (sourceFilter !== 'all') {
+      filtered = filtered.filter(c => {
+        if (sourceFilter === 'campaign') return c.source_type === 'campaign_application' || c.source_type === 'video_submission';
+        if (sourceFilter === 'boost') return c.source_type === 'boost_application';
+        if (sourceFilter === 'manual') return c.source_type === 'manual_add';
+        if (sourceFilter === 'import') return c.source_type === 'import';
+        return true;
+      });
+    }
+    // Status filter (active = has campaigns, inactive = no campaigns)
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(c => {
+        if (statusFilter === 'active') return c.campaigns.length > 0;
+        if (statusFilter === 'inactive') return c.campaigns.length === 0;
+        return true;
+      });
+    }
     // Apply sorting
     if (sortBy) {
       filtered = [...filtered].sort((a, b) => {
@@ -500,7 +522,7 @@ export function CreatorDatabaseTab({
       });
     }
     return filtered;
-  }, [creators, searchQuery, selectedCampaignFilter, sortBy, sortOrder]);
+  }, [creators, searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedCreators.length / itemsPerPage);
@@ -512,7 +534,7 @@ export function CreatorDatabaseTab({
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCampaignFilter, sortBy, sortOrder, itemsPerPage]);
+  }, [searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, sortBy, sortOrder, itemsPerPage]);
   const handleExportCSV = () => {
     const headers = ['Username', 'Full Name', 'Email', 'Country', 'Total Views', 'Total Earnings', 'Social Accounts', 'Campaigns'];
     const rows = filteredCreators.map(c => [c.username, c.full_name || '', c.email || '', c.country || '', c.total_views, c.total_earnings.toFixed(2), c.social_accounts.map(s => `${s.platform}:@${s.username}`).join('; '), c.campaigns.map(camp => camp.title).join('; ')]);
@@ -799,82 +821,78 @@ export function CreatorDatabaseTab({
           </div>
         </div>
 
-        {/* Search & Filters */}
-        <div className="mt-5 space-y-3">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+        {/* Search & Filters - Single Row */}
+        <div className="mt-4 flex items-center gap-2 flex-wrap">
+          <div className="relative flex-1 min-w-[200px] max-w-[280px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
             <Input 
               placeholder="Search creators..." 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)} 
-              className="pl-10 h-10 bg-muted/40 border-0 rounded-lg placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30" 
+              className="pl-9 h-9 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" 
             />
           </div>
-          
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
-              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[140px]">
-                <SelectValue placeholder="All campaigns" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All campaigns</SelectItem>
-                {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
-              </SelectContent>
-            </Select>
 
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
-              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[120px]">
-                <SelectValue placeholder="Platform" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All platforms</SelectItem>
-                <SelectItem value="tiktok">TikTok</SelectItem>
-                <SelectItem value="youtube">YouTube</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
-              </SelectContent>
-            </Select>
+          <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
+            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[130px]">
+              <SelectValue placeholder="Campaign" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All campaigns</SelectItem>
+              {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[100px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+          <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[110px]">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All platforms</SelectItem>
+              <SelectItem value="tiktok">TikTok</SelectItem>
+              <SelectItem value="youtube">YouTube</SelectItem>
+              <SelectItem value="instagram">Instagram</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[100px]">
-                <SelectValue placeholder="Source" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All sources</SelectItem>
-                <SelectItem value="campaign">Campaign</SelectItem>
-                <SelectItem value="boost">Boost</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
-                <SelectItem value="import">Import</SelectItem>
-              </SelectContent>
-            </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[100px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
 
-            {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && (
-              <button 
-                onClick={() => {
-                  setSelectedCampaignFilter('all');
-                  setPlatformFilter('all');
-                  setStatusFilter('all');
-                  setSourceFilter('all');
-                  setSearchQuery('');
-                }}
-                className="h-8 px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="h-9 px-3 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm w-auto min-w-[100px]">
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All sources</SelectItem>
+              <SelectItem value="campaign">Campaign</SelectItem>
+              <SelectItem value="boost">Boost</SelectItem>
+              <SelectItem value="manual">Manual</SelectItem>
+              <SelectItem value="import">Import</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && (
+            <button 
+              onClick={() => {
+                setSelectedCampaignFilter('all');
+                setPlatformFilter('all');
+                setStatusFilter('all');
+                setSourceFilter('all');
+                setSearchQuery('');
+              }}
+              className="h-9 px-3 font-inter tracking-[-0.5px] text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
