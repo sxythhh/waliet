@@ -1191,7 +1191,8 @@ export function CampaignAnalyticsTable({
   const totalViews = analytics.reduce((sum, a) => sum + a.total_views, 0);
   const totalVideos = analytics.reduce((sum, a) => sum + a.total_videos, 0);
   const avgEngagement = analytics.length > 0 ? analytics.reduce((sum, a) => sum + a.average_engagement_rate, 0) / analytics.length : 0;
-  if (loading) {
+  // Don't show main skeleton for transactions tab - PayoutRequestsTable handles its own loading state
+  if (loading && activeTab !== 'transactions') {
     return <Card className="bg-card border">
         <CardContent className="p-6">
           <div className="space-y-4">
