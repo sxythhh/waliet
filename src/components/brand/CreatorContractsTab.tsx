@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter } from "lucide-react";
+import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -459,8 +459,8 @@ export function CreatorContractsTab({
               Cancel
             </Button>
             <Button onClick={handleCreateContract} className="flex-1 h-10 font-inter tracking-[-0.5px]">
-              <Send className="h-4 w-4 mr-2" />
-              Send Contract
+              <Plus className="h-4 w-4 mr-2" />
+              Create Contract
             </Button>
           </div>
         </DialogContent>
