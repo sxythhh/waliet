@@ -847,10 +847,11 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
               <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
                   <TableRow className="hover:bg-transparent border-0">
-                    <TableHead className="w-[40px] h-11">
+                    <TableHead className="w-[32px] h-11">
                       <Checkbox 
                         checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
                         onCheckedChange={toggleSelectAll}
+                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground"
                       />
                     </TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
