@@ -639,6 +639,109 @@ export type Database = {
           },
         ]
       }
+      brand_creator_relationships: {
+        Row: {
+          brand_id: string
+          created_at: string
+          external_email: string | null
+          external_handle: string | null
+          external_name: string | null
+          external_platform: string | null
+          first_interaction_at: string | null
+          id: string
+          source_id: string | null
+          source_type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          external_email?: string | null
+          external_handle?: string | null
+          external_name?: string | null
+          external_platform?: string | null
+          first_interaction_at?: string | null
+          id?: string
+          source_id?: string | null
+          source_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          external_email?: string | null
+          external_handle?: string | null
+          external_name?: string | null
+          external_platform?: string | null
+          first_interaction_at?: string | null
+          id?: string
+          source_id?: string | null
+          source_type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_creator_relationships_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_creator_relationships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_creator_relationships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_creator_tags: {
+        Row: {
+          created_at: string
+          id: string
+          relationship_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          relationship_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          relationship_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_creator_tags_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "brand_creator_relationships"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_creator_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_invitations: {
         Row: {
           brand_id: string
@@ -1992,6 +2095,84 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_notes: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          relationship_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          relationship_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          relationship_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_notes_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "brand_creator_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_tags: {
+        Row: {
+          brand_id: string
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          brand_id: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          brand_id?: string
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tags_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
