@@ -375,42 +375,39 @@ export function CreatorDatabaseTab({
       // Get platform creator IDs (non-external)
       const platformCreatorIds = relationships.filter(r => r.user_id).map(r => r.user_id as string);
 
-      // Batch fetch helper to avoid URL length limits with large ID lists
+      // Batch fetch helper to avoid URL length limits with large ID lists - runs batches in parallel
       const batchFetch = async <T,>(
         ids: string[],
         fetchFn: (batchIds: string[]) => Promise<T[]>,
         batchSize = 50
       ): Promise<T[]> => {
-        const results: T[] = [];
+        const batches: string[][] = [];
         for (let i = 0; i < ids.length; i += batchSize) {
-          const batchIds = ids.slice(i, i + batchSize);
-          const batchResults = await fetchFn(batchIds);
-          results.push(...batchResults);
+          batches.push(ids.slice(i, i + batchSize));
         }
-        return results;
+        const batchResults = await Promise.all(batches.map(fetchFn));
+        return batchResults.flat();
       };
 
-      // Fetch profiles for platform creators in batches
-      const profiles = platformCreatorIds.length > 0 
-        ? await batchFetch(platformCreatorIds, async (batchIds) => {
-            const { data } = await supabase
-              .from('profiles')
-              .select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at')
-              .in('id', batchIds);
-            return data || [];
-          })
-        : [];
-
-      // Fetch social accounts for platform creators in batches
-      const socialAccounts = platformCreatorIds.length > 0
-        ? await batchFetch(platformCreatorIds, async (batchIds) => {
-            const { data } = await supabase
-              .from('social_accounts')
-              .select('user_id, platform, username, account_link, follower_count')
-              .in('user_id', batchIds);
-            return data || [];
-          })
-        : [];
+      // Fetch profiles and social accounts in parallel
+      const [profiles, socialAccounts] = platformCreatorIds.length > 0 
+        ? await Promise.all([
+            batchFetch(platformCreatorIds, async (batchIds) => {
+              const { data } = await supabase
+                .from('profiles')
+                .select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at')
+                .in('id', batchIds);
+              return data || [];
+            }),
+            batchFetch(platformCreatorIds, async (batchIds) => {
+              const { data } = await supabase
+                .from('social_accounts')
+                .select('user_id, platform, username, account_link, follower_count')
+                .in('user_id', batchIds);
+              return data || [];
+            })
+          ])
+        : [[], []];
 
       // Get video submissions for view counts
       const {
@@ -814,7 +811,7 @@ export function CreatorDatabaseTab({
   if (loading) {
     return <div className="h-full flex flex-col">
         {/* Header Skeleton */}
-        <div className="p-4 md:p-6 border-b border-border">
+        <div className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Skeleton className="h-9 w-32" />
