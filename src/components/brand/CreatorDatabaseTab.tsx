@@ -11,7 +11,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -145,7 +144,6 @@ const getMinFollowers = (range: string): number => {
       return 0;
   }
 };
-
 const getSourceLabel = (sourceType: string): string => {
   switch (sourceType) {
     case 'campaign_application':
@@ -162,7 +160,6 @@ const getSourceLabel = (sourceType: string): string => {
       return sourceType;
   }
 };
-
 const getSourceColor = (sourceType: string): string => {
   switch (sourceType) {
     case 'campaign_application':
@@ -242,7 +239,6 @@ export function CreatorDatabaseTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100];
-
   const handleSort = (column: 'views' | 'earnings') => {
     if (sortBy === column) {
       if (sortOrder === 'desc') {
@@ -347,21 +343,16 @@ export function CreatorDatabaseTab({
     setLoading(true);
     try {
       // First fetch campaigns to avoid race condition
-      const [campaignsResult, boostsResult] = await Promise.all([
-        supabase.from('campaigns').select('id, title').eq('brand_id', brandId),
-        supabase.from('bounty_campaigns').select('id, title').eq('brand_id', brandId)
-      ]);
+      const [campaignsResult, boostsResult] = await Promise.all([supabase.from('campaigns').select('id, title').eq('brand_id', brandId), supabase.from('bounty_campaigns').select('id, title').eq('brand_id', brandId)]);
       const allCampaigns: Campaign[] = [...(campaignsResult.data || []), ...(boostsResult.data || [])];
       setCampaigns(allCampaigns);
 
       // Fetch all creator relationships for this brand
-      const { data: relationships, error: relError } = await supabase
-        .from('brand_creator_relationships')
-        .select('*')
-        .eq('brand_id', brandId);
-
+      const {
+        data: relationships,
+        error: relError
+      } = await supabase.from('brand_creator_relationships').select('*').eq('brand_id', brandId);
       if (relError) throw relError;
-
       if (!relationships || relationships.length === 0) {
         setCreators([]);
         setLoading(false);
@@ -369,47 +360,41 @@ export function CreatorDatabaseTab({
       }
 
       // Get platform creator IDs (non-external)
-      const platformCreatorIds = relationships
-        .filter(r => r.user_id)
-        .map(r => r.user_id as string);
+      const platformCreatorIds = relationships.filter(r => r.user_id).map(r => r.user_id as string);
 
       // Fetch profiles for platform creators
-      const { data: profiles } = platformCreatorIds.length > 0
-        ? await supabase.from('profiles')
-            .select('id, username, full_name, avatar_url, email, country, created_at')
-            .in('id', platformCreatorIds)
-        : { data: [] };
+      const {
+        data: profiles
+      } = platformCreatorIds.length > 0 ? await supabase.from('profiles').select('id, username, full_name, avatar_url, email, country, created_at').in('id', platformCreatorIds) : {
+        data: []
+      };
 
       // Fetch social accounts for platform creators
-      const { data: socialAccounts } = platformCreatorIds.length > 0
-        ? await supabase.from('social_accounts')
-            .select('user_id, platform, username, account_link, follower_count')
-            .in('user_id', platformCreatorIds)
-        : { data: [] };
+      const {
+        data: socialAccounts
+      } = platformCreatorIds.length > 0 ? await supabase.from('social_accounts').select('user_id, platform, username, account_link, follower_count').in('user_id', platformCreatorIds) : {
+        data: []
+      };
 
       // Get video submissions for view counts
-      const { data: submissions } = await supabase
-        .from('video_submissions')
-        .select('creator_id, views, source_type, source_id')
-        .eq('brand_id', brandId);
+      const {
+        data: submissions
+      } = await supabase.from('video_submissions').select('creator_id, views, source_type, source_id').eq('brand_id', brandId);
 
       // Get wallet transactions for earnings
-      const { data: transactions } = await supabase
-        .from('wallet_transactions')
-        .select('user_id, amount, metadata')
-        .eq('type', 'earning');
+      const {
+        data: transactions
+      } = await supabase.from('wallet_transactions').select('user_id, amount, metadata').eq('type', 'earning');
 
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
-      
       relationships.forEach(rel => {
         const profile = profiles?.find(p => p.id === rel.user_id);
         const isExternal = !rel.user_id;
         const sourceCampaign = allCampaigns.find(c => c.id === rel.source_id);
-        
+
         // Use relationship id as key for external creators, user_id for platform creators
         const key = rel.user_id || rel.id;
-        
         creatorsMap.set(key, {
           id: rel.user_id || rel.id,
           relationship_id: rel.id,
@@ -483,7 +468,6 @@ export function CreatorDatabaseTab({
           }
         }
       });
-
       setCreators(Array.from(creatorsMap.values()));
     } catch (error) {
       console.error('Error fetching creators:', error);
@@ -654,7 +638,7 @@ export function CreatorDatabaseTab({
           tiktok: `https://tiktok.com/@${creator.external_handle}`,
           instagram: `https://instagram.com/${creator.external_handle}`,
           youtube: `https://youtube.com/@${creator.external_handle}`,
-          x: `https://x.com/${creator.external_handle}`,
+          x: `https://x.com/${creator.external_handle}`
         };
         window.open(platformUrls[creator.external_platform] || `https://${creator.external_platform}.com/@${creator.external_handle}`, '_blank');
       } else {
@@ -1048,33 +1032,19 @@ export function CreatorDatabaseTab({
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Source</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
                     
-                    <TableHead 
-                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
-                      onClick={() => handleSort('views')}
-                    >
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('views')}>
                       <div className="flex items-center justify-end gap-1">
                         Views
                         <span className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                          {sortBy === 'views' && sortOrder === 'asc' ? (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          )}
+                          {sortBy === 'views' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                         </span>
                       </div>
                     </TableHead>
-                    <TableHead 
-                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
-                      onClick={() => handleSort('earnings')}
-                    >
+                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('earnings')}>
                       <div className="flex items-center justify-end gap-1">
                         Earnings
                         <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                          {sortBy === 'earnings' && sortOrder === 'asc' ? (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          )}
+                          {sortBy === 'earnings' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                         </span>
                       </div>
                     </TableHead>
@@ -1086,12 +1056,8 @@ export function CreatorDatabaseTab({
                       <TableCell colSpan={7} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
                         {searchQuery || selectedCampaignFilter !== 'all' ? 'No creators match your filters' : 'No creators in your database yet'}
                       </TableCell>
-                    </TableRow> : filteredCreators.map(creator => <TableRow 
-                      key={creator.id} 
-                      className={`hover:bg-muted/20 border-0 group cursor-pointer ${selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''}`}
-                      onClick={() => setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)}
-                    >
-                        <TableCell className="py-3 w-[32px]" onClick={(e) => e.stopPropagation()}>
+                    </TableRow> : filteredCreators.map(creator => <TableRow key={creator.id} className={`hover:bg-muted/20 border-0 group cursor-pointer ${selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''}`} onClick={() => setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)}>
+                        <TableCell className="py-3 w-[32px]" onClick={e => e.stopPropagation()}>
                           <Checkbox checked={selectedCreators.has(creator.id)} onCheckedChange={() => toggleCreatorSelection(creator.id)} className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                         </TableCell>
                         <TableCell className="py-3">
@@ -1107,17 +1073,12 @@ export function CreatorDatabaseTab({
                                 <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
                                   {creator.full_name || creator.username || creator.external_name}
                                 </p>
-                                {creator.is_external && (
-                                  <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                                {creator.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
                                     External
-                                  </span>
-                                )}
+                                  </span>}
                               </div>
                               <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                {creator.is_external 
-                                  ? (creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle')
-                                  : `@${creator.username}`
-                                }
+                                {creator.is_external ? creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle' : `@${creator.username}`}
                               </p>
                             </div>
                           </div>
@@ -1129,11 +1090,9 @@ export function CreatorDatabaseTab({
                                 {getSourceLabel(creator.source_type)}
                               </span>
                             </TooltipTrigger>
-                            {creator.source_campaign_title && (
-                              <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                            {creator.source_campaign_title && <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
                                 <p>From: {creator.source_campaign_title}</p>
-                              </TooltipContent>
-                            )}
+                              </TooltipContent>}
                           </Tooltip>
                         </TableCell>
                         <TableCell className="py-3">
@@ -1170,20 +1129,17 @@ export function CreatorDatabaseTab({
           </ScrollArea>
 
           {/* Pagination */}
-          {totalCreators > 0 && (
-            <div className="border-t border-border/40 bg-background/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-4">
+          {totalCreators > 0 && <div className="border-t border-border/40 bg-background/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 <span>Show</span>
-                <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
+                <Select value={itemsPerPage.toString()} onValueChange={v => setItemsPerPage(Number(v))}>
                   <SelectTrigger className="h-7 w-[70px] text-xs border-0 bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {ITEMS_PER_PAGE_OPTIONS.map(option => (
-                      <SelectItem key={option} value={option.toString()} className="text-xs">
+                    {ITEMS_PER_PAGE_OPTIONS.map(option => <SelectItem key={option} value={option.toString()} className="text-xs">
                         {option}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
                 <span>of {totalCreators.toLocaleString()} creators</span>
@@ -1193,55 +1149,26 @@ export function CreatorDatabaseTab({
                 <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mr-2">
                   Page {currentPage} of {totalPages}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
                   <ChevronsLeft className="h-3.5 w-3.5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
                   <ChevronsRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
           </div>
 
       {/* Creator Details Panel - Floating Overlay */}
-      {selectedCreatorPanel && (
-        <>
+      {selectedCreatorPanel && <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/20 z-40 animate-fade-in"
-            onClick={() => setSelectedCreatorPanel(null)}
-          />
+          <div className="fixed inset-0 bg-black/20 z-40 animate-fade-in" onClick={() => setSelectedCreatorPanel(null)} />
           {/* Panel */}
           <div className="fixed top-0 right-0 h-full w-80 border-l border-border/50 bg-background flex flex-col z-50 shadow-2xl animate-slide-in-right">
           <div className="p-4 border-b border-border/50 flex items-center justify-between">
@@ -1265,17 +1192,12 @@ export function CreatorDatabaseTab({
                     <p className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
                       {selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name}
                     </p>
-                    {selectedCreatorPanel.is_external && (
-                      <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                    {selectedCreatorPanel.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded flex-shrink-0">
                         External
-                      </span>
-                    )}
+                      </span>}
                   </div>
                   <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    {selectedCreatorPanel.is_external 
-                      ? (selectedCreatorPanel.external_handle ? `@${selectedCreatorPanel.external_handle}` : selectedCreatorPanel.external_email || 'No handle')
-                      : `@${selectedCreatorPanel.username}`
-                    }
+                    {selectedCreatorPanel.is_external ? selectedCreatorPanel.external_handle ? `@${selectedCreatorPanel.external_handle}` : selectedCreatorPanel.external_email || 'No handle' : `@${selectedCreatorPanel.username}`}
                   </p>
                 </div>
               </div>
@@ -1301,133 +1223,90 @@ export function CreatorDatabaseTab({
                     <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(selectedCreatorPanel.source_type)}`}>
                       {getSourceLabel(selectedCreatorPanel.source_type)}
                     </span>
-                    {selectedCreatorPanel.source_campaign_title && (
-                      <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                    {selectedCreatorPanel.source_campaign_title && <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                         {selectedCreatorPanel.source_campaign_title}
-                      </span>
-                    )}
+                      </span>}
                   </div>
                 </div>
-                {selectedCreatorPanel.first_interaction_at && (
-                  <div>
+                {selectedCreatorPanel.first_interaction_at && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">First Interaction</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.first_interaction_at), 'MMM d, yyyy')}</p>
-                  </div>
-                )}
-                {selectedCreatorPanel.email && (
-                  <div>
+                  </div>}
+                {selectedCreatorPanel.email && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Email</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.email}</p>
-                  </div>
-                )}
-                {selectedCreatorPanel.country && (
-                  <div>
+                  </div>}
+                {selectedCreatorPanel.country && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Country</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.country}</p>
-                  </div>
-                )}
-                {selectedCreatorPanel.date_joined && (
-                  <div>
+                  </div>}
+                {selectedCreatorPanel.date_joined && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Joined Platform</p>
                     <p className="text-xs font-inter tracking-[-0.5px]">{format(new Date(selectedCreatorPanel.date_joined), 'MMM d, yyyy')}</p>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               {/* Social Accounts */}
-              {selectedCreatorPanel.social_accounts.length > 0 && (
-                <div>
+              {selectedCreatorPanel.social_accounts.length > 0 && <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-2">Social Accounts</p>
                   <div className="space-y-2">
-                    {selectedCreatorPanel.social_accounts.map((account, idx) => (
-                      <a 
-                        key={idx}
-                        href={account.account_link || `https://${account.platform}.com/@${account.username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                    {selectedCreatorPanel.social_accounts.map((account, idx) => <a key={idx} href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors" onClick={e => e.stopPropagation()}>
                         <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
                         <span className="text-xs font-inter tracking-[-0.5px] flex-1">@{account.username}</span>
-                        {account.follower_count && (
-                          <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">{formatNumber(account.follower_count)}</span>
-                        )}
+                        {account.follower_count && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">{formatNumber(account.follower_count)}</span>}
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                      </a>
-                    ))}
+                      </a>)}
                   </div>
-                </div>
-              )}
+                </div>}
 
               {/* Campaigns */}
-              {selectedCreatorPanel.campaigns.length > 0 && (
-                <div>
+              {selectedCreatorPanel.campaigns.length > 0 && <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-2">Active Campaigns</p>
                   <div className="space-y-1">
-                    {selectedCreatorPanel.campaigns.map(campaign => (
-                      <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                    {selectedCreatorPanel.campaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                         <span className="text-xs font-inter tracking-[-0.5px]">{campaign.title}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-[10px] text-amber-600 hover:text-amber-700 hover:bg-amber-500/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCampaignToKickFrom({
-                              creatorId: selectedCreatorPanel.id,
-                              campaignId: campaign.id,
-                              campaignTitle: campaign.title,
-                              campaignType: campaign.type
-                            });
-                            setKickFromCampaignDialogOpen(true);
-                          }}
-                        >
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={e => {
+                      e.stopPropagation();
+                      setCampaignToKickFrom({
+                        creatorId: selectedCreatorPanel.id,
+                        campaignId: campaign.id,
+                        campaignTitle: campaign.title,
+                        campaignType: campaign.type
+                      });
+                      setKickFromCampaignDialogOpen(true);
+                    }}>
                           <UserX className="h-3 w-3 mr-1" />
                           Remove
                         </Button>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
-                </div>
-              )}
+                </div>}
             </div>
           </ScrollArea>
 
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
-            <button 
-              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleViewProfile(selectedCreatorPanel);
-              }}
-            >
+            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onClick={e => {
+              e.stopPropagation();
+              handleViewProfile(selectedCreatorPanel);
+            }}>
               View Profile
             </button>
-            <button 
-              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/60 text-foreground rounded-lg hover:bg-muted transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSendMessage(selectedCreatorPanel);
-              }}
-            >
+            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/60 text-foreground rounded-lg hover:bg-muted transition-colors" onClick={e => {
+              e.stopPropagation();
+              handleSendMessage(selectedCreatorPanel);
+            }}>
               Send Message
             </button>
-            <button 
-              className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              onClick={(e) => {
-                e.stopPropagation();
-                initiateRemoveCreator(selectedCreatorPanel);
-              }}
-              disabled={selectedCreatorPanel.campaigns.length > 0}
-            >
+            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
+              e.stopPropagation();
+              initiateRemoveCreator(selectedCreatorPanel);
+            }} disabled={selectedCreatorPanel.campaigns.length > 0}>
               Remove
             </button>
           </div>
         </div>
-        </>
-      )}
+        </>}
 
       {/* Bulk Actions Bar */}
       {selectedCreators.size > 0 && <div className="border-t border-border/50 px-4 py-3 bg-gradient-to-r from-muted/40 to-muted/20 backdrop-blur-sm flex items-center justify-between">
@@ -1442,7 +1321,7 @@ export function CreatorDatabaseTab({
               Clear
             </button>
             <button onClick={handleBulkMessage} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-foreground bg-background border border-border/60 rounded-md hover:bg-muted/50 hover:border-border transition-all flex items-center gap-1.5 shadow-sm">
-              <MessageSquare className="h-3 w-3" />
+              
               Message
             </button>
             <button onClick={() => setAddToCampaignDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm">
