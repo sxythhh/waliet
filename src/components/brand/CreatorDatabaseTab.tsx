@@ -1143,7 +1143,7 @@ export function CreatorDatabaseTab({
           <div className="p-4 border-b border-border/50 flex items-center justify-between">
             <h3 className="font-instrument text-sm font-medium tracking-tight">Creator Details</h3>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => {
               const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
               if (currentIndex > 0) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex - 1]);
@@ -1151,7 +1151,7 @@ export function CreatorDatabaseTab({
             }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0}>
                 <ChevronUp className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => {
               const currentIndex = filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id);
               if (currentIndex < filteredCreators.length - 1) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex + 1]);
@@ -1159,7 +1159,7 @@ export function CreatorDatabaseTab({
             }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1}>
                 <ChevronDown className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedCreatorPanel(null)}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => setSelectedCreatorPanel(null)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
