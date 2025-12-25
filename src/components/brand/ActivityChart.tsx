@@ -66,7 +66,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
               onClick={() => toggleMetric(metric)}
               className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-medium font-inter tracking-[-0.5px] transition-all ${
                 activeMetrics.includes(metric)
-                  ? 'bg-white/10 text-white'
+                  ? 'bg-[#0a0a0a] text-white'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
