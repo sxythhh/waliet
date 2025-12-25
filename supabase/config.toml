@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.get-link-analytics]
 verify_jwt = true
+
+[functions.transfer-to-withdraw]
+verify_jwt = true
