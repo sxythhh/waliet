@@ -98,7 +98,7 @@ serve(async (req) => {
 
     // Generate idempotency key
     const idempotenceKey = crypto.randomUUID();
-    console.log(`Creating Whop transfer with idempotence_key=${idempotenceKey}`);
+    console.log(`Creating Whop transfer: origin=${whopParentCompanyId}, destination=${brand.whop_company_id}, amount=${amount}`);
 
     // Call Whop API to create transfer
     // Transfer from parent company (Virality) to brand's ledger account
@@ -111,7 +111,7 @@ serve(async (req) => {
       body: JSON.stringify({
         origin_id: whopParentCompanyId,
         destination_id: brand.whop_company_id,
-        amount: amount, // Whop expects decimal dollars, not cents
+        amount: amount,
         currency: 'usd',
         notes: `Transfer to ${brand.name} withdraw balance`.slice(0, 50), // Max 50 chars
         idempotence_key: idempotenceKey,
