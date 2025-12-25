@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare } from "lucide-react";
+import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -141,6 +142,14 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
   const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
   const [selectedCampaignToAdd, setSelectedCampaignToAdd] = useState<string>("");
   const [addingToCampaign, setAddingToCampaign] = useState(false);
+  
+  // Remove creator state
+  const [removeCreatorDialogOpen, setRemoveCreatorDialogOpen] = useState(false);
+  const [creatorToRemove, setCreatorToRemove] = useState<Creator | null>(null);
+  const [removingCreator, setRemovingCreator] = useState(false);
+  const [kickFromCampaignDialogOpen, setKickFromCampaignDialogOpen] = useState(false);
+  const [campaignToKickFrom, setCampaignToKickFrom] = useState<{ creatorId: string; campaignId: string; campaignTitle: string; campaignType: 'campaign' | 'boost' } | null>(null);
+  const [kickingFromCampaign, setKickingFromCampaign] = useState(false);
 
   // Find Creators state
   const [discoverableCreators, setDiscoverableCreators] = useState<DiscoverableCreator[]>([]);
@@ -561,6 +570,123 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
     } finally {
       setAddingToCampaign(false);
     }
+  };
+
+  const handleViewProfile = (creator: Creator) => {
+    window.open(`/creator/${creator.username}`, '_blank');
+  };
+
+  const handleSendMessage = (creator: Creator) => {
+    if (onStartConversation) {
+      onStartConversation(creator.id, creator.full_name || creator.username);
+    } else {
+      toast.info('Navigate to the Messages tab to start a conversation');
+    }
+  };
+
+  const handleKickFromCampaign = async () => {
+    if (!campaignToKickFrom) return;
+    
+    setKickingFromCampaign(true);
+    try {
+      const { creatorId, campaignId, campaignType, campaignTitle } = campaignToKickFrom;
+      
+      if (campaignType === 'boost') {
+        // Remove from bounty_applications
+        await supabase
+          .from('bounty_applications')
+          .delete()
+          .eq('bounty_campaign_id', campaignId)
+          .eq('user_id', creatorId);
+        
+        // Also remove any video submissions
+        await supabase
+          .from('boost_video_submissions')
+          .delete()
+          .eq('bounty_campaign_id', campaignId)
+          .eq('user_id', creatorId);
+      } else {
+        // Remove from social_account_campaigns junction table
+        const { data: socialAccounts } = await supabase
+          .from('social_accounts')
+          .select('id')
+          .eq('user_id', creatorId);
+        
+        if (socialAccounts && socialAccounts.length > 0) {
+          await supabase
+            .from('social_account_campaigns')
+            .delete()
+            .eq('campaign_id', campaignId)
+            .in('social_account_id', socialAccounts.map(sa => sa.id));
+        }
+        
+        // Remove video submissions
+        await supabase
+          .from('video_submissions')
+          .delete()
+          .eq('source_id', campaignId)
+          .eq('creator_id', creatorId);
+      }
+      
+      toast.success(`Removed creator from ${campaignTitle}`);
+      setKickFromCampaignDialogOpen(false);
+      setCampaignToKickFrom(null);
+      fetchCreators();
+    } catch (error) {
+      console.error('Error removing from campaign:', error);
+      toast.error('Failed to remove creator from campaign');
+    } finally {
+      setKickingFromCampaign(false);
+    }
+  };
+
+  const handleRemoveCreator = async () => {
+    if (!creatorToRemove) return;
+    
+    // Check if creator is in any campaigns
+    if (creatorToRemove.campaigns.length > 0) {
+      toast.error('Please remove this creator from all campaigns first');
+      setRemoveCreatorDialogOpen(false);
+      return;
+    }
+    
+    setRemovingCreator(true);
+    try {
+      // Remove all video submissions for this brand
+      await supabase
+        .from('video_submissions')
+        .delete()
+        .eq('brand_id', brandId)
+        .eq('creator_id', creatorToRemove.id);
+      
+      // Remove any conversations
+      await supabase
+        .from('conversations')
+        .delete()
+        .eq('brand_id', brandId)
+        .eq('creator_id', creatorToRemove.id);
+      
+      toast.success(`Removed ${creatorToRemove.full_name || creatorToRemove.username} from database`);
+      setRemoveCreatorDialogOpen(false);
+      setCreatorToRemove(null);
+      fetchCreators();
+    } catch (error) {
+      console.error('Error removing creator:', error);
+      toast.error('Failed to remove creator from database');
+    } finally {
+      setRemovingCreator(false);
+    }
+  };
+
+  const initiateRemoveCreator = (creator: Creator) => {
+    if (creator.campaigns.length > 0) {
+      toast.error(`This creator is active in ${creator.campaigns.length} campaign(s). Remove them from campaigns first.`, {
+        description: creator.campaigns.map(c => c.title).join(', ')
+      });
+      return;
+    }
+    setCreatorToRemove(creator);
+    setRemoveCreatorDialogOpen(true);
   };
 
   if (loading) {
@@ -1040,18 +1166,56 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="font-inter tracking-[-0.5px]">
-                              <DropdownMenuItem>
+                            <DropdownMenuContent align="end" className="font-inter tracking-[-0.3px] w-48">
+                              <DropdownMenuItem onClick={() => handleViewProfile(creator)}>
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 View Profile
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleSendMessage(creator)}>
                                 <MessageSquare className="h-4 w-4 mr-2" />
                                 Send Message
                               </DropdownMenuItem>
+                              {creator.campaigns.length > 0 && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                      <UserX className="h-4 w-4 mr-2" />
+                                      Remove from Campaign
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent className="font-inter tracking-[-0.3px]">
+                                      {creator.campaigns.map((campaign) => (
+                                        <DropdownMenuItem 
+                                          key={campaign.id}
+                                          onClick={() => {
+                                            setCampaignToKickFrom({
+                                              creatorId: creator.id,
+                                              campaignId: campaign.id,
+                                              campaignTitle: campaign.title,
+                                              campaignType: campaign.type
+                                            });
+                                            setKickFromCampaignDialogOpen(true);
+                                          }}
+                                          className="text-amber-600"
+                                        >
+                                          {campaign.title}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuSubContent>
+                                  </DropdownMenuSub>
+                                </>
+                              )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => initiateRemoveCreator(creator)}
+                                disabled={creator.campaigns.length > 0}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
                                 Remove from Database
+                                {creator.campaigns.length > 0 && (
+                                  <span className="ml-auto text-[10px] text-muted-foreground">({creator.campaigns.length} active)</span>
+                                )}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1185,6 +1349,52 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
       </Dialog>
 
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
+
+      {/* Remove from Campaign Confirmation */}
+      <AlertDialog open={kickFromCampaignDialogOpen} onOpenChange={setKickFromCampaignDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-instrument tracking-tight">Remove from Campaign</AlertDialogTitle>
+            <AlertDialogDescription className="font-inter tracking-[-0.3px]">
+              Are you sure you want to remove this creator from <span className="font-medium text-foreground">{campaignToKickFrom?.campaignTitle}</span>? 
+              This will remove all their submissions and data associated with this campaign.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-inter tracking-[-0.3px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleKickFromCampaign}
+              disabled={kickingFromCampaign}
+              className="bg-amber-600 hover:bg-amber-700 font-inter tracking-[-0.3px]"
+            >
+              {kickingFromCampaign ? 'Removing...' : 'Remove from Campaign'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove from Database Confirmation */}
+      <AlertDialog open={removeCreatorDialogOpen} onOpenChange={setRemoveCreatorDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-instrument tracking-tight">Remove from Database</AlertDialogTitle>
+            <AlertDialogDescription className="font-inter tracking-[-0.3px]">
+              Are you sure you want to remove <span className="font-medium text-foreground">{creatorToRemove?.full_name || creatorToRemove?.username}</span> from your database? 
+              This will delete all their submission history and conversations with your brand.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-inter tracking-[-0.3px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRemoveCreator}
+              disabled={removingCreator}
+              className="bg-destructive hover:bg-destructive/90 font-inter tracking-[-0.3px]"
+            >
+              {removingCreator ? 'Removing...' : 'Remove from Database'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
         </>
       )}
     </div>
