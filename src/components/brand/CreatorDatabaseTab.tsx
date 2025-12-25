@@ -381,10 +381,10 @@ export function CreatorDatabaseTab({
         data: submissions
       } = await supabase.from('video_submissions').select('creator_id, views, source_type, source_id').eq('brand_id', brandId);
 
-      // Get wallet transactions for earnings
+      // Get earnings using the database function for accurate brand-specific calculation
       const {
-        data: transactions
-      } = await supabase.from('wallet_transactions').select('user_id, amount, metadata').eq('type', 'earning');
+        data: earnings
+      } = await supabase.rpc('get_brand_creator_earnings', { p_brand_id: brandId });
 
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
@@ -451,21 +451,11 @@ export function CreatorDatabaseTab({
         }
       });
 
-      // Add earnings from transactions
-      transactions?.forEach(tx => {
-        const creator = creatorsMap.get(tx.user_id);
+      // Add earnings from the database function results
+      earnings?.forEach((earning: { user_id: string; total_earnings: number }) => {
+        const creator = creatorsMap.get(earning.user_id);
         if (creator) {
-          const metadata = tx.metadata as {
-            campaign_id?: string;
-            boost_id?: string;
-          } | null;
-          if (metadata?.campaign_id || metadata?.boost_id) {
-            const campaignId = metadata.campaign_id || metadata.boost_id;
-            const campaign = allCampaigns.find(c => c.id === campaignId);
-            if (campaign) {
-              creator.total_earnings += tx.amount || 0;
-            }
-          }
+          creator.total_earnings = Number(earning.total_earnings) || 0;
         }
       });
       setCreators(Array.from(creatorsMap.values()));
