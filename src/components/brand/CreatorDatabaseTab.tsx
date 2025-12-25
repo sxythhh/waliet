@@ -588,12 +588,10 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
         .eq('creator_id', creator.id)
         .maybeSingle();
       
+      let conversationId: string;
+      
       if (existingConversation) {
-        // Navigate to messages tab with this conversation
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set('subtab', 'messages');
-        setSearchParams(newParams);
-        toast.success(`Opening conversation with ${creator.full_name || creator.username}`);
+        conversationId = existingConversation.id;
       } else {
         // Create new conversation
         const { data: newConversation, error } = await supabase
@@ -606,13 +604,14 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
           .single();
         
         if (error) throw error;
-        
-        // Navigate to messages tab
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set('subtab', 'messages');
-        setSearchParams(newParams);
-        toast.success(`Started conversation with ${creator.full_name || creator.username}`);
+        conversationId = newConversation.id;
       }
+      
+      // Navigate to messages tab with conversation ID
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('subtab', 'messages');
+      newParams.set('conversation', conversationId);
+      setSearchParams(newParams);
     } catch (error) {
       console.error('Error starting conversation:', error);
       toast.error('Failed to start conversation');

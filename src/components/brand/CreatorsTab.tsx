@@ -133,6 +133,22 @@ export function CreatorsTab({
     fetchCreators();
     fetchConversations();
   }, [brandId]);
+  
+  // Handle conversation URL param - auto-select conversation when navigating from database
+  useEffect(() => {
+    const conversationId = searchParams.get('conversation');
+    if (conversationId && conversations.length > 0 && !activeConversation) {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        setActiveConversation(conversation);
+        setMobileView('conversation');
+        // Clear the conversation param from URL after selecting
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('conversation');
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [searchParams, conversations, activeConversation]);
   useEffect(() => {
     if (activeConversation) {
       fetchMessages(activeConversation.id);
