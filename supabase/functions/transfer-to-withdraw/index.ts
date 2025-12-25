@@ -111,9 +111,9 @@ serve(async (req) => {
       body: JSON.stringify({
         origin_id: whopParentCompanyId,
         destination_id: brand.whop_company_id,
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: amount, // Whop expects decimal dollars, not cents
         currency: 'usd',
-        notes: `Transfer from Virality balance to ${brand.name} withdraw balance`,
+        notes: `Transfer to ${brand.name} withdraw balance`.slice(0, 50), // Max 50 chars
         idempotence_key: idempotenceKey,
       }),
     });
