@@ -35,6 +35,14 @@ import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
 import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
 import storefrontIcon from "@/assets/storefront-icon.svg";
+import messagesInactive from "@/assets/messages-inactive.svg";
+import messagesActive from "@/assets/messages-active.svg";
+import databaseInactive from "@/assets/database-inactive.svg";
+import databaseActive from "@/assets/database-active.svg";
+import contractsInactive from "@/assets/contracts-inactive.svg";
+import contractsActive from "@/assets/contracts-active.svg";
+import leaderboardInactive from "@/assets/leaderboard-inactive.svg";
+import leaderboardActive from "@/assets/leaderboard-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -63,11 +71,18 @@ interface BrandMembership {
     brand_color: string | null;
   };
 }
+interface SubItem {
+  title: string;
+  subtab: string;
+  iconInactive: string;
+  iconActive: string;
+}
+
 interface MenuItem {
   title: string;
   tab: string;
   icon: any;
-  subItems?: { title: string; subtab: string; icon: any }[];
+  subItems?: SubItem[];
 }
 
 const creatorMenuItems: MenuItem[] = [{
@@ -108,10 +123,10 @@ const brandMenuItems: MenuItem[] = [{
   tab: "creators",
   icon: null as any,
   subItems: [
-    { title: "Messages", subtab: "messages", icon: MessageSquare },
-    { title: "Database", subtab: "database", icon: Database },
-    { title: "Contracts", subtab: "contracts", icon: FileText },
-    { title: "Leaderboard", subtab: "leaderboard", icon: Trophy },
+    { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
+    { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },
+    { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive },
+    { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
   ]
 }, {
   title: "Settings",
@@ -628,16 +643,18 @@ export function AppSidebar() {
                   {/* Subitems */}
                   {!isCollapsed && creatorsExpanded && (
                     <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-[#1f1f1f] pl-3">
-                      {item.subItems.map((subItem: { title: string; subtab: string; icon: any }) => {
+                      {item.subItems.map((subItem) => {
                         const isSubActive = isActive && currentSubtab === subItem.subtab;
-                        const SubIcon = subItem.icon;
                         return (
                           <button
                             key={subItem.subtab}
                             onClick={() => handleSubtabClick(subItem.subtab)}
                             className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-[#0e0e0e] ${isSubActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`}
                           >
-                            <SubIcon className="h-4 w-4" />
+                            <div className="relative h-4 w-4">
+                              <img src={subItem.iconInactive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-0' : 'opacity-100'}`} />
+                              <img src={subItem.iconActive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-100' : 'opacity-0'}`} />
+                            </div>
                             <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px]">{subItem.title}</span>
                           </button>
                         );
