@@ -365,33 +365,31 @@ export function BrandWalletTab({
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent className="py-0 px-0">
-          {transactions.length === 0 ? <div className="text-center py-8">
-              <p className="text-neutral-400">No transactions yet</p>
-            </div> : <div className="space-y-3">
-              {transactions.map(tx => <div key={tx.id} className="flex items-center justify-between py-3 border-b last:border-0 border-[#1f1f1f]/0">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                      {tx.amount > 0 ? <Plus className="w-4 h-4 text-green-400" /> : <ArrowUpRight className="w-4 h-4 text-red-400" />}
-                    </div>
+          {transactions.filter(tx => tx.status !== 'pending').length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {transactions
+                .filter(tx => tx.status !== 'pending')
+                .map(tx => (
+                  <div key={tx.id} className="flex items-center justify-between py-3">
                     <div>
-                      <p className="text-white font-medium">
+                      <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
                         {tx.description || getTransactionTypeLabel(tx.type)}
                       </p>
-                      <p className="text-sm text-neutral-500">
+                      <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
                         {formatDate(tx.created_at)}
                       </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-semibold ${tx.amount > 0 ? 'text-green-400' : 'text-white'}`}>
+                    <p className={`font-['Inter'] text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
                       {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
                     </p>
-                    <p className={`text-xs ${getStatusColor(tx.status)}`}>
-                      {tx.status}
-                    </p>
                   </div>
-                </div>)}
-            </div>}
+                ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
