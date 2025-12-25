@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
 import { BudgetProgressCard } from "./BudgetProgressCard";
+import { ActivityChart, ActivityData } from "./ActivityChart";
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 interface Boost {
   id: string;
@@ -121,6 +122,7 @@ export function BoostHomeTab({
     cpm: 0
   });
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
+  const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -270,6 +272,41 @@ export function BoostHomeTab({
         });
         setMetricsData(formattedMetrics);
 
+        // Calculate activity data (submissions and unique creators over time)
+        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string> }>();
+        filteredSubmissions.forEach(sub => {
+          if (sub.submitted_at) {
+            const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
+            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
+            existing.submissions += 1;
+            if (sub.creator_id) {
+              existing.creatorIds.add(sub.creator_id);
+            }
+            activityMap.set(dateKey, existing);
+          }
+        });
+
+        // Convert to sorted array with cumulative counts
+        const sortedActivityDates = Array.from(activityMap.entries()).sort((a, b) => 
+          new Date(a[0]).getTime() - new Date(b[0]).getTime()
+        );
+        
+        let cumulativeActivitySubmissions = 0;
+        const allActivityCreatorIds = new Set<string>();
+        const formattedActivityData: ActivityData[] = sortedActivityDates.map(([dateKey, data]) => {
+          cumulativeActivitySubmissions += data.submissions;
+          data.creatorIds.forEach(id => allActivityCreatorIds.add(id));
+          const dateObj = new Date(dateKey);
+          return {
+            date: format(dateObj, 'MMM d'),
+            datetime: format(dateObj, 'MMM d, yyyy'),
+            submissions: cumulativeActivitySubmissions,
+            creators: allActivityCreatorIds.size,
+            dailySubmissions: data.submissions,
+            dailyCreators: data.creatorIds.size
+          };
+        });
+        setActivityData(formattedActivityData);
         // Map approved submissions from filtered data to top videos format - sort by views descending
         const approvedVideos = filteredSubmissions
           .filter(s => s.status === 'approved')
@@ -417,8 +454,11 @@ export function BoostHomeTab({
         onTopUp={onTopUp}
       />
 
-      {/* Performance Chart - using shared component */}
-      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} lastSyncedAt={lastSyncedAt} />
+      {/* Charts Row - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} lastSyncedAt={lastSyncedAt} />
+        <ActivityChart activityData={activityData} />
+      </div>
 
       {/* Top Performing Videos - using shared component */}
       <TopPerformingVideos videos={topVideos} totalVideos={totalVideos} />

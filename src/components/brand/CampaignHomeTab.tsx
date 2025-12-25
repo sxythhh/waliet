@@ -9,6 +9,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { ManualMetricsDialog } from "./ManualMetricsDialog";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
+import { ActivityChart, ActivityData } from "./ActivityChart";
 
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 
@@ -88,6 +89,7 @@ export function CampaignHomeTab({
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
   const [metricsData, setMetricsData] = useState<MetricsData[]>([]);
+  const [activityData, setActivityData] = useState<ActivityData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [brand, setBrand] = useState<{
@@ -279,6 +281,71 @@ export function CampaignHomeTab({
         } else {
           setMetricsData([]);
         }
+        
+        // Calculate activity data (submissions and unique creators over time)
+        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string> }>();
+        filteredSubmissions.forEach(sub => {
+          if (sub.submitted_at) {
+            const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
+            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
+            existing.submissions += 1;
+            // We don't have creator_id in filteredSubmissions here, but we can get it from allSubmissions
+            activityMap.set(dateKey, existing);
+          }
+        });
+
+        // Re-process with creator IDs from full video submissions query
+        const activityMapWithCreators = new Map<string, { submissions: number; creatorIds: Set<string> }>();
+        const videoSubmissionsForActivity = await supabase
+          .from('video_submissions')
+          .select('submitted_at, creator_id')
+          .eq('source_type', 'campaign')
+          .eq('source_id', campaignId);
+        
+        const activitySubmissions = videoSubmissionsForActivity.data || [];
+        let filteredActivitySubmissions = activitySubmissions;
+        if (dateRange) {
+          filteredActivitySubmissions = activitySubmissions.filter(s => {
+            if (!s.submitted_at) return false;
+            const date = new Date(s.submitted_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+        
+        filteredActivitySubmissions.forEach(sub => {
+          if (sub.submitted_at) {
+            const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
+            const existing = activityMapWithCreators.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
+            existing.submissions += 1;
+            if (sub.creator_id) {
+              existing.creatorIds.add(sub.creator_id);
+            }
+            activityMapWithCreators.set(dateKey, existing);
+          }
+        });
+
+        // Convert to sorted array with cumulative counts
+        const sortedActivityDates = Array.from(activityMapWithCreators.entries()).sort((a, b) => 
+          new Date(a[0]).getTime() - new Date(b[0]).getTime()
+        );
+        
+        let cumulativeSubmissions = 0;
+        const allCreatorIds = new Set<string>();
+        const formattedActivityData: ActivityData[] = sortedActivityDates.map(([dateKey, data]) => {
+          cumulativeSubmissions += data.submissions;
+          data.creatorIds.forEach(id => allCreatorIds.add(id));
+          const dateObj = new Date(dateKey);
+          return {
+            date: format(dateObj, 'MMM d'),
+            datetime: format(dateObj, 'MMM d, yyyy'),
+            submissions: cumulativeSubmissions,
+            creators: allCreatorIds.size,
+            dailySubmissions: data.submissions,
+            dailyCreators: data.creatorIds.size
+          };
+        });
+        setActivityData(formattedActivityData);
+        
         setIsLoading(false);
 
         // Load top videos from video_submissions sorted by views (non-blocking)
@@ -498,13 +565,16 @@ export function CampaignHomeTab({
         </Card>
       </div>
 
-      {/* Metrics Chart - using shared component */}
-      <PerformanceChart
-        metricsData={metricsData}
-        isRefreshing={isRefreshing}
-        onRefresh={handleRefresh}
-        lastSyncedAt={lastSyncedAt}
-      />
+      {/* Charts Row - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <PerformanceChart
+          metricsData={metricsData}
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          lastSyncedAt={lastSyncedAt}
+        />
+        <ActivityChart activityData={activityData} />
+      </div>
 
       {/* Top Performing Videos - using shared component */}
       <TopPerformingVideos
