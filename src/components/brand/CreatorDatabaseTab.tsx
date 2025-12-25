@@ -1450,9 +1450,7 @@ export function CreatorDatabaseTab({
                   <div className="space-y-2">
                     {selectedCreatorPanel.social_accounts.map((account, idx) => <a key={idx} href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors" onClick={e => e.stopPropagation()}>
                         <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
-                        <span className="text-xs font-inter tracking-[-0.5px] flex-1">@{account.username}</span>
-                        {account.follower_count && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">{formatNumber(account.follower_count)}</span>}
-                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs font-inter tracking-[-0.5px] flex-1">{account.username}</span>
                       </a>)}
                   </div>
                 </div>}
