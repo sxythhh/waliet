@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,7 @@ const getMinFollowers = (range: string): number => {
 };
 
 export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorDatabaseTabProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
@@ -573,14 +575,47 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
   };
 
   const handleViewProfile = (creator: Creator) => {
-    window.open(`/creator/${creator.username}`, '_blank');
+    window.open(`/@${creator.username}`, '_blank');
   };
 
-  const handleSendMessage = (creator: Creator) => {
-    if (onStartConversation) {
-      onStartConversation(creator.id, creator.full_name || creator.username);
-    } else {
-      toast.info('Navigate to the Messages tab to start a conversation');
+  const handleSendMessage = async (creator: Creator) => {
+    try {
+      // Check if conversation already exists
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('brand_id', brandId)
+        .eq('creator_id', creator.id)
+        .maybeSingle();
+      
+      if (existingConversation) {
+        // Navigate to messages tab with this conversation
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('subtab', 'messages');
+        setSearchParams(newParams);
+        toast.success(`Opening conversation with ${creator.full_name || creator.username}`);
+      } else {
+        // Create new conversation
+        const { data: newConversation, error } = await supabase
+          .from('conversations')
+          .insert({
+            brand_id: brandId,
+            creator_id: creator.id
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        // Navigate to messages tab
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('subtab', 'messages');
+        setSearchParams(newParams);
+        toast.success(`Started conversation with ${creator.full_name || creator.username}`);
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      toast.error('Failed to start conversation');
     }
   };
 
