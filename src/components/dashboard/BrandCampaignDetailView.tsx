@@ -152,13 +152,9 @@ export function BrandCampaignDetailView({
     const checkDubIntegration = async () => {
       const checkBrandId = entityBrandId || brandId;
       if (!checkBrandId) return;
-      
-      const { data } = await supabase
-        .from("brands")
-        .select("dub_api_key")
-        .eq("id", checkBrandId)
-        .single();
-      
+      const {
+        data
+      } = await supabase.from("brands").select("dub_api_key").eq("id", checkBrandId).single();
       setHasDubIntegration(!!data?.dub_api_key);
     };
     checkDubIntegration();
@@ -356,11 +352,9 @@ export function BrandCampaignDetailView({
         {/* Header with title and campaign selector */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 bg-background gap-2 sm:px-[15px] py-[8px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {onBack && (
-              <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
+            {onBack && <Button variant="ghost" size="icon" onClick={onBack} className="h-8 w-8">
                 <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
+              </Button>}
             {/* Campaign/Boost Selector Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -442,7 +436,7 @@ export function BrandCampaignDetailView({
 
         {/* Tab Navigation */}
         <div className="flex-shrink-0 border-b border-border bg-background">
-          <nav className="flex gap-0">
+          <nav className="flex gap-0 px-[17px]">
             {detailTabs.map(tab => <button key={tab.id} onClick={() => {
             setActiveDetailTab(tab.id);
             const newParams = new URLSearchParams(searchParams);
