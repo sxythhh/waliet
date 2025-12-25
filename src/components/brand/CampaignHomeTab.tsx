@@ -684,12 +684,12 @@ export function CampaignHomeTab({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Expected CPM</p>
+            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Effective CPM</p>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.expectedPayout)}</p>
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.effectiveCPM)}</p>
             </div>
             <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-              {formatNumber(stats.unpaidViews)} pending views @ {formatCurrency(stats.rpmRate)} CPM
+              Expected CPM: {formatCurrency(stats.totalViews > 0 ? ((stats.totalPayouts + stats.expectedPayout) / stats.totalViews) * 1000 : stats.rpmRate)}
             </p>
           </div>
         </Card>
