@@ -851,7 +851,7 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
                       <Checkbox 
                         checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
                         onCheckedChange={toggleSelectAll}
-                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground"
+                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
                       />
                     </TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
@@ -879,7 +879,7 @@ export function CreatorDatabaseTab({ brandId, onStartConversation }: CreatorData
                           <Checkbox 
                             checked={selectedCreators.has(creator.id)}
                             onCheckedChange={() => toggleCreatorSelection(creator.id)}
-                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-muted-foreground data-[state=checked]:border-muted-foreground transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                           />
                         </TableCell>
                         <TableCell className="py-3">
