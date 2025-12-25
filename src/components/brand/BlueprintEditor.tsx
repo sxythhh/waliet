@@ -17,7 +17,6 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
-
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -113,7 +112,6 @@ export function BlueprintEditor({
   const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [enabledSections, setEnabledSections] = useState<SectionType[]>(DEFAULT_SECTIONS);
   const [activeId, setActiveId] = useState<string | null>(null);
-  
   const videoInputRef = useRef<HTMLInputElement>(null);
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
@@ -163,7 +161,6 @@ export function BlueprintEditor({
     if (brandRes.data) {
       setBrand(brandRes.data);
     }
-
     setLoading(false);
   };
   const saveBlueprint = useCallback(debounce(async (updates: Partial<Blueprint>) => {
@@ -895,23 +892,17 @@ export function BlueprintEditor({
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               
               <div className="h-4 w-px bg-border/50 shrink-0" />
-              {brand?.logo_url ? (
-                <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
-                  prev.delete('blueprint');
-                  return prev;
-                })} />
-              ) : (
-                <div 
-                  className="h-5 w-5 sm:h-6 sm:w-6 rounded flex items-center justify-center text-white text-xs font-semibold shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: brand?.brand_color || '#8B5CF6' }}
-                  onClick={() => setSearchParams(prev => {
-                    prev.delete('blueprint');
-                    return prev;
-                  })}
-                >
+              {brand?.logo_url ? <img src={brand.logo_url} alt={brand.name} className="h-5 w-5 sm:h-6 sm:w-6 rounded object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchParams(prev => {
+              prev.delete('blueprint');
+              return prev;
+            })} /> : <div className="h-5 w-5 sm:h-6 sm:w-6 rounded flex items-center justify-center text-white text-xs font-semibold shrink-0 cursor-pointer hover:opacity-80 transition-opacity" style={{
+              backgroundColor: brand?.brand_color || '#8B5CF6'
+            }} onClick={() => setSearchParams(prev => {
+              prev.delete('blueprint');
+              return prev;
+            })}>
                   {(brand?.name || 'B').charAt(0).toUpperCase()}
-                </div>
-              )}
+                </div>}
               <span className="text-muted-foreground/50 shrink-0">/</span>
               <Input value={blueprint.title} onChange={e => updateBlueprint({
               title: e.target.value
@@ -921,12 +912,7 @@ export function BlueprintEditor({
                 </span>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button 
-                onClick={() => window.open(`/blueprint/${blueprint.id}/preview`, '_blank')}
-                className="px-3 sm:px-4 py-2 rounded-md bg-muted hover:bg-muted/80 text-foreground font-geist tracking-[-0.5px] text-xs sm:text-sm transition-opacity"
-              >
-                Preview
-              </button>
+              
               <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-white border border-border text-black font-geist tracking-[-0.5px] text-xs sm:text-sm hover:bg-white/90 transition-opacity">
                 Activate Blueprint
               </button>
