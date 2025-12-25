@@ -1907,6 +1907,95 @@ export type Database = {
           },
         ]
       }
+      creator_contracts: {
+        Row: {
+          boost_id: string | null
+          brand_id: string
+          created_at: string
+          creator_email: string
+          creator_id: string | null
+          custom_terms: string | null
+          duration_months: number
+          end_date: string | null
+          id: string
+          monthly_rate: number
+          signature_url: string | null
+          signed_at: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+          videos_per_month: number
+        }
+        Insert: {
+          boost_id?: string | null
+          brand_id: string
+          created_at?: string
+          creator_email: string
+          creator_id?: string | null
+          custom_terms?: string | null
+          duration_months?: number
+          end_date?: string | null
+          id?: string
+          monthly_rate?: number
+          signature_url?: string | null
+          signed_at?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+          videos_per_month?: number
+        }
+        Update: {
+          boost_id?: string | null
+          brand_id?: string
+          created_at?: string
+          creator_email?: string
+          creator_id?: string | null
+          custom_terms?: string | null
+          duration_months?: number
+          end_date?: string | null
+          id?: string
+          monthly_rate?: number
+          signature_url?: string | null
+          signed_at?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          videos_per_month?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_contracts_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_contracts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_contracts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_contracts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_testimonials: {
         Row: {
           brand_id: string

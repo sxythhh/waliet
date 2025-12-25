@@ -46,26 +46,6 @@ interface CreatorContractsTabProps {
   brandId: string;
 }
 
-// Mock data - in production this would come from a contracts table
-const generateMockContracts = (boosts: Boost[]): Contract[] => {
-  return boosts.slice(0, 3).map((boost, idx) => ({
-    id: `contract-${idx}`,
-    title: `${boost.title} - Creator Agreement`,
-    creator_id: `creator-${idx}`,
-    creator_name: ['Sarah Johnson', 'Mike Chen', 'Alex Rivera'][idx] || 'Creator',
-    creator_avatar: null,
-    boost_id: boost.id,
-    boost_title: boost.title,
-    status: (['signed', 'sent', 'draft'] as const)[idx] || 'draft',
-    monthly_rate: boost.monthly_retainer,
-    videos_per_month: boost.videos_per_month,
-    start_date: new Date(Date.now() - idx * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    end_date: new Date(Date.now() + (12 - idx) * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    created_at: new Date(Date.now() - (idx + 5) * 24 * 60 * 60 * 1000).toISOString(),
-    signed_at: idx === 0 ? new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() : null,
-    terms: `Standard content creation agreement for ${boost.title}. Creator agrees to produce ${boost.videos_per_month} videos per month at $${boost.monthly_retainer}/month.`
-  }));
-};
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-muted text-muted-foreground', icon: FileText },
@@ -111,12 +91,79 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         .eq('brand_id', brandId)
         .eq('status', 'active');
 
-      const fetchedBoosts = boostsData || [];
-      setBoosts(fetchedBoosts);
+      setBoosts(boostsData || []);
 
-      // For now, generate mock contracts from boosts
-      // In production, this would fetch from a contracts table
-      setContracts(generateMockContracts(fetchedBoosts));
+      // Fetch contracts from database
+      const { data: contractsData, error } = await supabase
+        .from('creator_contracts')
+        .select(`
+          id,
+          title,
+          creator_id,
+          creator_email,
+          boost_id,
+          status,
+          monthly_rate,
+          videos_per_month,
+          start_date,
+          end_date,
+          duration_months,
+          custom_terms,
+          signed_at,
+          created_at
+        `)
+        .eq('brand_id', brandId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Map to Contract interface with creator info
+      const mappedContracts: Contract[] = await Promise.all(
+        (contractsData || []).map(async (contract) => {
+          let creatorName = contract.creator_email;
+          let creatorAvatar = null;
+
+          if (contract.creator_id) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username, full_name, avatar_url')
+              .eq('id', contract.creator_id)
+              .single();
+            
+            if (profile) {
+              creatorName = profile.full_name || profile.username || contract.creator_email;
+              creatorAvatar = profile.avatar_url;
+            }
+          }
+
+          // Get boost title
+          let boostTitle = null;
+          if (contract.boost_id) {
+            const boost = boostsData?.find(b => b.id === contract.boost_id);
+            boostTitle = boost?.title || null;
+          }
+
+          return {
+            id: contract.id,
+            title: contract.title,
+            creator_id: contract.creator_id || '',
+            creator_name: creatorName,
+            creator_avatar: creatorAvatar,
+            boost_id: contract.boost_id,
+            boost_title: boostTitle,
+            status: contract.status as Contract['status'],
+            monthly_rate: Number(contract.monthly_rate),
+            videos_per_month: contract.videos_per_month,
+            start_date: contract.start_date,
+            end_date: contract.end_date,
+            created_at: contract.created_at,
+            signed_at: contract.signed_at,
+            terms: contract.custom_terms || ''
+          };
+        })
+      );
+
+      setContracts(mappedContracts);
     } catch (error) {
       console.error('Error fetching contracts:', error);
       toast.error('Failed to load contracts');
@@ -149,19 +196,46 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       return;
     }
 
-    // In production, this would create a real contract and send for e-signature
-    toast.success('Contract created and sent for signature');
-    setCreateDialogOpen(false);
-    setNewContract({
-      boost_id: '',
-      creator_email: '',
-      monthly_rate: '',
-      videos_per_month: '',
-      start_date: format(new Date(), 'yyyy-MM-dd'),
-      duration_months: '12',
-      custom_terms: ''
-    });
-    fetchData();
+    const boost = boosts.find(b => b.id === newContract.boost_id);
+    const startDate = new Date(newContract.start_date);
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months));
+
+    try {
+      const { error } = await supabase
+        .from('creator_contracts')
+        .insert({
+          brand_id: brandId,
+          boost_id: newContract.boost_id,
+          creator_email: newContract.creator_email,
+          title: `${boost?.title || 'Content'} - Creator Agreement`,
+          monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || 0,
+          videos_per_month: parseInt(newContract.videos_per_month) || boost?.videos_per_month || 1,
+          start_date: newContract.start_date,
+          end_date: endDate.toISOString().split('T')[0],
+          duration_months: parseInt(newContract.duration_months),
+          custom_terms: newContract.custom_terms,
+          status: 'sent'
+        });
+
+      if (error) throw error;
+
+      toast.success('Contract created and sent for signature');
+      setCreateDialogOpen(false);
+      setNewContract({
+        boost_id: '',
+        creator_email: '',
+        monthly_rate: '',
+        videos_per_month: '',
+        start_date: format(new Date(), 'yyyy-MM-dd'),
+        duration_months: '12',
+        custom_terms: ''
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error creating contract:', error);
+      toast.error('Failed to create contract');
+    }
   };
 
   const handleSendReminder = (contract: Contract) => {
@@ -363,16 +437,19 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
 
       {/* Create Contract Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-instrument tracking-tight">Create New Contract</DialogTitle>
-            <DialogDescription className="font-inter tracking-[-0.5px]">
-              Generate an e-signature ready contract for a creator
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="font-inter tracking-[-0.5px]">Job Post / Boost *</Label>
+        <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+          <div className="p-6 pb-4">
+            <DialogHeader className="p-0 space-y-1">
+              <DialogTitle className="font-instrument tracking-tight text-lg">New Contract</DialogTitle>
+              <DialogDescription className="font-inter tracking-[-0.5px] text-xs">
+                Send an e-signature ready agreement
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          
+          <div className="px-6 pb-6 space-y-5">
+            <div className="space-y-1.5">
+              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Job Post / Boost</Label>
               <Select 
                 value={newContract.boost_id} 
                 onValueChange={(v) => {
@@ -385,7 +462,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                   });
                 }}
               >
-                <SelectTrigger className="mt-2">
+                <SelectTrigger className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]">
                   <SelectValue placeholder="Select a job post" />
                 </SelectTrigger>
                 <SelectContent>
@@ -398,57 +475,60 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
               </Select>
             </div>
 
-            <div>
-              <Label className="font-inter tracking-[-0.5px]">Creator Email *</Label>
+            <div className="space-y-1.5">
+              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Creator Email</Label>
               <Input 
                 type="email"
                 placeholder="creator@email.com"
                 value={newContract.creator_email}
                 onChange={(e) => setNewContract({...newContract, creator_email: e.target.value})}
-                className="mt-2"
+                className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="font-inter tracking-[-0.5px]">Monthly Rate ($)</Label>
-                <Input 
-                  type="number"
-                  placeholder="1000"
-                  value={newContract.monthly_rate}
-                  onChange={(e) => setNewContract({...newContract, monthly_rate: e.target.value})}
-                  className="mt-2"
-                />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Monthly Rate</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                  <Input 
+                    type="number"
+                    placeholder="1000"
+                    value={newContract.monthly_rate}
+                    onChange={(e) => setNewContract({...newContract, monthly_rate: e.target.value})}
+                    className="h-10 bg-muted/40 border-0 pl-7 font-inter tracking-[-0.5px]"
+                  />
+                </div>
               </div>
-              <div>
-                <Label className="font-inter tracking-[-0.5px]">Videos/Month</Label>
+              <div className="space-y-1.5">
+                <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Videos/Month</Label>
                 <Input 
                   type="number"
                   placeholder="4"
                   value={newContract.videos_per_month}
                   onChange={(e) => setNewContract({...newContract, videos_per_month: e.target.value})}
-                  className="mt-2"
+                  className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="font-inter tracking-[-0.5px]">Start Date</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Start Date</Label>
                 <Input 
                   type="date"
                   value={newContract.start_date}
                   onChange={(e) => setNewContract({...newContract, start_date: e.target.value})}
-                  className="mt-2"
+                  className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]"
                 />
               </div>
-              <div>
-                <Label className="font-inter tracking-[-0.5px]">Duration</Label>
+              <div className="space-y-1.5">
+                <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Duration</Label>
                 <Select 
                   value={newContract.duration_months} 
                   onValueChange={(v) => setNewContract({...newContract, duration_months: v})}
                 >
-                  <SelectTrigger className="mt-2">
+                  <SelectTrigger className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -461,23 +541,33 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
               </div>
             </div>
 
-            <div>
-              <Label className="font-inter tracking-[-0.5px]">Additional Terms (Optional)</Label>
+            <div className="space-y-1.5">
+              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Additional Terms</Label>
               <Textarea 
                 placeholder="Any custom terms or conditions..."
                 value={newContract.custom_terms}
                 onChange={(e) => setNewContract({...newContract, custom_terms: e.target.value})}
-                className="mt-2 min-h-[80px]"
+                className="min-h-[72px] bg-muted/40 border-0 font-inter tracking-[-0.5px] resize-none"
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateContract}>
-              <Send className="h-4 w-4 mr-2" />
-              Create & Send
+          
+          <div className="flex gap-2 p-4 bg-muted/20">
+            <Button 
+              variant="ghost" 
+              onClick={() => setCreateDialogOpen(false)}
+              className="flex-1 h-10 font-inter tracking-[-0.5px]"
+            >
+              Cancel
             </Button>
-          </DialogFooter>
+            <Button 
+              onClick={handleCreateContract}
+              className="flex-1 h-10 font-inter tracking-[-0.5px]"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send Contract
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
