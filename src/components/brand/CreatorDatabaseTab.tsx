@@ -1196,136 +1196,162 @@ export function CreatorDatabaseTab({
 
       {/* Add Creators Dialog */}
       <Dialog open={addCreatorsDialogOpen} onOpenChange={setAddCreatorsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="font-instrument tracking-tight text-lg">Add Creators</DialogTitle>
-            <DialogDescription className="font-inter tracking-[-0.3px]">
-              Add creators to your database via search, manual entry, or CSV import
+        <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden bg-background">
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4">
+            <DialogTitle className="font-instrument tracking-tight text-xl font-semibold">Add Creators</DialogTitle>
+            <DialogDescription className="font-inter tracking-[-0.3px] text-muted-foreground mt-1">
+              Search, add manually, or import from CSV
             </DialogDescription>
-          </DialogHeader>
+          </div>
           
-          <Tabs value={addCreatorsMode} onValueChange={(v) => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/50">
-              <TabsTrigger value="search" className="gap-2 text-xs font-inter">
-                <Users className="h-3.5 w-3.5" />
-                Find Creators
-              </TabsTrigger>
-              <TabsTrigger value="manual" className="gap-2 text-xs font-inter">
-                <UserPlus className="h-3.5 w-3.5" />
-                Manual Add
-              </TabsTrigger>
-              <TabsTrigger value="import" className="gap-2 text-xs font-inter">
-                <FileSpreadsheet className="h-3.5 w-3.5" />
-                Import CSV
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={addCreatorsMode} onValueChange={(v) => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col">
+            {/* Tab Pills */}
+            <div className="px-6">
+              <div className="flex gap-1 p-1 bg-muted/40 rounded-lg w-fit">
+                <button
+                  onClick={() => setAddCreatorsMode('search')}
+                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
+                    addCreatorsMode === 'search' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Find
+                </button>
+                <button
+                  onClick={() => setAddCreatorsMode('manual')}
+                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
+                    addCreatorsMode === 'manual' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Manual
+                </button>
+                <button
+                  onClick={() => setAddCreatorsMode('import')}
+                  className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${
+                    addCreatorsMode === 'import' 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Import
+                </button>
+              </div>
+            </div>
             
             {/* Find Creators Tab */}
-            <TabsContent value="search" className="flex-1 min-h-0 mt-4">
-              <div className="space-y-4 h-full flex flex-col">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      placeholder="Search by name, niche, or username..." 
-                      value={discoverSearch} 
-                      onChange={e => setDiscoverSearch(e.target.value)} 
-                      className="pl-10 h-10 bg-muted/30 border-0 font-inter tracking-[-0.5px]" 
-                    />
-                  </div>
+            <TabsContent value="search" className="flex-1 mt-0 px-6 py-4">
+              <div className="space-y-4">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                  <Input 
+                    placeholder="Search creators..." 
+                    value={discoverSearch} 
+                    onChange={e => setDiscoverSearch(e.target.value)} 
+                    className="pl-10 h-11 bg-muted/30 border-0 font-inter text-sm focus-visible:ring-1 focus-visible:ring-primary/20" 
+                  />
                 </div>
                 
-                <div className="flex flex-wrap gap-2">
+                {/* Filters Row */}
+                <div className="flex gap-2">
                   <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                    <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/30 border-0">
+                    <SelectTrigger className="h-9 text-xs bg-muted/30 border-0 w-auto min-w-[110px]">
                       <SelectValue placeholder="Platform" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       <SelectItem value="all">All Platforms</SelectItem>
                       {PLATFORMS.map(p => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={followerFilter} onValueChange={setFollowerFilter}>
-                    <SelectTrigger className="w-[100px] h-8 text-xs bg-muted/30 border-0">
+                    <SelectTrigger className="h-9 text-xs bg-muted/30 border-0 w-auto min-w-[90px]">
                       <SelectValue placeholder="Followers" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       {FOLLOWER_RANGES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={countryFilter} onValueChange={setCountryFilter}>
-                    <SelectTrigger className="w-[120px] h-8 text-xs bg-muted/30 border-0">
+                    <SelectTrigger className="h-9 text-xs bg-muted/30 border-0 w-auto min-w-[110px]">
                       <SelectValue placeholder="Country" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       <SelectItem value="all">All Countries</SelectItem>
                       {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 
-                <ScrollArea className="flex-1 min-h-[280px] max-h-[320px]">
+                {/* Results */}
+                <ScrollArea className="h-[300px]">
                   {hasActivePlan === false ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-4">
-                        <img src={vpnKeyIcon} alt="Key" className="h-6 w-6" />
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-14 h-14 rounded-full bg-muted/60 flex items-center justify-center mb-4">
+                        <img src={vpnKeyIcon} alt="Key" className="h-6 w-6 opacity-60" />
                       </div>
-                      <h3 className="font-semibold text-sm mb-1">Upgrade to Access</h3>
-                      <p className="text-xs text-muted-foreground mb-4 font-inter">Subscribe to browse creators</p>
+                      <h3 className="font-semibold text-sm mb-1 font-inter">Upgrade to Access</h3>
+                      <p className="text-xs text-muted-foreground mb-5 font-inter">Subscribe to browse creators</p>
                       <Button size="sm" onClick={() => { setAddCreatorsDialogOpen(false); setSubscriptionGateOpen(true); }}>
                         Upgrade Plan
                       </Button>
                     </div>
                   ) : discoverLoading ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+                    <div className="space-y-2">
+                      {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-lg" />)}
                     </div>
                   ) : discoverableCreators.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Users className="h-8 w-8 text-muted-foreground/40 mb-3" />
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <Users className="h-10 w-10 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground font-inter">No creators found</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3 pr-2">
-                      {discoverableCreators.slice(0, 8).map(creator => (
-                        <div key={creator.id} className="rounded-lg border border-border/50 bg-card/30 p-3 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center gap-2.5 mb-2">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={creator.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs">{creator.username.slice(0,2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{creator.full_name || creator.username}</p>
-                              <p className="text-[11px] text-muted-foreground truncate">@{creator.username}</p>
+                    <div className="space-y-1">
+                      {discoverableCreators.slice(0, 10).map(creator => (
+                        <div 
+                          key={creator.id} 
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/40 transition-colors group"
+                        >
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={creator.avatar_url || undefined} />
+                            <AvatarFallback className="text-xs font-medium bg-muted/60">
+                              {creator.username.slice(0,2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate font-inter">{creator.full_name || creator.username}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground truncate font-inter">@{creator.username}</p>
+                              <div className="flex gap-1">
+                                {creator.social_accounts.slice(0, 2).map(acc => (
+                                  <img key={acc.platform} src={PLATFORM_LOGOS[acc.platform]} alt={acc.platform} className="h-3 w-3 opacity-50" />
+                                ))}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex gap-1.5">
-                              {creator.social_accounts.slice(0, 2).map(acc => (
-                                <img key={acc.platform} src={PLATFORM_LOGOS[acc.platform]} alt={acc.platform} className="h-3.5 w-3.5 opacity-60" />
-                              ))}
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="h-7 text-xs px-2.5"
-                              onClick={async () => {
-                                try {
-                                  await supabase.from('brand_creator_relationships').insert({
-                                    brand_id: brandId,
-                                    user_id: creator.id,
-                                    source_type: 'manual_add'
-                                  });
-                                  toast.success(`Added ${creator.full_name || creator.username}`);
-                                  fetchCreators();
-                                } catch (e) {
-                                  toast.error('Failed to add creator');
-                                }
-                              }}
-                            >
-                              Add
-                            </Button>
-                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 px-3 text-xs font-inter opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                            onClick={async () => {
+                              try {
+                                await supabase.from('brand_creator_relationships').insert({
+                                  brand_id: brandId,
+                                  user_id: creator.id,
+                                  source_type: 'manual_add'
+                                });
+                                toast.success(`Added ${creator.full_name || creator.username}`);
+                                fetchCreators();
+                              } catch (e) {
+                                toast.error('Failed to add creator');
+                              }
+                            }}
+                          >
+                            Add
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -1335,57 +1361,54 @@ export function CreatorDatabaseTab({
             </TabsContent>
             
             {/* Manual Add Tab */}
-            <TabsContent value="manual" className="mt-4">
-              <div className="space-y-4">
+            <TabsContent value="manual" className="mt-0 px-6 py-4">
+              <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-inter">Username</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-inter text-muted-foreground">Username</Label>
                     <Input 
                       placeholder="@username" 
                       value={manualCreator.username}
                       onChange={e => setManualCreator(prev => ({ ...prev, username: e.target.value }))}
-                      className="mt-1.5 bg-muted/30 border-0"
+                      className="h-11 bg-muted/30 border-0 font-inter"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs font-inter">Full Name</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-inter text-muted-foreground">Full Name</Label>
                     <Input 
                       placeholder="John Doe" 
                       value={manualCreator.name}
                       onChange={e => setManualCreator(prev => ({ ...prev, name: e.target.value }))}
-                      className="mt-1.5 bg-muted/30 border-0"
+                      className="h-11 bg-muted/30 border-0 font-inter"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs font-inter">Email</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-inter text-muted-foreground">Email</Label>
                     <Input 
                       type="email"
                       placeholder="email@example.com" 
                       value={manualCreator.email}
                       onChange={e => setManualCreator(prev => ({ ...prev, email: e.target.value }))}
-                      className="mt-1.5 bg-muted/30 border-0"
+                      className="h-11 bg-muted/30 border-0 font-inter"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs font-inter">Phone (optional)</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-inter text-muted-foreground">Phone</Label>
                     <Input 
                       placeholder="+1 234 567 8900" 
                       value={manualCreator.phone}
                       onChange={e => setManualCreator(prev => ({ ...prev, phone: e.target.value }))}
-                      className="mt-1.5 bg-muted/30 border-0"
+                      className="h-11 bg-muted/30 border-0 font-inter"
                     />
                   </div>
                 </div>
-                <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <p className="text-xs text-muted-foreground font-inter">
-                    Manually added creators will be marked as external contacts until they join the platform.
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground font-inter">
+                  Manually added creators are marked as external until they join.
+                </p>
                 <Button 
-                  className="w-full"
+                  className="w-full h-11"
                   disabled={manualAddLoading || (!manualCreator.username && !manualCreator.email)}
                   onClick={async () => {
                     setManualAddLoading(true);
@@ -1397,7 +1420,7 @@ export function CreatorDatabaseTab({
                         external_handle: manualCreator.username.replace('@', '') || null,
                         source_type: 'manual_add'
                       });
-                      toast.success('Creator added successfully');
+                      toast.success('Creator added');
                       setManualCreator({ username: '', name: '', email: '', phone: '' });
                       fetchCreators();
                       setAddCreatorsDialogOpen(false);
@@ -1414,29 +1437,33 @@ export function CreatorDatabaseTab({
             </TabsContent>
             
             {/* Import CSV Tab */}
-            <TabsContent value="import" className="mt-4">
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-xs font-inter">Paste CSV Data</Label>
+            <TabsContent value="import" className="mt-0 px-6 py-4">
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs font-inter text-muted-foreground">Paste CSV Data</Label>
                   <Textarea 
-                    placeholder="tiktok,@username&#10;instagram,@anotheruser&#10;youtube,@creator" 
+                    placeholder="tiktok,@username&#10;instagram,@creator&#10;youtube,@channel" 
                     value={importData} 
                     onChange={e => setImportData(e.target.value)} 
-                    className="mt-1.5 min-h-[160px] font-mono text-sm bg-muted/30 border-0" 
+                    className="min-h-[180px] font-mono text-sm bg-muted/30 border-0 resize-none" 
                   />
                 </div>
-                <div className="flex items-start gap-2 p-3 bg-muted/30 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
-                  <p className="text-xs text-muted-foreground font-inter">
-                    Format: <code className="bg-muted px-1 rounded">platform,username</code> (one per line). Imported creators will be added to your database.
-                  </p>
-                </div>
-                <Button onClick={handleImport} disabled={importLoading || !importData.trim()} className="w-full">
+                <p className="text-xs text-muted-foreground font-inter">
+                  Format: <code className="bg-muted/60 px-1.5 py-0.5 rounded text-[11px]">platform,username</code> per line
+                </p>
+                <Button 
+                  onClick={handleImport} 
+                  disabled={importLoading || !importData.trim()} 
+                  className="w-full h-11"
+                >
                   {importLoading ? 'Importing...' : 'Import Creators'}
                 </Button>
               </div>
             </TabsContent>
           </Tabs>
+          
+          {/* Footer spacing */}
+          <div className="h-4" />
         </DialogContent>
       </Dialog>
 
