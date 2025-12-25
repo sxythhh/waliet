@@ -236,6 +236,8 @@ export function CreatorDatabaseTab({
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [followerFilter, setFollowerFilter] = useState<string>('any');
   const [countryFilter, setCountryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -797,14 +799,23 @@ export function CreatorDatabaseTab({
           </div>
         </div>
 
-        {/* Database Filters */}
-        <div className="flex flex-col md:flex-row gap-3 mt-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by name, email, or social handle..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/30 border-border" />
-            </div>
+        {/* Search & Filters */}
+        <div className="mt-5 space-y-3">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+            <Input 
+              placeholder="Search creators..." 
+              value={searchQuery} 
+              onChange={e => setSearchQuery(e.target.value)} 
+              className="pl-10 h-10 bg-muted/40 border-0 rounded-lg placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/30" 
+            />
+          </div>
+          
+          {/* Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={selectedCampaignFilter} onValueChange={setSelectedCampaignFilter}>
-              <SelectTrigger className="w-full md:w-[200px] bg-muted/30">
+              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[140px]">
                 <SelectValue placeholder="All campaigns" />
               </SelectTrigger>
               <SelectContent>
@@ -812,7 +823,59 @@ export function CreatorDatabaseTab({
                 {campaigns.map(campaign => <SelectItem key={campaign.id} value={campaign.id}>{campaign.title}</SelectItem>)}
               </SelectContent>
             </Select>
+
+            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[120px]">
+                <SelectValue placeholder="Platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All platforms</SelectItem>
+                <SelectItem value="tiktok">TikTok</SelectItem>
+                <SelectItem value="youtube">YouTube</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[100px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="h-8 px-3 bg-muted/40 border-0 rounded-full text-sm font-medium gap-1.5 w-auto min-w-[100px]">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                <SelectItem value="campaign">Campaign</SelectItem>
+                <SelectItem value="boost">Boost</SelectItem>
+                <SelectItem value="manual">Manual</SelectItem>
+                <SelectItem value="import">Import</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || searchQuery) && (
+              <button 
+                onClick={() => {
+                  setSelectedCampaignFilter('all');
+                  setPlatformFilter('all');
+                  setStatusFilter('all');
+                  setSourceFilter('all');
+                  setSearchQuery('');
+                }}
+                className="h-8 px-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Clear all
+              </button>
+            )}
           </div>
+        </div>
       </div>
 
       {/* Table */}
