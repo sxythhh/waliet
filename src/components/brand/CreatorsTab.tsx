@@ -96,7 +96,6 @@ export function CreatorsTab({
   } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const PLATFORM_LOGOS = useMemo(() => getPlatformLogos(isDark), [isDark]);
-
   const navigateToDatabase = () => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set('subtab', 'database');
@@ -133,7 +132,7 @@ export function CreatorsTab({
     fetchCreators();
     fetchConversations();
   }, [brandId]);
-  
+
   // Handle conversation URL param - auto-select conversation when navigating from database
   useEffect(() => {
     const conversationId = searchParams.get('conversation');
@@ -145,7 +144,9 @@ export function CreatorsTab({
         // Clear the conversation param from URL after selecting
         const newParams = new URLSearchParams(searchParams);
         newParams.delete('conversation');
-        setSearchParams(newParams, { replace: true });
+        setSearchParams(newParams, {
+          replace: true
+        });
       }
     }
   }, [searchParams, conversations, activeConversation]);
@@ -874,10 +875,7 @@ export function CreatorsTab({
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span 
-                className="font-inter tracking-[-0.5px] font-medium text-sm flex-1 hover:underline cursor-pointer"
-                onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}
-              >
+              <span className="font-inter tracking-[-0.5px] font-medium text-sm flex-1 hover:underline cursor-pointer" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
               <div className="flex items-center gap-2">
@@ -910,9 +908,7 @@ export function CreatorsTab({
           </> : <div className="flex-1 flex flex-col">
             {/* Empty state header with toggle */}
             <div className="h-14 px-4 border-b border-border flex items-center justify-end shrink-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
-                {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
-              </Button>
+              
             </div>
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
