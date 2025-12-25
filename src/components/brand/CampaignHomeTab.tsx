@@ -88,6 +88,8 @@ interface StatsData {
   unpaidViews: number;
   previousPeriodViews: number;
   viewsDifference: number;
+  periodViews: number; // Views generated during the selected period
+  allTimeViews: number; // All-time cumulative views
 }
 
 const formatNumber = (num: number) => {
@@ -119,7 +121,9 @@ export function CampaignHomeTab({
     paidViews: 0,
     unpaidViews: 0,
     previousPeriodViews: 0,
-    viewsDifference: 0
+    viewsDifference: 0,
+    periodViews: 0,
+    allTimeViews: 0
   });
   const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [totalVideos, setTotalVideos] = useState(0);
@@ -172,10 +176,9 @@ export function CampaignHomeTab({
           .select('total_views, paid_views')
           .eq('campaign_id', campaignId);
         
+        // Query ALL metrics to calculate period differences (we need the baseline before the period)
         let chartMetricsQuery = supabase.from('program_video_metrics').select('*').eq('source_type', 'campaign').eq('source_id', campaignId).order('recorded_at', { ascending: true });
-        if (dateRange) {
-          chartMetricsQuery = chartMetricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
-        }
+        // Note: We fetch all metrics and filter client-side to properly calculate deltas
 
         // Execute ALL queries in parallel
         const [brandResult, campaignResult, allTransactionsResult, videoSubmissionsResult, analyticsResult, chartMetricsResult] = await Promise.all([
@@ -285,35 +288,78 @@ export function CampaignHomeTab({
           previousPeriodViews = previousPeriodSubmissions.reduce((sum, s) => sum + (s.views || 0), 0);
         }
         
-        const currentViews = (totalPaidViews + unpaidViews) > 0 ? (totalPaidViews + unpaidViews) : totalViews;
-        const viewsDifference = currentViews - previousPeriodViews;
-        
-        setStats({
-          totalViews,
-          totalPayouts,
-          effectiveCPM,
-          viewsLastWeek: viewsLastWeekValue,
-          payoutsLastWeek,
-          viewsChangePercent,
-          payoutsChangePercent,
-          totalSubmissions: totalSubmissionsCount,
-          approvedSubmissions: approvedSubmissionsCount,
-          paidViews: totalPaidViews,
-          unpaidViews: unpaidViews,
-          previousPeriodViews,
-          viewsDifference
-        });
+        // Note: Stats will be set after metrics processing to include period-specific views
 
         // Process chart metrics
         const rawMetrics = chartMetricsResult.data || [];
+        
+        // Calculate period-specific views using metrics snapshots
+        let periodViews = 0;
+        let periodPreviousViews = 0;
+        let allTimeTotalViews = 0;
+        
         if (rawMetrics.length > 0) {
-          const formattedMetrics: MetricsData[] = rawMetrics.map((m, index) => {
+          // Get the latest total (all-time cumulative)
+          allTimeTotalViews = rawMetrics[rawMetrics.length - 1].total_views || 0;
+          
+          if (dateRange && timeframe !== 'all_time') {
+            // Find the last record before the period start (baseline)
+            const baselineRecord = rawMetrics
+              .filter(m => new Date(m.recorded_at) < dateRange.start)
+              .pop();
+            const baselineViews = baselineRecord?.total_views || 0;
+            
+            // Find the latest record within the period
+            const periodRecords = rawMetrics.filter(m => {
+              const date = new Date(m.recorded_at);
+              return date >= dateRange.start && date <= dateRange.end;
+            });
+            const latestPeriodRecord = periodRecords.length > 0 ? periodRecords[periodRecords.length - 1] : null;
+            const currentPeriodViews = latestPeriodRecord?.total_views || baselineViews;
+            
+            // Period views = current - baseline
+            periodViews = Math.max(0, currentPeriodViews - baselineViews);
+            
+            // Calculate previous period views for comparison
+            const previousPeriodRange = getPreviousPeriodRange(timeframe);
+            if (previousPeriodRange) {
+              const prevBaselineRecord = rawMetrics
+                .filter(m => new Date(m.recorded_at) < previousPeriodRange.start)
+                .pop();
+              const prevBaselineViews = prevBaselineRecord?.total_views || 0;
+              
+              const prevPeriodRecords = rawMetrics.filter(m => {
+                const date = new Date(m.recorded_at);
+                return date >= previousPeriodRange.start && date <= previousPeriodRange.end;
+              });
+              const latestPrevPeriodRecord = prevPeriodRecords.length > 0 ? prevPeriodRecords[prevPeriodRecords.length - 1] : null;
+              const prevPeriodEndViews = latestPrevPeriodRecord?.total_views || prevBaselineViews;
+              
+              periodPreviousViews = Math.max(0, prevPeriodEndViews - prevBaselineViews);
+            }
+          } else {
+            // All time - use the cumulative total
+            periodViews = allTimeTotalViews;
+          }
+          
+          // Filter metrics for chart display based on selected timeframe
+          let filteredMetrics = rawMetrics;
+          if (dateRange) {
+            filteredMetrics = rawMetrics.filter(m => {
+              const date = new Date(m.recorded_at);
+              return date >= dateRange.start && date <= dateRange.end;
+            });
+          }
+          
+          const formattedMetrics: MetricsData[] = filteredMetrics.map((m, index) => {
             const views = m.total_views || 0;
             const likes = m.total_likes || 0;
             const shares = m.total_shares || 0;
             const bookmarks = m.total_bookmarks || 0;
             const videos = m.total_videos || 0;
-            const prevRecord = index > 0 ? rawMetrics[index - 1] : null;
+            // For daily values, find the previous record from the full rawMetrics array
+            const currentRecordIndex = rawMetrics.findIndex(rm => rm.id === m.id);
+            const prevRecord = currentRecordIndex > 0 ? rawMetrics[currentRecordIndex - 1] : null;
             return {
               date: format(new Date(m.recorded_at), 'MMM d'),
               datetime: format(new Date(m.recorded_at), 'MMM d, yyyy h:mm a'),
@@ -334,6 +380,26 @@ export function CampaignHomeTab({
           setMetricsData([]);
         }
         
+        // Update stats with period-specific views
+        const periodViewsDifference = periodViews - periodPreviousViews;
+        
+        setStats({
+          totalViews,
+          totalPayouts,
+          effectiveCPM,
+          viewsLastWeek: viewsLastWeekValue,
+          payoutsLastWeek,
+          viewsChangePercent,
+          payoutsChangePercent,
+          totalSubmissions: totalSubmissionsCount,
+          approvedSubmissions: approvedSubmissionsCount,
+          paidViews: totalPaidViews,
+          unpaidViews: unpaidViews,
+          previousPeriodViews: periodPreviousViews,
+          viewsDifference: periodViewsDifference,
+          periodViews,
+          allTimeViews: allTimeTotalViews
+        });
         // Calculate activity data (submissions and unique creators over time)
         const activityMapWithCreators = new Map<string, { submissions: number; creatorIds: Set<string>; applications: number }>();
         const videoSubmissionsForActivity = await supabase
@@ -548,7 +614,9 @@ export function CampaignHomeTab({
             <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber((stats.paidViews + stats.unpaidViews) > 0 ? (stats.paidViews + stats.unpaidViews) : (metricsData.length > 0 ? metricsData[metricsData.length - 1].views : stats.totalViews))}</p>
+                <p className="text-3xl font-bold tracking-[-0.5px]">
+                  {formatNumber(timeframe === 'all_time' ? stats.allTimeViews : stats.periodViews)}
+                </p>
                 {stats.viewsDifference !== 0 && timeframe !== 'all_time' && (
                   <span className={`text-xs font-medium tracking-[-0.5px] ${stats.viewsDifference > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                     {stats.viewsDifference > 0 ? '+' : ''}{formatNumber(stats.viewsDifference)}
