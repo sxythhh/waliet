@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, FileText, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter } from "lucide-react";
+import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -284,12 +284,12 @@ export function CreatorContractsTab({
       <ScrollArea className="flex-1 p-4 md:p-6">
         <div className="space-y-3">
           {filteredContracts.length === 0 ? <Card className="p-12 text-center">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              
               <p className="text-lg font-medium font-instrument">No contracts yet</p>
               <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mb-4">
                 Create your first contract to get started with creator agreements
               </p>
-              <Button onClick={() => setCreateDialogOpen(true)}>Create Contract</Button>
+              
             </Card> : filteredContracts.map(contract => {
           const StatusIcon = statusConfig[contract.status].icon;
           return <Card key={contract.id} className="hover:bg-muted/30 transition-colors cursor-pointer border-border" onClick={() => handleViewContract(contract)}>
