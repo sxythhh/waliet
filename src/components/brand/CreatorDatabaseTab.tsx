@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX } from "lucide-react";
+import { Search, Download, Upload, Filter, MoreHorizontal, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -188,6 +188,24 @@ export function CreatorDatabaseTab({
   const [showFilters, setShowFilters] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+
+  // Sorting state
+  const [sortBy, setSortBy] = useState<'views' | 'earnings' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (column: 'views' | 'earnings') => {
+    if (sortBy === column) {
+      if (sortOrder === 'desc') {
+        setSortOrder('asc');
+      } else {
+        setSortBy(null);
+        setSortOrder('desc');
+      }
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
 
   // Debounce discover search
   useEffect(() => {
@@ -398,8 +416,16 @@ export function CreatorDatabaseTab({
     if (selectedCampaignFilter !== 'all') {
       filtered = filtered.filter(c => c.campaigns.some(camp => camp.id === selectedCampaignFilter));
     }
+    // Apply sorting
+    if (sortBy) {
+      filtered = [...filtered].sort((a, b) => {
+        const aVal = sortBy === 'views' ? a.total_views : a.total_earnings;
+        const bVal = sortBy === 'views' ? b.total_views : b.total_earnings;
+        return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
+      });
+    }
     return filtered;
-  }, [creators, searchQuery, selectedCampaignFilter]);
+  }, [creators, searchQuery, selectedCampaignFilter, sortBy, sortOrder]);
   const handleExportCSV = () => {
     const headers = ['Username', 'Full Name', 'Email', 'Country', 'Total Views', 'Total Earnings', 'Social Accounts', 'Campaigns'];
     const rows = filteredCreators.map(c => [c.username, c.full_name || '', c.email || '', c.country || '', c.total_views, c.total_earnings.toFixed(2), c.social_accounts.map(s => `${s.platform}:@${s.username}`).join('; '), c.campaigns.map(camp => camp.title).join('; ')]);
@@ -908,8 +934,36 @@ export function CreatorDatabaseTab({
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Campaigns</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11">Views</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11">Earnings</TableHead>
+                    <TableHead 
+                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
+                      onClick={() => handleSort('views')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Views
+                        <span className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                          {sortBy === 'views' && sortOrder === 'asc' ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )}
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
+                      onClick={() => handleSort('earnings')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Earnings
+                        <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                          {sortBy === 'earnings' && sortOrder === 'asc' ? (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )}
+                        </span>
+                      </div>
+                    </TableHead>
                     <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Joined</TableHead>
                     <TableHead className="w-[40px] h-11"></TableHead>
                   </TableRow>
