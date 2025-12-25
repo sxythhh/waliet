@@ -898,13 +898,6 @@ export function UserSettingsTab() {
             toast.success("Subscription activated!");
           }} />}
 
-          
-
-          {/* Brand Wallet Section */}
-          {isBrandMode && brand && <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />}
-
-          
-
           {/* Legal Business Name */}
           <div className="space-y-2">
             <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
@@ -916,8 +909,6 @@ export function UserSettingsTab() {
             })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
           </div>
 
-          
-
           {/* Billing Address */}
           <div className="space-y-2">
             <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
@@ -928,6 +919,9 @@ export function UserSettingsTab() {
               billing_address: e.target.value
             })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
+
+          {/* Brand Wallet Section */}
+          {isBrandMode && brand && <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />}
 
           
 
