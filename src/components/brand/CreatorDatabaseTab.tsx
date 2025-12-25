@@ -1,6 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, Settings2, GripVertical } from "lucide-react";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -179,6 +182,62 @@ const getSourceColor = (sourceType: string): string => {
       return 'bg-muted/40 text-muted-foreground';
   }
 };
+
+// Sortable column item for drag-and-drop reordering
+interface SortableColumnItemProps {
+  id: string;
+  label: string;
+  isVisible: boolean;
+  isRequired: boolean;
+  onToggle: () => void;
+}
+
+function SortableColumnItem({ id, label, isVisible, isRequired, onToggle }: SortableColumnItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 py-1.5 px-1 rounded-md hover:bg-muted/50 transition-colors"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted/70"
+      >
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50" />
+      </div>
+      <Checkbox
+        id={`col-${id}`}
+        checked={isVisible}
+        onCheckedChange={onToggle}
+        disabled={isRequired}
+        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+      />
+      <label
+        htmlFor={`col-${id}`}
+        className={`text-sm font-inter tracking-[-0.5px] cursor-pointer flex-1 ${isRequired ? 'text-muted-foreground' : 'text-foreground'}`}
+      >
+        {label}
+      </label>
+    </div>
+  );
+}
+
 export function CreatorDatabaseTab({
   brandId,
   onStartConversation
@@ -245,6 +304,28 @@ export function CreatorDatabaseTab({
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
 
+  // Column configuration state
+  const ALL_COLUMNS = [
+    { id: 'creator', label: 'Creator', required: true },
+    { id: 'source', label: 'Source', required: false },
+    { id: 'socials', label: 'Socials', required: false },
+    { id: 'views', label: 'Views', required: false },
+    { id: 'earnings', label: 'Earnings', required: false },
+    { id: 'joined', label: 'Joined', required: false },
+    { id: 'email', label: 'Email', required: false },
+    { id: 'phone', label: 'Phone', required: false },
+    { id: 'country', label: 'Country', required: false },
+  ] as const;
+  
+  type ColumnId = typeof ALL_COLUMNS[number]['id'];
+  
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnId>>(
+    new Set(['creator', 'source', 'socials', 'views', 'earnings', 'joined'])
+  );
+  const [columnOrder, setColumnOrder] = useState<ColumnId[]>(
+    ALL_COLUMNS.map(c => c.id)
+  );
+
   // Sorting state
   const [sortBy, setSortBy] = useState<'views' | 'earnings' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -253,6 +334,43 @@ export function CreatorDatabaseTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const ITEMS_PER_PAGE_OPTIONS = [25, 50, 100];
+
+  // DnD sensors for column reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleColumnDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setColumnOrder((items) => {
+        const oldIndex = items.indexOf(active.id as ColumnId);
+        const newIndex = items.indexOf(over.id as ColumnId);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
+  const toggleColumnVisibility = useCallback((columnId: ColumnId) => {
+    const column = ALL_COLUMNS.find(c => c.id === columnId);
+    if (column?.required) return;
+    
+    setVisibleColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(columnId)) {
+        next.delete(columnId);
+      } else {
+        next.add(columnId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Get ordered visible columns
+  const orderedVisibleColumns = useMemo(() => {
+    return columnOrder.filter(id => visibleColumns.has(id));
+  }, [columnOrder, visibleColumns]);
   const handleSort = (column: 'views' | 'earnings') => {
     if (sortBy === column) {
       if (sortOrder === 'desc') {
@@ -976,6 +1094,45 @@ export function CreatorDatabaseTab({
               <Download className="h-3.5 w-3.5" />
               Export
             </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground">
+                  <Settings2 className="h-3.5 w-3.5" />
+                  Edit
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[220px] p-3 bg-background border border-border shadow-lg z-50" align="end">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Columns</span>
+                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleColumnDragEnd}
+                  >
+                    <SortableContext items={columnOrder} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-0.5">
+                        {columnOrder.map((colId) => {
+                          const col = ALL_COLUMNS.find(c => c.id === colId);
+                          if (!col) return null;
+                          return (
+                            <SortableColumnItem
+                              key={col.id}
+                              id={col.id}
+                              label={col.label}
+                              isVisible={visibleColumns.has(col.id)}
+                              isRequired={col.required}
+                              onToggle={() => toggleColumnVisibility(col.id)}
+                            />
+                          );
+                        })}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
@@ -990,100 +1147,153 @@ export function CreatorDatabaseTab({
                     <TableHead className="w-[32px] h-11">
                       <Checkbox checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0} onCheckedChange={toggleSelectAll} className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]" />
                     </TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Creator</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Source</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Socials</TableHead>
-                    
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('views')}>
-                      <div className="flex items-center justify-end gap-1">
-                        Views
-                        <span className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                          {sortBy === 'views' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                        </span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('earnings')}>
-                      <div className="flex items-center justify-end gap-1">
-                        Earnings
-                        <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                          {sortBy === 'earnings' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                        </span>
-                      </div>
-                    </TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">Joined</TableHead>
+                    {orderedVisibleColumns.map((colId) => {
+                      if (colId === 'views') {
+                        return (
+                          <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('views')}>
+                            <div className="flex items-center justify-end gap-1">
+                              Views
+                              <span className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                {sortBy === 'views' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </span>
+                            </div>
+                          </TableHead>
+                        );
+                      }
+                      if (colId === 'earnings') {
+                        return (
+                          <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('earnings')}>
+                            <div className="flex items-center justify-end gap-1">
+                              Earnings
+                              <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                {sortBy === 'earnings' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </span>
+                            </div>
+                          </TableHead>
+                        );
+                      }
+                      const col = ALL_COLUMNS.find(c => c.id === colId);
+                      return (
+                        <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">
+                          {col?.label}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCreators.length === 0 ? <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
+                      <TableCell colSpan={orderedVisibleColumns.length + 1} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
                         {searchQuery || selectedCampaignFilter !== 'all' ? 'No creators match your filters' : 'No creators in your database yet'}
                       </TableCell>
                     </TableRow> : filteredCreators.map(creator => <TableRow key={creator.id} className={`hover:bg-muted/20 border-0 group cursor-pointer ${selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''}`} onClick={() => setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)}>
                         <TableCell className="py-3 w-[32px]" onClick={e => e.stopPropagation()}>
                           <Checkbox checked={selectedCreators.has(creator.id)} onCheckedChange={() => toggleCreatorSelection(creator.id)} className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                         </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={creator.avatar_url || undefined} />
-                              <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
-                                {(creator.full_name || creator.username || creator.external_name)?.charAt(0).toUpperCase() || 'C'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
-                                  {creator.full_name || creator.username || creator.external_name}
-                                </p>
-                                {creator.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
-                                    External
-                                  </span>}
-                              </div>
-                              <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                {creator.is_external ? creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle' : `@${creator.username}`}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(creator.source_type)}`}>
-                                {getSourceLabel(creator.source_type)}
-                              </span>
-                            </TooltipTrigger>
-                            {creator.source_campaign_title && <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
-                                <p>From: {creator.source_campaign_title}</p>
-                              </TooltipContent>}
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-1">
-                            {creator.social_accounts.slice(0, 4).map((account, idx) => <Tooltip key={idx}>
-                                <TooltipTrigger asChild>
-                                  <a href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors">
-                                    <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
-                                  </a>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
-                                  <p className="font-medium">@{account.username}</p>
-                                  {account.follower_count && <p className="text-muted-foreground">{formatNumber(account.follower_count)} followers</p>}
-                                </TooltipContent>
-                              </Tooltip>)}
-                            {creator.social_accounts.length > 4 && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
-                                +{creator.social_accounts.length - 4}
-                              </span>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3">
-                          {formatNumber(creator.total_views)}
-                        </TableCell>
-                        <TableCell className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3 text-emerald-500">
-                          ${creator.total_earnings.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
-                          {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
-                        </TableCell>
+                        {orderedVisibleColumns.map((colId) => {
+                          switch (colId) {
+                            case 'creator':
+                              return (
+                                <TableCell key={colId} className="py-3">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarImage src={creator.avatar_url || undefined} />
+                                      <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
+                                        {(creator.full_name || creator.username || creator.external_name)?.charAt(0).toUpperCase() || 'C'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
+                                          {creator.full_name || creator.username || creator.external_name}
+                                        </p>
+                                        {creator.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                                            External
+                                          </span>}
+                                      </div>
+                                      <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
+                                        {creator.is_external ? creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle' : `@${creator.username}`}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              );
+                            case 'source':
+                              return (
+                                <TableCell key={colId} className="py-3">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(creator.source_type)}`}>
+                                        {getSourceLabel(creator.source_type)}
+                                      </span>
+                                    </TooltipTrigger>
+                                    {creator.source_campaign_title && <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                        <p>From: {creator.source_campaign_title}</p>
+                                      </TooltipContent>}
+                                  </Tooltip>
+                                </TableCell>
+                              );
+                            case 'socials':
+                              return (
+                                <TableCell key={colId} className="py-3">
+                                  <div className="flex items-center gap-1">
+                                    {creator.social_accounts.slice(0, 4).map((account, idx) => <Tooltip key={idx}>
+                                        <TooltipTrigger asChild>
+                                          <a href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors">
+                                            <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
+                                          </a>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                          <p className="font-medium">@{account.username}</p>
+                                          {account.follower_count && <p className="text-muted-foreground">{formatNumber(account.follower_count)} followers</p>}
+                                        </TooltipContent>
+                                      </Tooltip>)}
+                                    {creator.social_accounts.length > 4 && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
+                                        +{creator.social_accounts.length - 4}
+                                      </span>}
+                                  </div>
+                                </TableCell>
+                              );
+                            case 'views':
+                              return (
+                                <TableCell key={colId} className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3">
+                                  {formatNumber(creator.total_views)}
+                                </TableCell>
+                              );
+                            case 'earnings':
+                              return (
+                                <TableCell key={colId} className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3 text-emerald-500">
+                                  ${creator.total_earnings.toFixed(2)}
+                                </TableCell>
+                              );
+                            case 'joined':
+                              return (
+                                <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                  {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
+                                </TableCell>
+                              );
+                            case 'email':
+                              return (
+                                <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                  {creator.email || creator.external_email || '-'}
+                                </TableCell>
+                              );
+                            case 'phone':
+                              return (
+                                <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                  {creator.phone_number || '-'}
+                                </TableCell>
+                              );
+                            case 'country':
+                              return (
+                                <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                  {creator.country || '-'}
+                                </TableCell>
+                              );
+                            default:
+                              return null;
+                          }
+                        })}
                       </TableRow>)}
                 </TableBody>
               </Table>
