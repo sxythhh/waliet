@@ -256,11 +256,8 @@ export function CreatorContractsTab({
   return <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border">
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search contracts..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/30 border-border h-8" />
-          </div>
+        <div className="flex-col gap-3 flex items-start justify-end md:flex md:flex-row">
+          
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-[180px] bg-muted/30 h-8">
               <SelectValue placeholder="All statuses" />
