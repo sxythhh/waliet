@@ -168,8 +168,8 @@ export function PerformanceChart({
                 })}
                       </div>
                     </div>;
-          }} cursor={{
-            stroke: '#666666',
+}} cursor={{
+            stroke: '#0e0e0e',
             strokeWidth: 1
           }} />
               {activeMetrics.map(metric => <Area key={metric} type="linear" dataKey={getChartDataKey(metric)} name={metric} stroke={METRIC_COLORS[metric]} strokeWidth={2} fill={`url(#gradient-${metric})`} dot={false} activeDot={{
