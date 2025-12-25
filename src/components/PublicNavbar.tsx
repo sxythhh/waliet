@@ -8,19 +8,20 @@ import AuthDialog from "@/components/AuthDialog";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { FloatingFooter } from "@/components/FloatingFooter";
 import forBrandsIcon from "@/assets/for-brands-icon.png";
-
 interface PublicNavbarProps {
   searchQuery?: string;
   onSearchClick?: () => void;
   scrollContainerRef?: React.RefObject<HTMLElement>;
 }
-
-export default function PublicNavbar({ searchQuery, onSearchClick, scrollContainerRef }: PublicNavbarProps) {
+export default function PublicNavbar({
+  searchQuery,
+  onSearchClick,
+  scrollContainerRef
+}: PublicNavbarProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
   const handleSearchClick = useCallback(() => {
     if (onSearchClick) {
       onSearchClick();
@@ -34,24 +35,17 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input or textarea
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        (e.target as HTMLElement)?.isContentEditable
-      ) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement)?.isContentEditable) {
         return;
       }
-
       if (e.key === '/') {
         e.preventDefault();
         handleSearchClick();
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSearchClick]);
-
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -69,9 +63,7 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
     });
     return () => subscription.unsubscribe();
   }, []);
-
   const isActive = (path: string) => location.pathname === path;
-
   return <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
@@ -92,7 +84,7 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
                       <NavigationMenuContent>
                         <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl px-[5px] py-[7px]">
                           <NavigationMenuLink asChild>
-                            <Link to="/discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                            <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img alt="" className="w-5 h-5" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
                               <div>
                                 <div className="font-medium text-white">Discover</div>
@@ -101,7 +93,7 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/new" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
+                            <Link to="/new" className="flex items-center gap-3 px-3 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img src={forBrandsIcon} alt="" className="w-5 h-5" />
                               <div>
                                 <div className="font-medium text-white">For Brands</div>
@@ -126,10 +118,7 @@ export default function PublicNavbar({ searchQuery, onSearchClick, scrollContain
             </div>
             
             {/* Search Input - Always visible */}
-            <button 
-              onClick={handleSearchClick} 
-              className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-muted-foreground/50 hover:bg-muted/30 transition-colors min-w-[280px]"
-            >
+            <button onClick={handleSearchClick} className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-muted-foreground/50 hover:bg-muted/30 transition-colors min-w-[280px]">
               <div className="flex items-center gap-2">
                 <img src={searchIcon} alt="" className="h-4 w-4 opacity-60" />
                 <span>{searchQuery || 'Search opportunities'}</span>
