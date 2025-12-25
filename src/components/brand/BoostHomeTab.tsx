@@ -455,7 +455,7 @@ export function BoostHomeTab({
       />
 
       {/* Charts Row - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} lastSyncedAt={lastSyncedAt} />
         <ActivityChart activityData={activityData} />
       </div>
