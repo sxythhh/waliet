@@ -273,15 +273,39 @@ export function BoostHomeTab({
         setMetricsData(formattedMetrics);
 
         // Calculate activity data (submissions and unique creators over time)
-        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string> }>();
+        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string>; applications: number }>();
         filteredSubmissions.forEach(sub => {
           if (sub.submitted_at) {
             const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
-            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>() };
+            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
             existing.submissions += 1;
             if (sub.creator_id) {
               existing.creatorIds.add(sub.creator_id);
             }
+            activityMap.set(dateKey, existing);
+          }
+        });
+
+        // Fetch and add applications data
+        const { data: applicationsData } = await supabase
+          .from('bounty_applications')
+          .select('applied_at, user_id')
+          .eq('bounty_campaign_id', boost.id);
+        
+        let filteredApplications = applicationsData || [];
+        if (dateRange) {
+          filteredApplications = filteredApplications.filter(app => {
+            if (!app.applied_at) return false;
+            const date = new Date(app.applied_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+        
+        filteredApplications.forEach(app => {
+          if (app.applied_at) {
+            const dateKey = format(new Date(app.applied_at), 'yyyy-MM-dd');
+            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
+            existing.applications += 1;
             activityMap.set(dateKey, existing);
           }
         });
@@ -292,9 +316,11 @@ export function BoostHomeTab({
         );
         
         let cumulativeActivitySubmissions = 0;
+        let cumulativeApplications = 0;
         const allActivityCreatorIds = new Set<string>();
         const formattedActivityData: ActivityData[] = sortedActivityDates.map(([dateKey, data]) => {
           cumulativeActivitySubmissions += data.submissions;
+          cumulativeApplications += data.applications;
           data.creatorIds.forEach(id => allActivityCreatorIds.add(id));
           const dateObj = new Date(dateKey);
           return {
@@ -302,8 +328,10 @@ export function BoostHomeTab({
             datetime: format(dateObj, 'MMM d, yyyy'),
             submissions: cumulativeActivitySubmissions,
             creators: allActivityCreatorIds.size,
+            applications: cumulativeApplications,
             dailySubmissions: data.submissions,
-            dailyCreators: data.creatorIds.size
+            dailyCreators: data.creatorIds.size,
+            dailyApplications: data.applications
           };
         });
         setActivityData(formattedActivityData);
