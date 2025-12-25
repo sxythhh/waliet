@@ -812,17 +812,78 @@ export function CreatorDatabaseTab({
     setRemoveCreatorDialogOpen(true);
   };
   if (loading) {
-    return <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <div className="flex gap-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
+    return <div className="h-full flex flex-col">
+        {/* Header Skeleton */}
+        <div className="p-4 md:p-6 border-b border-border">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-32" />
+              <Skeleton className="h-9 w-28" />
+            </div>
+          </div>
+          
+          {/* Filters Skeleton */}
+          <div className="flex flex-wrap items-center gap-2 mt-4">
+            <Skeleton className="h-9 flex-1 min-w-[200px] max-w-sm" />
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-9 w-28" />
+          </div>
+          
+          {/* Tab Pills Skeleton */}
+          <div className="flex items-center gap-2 mt-4">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-28 rounded-full" />
           </div>
         </div>
-        <Skeleton className="h-10 w-full" />
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+        
+        {/* Table Skeleton */}
+        <div className="flex-1 overflow-hidden">
+          {/* Table Header */}
+          <div className="border-b border-border px-4 md:px-6 py-3 flex items-center gap-4">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-24 ml-auto" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          
+          {/* Table Rows */}
+          <div className="divide-y divide-border">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="px-4 md:px-6 py-4 flex items-center gap-4">
+                <Skeleton className="h-4 w-4" />
+                <div className="flex items-center gap-3 flex-1">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-5 w-5 rounded" />
+                </div>
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer Skeleton */}
+        <div className="border-t border-border px-4 md:px-6 py-3 flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <div className="flex items-center gap-1">
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-4 w-20 mx-2" />
+            <Skeleton className="h-7 w-7 rounded-md" />
+            <Skeleton className="h-7 w-7 rounded-md" />
+          </div>
         </div>
       </div>;
   }
