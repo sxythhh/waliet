@@ -376,11 +376,7 @@ export function CreatorDatabaseTab({
       const platformCreatorIds = relationships.filter(r => r.user_id).map(r => r.user_id as string);
 
       // Batch fetch helper to avoid URL length limits with large ID lists - runs batches in parallel
-      const batchFetch = async <T,>(
-        ids: string[],
-        fetchFn: (batchIds: string[]) => Promise<T[]>,
-        batchSize = 50
-      ): Promise<T[]> => {
+      const batchFetch = async <T,>(ids: string[], fetchFn: (batchIds: string[]) => Promise<T[]>, batchSize = 50): Promise<T[]> => {
         const batches: string[][] = [];
         for (let i = 0; i < ids.length; i += batchSize) {
           batches.push(ids.slice(i, i + batchSize));
@@ -390,24 +386,17 @@ export function CreatorDatabaseTab({
       };
 
       // Fetch profiles and social accounts in parallel
-      const [profiles, socialAccounts] = platformCreatorIds.length > 0 
-        ? await Promise.all([
-            batchFetch(platformCreatorIds, async (batchIds) => {
-              const { data } = await supabase
-                .from('profiles')
-                .select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at')
-                .in('id', batchIds);
-              return data || [];
-            }),
-            batchFetch(platformCreatorIds, async (batchIds) => {
-              const { data } = await supabase
-                .from('social_accounts')
-                .select('user_id, platform, username, account_link, follower_count')
-                .in('user_id', batchIds);
-              return data || [];
-            })
-          ])
-        : [[], []];
+      const [profiles, socialAccounts] = platformCreatorIds.length > 0 ? await Promise.all([batchFetch(platformCreatorIds, async batchIds => {
+        const {
+          data
+        } = await supabase.from('profiles').select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at').in('id', batchIds);
+        return data || [];
+      }), batchFetch(platformCreatorIds, async batchIds => {
+        const {
+          data
+        } = await supabase.from('social_accounts').select('user_id, platform, username, account_link, follower_count').in('user_id', batchIds);
+        return data || [];
+      })]) : [[], []];
 
       // Get video submissions for view counts
       const {
@@ -849,8 +838,7 @@ export function CreatorDatabaseTab({
           
           {/* Table Rows */}
           <div className="space-y-1">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="px-4 md:px-6 py-4 flex items-center gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="px-4 md:px-6 py-4 flex items-center gap-4">
                 <Skeleton className="h-4 w-4" />
                 <div className="flex items-center gap-3 flex-1">
                   <Skeleton className="h-10 w-10 rounded-full" />
@@ -866,8 +854,7 @@ export function CreatorDatabaseTab({
                 <Skeleton className="h-4 w-16" />
                 <Skeleton className="h-5 w-16 rounded-full" />
                 <Skeleton className="h-4 w-20" />
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
         
@@ -886,7 +873,7 @@ export function CreatorDatabaseTab({
   }
   return <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border">
+      <div className="p-4 md:p-6 border-b border-border py-[5px]">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           
           <div className="flex items-center gap-2">
