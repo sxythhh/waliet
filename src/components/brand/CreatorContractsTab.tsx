@@ -256,30 +256,13 @@ export function CreatorContractsTab({
   return <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 md:p-6 border-b border-border">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold font-instrument tracking-tight">Creator Contracts</h2>
-            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-              Manage agreements and e-signatures with creators
-            </p>
-          </div>
-          <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
-            <Plus className="h-3.5 w-3.5" />
-            Create Contract
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        
-
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-3 mt-4">
+        <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search contracts..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/30 border-border" />
+            <Input placeholder="Search contracts..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10 bg-muted/30 border-border h-8" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-[180px] bg-muted/30">
+            <SelectTrigger className="w-full md:w-[180px] bg-muted/30 h-8">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -290,6 +273,10 @@ export function CreatorContractsTab({
               <SelectItem value="expired">Expired</SelectItem>
             </SelectContent>
           </Select>
+          <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
+            <Plus className="h-3.5 w-3.5" />
+            Create Contract
+          </Button>
         </div>
       </div>
 
