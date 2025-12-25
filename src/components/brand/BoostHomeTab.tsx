@@ -93,6 +93,26 @@ const getDateRange = (timeframe: TimeframeOption): {
       return null;
   }
 };
+
+const formatTimeframeLabel = (timeframe: TimeframeOption): string => {
+  const dateRange = getDateRange(timeframe);
+  
+  if (!dateRange) {
+    return "All time";
+  }
+  
+  const { start, end } = dateRange;
+  
+  if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
+    return format(start, 'MMMM d');
+  }
+  
+  if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
+    return `${format(start, 'MMMM d')} - ${format(end, 'd')}`;
+  }
+  
+  return `${format(start, 'MMMM d')} - ${format(end, 'MMMM d')}`;
+};
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -427,6 +447,11 @@ export function BoostHomeTab({
       </div>;
   }
   return <div className="p-4 space-y-4">
+      {/* Date Range Label */}
+      <p className="text-sm text-muted-foreground font-['Geist'] tracking-[-0.3px]">
+        {formatTimeframeLabel(timeframe)}
+      </p>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
