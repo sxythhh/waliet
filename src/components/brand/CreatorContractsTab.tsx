@@ -263,8 +263,8 @@ export function CreatorContractsTab({
               Manage agreements and e-signatures with creators
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
+          <Button onClick={() => setCreateDialogOpen(true)} size="sm" className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
+            <Plus className="h-3.5 w-3.5" />
             Create Contract
           </Button>
         </div>
