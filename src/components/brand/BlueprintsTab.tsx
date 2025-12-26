@@ -344,23 +344,21 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </div>
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="bg-popover w-44">
+                <DropdownMenuContent align="center" className="w-44">
                   <DropdownMenuItem
-                    className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px] text-sm"
                     onClick={() => openBlueprint(blueprint.id)}
                   >
                     <Pencil className="h-3.5 w-3.5 mr-2" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="focus:bg-muted focus:text-foreground font-inter tracking-[-0.5px] text-sm"
                     onClick={() => handleActivateBlueprint(blueprint.id)}
                   >
                     <Plus className="h-3.5 w-3.5 mr-2" />
                     Create Campaign
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="text-destructive focus:bg-muted focus:text-destructive font-inter tracking-[-0.5px] text-sm"
+                    className="text-destructive focus:text-destructive"
                     onClick={() => deleteBlueprint(blueprint.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-2" />
