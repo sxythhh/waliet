@@ -465,11 +465,11 @@ export function UserSettingsTab() {
         </div>
       </div>;
   }
-  return <div className="w-full p-[10px] border border-[#141414] rounded-[15px]">
+  return <div className="max-w-xl mx-auto">
       {/* Sticky Header & Tabs */}
-      <div className="sticky top-0 z-10 bg-background">
+      <div className="sticky top-0 z-10 bg-background pt-4 pb-0">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-[-0.5px]">Settings</h1>
             <p className="text-sm text-muted-foreground tracking-[-0.5px]">
@@ -488,7 +488,7 @@ export function UserSettingsTab() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex items-center gap-6 border-b border-border mt-6">
+        <div className="flex items-center gap-6 border-b border-border mt-6 px-4">
           {["wallet", "general", "integrations", "team"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>)}
@@ -496,7 +496,7 @@ export function UserSettingsTab() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="space-y-6">
+      <div className="p-4 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
         {/* General Tab */}
