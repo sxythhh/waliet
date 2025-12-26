@@ -1364,18 +1364,6 @@ export function VideoSubmissionsTab({
                 const uploadDate = video.uploaded_at || video.submitted_at;
                 const isSelected = selectedVideos.has(video.id);
                 return <div key={video.id} className={cn("group relative w-full rounded-2xl border bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:shadow-lg transition-all duration-300 font-sans tracking-[-0.5px]", isSelected ? "border-primary/50 bg-primary/5" : "border-border/30 hover:border-border/60")}>
-                      {/* Selection Checkbox - Appears on hover or when selected */}
-                      <div 
-                        className={cn(
-                          "absolute top-2 left-2 z-10 h-5 w-5 rounded-md flex items-center justify-center cursor-pointer transition-all",
-                          isSelected 
-                            ? "bg-primary border border-primary opacity-100" 
-                            : "bg-background/80 backdrop-blur-sm border border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted"
-                        )}
-                        onClick={() => toggleVideoSelection(video.id)}
-                      >
-                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
-                      </div>
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
