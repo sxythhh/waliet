@@ -889,6 +889,7 @@ export function PayoutRequestsTable({
             <TableHeader>
               <TableRow className="border-b border-border/40 hover:bg-transparent">
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Creator</TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Date</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Amount</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Items</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Clearing</TableHead>
@@ -918,13 +919,13 @@ export function PayoutRequestsTable({
                               {request.profiles?.username?.charAt(0).toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <div className="text-sm font-medium">{request.profiles?.username || 'Unknown'}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {format(new Date(request.created_at), 'MMM d, yyyy')}
-                            </div>
-                          </div>
+                          <div className="text-sm font-medium">{request.profiles?.username || 'Unknown'}</div>
                         </div>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <span className="text-sm text-muted-foreground">
+                          {format(new Date(request.created_at), 'MMM d, yyyy')}
+                        </span>
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex flex-col">
