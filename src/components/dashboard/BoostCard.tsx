@@ -77,16 +77,13 @@ export function BoostCard({
         }
       } = await supabase.auth.getUser();
       if (!user) return;
-      
+
       // Fetch from unified video_submissions table
-      const { data } = await supabase
-        .from("video_submissions")
-        .select("*")
-        .eq("source_type", "boost")
-        .eq("source_id", boost.id)
-        .eq("creator_id", user.id)
-        .order("submitted_at", { ascending: false });
-      
+      const {
+        data
+      } = await supabase.from("video_submissions").select("*").eq("source_type", "boost").eq("source_id", boost.id).eq("creator_id", user.id).order("submitted_at", {
+        ascending: false
+      });
       if (data) {
         // Map to the expected VideoSubmission interface
         setSubmissions(data.map(s => ({
@@ -109,20 +106,35 @@ export function BoostCard({
   const fetchVideoDetails = async (url: string) => {
     try {
       if (url.includes('tiktok.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         return data?.data || null;
       } else if (url.includes('instagram.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
-          body: { postUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: {
+            postUrl: url
+          }
         });
         if (error) throw error;
         return data?.data || null;
       } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         // Map YouTube response to common format
@@ -136,7 +148,7 @@ export function BoostCard({
             views: data.view_count,
             likes: data.like_count,
             comments: 0,
-            shares: 0,
+            shares: 0
           };
         }
         return null;
@@ -147,7 +159,6 @@ export function BoostCard({
       return null;
     }
   };
-
   const handleSubmitVideo = async () => {
     if (!videoUrl.trim()) {
       toast.error("Please enter a video URL");
@@ -203,19 +214,16 @@ export function BoostCard({
 
       // Fetch video details from API
       const videoDetails = await fetchVideoDetails(videoUrl.trim());
-      
+
       // Warn if metadata couldn't be fetched
       if (!videoDetails) {
         console.warn("Could not fetch video metadata for:", videoUrl.trim());
       }
 
       // Get brand_id from boost
-      const { data: boostData } = await supabase
-        .from("bounty_campaigns")
-        .select("brand_id")
-        .eq("id", boost.id)
-        .single();
-
+      const {
+        data: boostData
+      } = await supabase.from("bounty_campaigns").select("brand_id").eq("id", boost.id).single();
       const {
         error
       } = await supabase.from("video_submissions").insert({
@@ -238,10 +246,9 @@ export function BoostCard({
         video_author_username: videoDetails?.authorUsername || null,
         video_author_avatar: videoDetails?.authorAvatar || null,
         video_title: videoDetails?.title || null,
-        video_upload_date: videoDetails?.uploadDate || null,
+        video_upload_date: videoDetails?.uploadDate || null
       });
       if (error) throw error;
-      
       if (!videoDetails) {
         toast.success("Video submitted! Metadata couldn't be fetched - it can be refreshed later.");
       } else {
@@ -432,45 +439,7 @@ export function BoostCard({
           </div>
 
           {/* Action Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Blueprint Card */}
-            <div className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group" onClick={() => {
-            if (boost.blueprint_id) {
-              navigate(`/blueprint/${boost.blueprint_id}`);
-            } else {
-              toast.error("No blueprint linked to this boost");
-            }
-          }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-background rounded-lg border">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold">Blueprint</h4>
-                    <p className="text-[10px] text-muted-foreground">View content guidelines</p>
-                  </div>
-                </div>
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-
-            {/* My Posts Card */}
-            <div className="bg-muted/30 rounded-xl p-4 cursor-pointer hover:bg-muted/50 transition-colors group" onClick={() => setPostsDialogOpen(true)}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-background rounded-lg border">
-                    <Video className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-semibold">My posts ({submissions.length})</h4>
-                    <p className="text-[10px] text-muted-foreground">{dailyRemaining} submissions left today</p>
-                  </div>
-                </div>
-                <Expand className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
 
