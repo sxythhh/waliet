@@ -612,6 +612,26 @@ export function PayoutRequestsTable({
       setApprovingRequest(null);
     }
   };
+  // Calculate summary stats for status cards - MUST be before early returns
+  const summaryStats = useMemo(() => {
+    let inReviewAmount = 0, inReviewCount = 0, approvedAmount = 0, approvedCount = 0, flaggedAmount = 0, flaggedCount = 0;
+    let earliestClearingEndsAt: string | undefined;
+    let canStillFlagAny = false;
+    requests.forEach(request => {
+      const { items: displayItems } = getFilteredItemsForRequest(request);
+      displayItems.forEach(item => {
+        if (item.flagged_at) { flaggedAmount += item.amount; flaggedCount++; }
+        else if (item.status === 'approved') { approvedAmount += item.amount; approvedCount++; }
+        else {
+          inReviewAmount += item.amount; inReviewCount++;
+          if (!earliestClearingEndsAt || request.clearing_ends_at < earliestClearingEndsAt) earliestClearingEndsAt = request.clearing_ends_at;
+          if (canBeFlagged(request.created_at, request.clearing_ends_at)) canStillFlagAny = true;
+        }
+      });
+    });
+    return { inReviewAmount, inReviewCount, approvedAmount, approvedCount, flaggedAmount, flaggedCount, earliestClearingEndsAt, canStillFlag: canStillFlagAny };
+  }, [requests, campaignId, boostId]);
+
   if (loading) {
     return <div className="p-6">
         <div className="space-y-4">
@@ -644,25 +664,6 @@ export function PayoutRequestsTable({
   if (!hasAnyData) {
     return null;
   }
-  // Calculate summary stats for status cards
-  const summaryStats = useMemo(() => {
-    let inReviewAmount = 0, inReviewCount = 0, approvedAmount = 0, approvedCount = 0, flaggedAmount = 0, flaggedCount = 0;
-    let earliestClearingEndsAt: string | undefined;
-    let canStillFlagAny = false;
-    requests.forEach(request => {
-      const { items: displayItems } = getFilteredItemsForRequest(request);
-      displayItems.forEach(item => {
-        if (item.flagged_at) { flaggedAmount += item.amount; flaggedCount++; }
-        else if (item.status === 'approved') { approvedAmount += item.amount; approvedCount++; }
-        else {
-          inReviewAmount += item.amount; inReviewCount++;
-          if (!earliestClearingEndsAt || request.clearing_ends_at < earliestClearingEndsAt) earliestClearingEndsAt = request.clearing_ends_at;
-          if (canBeFlagged(request.created_at, request.clearing_ends_at)) canStillFlagAny = true;
-        }
-      });
-    });
-    return { inReviewAmount, inReviewCount, approvedAmount, approvedCount, flaggedAmount, flaggedCount, earliestClearingEndsAt, canStillFlag: canStillFlagAny };
-  }, [requests, campaignId, boostId]);
 
   return <TooltipProvider>
       <div className="space-y-6 font-['Inter'] tracking-[-0.5px] h-full py-[10px]">
