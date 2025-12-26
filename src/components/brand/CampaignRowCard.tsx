@@ -216,7 +216,9 @@ export function CampaignRowCard({
                       {member.avatar_url ? (
                         <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-muted" />
+                        <span className="text-xs font-medium text-muted-foreground uppercase">
+                          {member.display_name?.charAt(0) || '?'}
+                        </span>
                       )}
                     </div>
                   ))
@@ -225,9 +227,11 @@ export function CampaignRowCard({
                   [0, 1, 2].map((index) => (
                     <div
                       key={index}
-                      className="w-7 h-7 rounded-full border-2 border-card bg-muted"
+                      className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center"
                       style={{ zIndex: 3 - index }}
-                    />
+                    >
+                      <span className="text-[10px] font-medium text-muted-foreground/50">?</span>
+                    </div>
                   ))
                 )}
               </div>
