@@ -80,7 +80,7 @@ export function CreateBountyDialog({
     work_location: "" as string,
     shortimize_collection_name: "" as string,
     view_bonuses_enabled: false,
-    view_bonus_tiers: [] as { bonus_type: 'milestone' | 'cpm'; view_threshold: number; bonus_amount: number; cpm_rate?: number }[]
+    view_bonus_tiers: [] as { bonus_type: 'milestone' | 'cpm'; view_threshold: number; min_views?: number; bonus_amount: number; cpm_rate?: number }[]
   });
   const [newQuestion, setNewQuestion] = useState("");
 
@@ -469,12 +469,14 @@ export function CreateBountyDialog({
                   </div>
 
                   {/* View Bonuses Config */}
-                  <div className="p-4 rounded-xl bg-muted/30">
+                  <div className="space-y-1.5">
                     <ViewBonusesConfig
-                      enabled={formData.view_bonuses_enabled}
-                      onEnabledChange={(checked) => setFormData({ ...formData, view_bonuses_enabled: checked })}
                       tiers={formData.view_bonus_tiers}
-                      onTiersChange={(newTiers) => setFormData({ ...formData, view_bonus_tiers: newTiers })}
+                      onTiersChange={(newTiers) => setFormData({ 
+                        ...formData, 
+                        view_bonus_tiers: newTiers,
+                        view_bonuses_enabled: newTiers.length > 0
+                      })}
                     />
                   </div>
 
