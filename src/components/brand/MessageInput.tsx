@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, Smile } from 'lucide-react';
+import { Bold, Italic, Smile, Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
 
@@ -55,41 +55,45 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder = 
   return (
     <div className="rounded-xl border border-border overflow-hidden bg-muted/20">
       <EditorContent editor={editor} />
-      <div className="flex items-center justify-between px-2 pb-2 pt-0.5">
+      <div className="flex items-center justify-between px-3 pb-3 pt-1">
         <div className="flex items-center gap-0.5">
           <Button 
             type="button"
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-transparent"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50"
           >
-            <Smile className="h-3.5 w-3.5" />
+            <Smile className="h-4 w-4" />
           </Button>
           <Button 
             type="button"
             variant="ghost" 
             size="icon" 
             onClick={() => editor.chain().focus().toggleBold().run()}
-            className={`h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-transparent ${editor.isActive('bold') ? 'text-foreground' : ''}`}
+            className={`h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 ${editor.isActive('bold') ? 'text-foreground bg-muted/50' : ''}`}
           >
-            <Bold className="h-3.5 w-3.5" />
+            <Bold className="h-4 w-4" />
           </Button>
           <Button 
             type="button"
             variant="ghost" 
             size="icon" 
             onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={`h-6 w-6 text-muted-foreground/60 hover:text-foreground hover:bg-transparent ${editor.isActive('italic') ? 'text-foreground' : ''}`}
+            className={`h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted/50 ${editor.isActive('italic') ? 'text-foreground bg-muted/50' : ''}`}
           >
-            <Italic className="h-3.5 w-3.5" />
+            <Italic className="h-4 w-4" />
           </Button>
         </div>
         <Button 
           size="sm" 
-          className="h-6 px-3 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium" 
+          className="h-8 px-3 rounded-lg bg-[#2060de] hover:bg-[#1a50c0] text-white text-xs gap-1.5" 
           onClick={onSend} 
           disabled={disabled || !editor.getText().trim()}
         >
+          <span className="flex items-center gap-0.5 text-white/70">
+            <Command className="h-3 w-3" />
+            <span className="text-[10px]">↵</span>
+          </span>
           Send
         </Button>
       </div>
