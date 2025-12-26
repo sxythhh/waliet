@@ -55,6 +55,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import SidebarMenuButtons from "@/components/SidebarMenuButtons";
 interface Brand {
   id: string;
   name: string;
@@ -771,30 +772,15 @@ export function AppSidebar() {
               </div>
 
               {/* Menu Items */}
-              <div className="space-y-0.5 mb-3">
-                <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
-                  <img alt="Discord" className="w-5 h-5 rounded" src="/lovable-uploads/0b07b88a-cde1-4778-a64e-2adbb5eb1251.webp" />
-                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
-                </button>
-                <button onClick={() => window.open("mailto:support@virality.gg", "_blank")} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
-                  <img src={supportIcon} alt="Support" className="w-5 h-5" />
-                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
-                </button>
-                <button onClick={() => {
-                setFeedbackType("feature");
-                setFeedbackOpen(true);
-              }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
-                  <img src={lightbulbIcon} alt="Feature Request" className="w-5 h-5" />
-                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Feature Request</span>
-                </button>
-                <button onClick={() => {
-                setFeedbackType("bug");
-                setFeedbackOpen(true);
-              }} className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-white hover:bg-[#141414] transition-colors">
-                  <img src={bugIcon} alt="Report Bug" className="w-5 h-5" />
-                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Report Bug</span>
-                </button>
-              </div>
+              <SidebarMenuButtons 
+                onFeedback={(type) => {
+                  setFeedbackType(type);
+                  setFeedbackOpen(true);
+                }}
+                supportIcon={supportIcon}
+                lightbulbIcon={lightbulbIcon}
+                bugIcon={bugIcon}
+              />
 
               {/* Sign Out Button */}
               <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
