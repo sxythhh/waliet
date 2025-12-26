@@ -59,7 +59,9 @@ export function CampaignRowCard({
   onClick,
   onTopUp
 }: CampaignRowCardProps) {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const budgetPercentage = budget > 0 ? budgetUsed / budget * 100 : 0;
   const getDaysLeft = () => {
     if (!endDate) return null;
@@ -136,13 +138,11 @@ export function CampaignRowCard({
                 {type === "campaign" ? "Clipping" : "Boost"}
               </span>
 
-              {type === "campaign" && rpmRate !== undefined && <span className="text-muted-foreground">${rpmRate.toFixed(2)} / 1k views</span>}
+              {type === "campaign" && rpmRate !== undefined}
 
-              {type === "boost" && videosPerMonth !== undefined && <span className="text-muted-foreground">{videosPerMonth} videos/mo</span>}
+              {type === "boost" && videosPerMonth !== undefined}
 
-              {type === "boost" && spotsRemaining !== undefined && maxCreators !== undefined && <span className="text-muted-foreground">
-                  {spotsRemaining}/{maxCreators} spots
-                </span>}
+              {type === "boost" && spotsRemaining !== undefined && maxCreators !== undefined}
 
               {allowedPlatforms && allowedPlatforms.length > 0 && <div className="flex items-center gap-1.5 ml-1">
                   {allowedPlatforms.map(platform => <span key={platform}>{getPlatformIcon(platform)}</span>)}
@@ -175,13 +175,14 @@ export function CampaignRowCard({
 
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => {
-                e.stopPropagation();
-                const url = type === "campaign" 
-                  ? `${window.location.origin}/c/${slug}` 
-                  : `${window.location.origin}/boost/${slug}`;
-                navigator.clipboard.writeText(url);
-                toast({ title: "Link copied", description: "URL copied to clipboard" });
-              }}>
+              e.stopPropagation();
+              const url = type === "campaign" ? `${window.location.origin}/c/${slug}` : `${window.location.origin}/boost/${slug}`;
+              navigator.clipboard.writeText(url);
+              toast({
+                title: "Link copied",
+                description: "URL copied to clipboard"
+              });
+            }}>
                 <img src={copyIcon} alt="" className="w-3.5 h-3.5" />
               </Button>}
 
