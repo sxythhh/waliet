@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet, Tag } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -20,6 +20,12 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+const SUGGESTED_TAGS = [
+  'growth', 'retargeting', 'seasonal', 'awareness', 'retention', 
+  'acquisition', 'promo', 'reactivation', 'launch', 'evergreen',
+  'holiday', 'influencer', 'performance', 'branding', 'viral'
+];
+
 const CAMPAIGN_NICHES = [{
   id: 'tech',
   label: 'Tech & Software'
@@ -118,6 +124,7 @@ const campaignSchema = z.object({
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
   hashtags: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
   application_questions: z.array(z.string().trim().min(1)).max(5, "Maximum 5 questions allowed").default([]),
   payout_day_of_week: z.number().min(0).max(6).default(2)
 }).refine(data => {
@@ -166,6 +173,7 @@ interface Campaign {
   status?: string;
   is_infinite_budget?: boolean;
   hashtags?: string[] | null;
+  tags?: string[] | null;
   asset_links?: {
     label: string;
     url: string;
@@ -347,6 +355,7 @@ export function CampaignCreationWizard({
       access_code: campaign?.access_code || "",
       requires_application: campaign?.requires_application !== false,
       hashtags: campaign?.hashtags || [],
+      tags: campaign?.tags || [],
       application_questions: campaign?.application_questions || [],
       payout_day_of_week: campaign?.payout_day_of_week ?? 2
     }
@@ -385,6 +394,7 @@ export function CampaignCreationWizard({
         access_code: campaign?.access_code || "",
         requires_application: campaign?.requires_application !== false,
         hashtags: campaign?.hashtags || [],
+        tags: campaign?.tags || [],
         application_questions: campaign?.application_questions || [],
         payout_day_of_week: campaign?.payout_day_of_week ?? 2
       });
@@ -512,6 +522,7 @@ export function CampaignCreationWizard({
         requires_application: values.requires_application,
         is_featured: false,
         hashtags: values.hashtags || [],
+        tags: values.tags || [],
         shortimize_collection_name: shortimizeCollectionName || null
       };
       const {
@@ -560,6 +571,7 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
+          tags: values.tags || [],
           application_questions: values.application_questions || [],
           payout_day_of_week: values.payout_day_of_week,
           blueprint_id: selectedBlueprintId || null,
@@ -604,6 +616,7 @@ export function CampaignCreationWizard({
           access_code: values.is_private ? values.access_code?.toUpperCase() : null,
           requires_application: values.requires_application,
           hashtags: values.hashtags || [],
+          tags: values.tags || [],
           application_questions: values.application_questions || [],
           payout_day_of_week: values.payout_day_of_week,
           banner_url: bannerUrl,
@@ -846,6 +859,74 @@ export function CampaignCreationWizard({
                               </div>
                             </div>
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>} />
+
+                    {/* Tags Section */}
+                    <FormField control={form.control} name="tags" render={({
+                  field
+                }) => <FormItem className="space-y-3">
+                          <div>
+                            <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Tags</FormLabel>
+                            <p className="text-xs text-muted-foreground mt-0.5">Add quick labels to keep your campaign organized</p>
+                          </div>
+                          
+                          {/* Selected Tags */}
+                          {field.value && field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {field.value.map((tag: string, index: number) => (
+                                <div 
+                                  key={index} 
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-sm font-inter tracking-[-0.5px] text-foreground"
+                                >
+                                  {tag}
+                                  <button 
+                                    type="button" 
+                                    onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))}
+                                    className="hover:text-destructive transition-colors"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Add Tag Input */}
+                          <FormControl>
+                            <Input 
+                              placeholder="Type a tag and press Enter..." 
+                              className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" 
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  const input = e.currentTarget;
+                                  const value = input.value.trim().toLowerCase();
+                                  if (value && !field.value?.includes(value)) {
+                                    field.onChange([...(field.value || []), value]);
+                                    input.value = '';
+                                  }
+                                }
+                              }} 
+                            />
+                          </FormControl>
+                          
+                          {/* Suggested Tags */}
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Suggested Tags</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {SUGGESTED_TAGS.filter(tag => !field.value?.includes(tag)).slice(0, 8).map((tag) => (
+                                <button
+                                  key={tag}
+                                  type="button"
+                                  onClick={() => field.onChange([...(field.value || []), tag])}
+                                  className="text-xs text-primary hover:text-primary/80 font-inter tracking-[-0.3px] transition-colors"
+                                >
+                                  {tag}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <FormMessage />
                         </FormItem>} />
 
