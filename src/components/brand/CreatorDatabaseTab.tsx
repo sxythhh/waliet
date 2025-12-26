@@ -1638,7 +1638,7 @@ export function CreatorDatabaseTab({
       </Dialog>
 
       <Dialog open={addCreatorsDialogOpen} onOpenChange={setAddCreatorsDialogOpen}>
-        <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden bg-background">
+        <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden bg-background border border-[#0e0e0e]">
           {/* Header */}
           
           
