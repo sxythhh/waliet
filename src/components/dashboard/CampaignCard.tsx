@@ -5,7 +5,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
-import defaultBanner from "@/assets/default-banner.jpg";
+import animatedImagesIcon from "@/assets/animated-images-icon.svg";
 
 export interface CampaignCardProps {
   id: string;
@@ -13,6 +13,7 @@ export interface CampaignCardProps {
   brand_name: string;
   brand_logo_url: string | null;
   brand_is_verified?: boolean;
+  brand_color?: string | null;
   banner_url: string | null;
   budget: number;
   budget_used?: number;
@@ -34,6 +35,7 @@ export function CampaignCard({
   brand_name,
   brand_logo_url,
   brand_is_verified,
+  brand_color,
   banner_url,
   budget,
   budget_used = 0,
@@ -85,11 +87,24 @@ export function CampaignCard({
         <div className="flex items-center gap-2.5">
           {/* Campaign Banner */}
           <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-            <OptimizedImage
-              src={banner_url || defaultBanner}
-              alt={title}
-              className="w-full h-full object-cover"
-            />
+            {banner_url ? (
+              <OptimizedImage
+                src={banner_url}
+                alt={title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div 
+                className="w-full h-full flex items-center justify-center"
+                style={{ backgroundColor: brand_color || '#6366f1' }}
+              >
+                <img 
+                  src={animatedImagesIcon} 
+                  alt="" 
+                  className="w-5 h-5 opacity-80"
+                />
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
