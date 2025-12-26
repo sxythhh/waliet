@@ -366,44 +366,50 @@ export function CampaignHomeTab({
             // All time - use the cumulative total
             periodViews = allTimeTotalViews;
           }
-          
-          // Filter metrics for chart display based on selected timeframe
-          let filteredMetrics = rawMetrics;
-          if (dateRange) {
-            filteredMetrics = rawMetrics.filter(m => {
-              const date = new Date(m.recorded_at);
-              return date >= dateRange.start && date <= dateRange.end;
-            });
-          }
-          
-          const formattedMetrics: MetricsData[] = filteredMetrics.map((m, index) => {
-            const views = m.total_views || 0;
-            const likes = m.total_likes || 0;
-            const shares = m.total_shares || 0;
-            const bookmarks = m.total_bookmarks || 0;
-            const videos = m.total_videos || 0;
-            // For daily values, find the previous record from the full rawMetrics array
-            const currentRecordIndex = rawMetrics.findIndex(rm => rm.id === m.id);
-            const prevRecord = currentRecordIndex > 0 ? rawMetrics[currentRecordIndex - 1] : null;
-            return {
-              date: format(new Date(m.recorded_at), 'MMM d'),
-              datetime: format(new Date(m.recorded_at), 'MMM d, yyyy h:mm a'),
-              views,
-              likes,
-              shares,
-              bookmarks,
-              videos,
-              dailyViews: Math.max(0, prevRecord ? views - (prevRecord.total_views || 0) : views),
-              dailyLikes: Math.max(0, prevRecord ? likes - (prevRecord.total_likes || 0) : likes),
-              dailyShares: Math.max(0, prevRecord ? shares - (prevRecord.total_shares || 0) : shares),
-              dailyBookmarks: Math.max(0, prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks),
-              dailyVideos: Math.max(0, prevRecord ? videos - (prevRecord.total_videos || 0) : videos)
-            };
-          });
-          setMetricsData(formattedMetrics);
-        } else {
-          setMetricsData([]);
         }
+        
+        // Fallback: If no metrics data, use totals from video_submissions directly
+        if (periodViews === 0 && totalViews > 0) {
+          periodViews = totalViews;
+        }
+        if (allTimeTotalViews === 0 && totalViews > 0) {
+          allTimeTotalViews = totalViews;
+        }
+        
+        // Filter metrics for chart display based on selected timeframe
+        let filteredMetrics = rawMetrics;
+        if (dateRange && rawMetrics.length > 0) {
+          filteredMetrics = rawMetrics.filter(m => {
+            const date = new Date(m.recorded_at);
+            return date >= dateRange.start && date <= dateRange.end;
+          });
+        }
+        
+        const formattedMetrics: MetricsData[] = filteredMetrics.map((m, index) => {
+          const views = m.total_views || 0;
+          const likes = m.total_likes || 0;
+          const shares = m.total_shares || 0;
+          const bookmarks = m.total_bookmarks || 0;
+          const videos = m.total_videos || 0;
+          // For daily values, find the previous record from the full rawMetrics array
+          const currentRecordIndex = rawMetrics.findIndex(rm => rm.id === m.id);
+          const prevRecord = currentRecordIndex > 0 ? rawMetrics[currentRecordIndex - 1] : null;
+          return {
+            date: format(new Date(m.recorded_at), 'MMM d'),
+            datetime: format(new Date(m.recorded_at), 'MMM d, yyyy h:mm a'),
+            views,
+            likes,
+            shares,
+            bookmarks,
+            videos,
+            dailyViews: Math.max(0, prevRecord ? views - (prevRecord.total_views || 0) : views),
+            dailyLikes: Math.max(0, prevRecord ? likes - (prevRecord.total_likes || 0) : likes),
+            dailyShares: Math.max(0, prevRecord ? shares - (prevRecord.total_shares || 0) : shares),
+            dailyBookmarks: Math.max(0, prevRecord ? bookmarks - (prevRecord.total_bookmarks || 0) : bookmarks),
+            dailyVideos: Math.max(0, prevRecord ? videos - (prevRecord.total_videos || 0) : videos)
+          };
+        });
+        setMetricsData(formattedMetrics);
         
         // Update stats with period-specific views
         const periodViewsDifference = periodViews - periodPreviousViews;

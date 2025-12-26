@@ -378,6 +378,46 @@ Deno.serve(async (req) => {
             totalVideosMatched += matchedCount;
             totalVideosUnmatched += unmatchedCount;
 
+            // Record metrics snapshot for the performance chart
+            // Aggregate totals from all approved video_submissions for this campaign
+            const { data: submissionTotals } = await supabase
+              .from("video_submissions")
+              .select("views, likes, comments, shares, bookmarks")
+              .eq("source_type", "campaign")
+              .eq("source_id", campaign.id)
+              .eq("status", "approved");
+
+            if (submissionTotals && submissionTotals.length > 0) {
+              const totalViews = submissionTotals.reduce((sum, s) => sum + (s.views || 0), 0);
+              const totalLikes = submissionTotals.reduce((sum, s) => sum + (s.likes || 0), 0);
+              const totalComments = submissionTotals.reduce((sum, s) => sum + (s.comments || 0), 0);
+              const totalShares = submissionTotals.reduce((sum, s) => sum + (s.shares || 0), 0);
+              const totalBookmarks = submissionTotals.reduce((sum, s) => sum + (s.bookmarks || 0), 0);
+              const totalVideos = submissionTotals.length;
+
+              // Insert metrics snapshot
+              const { error: metricsError } = await supabase
+                .from("program_video_metrics")
+                .insert({
+                  source_type: "campaign",
+                  source_id: campaign.id,
+                  brand_id: brand.id,
+                  total_views: totalViews,
+                  total_likes: totalLikes,
+                  total_comments: totalComments,
+                  total_shares: totalShares,
+                  total_bookmarks: totalBookmarks,
+                  total_videos: totalVideos,
+                  recorded_at: new Date().toISOString(),
+                });
+
+              if (metricsError) {
+                console.error(`Error recording metrics for campaign ${campaign.id}:`, metricsError.message);
+              } else {
+                console.log(`Recorded metrics snapshot: ${totalViews} views, ${totalVideos} videos`);
+              }
+            }
+
             brandCampaignResults.push({
               campaignId: campaign.id,
               campaignTitle: campaign.title,
