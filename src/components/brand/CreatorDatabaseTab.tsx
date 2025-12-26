@@ -172,15 +172,15 @@ const getSourceColor = (sourceType: string, hasCampaigns: boolean = false): stri
   switch (sourceType) {
     case 'campaign_application':
     case 'boost_application':
-      return hasCampaigns ? 'bg-emerald-500/40 text-emerald-500' : 'bg-blue-500/40 text-blue-500';
+      return hasCampaigns ? 'bg-emerald-500/25 text-emerald-500' : 'bg-blue-500/25 text-blue-500';
     case 'video_submission':
-      return 'bg-purple-500/40 text-purple-500';
+      return 'bg-purple-500/25 text-purple-500';
     case 'manual_add':
-      return 'bg-amber-500/40 text-amber-500';
+      return 'bg-amber-500/25 text-amber-500';
     case 'import':
-      return 'bg-rose-500/40 text-rose-500';
+      return 'bg-rose-500/25 text-rose-500';
     default:
-      return 'bg-muted/40 text-muted-foreground';
+      return 'bg-muted/25 text-muted-foreground';
   }
 };
 
