@@ -1759,40 +1759,40 @@ export function CreatorDatabaseTab({
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-inter text-muted-foreground">Username</Label>
+                    <Label className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">Username</Label>
                     <Input placeholder="@username" value={manualCreator.username} onChange={e => setManualCreator(prev => ({
                     ...prev,
                     username: e.target.value
-                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
+                  }))} className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-inter text-muted-foreground">Full Name</Label>
+                    <Label className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">Full Name</Label>
                     <Input placeholder="John Doe" value={manualCreator.name} onChange={e => setManualCreator(prev => ({
                     ...prev,
                     name: e.target.value
-                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
+                  }))} className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-inter text-muted-foreground">Email</Label>
+                    <Label className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">Email</Label>
                     <Input type="email" placeholder="email@example.com" value={manualCreator.email} onChange={e => setManualCreator(prev => ({
                     ...prev,
                     email: e.target.value
-                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
+                  }))} className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-inter text-muted-foreground">Phone</Label>
+                    <Label className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">Phone</Label>
                     <Input placeholder="+1 234 567 8900" value={manualCreator.phone} onChange={e => setManualCreator(prev => ({
                     ...prev,
                     phone: e.target.value
-                  }))} className="h-11 bg-muted/30 border-0 font-inter" />
+                  }))} className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground font-inter">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Manually added creators are marked as external until they join.
                 </p>
-                <Button className="w-full h-11" disabled={manualAddLoading || !manualCreator.username && !manualCreator.email} onClick={async () => {
+                <button className="w-fit py-2 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-inter text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={manualAddLoading || !manualCreator.username && !manualCreator.email} onClick={async () => {
                 setManualAddLoading(true);
                 try {
                   await supabase.from('brand_creator_relationships').insert({
@@ -1818,7 +1818,7 @@ export function CreatorDatabaseTab({
                 }
               }}>
                   {manualAddLoading ? 'Adding...' : 'Add Creator'}
-                </Button>
+                </button>
               </div>
             </TabsContent>
             
