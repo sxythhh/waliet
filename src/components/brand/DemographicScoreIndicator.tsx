@@ -24,7 +24,21 @@ const getFilledSteps = (score: number): number => {
 
 export function DemographicScoreIndicator({ score, className }: DemographicScoreIndicatorProps) {
   if (score === null || score === undefined) {
-    return null;
+    return (
+      <div className={cn("flex flex-col gap-0.5", className)}>
+        <span className="text-[10px] font-['Inter'] tracking-[-0.3px] text-muted-foreground/70">
+          Score: <span className="text-muted-foreground">Not submitted</span>
+        </span>
+        <div className="flex items-center gap-0.5">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div
+              key={step}
+              className="h-2 w-4 rounded-full bg-muted/30"
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   const { label, color } = getScoreLabel(score);

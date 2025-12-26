@@ -1376,9 +1376,7 @@ export function VideoSubmissionsTab({
                                       {video.video_author_username || profile?.username || "Unknown"}
                                     </span>
                                   </div>
-                                  {demographicScore && (
-                                    <DemographicScoreIndicator score={demographicScore.score} />
-                                  )}
+                                  <DemographicScoreIndicator score={demographicScore?.score} />
                                 </div>
                               </TableCell>
                               <TableCell>
