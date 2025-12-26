@@ -149,6 +149,19 @@ export function BrandCampaignDetailView({
     fetchPendingApplicationsCount();
   }, [campaignId, boostId, brandId, isAllMode]);
 
+  // Auto-select first program when in "all mode" after data loads
+  useEffect(() => {
+    if (isAllMode && !loading && (campaigns.length > 0 || boosts.length > 0)) {
+      const newParams = new URLSearchParams(searchParams);
+      if (campaigns.length > 0) {
+        newParams.set("campaign", campaigns[0].id);
+      } else if (boosts.length > 0) {
+        newParams.set("boost", boosts[0].id);
+      }
+      setSearchParams(newParams);
+    }
+  }, [isAllMode, loading, campaigns, boosts]);
+
   // Check if brand has Dub integration configured
   useEffect(() => {
     const checkDubIntegration = async () => {
@@ -369,13 +382,6 @@ export function BrandCampaignDetailView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64 z-50 bg-[#080808] rounded-[7px]">
-                {/* All Programs option */}
-                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={`focus:bg-white/5 focus:text-foreground ${isAllMode ? "bg-white/8" : ""}`}>
-                  <span className="font-medium">All Programs</span>
-                </DropdownMenuItem>
-                
-                {(campaigns.length > 0 || boosts.length > 0) && <DropdownMenuSeparator />}
-                
                 {/* All Programs (Campaigns + Boosts) */}
                 <div className="flex flex-col gap-1 py-1">
                   {campaigns.map(c => <DropdownMenuItem key={c.id} onClick={() => handleSelectEntity({
