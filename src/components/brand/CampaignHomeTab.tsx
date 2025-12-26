@@ -10,7 +10,6 @@ import { ManualMetricsDialog } from "./ManualMetricsDialog";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { TopPerformingVideos, VideoData } from "./TopPerformingVideos";
 import { ActivityChart, ActivityData } from "./ActivityChart";
-import { ChangeIndicator } from "./ChangeIndicator";
 
 export type TimeframeOption = "all_time" | "today" | "this_week" | "last_week" | "this_month" | "last_month";
 
@@ -671,10 +670,10 @@ export function CampaignHomeTab({
                 <p className="text-3xl font-bold tracking-[-0.5px]">
                   {formatNumber(timeframe === 'all_time' ? stats.allTimeViews : stats.periodViews)}
                 </p>
-                {timeframe !== 'all_time' && (
-                  <ChangeIndicator 
-                    value={stats.viewsChangePercent}
-                  />
+                {stats.viewsDifference !== 0 && timeframe !== 'all_time' && (
+                  <span className={`text-xs font-medium tracking-[-0.5px] ${stats.viewsDifference > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {stats.viewsDifference > 0 ? '+' : ''}{formatNumber(stats.viewsDifference)}
+                  </span>
                 )}
               </div>
             </div>
