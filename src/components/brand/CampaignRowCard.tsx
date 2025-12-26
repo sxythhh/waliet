@@ -7,6 +7,8 @@ import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import animatedImagesIcon from "@/assets/animated-images-icon.svg";
+import copyIcon from "@/assets/copy-icon.svg";
+import { useToast } from "@/hooks/use-toast";
 interface CampaignMember {
   id: string;
   avatar_url?: string | null;
@@ -31,6 +33,7 @@ interface CampaignRowCardProps {
   totalVideos?: number;
   pendingReviewCount?: number;
   members?: CampaignMember[];
+  slug?: string;
   onClick: () => void;
   onEdit?: () => void;
   onArchive?: () => void;
@@ -52,9 +55,11 @@ export function CampaignRowCard({
   allowedPlatforms,
   pendingReviewCount = 0,
   members = [],
+  slug,
   onClick,
   onTopUp
 }: CampaignRowCardProps) {
+  const { toast } = useToast();
   const budgetPercentage = budget > 0 ? budgetUsed / budget * 100 : 0;
   const getDaysLeft = () => {
     if (!endDate) return null;
@@ -110,7 +115,9 @@ export function CampaignRowCard({
               </span>}
 
             <div className="flex items-baseline gap-2 flex-wrap">
-              
+              <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
+                {title}
+              </h3>
             </div>
 
             {/* Budget Progress */}
@@ -170,8 +177,16 @@ export function CampaignRowCard({
               </button>}
 
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => {
+                e.stopPropagation();
+                const url = `${window.location.origin}/c/${slug}`;
+                navigator.clipboard.writeText(url);
+                toast({ title: "Link copied", description: "Campaign URL copied to clipboard" });
+              }}>
+                <img src={copyIcon} alt="" className="w-3.5 h-3.5" />
+              </Button>}
+
               {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
-                  
                   Resume
                 </Button>}
 
