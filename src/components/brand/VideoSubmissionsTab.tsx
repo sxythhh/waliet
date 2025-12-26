@@ -115,11 +115,13 @@ export function VideoSubmissionsTab({
 
   // Calculate payout breakdown for pay_per_post campaigns (flat rate + CPM)
   const getPayoutBreakdown = (submission: VideoSubmission) => {
-    const flatRate = campaign?.payment_model === "pay_per_post" ? (campaign?.post_rate || 0) : 0;
-    const cpmEarnings = campaign?.rpm_rate && submission.views 
-      ? (submission.views / 1000) * campaign.rpm_rate 
-      : 0;
-    return { flatRate, cpmEarnings, total: flatRate + cpmEarnings };
+    const flatRate = campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
+    const cpmEarnings = campaign?.rpm_rate && submission.views ? submission.views / 1000 * campaign.rpm_rate : 0;
+    return {
+      flatRate,
+      cpmEarnings,
+      total: flatRate + cpmEarnings
+    };
   };
 
   // Calculate payout amount based on payment model
@@ -128,7 +130,7 @@ export function VideoSubmissionsTab({
     if (submission.payout_amount !== null && submission.payout_amount !== undefined) {
       // For pay_per_post, add CPM earnings on top of flat rate
       if (campaign?.payment_model === "pay_per_post" && campaign?.rpm_rate && submission.views) {
-        const cpmEarnings = (submission.views / 1000) * campaign.rpm_rate;
+        const cpmEarnings = submission.views / 1000 * campaign.rpm_rate;
         return submission.payout_amount + cpmEarnings;
       }
       return submission.payout_amount;
@@ -142,15 +144,13 @@ export function VideoSubmissionsTab({
     // For pay_per_post campaigns: flat rate + CPM from views
     if (campaign?.payment_model === "pay_per_post") {
       const flatRate = campaign?.post_rate || 0;
-      const cpmEarnings = campaign?.rpm_rate && submission.views 
-        ? (submission.views / 1000) * campaign.rpm_rate 
-        : 0;
+      const cpmEarnings = campaign?.rpm_rate && submission.views ? submission.views / 1000 * campaign.rpm_rate : 0;
       return flatRate + cpmEarnings;
     }
 
     // For RPM-based campaigns (pay_per_view), calculate based on views only
     if (campaign?.rpm_rate && submission.views) {
-      return (submission.views / 1000) * campaign.rpm_rate;
+      return submission.views / 1000 * campaign.rpm_rate;
     }
     return 0;
   };
@@ -679,17 +679,15 @@ export function VideoSubmissionsTab({
                       </div>
 
                       {/* Submission Heatmap - only show when selected */}
-                      {isSelected && (
-                        <div className="mt-3">
+                      {isSelected && <div className="mt-3">
                           <SubmissionHeatmap submissions={creator.submissions.map(s => ({
-                        submitted_at: s.submitted_at,
-                        status: s.status
-                      }))} onDateClick={date => {
-                        setSelectedCreator(creator.userId);
-                        setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
-                      }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
-                        </div>
-                      )}
+                      submitted_at: s.submitted_at,
+                      status: s.status
+                    }))} onDateClick={date => {
+                      setSelectedCreator(creator.userId);
+                      setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
+                    }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
+                        </div>}
                     </button>;
               });
             })()}
@@ -919,16 +917,12 @@ export function VideoSubmissionsTab({
                               <span className="text-xs font-medium tabular-nums">{formatNumber(submission.comments)}</span>
                             </TableCell>
                             <TableCell className="text-right">
-                              {hasCpmBonus && submission.views ? (
-                                <div className="flex flex-col items-end">
+                              {hasCpmBonus && submission.views ? <div className="flex flex-col items-end">
                                   <span className="text-xs font-semibold tabular-nums">${getPayoutForSubmission(submission).toFixed(2)}</span>
                                   <span className="text-[10px] text-muted-foreground">
-                                    ${(campaign?.post_rate || 0).toFixed(0)} + ${((submission.views / 1000) * (campaign?.rpm_rate || 0)).toFixed(2)} CPM
+                                    ${(campaign?.post_rate || 0).toFixed(0)} + ${(submission.views / 1000 * (campaign?.rpm_rate || 0)).toFixed(2)} CPM
                                   </span>
-                                </div>
-                              ) : (
-                                <span className="text-xs font-semibold tabular-nums">${getPayoutForSubmission(submission).toFixed(2)}</span>
-                              )}
+                                </div> : <span className="text-xs font-semibold tabular-nums">${getPayoutForSubmission(submission).toFixed(2)}</span>}
                             </TableCell>
                             <TableCell>
                               <span className="text-xs text-muted-foreground">
@@ -1019,7 +1013,7 @@ export function VideoSubmissionsTab({
                                   {profile?.username?.[0]?.toUpperCase() || "?"}
                                 </AvatarFallback>
                               </Avatar>}
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-primary-foreground">
                               @{submission.video_author_username || profile?.username}
                             </span>
                             <span className="text-xs text-muted-foreground/50">•</span>
@@ -1049,20 +1043,16 @@ export function VideoSubmissionsTab({
                               <span>comments</span>
                             </div>
                           </div>
-                          {hasCpmBonus && submission.views ? (
-                            <div className="flex flex-col items-end">
+                          {hasCpmBonus && submission.views ? <div className="flex flex-col items-end">
                               <span className="text-sm font-semibold text-foreground font-['Inter'] tabular-nums">
                                 ${getPayoutForSubmission(submission).toFixed(2)}
                               </span>
                               <span className="text-[10px] text-muted-foreground">
-                                ${(campaign?.post_rate || 0).toFixed(0)} flat + ${((submission.views / 1000) * (campaign?.rpm_rate || 0)).toFixed(2)} CPM
+                                ${(campaign?.post_rate || 0).toFixed(0)} flat + ${(submission.views / 1000 * (campaign?.rpm_rate || 0)).toFixed(2)} CPM
                               </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm font-semibold text-foreground font-['Inter'] tabular-nums">
+                            </div> : <span className="text-sm font-semibold text-foreground font-['Inter'] tabular-nums">
                               ${getPayoutForSubmission(submission).toFixed(2)}
-                            </span>
-                          )}
+                            </span>}
                         </div>
                       </div>
                     </div>
