@@ -34,6 +34,8 @@ import checkCircleFilledIcon from "@/assets/check-circle-filled.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
+import { PayoutStatusCards } from "./PayoutStatusCards";
+import { addDays } from "date-fns";
 interface WalletData {
   id: string;
   balance: number;
@@ -110,6 +112,7 @@ export function WalletTab() {
   const [pendingBoostEarnings, setPendingBoostEarnings] = useState(0);
   const [clearingPayouts, setClearingPayouts] = useState(0);
   const [isSubmittingPayout, setIsSubmittingPayout] = useState(false);
+  const [isRequestingEarningsPayout, setIsRequestingEarningsPayout] = useState(false);
   const [p2pTransferDialogOpen, setP2pTransferDialogOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -135,7 +138,64 @@ export function WalletTab() {
   } = useToast();
   
   // Use payment ledger for unified pending earnings
-  const { summary: ledgerSummary, loading: ledgerLoading } = usePaymentLedger();
+  const { summary: ledgerSummary, loading: ledgerLoading, requestPayout: ledgerRequestPayout, refetch: refetchLedger } = usePaymentLedger();
+  
+  // Calculate payout pipeline data
+  const payoutPipelineData = {
+    accruing: {
+      amount: (ledgerSummary?.totalPending || 0),
+      videoCount: (ledgerSummary?.accruingCount || 0)
+    },
+    clearing: {
+      amount: (ledgerSummary?.totalClearing || 0) + (ledgerSummary?.totalLocked || 0) + clearingPayouts,
+      videoCount: (ledgerSummary?.clearingCount || 0),
+      clearingEndsAt: ledgerSummary?.earliestClearingEndsAt,
+      canBeFlagged: ledgerSummary?.hasActiveFlaggableItems || false
+    },
+    paid: {
+      amount: (ledgerSummary?.totalPaid || 0) + (wallet?.total_withdrawn || 0),
+      videoCount: (ledgerSummary?.paidCount || 0)
+    }
+  };
+  
+  // Handle request payout for earnings pipeline
+  const handleRequestEarningsPayout = async () => {
+    if (payoutPipelineData.accruing.amount < 1) {
+      toast({
+        title: "Minimum not met",
+        description: "Minimum payout is $1.00",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsRequestingEarningsPayout(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Request payout via ledger
+      if (ledgerSummary && ledgerSummary.totalPending > 0) {
+        await ledgerRequestPayout();
+        toast({
+          title: "Payout requested",
+          description: `$${ledgerSummary.totalPending.toFixed(2)} is now in 7-day clearing period.`
+        });
+        refetchLedger();
+        fetchClearingPayouts();
+      }
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      toast({
+        title: "Error",
+        description: "Failed to request payout",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRequestingEarningsPayout(false);
+    }
+  };
+  
   useEffect(() => {
     fetchWallet();
     fetchPendingBoostEarnings();
@@ -1507,6 +1567,20 @@ export function WalletTab() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Payout Pipeline Section */}
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-muted-foreground mb-4 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+          Payout Pipeline
+        </h3>
+        <PayoutStatusCards
+          accruing={payoutPipelineData.accruing}
+          clearing={payoutPipelineData.clearing}
+          paid={payoutPipelineData.paid}
+          onRequestPayout={handleRequestEarningsPayout}
+          isRequesting={isRequestingEarningsPayout}
+        />
       </div>
 
 {/* Team & Affiliate Earnings Charts - Hidden */}

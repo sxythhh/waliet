@@ -12,7 +12,6 @@ import { format, addDays } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
-import { PayoutStatusCards } from "./PayoutStatusCards";
 import { PayoutStatusBadge, type PayoutStatus } from "./PayoutStatusBadge";
 import { RequestVideoPayoutDialog } from "./RequestVideoPayoutDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -487,19 +486,8 @@ export function SubmissionsTab() {
 
   return (
     <Card className="bg-card border rounded-xl overflow-hidden border-[#141414]/0">
-      {/* Payout Status Cards */}
-      <div className="pt-5 px-0">
-        <PayoutStatusCards
-          accruing={payoutSummary.accruing}
-          clearing={payoutSummary.clearing}
-          paid={payoutSummary.paid}
-          onRequestPayout={handleRequestAllPayouts}
-          isRequesting={requestingPayout}
-        />
-      </div>
-
       {/* Filter */}
-      <div className="pb-4 px-0 flex items-center gap-3">
+      <div className="pt-5 pb-4 px-0 flex items-center gap-3">
         <DropdownMenu open={filterOpen} onOpenChange={open => {
           setFilterOpen(open);
           if (!open) {
