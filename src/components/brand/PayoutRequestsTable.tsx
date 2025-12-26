@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
 import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, User, Search } from "lucide-react";
@@ -646,30 +647,36 @@ export function PayoutRequestsTable({
         {/* Desktop Table */}
         {requests.length > 0 && <div className="hidden md:block">
           {/* Filter Bar */}
-          <div className="flex items-center justify-end gap-3 mb-4">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px] h-9 text-sm border-0 bg-background">
-                <SelectValue placeholder="Highest paid out" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="highest">Highest paid out</SelectItem>
-                <SelectItem value="lowest">Lowest paid out</SelectItem>
-                <SelectItem value="deadline_soon">Deadline ending soon</SelectItem>
-                <SelectItem value="deadline_later">Deadline ending later</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px] h-9 text-sm border-0 bg-background">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="clearing">Clearing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="flagged">Flagged</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-end gap-2 mb-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-3 text-sm">
+                  {sortBy === "highest" ? "Highest paid out" : sortBy === "lowest" ? "Lowest paid out" : sortBy === "deadline_soon" ? "Deadline ending soon" : "Deadline ending later"}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-50">
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setSortBy("highest")}>Highest paid out</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setSortBy("lowest")}>Lowest paid out</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setSortBy("deadline_soon")}>Deadline ending soon</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setSortBy("deadline_later")}>Deadline ending later</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-3 text-sm">
+                  {statusFilter === "all" ? "All statuses" : statusFilter === "clearing" ? "Clearing" : statusFilter === "completed" ? "Completed" : statusFilter === "flagged" ? "Flagged" : "Cancelled"}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-50">
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("all")}>All statuses</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("clearing")}>Clearing</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("completed")}>Completed</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("flagged")}>Flagged</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {filteredRequests.length === 0 ? <div className="text-center py-8 text-muted-foreground text-sm">
