@@ -290,7 +290,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             return (
               <DropdownMenu key={blueprint.id}>
               <DropdownMenuTrigger asChild>
-                  <div className={`group cursor-pointer rounded-xl ${statusConfig.bgColor}`}>
+                  <div className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full`}>
                     {/* Status Label */}
                     <div className="px-4 py-2 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
@@ -299,7 +299,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </div>
 
                     {/* Content Card overlaying the status background */}
-                    <div className="rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4">
+                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col">
                       {/* Title */}
                       <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px]">
                         {blueprint.title}
@@ -311,7 +311,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                       </p>
 
                       {/* Status Badge Row */}
-                      <div className="flex items-center justify-end mb-4">
+                      <div className="flex items-center justify-end mb-4 flex-1">
                         {status === 'assigned' && (
                           <span className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
                             Active
