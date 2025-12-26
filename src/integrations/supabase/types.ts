@@ -1286,6 +1286,67 @@ export type Database = {
           },
         ]
       }
+      campaign_cpm_payouts: {
+        Row: {
+          campaign_id: string
+          cpm_amount_paid: number
+          created_at: string
+          creator_id: string
+          flat_rate_paid: number
+          id: string
+          transaction_id: string | null
+          updated_at: string
+          video_submission_id: string
+          views_at_payout: number
+        }
+        Insert: {
+          campaign_id: string
+          cpm_amount_paid?: number
+          created_at?: string
+          creator_id: string
+          flat_rate_paid?: number
+          id?: string
+          transaction_id?: string | null
+          updated_at?: string
+          video_submission_id: string
+          views_at_payout?: number
+        }
+        Update: {
+          campaign_id?: string
+          cpm_amount_paid?: number
+          created_at?: string
+          creator_id?: string
+          flat_rate_paid?: number
+          id?: string
+          transaction_id?: string | null
+          updated_at?: string
+          video_submission_id?: string
+          views_at_payout?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_cpm_payouts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_cpm_payouts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_cpm_payouts_video_submission_id_fkey"
+            columns: ["video_submission_id"]
+            isOneToOne: true
+            referencedRelation: "video_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_links: {
         Row: {
           assigned_to: string | null
