@@ -90,7 +90,7 @@ export function CampaignRowCard({
           {bannerUrl ? <OptimizedImage src={bannerUrl} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full flex items-center justify-center" style={{
           backgroundColor: brandColor || "#6366f1"
         }}>
-              <img src={animatedImagesIcon} alt="" className="w-6 h-6 opacity-80" />
+              <img alt="" className="w-6 h-6 opacity-80" src="/lovable-uploads/090bbb71-fff3-4820-a16e-521aac57990e.png" />
             </div>}
         </div>
 
