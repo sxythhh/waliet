@@ -172,15 +172,15 @@ const getSourceColor = (sourceType: string): string => {
   switch (sourceType) {
     case 'campaign_application':
     case 'boost_application':
-      return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+      return 'bg-blue-500 text-white';
     case 'video_submission':
-      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+      return 'bg-emerald-500 text-white';
     case 'manual_add':
-      return 'bg-purple-500/10 text-purple-600 dark:text-purple-400';
+      return 'bg-purple-500 text-white';
     case 'import':
-      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
+      return 'bg-amber-500 text-white';
     default:
-      return 'bg-muted/40 text-muted-foreground';
+      return 'bg-muted text-white';
   }
 };
 
@@ -1287,7 +1287,7 @@ export function CreatorDatabaseTab({
                       return <TableCell key={colId} className="py-3">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(creator.source_type)}`}>
+                                      <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-md ${getSourceColor(creator.source_type)}`}>
                                         {getSourceLabel(creator.source_type)}
                                       </span>
                                     </TooltipTrigger>
