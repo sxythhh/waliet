@@ -29,6 +29,43 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
 
+// Helper to extract platform video ID from URL
+const extractPlatformVideoId = (url: string, platform: string): string | null => {
+  if (!url) return null;
+  
+  try {
+    if (platform.toLowerCase() === "tiktok") {
+      // TikTok URLs: /video/ID or /photo/ID
+      const match = url.match(/\/(video|photo)\/(\d+)/);
+      return match ? match[2] : null;
+    } else if (platform.toLowerCase() === "instagram") {
+      // Instagram URLs: /reel/ID or /p/ID
+      const match = url.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
+      return match ? match[2] : null;
+    } else if (platform.toLowerCase() === "youtube") {
+      // YouTube URLs: /shorts/ID or ?v=ID
+      const shortsMatch = url.match(/\/shorts\/([A-Za-z0-9_-]+)/);
+      if (shortsMatch) return shortsMatch[1];
+      const vMatch = url.match(/[?&]v=([A-Za-z0-9_-]+)/);
+      return vMatch ? vMatch[1] : null;
+    }
+  } catch (e) {
+    console.error("Error extracting video ID:", e);
+  }
+  return null;
+};
+
+// Get tracked video thumbnail URL from Supabase storage
+const getTrackedThumbnailUrl = (video: { video_url: string; video_author_username: string | null; platform: string }): string | null => {
+  const username = video.video_author_username;
+  const platform = video.platform?.toLowerCase();
+  const adPlatformId = extractPlatformVideoId(video.video_url, platform);
+  
+  if (!username || !adPlatformId || !platform) return null;
+  
+  return `https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails/${username}/${adPlatformId}_${platform}.jpg`;
+};
+
 // Unified video interface that handles both submissions and tracked videos
 interface UnifiedVideo {
   id: string;
@@ -1351,17 +1388,33 @@ export function VideoSubmissionsTab({
                           rel="noopener noreferrer" 
                           className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted/50 shrink-0"
                         >
-                          {video.video_thumbnail_url ? (
-                            <img 
-                              src={video.video_thumbnail_url} 
-                              alt="" 
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Video className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
+                          {(() => {
+                            // For tracked videos, try to get thumbnail from Supabase storage
+                            const thumbnailUrl = video.source === "tracked" 
+                              ? (getTrackedThumbnailUrl(video) || video.video_thumbnail_url)
+                              : video.video_thumbnail_url;
+                            
+                            return thumbnailUrl ? (
+                              <img 
+                                src={thumbnailUrl} 
+                                alt="" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Fallback to original thumbnail or hide on error
+                                  const target = e.target as HTMLImageElement;
+                                  if (video.video_thumbnail_url && target.src !== video.video_thumbnail_url) {
+                                    target.src = video.video_thumbnail_url;
+                                  } else {
+                                    target.style.display = 'none';
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Video className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            );
+                          })()}
                           {/* Platform badge */}
                           <div className="absolute bottom-1 left-1 h-5 w-5 rounded-full bg-background/80 flex items-center justify-center">
                             <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
