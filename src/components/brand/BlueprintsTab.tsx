@@ -292,7 +292,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
               <DropdownMenuTrigger asChild>
                   <div className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full`}>
                     {/* Status Label */}
-                    <div className="px-4 py-2 text-center">
+                    <div className="px-4 py-1 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
                         {statusConfig.label}
                       </span>
