@@ -1482,43 +1482,54 @@ export function VideoSubmissionsTab({
       </div>
 
       {/* Floating Bulk Actions Bar */}
-      {selectedVideos.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4 font-inter tracking-[-0.5px]">
-          <span className="text-sm">
-            <span className="font-semibold text-foreground">{selectedVideos.size}</span>
-            <span className="text-muted-foreground/70"> video{selectedVideos.size > 1 ? 's' : ''} selected</span>
-          </span>
-          <div className="h-4 w-px bg-border/50" />
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none tracking-[-0.3px]"
-              onClick={handleBulkApprove}
-              disabled={processing}
-            >
-              <Check className="h-3.5 w-3.5" />
-              Approve All
-            </Button>
-            <Button 
-              size="sm" 
-              className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none tracking-[-0.3px]"
-              onClick={handleBulkReject}
-              disabled={processing}
-            >
-              <X className="h-3.5 w-3.5" />
-              Reject All
-            </Button>
-            <Button 
-              size="sm" 
-              variant="ghost"
-              className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg tracking-[-0.3px]"
-              onClick={() => setSelectedVideos(new Set())}
-            >
-              Clear
-            </Button>
+      {selectedVideos.size > 0 && (() => {
+        // Get selected video objects to check their statuses
+        const selectedVideoObjects = allVideos.filter(v => selectedVideos.has(v.id));
+        const hasApprovable = selectedVideoObjects.some(v => v.status !== 'approved');
+        const hasRejectable = selectedVideoObjects.some(v => v.status !== 'rejected');
+        
+        return (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4 font-inter tracking-[-0.5px]">
+            <span className="text-sm">
+              <span className="font-semibold text-foreground">{selectedVideos.size}</span>
+              <span className="text-muted-foreground/70"> video{selectedVideos.size > 1 ? 's' : ''} selected</span>
+            </span>
+            <div className="h-4 w-px bg-border/50" />
+            <div className="flex items-center gap-2">
+              {hasApprovable && (
+                <Button 
+                  size="sm" 
+                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none tracking-[-0.3px]"
+                  onClick={handleBulkApprove}
+                  disabled={processing}
+                >
+                  <Check className="h-3.5 w-3.5" />
+                  Approve{selectedVideos.size > 1 ? ' All' : ''}
+                </Button>
+              )}
+              {hasRejectable && (
+                <Button 
+                  size="sm" 
+                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none tracking-[-0.3px]"
+                  onClick={handleBulkReject}
+                  disabled={processing}
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Reject{selectedVideos.size > 1 ? ' All' : ''}
+                </Button>
+              )}
+              <Button 
+                size="sm" 
+                variant="ghost"
+                className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg tracking-[-0.3px]"
+                onClick={() => setSelectedVideos(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
