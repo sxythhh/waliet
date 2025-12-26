@@ -1068,7 +1068,7 @@ export function CreatorDatabaseTab({
   }
   return <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border px-[12px] py-[3px]">
+      <div className="p-4 md:p-6 border-b border-border px-[12px] py-[7px]">
         {/* Search, Filters & Actions - Single Row */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative min-w-[180px] max-w-[220px]">
