@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -159,6 +160,7 @@ export function VideoSubmissionsTab({
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -798,6 +800,78 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
+
+  // Video selection handlers
+  const toggleVideoSelection = (videoId: string) => {
+    const newSet = new Set(selectedVideos);
+    if (newSet.has(videoId)) {
+      newSet.delete(videoId);
+    } else {
+      newSet.add(videoId);
+    }
+    setSelectedVideos(newSet);
+  };
+
+  const toggleSelectAllPending = (pendingVideos: UnifiedVideo[]) => {
+    const pendingIds = pendingVideos.filter(v => v.status === "pending").map(v => v.id);
+    const allSelected = pendingIds.every(id => selectedVideos.has(id));
+    if (allSelected) {
+      setSelectedVideos(new Set());
+    } else {
+      setSelectedVideos(new Set(pendingIds));
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    if (selectedVideos.size === 0) return;
+    setProcessing(true);
+    try {
+      const videosToApprove = allVideos.filter(v => selectedVideos.has(v.id) && v.status === "pending");
+      for (const video of videosToApprove) {
+        await handleApprove(video);
+      }
+      setSelectedVideos(new Set());
+      toast.success(`Approved ${videosToApprove.length} videos`);
+    } catch (error) {
+      console.error("Bulk approve error:", error);
+      toast.error("Failed to approve some videos");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleBulkReject = async () => {
+    if (selectedVideos.size === 0) return;
+    setProcessing(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const videosToReject = allVideos.filter(v => selectedVideos.has(v.id) && v.status === "pending");
+      for (const video of videosToReject) {
+        await supabase.from("video_submissions").update({
+          status: "rejected",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id,
+          rejection_reason: "Bulk rejected"
+        }).eq("id", video.id);
+      }
+      setSubmissions(prev => prev.map(s => 
+        selectedVideos.has(s.id) && s.status === "pending" 
+          ? { ...s, status: "rejected", reviewed_at: new Date().toISOString() } 
+          : s
+      ));
+      setSelectedVideos(new Set());
+      toast.success(`Rejected ${videosToReject.length} videos`);
+      onSubmissionReviewed?.();
+    } catch (error) {
+      console.error("Bulk reject error:", error);
+      toast.error("Failed to reject some videos");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -1177,6 +1251,17 @@ export function VideoSubmissionsTab({
                 return <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="w-8 p-0 pl-2">
+                            <div 
+                              className="h-4 w-4 rounded border border-border/60 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => toggleSelectAllPending(filteredVids)}
+                            >
+                              {filteredVids.filter(v => v.status === "pending").length > 0 && 
+                               filteredVids.filter(v => v.status === "pending").every(v => selectedVideos.has(v.id)) && (
+                                <Check className="h-3 w-3 text-primary" />
+                              )}
+                            </div>
+                          </TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
@@ -1192,7 +1277,21 @@ export function VideoSubmissionsTab({
                       <TableBody>
                         {filteredVids.map(video => {
                       const profile = video.user_id ? profiles[video.user_id] : null;
-                      return <TableRow key={video.id} className="border-border/30">
+                      const isSelected = selectedVideos.has(video.id);
+                      return <TableRow key={video.id} className={cn("border-border/30 group", isSelected && "bg-primary/5")}>
+                              <TableCell className="w-8 p-0 pl-2">
+                                <div 
+                                  className={cn(
+                                    "h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all",
+                                    isSelected 
+                                      ? "border-primary bg-primary" 
+                                      : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
+                                  )}
+                                  onClick={() => toggleVideoSelection(video.id)}
+                                >
+                                  {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                                </div>
+                              </TableCell>
                               <TableCell className="max-w-[200px]">
                                 <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline">
                                   {video.video_title || video.video_description || "Untitled Video"}
@@ -1261,7 +1360,20 @@ export function VideoSubmissionsTab({
               return filteredVids.map(video => {
                 const profile = video.user_id ? profiles[video.user_id] : null;
                 const uploadDate = video.uploaded_at || video.submitted_at;
-                return <div key={video.id} className="group relative w-full rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300 font-sans tracking-[-0.5px]">
+                const isSelected = selectedVideos.has(video.id);
+                return <div key={video.id} className={cn("group relative w-full rounded-2xl border bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:shadow-lg transition-all duration-300 font-sans tracking-[-0.5px]", isSelected ? "border-primary/50 bg-primary/5" : "border-border/30 hover:border-border/60")}>
+                      {/* Selection Checkbox - Appears on hover or when selected */}
+                      <div 
+                        className={cn(
+                          "absolute top-2 left-2 z-10 h-5 w-5 rounded-md flex items-center justify-center cursor-pointer transition-all",
+                          isSelected 
+                            ? "bg-primary border border-primary opacity-100" 
+                            : "bg-background/80 backdrop-blur-sm border border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted"
+                        )}
+                        onClick={() => toggleVideoSelection(video.id)}
+                      >
+                        {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
@@ -1364,6 +1476,44 @@ export function VideoSubmissionsTab({
           </ScrollArea>
         </div>
       </div>
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedVideos.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4">
+          <span className="text-sm font-medium tracking-[-0.3px]">
+            <span className="text-primary">{selectedVideos.size}</span> video{selectedVideos.size > 1 ? 's' : ''} selected
+          </span>
+          <div className="h-4 w-px bg-border/60" />
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none"
+              onClick={handleBulkApprove}
+              disabled={processing}
+            >
+              <Check className="h-3.5 w-3.5" />
+              Approve All
+            </Button>
+            <Button 
+              size="sm" 
+              className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+              onClick={handleBulkReject}
+              disabled={processing}
+            >
+              <X className="h-3.5 w-3.5" />
+              Reject All
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost"
+              className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg"
+              onClick={() => setSelectedVideos(new Set())}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
