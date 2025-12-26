@@ -771,31 +771,29 @@ export function CreatorDatabaseTab({
     if (selectedCreators.size === 0) return;
     setBulkMessageDialogOpen(true);
   };
-
   const handleSendBulkMessage = async () => {
     if (!bulkMessage.trim() || selectedCreators.size === 0) {
       toast.error('Please enter a message');
       return;
     }
-
     setSendingBulkMessage(true);
     const selectedCreatorIds = Array.from(selectedCreators);
     let successCount = 0;
     let failCount = 0;
     const errors: string[] = [];
-
     for (const creatorId of selectedCreatorIds) {
       const creator = creators.find(c => c.id === creatorId);
       if (!creator) continue;
-
       try {
-        const { data, error } = await supabase.functions.invoke('send-discord-dm', {
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('send-discord-dm', {
           body: {
             userId: creatorId,
-            message: bulkMessage,
+            message: bulkMessage
           }
         });
-
         if (error) {
           failCount++;
           errors.push(`${creator.username}: ${error.message}`);
@@ -810,16 +808,13 @@ export function CreatorDatabaseTab({
         errors.push(`${creator.username}: ${err.message}`);
       }
     }
-
     setSendingBulkMessage(false);
-
     if (successCount > 0) {
       toast.success(`Message sent to ${successCount} creator${successCount > 1 ? 's' : ''}`);
     }
     if (failCount > 0) {
       toast.error(`Failed to send to ${failCount} creator${failCount > 1 ? 's' : ''} (Discord not linked or error)`);
     }
-
     if (successCount > 0) {
       setBulkMessageDialogOpen(false);
       setBulkMessage("");
@@ -1473,7 +1468,7 @@ export function CreatorDatabaseTab({
                 {selectedCreatorPanel.discord_username && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord Username</p>
                     <div className="flex items-center gap-1.5">
-                      <img src={discordWhiteIcon} alt="Discord" className="h-3.5 w-3.5" />
+                      <img alt="Discord" className="h-3.5 w-3.5" src="/lovable-uploads/de420cc8-50b3-487b-acbf-885797de1c29.webp" />
                       <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
                     </div>
                   </div>}
@@ -1622,12 +1617,7 @@ export function CreatorDatabaseTab({
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="font-inter tracking-[-0.3px] text-sm">Message</Label>
-              <Textarea 
-                placeholder="Type your message here..." 
-                value={bulkMessage} 
-                onChange={e => setBulkMessage(e.target.value)} 
-                className="min-h-[120px] font-inter tracking-[-0.3px] text-sm resize-none"
-              />
+              <Textarea placeholder="Type your message here..." value={bulkMessage} onChange={e => setBulkMessage(e.target.value)} className="min-h-[120px] font-inter tracking-[-0.3px] text-sm resize-none" />
             </div>
             <div className="flex items-start gap-2 p-3 bg-muted/30 border border-border/40 rounded-lg">
               <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
