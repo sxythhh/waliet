@@ -1095,7 +1095,7 @@ export function VideoSubmissionsTab({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2 max-w-2xl">
+            <div className="p-3 space-y-2 w-full">
               {(() => {
               // Get filtered videos
               let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
