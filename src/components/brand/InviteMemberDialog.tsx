@@ -162,17 +162,17 @@ export function InviteMemberDialog({
             </Select>
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-2 justify-end">
             <button
               onClick={() => onOpenChange(false)}
-              className="flex-1 py-1.5 px-2 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-muted-foreground bg-transparent hover:bg-muted/50 transition-colors"
+              className="py-1.5 px-4 rounded-[5px] font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-muted-foreground bg-transparent hover:bg-muted/50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleInvite}
               disabled={sending}
-              className="flex-1 py-1.5 px-2 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="py-1.5 px-4 bg-[#1f60dd] border-t border-[#4b85f7] rounded-[5px] font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? "Sending..." : "Send Invite"}
             </button>
