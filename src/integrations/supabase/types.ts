@@ -1848,6 +1848,7 @@ export type Database = {
           slug: string
           start_date: string | null
           status: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
         }
@@ -1891,6 +1892,7 @@ export type Database = {
           slug: string
           start_date?: string | null
           status?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -1934,6 +1936,7 @@ export type Database = {
           slug?: string
           start_date?: string | null
           status?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
         }

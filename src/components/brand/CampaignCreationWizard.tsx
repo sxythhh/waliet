@@ -700,10 +700,10 @@ export function CampaignCreationWizard({
                 <span className="text-sm font-semibold text-primary">{brandName?.charAt(0) || "V"}</span>
               </div>}
             <div>
-              <h2 className="text-base font-semibold text-foreground tracking-[-0.5px]">
+              <h2 className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
                 {isEditMode ? "Edit Campaign" : "New Campaign"}
               </h2>
-              <p className="text-xs text-muted-foreground">{brandName}</p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
             </div>
           </div>
 
