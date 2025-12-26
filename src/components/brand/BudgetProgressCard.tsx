@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
-
 interface BudgetProgressCardProps {
   budgetUsed: number;
   budgetTotal: number;
@@ -8,7 +7,6 @@ interface BudgetProgressCardProps {
   maxCreators: number;
   onTopUp: () => void;
 }
-
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -17,7 +15,6 @@ const formatCurrency = (amount: number) => {
     maximumFractionDigits: 2
   }).format(amount);
 };
-
 export function BudgetProgressCard({
   budgetUsed,
   budgetTotal,
@@ -26,22 +23,17 @@ export function BudgetProgressCard({
   onTopUp
 }: BudgetProgressCardProps) {
   const budgetRemaining = Math.max(0, budgetTotal - budgetUsed);
-  const budgetPercentage = budgetTotal > 0 ? (budgetUsed / budgetTotal) * 100 : 0;
-  const creatorPercentage = maxCreators > 0 ? (acceptedCreators / maxCreators) * 100 : 0;
-
-  return (
-    <div className="rounded-xl p-6" style={{ backgroundColor: '#0a0a0a' }}>
+  const budgetPercentage = budgetTotal > 0 ? budgetUsed / budgetTotal * 100 : 0;
+  const creatorPercentage = maxCreators > 0 ? acceptedCreators / maxCreators * 100 : 0;
+  return <div className="rounded-xl p-6" style={{
+    backgroundColor: '#0a0a0a'
+  }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-sm font-inter font-semibold tracking-[-0.5px] uppercase text-muted-foreground">
           Balance & Capacity
         </h3>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50"
-          onClick={onTopUp}
-        >
+        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50" onClick={onTopUp}>
           <Plus className="h-3.5 w-3.5" />
           Add Funds
         </Button>
@@ -57,11 +49,10 @@ export function BudgetProgressCard({
           {/* Progress bar with floating percentage */}
           <div className="relative pt-6">
             {/* Floating percentage badge */}
-            <div 
-              className="absolute -top-0 transform -translate-x-1/2 transition-all duration-500"
-              style={{ left: `${Math.min(Math.max(budgetPercentage, 5), 95)}%` }}
-            >
-              <div className="bg-emerald-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-lg">
+            <div className="absolute -top-0 transform -translate-x-1/2 transition-all duration-500" style={{
+            left: `${Math.min(Math.max(budgetPercentage, 5), 95)}%`
+          }}>
+              <div className="bg-emerald-500 text-white text-xs tracking-[-0.5px] font-semibold px-2 py-1 rounded-md shadow-lg">
                 {budgetPercentage.toFixed(0)}%
               </div>
               <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-emerald-500 mx-auto" />
@@ -69,10 +60,9 @@ export function BudgetProgressCard({
             
             {/* Progress bar */}
             <div className="h-2.5 bg-muted/30 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
-              />
+              <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500" style={{
+              width: `${Math.min(budgetPercentage, 100)}%`
+            }} />
             </div>
           </div>
           
@@ -101,32 +91,16 @@ export function BudgetProgressCard({
           
           {/* Semi-circle progress gauge */}
           <div className="flex flex-col items-center">
-            <div className="relative" style={{ width: 180, height: 100 }}>
-              <svg
-                width="180"
-                height="100"
-                viewBox="0 0 180 100"
-                className="overflow-visible"
-              >
+            <div className="relative" style={{
+            width: 180,
+            height: 100
+          }}>
+              <svg width="180" height="100" viewBox="0 0 180 100" className="overflow-visible">
                 {/* Background arc */}
-                <path
-                  d="M 15 90 A 75 75 0 0 1 165 90"
-                  fill="none"
-                  stroke="hsl(var(--muted) / 0.3)"
-                  strokeWidth="14"
-                  strokeLinecap="round"
-                />
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="14" strokeLinecap="round" />
                 
                 {/* Progress arc */}
-                <path
-                  d="M 15 90 A 75 75 0 0 1 165 90"
-                  fill="none"
-                  stroke="url(#creatorGradient)"
-                  strokeWidth="14"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(creatorPercentage / 100) * (Math.PI * 75)} ${Math.PI * 75}`}
-                  className="transition-all duration-700"
-                />
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="url(#creatorGradient)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${creatorPercentage / 100 * (Math.PI * 75)} ${Math.PI * 75}`} className="transition-all duration-700" />
                 
                 {/* Gradient definition */}
                 <defs>
@@ -165,6 +139,5 @@ export function BudgetProgressCard({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
