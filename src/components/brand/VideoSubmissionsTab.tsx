@@ -152,7 +152,7 @@ export function VideoSubmissionsTab({
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [sortBy, setSortBy] = useState<"date" | "status" | "platform">("date");
+  const [sortBy, setSortBy] = useState<"date" | "views" | "payout">("date");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected" | "flagged">("all");
   const [filterSource, setFilterSource] = useState<"all" | "submitted" | "tracked">("all");
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -1023,6 +1023,38 @@ export function VideoSubmissionsTab({
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              {/* Sort By Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 bg-muted/30 rounded-md px-2.5 py-1.5 text-xs tracking-[-0.5px] transition-colors">
+                    <span className="text-foreground">
+                      {sortBy === "date" ? "Upload Date" : sortBy === "views" ? "Views" : "Payout"}
+                    </span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-background border border-border min-w-[120px]">
+                  {[{
+                    value: "date",
+                    label: "Upload Date"
+                  }, {
+                    value: "views",
+                    label: "Views"
+                  }, {
+                    value: "payout",
+                    label: "Payout"
+                  }].map(option => (
+                    <DropdownMenuItem 
+                      key={option.value} 
+                      onClick={() => setSortBy(option.value as typeof sortBy)} 
+                      className={`text-xs tracking-[-0.5px] cursor-pointer ${sortBy === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
                 <button onClick={() => setViewMode("cards")} className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Card view">
@@ -1132,16 +1164,12 @@ export function VideoSubmissionsTab({
               filteredVids = [...filteredVids].sort((a, b) => {
                 if (sortBy === "date") {
                   return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
-                } else if (sortBy === "status") {
-                  const statusOrder = {
-                    pending: 0,
-                    approved: 1,
-                    rejected: 2,
-                    tracked: 3
-                  };
-                  return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0);
-                } else if (sortBy === "platform") {
-                  return (a.platform || "").localeCompare(b.platform || "");
+                } else if (sortBy === "views") {
+                  return (b.views || 0) - (a.views || 0);
+                } else if (sortBy === "payout") {
+                  const payoutA = a.payout_amount || (a.views ? a.views / 1000 * rpmRate : 0);
+                  const payoutB = b.payout_amount || (b.views ? b.views / 1000 * rpmRate : 0);
+                  return payoutB - payoutA;
                 }
                 return 0;
               });
