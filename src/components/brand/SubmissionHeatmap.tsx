@@ -186,83 +186,106 @@ export function SubmissionHeatmap({
           ))}
         </div>
         
-        {/* Month labels */}
-        <div className="flex mb-1.5 pl-6">
-          {monthLabels.map((month, idx) => {
-          const cellWidth = 14;
-          const offset = idx === 0 ? month.weekIndex * cellWidth : (month.weekIndex - (monthLabels[idx - 1]?.weekIndex || 0)) * cellWidth;
-          return <div key={idx} className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px]" style={{
-            marginLeft: idx === 0 ? offset : offset - 20
-          }}>
-                {month.label}
-              </div>;
-        })}
-        </div>
-        
         {/* Grid */}
         <div className="flex gap-[2px]">
           {/* Day labels */}
           <div className="flex flex-col gap-[2px] pr-1">
-            {dayLabels.map((label, idx) => <div key={idx} className="h-[12px] w-4 text-[9px] text-muted-foreground font-medium tracking-[-0.3px] flex items-center justify-end pr-0.5">
+            {/* Month label spacer */}
+            <div className="h-4" />
+            {dayLabels.map((label, idx) => (
+              <div key={idx} className="h-[12px] w-4 text-[9px] text-muted-foreground font-medium tracking-[-0.3px] flex items-center justify-end pr-0.5">
                 {idx % 2 === 0 ? label : ""}
-              </div>)}
+              </div>
+            ))}
           </div>
           
-          {/* Weeks */}
+          {/* Weeks with month labels */}
           <div className="flex gap-[2px] flex-1">
-            {weeks.map((week, weekIdx) => <div key={weekIdx} className="flex flex-col gap-[2px] flex-1">
-                {week.map((day, dayIdx) => {
-              const isFuture = isAfter(day.date, today);
-              const isToday = isSameDay(day.date, today);
-              const isSelected = selectedDate && isSameDay(day.date, selectedDate);
-              const gradientStyle = getGradientStyle(day, isFuture);
-              return <Tooltip key={dayIdx}>
-                      <TooltipTrigger asChild>
-                        <div onClick={e => {
-                    e.stopPropagation();
-                    if (!isFuture) onDateClick?.(day.date);
-                  }} className={cn("h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer", !gradientStyle && getColorClass(day, isFuture, isToday))} style={{
-                    ...gradientStyle,
-                    ...(isSelected ? {
-                      boxShadow: '0 0 0 2px hsl(var(--primary))',
-                      position: 'relative',
-                      zIndex: 10
-                    } : undefined)
-                  }} />
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="bg-popover border border-border/60 shadow-lg px-3 py-2">
-                        <div className="font-medium tracking-[-0.3px]">
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {format(day.date, "EEE, MMM d")}
-                          </p>
-                          {isFuture ? <p className="text-sm font-medium text-foreground/60">Upcoming</p> : <>
-                              <p className="text-sm font-semibold text-foreground">
-                                {day.total} {day.total === 1 ? "video" : "videos"}
-                              </p>
-                              {day.total > 0 && <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5 text-[10px]">
-                                  {day.approved > 0 && <span className="text-emerald-500 flex items-center gap-1">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                      {day.approved} approved
-                                    </span>}
-                                  {day.tracked > 0 && <span className="text-purple-500 flex items-center gap-1">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                                      {day.tracked} tracked
-                                    </span>}
-                                  {day.pending > 0 && <span className="text-amber-500 flex items-center gap-1">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                      {day.pending} pending
-                                    </span>}
-                                  {day.rejected > 0 && <span className="text-red-400 flex items-center gap-1">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                                      {day.rejected} rejected
-                                    </span>}
-                                </div>}
-                            </>}
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>;
+            {weeks.map((week, weekIdx) => {
+              const monthLabel = monthLabels.find(m => m.weekIndex === weekIdx);
+              return (
+                <div key={weekIdx} className="flex flex-col gap-[2px] flex-1">
+                  {/* Month label row */}
+                  <div className="h-4 text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-inter">
+                    {monthLabel?.label || ""}
+                  </div>
+                  {week.map((day, dayIdx) => {
+                    const isFuture = isAfter(day.date, today);
+                    const isToday = isSameDay(day.date, today);
+                    const isSelected = selectedDate && isSameDay(day.date, selectedDate);
+                    const gradientStyle = getGradientStyle(day, isFuture);
+                    return (
+                      <Tooltip key={dayIdx}>
+                        <TooltipTrigger asChild>
+                          <div 
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (!isFuture) onDateClick?.(day.date);
+                            }} 
+                            className={cn(
+                              "h-[12px] w-full min-w-[8px] rounded-[3px] transition-all hover:scale-110 cursor-pointer", 
+                              !gradientStyle && getColorClass(day, isFuture, isToday)
+                            )} 
+                            style={{
+                              ...gradientStyle,
+                              ...(isSelected ? {
+                                boxShadow: '0 0 0 2px hsl(var(--primary))',
+                                position: 'relative',
+                                zIndex: 10
+                              } : undefined)
+                            }} 
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-popover border border-border/60 shadow-lg px-3 py-2">
+                          <div className="font-medium tracking-[-0.3px]">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              {format(day.date, "EEE, MMM d")}
+                            </p>
+                            {isFuture ? (
+                              <p className="text-sm font-medium text-foreground/60">Upcoming</p>
+                            ) : (
+                              <>
+                                <p className="text-sm font-semibold text-foreground">
+                                  {day.total} {day.total === 1 ? "video" : "videos"}
+                                </p>
+                                {day.total > 0 && (
+                                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5 text-[10px]">
+                                    {day.approved > 0 && (
+                                      <span className="text-emerald-500 flex items-center gap-1">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        {day.approved} approved
+                                      </span>
+                                    )}
+                                    {day.tracked > 0 && (
+                                      <span className="text-purple-500 flex items-center gap-1">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+                                        {day.tracked} tracked
+                                      </span>
+                                    )}
+                                    {day.pending > 0 && (
+                                      <span className="text-amber-500 flex items-center gap-1">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                        {day.pending} pending
+                                      </span>
+                                    )}
+                                    {day.rejected > 0 && (
+                                      <span className="text-red-400 flex items-center gap-1">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                        {day.rejected} rejected
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              );
             })}
-              </div>)}
           </div>
         </div>
         
