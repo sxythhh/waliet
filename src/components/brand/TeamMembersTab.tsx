@@ -170,7 +170,7 @@ export function TeamMembersTab({
           Members ({members.length})
         </p>
         <div className="space-y-1">
-          {members.map(member => <div key={member.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+          {members.map(member => <div key={member.id} className="flex items-center justify-between p-2.5 rounded-lg transition-colors bg-[#1f1f1f]/0">
               <div className="flex items-center gap-3">
                 {member.profiles.avatar_url ? <img src={member.profiles.avatar_url} alt={member.profiles.full_name} className="w-8 h-8 rounded-full object-cover" /> : <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-medium">
                     {member.profiles.full_name?.[0]?.toUpperCase() || "?"}
