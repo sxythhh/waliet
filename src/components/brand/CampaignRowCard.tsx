@@ -2,21 +2,24 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Progress } from "@/components/ui/progress";
-import { ChevronRight, Play, DollarSign } from "lucide-react";
+import { ChevronRight, Play } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
-import defaultBanner from "@/assets/default-banner.jpg";
+import animatedImagesIcon from "@/assets/animated-images-icon.svg";
+
 interface CampaignMember {
   id: string;
   avatar_url?: string | null;
   display_name?: string;
 }
+
 interface CampaignRowCardProps {
   id: string;
   title: string;
   type: "campaign" | "boost";
   bannerUrl: string | null;
+  brandColor?: string | null;
   budget: number;
   budgetUsed: number;
   rpmRate?: number;
@@ -35,11 +38,12 @@ interface CampaignRowCardProps {
   onArchive?: () => void;
   onTopUp?: () => void;
 }
+
 export function CampaignRowCard({
-  id,
   title,
   type,
   bannerUrl,
+  brandColor,
   budget,
   budgetUsed,
   rpmRate,
@@ -49,18 +53,13 @@ export function CampaignRowCard({
   status,
   endDate,
   allowedPlatforms,
-  totalViews = 0,
-  totalVideos = 0,
   pendingReviewCount = 0,
   members = [],
   onClick,
-  onEdit,
-  onArchive,
-  onTopUp
+  onTopUp,
 }: CampaignRowCardProps) {
-  const budgetPercentage = budget > 0 ? budgetUsed / budget * 100 : 0;
+  const budgetPercentage = budget > 0 ? (budgetUsed / budget) * 100 : 0;
 
-  // Calculate days left
   const getDaysLeft = () => {
     if (!endDate) return null;
     const end = new Date(endDate);
@@ -69,30 +68,52 @@ export function CampaignRowCard({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
+
   const daysLeft = getDaysLeft();
+
   const formatCurrency = (num: number) => {
     if (num >= 1000) return `$${(num / 1000).toFixed(1)}k`;
     return `$${num.toFixed(0)}`;
   };
+
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
-      case 'tiktok':
+      case "tiktok":
         return <img src={tiktokLogo} alt="TikTok" className="w-4 h-4 dark:invert" />;
-      case 'youtube':
+      case "youtube":
         return <img src={youtubeLogo} alt="YouTube" className="w-4 h-4 dark:invert" />;
-      case 'instagram':
+      case "instagram":
         return <img src={instagramLogo} alt="Instagram" className="w-4 h-4 dark:invert" />;
       default:
         return null;
     }
   };
+
   const visibleMembers = members.slice(0, 3);
   const remainingCount = members.length - 3;
-  return <Card className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border border-[#0e0e0e]" onClick={onClick}>
+
+  return (
+    <Card
+      className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border border-[#0e0e0e]"
+      onClick={onClick}
+    >
       <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px]">
-        {/* Banner Image */}
+        {/* Banner */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
-          <OptimizedImage src={bannerUrl || defaultBanner} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          {bannerUrl ? (
+            <OptimizedImage
+              src={bannerUrl}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: brandColor || "#6366f1" }}
+            >
+              <img src={animatedImagesIcon} alt="" className="w-6 h-6 opacity-80" />
+            </div>
+          )}
         </div>
 
         {/* Content Section */}
@@ -100,22 +121,26 @@ export function CampaignRowCard({
           {/* Main Info */}
           <div className="flex-1 min-w-0 space-y-2">
             {/* Days Left Label */}
-            {daysLeft !== null && daysLeft > 0 && <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-500">
+            {daysLeft !== null && daysLeft > 0 && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-500">
                 {daysLeft} DAYS LEFT
-              </span>}
-            {status === 'draft' && <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              </span>
+            )}
+            {status === "draft" && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 DRAFT
-              </span>}
-            {status === 'ended' && <span className="text-[10px] font-semibold uppercase tracking-wide text-red-500">
+              </span>
+            )}
+            {status === "ended" && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-red-500">
                 ENDED
-              </span>}
+              </span>
+            )}
 
-            {/* Title with Budget */}
             <div className="flex items-baseline gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
                 {title}
               </h3>
-              
             </div>
 
             {/* Budget Progress */}
@@ -133,73 +158,109 @@ export function CampaignRowCard({
 
             {/* Tags Row */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className={`px-2 py-0.5 rounded-full font-medium ${type === 'campaign' ? 'bg-primary/10 text-primary' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>
-                {type === 'campaign' ? 'Clipping' : 'Boost'}
+              <span
+                className={`px-2 py-0.5 rounded-full font-medium ${
+                  type === "campaign"
+                    ? "bg-primary/10 text-primary"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {type === "campaign" ? "Clipping" : "Boost"}
               </span>
-              
-              {type === 'campaign' && rpmRate !== undefined && <span className="text-muted-foreground">
-                  ${rpmRate.toFixed(2)} / 1k views
-                </span>}
-              
-              {type === 'boost' && videosPerMonth !== undefined && <span className="text-muted-foreground">
-                  {videosPerMonth} videos/mo
-                </span>}
 
-              {type === 'boost' && spotsRemaining !== undefined && maxCreators !== undefined && <span className="text-muted-foreground">
+              {type === "campaign" && rpmRate !== undefined && (
+                <span className="text-muted-foreground">${rpmRate.toFixed(2)} / 1k views</span>
+              )}
+
+              {type === "boost" && videosPerMonth !== undefined && (
+                <span className="text-muted-foreground">{videosPerMonth} videos/mo</span>
+              )}
+
+              {type === "boost" && spotsRemaining !== undefined && maxCreators !== undefined && (
+                <span className="text-muted-foreground">
                   {spotsRemaining}/{maxCreators} spots
-                </span>}
+                </span>
+              )}
 
-              {/* Platform Icons */}
-              {allowedPlatforms && allowedPlatforms.length > 0 && <div className="flex items-center gap-1.5 ml-1">
-                  {allowedPlatforms.map(platform => <span key={platform}>{getPlatformIcon(platform)}</span>)}
-                </div>}
+              {allowedPlatforms && allowedPlatforms.length > 0 && (
+                <div className="flex items-center gap-1.5 ml-1">
+                  {allowedPlatforms.map((platform) => (
+                    <span key={platform}>{getPlatformIcon(platform)}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* Members & Actions */}
           <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-            {/* Members Avatars - only show if there are members */}
-            {visibleMembers.length > 0 && <div className="flex items-center">
+            {visibleMembers.length > 0 && (
+              <div className="flex items-center">
                 <div className="flex -space-x-2">
-                  {visibleMembers.map((member, index) => <div key={member.id} className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden" style={{
-                zIndex: 3 - index
-              }}>
-                      {member.avatar_url ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" /> : <span className="text-xs font-medium text-muted-foreground uppercase">
-                          {member.display_name?.charAt(0) || '?'}
-                        </span>}
-                    </div>)}
+                  {visibleMembers.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
+                      style={{ zIndex: 3 - index }}
+                    >
+                      {member.avatar_url ? (
+                        <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground uppercase">
+                          {member.display_name?.charAt(0) || "?"}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {remainingCount > 0 && <span className="ml-2 text-xs text-muted-foreground">
-                    +{remainingCount} more
-                  </span>}
-              </div>}
+                {remainingCount > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground">+{remainingCount} more</span>
+                )}
+              </div>
+            )}
 
-            {/* Review Badge */}
-            {pendingReviewCount > 0 && <button onClick={e => {
-            e.stopPropagation();
-            onClick();
-          }} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors">
+            {pendingReviewCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors"
+              >
                 {pendingReviewCount} need review
                 <ChevronRight className="w-3 h-3" />
-              </button>}
+              </button>
+            )}
 
-            {/* Action Buttons - Show on hover */}
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {/* Resume button - only for ended campaigns */}
-              {status === 'ended' && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-[#1a1a1a] bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
+              {status === "ended" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2.5 text-xs border-[#1a1a1a] bg-[#0a0a0a] hover:bg-[#151515]"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Play className="w-3 h-3 mr-1" />
                   Resume
-                </Button>}
-              {/* Fund Campaign button - appears on hover */}
-              {onTopUp && <Button size="sm" className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground" onClick={e => {
-              e.stopPropagation();
-              onTopUp();
-            }}>
+                </Button>
+              )}
+
+              {onTopUp && (
+                <Button
+                  size="sm"
+                  className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTopUp();
+                  }}
+                >
                   Fund Campaign
-                </Button>}
+                </Button>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </Card>;
+    </Card>
+  );
 }

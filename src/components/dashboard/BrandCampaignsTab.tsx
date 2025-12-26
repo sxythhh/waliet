@@ -80,6 +80,7 @@ export function BrandCampaignsTab({
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
+  const [brandColor, setBrandColor] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -111,12 +112,19 @@ export function BrandCampaignsTab({
     if (!brandId) return;
     setLoading(true);
     try {
-      // Fetch brand info for logo and subscription status
-      const {
-        data: brandData
-      } = await supabase.from("brands").select("logo_url, subscription_status").eq("id", brandId).single();
+      // Fetch brand info for logo, color and subscription status
+      const { data: brandData } = await supabase
+        .from("brands")
+        .select("logo_url, brand_color, subscription_status")
+        .eq("id", brandId)
+        .single();
+
       if (brandData?.logo_url) {
         setBrandLogoUrl(brandData.logo_url);
+      }
+
+      if (brandData?.brand_color) {
+        setBrandColor(brandData.brand_color);
       }
       setSubscriptionStatus(brandData?.subscription_status || null);
 
@@ -438,25 +446,65 @@ export function BrandCampaignsTab({
               const campaign = item as Campaign & {
                 type: "campaign";
               };
-              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} onClick={() => handleCampaignClick(campaign)} onTopUp={() => {
-                setSelectedCampaignForFunding({
-                  id: campaign.id,
-                  type: 'campaign'
-                });
-                setAllocateBudgetOpen(true);
-              }} />;
+              return (
+                <CampaignRowCard
+                  key={`campaign-${campaign.id}`}
+                  id={campaign.id}
+                  title={campaign.title}
+                  type="campaign"
+                  bannerUrl={campaign.banner_url}
+                  brandColor={brandColor || null}
+                  budget={Number(campaign.budget)}
+                  budgetUsed={Number(campaign.budget_used || 0)}
+                  rpmRate={Number(campaign.rpm_rate)}
+                  status={campaign.status}
+                  allowedPlatforms={campaign.allowed_platforms}
+                  members={campaignMembers[campaign.id] || []}
+                  onClick={() => handleCampaignClick(campaign)}
+                  onTopUp={() => {
+                    setSelectedCampaignForFunding({
+                      id: campaign.id,
+                      type: 'campaign'
+                    });
+                    setAllocateBudgetOpen(true);
+                  }}
+                />
+              );
             } else {
               const bounty = item as BountyCampaign & {
                 type: "boost";
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)} onTopUp={() => {
-                setSelectedCampaignForFunding({
-                  id: bounty.id,
-                  type: 'boost'
-                });
-                setAllocateBudgetOpen(true);
-              }} />;
+              return (
+                <CampaignRowCard
+                  key={`boost-${bounty.id}`}
+                  id={bounty.id}
+                  title={bounty.title}
+                  type="boost"
+                  bannerUrl={bounty.banner_url}
+                  brandColor={brandColor || null}
+                  budget={Number(bounty.budget || 0)}
+                  budgetUsed={Number(bounty.budget_used || 0)}
+                  videosPerMonth={bounty.videos_per_month}
+                  spotsRemaining={spotsRemaining}
+                  maxCreators={bounty.max_accepted_creators}
+                  status={bounty.status}
+                  endDate={bounty.end_date}
+                  members={bountyMembers[bounty.id] || []}
+                  onClick={() =>
+                    navigate(
+                      `/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`
+                    )
+                  }
+                  onTopUp={() => {
+                    setSelectedCampaignForFunding({
+                      id: bounty.id,
+                      type: 'boost'
+                    });
+                    setAllocateBudgetOpen(true);
+                  }}
+                />
+              );
             }
           })}
               </div>
