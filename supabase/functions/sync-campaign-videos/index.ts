@@ -135,9 +135,11 @@ Deno.serve(async (req) => {
           try {
             // Determine collection to use (campaign-specific or brand default)
             const collectionName = campaign.shortimize_collection_name || brand.collection_name;
+            const campaignHashtags = campaign.hashtags as string[] | null;
 
-            if (!collectionName) {
-              console.log(`No collection configured for campaign ${campaign.title}, skipping`);
+            // Need either a collection OR hashtags to sync
+            if (!collectionName && (!campaignHashtags || campaignHashtags.length === 0)) {
+              console.log(`No collection or hashtags configured for campaign ${campaign.title}, skipping`);
               brandCampaignResults.push({
                 campaignId: campaign.id,
                 campaignTitle: campaign.title,
@@ -149,18 +151,24 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            // Fetch ALL videos from Shortimize for this collection
-            console.log(`Fetching videos from collection: ${collectionName} for campaign: ${campaign.title}`);
+            // Build API URL - if no collection, use brand's default collection or fetch all
+            let apiUrl: string;
+            if (collectionName) {
+              apiUrl = `https://api.shortimize.com/videos?collections=${encodeURIComponent(collectionName)}&limit=5000&has_metrics=true&order_by=latest_updated_at&order_direction=desc`;
+            } else {
+              // No collection but has hashtags - fetch from brand's all videos or a default collection
+              // Try to get videos without collection filter (recent videos)
+              apiUrl = `https://api.shortimize.com/videos?limit=5000&has_metrics=true&order_by=latest_updated_at&order_direction=desc`;
+            }
 
-            const response = await fetch(
-              `https://api.shortimize.com/videos?collections=${encodeURIComponent(collectionName)}&limit=5000&has_metrics=true&order_by=latest_updated_at&order_direction=desc`,
-              {
-                method: "GET",
-                headers: {
-                  Authorization: `Bearer ${brand.shortimize_api_key}`,
-                },
-              }
-            );
+            console.log(`Fetching videos for campaign: ${campaign.title}${collectionName ? ` from collection: ${collectionName}` : ' (all videos, filtered by hashtags)'}`);
+
+            const response = await fetch(apiUrl, {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${brand.shortimize_api_key}`,
+              },
+            });
 
             if (!response.ok) {
               console.error(`Shortimize API error for campaign ${campaign.title}: ${response.status}`);
@@ -193,7 +201,6 @@ Deno.serve(async (req) => {
 
             // Filter videos by campaign hashtags if configured
             let filteredVideos = apiData.data;
-            const campaignHashtags = campaign.hashtags as string[] | null;
 
             if (campaignHashtags && campaignHashtags.length > 0) {
               console.log(`Filtering videos by hashtags: ${campaignHashtags.join(", ")}`);
