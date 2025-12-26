@@ -977,23 +977,6 @@ export function VideoSubmissionsTab({
                         </div>
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
-
-                      {/* Stats row */}
-                      <div className="grid grid-cols-3 gap-2 text-xs">
-                        <div>
-                          <span className="text-muted-foreground">Videos</span>
-                          <p className="font-medium">{creator.totalSubmissions + creator.trackedVideos}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Views</span>
-                          <p className="font-medium">{formatNumber(creator.totalViews)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Earned</span>
-                          <p className="font-medium">${creator.earnedThisMonth.toFixed(0)}</p>
-                        </div>
-                      </div>
-
                       {/* Submission Heatmap - only show when selected */}
                       {isSelected && (
                         <div className="mt-3">
