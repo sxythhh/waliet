@@ -172,15 +172,15 @@ const getSourceColor = (sourceType: string, hasCampaigns: boolean = false): stri
   switch (sourceType) {
     case 'campaign_application':
     case 'boost_application':
-      return hasCampaigns ? 'bg-transparent text-emerald-500' : 'bg-transparent text-blue-500';
+      return hasCampaigns ? 'bg-emerald-500/40 text-emerald-500' : 'bg-blue-500/40 text-blue-500';
     case 'video_submission':
-      return 'bg-transparent text-purple-500';
+      return 'bg-purple-500/40 text-purple-500';
     case 'manual_add':
-      return 'bg-transparent text-amber-500';
+      return 'bg-amber-500/40 text-amber-500';
     case 'import':
-      return 'bg-transparent text-rose-500';
+      return 'bg-rose-500/40 text-rose-500';
     default:
-      return 'bg-transparent text-muted-foreground';
+      return 'bg-muted/40 text-muted-foreground';
   }
 };
 
@@ -1283,7 +1283,7 @@ export function CreatorDatabaseTab({
                       return <TableCell key={colId} className="py-3">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className={`text-[10px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(creator.source_type, creator.campaigns.length > 0)}`}>
+                                      <span className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(creator.source_type, creator.campaigns.length > 0)}`}>
                                         {getSourceLabel(creator.source_type, creator.campaigns.length > 0)}
                                       </span>
                                     </TooltipTrigger>
@@ -1455,7 +1455,7 @@ export function CreatorDatabaseTab({
                 <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Source</p>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}`}>
+                    <span className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}`}>
                       {getSourceLabel(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}
                     </span>
                     {selectedCreatorPanel.source_campaign_title && <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
