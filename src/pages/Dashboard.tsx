@@ -235,7 +235,7 @@ export default function Dashboard() {
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
         case "profile":
-          return <UserSettingsTab className="px-0" />;
+          return <UserSettingsTab />;
         default:
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
       }
@@ -265,7 +265,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 h-screen overflow-hidden flex flex-col">
         <div className={`
-          pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto
+          pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto p-[10px]
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}
