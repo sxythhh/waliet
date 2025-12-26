@@ -274,13 +274,12 @@ export function CampaignRowCard({
               {onTopUp && (
                 <Button
                   size="sm"
-                  className="h-7 px-2.5 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                  className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                     onTopUp();
                   }}
                 >
-                  <DollarSign className="w-3 h-3 mr-1" />
                   Fund Campaign
                 </Button>
               )}
