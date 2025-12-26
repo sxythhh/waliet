@@ -460,6 +460,7 @@ export function BrandCampaignsTab({
                   status={campaign.status}
                   allowedPlatforms={campaign.allowed_platforms}
                   members={campaignMembers[campaign.id] || []}
+                  slug={campaign.slug}
                   onClick={() => handleCampaignClick(campaign)}
                   onTopUp={() => {
                     setSelectedCampaignForFunding({
