@@ -375,12 +375,6 @@ export function BrandCampaignsTab({
         }} />
           </div>
 
-          {/* Summary Stats - Show when there are programs */}
-          {campaigns.length > 0 || bounties.length > 0}
-
-          {/* Pending Applications Banner */}
-          {pendingApplicationsCount > 0}
-
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
             {/* Action Cards */}
