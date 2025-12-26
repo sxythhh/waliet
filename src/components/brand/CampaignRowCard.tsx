@@ -237,7 +237,7 @@ export function CampaignRowCard({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 px-2.5 text-xs border-[#1a1a1a] bg-[#0a0a0a] hover:bg-[#151515]"
+                  className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Play className="w-3 h-3 mr-1" />
