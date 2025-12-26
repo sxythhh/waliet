@@ -35,7 +35,6 @@ interface Campaign {
   allowed_platforms: string[] | null;
   application_questions: any[];
 }
-
 interface CampaignMember {
   id: string;
   avatar_url?: string | null;
@@ -43,7 +42,6 @@ interface CampaignMember {
   full_name?: string | null;
   username?: string | null;
 }
-
 interface BountyCampaign {
   id: string;
   title: string;
@@ -89,7 +87,10 @@ export function BrandCampaignsTab({
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
   const [allocateBudgetOpen, setAllocateBudgetOpen] = useState(false);
-  const [selectedCampaignForFunding, setSelectedCampaignForFunding] = useState<{ id: string; type: 'campaign' | 'boost' } | null>(null);
+  const [selectedCampaignForFunding, setSelectedCampaignForFunding] = useState<{
+    id: string;
+    type: 'campaign' | 'boost';
+  } | null>(null);
   const {
     isAdmin,
     loading: adminLoading
@@ -153,12 +154,10 @@ export function BrandCampaignsTab({
 
       // Fetch campaign members (approved submissions with profile data)
       if (campaignIds.length > 0) {
-        const { data: campaignSubmissions } = await supabase
-          .from("campaign_submissions")
-          .select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, full_name, username)")
-          .in("campaign_id", campaignIds)
-          .eq("status", "approved");
-        
+        const {
+          data: campaignSubmissions
+        } = await supabase.from("campaign_submissions").select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, full_name, username)").in("campaign_id", campaignIds).eq("status", "approved");
+
         // Group members by campaign_id
         const membersByCampaign: Record<string, CampaignMember[]> = {};
         (campaignSubmissions || []).forEach((sub: any) => {
@@ -169,7 +168,7 @@ export function BrandCampaignsTab({
             membersByCampaign[sub.campaign_id].push({
               id: sub.profiles.id,
               avatar_url: sub.profiles.avatar_url,
-              display_name: sub.profiles.full_name || sub.profiles.username || '',
+              display_name: sub.profiles.full_name || sub.profiles.username || ''
             });
           }
         });
@@ -178,12 +177,10 @@ export function BrandCampaignsTab({
 
       // Fetch bounty members (approved applications with profile data)
       if (bountyIds.length > 0) {
-        const { data: bountyApps } = await supabase
-          .from("bounty_applications")
-          .select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, full_name, username)")
-          .in("bounty_campaign_id", bountyIds)
-          .eq("status", "approved");
-        
+        const {
+          data: bountyApps
+        } = await supabase.from("bounty_applications").select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, full_name, username)").in("bounty_campaign_id", bountyIds).eq("status", "approved");
+
         // Group members by bounty_campaign_id
         const membersByBounty: Record<string, CampaignMember[]> = {};
         (bountyApps || []).forEach((app: any) => {
@@ -194,7 +191,7 @@ export function BrandCampaignsTab({
             membersByBounty[app.bounty_campaign_id].push({
               id: app.profiles.id,
               avatar_url: app.profiles.avatar_url,
-              display_name: app.profiles.full_name || app.profiles.username || '',
+              display_name: app.profiles.full_name || app.profiles.username || ''
             });
           }
         });
@@ -374,39 +371,7 @@ export function BrandCampaignsTab({
           {campaigns.length > 0 || bounties.length > 0}
 
           {/* Pending Applications Banner */}
-          {pendingApplicationsCount > 0 && <div className="mt-4 bg-popover/80 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-popover transition-colors font-inter tracking-[-0.5px]" onClick={() => {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set("tab", "analytics");
-        newParams.set("subtab", "applications");
-        newParams.delete("campaign");
-        newParams.delete("boost");
-        setSearchParams(newParams);
-      }}>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#0d0d0d]">
-                  <img alt="Applications" className="w-5 h-5" src="/lovable-uploads/b97de298-8ca2-4dca-90fc-646d17752143.png" />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">
-                    {pendingApplicationsCount} application{pendingApplicationsCount !== 1 ? 's are' : ' is'} ready for review
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    People are applying to your campaign. Review them now to allow them to submit their clips.
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={e => {
-          e.stopPropagation();
-          const newParams = new URLSearchParams(searchParams);
-          newParams.set("tab", "analytics");
-          newParams.set("subtab", "applications");
-          newParams.delete("campaign");
-          newParams.delete("boost");
-          setSearchParams(newParams);
-        }} className="border-transparent shrink-0 text-primary-foreground bg-[#1c1c1c]">
-                Review applications
-              </Button>
-            </div>}
+          {pendingApplicationsCount > 0}
 
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
@@ -463,61 +428,37 @@ export function BrandCampaignsTab({
               <div className="flex flex-col gap-2">
                 {/* Combined and sorted list */}
                 {[...campaigns.filter(c => statusFilter === "all" || c.status === statusFilter).map(c => ({
-                  ...c,
-                  type: "campaign" as const
-                })), ...bounties.filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
-                  ...b,
-                  type: "boost" as const
-                }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(item => {
-                  if (item.type === "campaign") {
-                    const campaign = item as Campaign & { type: "campaign" };
-                    return (
-                      <CampaignRowCard
-                        key={`campaign-${campaign.id}`}
-                        id={campaign.id}
-                        title={campaign.title}
-                        type="campaign"
-                        bannerUrl={campaign.banner_url}
-                        budget={Number(campaign.budget)}
-                        budgetUsed={Number(campaign.budget_used || 0)}
-                        rpmRate={Number(campaign.rpm_rate)}
-                        status={campaign.status}
-                        allowedPlatforms={campaign.allowed_platforms}
-                        members={campaignMembers[campaign.id] || []}
-                        onClick={() => handleCampaignClick(campaign)}
-                        onTopUp={() => {
-                          setSelectedCampaignForFunding({ id: campaign.id, type: 'campaign' });
-                          setAllocateBudgetOpen(true);
-                        }}
-                      />
-                    );
-                  } else {
-                    const bounty = item as BountyCampaign & { type: "boost" };
-                    const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                    return (
-                      <CampaignRowCard
-                        key={`boost-${bounty.id}`}
-                        id={bounty.id}
-                        title={bounty.title}
-                        type="boost"
-                        bannerUrl={bounty.banner_url}
-                        budget={Number(bounty.budget || 0)}
-                        budgetUsed={Number(bounty.budget_used || 0)}
-                        videosPerMonth={bounty.videos_per_month}
-                        spotsRemaining={spotsRemaining}
-                        maxCreators={bounty.max_accepted_creators}
-                        status={bounty.status}
-                        endDate={bounty.end_date}
-                        members={bountyMembers[bounty.id] || []}
-                        onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)}
-                        onTopUp={() => {
-                          setSelectedCampaignForFunding({ id: bounty.id, type: 'boost' });
-                          setAllocateBudgetOpen(true);
-                        }}
-                      />
-                    );
-                  }
-                })}
+            ...c,
+            type: "campaign" as const
+          })), ...bounties.filter(b => statusFilter === "all" || b.status === statusFilter).map(b => ({
+            ...b,
+            type: "boost" as const
+          }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(item => {
+            if (item.type === "campaign") {
+              const campaign = item as Campaign & {
+                type: "campaign";
+              };
+              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} onClick={() => handleCampaignClick(campaign)} onTopUp={() => {
+                setSelectedCampaignForFunding({
+                  id: campaign.id,
+                  type: 'campaign'
+                });
+                setAllocateBudgetOpen(true);
+              }} />;
+            } else {
+              const bounty = item as BountyCampaign & {
+                type: "boost";
+              };
+              const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
+              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)} onTopUp={() => {
+                setSelectedCampaignForFunding({
+                  id: bounty.id,
+                  type: 'boost'
+                });
+                setAllocateBudgetOpen(true);
+              }} />;
+            }
+          })}
               </div>
             </div>}
 
@@ -568,15 +509,9 @@ export function BrandCampaignsTab({
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
 
       {/* Allocate Budget Dialog */}
-      <AllocateBudgetDialog
-        open={allocateBudgetOpen}
-        onOpenChange={(open) => {
-          setAllocateBudgetOpen(open);
-          if (!open) setSelectedCampaignForFunding(null);
-        }}
-        brandId={brandId}
-        availableBalance={0}
-        onSuccess={fetchBrandData}
-      />
+      <AllocateBudgetDialog open={allocateBudgetOpen} onOpenChange={open => {
+      setAllocateBudgetOpen(open);
+      if (!open) setSelectedCampaignForFunding(null);
+    }} brandId={brandId} availableBalance={0} onSuccess={fetchBrandData} />
     </div>;
 }
