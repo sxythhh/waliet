@@ -58,6 +58,7 @@ interface BountyCampaign {
   created_at: string;
   budget: number | null;
   budget_used: number | null;
+  slug: string | null;
 }
 interface BrandCampaignsTabProps {
   brandId: string;
@@ -492,6 +493,7 @@ export function BrandCampaignsTab({
                   status={bounty.status}
                   endDate={bounty.end_date}
                   members={bountyMembers[bounty.id] || []}
+                  slug={bounty.slug || undefined}
                   onClick={() =>
                     navigate(
                       `/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`
