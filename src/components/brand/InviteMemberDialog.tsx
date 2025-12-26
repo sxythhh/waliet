@@ -146,10 +146,10 @@ export function InviteMemberDialog({
               Role
             </Label>
             <Select value={role} onValueChange={(value: "admin" | "member") => setRole(value)}>
-              <SelectTrigger className="bg-muted/30 border-0 h-10">
+              <SelectTrigger className="bg-muted/30 border-0 h-10 font-['Inter'] tracking-[-0.5px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="font-['Inter'] tracking-[-0.5px]">
                 <SelectItem value="member">
                   <span className="font-medium">Member</span>
                   <span className="text-muted-foreground ml-1">- Can view and contribute</span>
