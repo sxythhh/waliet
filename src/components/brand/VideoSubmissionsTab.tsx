@@ -1479,15 +1479,16 @@ export function VideoSubmissionsTab({
 
       {/* Floating Bulk Actions Bar */}
       {selectedVideos.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4">
-          <span className="text-sm font-medium tracking-[-0.3px]">
-            <span className="text-primary">{selectedVideos.size}</span> video{selectedVideos.size > 1 ? 's' : ''} selected
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4 font-inter tracking-[-0.5px]">
+          <span className="text-sm">
+            <span className="font-semibold text-foreground">{selectedVideos.size}</span>
+            <span className="text-muted-foreground/70"> video{selectedVideos.size > 1 ? 's' : ''} selected</span>
           </span>
-          <div className="h-4 w-px bg-border/60" />
+          <div className="h-4 w-px bg-border/50" />
           <div className="flex items-center gap-2">
             <Button 
               size="sm" 
-              className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none"
+              className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none tracking-[-0.3px]"
               onClick={handleBulkApprove}
               disabled={processing}
             >
@@ -1496,7 +1497,7 @@ export function VideoSubmissionsTab({
             </Button>
             <Button 
               size="sm" 
-              className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none"
+              className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none tracking-[-0.3px]"
               onClick={handleBulkReject}
               disabled={processing}
             >
@@ -1506,7 +1507,7 @@ export function VideoSubmissionsTab({
             <Button 
               size="sm" 
               variant="ghost"
-              className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg"
+              className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg tracking-[-0.3px]"
               onClick={() => setSelectedVideos(new Set())}
             >
               Clear
