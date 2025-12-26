@@ -10,13 +10,8 @@ interface ViewBonus {
   bounty_campaign_id: string;
   view_threshold: number;
   bonus_amount: number;
-}
-
-interface VideoSubmission {
-  id: string;
-  creator_id: string;
-  video_views: number | null;
-  bounty_campaign_id: string;
+  bonus_type: 'milestone' | 'cpm';
+  cpm_rate: number | null;
 }
 
 Deno.serve(async (req) => {
@@ -95,8 +90,7 @@ Deno.serve(async (req) => {
       for (const submission of submissions) {
         if (!submission.shortimize_video_id) continue;
 
-        // Get video metrics from cached_campaign_videos or video_submissions views
-        // We'll check the video_submissions table for view data
+        // Get video metrics from video_submissions table
         const { data: videoData } = await supabase
           .from('video_submissions')
           .select('video_views')
@@ -111,61 +105,145 @@ Deno.serve(async (req) => {
         // Check which bonuses this video has already received
         const { data: existingPayouts } = await supabase
           .from('view_bonus_payouts')
-          .select('bonus_id')
+          .select('bonus_id, views_at_payout, amount_paid')
           .eq('video_submission_id', submission.id);
 
-        const paidBonusIds = new Set((existingPayouts || []).map(p => p.bonus_id));
+        const paidBonusMap = new Map((existingPayouts || []).map(p => [p.bonus_id, p]));
 
         // Check each tier
-        for (const tier of bonusTiers) {
-          // Skip if already paid or views haven't crossed threshold
-          if (paidBonusIds.has(tier.id) || currentViews < tier.view_threshold) {
-            continue;
-          }
+        for (const tier of bonusTiers as ViewBonus[]) {
+          const existingPayout = paidBonusMap.get(tier.id);
 
-          console.log(`Video ${submission.id} crossed ${tier.view_threshold} views, paying $${tier.bonus_amount} bonus`);
+          if (tier.bonus_type === 'cpm') {
+            // CPM bonus: pay based on views up to threshold
+            // Calculate what we should have paid by now
+            const viewsForPayment = Math.min(currentViews, tier.view_threshold);
+            const totalEarned = (tier.cpm_rate! * viewsForPayment) / 1000;
+            const alreadyPaid = existingPayout?.amount_paid || 0;
+            const amountToPay = Math.max(0, totalEarned - alreadyPaid);
 
-          // Create wallet transaction for the creator
-          const { data: transaction, error: txError } = await supabase
-            .from('wallet_transactions')
-            .insert({
-              user_id: submission.user_id,
-              amount: tier.bonus_amount,
-              type: 'boost',
-              description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
-              metadata: {
-                boost_id: boost.id,
-                bonus_id: tier.id,
-                video_submission_id: submission.id,
-                views_at_payout: currentViews,
-                bonus_type: 'view_bonus'
-              }
-            })
-            .select()
-            .single();
+            // Only pay if there's at least $0.01 to pay
+            if (amountToPay < 0.01) continue;
 
-          if (txError) {
-            console.error('Error creating transaction:', txError);
-            continue;
-          }
+            console.log(`CPM bonus for video ${submission.id}: ${viewsForPayment} views at $${tier.cpm_rate}/CPM = $${totalEarned.toFixed(2)} (already paid: $${alreadyPaid.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
-          // Update creator's wallet balance
-          const { error: walletError } = await supabase.rpc('update_wallet_balance', {
-            p_user_id: submission.user_id,
-            p_amount: tier.bonus_amount
-          });
-
-          // If RPC doesn't exist, update directly
-          if (walletError) {
-            await supabase
-              .from('wallets')
-              .update({ 
-                balance: supabase.rpc('add_to_balance', { amount: tier.bonus_amount }),
-                total_earned: supabase.rpc('add_to_total', { amount: tier.bonus_amount })
+            // Create wallet transaction for the creator
+            const { data: transaction, error: txError } = await supabase
+              .from('wallet_transactions')
+              .insert({
+                user_id: submission.user_id,
+                amount: amountToPay,
+                type: 'boost',
+                description: `CPM bonus: $${tier.cpm_rate}/1K views (${viewsForPayment.toLocaleString()} views)`,
+                metadata: {
+                  boost_id: boost.id,
+                  bonus_id: tier.id,
+                  video_submission_id: submission.id,
+                  views_at_payout: currentViews,
+                  bonus_type: 'cpm',
+                  cpm_rate: tier.cpm_rate
+                }
               })
-              .eq('user_id', submission.user_id);
-            
-            // Fallback: direct update
+              .select()
+              .single();
+
+            if (txError) {
+              console.error('Error creating CPM transaction:', txError);
+              continue;
+            }
+
+            // Update creator's wallet balance
+            const { data: wallet } = await supabase
+              .from('wallets')
+              .select('balance, total_earned')
+              .eq('user_id', submission.user_id)
+              .single();
+
+            if (wallet) {
+              await supabase
+                .from('wallets')
+                .update({
+                  balance: (wallet.balance || 0) + amountToPay,
+                  total_earned: (wallet.total_earned || 0) + amountToPay
+                })
+                .eq('user_id', submission.user_id);
+            }
+
+            // Upsert the bonus payout record
+            if (existingPayout) {
+              await supabase
+                .from('view_bonus_payouts')
+                .update({
+                  views_at_payout: currentViews,
+                  amount_paid: totalEarned,
+                  transaction_id: transaction?.id
+                })
+                .eq('bonus_id', tier.id)
+                .eq('video_submission_id', submission.id);
+            } else {
+              await supabase
+                .from('view_bonus_payouts')
+                .insert({
+                  bonus_id: tier.id,
+                  video_submission_id: submission.id,
+                  creator_id: submission.user_id,
+                  views_at_payout: currentViews,
+                  amount_paid: totalEarned,
+                  transaction_id: transaction?.id
+                });
+            }
+
+            // Update boost budget_used
+            await supabase
+              .from('bounty_campaigns')
+              .update({ budget_used: (boost.budget_used || 0) + amountToPay })
+              .eq('id', boost.id);
+
+            totalBonusesPaid++;
+            totalAmountPaid += amountToPay;
+            payoutDetails.push({
+              boost_id: boost.id,
+              video_submission_id: submission.id,
+              creator_id: submission.user_id,
+              bonus_type: 'cpm',
+              cpm_rate: tier.cpm_rate,
+              views: currentViews,
+              amount: amountToPay
+            });
+
+          } else {
+            // Milestone bonus: one-time payment when threshold is crossed
+            if (existingPayout || currentViews < tier.view_threshold) {
+              continue;
+            }
+
+            console.log(`Milestone bonus for video ${submission.id}: crossed ${tier.view_threshold} views, paying $${tier.bonus_amount}`);
+
+            // Create wallet transaction for the creator
+            const { data: transaction, error: txError } = await supabase
+              .from('wallet_transactions')
+              .insert({
+                user_id: submission.user_id,
+                amount: tier.bonus_amount,
+                type: 'boost',
+                description: `View bonus: ${tier.view_threshold.toLocaleString()} views reached`,
+                metadata: {
+                  boost_id: boost.id,
+                  bonus_id: tier.id,
+                  video_submission_id: submission.id,
+                  views_at_payout: currentViews,
+                  bonus_type: 'milestone'
+                }
+              })
+              .select()
+              .single();
+
+            if (txError) {
+              console.error('Error creating milestone transaction:', txError);
+              continue;
+            }
+
+            // Update creator's wallet balance
             const { data: wallet } = await supabase
               .from('wallets')
               .select('balance, total_earned')
@@ -181,46 +259,42 @@ Deno.serve(async (req) => {
                 })
                 .eq('user_id', submission.user_id);
             }
-          }
 
-          // Record the bonus payout
-          const { error: payoutError } = await supabase
-            .from('view_bonus_payouts')
-            .insert({
-              bonus_id: tier.id,
+            // Record the bonus payout
+            await supabase
+              .from('view_bonus_payouts')
+              .insert({
+                bonus_id: tier.id,
+                video_submission_id: submission.id,
+                creator_id: submission.user_id,
+                views_at_payout: currentViews,
+                amount_paid: tier.bonus_amount,
+                transaction_id: transaction?.id
+              });
+
+            // Update boost budget_used
+            await supabase
+              .from('bounty_campaigns')
+              .update({ budget_used: (boost.budget_used || 0) + tier.bonus_amount })
+              .eq('id', boost.id);
+
+            totalBonusesPaid++;
+            totalAmountPaid += tier.bonus_amount;
+            payoutDetails.push({
+              boost_id: boost.id,
               video_submission_id: submission.id,
               creator_id: submission.user_id,
-              views_at_payout: currentViews,
-              amount_paid: tier.bonus_amount,
-              transaction_id: transaction?.id
+              bonus_type: 'milestone',
+              tier_threshold: tier.view_threshold,
+              amount: tier.bonus_amount,
+              views: currentViews
             });
-
-          if (payoutError) {
-            console.error('Error recording payout:', payoutError);
-            // Don't fail the whole process
           }
-
-          // Update boost budget_used
-          await supabase
-            .from('bounty_campaigns')
-            .update({ budget_used: (boost.budget_used || 0) + tier.bonus_amount })
-            .eq('id', boost.id);
-
-          totalBonusesPaid++;
-          totalAmountPaid += tier.bonus_amount;
-          payoutDetails.push({
-            boost_id: boost.id,
-            video_submission_id: submission.id,
-            creator_id: submission.user_id,
-            tier_threshold: tier.view_threshold,
-            amount: tier.bonus_amount,
-            views: currentViews
-          });
         }
       }
     }
 
-    console.log(`Processed ${totalBonusesPaid} bonuses totaling $${totalAmountPaid}`);
+    console.log(`Processed ${totalBonusesPaid} bonuses totaling $${totalAmountPaid.toFixed(2)}`);
 
     return new Response(
       JSON.stringify({

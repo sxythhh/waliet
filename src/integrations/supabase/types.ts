@@ -309,7 +309,9 @@ export type Database = {
       boost_view_bonuses: {
         Row: {
           bonus_amount: number
+          bonus_type: string
           bounty_campaign_id: string
+          cpm_rate: number | null
           created_at: string
           id: string
           is_active: boolean | null
@@ -318,7 +320,9 @@ export type Database = {
         }
         Insert: {
           bonus_amount: number
+          bonus_type?: string
           bounty_campaign_id: string
+          cpm_rate?: number | null
           created_at?: string
           id?: string
           is_active?: boolean | null
@@ -327,7 +331,9 @@ export type Database = {
         }
         Update: {
           bonus_amount?: number
+          bonus_type?: string
           bounty_campaign_id?: string
+          cpm_rate?: number | null
           created_at?: string
           id?: string
           is_active?: boolean | null
