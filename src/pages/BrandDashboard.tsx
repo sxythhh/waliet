@@ -315,7 +315,7 @@ export default function BrandDashboard() {
                                     </div>
                                     
                                     {/* Progress Bar */}
-                                    <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                                    <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b] border-t border-t-[#262626]">
                                       <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                               width: `${budgetPercentage}%`
                             }} />
@@ -404,7 +404,7 @@ export default function BrandDashboard() {
                           </div>
                           
                           {/* Progress Bar */}
-                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b]">
+                          <div className="relative h-1.5 rounded-full overflow-hidden bg-[#1b1b1b] border-t border-t-[#262626]">
                             <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
                     width: `${budgetPercentage}%`
                   }} />
