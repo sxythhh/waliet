@@ -44,5 +44,18 @@ export const getBrandSubdomainUrl = (slug: string): string => {
   }
   
   // In development/preview, use path-based URL as fallback
-  return `${window.location.origin}/b/${slug}`;
+  return `${window.location.origin}/portal/${slug}`;
+};
+
+/**
+ * Get the brand portal URL (either subdomain or path-based)
+ */
+export const getBrandPortalUrl = (slug: string): string => {
+  // In production, use the actual subdomain for white-labeled experience
+  if (window.location.hostname.includes('virality.gg')) {
+    return `https://${slug}.virality.gg`;
+  }
+  
+  // In development/preview, use path-based URL
+  return `${window.location.origin}/portal/${slug}`;
 };
