@@ -86,26 +86,26 @@ const formatCurrency = (num: number): string => {
     minimumFractionDigits: 2
   }).format(num);
 };
-
 const formatTimeframeLabel = (timeframe: TimeframeOption): string => {
   const dateRange = getDateRange(timeframe);
-  
   if (!dateRange) {
     return "All time";
   }
-  
-  const { start, end } = dateRange;
-  
+  const {
+    start,
+    end
+  } = dateRange;
+
   // If same day, just show one date
   if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
     return format(start, 'MMMM d');
   }
-  
+
   // If same month and year, show "Month d - d"
   if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
     return `${format(start, 'MMMM d')} - ${format(end, 'd')}`;
   }
-  
+
   // Different months, show full dates
   return `${format(start, 'MMMM d')} - ${format(end, 'MMMM d')}`;
 };
@@ -141,14 +141,9 @@ export function AllProgramsAnalytics({
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
       // Fetch all campaign and boost IDs for this brand
-      const [campaignsData, boostsData] = await Promise.all([
-        supabase.from('campaigns').select('id').eq('brand_id', brandId),
-        supabase.from('bounty_campaigns').select('id').eq('brand_id', brandId)
-      ]);
-
+      const [campaignsData, boostsData] = await Promise.all([supabase.from('campaigns').select('id').eq('brand_id', brandId), supabase.from('bounty_campaigns').select('id').eq('brand_id', brandId)]);
       const campaignIds = campaignsData.data?.map(c => c.id) || [];
       const boostIds = boostsData.data?.map(b => b.id) || [];
-
       if (campaignIds.length === 0 && boostIds.length === 0) {
         setStats({
           totalViews: 0,
@@ -167,44 +162,32 @@ export function AllProgramsAnalytics({
       }
 
       // Fetch metrics from unified program_video_metrics table
-      let metricsQuery = supabase
-        .from('program_video_metrics')
-        .select('*')
-        .eq('brand_id', brandId)
-        .order('recorded_at', { ascending: true });
-
+      let metricsQuery = supabase.from('program_video_metrics').select('*').eq('brand_id', brandId).order('recorded_at', {
+        ascending: true
+      });
       if (dateRange) {
-        metricsQuery = metricsQuery
-          .gte('recorded_at', dateRange.start.toISOString())
-          .lte('recorded_at', dateRange.end.toISOString());
+        metricsQuery = metricsQuery.gte('recorded_at', dateRange.start.toISOString()).lte('recorded_at', dateRange.end.toISOString());
       }
 
       // Fetch video submissions from unified table
-      const [metricsResult, videoSubmissionsResult] = await Promise.all([
-        metricsQuery,
-        supabase
-          .from('video_submissions')
-          .select('id, status, views, likes, comments, shares, bookmarks')
-          .eq('brand_id', brandId)
-      ]);
+      const [metricsResult, videoSubmissionsResult] = await Promise.all([metricsQuery, supabase.from('video_submissions').select('id, status, views, likes, comments, shares, bookmarks').eq('brand_id', brandId)]);
 
       // Aggregate metrics by date - taking only the LATEST record per source per day
       const rawMetrics = metricsResult.data || [];
-      
+
       // First, group by source_id + date and keep only the latest record per source per day
       const latestBySourceAndDate = new Map<string, typeof rawMetrics[0]>();
-      
       rawMetrics.forEach(m => {
         const dateKey = format(new Date(m.recorded_at), 'yyyy-MM-dd');
         const sourceKey = `${m.source_type}_${m.source_id}_${dateKey}`;
         const existing = latestBySourceAndDate.get(sourceKey);
-        
+
         // Keep the record with the latest recorded_at timestamp
         if (!existing || new Date(m.recorded_at) > new Date(existing.recorded_at)) {
           latestBySourceAndDate.set(sourceKey, m);
         }
       });
-      
+
       // Now aggregate the latest records by date (summing across different sources)
       const metricsByDate = new Map<string, {
         views: number;
@@ -213,7 +196,6 @@ export function AllProgramsAnalytics({
         bookmarks: number;
         videos: number;
       }>();
-
       latestBySourceAndDate.forEach(m => {
         const dateKey = format(new Date(m.recorded_at), 'yyyy-MM-dd');
         const existing = metricsByDate.get(dateKey) || {
@@ -242,8 +224,14 @@ export function AllProgramsAnalytics({
           shares: acc.shares + (v.shares || 0),
           bookmarks: acc.bookmarks + (v.bookmarks || 0),
           videos: acc.videos + 1
-        }), { views: 0, likes: 0, comments: 0, shares: 0, bookmarks: 0, videos: 0 });
-
+        }), {
+          views: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+          bookmarks: 0,
+          videos: 0
+        });
         metricsByDate.set(today, {
           views: totals.views,
           likes: totals.likes,
@@ -284,43 +272,27 @@ export function AllProgramsAnalytics({
 
       // Get transactions for payouts - filter at DB level to avoid 1000 row limit issues
       // Build OR conditions for campaign and boost IDs
-      const allProgramIds = [
-        ...campaignIds.map(id => `metadata->>campaign_id.eq.${id}`),
-        ...boostIds.map(id => `metadata->>boost_id.eq.${id}`)
-      ];
-      
-      let brandTransactions: { amount: number; created_at: string }[] = [];
-      
+      const allProgramIds = [...campaignIds.map(id => `metadata->>campaign_id.eq.${id}`), ...boostIds.map(id => `metadata->>boost_id.eq.${id}`)];
+      let brandTransactions: {
+        amount: number;
+        created_at: string;
+      }[] = [];
       if (allProgramIds.length > 0) {
         // Fetch transactions for each program in batches to avoid hitting limits
         const transactionPromises = [];
-        
+
         // Fetch campaign transactions
         for (const campaignId of campaignIds) {
-          transactionPromises.push(
-            supabase
-              .from('wallet_transactions')
-              .select('amount, created_at')
-              .eq('type', 'earning')
-              .eq('metadata->>campaign_id', campaignId)
-          );
+          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at').eq('type', 'earning').eq('metadata->>campaign_id', campaignId));
         }
-        
+
         // Fetch boost transactions
         for (const boostId of boostIds) {
-          transactionPromises.push(
-            supabase
-              .from('wallet_transactions')
-              .select('amount, created_at')
-              .eq('type', 'earning')
-              .eq('metadata->>boost_id', boostId)
-          );
+          transactionPromises.push(supabase.from('wallet_transactions').select('amount, created_at').eq('type', 'earning').eq('metadata->>boost_id', boostId));
         }
-        
         const transactionResults = await Promise.all(transactionPromises);
         brandTransactions = transactionResults.flatMap(r => r.data || []);
       }
-
       let filteredTransactions = brandTransactions;
       if (dateRange) {
         filteredTransactions = brandTransactions.filter(t => {
@@ -328,37 +300,22 @@ export function AllProgramsAnalytics({
           return date >= dateRange.start && date <= dateRange.end;
         });
       }
-
       const totalPayouts = filteredTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
       const effectiveCPM = latestViews > 0 ? totalPayouts / latestViews * 1000 : 0;
 
       // Calculate week over week changes
-      const viewsThisWeek = rawMetrics
-        .filter(m => new Date(m.recorded_at) >= oneWeekAgo)
-        .reduce((sum, m) => sum + (m.total_views || 0), 0);
-      const viewsLastWeekValue = rawMetrics
-        .filter(m => {
-          const date = new Date(m.recorded_at);
-          return date >= twoWeeksAgo && date < oneWeekAgo;
-        })
-        .reduce((sum, m) => sum + (m.total_views || 0), 0);
-      const payoutsThisWeek = brandTransactions
-        .filter(t => new Date(t.created_at) >= oneWeekAgo)
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
-      const payoutsLastWeek = brandTransactions
-        .filter(t => {
-          const date = new Date(t.created_at);
-          return date >= twoWeeksAgo && date < oneWeekAgo;
-        })
-        .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-      const viewsChangePercent = viewsLastWeekValue > 0 
-        ? (viewsThisWeek - viewsLastWeekValue) / viewsLastWeekValue * 100 
-        : 0;
-      const payoutsChangePercent = payoutsLastWeek > 0 
-        ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 
-        : 0;
-
+      const viewsThisWeek = rawMetrics.filter(m => new Date(m.recorded_at) >= oneWeekAgo).reduce((sum, m) => sum + (m.total_views || 0), 0);
+      const viewsLastWeekValue = rawMetrics.filter(m => {
+        const date = new Date(m.recorded_at);
+        return date >= twoWeeksAgo && date < oneWeekAgo;
+      }).reduce((sum, m) => sum + (m.total_views || 0), 0);
+      const payoutsThisWeek = brandTransactions.filter(t => new Date(t.created_at) >= oneWeekAgo).reduce((sum, t) => sum + (t.amount || 0), 0);
+      const payoutsLastWeek = brandTransactions.filter(t => {
+        const date = new Date(t.created_at);
+        return date >= twoWeeksAgo && date < oneWeekAgo;
+      }).reduce((sum, t) => sum + (t.amount || 0), 0);
+      const viewsChangePercent = viewsLastWeekValue > 0 ? (viewsThisWeek - viewsLastWeekValue) / viewsLastWeekValue * 100 : 0;
+      const payoutsChangePercent = payoutsLastWeek > 0 ? (payoutsThisWeek - payoutsLastWeek) / payoutsLastWeek * 100 : 0;
       setStats({
         totalViews: latestViews,
         totalPayouts,
@@ -404,7 +361,7 @@ export function AllProgramsAnalytics({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Views Generated</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Views Generated</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
               
@@ -449,10 +406,6 @@ export function AllProgramsAnalytics({
       </div>
 
       {/* Metrics Chart */}
-      <PerformanceChart
-        metricsData={metricsData}
-        isRefreshing={isRefreshing}
-        onRefresh={handleRefresh}
-      />
+      <PerformanceChart metricsData={metricsData} isRefreshing={isRefreshing} onRefresh={handleRefresh} />
     </div>;
 }
