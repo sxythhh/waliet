@@ -1555,8 +1555,7 @@ export function CreatorDatabaseTab({
             <button onClick={() => setSelectedCreators(new Set())} className="px-3 py-1.5 text-xs font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">
               Clear
             </button>
-            <button onClick={handleBulkMessage} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-black bg-white border border-border/60 rounded-md hover:bg-gray-50 hover:border-border transition-all flex items-center gap-1.5 shadow-sm">
-              <MessageSquare className="h-3 w-3" />
+            <button onClick={handleBulkMessage} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-black bg-white rounded-md hover:bg-gray-50 transition-all flex items-center shadow-sm">
               Message
             </button>
             <button onClick={() => setAddToCampaignDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm">
