@@ -1383,7 +1383,7 @@ export function VideoSubmissionsTab({
                   return (
                     <div 
                       key={video.id} 
-                      className="group relative rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300"
+                      className="group relative w-64 shrink-0 rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300"
                     >
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
@@ -1441,7 +1441,7 @@ export function VideoSubmissionsTab({
                               href={video.video_url} 
                               target="_blank" 
                               rel="noopener noreferrer" 
-                              className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:text-primary transition-colors leading-tight"
+                              className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:underline transition-all leading-tight"
                             >
                               {video.video_title || video.video_description || "Untitled Video"}
                             </a>
@@ -1458,19 +1458,10 @@ export function VideoSubmissionsTab({
 
                           {/* Stats Row */}
                           <div className="flex items-center gap-3 mt-2">
-                            <div className="flex items-center gap-2.5 text-muted-foreground">
-                              <span className="flex items-center gap-1 text-xs">
-                                <Heart className="h-3 w-3" />
-                                {formatNumber(video.likes)}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs">
-                                <MessageCircle className="h-3 w-3" />
-                                {formatNumber(video.comments)}
-                              </span>
-                              <span className="flex items-center gap-1 text-xs">
-                                <Share2 className="h-3 w-3" />
-                                {formatNumber(video.shares)}
-                              </span>
+                            <div className="flex items-center gap-2.5 text-muted-foreground text-xs">
+                              <span>{formatNumber(video.likes)} likes</span>
+                              <span>•</span>
+                              <span>{formatNumber(video.comments)} comments</span>
                             </div>
                             <div className="ml-auto flex items-center gap-1.5">
                               {/* Earnings */}
