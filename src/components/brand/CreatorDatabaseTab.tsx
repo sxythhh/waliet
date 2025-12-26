@@ -1510,7 +1510,7 @@ export function CreatorDatabaseTab({
                   <div className="space-y-1">
                     {selectedCreatorPanel.campaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                         <span className="text-xs font-inter tracking-[-0.5px]">{campaign.title}</span>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-red-500/10" onClick={e => {
+                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-transparent" onClick={e => {
                     e.stopPropagation();
                     setCampaignToKickFrom({
                       creatorId: selectedCreatorPanel.id,
