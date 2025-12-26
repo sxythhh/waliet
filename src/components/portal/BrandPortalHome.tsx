@@ -105,18 +105,17 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
         }
       }
 
-      // Fetch earnings for this brand from payout_items
-      const { data: payoutItems } = await supabase
-        .from("payout_items")
+      // Fetch earnings for this brand from brand_wallet_transactions
+      const { data: walletTransactions } = await supabase
+        .from("brand_wallet_transactions")
         .select("amount, status, created_at, description")
-        .eq("user_id", userId)
         .eq("brand_id", brand.id);
 
-      const totalEarnings = (payoutItems || [])
+      const totalEarnings = (walletTransactions || [])
         .filter(t => t.status === "completed")
         .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-      const pendingPayouts = (payoutItems || [])
+      const pendingPayouts = (walletTransactions || [])
         .filter(t => t.status === "pending")
         .reduce((sum, t) => sum + (t.amount || 0), 0);
 
@@ -127,15 +126,15 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
         pendingPayouts,
       });
 
-      // Create recent activity from payouts
-      const activity: RecentActivity[] = (payoutItems || [])
+      // Create recent activity from transactions
+      const activity: RecentActivity[] = (walletTransactions || [])
         .slice(0, 5)
         .map(t => ({
-          id: t.created_at,
+          id: t.created_at || crypto.randomUUID(),
           type: "payout" as const,
           title: t.description || "Payment",
           amount: t.amount || 0,
-          date: t.created_at,
+          date: t.created_at || new Date().toISOString(),
         }));
 
       setRecentActivity(activity);

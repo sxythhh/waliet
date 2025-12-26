@@ -48,20 +48,19 @@ export function BrandPortalEarnings({ brand, userId }: BrandPortalEarningsProps)
     const fetchEarnings = async () => {
       setLoading(true);
 
-      // Fetch payouts from payout_items table
-      const { data: payoutItems } = await supabase
-        .from("payout_items")
-        .select("id, amount, status, description, created_at")
-        .eq("user_id", userId)
+      // Fetch payouts from brand_wallet_transactions table
+      const { data: walletTransactions } = await supabase
+        .from("brand_wallet_transactions")
+        .select("id, amount, status, description, created_at, type")
         .eq("brand_id", brand.id)
         .order("created_at", { ascending: false });
 
-      const formattedTransactions: Transaction[] = (payoutItems || []).map(t => ({
+      const formattedTransactions: Transaction[] = (walletTransactions || []).map(t => ({
         id: t.id,
         amount: t.amount || 0,
         status: t.status || "pending",
         description: t.description,
-        created_at: t.created_at,
+        created_at: t.created_at || new Date().toISOString(),
         campaign_title: undefined,
       }));
 
