@@ -467,7 +467,7 @@ export function UserSettingsTab() {
   }
   return <div className="w-full p-[10px] border border-[#141414] rounded-[15px]">
       {/* Sticky Header & Tabs */}
-      <div className="sticky top-0 z-10 bg-background pt-4 pb-0">
+      <div className="sticky top-0 z-10 bg-background">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
