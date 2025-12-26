@@ -480,88 +480,14 @@ export function BrandCampaignDetailView({
                 onSubmissionReviewed={fetchPendingApplicationsCount} 
               />
             ) : campaign && campaign.brand_id ? (
-              <CampaignVideosContent 
-                campaign={campaign}
+              <VideoSubmissionsTab 
+                campaign={{
+                  ...campaign,
+                  hashtags: campaign.hashtags || []
+                }}
                 onSubmissionReviewed={fetchPendingApplicationsCount}
               />
             ) : null
-          ) : activeDetailTab === "creators" ? (
-            <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
-          ) : activeDetailTab === "payouts" ? (
-            isBoost && boostId ? (
-              <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div>
-            ) : campaignId ? (
-              <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
-            ) : null
-          ) : activeDetailTab === "links" ? (
-            entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null
-          ) : null}
-        </div>
-      </div>
-    </div>;
-}
-
-// Campaign Videos Content - shows both submissions and tracked videos
-function CampaignVideosContent({
-  campaign,
-  onSubmissionReviewed
-}: {
-  campaign: Campaign;
-  onSubmissionReviewed?: () => void;
-}) {
-  const [activeVideosTab, setActiveVideosTab] = useState<"submissions" | "tracked">("submissions");
-
-  return (
-    <div className="h-full flex flex-col">
-      {/* Sub-tabs for videos */}
-      <div className="flex-shrink-0 border-b border-border bg-background px-4">
-        <div className="flex gap-4">
-          <button
-            onClick={() => setActiveVideosTab("submissions")}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
-              activeVideosTab === "submissions" 
-                ? "border-primary text-foreground" 
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Upload className="h-3.5 w-3.5" />
-            Submissions
-          </button>
-          <button
-            onClick={() => setActiveVideosTab("tracked")}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
-              activeVideosTab === "tracked" 
-                ? "border-primary text-foreground" 
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <FileVideo className="h-3.5 w-3.5" />
-            Tracked Videos
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        {activeVideosTab === "submissions" ? (
-          <VideoSubmissionsTab 
-            campaign={campaign} 
-            onSubmissionReviewed={onSubmissionReviewed} 
-          />
-        ) : campaign.brand_id ? (
-          <div className="p-4">
-            <CampaignVideosPanel
-              campaignId={campaign.id}
-              brandId={campaign.brand_id}
-              rpmRate={campaign.rpm_rate}
-              hashtags={campaign.hashtags || []}
-            />
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 // All Programs Home Content - shows aggregated analytics
 function AllProgramsHomeContent({
