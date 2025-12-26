@@ -259,6 +259,11 @@ export function CreatorDatabaseTab({
   const [selectedCampaignToAdd, setSelectedCampaignToAdd] = useState<string>("");
   const [addingToCampaign, setAddingToCampaign] = useState(false);
 
+  // Bulk message state
+  const [bulkMessageDialogOpen, setBulkMessageDialogOpen] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("");
+  const [sendingBulkMessage, setSendingBulkMessage] = useState(false);
+
   // Remove creator state
   const [removeCreatorDialogOpen, setRemoveCreatorDialogOpen] = useState(false);
   const [creatorToRemove, setCreatorToRemove] = useState<Creator | null>(null);
@@ -763,15 +768,61 @@ export function CreatorDatabaseTab({
   };
   const handleBulkMessage = () => {
     if (selectedCreators.size === 0) return;
+    setBulkMessageDialogOpen(true);
+  };
 
-    // Get first selected creator and start conversation
+  const handleSendBulkMessage = async () => {
+    if (!bulkMessage.trim() || selectedCreators.size === 0) {
+      toast.error('Please enter a message');
+      return;
+    }
+
+    setSendingBulkMessage(true);
     const selectedCreatorIds = Array.from(selectedCreators);
-    const firstCreator = creators.find(c => c.id === selectedCreatorIds[0]);
-    if (firstCreator && onStartConversation) {
-      onStartConversation(firstCreator.id, firstCreator.full_name || firstCreator.username);
-      toast.success(`Opening conversation with ${selectedCreators.size} selected creator${selectedCreators.size > 1 ? 's' : ''}`);
-    } else {
-      toast.info('Messaging functionality requires the Messages tab');
+    let successCount = 0;
+    let failCount = 0;
+    const errors: string[] = [];
+
+    for (const creatorId of selectedCreatorIds) {
+      const creator = creators.find(c => c.id === creatorId);
+      if (!creator) continue;
+
+      try {
+        const { data, error } = await supabase.functions.invoke('send-discord-dm', {
+          body: {
+            userId: creatorId,
+            message: bulkMessage,
+          }
+        });
+
+        if (error) {
+          failCount++;
+          errors.push(`${creator.username}: ${error.message}`);
+        } else if (data?.success) {
+          successCount++;
+        } else {
+          failCount++;
+          errors.push(`${creator.username}: ${data?.error || 'Failed to send'}`);
+        }
+      } catch (err: any) {
+        failCount++;
+        errors.push(`${creator.username}: ${err.message}`);
+      }
+    }
+
+    setSendingBulkMessage(false);
+
+    if (successCount > 0) {
+      toast.success(`Message sent to ${successCount} creator${successCount > 1 ? 's' : ''}`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to send to ${failCount} creator${failCount > 1 ? 's' : ''} (Discord not linked or error)`);
+    }
+
+    if (successCount > 0) {
+      setBulkMessageDialogOpen(false);
+      setBulkMessage("");
+      setSelectedCreators(new Set());
     }
   };
   const handleAddToCampaign = async () => {
@@ -1504,8 +1555,8 @@ export function CreatorDatabaseTab({
             <button onClick={() => setSelectedCreators(new Set())} className="px-3 py-1.5 text-xs font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50">
               Clear
             </button>
-            <button onClick={handleBulkMessage} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-foreground bg-background border border-border/60 rounded-md hover:bg-muted/50 hover:border-border transition-all flex items-center gap-1.5 shadow-sm">
-              
+            <button onClick={handleBulkMessage} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-black bg-white border border-border/60 rounded-md hover:bg-gray-50 hover:border-border transition-all flex items-center gap-1.5 shadow-sm">
+              <MessageSquare className="h-3 w-3" />
               Message
             </button>
             <button onClick={() => setAddToCampaignDialogOpen(true)} className="px-3.5 py-1.5 text-xs font-inter tracking-[-0.3px] text-primary-foreground bg-primary rounded-md hover:bg-primary/90 transition-all flex items-center gap-1.5 shadow-sm">
@@ -1556,7 +1607,43 @@ export function CreatorDatabaseTab({
         </DialogContent>
       </Dialog>
 
-      {/* Add Creators Dialog */}
+      {/* Bulk Message Dialog */}
+      <Dialog open={bulkMessageDialogOpen} onOpenChange={setBulkMessageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-instrument tracking-tight">Send Message</DialogTitle>
+            <DialogDescription className="font-inter tracking-[-0.3px]">
+              Send a Discord DM to {selectedCreators.size} selected creator{selectedCreators.size > 1 ? 's' : ''}. Only creators with linked Discord accounts will receive the message.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.3px] text-sm">Message</Label>
+              <Textarea 
+                placeholder="Type your message here..." 
+                value={bulkMessage} 
+                onChange={e => setBulkMessage(e.target.value)} 
+                className="min-h-[120px] font-inter tracking-[-0.3px] text-sm resize-none"
+              />
+            </div>
+            <div className="flex items-start gap-2 p-3 bg-muted/30 border border-border/40 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                Messages are sent via Discord. Creators without a linked Discord account will not receive the message.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setBulkMessageDialogOpen(false)} className="font-inter tracking-[-0.3px]">
+              Cancel
+            </Button>
+            <Button onClick={handleSendBulkMessage} disabled={sendingBulkMessage || !bulkMessage.trim()} className="font-inter tracking-[-0.3px]">
+              {sendingBulkMessage ? 'Sending...' : `Send to ${selectedCreators.size} Creator${selectedCreators.size > 1 ? 's' : ''}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={addCreatorsDialogOpen} onOpenChange={setAddCreatorsDialogOpen}>
         <DialogContent className="max-w-xl p-0 gap-0 overflow-hidden bg-background">
           {/* Header */}
