@@ -29,10 +29,8 @@ export function BudgetProgressCard({
     backgroundColor: '#0a0a0a'
   }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-sm font-inter font-semibold tracking-[-0.5px] uppercase text-muted-foreground">
-          Balance & Capacity
-        </h3>
+      <div className="mb-6 flex items-end justify-between">
+        
         <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50" onClick={onTopUp}>
           <Plus className="h-3.5 w-3.5" />
           Add Funds
