@@ -6,6 +6,7 @@ import { ChevronRight, Play, DollarSign } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
+import defaultBanner from "@/assets/default-banner.jpg";
 interface CampaignMember {
   id: string;
   avatar_url?: string | null;
@@ -91,11 +92,7 @@ export function CampaignRowCard({
       <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px]">
         {/* Banner Image */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
-          {bannerUrl ? <OptimizedImage src={bannerUrl} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-              <span className="text-muted-foreground/50 text-xs font-medium">
-                No Banner
-              </span>
-            </div>}
+          <OptimizedImage src={bannerUrl || defaultBanner} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
         </div>
 
         {/* Content Section */}
