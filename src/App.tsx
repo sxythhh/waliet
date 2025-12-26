@@ -60,6 +60,7 @@ import Resources from "./pages/Resources";
 import BlogPost from "./pages/BlogPost";
 import BrandPublicPage from "./pages/BrandPublicPage";
 import Install from "./pages/Install";
+import BrandPortal from "./pages/BrandPortal";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 import { getSubdomainSlug } from "./utils/subdomain";
@@ -100,15 +101,15 @@ function BoostRedirect() {
   return <div className="min-h-screen flex items-center justify-center"><p>Redirecting...</p></div>;
 }
 
-// Handle subdomain routing for brand pages
+// Handle subdomain routing for brand portal
 function SubdomainHandler({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const subdomainSlug = getSubdomainSlug();
 
   useEffect(() => {
     if (subdomainSlug) {
-      // Redirect to brand public page
-      navigate(`/b/${subdomainSlug}`, { replace: true });
+      // Redirect to brand portal for authenticated users
+      navigate(`/portal/${subdomainSlug}`, { replace: true });
     }
   }, [subdomainSlug, navigate]);
 
@@ -223,6 +224,7 @@ const App = () => (
               <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
               <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
               <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
+              <Route path="/portal/:slug" element={<BrandPortal />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path=":username" element={<PublicProfile />} />
                 <Route path="*" element={<NotFound />} />
