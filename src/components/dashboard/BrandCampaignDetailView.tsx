@@ -149,19 +149,6 @@ export function BrandCampaignDetailView({
     fetchPendingApplicationsCount();
   }, [campaignId, boostId, brandId, isAllMode]);
 
-  // Auto-select first program when in "all mode" after data loads
-  useEffect(() => {
-    if (isAllMode && !loading && (campaigns.length > 0 || boosts.length > 0)) {
-      const newParams = new URLSearchParams(searchParams);
-      if (campaigns.length > 0) {
-        newParams.set("campaign", campaigns[0].id);
-      } else if (boosts.length > 0) {
-        newParams.set("boost", boosts[0].id);
-      }
-      setSearchParams(newParams);
-    }
-  }, [isAllMode, loading, campaigns, boosts]);
-
   // Check if brand has Dub integration configured
   useEffect(() => {
     const checkDubIntegration = async () => {
@@ -355,18 +342,6 @@ export function BrandCampaignDetailView({
 
   // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
-  // Show empty state when no campaigns/boosts exist
-  if (isAllMode && !loading && campaigns.length === 0 && boosts.length === 0) {
-    return <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
-        
-        <div className="space-y-1">
-          <h3 className="font-semibold text-lg">No campaigns yet</h3>
-          <p className="text-muted-foreground text-sm max-w-sm">
-            Create your first campaign to start tracking creator content and managing payouts.
-          </p>
-        </div>
-      </div>;
-  }
   if (!isAllMode && !campaign && !boost && !loading) {
     return <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
@@ -394,6 +369,13 @@ export function BrandCampaignDetailView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64 z-50 bg-[#080808] rounded-[7px]">
+                {/* All Programs option */}
+                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={`focus:bg-white/5 focus:text-foreground ${isAllMode ? "bg-white/8" : ""}`}>
+                  <span className="font-medium">All Programs</span>
+                </DropdownMenuItem>
+                
+                {(campaigns.length > 0 || boosts.length > 0) && <DropdownMenuSeparator />}
+                
                 {/* All Programs (Campaigns + Boosts) */}
                 <div className="flex flex-col gap-1 py-1">
                   {campaigns.map(c => <DropdownMenuItem key={c.id} onClick={() => handleSelectEntity({
@@ -473,10 +455,50 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
-          ...campaign,
-          hashtags: campaign.hashtags || []
-        }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : null}
+          {activeDetailTab === "home" ? (
+            isAllMode && brandId ? (
+              <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} />
+            ) : isBoost && boost ? (
+              <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} />
+            ) : campaign?.brand_id ? (
+              <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} />
+            ) : null
+          ) : activeDetailTab === "applications" ? (
+            isAllMode && brandId ? (
+              <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : isBoost ? (
+              <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : (
+              <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            )
+          ) : activeDetailTab === "videos" ? (
+            isBoost && boost ? (
+              <VideoSubmissionsTab 
+                boostId={boostId} 
+                monthlyRetainer={boost.monthly_retainer} 
+                videosPerMonth={boost.videos_per_month} 
+                onSubmissionReviewed={fetchPendingApplicationsCount} 
+              />
+            ) : campaign && campaign.brand_id ? (
+              <VideoSubmissionsTab 
+                campaign={{
+                  ...campaign,
+                  hashtags: campaign.hashtags || []
+                }}
+                onSubmissionReviewed={fetchPendingApplicationsCount}
+              />
+            ) : null
+          ) : activeDetailTab === "creators" ? (
+            <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
+          ) : activeDetailTab === "payouts" ? (
+            isBoost && boostId ? (
+              <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div>
+            ) : campaignId ? (
+              <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
+            ) : null
+          ) : activeDetailTab === "links" ? (
+            entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null
+          ) : null}
         </div>
       </div>
     </div>;
