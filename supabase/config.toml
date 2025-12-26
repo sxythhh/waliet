@@ -134,3 +134,15 @@ verify_jwt = false
 
 [functions.sync-campaign-videos]
 verify_jwt = false
+
+[functions.process-accrued-payments]
+verify_jwt = false
+
+[functions.request-payout]
+verify_jwt = true
+
+[functions.complete-payout]
+verify_jwt = true
+
+[functions.migrate-legacy-payouts]
+verify_jwt = true
