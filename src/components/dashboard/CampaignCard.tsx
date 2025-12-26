@@ -5,6 +5,7 @@ import { VerifiedBadge } from "@/components/VerifiedBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import defaultBanner from "@/assets/default-banner.jpg";
 
 export interface CampaignCardProps {
   id: string;
@@ -83,21 +84,13 @@ export function CampaignCard({
         {/* Brand Info with Banner */}
         <div className="flex items-center gap-2.5">
           {/* Campaign Banner */}
-          {banner_url ? (
-            <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-              <OptimizedImage
-                src={banner_url}
-                alt={title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-14 h-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
-              <span className="text-xs font-semibold text-muted-foreground">
-                {title?.charAt(0) || "C"}
-              </span>
-            </div>
-          )}
+          <div className="w-14 h-10 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
+            <OptimizedImage
+              src={banner_url || defaultBanner}
+              alt={title}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               {/* Brand Logo */}
