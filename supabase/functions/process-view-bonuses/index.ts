@@ -9,6 +9,7 @@ interface ViewBonus {
   id: string;
   bounty_campaign_id: string;
   view_threshold: number;
+  min_views: number | null;
   bonus_amount: number;
   bonus_type: 'milestone' | 'cpm';
   cpm_rate: number | null;
@@ -115,17 +116,24 @@ Deno.serve(async (req) => {
           const existingPayout = paidBonusMap.get(tier.id);
 
           if (tier.bonus_type === 'cpm') {
-            // CPM bonus: pay based on views up to threshold
-            // Calculate what we should have paid by now
-            const viewsForPayment = Math.min(currentViews, tier.view_threshold);
-            const totalEarned = (tier.cpm_rate! * viewsForPayment) / 1000;
+            // CPM bonus: pay based on views within the specified range
+            const minViews = tier.min_views || 0;
+            
+            // Only pay for views above the minimum threshold
+            if (currentViews <= minViews) continue;
+            
+            // Calculate views eligible for payment (between min and max)
+            const eligibleViews = Math.min(currentViews, tier.view_threshold) - minViews;
+            if (eligibleViews <= 0) continue;
+            
+            const totalEarned = (tier.cpm_rate! * eligibleViews) / 1000;
             const alreadyPaid = existingPayout?.amount_paid || 0;
             const amountToPay = Math.max(0, totalEarned - alreadyPaid);
 
             // Only pay if there's at least $0.01 to pay
             if (amountToPay < 0.01) continue;
 
-            console.log(`CPM bonus for video ${submission.id}: ${viewsForPayment} views at $${tier.cpm_rate}/CPM = $${totalEarned.toFixed(2)} (already paid: $${alreadyPaid.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
+            console.log(`CPM bonus for video ${submission.id}: ${eligibleViews} eligible views (${minViews}-${tier.view_threshold}) at $${tier.cpm_rate}/CPM = $${totalEarned.toFixed(2)} (already paid: $${alreadyPaid.toFixed(2)}, paying: $${amountToPay.toFixed(2)})`);
 
             // Create wallet transaction for the creator
             const { data: transaction, error: txError } = await supabase
@@ -134,7 +142,7 @@ Deno.serve(async (req) => {
                 user_id: submission.user_id,
                 amount: amountToPay,
                 type: 'boost',
-                description: `CPM bonus: $${tier.cpm_rate}/1K views (${viewsForPayment.toLocaleString()} views)`,
+                description: `CPM bonus: $${tier.cpm_rate}/1K views (${eligibleViews.toLocaleString()} views)`,
                 metadata: {
                   boost_id: boost.id,
                   bonus_id: tier.id,
