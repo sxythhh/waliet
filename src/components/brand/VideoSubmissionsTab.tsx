@@ -1299,8 +1299,10 @@ export function VideoSubmissionsTab({
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1.5">
-                                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-full object-cover flex-shrink-0" /> : <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                      <User className="h-3 w-3 text-muted-foreground" />
+                                {profile?.avatar_url ? <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" /> : <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-[10px] font-medium text-muted-foreground uppercase">
+                                        {(profile?.full_name || profile?.username || "U").charAt(0)}
+                                      </span>
                                     </div>}
                                   <span className="text-xs text-foreground">
                                     {profile?.full_name || profile?.username || "Unknown"}
