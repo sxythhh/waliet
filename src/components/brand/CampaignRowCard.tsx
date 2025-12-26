@@ -203,11 +203,11 @@ export function CampaignRowCard({
 
           {/* Members & Actions */}
           <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-            {/* Members Avatars */}
-            <div className="flex items-center">
-              <div className="flex -space-x-2">
-                {visibleMembers.length > 0 ? (
-                  visibleMembers.map((member, index) => (
+            {/* Members Avatars - only show if there are members */}
+            {visibleMembers.length > 0 && (
+              <div className="flex items-center">
+                <div className="flex -space-x-2">
+                  {visibleMembers.map((member, index) => (
                     <div
                       key={member.id}
                       className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
@@ -221,26 +221,15 @@ export function CampaignRowCard({
                         </span>
                       )}
                     </div>
-                  ))
-                ) : (
-                  // Show empty placeholder circles when no members
-                  [0, 1, 2].map((index) => (
-                    <div
-                      key={index}
-                      className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center"
-                      style={{ zIndex: 3 - index }}
-                    >
-                      <span className="text-[10px] font-medium text-muted-foreground/50">?</span>
-                    </div>
-                  ))
+                  ))}
+                </div>
+                {remainingCount > 0 && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    +{remainingCount} more
+                  </span>
                 )}
               </div>
-              {remainingCount > 0 && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  +{remainingCount} more
-                </span>
-              )}
-            </div>
+            )}
 
             {/* Review Badge */}
             {pendingReviewCount > 0 && (
