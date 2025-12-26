@@ -1531,7 +1531,7 @@ export function VideoSubmissionsTab({
       {selectedVideos.size > 0 && (() => {
         // Get selected video objects to check their statuses
         const selectedVideoObjects = allVideos.filter(v => selectedVideos.has(v.id));
-        const hasApprovable = selectedVideoObjects.some(v => v.status !== 'approved');
+        const hasApprovable = selectedVideoObjects.some(v => v.status !== 'approved' && v.user_id);
         const hasRejectable = selectedVideoObjects.some(v => v.status !== 'rejected');
         
         return (
