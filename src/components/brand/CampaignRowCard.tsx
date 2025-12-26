@@ -110,9 +110,6 @@ export function CampaignRowCard({
             {status === "draft" && <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 DRAFT
               </span>}
-            {status === "ended" && <span className="text-[10px] font-semibold uppercase tracking-wide text-red-500">
-                ENDED
-              </span>}
 
             <div className="flex items-baseline gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
@@ -179,9 +176,11 @@ export function CampaignRowCard({
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => {
                 e.stopPropagation();
-                const url = `${window.location.origin}/c/${slug}`;
+                const url = type === "campaign" 
+                  ? `${window.location.origin}/c/${slug}` 
+                  : `${window.location.origin}/boost/${slug}`;
                 navigator.clipboard.writeText(url);
-                toast({ title: "Link copied", description: "Campaign URL copied to clipboard" });
+                toast({ title: "Link copied", description: "URL copied to clipboard" });
               }}>
                 <img src={copyIcon} alt="" className="w-3.5 h-3.5" />
               </Button>}
