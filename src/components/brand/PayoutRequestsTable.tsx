@@ -20,6 +20,9 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import flagAmberIcon from "@/assets/flag-amber-icon.svg";
+import { BrandPayoutStatusCards } from "./BrandPayoutStatusCards";
+import { PayoutItemRow } from "./PayoutItemRow";
+import { canBeFlagged } from "./FlaggingWindowBadge";
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -641,8 +644,42 @@ export function PayoutRequestsTable({
   if (!hasAnyData) {
     return null;
   }
+  // Calculate summary stats for status cards
+  const summaryStats = useMemo(() => {
+    let inReviewAmount = 0, inReviewCount = 0, approvedAmount = 0, approvedCount = 0, flaggedAmount = 0, flaggedCount = 0;
+    let earliestClearingEndsAt: string | undefined;
+    let canStillFlagAny = false;
+    requests.forEach(request => {
+      const { items: displayItems } = getFilteredItemsForRequest(request);
+      displayItems.forEach(item => {
+        if (item.flagged_at) { flaggedAmount += item.amount; flaggedCount++; }
+        else if (item.status === 'approved') { approvedAmount += item.amount; approvedCount++; }
+        else {
+          inReviewAmount += item.amount; inReviewCount++;
+          if (!earliestClearingEndsAt || request.clearing_ends_at < earliestClearingEndsAt) earliestClearingEndsAt = request.clearing_ends_at;
+          if (canBeFlagged(request.created_at, request.clearing_ends_at)) canStillFlagAny = true;
+        }
+      });
+    });
+    return { inReviewAmount, inReviewCount, approvedAmount, approvedCount, flaggedAmount, flaggedCount, earliestClearingEndsAt, canStillFlag: canStillFlagAny };
+  }, [requests, campaignId, boostId]);
+
   return <TooltipProvider>
       <div className="space-y-6 font-['Inter'] tracking-[-0.5px] h-full py-[10px]">
+        
+        {/* Summary Status Cards */}
+        {requests.length > 0 && (
+          <BrandPayoutStatusCards
+            inReviewAmount={summaryStats.inReviewAmount}
+            inReviewCount={summaryStats.inReviewCount}
+            approvedAmount={summaryStats.approvedAmount}
+            approvedCount={summaryStats.approvedCount}
+            flaggedAmount={summaryStats.flaggedAmount}
+            flaggedCount={summaryStats.flaggedCount}
+            earliestClearingEndsAt={summaryStats.earliestClearingEndsAt}
+            canStillFlag={summaryStats.canStillFlag}
+          />
+        )}
 
         {/* Desktop Table */}
         {requests.length > 0 && <div className="hidden md:block">
@@ -665,14 +702,14 @@ export function PayoutRequestsTable({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted px-3 text-sm">
-                  {statusFilter === "all" ? "All statuses" : statusFilter === "clearing" ? "Clearing" : statusFilter === "completed" ? "Completed" : statusFilter === "flagged" ? "Flagged" : "Cancelled"}
+                  {statusFilter === "all" ? "All statuses" : statusFilter === "clearing" ? "In Review" : statusFilter === "completed" ? "Approved" : statusFilter === "flagged" ? "Flagged" : "Cancelled"}
                   <ChevronDown className="h-3.5 w-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50">
                 <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("all")}>All statuses</DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("clearing")}>Clearing</DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("completed")}>Completed</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("clearing")}>In Review</DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("completed")}>Approved</DropdownMenuItem>
                 <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("flagged")}>Flagged</DropdownMenuItem>
                 <DropdownMenuItem className="focus:bg-muted focus:text-foreground" onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
               </DropdownMenuContent>
