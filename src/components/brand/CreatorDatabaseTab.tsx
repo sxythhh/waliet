@@ -338,7 +338,7 @@ export function CreatorDatabaseTab({
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>(ALL_COLUMNS.map(c => c.id));
 
   // Sorting state
-  const [sortBy, setSortBy] = useState<'views' | 'earnings' | null>(null);
+  const [sortBy, setSortBy] = useState<'views' | 'earnings' | 'joined' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Pagination state
@@ -385,7 +385,7 @@ export function CreatorDatabaseTab({
   const orderedVisibleColumns = useMemo(() => {
     return columnOrder.filter(id => visibleColumns.has(id));
   }, [columnOrder, visibleColumns]);
-  const handleSort = (column: 'views' | 'earnings') => {
+  const handleSort = (column: 'views' | 'earnings' | 'joined') => {
     if (sortBy === column) {
       if (sortOrder === 'desc') {
         setSortOrder('asc');
@@ -679,6 +679,11 @@ export function CreatorDatabaseTab({
     // Apply sorting
     if (sortBy) {
       filtered = [...filtered].sort((a, b) => {
+        if (sortBy === 'joined') {
+          const aDate = new Date(a.first_interaction_at || a.date_joined || 0).getTime();
+          const bDate = new Date(b.first_interaction_at || b.date_joined || 0).getTime();
+          return sortOrder === 'desc' ? bDate - aDate : aDate - bDate;
+        }
         const aVal = sortBy === 'views' ? a.total_views : a.total_earnings;
         const bVal = sortBy === 'views' ? b.total_views : b.total_earnings;
         return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
@@ -1223,6 +1228,16 @@ export function CreatorDatabaseTab({
                               Earnings
                               <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
                                 {sortBy === 'earnings' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              </span>
+                            </div>
+                          </TableHead>;
+                  }
+                  if (colId === 'joined') {
+                    return <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('joined')}>
+                            <div className="flex items-center gap-1">
+                              Joined
+                              <span className={`transition-opacity ${sortBy === 'joined' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
+                                {sortBy === 'joined' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                               </span>
                             </div>
                           </TableHead>;
