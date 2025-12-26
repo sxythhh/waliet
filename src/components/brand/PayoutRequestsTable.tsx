@@ -515,7 +515,7 @@ export function PayoutRequestsTable({
         .insert({
           user_id: clawbackUserId,
           amount: -clawbackAmount,
-          type: 'clawback',
+          type: 'balance_correction',
           description: `Clawback: ${reason}`,
           metadata: {
             payout_item_id: clawbackItemId,
