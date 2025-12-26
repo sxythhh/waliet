@@ -35,6 +35,13 @@ interface Campaign {
   allowed_platforms: string[] | null;
   application_questions: any[];
 }
+
+interface CampaignMember {
+  id: string;
+  avatar_url?: string | null;
+  display_name?: string;
+}
+
 interface BountyCampaign {
   id: string;
   title: string;
@@ -64,6 +71,8 @@ export function BrandCampaignsTab({
   const [searchParams, setSearchParams] = useSearchParams();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [bounties, setBounties] = useState<BountyCampaign[]>([]);
+  const [campaignMembers, setCampaignMembers] = useState<Record<string, CampaignMember[]>>({});
+  const [bountyMembers, setBountyMembers] = useState<Record<string, CampaignMember[]>>({});
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [campaignToDelete, setCampaignToDelete] = useState<Campaign | null>(null);
@@ -139,6 +148,56 @@ export function BrandCampaignsTab({
       const campaignIds = (campaignsData || []).map(c => c.id);
       const bountyIds = (bountiesData || []).map(b => b.id);
       let totalPending = 0;
+
+      // Fetch campaign members (approved submissions with profile data)
+      if (campaignIds.length > 0) {
+        const { data: campaignSubmissions } = await supabase
+          .from("campaign_submissions")
+          .select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, display_name)")
+          .in("campaign_id", campaignIds)
+          .eq("status", "approved");
+        
+        // Group members by campaign_id
+        const membersByCampaign: Record<string, CampaignMember[]> = {};
+        (campaignSubmissions || []).forEach((sub: any) => {
+          if (!membersByCampaign[sub.campaign_id]) {
+            membersByCampaign[sub.campaign_id] = [];
+          }
+          if (sub.profiles) {
+            membersByCampaign[sub.campaign_id].push({
+              id: sub.profiles.id,
+              avatar_url: sub.profiles.avatar_url,
+              display_name: sub.profiles.display_name,
+            });
+          }
+        });
+        setCampaignMembers(membersByCampaign);
+      }
+
+      // Fetch bounty members (approved applications with profile data)
+      if (bountyIds.length > 0) {
+        const { data: bountyApps } = await supabase
+          .from("bounty_applications")
+          .select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, display_name)")
+          .in("bounty_campaign_id", bountyIds)
+          .eq("status", "approved");
+        
+        // Group members by bounty_campaign_id
+        const membersByBounty: Record<string, CampaignMember[]> = {};
+        (bountyApps || []).forEach((app: any) => {
+          if (!membersByBounty[app.bounty_campaign_id]) {
+            membersByBounty[app.bounty_campaign_id] = [];
+          }
+          if (app.profiles) {
+            membersByBounty[app.bounty_campaign_id].push({
+              id: app.profiles.id,
+              avatar_url: app.profiles.avatar_url,
+              display_name: app.profiles.display_name,
+            });
+          }
+        });
+        setBountyMembers(membersByBounty);
+      }
 
       // Count pending campaign submissions
       if (campaignIds.length > 0) {
@@ -439,6 +498,7 @@ export function BrandCampaignsTab({
                         rpmRate={Number(campaign.rpm_rate)}
                         status={campaign.status}
                         allowedPlatforms={campaign.allowed_platforms}
+                        members={campaignMembers[campaign.id] || []}
                         onClick={() => handleCampaignClick(campaign)}
                         onTopUp={() => {
                           setSelectedCampaignForFunding({ id: campaign.id, type: 'campaign' });
@@ -463,6 +523,7 @@ export function BrandCampaignsTab({
                         maxCreators={bounty.max_accepted_creators}
                         status={bounty.status}
                         endDate={bounty.end_date}
+                        members={bountyMembers[bounty.id] || []}
                         onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)}
                         onTopUp={() => {
                           setSelectedCampaignForFunding({ id: bounty.id, type: 'boost' });
