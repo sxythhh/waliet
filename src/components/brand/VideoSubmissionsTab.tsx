@@ -93,6 +93,7 @@ interface UnifiedVideo {
   // Tracked video specific fields
   estimatedPayout?: number;
   weeklyViews?: number;
+  uploaded_at?: string;
 }
 
 interface Profile {
@@ -365,7 +366,8 @@ export function VideoSubmissionsTab({
           shares: v.shares,
           source: "tracked" as const,
           estimatedPayout,
-          weeklyViews
+          weeklyViews,
+          uploaded_at: v.uploaded_at
         };
       });
 
@@ -1372,24 +1374,26 @@ export function VideoSubmissionsTab({
                   );
                 }
 
-                // Card View
+                // Card View - Redesigned for cleaner aesthetics
                 return filteredVids.map(video => {
                   const profile = video.user_id ? profiles[video.user_id] : null;
+                  const uploadDate = video.uploaded_at || video.submitted_at;
+                  
                   return (
                     <div 
                       key={video.id} 
-                      className="rounded-xl border border-border/40 bg-card/30 p-4 hover:bg-card/50 transition-colors"
+                      className="group relative rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="flex gap-4">
-                        {/* Thumbnail */}
+                      {/* Main Content Row */}
+                      <div className="flex gap-3 p-3">
+                        {/* Thumbnail with overlay */}
                         <a 
                           href={video.video_url} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="relative w-24 h-32 rounded-lg overflow-hidden bg-muted/50 shrink-0"
+                          className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb"
                         >
                           {(() => {
-                            // For tracked videos, try to get thumbnail from Supabase storage
                             const thumbnailUrl = video.source === "tracked" 
                               ? (getTrackedThumbnailUrl(video) || video.video_thumbnail_url)
                               : video.video_thumbnail_url;
@@ -1398,9 +1402,8 @@ export function VideoSubmissionsTab({
                               <img 
                                 src={thumbnailUrl} 
                                 alt="" 
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
                                 onError={(e) => {
-                                  // Fallback to original thumbnail or hide on error
                                   const target = e.target as HTMLImageElement;
                                   if (video.video_thumbnail_url && target.src !== video.video_thumbnail_url) {
                                     target.src = video.video_thumbnail_url;
@@ -1410,141 +1413,148 @@ export function VideoSubmissionsTab({
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Video className="h-6 w-6 text-muted-foreground" />
+                              <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                                <Video className="h-5 w-5 text-muted-foreground/50" />
                               </div>
                             );
                           })()}
-                          {/* Platform badge */}
-                          <div className="absolute bottom-1 left-1 h-5 w-5 rounded-full bg-background/80 flex items-center justify-center">
+                          {/* Platform badge - bottom left */}
+                          <div className="absolute bottom-1.5 left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
                             <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
+                          </div>
+                          {/* Views overlay - top right */}
+                          <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm">
+                            <span className="text-[10px] font-medium text-white flex items-center gap-0.5">
+                              <Eye className="h-2.5 w-2.5" />
+                              {formatNumber(video.views)}
+                            </span>
                           </div>
                         </a>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <div>
-                              <a 
-                                href={video.video_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-sm font-medium tracking-[-0.3px] line-clamp-1 hover:underline"
-                              >
-                                {video.video_title || video.video_description || "Untitled Video"}
-                              </a>
-                              <p className="text-xs text-muted-foreground">
-                                @{video.video_author_username || profile?.username || "Unknown"}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              {/* Source badge */}
-                              <Badge 
-                                variant="outline" 
-                                className={cn(
-                                  "text-[10px] px-1.5 py-0",
-                                  video.source === "submitted" 
-                                    ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
-                                    : "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                                )}
-                              >
-                                {video.source === "submitted" ? "Submitted" : "Tracked"}
-                              </Badge>
-                              {/* Status badge */}
-                              <Badge 
-                                variant="outline" 
-                                className={cn(
-                                  "text-[10px] px-1.5 py-0",
-                                  video.status === "approved" && "bg-green-500/10 text-green-500 border-green-500/20",
-                                  video.status === "pending" && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-                                  video.status === "rejected" && "bg-red-500/10 text-red-500 border-red-500/20",
-                                  video.status === "tracked" && "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                                )}
-                              >
-                                {video.status}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Stats row */}
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                            <span className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {formatNumber(video.views)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Heart className="h-3 w-3" />
-                              {formatNumber(video.likes)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="h-3 w-3" />
-                              {formatNumber(video.comments)}
-                            </span>
-                            <span className="text-green-500 font-medium ml-auto">
-                              ${getPayoutForSubmission(video).toFixed(2)}
-                            </span>
-                          </div>
-
-                          {/* Actions - only for submitted videos */}
-                          {video.source === "submitted" && video.status === "pending" && (
-                            <div className="flex items-center gap-2">
-                              <Button 
-                                size="sm" 
-                                className="h-7 px-3 text-xs gap-1.5 bg-green-500 hover:bg-green-600 text-white"
-                                onClick={() => handleApprove(video)}
-                                disabled={processing}
-                              >
-                                <Check className="h-3 w-3" />
-                                Approve
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                className="h-7 px-3 text-xs gap-1.5 border-red-500/30 text-red-500 hover:bg-red-500/10"
-                                onClick={() => {
-                                  setSelectedSubmission(video);
-                                  setRejectDialogOpen(true);
-                                }}
-                                disabled={processing}
-                              >
-                                <X className="h-3 w-3" />
-                                Reject
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleFlag(video)}
-                                disabled={processing}
-                              >
-                                <img src={flagIcon} alt="Flag" className={cn("h-3.5 w-3.5", video.is_flagged && "opacity-50")} />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => handleRefreshMetadata(video)}
-                                disabled={processing}
-                              >
-                                <RefreshCw className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          )}
-
-                          {video.source === "submitted" && video.status === "approved" && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="h-7 px-3 text-xs gap-1.5 text-muted-foreground"
-                              onClick={() => handleRevertApproval(video)}
-                              disabled={processing}
+                        {/* Content Section */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                          {/* Header */}
+                          <div>
+                            {/* Title & Username */}
+                            <a 
+                              href={video.video_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:text-primary transition-colors leading-tight"
                             >
-                              <RotateCcw className="h-3 w-3" />
-                              Revert to Pending
-                            </Button>
-                          )}
+                              {video.video_title || video.video_description || "Untitled Video"}
+                            </a>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-muted-foreground">
+                                @{video.video_author_username || profile?.username || "Unknown"}
+                              </span>
+                              <span className="text-muted-foreground/40">•</span>
+                              <span className="text-[11px] text-muted-foreground/70">
+                                {uploadDate ? formatDistanceToNow(new Date(uploadDate), { addSuffix: true }) : "Unknown"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Stats Row */}
+                          <div className="flex items-center gap-3 mt-2">
+                            <div className="flex items-center gap-2.5 text-muted-foreground">
+                              <span className="flex items-center gap-1 text-xs">
+                                <Heart className="h-3 w-3" />
+                                {formatNumber(video.likes)}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs">
+                                <MessageCircle className="h-3 w-3" />
+                                {formatNumber(video.comments)}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs">
+                                <Share2 className="h-3 w-3" />
+                                {formatNumber(video.shares)}
+                              </span>
+                            </div>
+                            <div className="ml-auto flex items-center gap-1.5">
+                              {/* Earnings */}
+                              <span className="text-sm font-semibold text-green-500">
+                                ${getPayoutForSubmission(video).toFixed(2)}
+                              </span>
+                              {/* Source indicator */}
+                              <div className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                video.source === "submitted" ? "bg-blue-500" : "bg-purple-500"
+                              )} title={video.source === "submitted" ? "Submitted" : "Tracked"} />
+                            </div>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Action Bar - Only for submitted videos needing action */}
+                      {video.source === "submitted" && video.status === "pending" && (
+                        <div className="flex items-center gap-2 px-3 pb-3 pt-1">
+                          <Button 
+                            size="sm" 
+                            className="h-8 flex-1 text-xs gap-1.5 bg-green-500/90 hover:bg-green-500 text-white rounded-lg"
+                            onClick={() => handleApprove(video)}
+                            disabled={processing}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-8 flex-1 text-xs gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg"
+                            onClick={() => {
+                              setSelectedSubmission(video);
+                              setRejectDialogOpen(true);
+                            }}
+                            disabled={processing}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            Reject
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => handleFlag(video)}
+                            disabled={processing}
+                          >
+                            <img src={flagIcon} alt="Flag" className={cn("h-4 w-4", video.is_flagged && "opacity-50")} />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => handleRefreshMetadata(video)}
+                            disabled={processing}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {video.source === "submitted" && video.status === "approved" && (
+                        <div className="px-3 pb-3 pt-1">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-7 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-lg"
+                            onClick={() => handleRevertApproval(video)}
+                            disabled={processing}
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Revert to Pending
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Status indicator line at top */}
+                      <div className={cn(
+                        "absolute top-0 left-0 right-0 h-0.5",
+                        video.status === "approved" && "bg-green-500",
+                        video.status === "pending" && "bg-yellow-500",
+                        video.status === "rejected" && "bg-red-500",
+                        video.status === "tracked" && "bg-purple-500"
+                      )} />
                     </div>
                   );
                 });
