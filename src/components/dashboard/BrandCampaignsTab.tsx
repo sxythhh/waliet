@@ -40,6 +40,8 @@ interface CampaignMember {
   id: string;
   avatar_url?: string | null;
   display_name?: string;
+  full_name?: string | null;
+  username?: string | null;
 }
 
 interface BountyCampaign {
@@ -153,7 +155,7 @@ export function BrandCampaignsTab({
       if (campaignIds.length > 0) {
         const { data: campaignSubmissions } = await supabase
           .from("campaign_submissions")
-          .select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, display_name)")
+          .select("campaign_id, creator_id, profiles:creator_id(id, avatar_url, full_name, username)")
           .in("campaign_id", campaignIds)
           .eq("status", "approved");
         
@@ -167,7 +169,7 @@ export function BrandCampaignsTab({
             membersByCampaign[sub.campaign_id].push({
               id: sub.profiles.id,
               avatar_url: sub.profiles.avatar_url,
-              display_name: sub.profiles.display_name,
+              display_name: sub.profiles.full_name || sub.profiles.username || '',
             });
           }
         });
@@ -178,7 +180,7 @@ export function BrandCampaignsTab({
       if (bountyIds.length > 0) {
         const { data: bountyApps } = await supabase
           .from("bounty_applications")
-          .select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, display_name)")
+          .select("bounty_campaign_id, user_id, profiles:user_id(id, avatar_url, full_name, username)")
           .in("bounty_campaign_id", bountyIds)
           .eq("status", "approved");
         
@@ -192,7 +194,7 @@ export function BrandCampaignsTab({
             membersByBounty[app.bounty_campaign_id].push({
               id: app.profiles.id,
               avatar_url: app.profiles.avatar_url,
-              display_name: app.profiles.display_name,
+              display_name: app.profiles.full_name || app.profiles.username || '',
             });
           }
         });
