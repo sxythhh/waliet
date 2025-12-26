@@ -11,6 +11,7 @@ import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
+import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import schoolIcon from "@/assets/school-icon-grey.svg";
@@ -76,6 +77,8 @@ export function BrandCampaignsTab({
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
+  const [allocateBudgetOpen, setAllocateBudgetOpen] = useState(false);
+  const [selectedCampaignForFunding, setSelectedCampaignForFunding] = useState<{ id: string; type: 'campaign' | 'boost' } | null>(null);
   const {
     isAdmin,
     loading: adminLoading
@@ -437,6 +440,10 @@ export function BrandCampaignsTab({
                         status={campaign.status}
                         allowedPlatforms={campaign.allowed_platforms}
                         onClick={() => handleCampaignClick(campaign)}
+                        onTopUp={() => {
+                          setSelectedCampaignForFunding({ id: campaign.id, type: 'campaign' });
+                          setAllocateBudgetOpen(true);
+                        }}
                       />
                     );
                   } else {
@@ -457,6 +464,10 @@ export function BrandCampaignsTab({
                         status={bounty.status}
                         endDate={bounty.end_date}
                         onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)}
+                        onTopUp={() => {
+                          setSelectedCampaignForFunding({ id: bounty.id, type: 'boost' });
+                          setAllocateBudgetOpen(true);
+                        }}
                       />
                     );
                   }
@@ -509,5 +520,17 @@ export function BrandCampaignsTab({
 
       {/* Subscription Gate Dialog */}
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
+
+      {/* Allocate Budget Dialog */}
+      <AllocateBudgetDialog
+        open={allocateBudgetOpen}
+        onOpenChange={(open) => {
+          setAllocateBudgetOpen(open);
+          if (!open) setSelectedCampaignForFunding(null);
+        }}
+        brandId={brandId}
+        availableBalance={0}
+        onSuccess={fetchBrandData}
+      />
     </div>;
 }
