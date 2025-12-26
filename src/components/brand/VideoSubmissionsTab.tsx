@@ -1008,7 +1008,7 @@ export function VideoSubmissionsTab({
                               {creator.profile.full_name || creator.profile.username}
                             </p>
                             {pendingCount > 0 && (
-                              <span className="text-xs text-amber-500 font-medium whitespace-nowrap">
+                              <span className="text-[10px] text-amber-500 font-medium whitespace-nowrap">
                                 {pendingCount} Pending
                               </span>
                             )}
