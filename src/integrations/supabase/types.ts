@@ -315,6 +315,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean | null
+          min_views: number | null
           updated_at: string
           view_threshold: number
         }
@@ -326,6 +327,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          min_views?: number | null
           updated_at?: string
           view_threshold: number
         }
@@ -337,6 +339,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          min_views?: number | null
           updated_at?: string
           view_threshold?: number
         }

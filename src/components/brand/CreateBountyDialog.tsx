@@ -267,7 +267,8 @@ export function CreateBountyDialog({
           view_threshold: tier.view_threshold,
           bonus_amount: tier.bonus_amount,
           bonus_type: tier.bonus_type,
-          cpm_rate: tier.cpm_rate || null
+          cpm_rate: tier.cpm_rate || null,
+          min_views: tier.min_views || null
         }));
         
         await supabase.from('boost_view_bonuses').insert(tiersToInsert);
