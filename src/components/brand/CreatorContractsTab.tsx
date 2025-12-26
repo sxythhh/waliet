@@ -254,10 +254,9 @@ export function CreatorContractsTab({
       </div>;
   }
   return <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border">
-        <div className="flex-col gap-3 flex items-start justify-end md:flex md:flex-row">
-          
+      {/* Contracts List */}
+      <ScrollArea className="flex-1 p-4 md:p-6">
+        <div className="flex flex-col gap-3 items-start justify-end md:flex-row mb-4">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-[180px] bg-muted/30 h-8">
               <SelectValue placeholder="All statuses" />
@@ -275,10 +274,6 @@ export function CreatorContractsTab({
             Create Contract
           </Button>
         </div>
-      </div>
-
-      {/* Contracts List */}
-      <ScrollArea className="flex-1 p-4 md:p-6">
         <div className="space-y-3">
           {filteredContracts.length === 0 ? <Card className="p-12 text-center">
               
