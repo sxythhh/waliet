@@ -1060,16 +1060,21 @@ export type Database = {
           description: string | null
           id: string
           likes: number | null
+          matched_at: string | null
           platform: string
           shares: number | null
           shortimize_video_id: string
+          social_account_id: string | null
           thumbnail_url: string | null
           title: string | null
           updated_at: string
           uploaded_at: string | null
+          user_id: string | null
           username: string
           video_url: string | null
           views: number | null
+          week_start_date: string | null
+          week_start_views: number | null
         }
         Insert: {
           bookmarks?: number | null
@@ -1082,16 +1087,21 @@ export type Database = {
           description?: string | null
           id?: string
           likes?: number | null
+          matched_at?: string | null
           platform: string
           shares?: number | null
           shortimize_video_id: string
+          social_account_id?: string | null
           thumbnail_url?: string | null
           title?: string | null
           updated_at?: string
           uploaded_at?: string | null
+          user_id?: string | null
           username: string
           video_url?: string | null
           views?: number | null
+          week_start_date?: string | null
+          week_start_views?: number | null
         }
         Update: {
           bookmarks?: number | null
@@ -1104,16 +1114,21 @@ export type Database = {
           description?: string | null
           id?: string
           likes?: number | null
+          matched_at?: string | null
           platform?: string
           shares?: number | null
           shortimize_video_id?: string
+          social_account_id?: string | null
           thumbnail_url?: string | null
           title?: string | null
           updated_at?: string
           uploaded_at?: string | null
+          user_id?: string | null
           username?: string
           video_url?: string | null
           views?: number | null
+          week_start_date?: string | null
+          week_start_views?: number | null
         }
         Relationships: [
           {
@@ -1135,6 +1150,27 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cached_campaign_videos_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cached_campaign_videos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cached_campaign_videos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
