@@ -877,12 +877,7 @@ export function CreatorsTab({
               <span className="font-inter tracking-[-0.5px] font-medium text-sm flex-1 hover:underline cursor-pointer" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
                 {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
               </span>
-              <div className="flex items-center gap-2">
-                
-                <Button variant="ghost" size="icon" className="h-8 w-8 hidden lg:flex hover:bg-muted/50" onClick={() => setCreatorsCollapsed(!creatorsCollapsed)}>
-                  {creatorsCollapsed ? <PanelRightOpen className="h-4 w-4" /> : <PanelRightClose className="h-4 w-4" />}
-                </Button>
-              </div>
+              
             </div>
 
             {/* Messages */}
