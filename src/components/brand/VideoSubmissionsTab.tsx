@@ -994,23 +994,28 @@ export function VideoSubmissionsTab({
               return filteredCreators.map(creator => {
                 const isSelected = selectedCreator === creator.userId;
                 const pendingCount = creator.submissions.filter(s => s.status === "pending").length;
-                return <button key={creator.userId} onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} className="w-full rounded-xl py-2 px-3 text-center transition-all bg-card/30 hover:bg-card/50 border border-border/30">
-                      <div className="flex items-center justify-center gap-3">
+                return <button key={creator.userId} onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} className="w-full rounded-xl py-2 px-3 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30 font-inter tracking-[-0.5px]">
+                      <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-border/40">
                           <AvatarImage src={creator.profile.avatar_url || undefined} />
                           <AvatarFallback className="text-xs bg-muted/40">
                             {creator.profile.username?.[0]?.toUpperCase() || "?"}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <p className="font-medium text-sm truncate">
-                            {creator.profile.full_name || creator.profile.username}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm truncate">
+                              {creator.profile.full_name || creator.profile.username}
+                            </p>
+                            {pendingCount > 0 && (
+                              <span className="text-xs text-amber-500 font-medium whitespace-nowrap">
+                                {pendingCount} Pending
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            @{creator.profile.username}
                           </p>
-                          {pendingCount > 0 && (
-                            <span className="text-xs text-amber-500 font-medium whitespace-nowrap">
-                              {pendingCount} Pending
-                            </span>
-                          )}
                         </div>
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
