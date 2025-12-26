@@ -2,10 +2,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { Progress } from "@/components/ui/progress";
-import { Eye, Video, ChevronRight, Archive, Pencil, Play, DollarSign } from "lucide-react";
+import { ChevronRight, Play, DollarSign } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
+
+interface CampaignMember {
+  id: string;
+  avatar_url?: string | null;
+  display_name?: string;
+}
 
 interface CampaignRowCardProps {
   id: string;
@@ -24,6 +30,7 @@ interface CampaignRowCardProps {
   totalViews?: number;
   totalVideos?: number;
   pendingReviewCount?: number;
+  members?: CampaignMember[];
   onClick: () => void;
   onEdit?: () => void;
   onArchive?: () => void;
@@ -47,6 +54,7 @@ export function CampaignRowCard({
   totalViews = 0,
   totalVideos = 0,
   pendingReviewCount = 0,
+  members = [],
   onClick,
   onEdit,
   onArchive,
@@ -66,12 +74,6 @@ export function CampaignRowCard({
   
   const daysLeft = getDaysLeft();
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}m`;
-    if (num >= 1000) return `${(num / 1000).toFixed(1)}k`;
-    return num.toString();
-  };
-
   const formatCurrency = (num: number) => {
     if (num >= 1000) return `$${(num / 1000).toFixed(1)}k`;
     return `$${num.toFixed(0)}`;
@@ -90,12 +92,15 @@ export function CampaignRowCard({
     }
   };
 
+  const visibleMembers = members.slice(0, 3);
+  const remainingCount = members.length - 3;
+
   return (
     <Card 
-      className="group bg-card hover:bg-accent/30 transition-all duration-200 overflow-hidden cursor-pointer border-border/50"
+      className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-[#0e0e0e]"
       onClick={onClick}
     >
-      <div className="flex flex-col sm:flex-row">
+      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px]">
         {/* Banner Image */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
           {bannerUrl ? (
@@ -196,18 +201,41 @@ export function CampaignRowCard({
             </div>
           </div>
 
-          {/* Stats & Actions */}
+          {/* Members & Actions */}
           <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Eye className="w-3.5 h-3.5" />
-                <span>{formatNumber(totalViews)}</span>
+            {/* Members Avatars */}
+            <div className="flex items-center">
+              <div className="flex -space-x-2">
+                {visibleMembers.length > 0 ? (
+                  visibleMembers.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
+                      style={{ zIndex: 3 - index }}
+                    >
+                      {member.avatar_url ? (
+                        <img src={member.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-muted" />
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  // Show empty placeholder circles when no members
+                  [0, 1, 2].map((index) => (
+                    <div
+                      key={index}
+                      className="w-7 h-7 rounded-full border-2 border-card bg-muted"
+                      style={{ zIndex: 3 - index }}
+                    />
+                  ))
+                )}
               </div>
-              <div className="flex items-center gap-1">
-                <Video className="w-3.5 h-3.5" />
-                <span>{totalVideos}</span>
-              </div>
+              {remainingCount > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  +{remainingCount} more
+                </span>
+              )}
             </div>
 
             {/* Review Badge */}
@@ -224,47 +252,21 @@ export function CampaignRowCard({
               </button>
             )}
 
-            {/* Action Buttons - Hidden on mobile, visible on hover */}
+            {/* Action Buttons - Show on hover */}
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {onArchive && (
+              {/* Resume button - only for ended campaigns */}
+              {status === 'ended' && (
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-7 px-2.5 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onArchive();
-                  }}
-                >
-                  <Archive className="w-3 h-3 mr-1" />
-                  Archive
-                </Button>
-              )}
-              {onEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2.5 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}
-                >
-                  <Pencil className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-              )}
-              {status === 'active' && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 px-2.5 text-xs"
+                  className="h-7 px-2.5 text-xs border-[#1a1a1a] bg-[#0a0a0a] hover:bg-[#151515]"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Play className="w-3 h-3 mr-1" />
                   Resume
                 </Button>
               )}
+              {/* Fund Campaign button - appears on hover */}
               {onTopUp && (
                 <Button
                   size="sm"
@@ -275,7 +277,7 @@ export function CampaignRowCard({
                   }}
                 >
                   <DollarSign className="w-3 h-3 mr-1" />
-                  Top up
+                  Fund Campaign
                 </Button>
               )}
             </div>
