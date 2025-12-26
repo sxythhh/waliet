@@ -145,4 +145,4 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.migrate-legacy-payouts]
-verify_jwt = true
+verify_jwt = false
