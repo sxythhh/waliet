@@ -1194,7 +1194,7 @@ export function VideoSubmissionsTab({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2 min-w-max overflow-x-auto">
+            <div className="p-3 space-y-2 max-w-2xl">
               {(() => {
                 // Get filtered videos
                 let filteredVids = selectedCreator 
