@@ -24,18 +24,15 @@ import { CreatorContractsTab } from "@/components/brand/CreatorContractsTab";
 import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
-
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
-
 type BrandSummary = {
   id: string;
   name: string;
   slug: string;
   subscription_status: string | null;
 };
-
 export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,22 +40,24 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showOnboardingCard, setShowOnboardingCard] = useState(false);
   const [showCreateBrandDialog, setShowCreateBrandDialog] = useState(false);
-  const { markOnboardingComplete } = useOnboardingStatus();
+  const {
+    markOnboardingComplete
+  } = useOnboardingStatus();
   const [userId, setUserId] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<BrandSummary | null>(null);
   const navigate = useNavigate();
-
   const currentTab = searchParams.get("tab") || "campaigns";
   const workspace = searchParams.get("workspace") || "creator";
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBoostId = searchParams.get("boost");
   const selectedBlueprintId = searchParams.get("blueprint");
   const currentSubtab = searchParams.get("subtab") || "messages";
-
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
-
-  const { session, loading: authLoading } = useAuth();
+  const {
+    session,
+    loading: authLoading
+  } = useAuth();
   const [oauthCompleting, setOauthCompleting] = useState(false);
 
   // If we land on /dashboard with implicit tokens in the hash (some OAuth setups),
@@ -67,15 +66,18 @@ export default function Dashboard() {
     const run = async () => {
       const hash = window.location.hash || "";
       if (!hash.includes("access_token=") || !hash.includes("refresh_token=")) return;
-
       try {
         setOauthCompleting(true);
         const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
         const access_token = hashParams.get("access_token");
         const refresh_token = hashParams.get("refresh_token");
-
         if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          const {
+            error
+          } = await supabase.auth.setSession({
+            access_token,
+            refresh_token
+          });
           if (error) throw error;
         }
 
@@ -87,20 +89,19 @@ export default function Dashboard() {
         setOauthCompleting(false);
       }
     };
-
     run();
   }, []);
-
   useEffect(() => {
     // Restore last workspace from localStorage if no workspace is set in URL
     const urlWorkspace = searchParams.get("workspace");
     const lastWorkspace = localStorage.getItem("lastWorkspace");
-
     if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("workspace", lastWorkspace);
       newParams.set("tab", searchParams.get("tab") || "campaigns");
-      setSearchParams(newParams, { replace: true });
+      setSearchParams(newParams, {
+        replace: true
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -108,21 +109,17 @@ export default function Dashboard() {
   // Auth gate + initial data load (wait for auth to finish initializing after OAuth redirect)
   useEffect(() => {
     if (authLoading || oauthCompleting) return;
-
     if (!session) {
-      navigate("/auth", { replace: true });
+      navigate("/auth", {
+        replace: true
+      });
       return;
     }
-
     setUserId(session.user.id);
-
     const loadProfile = async () => {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
+      const {
+        data: profileData
+      } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       setProfile(profileData);
 
       // Check if user selected brand during onboarding
@@ -138,7 +135,6 @@ export default function Dashboard() {
         setShowOnboardingCard(true);
       }
     };
-
     loadProfile();
   }, [authLoading, oauthCompleting, session, navigate, searchParams]);
 
@@ -155,15 +151,14 @@ export default function Dashboard() {
   useEffect(() => {
     const onboardingStatus = searchParams.get("onboarding");
     const status = searchParams.get("status");
-
     if (onboardingStatus === "complete" && (status === "submitted" || status === "success") && currentBrand) {
       const updateOnboardingStatus = async () => {
         try {
-          const { error } = await supabase
-            .from("brands")
-            .update({ whop_onboarding_complete: true })
-            .eq("id", currentBrand.id);
-
+          const {
+            error
+          } = await supabase.from("brands").update({
+            whop_onboarding_complete: true
+          }).eq("id", currentBrand.id);
           if (!error) {
             toast.success("Verification completed successfully!");
           }
@@ -172,28 +167,24 @@ export default function Dashboard() {
           const newParams = new URLSearchParams(searchParams);
           newParams.delete("onboarding");
           newParams.delete("status");
-          setSearchParams(newParams, { replace: true });
+          setSearchParams(newParams, {
+            replace: true
+          });
         } catch (error) {
           console.error("Error updating onboarding status:", error);
         }
       };
-
       updateOnboardingStatus();
     }
   }, [searchParams, currentBrand, setSearchParams]);
-
   const fetchBrandBySlug = async (slug: string) => {
-    const { data } = await supabase
-      .from("brands")
-      .select("id, name, slug, subscription_status")
-      .eq("slug", slug)
-      .single();
-
+    const {
+      data
+    } = await supabase.from("brands").select("id, name, slug, subscription_status").eq("slug", slug).single();
     if (data) {
       setCurrentBrand(data);
     }
   };
-
   const renderContent = () => {
     // Brand mode - show loading state while fetching brand data
     if (isBrandMode && !currentBrand) {
@@ -202,7 +193,6 @@ export default function Dashboard() {
 
     // Brand mode
     if (isBrandMode && currentBrand) {
-
       // Brand mode with selected campaign - show detail view
       if (selectedCampaignId) {
         return <BrandCampaignDetailView campaignId={selectedCampaignId} />;
@@ -245,7 +235,7 @@ export default function Dashboard() {
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
         case "profile":
-          return <UserSettingsTab />;
+          return <UserSettingsTab className="px-0" />;
         default:
           return <BrandCampaignsTab brandId={currentBrand.id} brandName={currentBrand.name} />;
       }
@@ -287,11 +277,7 @@ export default function Dashboard() {
       {userId && <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} userId={userId} />}
 
       {/* Brand Creation Dialog - triggered when user selected Brand during onboarding */}
-      <CreateBrandDialog 
-        open={showCreateBrandDialog} 
-        onOpenChange={setShowCreateBrandDialog} 
-        hideTrigger 
-      />
+      <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger />
 
       {/* Creator Chat Widget - only show in creator mode */}
       {isCreatorMode && <CreatorChatWidget />}
