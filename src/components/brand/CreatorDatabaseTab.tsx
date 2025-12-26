@@ -153,12 +153,11 @@ const getMinFollowers = (range: string): number => {
       return 0;
   }
 };
-const getSourceLabel = (sourceType: string): string => {
+const getSourceLabel = (sourceType: string, hasCampaigns: boolean = false): string => {
   switch (sourceType) {
     case 'campaign_application':
-      return 'Applied';
     case 'boost_application':
-      return 'Applied';
+      return hasCampaigns ? 'Member' : 'Application';
     case 'video_submission':
       return 'Submitted';
     case 'manual_add':
@@ -1284,8 +1283,8 @@ export function CreatorDatabaseTab({
                       return <TableCell key={colId} className="py-3">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-md ${getSourceColor(creator.source_type)}`}>
-                                        {getSourceLabel(creator.source_type)}
+                                      <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded ${getSourceColor(creator.source_type)}`}>
+                                        {getSourceLabel(creator.source_type, creator.campaigns.length > 0)}
                                       </span>
                                     </TooltipTrigger>
                                     {creator.source_campaign_title && <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
@@ -1456,8 +1455,8 @@ export function CreatorDatabaseTab({
                 <div>
                   <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Source</p>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded-full ${getSourceColor(selectedCreatorPanel.source_type)}`}>
-                      {getSourceLabel(selectedCreatorPanel.source_type)}
+                    <span className={`text-[10px] font-inter tracking-[-0.5px] px-2 py-0.5 rounded ${getSourceColor(selectedCreatorPanel.source_type)}`}>
+                      {getSourceLabel(selectedCreatorPanel.source_type, selectedCreatorPanel.campaigns.length > 0)}
                     </span>
                     {selectedCreatorPanel.source_campaign_title && <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                         {selectedCreatorPanel.source_campaign_title}
