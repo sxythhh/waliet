@@ -78,9 +78,9 @@ export function SubmissionHeatmap({
       const day = submissionMap.get(dateKey)!;
       day.total++;
       
-      // Use source field for tracked determination (from video_submissions.source)
+      // Tracked videos count as pending
       if (sub.source === "tracked") {
-        day.tracked++;
+        day.pending++;
       } else if (sub.status === "approved") {
         day.approved++;
       } else if (sub.status === "pending") {
@@ -146,16 +146,14 @@ export function SubmissionHeatmap({
     if (isToday) {
       if (day.total === 0) return "bg-primary/20 ring-1 ring-primary/40";
       if (day.approved > 0) return "bg-emerald-500/80 ring-1 ring-emerald-400";
-      if (day.tracked > 0) return "bg-purple-500/80 ring-1 ring-purple-400";
       if (day.pending > 0) return "bg-amber-500/70 ring-1 ring-amber-400";
       return "bg-primary/20 ring-1 ring-primary/40";
     }
     
     if (day.total === 0) return "bg-muted/30";
     
-    // Priority: approved > tracked > pending > rejected
+    // Priority: approved > pending > rejected
     if (day.approved > 0) return "bg-emerald-500/70";
-    if (day.tracked > 0) return "bg-purple-500/60";
     if (day.pending > 0) return "bg-amber-500/60";
     if (day.rejected > 0) return "bg-red-500/50";
     
@@ -168,7 +166,6 @@ export function SubmissionHeatmap({
     
     const hasMultipleTypes = 
       (day.approved > 0 ? 1 : 0) + 
-      (day.tracked > 0 ? 1 : 0) + 
       (day.pending > 0 ? 1 : 0) > 1;
     
     if (!hasMultipleTypes) return undefined;
@@ -176,16 +173,11 @@ export function SubmissionHeatmap({
     // Create a gradient for mixed days
     const colors: string[] = [];
     if (day.approved > 0) colors.push("rgb(16, 185, 129)");
-    if (day.tracked > 0) colors.push("rgb(168, 85, 247)");
     if (day.pending > 0) colors.push("rgb(245, 158, 11)");
     
     if (colors.length === 2) {
       return {
         background: `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`
-      };
-    } else if (colors.length === 3) {
-      return {
-        background: `linear-gradient(135deg, ${colors[0]} 33%, ${colors[1]} 33% 66%, ${colors[2]} 66%)`
       };
     }
     
@@ -338,10 +330,6 @@ export function SubmissionHeatmap({
           <div className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-sm bg-emerald-500/70" />
             <span>Approved</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-sm bg-purple-500/60" />
-            <span>Tracked</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-sm bg-amber-500/60" />
