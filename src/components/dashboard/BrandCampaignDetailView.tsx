@@ -4,13 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock, Link2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock, Link2, FileVideo, Upload } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
 import { BoostHomeTab } from "@/components/brand/BoostHomeTab";
 import { CampaignApplicationsView } from "@/components/brand/CampaignApplicationsView";
 import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
+import { CampaignVideosPanel } from "@/components/brand/CampaignVideosPanel";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
 import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
@@ -453,10 +455,112 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign ? <VideoSubmissionsTab campaign={campaign} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : null}
+          {activeDetailTab === "home" ? (
+            isAllMode && brandId ? (
+              <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} />
+            ) : isBoost && boost ? (
+              <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} />
+            ) : campaign?.brand_id ? (
+              <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} />
+            ) : null
+          ) : activeDetailTab === "applications" ? (
+            isAllMode && brandId ? (
+              <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : isBoost ? (
+              <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            ) : (
+              <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} />
+            )
+          ) : activeDetailTab === "videos" ? (
+            isBoost && boost ? (
+              <VideoSubmissionsTab 
+                boostId={boostId} 
+                monthlyRetainer={boost.monthly_retainer} 
+                videosPerMonth={boost.videos_per_month} 
+                onSubmissionReviewed={fetchPendingApplicationsCount} 
+              />
+            ) : campaign && campaign.brand_id ? (
+              <CampaignVideosContent 
+                campaign={campaign}
+                onSubmissionReviewed={fetchPendingApplicationsCount}
+              />
+            ) : null
+          ) : activeDetailTab === "creators" ? (
+            <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
+          ) : activeDetailTab === "payouts" ? (
+            isBoost && boostId ? (
+              <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div>
+            ) : campaignId ? (
+              <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
+            ) : null
+          ) : activeDetailTab === "links" ? (
+            entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null
+          ) : null}
         </div>
       </div>
     </div>;
+}
+
+// Campaign Videos Content - shows both submissions and tracked videos
+function CampaignVideosContent({
+  campaign,
+  onSubmissionReviewed
+}: {
+  campaign: Campaign;
+  onSubmissionReviewed?: () => void;
+}) {
+  const [activeVideosTab, setActiveVideosTab] = useState<"submissions" | "tracked">("submissions");
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Sub-tabs for videos */}
+      <div className="flex-shrink-0 border-b border-border bg-background px-4">
+        <div className="flex gap-4">
+          <button
+            onClick={() => setActiveVideosTab("submissions")}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
+              activeVideosTab === "submissions" 
+                ? "border-primary text-foreground" 
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Submissions
+          </button>
+          <button
+            onClick={() => setActiveVideosTab("tracked")}
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${
+              activeVideosTab === "tracked" 
+                ? "border-primary text-foreground" 
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileVideo className="h-3.5 w-3.5" />
+            Tracked Videos
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-auto">
+        {activeVideosTab === "submissions" ? (
+          <VideoSubmissionsTab 
+            campaign={campaign} 
+            onSubmissionReviewed={onSubmissionReviewed} 
+          />
+        ) : campaign.brand_id ? (
+          <div className="p-4">
+            <CampaignVideosPanel
+              campaignId={campaign.id}
+              brandId={campaign.brand_id}
+              rpmRate={campaign.rpm_rate}
+              hashtags={campaign.hashtags || []}
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 // All Programs Home Content - shows aggregated analytics
