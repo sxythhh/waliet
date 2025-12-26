@@ -996,7 +996,7 @@ export function CreatorDatabaseTab({
   if (loading) {
     return <div className="h-full flex flex-col">
         {/* Header Skeleton */}
-        <div className="p-4 md:p-6">
+        <div className="p-4 md:p-6 py-[8px] px-[8px]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Skeleton className="h-9 w-32" />
