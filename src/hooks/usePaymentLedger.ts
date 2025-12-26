@@ -23,12 +23,45 @@ export interface PaymentLedgerEntry {
   updated_at: string;
 }
 
+export interface VideoLedgerEntry {
+  videoSubmissionId: string | null;
+  boostSubmissionId: string | null;
+  status: 'accruing' | 'locked' | 'clearing' | 'paid' | 'clawed_back';
+  accrued: number;
+  paid: number;
+  pending: number;
+  clearingEndsAt?: string;
+  payoutRequestId?: string;
+  createdAt: string;
+}
+
+export interface ClearingRequest {
+  id: string;
+  amount: number;
+  clearingEndsAt: string;
+  daysRemaining: number;
+  canBeFlagged: boolean;
+  itemCount: number;
+}
+
 export interface PaymentLedgerSummary {
   totalAccrued: number;
   totalPaid: number;
   totalPending: number;
   totalLocked: number;
   totalClearing: number;
+  // Video-level breakdown
+  entriesByVideo: Record<string, VideoLedgerEntry>;
+  // Active clearing requests
+  clearingRequests: ClearingRequest[];
+  // Counts
+  accruingCount: number;
+  clearingCount: number;
+  paidCount: number;
+  // Earliest clearing end date (for countdown)
+  earliestClearingEndsAt?: string;
+  // Can any clearing items still be flagged?
+  hasActiveFlaggableItems: boolean;
   entriesBySource: Record<string, {
     sourceType: 'campaign' | 'boost';
     sourceId: string;
@@ -78,8 +111,18 @@ export function usePaymentLedger(userId?: string) {
         totalPending: 0,
         totalLocked: 0,
         totalClearing: 0,
+        entriesByVideo: {},
+        clearingRequests: [],
+        accruingCount: 0,
+        clearingCount: 0,
+        paidCount: 0,
+        hasActiveFlaggableItems: false,
         entriesBySource: {},
       };
+
+      // Track clearing requests by payout_request_id
+      const clearingRequestMap: Record<string, ClearingRequest> = {};
+      let earliestClearingEnd: Date | null = null;
 
       ledgerEntries.forEach(entry => {
         const accrued = Number(entry.accrued_amount) || 0;
@@ -89,13 +132,76 @@ export function usePaymentLedger(userId?: string) {
         summaryData.totalAccrued += accrued;
         summaryData.totalPaid += paid;
 
+        // Map status for UI
+        let uiStatus: VideoLedgerEntry['status'] = 'accruing';
         if (entry.status === 'pending') {
           summaryData.totalPending += pending;
+          uiStatus = 'accruing';
+          summaryData.accruingCount++;
         } else if (entry.status === 'locked') {
           summaryData.totalLocked += pending;
+          uiStatus = 'locked';
         } else if (entry.status === 'clearing') {
           summaryData.totalClearing += pending;
+          uiStatus = 'clearing';
+          summaryData.clearingCount++;
+          
+          // Track clearing end dates
+          if (entry.clearing_ends_at) {
+            const endDate = new Date(entry.clearing_ends_at);
+            if (!earliestClearingEnd || endDate < earliestClearingEnd) {
+              earliestClearingEnd = endDate;
+            }
+            
+            // Check if can be flagged (first 4 days)
+            if (entry.locked_at) {
+              const lockedDate = new Date(entry.locked_at);
+              const daysSinceLocked = (Date.now() - lockedDate.getTime()) / (1000 * 60 * 60 * 24);
+              if (daysSinceLocked < 4) {
+                summaryData.hasActiveFlaggableItems = true;
+              }
+            }
+            
+            // Group by payout request
+            if (entry.payout_request_id) {
+              if (!clearingRequestMap[entry.payout_request_id]) {
+                const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+                const lockedDate = entry.locked_at ? new Date(entry.locked_at) : new Date();
+                const daysSinceLocked = (Date.now() - lockedDate.getTime()) / (1000 * 60 * 60 * 24);
+                
+                clearingRequestMap[entry.payout_request_id] = {
+                  id: entry.payout_request_id,
+                  amount: 0,
+                  clearingEndsAt: entry.clearing_ends_at,
+                  daysRemaining,
+                  canBeFlagged: daysSinceLocked < 4,
+                  itemCount: 0,
+                };
+              }
+              clearingRequestMap[entry.payout_request_id].amount += pending;
+              clearingRequestMap[entry.payout_request_id].itemCount++;
+            }
+          }
+        } else if (entry.status === 'paid') {
+          uiStatus = 'paid';
+          summaryData.paidCount++;
+        } else if (entry.status === 'clawed_back') {
+          uiStatus = 'clawed_back';
         }
+
+        // Build video entry key
+        const videoKey = entry.video_submission_id || entry.boost_submission_id || entry.id;
+        summaryData.entriesByVideo[videoKey] = {
+          videoSubmissionId: entry.video_submission_id,
+          boostSubmissionId: entry.boost_submission_id,
+          status: uiStatus,
+          accrued,
+          paid,
+          pending,
+          clearingEndsAt: entry.clearing_ends_at || undefined,
+          payoutRequestId: entry.payout_request_id || undefined,
+          createdAt: entry.created_at,
+        };
 
         // Group by source
         const key = `${entry.source_type}:${entry.source_id}`;
@@ -112,6 +218,12 @@ export function usePaymentLedger(userId?: string) {
         summaryData.entriesBySource[key].paid += paid;
         summaryData.entriesBySource[key].pending += pending;
       });
+
+      // Convert clearing requests map to array
+      summaryData.clearingRequests = Object.values(clearingRequestMap);
+      if (earliestClearingEnd) {
+        summaryData.earliestClearingEndsAt = earliestClearingEnd.toISOString();
+      }
 
       setSummary(summaryData);
     } catch (err) {
@@ -146,10 +258,10 @@ export function usePaymentLedger(userId?: string) {
     };
   }, [fetchEntries]);
 
-  const requestPayout = async (sourceType?: string, sourceId?: string) => {
+  const requestPayout = async (sourceType?: string, sourceId?: string, videoSubmissionId?: string, boostSubmissionId?: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('request-payout', {
-        body: { sourceType, sourceId },
+        body: { sourceType, sourceId, videoSubmissionId, boostSubmissionId },
       });
 
       if (error) throw error;
@@ -172,6 +284,21 @@ export function usePaymentLedger(userId?: string) {
       .reduce((sum, e) => sum + Math.max(0, Number(e.accrued_amount) - Number(e.paid_amount)), 0);
   };
 
+  // Get ledger entry for a specific video
+  const getEntryByVideoId = (videoId: string): VideoLedgerEntry | null => {
+    return summary?.entriesByVideo[videoId] || null;
+  };
+
+  // Request payout for a single video
+  const requestPayoutForVideo = async (videoSubmissionId: string) => {
+    return requestPayout(undefined, undefined, videoSubmissionId, undefined);
+  };
+
+  // Request payout for a single boost submission
+  const requestPayoutForBoost = async (boostSubmissionId: string) => {
+    return requestPayout(undefined, undefined, undefined, boostSubmissionId);
+  };
+
   return {
     entries,
     summary,
@@ -180,5 +307,8 @@ export function usePaymentLedger(userId?: string) {
     refetch: fetchEntries,
     requestPayout,
     getPendingBySource,
+    getEntryByVideoId,
+    requestPayoutForVideo,
+    requestPayoutForBoost,
   };
 }
