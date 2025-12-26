@@ -1644,15 +1644,15 @@ export function CreatorDatabaseTab({
           
           <Tabs value={addCreatorsMode} onValueChange={v => setAddCreatorsMode(v as 'search' | 'import' | 'manual')} className="flex-1 flex flex-col">
             {/* Tab Pills */}
-            <div className="px-6">
-              <div className="flex gap-1 p-1 bg-muted/40 rounded-lg w-fit">
-                <button onClick={() => setAddCreatorsMode('search')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'search' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+            <div className="px-6 border-b border-border">
+              <div className="flex gap-6">
+                <button onClick={() => setAddCreatorsMode('search')} className={`px-1 py-3 text-sm font-inter tracking-[-0.5px] transition-all border-b-2 ${addCreatorsMode === 'search' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                   Find
                 </button>
-                <button onClick={() => setAddCreatorsMode('manual')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'manual' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                <button onClick={() => setAddCreatorsMode('manual')} className={`px-1 py-3 text-sm font-inter tracking-[-0.5px] transition-all border-b-2 ${addCreatorsMode === 'manual' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                   Manual
                 </button>
-                <button onClick={() => setAddCreatorsMode('import')} className={`px-4 py-2 text-xs font-medium font-inter rounded-md transition-all ${addCreatorsMode === 'import' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                <button onClick={() => setAddCreatorsMode('import')} className={`px-1 py-3 text-sm font-inter tracking-[-0.5px] transition-all border-b-2 ${addCreatorsMode === 'import' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
                   Import
                 </button>
               </div>
