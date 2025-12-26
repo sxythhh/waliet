@@ -3423,6 +3423,7 @@ export type Database = {
           shares: number | null
           shortimize_video_id: string | null
           social_account_id: string | null
+          source: string | null
           source_id: string
           source_type: string
           status: string | null
@@ -3460,6 +3461,7 @@ export type Database = {
           shares?: number | null
           shortimize_video_id?: string | null
           social_account_id?: string | null
+          source?: string | null
           source_id: string
           source_type: string
           status?: string | null
@@ -3497,6 +3499,7 @@ export type Database = {
           shares?: number | null
           shortimize_video_id?: string | null
           social_account_id?: string | null
+          source?: string | null
           source_id?: string
           source_type?: string
           status?: string | null

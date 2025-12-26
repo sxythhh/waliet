@@ -78,8 +78,8 @@ export function SubmissionHeatmap({
       const day = submissionMap.get(dateKey)!;
       day.total++;
       
-      // Handle source-based counting
-      if (sub.source === "tracked" || sub.status === "tracked") {
+      // Use source field for tracked determination (from video_submissions.source)
+      if (sub.source === "tracked") {
         day.tracked++;
       } else if (sub.status === "approved") {
         day.approved++;
