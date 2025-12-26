@@ -747,9 +747,7 @@ export function CreatorsTab({
           <div className="flex items-center gap-2">
             <h2 className="font-medium text-sm">Messages</h2>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={navigateToDatabase}>
-            <Database className="h-4 w-4" />
-          </Button>
+          
         </div>
 
         {/* Message Filters */}
