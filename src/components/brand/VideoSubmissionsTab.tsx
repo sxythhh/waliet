@@ -1329,7 +1329,7 @@ export function VideoSubmissionsTab({
                       const profile = video.user_id ? profiles[video.user_id] : null;
                       const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
                       const isSelected = selectedVideos.has(video.id);
-                      return <TableRow key={video.id} className={cn("border-border/30 group font-['Inter']", isSelected && "bg-primary/5")}>
+                      return <TableRow key={video.id} className={cn("border-border/30 group font-['Inter'] hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
                               <TableCell className="w-8 p-0 pl-2">
                                 <div 
                                   className={cn(
