@@ -329,12 +329,50 @@ Deno.serve(async (req) => {
                 }
               }
 
-              if (matchedAccount) {
-                matchedCount++;
-                updatedAccounts.add(video.username);
-              } else {
-                unmatchedCount++;
+            if (matchedAccount) {
+              matchedCount++;
+              updatedAccounts.add(video.username);
+
+              // Create/update video_submission for matched videos (source='tracked')
+              // This enables the payment processing pipeline
+              const submissionData = {
+                source_type: "campaign",
+                source_id: campaign.id,
+                brand_id: brand.id,
+                creator_id: matchedAccount.user_id,
+                video_url: video.ad_link,
+                platform: video.platform,
+                shortimize_video_id: video.ad_id,
+                status: "approved", // Auto-approved since verified via collection/hashtags
+                source: "tracked",
+                video_title: video.title || null,
+                video_description: video.caption || video.description || null,
+                video_thumbnail_url: video.thumbnail_url || null,
+                video_author_username: video.username,
+                video_upload_date: video.uploaded_at || null,
+                views: video.latest_views || 0,
+                likes: video.latest_likes || 0,
+                comments: video.latest_comments || 0,
+                shares: video.latest_shares || 0,
+                bookmarks: video.latest_bookmarks || 0,
+                social_account_id: matchedAccount.id,
+                submitted_at: video.uploaded_at || new Date().toISOString(),
+                metrics_updated_at: new Date().toISOString(),
+              };
+
+              const { error: submissionError } = await supabase
+                .from("video_submissions")
+                .upsert(submissionData, {
+                  onConflict: "shortimize_video_id,source_id",
+                  ignoreDuplicates: false,
+                });
+
+              if (submissionError) {
+                console.error(`Error upserting video_submission for ${video.ad_id}:`, submissionError.message);
               }
+            } else {
+              unmatchedCount++;
+            }
             }
 
             totalVideosMatched += matchedCount;

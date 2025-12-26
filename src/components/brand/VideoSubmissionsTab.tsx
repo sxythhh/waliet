@@ -241,7 +241,7 @@ export function VideoSubmissionsTab({
     if (entityId) {
       fetchSubmissions();
       if (!isBoost && brandId) {
-        fetchTrackedVideos();
+        fetchUnmatchedTrackedVideos();
       }
     }
   }, [entityId, brandId]);
@@ -250,7 +250,7 @@ export function VideoSubmissionsTab({
     if (!entityId) return;
     setLoading(true);
     try {
-      // Fetch from unified video_submissions table
+      // Fetch from unified video_submissions table (includes both submitted and tracked videos)
       const { data, error } = await supabase
         .from("video_submissions")
         .select("*")
@@ -260,7 +260,7 @@ export function VideoSubmissionsTab({
 
       if (error) throw error;
 
-      // Map to the expected format
+      // Map to the expected format - now includes both submitted and tracked videos
       const submissionsData: UnifiedVideo[] = (data || []).map(v => ({
         id: v.id,
         user_id: v.creator_id,
@@ -282,7 +282,9 @@ export function VideoSubmissionsTab({
         likes: v.likes,
         comments: v.comments,
         shares: v.shares,
-        source: "submitted" as const
+        // Use the source field from database, default to 'submitted' for legacy records
+        source: (v.source === "tracked" ? "tracked" : "submitted") as "submitted" | "tracked",
+        uploaded_at: v.video_upload_date
       }));
       setSubmissions(submissionsData);
 
@@ -303,6 +305,12 @@ export function VideoSubmissionsTab({
           }
         }
       }
+
+      // Update last synced time from the most recent tracked video
+      const trackedVideos = submissionsData.filter(s => s.source === "tracked");
+      if (trackedVideos.length > 0) {
+        setLastSynced(new Date());
+      }
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load video submissions");
@@ -311,65 +319,47 @@ export function VideoSubmissionsTab({
     }
   };
 
-  const fetchTrackedVideos = async () => {
+  const fetchUnmatchedTrackedVideos = async () => {
+    // Fetch unmatched videos from cached_campaign_videos (for analytics display only)
+    // These are videos without a user_id that couldn't be matched to creators
     if (!entityId || !brandId) return;
     try {
       const { data, error } = await supabase
         .from("cached_campaign_videos")
         .select("*")
         .eq("campaign_id", entityId)
+        .is("user_id", null) // Only unmatched videos
         .order("uploaded_at", { ascending: false });
 
       if (error) throw error;
 
-      const now = new Date();
-      const weekStart = startOfWeek(now, { weekStartsOn: 0 });
-      const weekEnd = endOfWeek(now, { weekStartsOn: 0 });
-
-      // Map tracked videos to unified format
-      const tracked: UnifiedVideo[] = (data || []).map(v => {
-        // Calculate weekly views
-        let weeklyViews = 0;
-        if (v.uploaded_at) {
-          const uploadDate = parseISO(v.uploaded_at);
-          if (isWithinInterval(uploadDate, { start: weekStart, end: weekEnd })) {
-            weeklyViews = v.views || 0;
-          }
-        }
-        if (v.week_start_date && v.week_start_views !== null) {
-          const currentViews = v.views || 0;
-          weeklyViews = Math.max(weeklyViews, currentViews - (v.week_start_views || 0));
-        }
-
-        const estimatedPayout = (weeklyViews / 1000) * rpmRate;
-
-        return {
-          id: v.id,
-          user_id: v.user_id,
-          video_url: v.video_url || "",
-          platform: v.platform,
-          submission_notes: null,
-          status: "tracked",
-          payout_amount: null,
-          submitted_at: v.uploaded_at || v.cached_at,
-          reviewed_at: null,
-          rejection_reason: null,
-          is_flagged: null,
-          video_description: v.caption || v.description,
-          video_thumbnail_url: v.thumbnail_url,
-          video_author_username: v.username,
-          video_author_avatar: null,
-          video_title: v.title,
-          views: v.views,
-          likes: v.likes,
-          comments: v.comments,
-          shares: v.shares,
-          source: "tracked" as const,
-          estimatedPayout,
-          weeklyViews,
-          uploaded_at: v.uploaded_at
-        };
-      });
+      // Map unmatched tracked videos to unified format (for display purposes only, no payment)
+      const tracked: UnifiedVideo[] = (data || []).map(v => ({
+        id: v.id,
+        user_id: null,
+        video_url: v.video_url || "",
+        platform: v.platform,
+        submission_notes: null,
+        status: "tracked",
+        payout_amount: null,
+        submitted_at: v.uploaded_at || v.cached_at,
+        reviewed_at: null,
+        rejection_reason: null,
+        is_flagged: null,
+        video_description: v.caption || v.description,
+        video_thumbnail_url: v.thumbnail_url,
+        video_author_username: v.username,
+        video_author_avatar: null,
+        video_title: v.title,
+        views: v.views,
+        likes: v.likes,
+        comments: v.comments,
+        shares: v.shares,
+        source: "tracked" as const,
+        estimatedPayout: 0, // No payout for unmatched videos
+        weeklyViews: 0,
+        uploaded_at: v.uploaded_at
+      }));
 
       setTrackedVideos(tracked);
 
@@ -379,26 +369,12 @@ export function VideoSubmissionsTab({
           const vDate = new Date(v.updated_at);
           return vDate > latest ? vDate : latest;
         }, new Date(0));
-        setLastSynced(latestUpdate);
-      }
-
-      // Fetch profiles for tracked video users
-      const trackedUserIds = [...new Set(tracked.filter(t => t.user_id).map(t => t.user_id!))];
-      if (trackedUserIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("id, username, full_name, avatar_url, email")
-          .in("id", trackedUserIds);
-        if (profilesData) {
-          const profileMap: Record<string, Profile> = {};
-          profilesData.forEach(p => {
-            profileMap[p.id] = p;
-          });
-          setProfiles(prev => ({ ...prev, ...profileMap }));
+        if (!lastSynced || latestUpdate > lastSynced) {
+          setLastSynced(latestUpdate);
         }
       }
     } catch (error) {
-      console.error("Error fetching tracked videos:", error);
+      console.error("Error fetching unmatched tracked videos:", error);
     }
   };
 
@@ -413,7 +389,8 @@ export function VideoSubmissionsTab({
       if (error) throw error;
 
       toast.success(`Synced ${data?.totalVideosMatched || 0} matched videos`);
-      await fetchTrackedVideos();
+      // Refetch both submissions (which now includes matched tracked videos) and unmatched videos
+      await Promise.all([fetchSubmissions(), fetchUnmatchedTrackedVideos()]);
     } catch (error) {
       console.error("Error syncing videos:", error);
       toast.error("Failed to sync videos");
@@ -436,6 +413,8 @@ export function VideoSubmissionsTab({
   // Calculate totals
   const totals = useMemo(() => {
     const vids = allVideos;
+    const submittedVideos = submissions.filter(s => s.source === "submitted");
+    const trackedInSubmissions = submissions.filter(s => s.source === "tracked");
     return {
       videos: vids.length,
       views: vids.reduce((sum, v) => sum + (v.views || 0), 0),
@@ -443,8 +422,10 @@ export function VideoSubmissionsTab({
       comments: vids.reduce((sum, v) => sum + (v.comments || 0), 0),
       shares: vids.reduce((sum, v) => sum + (v.shares || 0), 0),
       estimatedPayout: vids.reduce((sum, v) => sum + getPayoutForSubmission(v), 0),
-      submittedCount: submissions.length,
-      trackedCount: trackedVideos.length,
+      submittedCount: submittedVideos.length,
+      trackedCount: trackedInSubmissions.length + trackedVideos.length, // matched + unmatched
+      matchedTrackedCount: trackedInSubmissions.length,
+      unmatchedTrackedCount: trackedVideos.length,
     };
   }, [allVideos, submissions, trackedVideos]);
 
