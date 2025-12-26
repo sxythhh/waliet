@@ -2648,6 +2648,106 @@ export type Database = {
           },
         ]
       }
+      payment_ledger: {
+        Row: {
+          accrued_amount: number
+          boost_submission_id: string | null
+          clawback_reason: string | null
+          clawed_back_at: string | null
+          cleared_at: string | null
+          clearing_ends_at: string | null
+          created_at: string
+          id: string
+          last_calculated_at: string | null
+          last_paid_at: string | null
+          locked_at: string | null
+          milestone_threshold: number | null
+          paid_amount: number
+          payment_type: string
+          payout_request_id: string | null
+          rate: number | null
+          source_id: string
+          source_type: string
+          status: string
+          updated_at: string
+          user_id: string
+          video_submission_id: string | null
+          views_snapshot: number | null
+        }
+        Insert: {
+          accrued_amount?: number
+          boost_submission_id?: string | null
+          clawback_reason?: string | null
+          clawed_back_at?: string | null
+          cleared_at?: string | null
+          clearing_ends_at?: string | null
+          created_at?: string
+          id?: string
+          last_calculated_at?: string | null
+          last_paid_at?: string | null
+          locked_at?: string | null
+          milestone_threshold?: number | null
+          paid_amount?: number
+          payment_type: string
+          payout_request_id?: string | null
+          rate?: number | null
+          source_id: string
+          source_type: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_submission_id?: string | null
+          views_snapshot?: number | null
+        }
+        Update: {
+          accrued_amount?: number
+          boost_submission_id?: string | null
+          clawback_reason?: string | null
+          clawed_back_at?: string | null
+          cleared_at?: string | null
+          clearing_ends_at?: string | null
+          created_at?: string
+          id?: string
+          last_calculated_at?: string | null
+          last_paid_at?: string | null
+          locked_at?: string | null
+          milestone_threshold?: number | null
+          paid_amount?: number
+          payment_type?: string
+          payout_request_id?: string | null
+          rate?: number | null
+          source_id?: string
+          source_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_submission_id?: string | null
+          views_snapshot?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_ledger_boost_submission_id_fkey"
+            columns: ["boost_submission_id"]
+            isOneToOne: false
+            referencedRelation: "boost_video_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_ledger_payout_request_id_fkey"
+            columns: ["payout_request_id"]
+            isOneToOne: false
+            referencedRelation: "submission_payout_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_ledger_video_submission_id_fkey"
+            columns: ["video_submission_id"]
+            isOneToOne: false
+            referencedRelation: "video_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_requests: {
         Row: {
           amount: number
@@ -3829,6 +3929,10 @@ export type Database = {
           refresh_token: string
           token_expires_at: string
         }[]
+      }
+      get_pending_amount: {
+        Args: { ledger: Database["public"]["Tables"]["payment_ledger"]["Row"] }
+        Returns: number
       }
       get_referral_tier: {
         Args: { referral_count: number }
