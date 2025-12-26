@@ -33,6 +33,7 @@ import walletActiveIcon from "@/assets/wallet-active.svg";
 import checkCircleFilledIcon from "@/assets/check-circle-filled.svg";
 import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
+import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 interface WalletData {
   id: string;
   balance: number;
@@ -132,6 +133,9 @@ export function WalletTab() {
   const {
     toast
   } = useToast();
+  
+  // Use payment ledger for unified pending earnings
+  const { summary: ledgerSummary, loading: ledgerLoading } = usePaymentLedger();
   useEffect(() => {
     fetchWallet();
     fetchPendingBoostEarnings();
@@ -1482,13 +1486,17 @@ export function WalletTab() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-                {clearingPayouts > 0 && (
+                {(ledgerSummary?.totalLocked || 0) > 0 && (
                   <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                    ${clearingPayouts.toFixed(2)} Pending
+                    ${(ledgerSummary?.totalLocked || 0).toFixed(2)} Locked
                   </span>
                 )}
               </div>
-              <span className="text-base font-semibold text-amber-500">{isBalanceVisible ? `$${pendingBoostEarnings.toFixed(2)}` : "••••••"}</span>
+              <span className="text-base font-semibold text-amber-500">
+                {isBalanceVisible 
+                  ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` 
+                  : "••••••"}
+              </span>
             </div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-muted-foreground font-medium">In Transit</span>

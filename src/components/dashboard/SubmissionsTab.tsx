@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { format, addDays, formatDistanceToNow } from "date-fns";
 import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
+import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -75,6 +76,10 @@ export function SubmissionsTab() {
   const [programFilter, setProgramFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // Use unified payment ledger
+  const { summary: ledgerSummary, requestPayout: ledgerRequestPayout, refetch: refetchLedger } = usePaymentLedger();
+  
   const {
     resolvedTheme
   } = useTheme();
@@ -259,7 +264,12 @@ export function SubmissionsTab() {
   });
   const availableForPayout = availableSubmissions.reduce((sum, s) => sum + (s.estimated_payout || 0), 0);
   const handleRequestPayout = async () => {
-    if (availableForPayout < 1) {
+    // Check if we have pending earnings in the ledger
+    const ledgerPending = ledgerSummary?.totalPending || 0;
+    const legacyPending = availableForPayout;
+    const totalPending = ledgerPending + legacyPending;
+    
+    if (totalPending < 1) {
       toast.error('Minimum payout is $1.00');
       return;
     }
@@ -272,42 +282,56 @@ export function SubmissionsTab() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Create payout request with 7-day clearing period
-      const clearingEndsAt = addDays(new Date(), 7);
-      const {
-        data: request,
-        error: requestError
-      } = await supabase.from('submission_payout_requests').insert({
-        user_id: user.id,
-        total_amount: availableForPayout,
-        clearing_ends_at: clearingEndsAt.toISOString(),
-        status: 'clearing'
-      }).select().single();
-      if (requestError) throw requestError;
+      // If we have ledger entries, use the new unified flow
+      if (ledgerPending > 0) {
+        await ledgerRequestPayout();
+        toast.success(`Payout of $${ledgerPending.toFixed(2)} requested via unified system! 7-day clearing period started.`);
+        refetchLedger();
+      }
 
-      // Create payout items for each submission with views_at_request snapshot
-      const payoutItems = availableSubmissions.map(s => ({
-        payout_request_id: request.id,
-        submission_id: s.id,
-        amount: s.estimated_payout || 0,
-        source_type: s.type,
-        source_id: s.program.id,
-        views_at_request: s.unpaid_views || 0  // Snapshot of unpaid views being claimed
-      }));
-      const {
-        error: itemsError
-      } = await supabase.from('submission_payout_items').insert(payoutItems);
-      if (itemsError) throw itemsError;
+      // Also handle legacy submissions if any
+      if (legacyPending > 0 && availableSubmissions.length > 0) {
+        // Create payout request with 7-day clearing period
+        const clearingEndsAt = addDays(new Date(), 7);
+        const {
+          data: request,
+          error: requestError
+        } = await supabase.from('submission_payout_requests').insert({
+          user_id: user.id,
+          total_amount: legacyPending,
+          clearing_ends_at: clearingEndsAt.toISOString(),
+          status: 'clearing'
+        }).select().single();
+        if (requestError) throw requestError;
 
-      // Update submission payout_status to 'locked'
-      const submissionIds = availableSubmissions.map(s => s.id);
-      const {
-        error: updateError
-      } = await supabase.from('video_submissions').update({
-        payout_status: 'locked'
-      }).in('id', submissionIds);
-      if (updateError) throw updateError;
-      toast.success(`Payout of $${availableForPayout.toFixed(2)} requested! 7-day clearing period started.`);
+        // Create payout items for each submission with views_at_request snapshot
+        const payoutItems = availableSubmissions.map(s => ({
+          payout_request_id: request.id,
+          submission_id: s.id,
+          amount: s.estimated_payout || 0,
+          source_type: s.type,
+          source_id: s.program.id,
+          views_at_request: s.unpaid_views || 0  // Snapshot of unpaid views being claimed
+        }));
+        const {
+          error: itemsError
+        } = await supabase.from('submission_payout_items').insert(payoutItems);
+        if (itemsError) throw itemsError;
+
+        // Update submission payout_status to 'locked'
+        const submissionIds = availableSubmissions.map(s => s.id);
+        const {
+          error: updateError
+        } = await supabase.from('video_submissions').update({
+          payout_status: 'locked'
+        }).in('id', submissionIds);
+        if (updateError) throw updateError;
+        
+        if (ledgerPending === 0) {
+          toast.success(`Payout of $${legacyPending.toFixed(2)} requested! 7-day clearing period started.`);
+        }
+      }
+      
       setPayoutDialogOpen(false);
       fetchSubmissions();
     } catch (error) {
