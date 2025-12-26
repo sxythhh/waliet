@@ -241,7 +241,7 @@ export function VideoSubmissionsTab({
     if (entityId) {
       fetchSubmissions();
       if (!isBoost && brandId) {
-        fetchUnmatchedTrackedVideos();
+        fetchTrackedVideosFromCache();
       }
     }
   }, [entityId, brandId]);
@@ -319,28 +319,40 @@ export function VideoSubmissionsTab({
     }
   };
 
-  const fetchUnmatchedTrackedVideos = async () => {
-    // Fetch unmatched videos from cached_campaign_videos (for analytics display only)
-    // These are videos without a user_id that couldn't be matched to creators
+  const fetchTrackedVideosFromCache = async () => {
+    // Fetch ALL tracked videos from cached_campaign_videos
+    // This includes both matched and unmatched videos that haven't been synced to video_submissions yet
     if (!entityId || !brandId) return;
     try {
       const { data, error } = await supabase
         .from("cached_campaign_videos")
         .select("*")
         .eq("campaign_id", entityId)
-        .is("user_id", null) // Only unmatched videos
         .order("uploaded_at", { ascending: false });
 
       if (error) throw error;
 
-      // Map unmatched tracked videos to unified format (for display purposes only, no payment)
-      const tracked: UnifiedVideo[] = (data || []).map(v => ({
+      // Get existing shortimize_video_ids from submissions to avoid duplicates
+      const existingShortimizeIds = new Set(
+        submissions
+          .filter(s => s.source === "tracked")
+          .map(s => (s as any).shortimize_video_id)
+          .filter(Boolean)
+      );
+
+      // Filter out videos that are already in video_submissions
+      const newTrackedVideos = (data || []).filter(v => 
+        !existingShortimizeIds.has(v.shortimize_video_id)
+      );
+
+      // Map tracked videos to unified format
+      const tracked: UnifiedVideo[] = newTrackedVideos.map(v => ({
         id: v.id,
-        user_id: null,
+        user_id: v.user_id,
         video_url: v.video_url || "",
         platform: v.platform,
         submission_notes: null,
-        status: "tracked",
+        status: v.user_id ? "approved" : "tracked", // Matched videos show as approved
         payout_amount: null,
         submitted_at: v.uploaded_at || v.cached_at,
         reviewed_at: null,
@@ -356,7 +368,7 @@ export function VideoSubmissionsTab({
         comments: v.comments,
         shares: v.shares,
         source: "tracked" as const,
-        estimatedPayout: 0, // No payout for unmatched videos
+        estimatedPayout: v.user_id ? ((v.views || 0) / 1000) * rpmRate : 0,
         weeklyViews: 0,
         uploaded_at: v.uploaded_at
       }));
@@ -373,8 +385,24 @@ export function VideoSubmissionsTab({
           setLastSynced(latestUpdate);
         }
       }
+
+      // Fetch profiles for tracked video users
+      const trackedUserIds = [...new Set(tracked.filter(t => t.user_id).map(t => t.user_id!))];
+      if (trackedUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", trackedUserIds);
+        if (profilesData) {
+          const profileMap: Record<string, Profile> = {};
+          profilesData.forEach(p => {
+            profileMap[p.id] = p;
+          });
+          setProfiles(prev => ({ ...prev, ...profileMap }));
+        }
+      }
     } catch (error) {
-      console.error("Error fetching unmatched tracked videos:", error);
+      console.error("Error fetching tracked videos:", error);
     }
   };
 
@@ -389,8 +417,8 @@ export function VideoSubmissionsTab({
       if (error) throw error;
 
       toast.success(`Synced ${data?.totalVideosMatched || 0} matched videos`);
-      // Refetch both submissions (which now includes matched tracked videos) and unmatched videos
-      await Promise.all([fetchSubmissions(), fetchUnmatchedTrackedVideos()]);
+      // Refetch both submissions and cached tracked videos
+      await Promise.all([fetchSubmissions(), fetchTrackedVideosFromCache()]);
     } catch (error) {
       console.error("Error syncing videos:", error);
       toast.error("Failed to sync videos");
