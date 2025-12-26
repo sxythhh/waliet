@@ -94,7 +94,7 @@ export function CampaignRowCard({
 
   return (
     <Card
-      className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border border-[#0e0e0e]"
+      className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-0"
       onClick={onClick}
     >
       <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px]">
@@ -200,7 +200,7 @@ export function CampaignRowCard({
                   {visibleMembers.map((member, index) => (
                     <div
                       key={member.id}
-                      className="w-7 h-7 rounded-full border-2 border-card bg-muted flex items-center justify-center overflow-hidden"
+                      className="w-7 h-7 rounded-full border-0 bg-muted flex items-center justify-center overflow-hidden"
                       style={{ zIndex: 3 - index }}
                     >
                       {member.avatar_url ? (
