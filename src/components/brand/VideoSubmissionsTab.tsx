@@ -915,27 +915,6 @@ export function VideoSubmissionsTab({
           )}
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-6 gap-2">
-          {[
-            { label: "Videos", value: totals.videos, icon: Video },
-            { label: "Views", value: totals.views, icon: Eye },
-            { label: "Likes", value: totals.likes, icon: Heart },
-            { label: "Comments", value: totals.comments, icon: MessageCircle },
-            { label: "Shares", value: totals.shares, icon: Share2 },
-            { label: "Est. Payout", value: `$${totals.estimatedPayout.toFixed(0)}`, icon: DollarSign, isString: true },
-          ].map(({ label, value, icon: Icon, isString }) => (
-            <div key={label} className="rounded-lg border border-border/40 bg-card/30 p-2.5">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <Icon className="h-3 w-3 text-muted-foreground/70" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">{label}</span>
-              </div>
-              <p className="text-base font-semibold tabular-nums text-foreground">
-                {isString ? value : formatNumber(value as number)}
-              </p>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Main Content */}
