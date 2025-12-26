@@ -29,7 +29,8 @@ export function ScheduledFunctionsTab() {
   const fetchCronJobs = async () => {
     try {
       setRefreshing(true);
-      const { data, error } = await supabase.rpc('get_cron_jobs');
+      // Use raw SQL query via rpc with type assertion since types aren't generated yet
+      const { data, error } = await supabase.rpc('get_cron_jobs' as any);
       
       if (error) {
         // If RPC doesn't exist, show empty state
@@ -40,7 +41,7 @@ export function ScheduledFunctionsTab() {
           throw error;
         }
       } else {
-        setJobs(data || []);
+        setJobs((data as CronJob[]) || []);
         setError(null);
       }
     } catch (err: any) {
