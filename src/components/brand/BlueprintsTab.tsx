@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil, MessageSquare, Link, FileText } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -319,38 +319,25 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                         )}
                       </div>
 
-                      {/* Footer Stats */}
-                      <div className="flex items-center justify-between text-muted-foreground pt-3 border-t border-border/20">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1.5">
-                            <MessageSquare className="h-4 w-4" />
-                            <span className="text-sm font-medium">0</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <Link className="h-4 w-4" />
-                            <span className="text-sm font-medium">{blueprint.platforms?.length || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <FileText className="h-4 w-4" />
-                            <span className="text-sm font-medium">{contentPreview ? 1 : 0}</span>
-                          </div>
-                          {/* User info */}
-                          <div className="flex items-center gap-1.5">
-                            {userInfo?.avatarUrl ? (
-                              <img
-                                src={userInfo.avatarUrl}
-                                alt={userInfo.name}
-                                className="h-4 w-4 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center text-[9px] font-medium">
-                                {(userInfo?.name || "U").charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="text-sm">{userInfo?.name || "You"}</span>
-                          </div>
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-3 border-t border-border/20">
+                        <div className="flex items-center gap-2">
+                          {userInfo?.avatarUrl ? (
+                            <img
+                              src={userInfo.avatarUrl}
+                              alt={userInfo.name}
+                              className="h-5 w-5 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                              {(userInfo?.name || "U").charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-sm font-inter tracking-[-0.5px] text-white">
+                            {userInfo?.name || "You"}
+                          </span>
                         </div>
-                        <span className="text-sm">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
                           {format(new Date(blueprint.updated_at), 'dd/MM/yyyy')}
                         </span>
                       </div>
