@@ -343,7 +343,7 @@ Deno.serve(async (req) => {
                 video_url: video.ad_link,
                 platform: video.platform,
                 shortimize_video_id: video.ad_id,
-                status: "approved", // Auto-approved since verified via collection/hashtags
+                status: "pending", // Requires brand approval like regular submissions
                 source: "tracked",
                 video_title: video.title || null,
                 video_description: video.caption || video.description || null,

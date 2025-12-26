@@ -452,10 +452,6 @@ export function VideoSubmissionsTab({
     };
   }, [allVideos, submissions, trackedVideos]);
   const handleApprove = async (submission: UnifiedVideo) => {
-    if (submission.source === "tracked") {
-      toast.error("Tracked videos cannot be approved");
-      return;
-    }
     setProcessing(true);
     try {
       const {
@@ -578,7 +574,7 @@ export function VideoSubmissionsTab({
     }
   };
   const handleReject = async () => {
-    if (!selectedSubmission || selectedSubmission.source === "tracked") return;
+    if (!selectedSubmission) return;
     setProcessing(true);
     try {
       const {
@@ -628,7 +624,6 @@ export function VideoSubmissionsTab({
     }
   };
   const handleFlag = async (submission: UnifiedVideo) => {
-    if (submission.source === "tracked") return;
     setProcessing(true);
     try {
       const newFlagState = !submission.is_flagged;
@@ -663,7 +658,6 @@ export function VideoSubmissionsTab({
     }
   };
   const handleRevertApproval = async (submission: UnifiedVideo) => {
-    if (submission.source === "tracked") return;
     setProcessing(true);
     try {
       const {
@@ -709,7 +703,6 @@ export function VideoSubmissionsTab({
 
   // Handle refreshing video metadata
   const handleRefreshMetadata = async (submission: UnifiedVideo) => {
-    if (submission.source === "tracked") return;
     setProcessing(true);
     try {
       let videoDetails = null;
@@ -1246,7 +1239,7 @@ export function VideoSubmissionsTab({
                                 {format(new Date(video.submitted_at), "MMM d")}
                               </TableCell>
                               <TableCell>
-                                {video.source === "submitted" && video.status === "pending" && <div className="flex items-center justify-center gap-1">
+                                {video.status === "pending" && <div className="flex items-center justify-center gap-1">
                                     <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-green-500/10 hover:text-green-500" onClick={() => handleApprove(video)} disabled={processing}>
                                       <Check className="h-3.5 w-3.5" />
                                     </Button>
@@ -1339,8 +1332,8 @@ export function VideoSubmissionsTab({
                         </div>
                       </div>
 
-                      {/* Action Bar - Only for submitted videos needing action */}
-                      {video.source === "submitted" && video.status === "pending" && <div className="flex items-center gap-2 px-3 pb-3 pt-1">
+                      {/* Action Bar - For all pending videos */}
+                      {video.status === "pending" && <div className="flex items-center gap-2 px-3 pb-3 pt-1">
                           <Button size="sm" className="h-8 flex-1 text-xs gap-1.5 bg-green-500/90 hover:bg-green-500 text-white rounded-lg" onClick={() => handleApprove(video)} disabled={processing}>
                             <Check className="h-3.5 w-3.5" />
                             Approve
@@ -1360,7 +1353,7 @@ export function VideoSubmissionsTab({
                           </Button>
                         </div>}
 
-                      {video.source === "submitted" && video.status === "approved" && <div className="px-3 pb-3 pt-1">
+                      {video.status === "approved" && <div className="px-3 pb-3 pt-1">
                           <Button size="sm" variant="ghost" className="h-7 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-lg" onClick={() => handleRevertApproval(video)} disabled={processing}>
                             <RotateCcw className="h-3 w-3" />
                             Revert to Pending
