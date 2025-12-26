@@ -1010,9 +1010,10 @@ export function VideoSubmissionsTab({
                       {isSelected && (
                         <div className="mt-3">
                           <SubmissionHeatmap 
-                            submissions={creator.submissions.filter(s => s.source === "submitted").map(s => ({
-                              submitted_at: s.submitted_at,
-                              status: s.status
+                            submissions={creator.submissions.map(s => ({
+                              submitted_at: s.uploaded_at || s.submitted_at,
+                              status: s.status,
+                              source: s.source
                             }))} 
                             onDateClick={date => {
                               setSelectedCreator(creator.userId);
