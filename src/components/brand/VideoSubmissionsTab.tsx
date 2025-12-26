@@ -1383,7 +1383,7 @@ export function VideoSubmissionsTab({
                   return (
                     <div 
                       key={video.id} 
-                      className="group relative w-64 shrink-0 rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300"
+                      className="group relative w-full rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300 font-sans tracking-[-0.5px]"
                     >
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
@@ -1539,14 +1539,6 @@ export function VideoSubmissionsTab({
                         </div>
                       )}
 
-                      {/* Status indicator line at top */}
-                      <div className={cn(
-                        "absolute top-0 left-0 right-0 h-0.5",
-                        video.status === "approved" && "bg-green-500",
-                        video.status === "pending" && "bg-yellow-500",
-                        video.status === "rejected" && "bg-red-500",
-                        video.status === "tracked" && "bg-purple-500"
-                      )} />
                     </div>
                   );
                 });
