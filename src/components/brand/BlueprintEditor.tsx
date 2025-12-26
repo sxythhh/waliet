@@ -938,7 +938,7 @@ export function BlueprintEditor({
 
             {/* Drag Overlay for smooth dragging - hidden on mobile */}
             {!isMobile && <DragOverlay dropAnimation={null}>
-                {activeId && <div className="rounded-xl border border-primary/50 bg-card shadow-xl p-3 opacity-90">
+                {activeId && <div className="rounded-xl border border-border/50 bg-card shadow-xl p-3 opacity-90">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium font-inter tracking-[-0.5px]">
                         {getSectionTitle(activeId as SectionType)}
