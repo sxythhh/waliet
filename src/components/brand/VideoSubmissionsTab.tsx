@@ -1450,11 +1450,11 @@ export function VideoSubmissionsTab({
 
                       {/* Action Bar - For all pending videos */}
                       {video.status === "pending" && <div className="flex items-center justify-end gap-1.5 px-3 pb-3 pt-1">
-                          <Button size="sm" className="h-7 px-5 text-[11px] font-medium gap-1 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white rounded-md shadow-none border-t border-t-[#43954d]" onClick={() => handleApprove(video)} disabled={processing}>
+                          <Button size="sm" className="h-7 px-15 text-[11px] font-medium gap-1 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white rounded-md shadow-none border-t border-t-[#43954d]" onClick={() => handleApprove(video)} disabled={processing}>
                             <Check className="h-3 w-3" />
                             Approve
                           </Button>
-                          <Button size="sm" className="h-7 px-5 text-[11px] font-medium gap-1 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white rounded-md shadow-none border-t border-t-[#ed3030]" onClick={() => {
+                          <Button size="sm" className="h-7 px-15 text-[11px] font-medium gap-1 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white rounded-md shadow-none border-t border-t-[#ed3030]" onClick={() => {
                       setSelectedSubmission(video);
                       setRejectDialogOpen(true);
                     }} disabled={processing}>
