@@ -139,13 +139,6 @@ export function BrandCampaignsTab({
       });
       if (campaignsError) throw campaignsError;
 
-      // Parse application_questions from JSON to array
-      const parsedCampaigns = (campaignsData || []).map(campaign => ({
-        ...campaign,
-        application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions : []
-      })) as Campaign[];
-      setCampaigns(parsedCampaigns);
-
       // Fetch bounties
       const {
         data: bountiesData,
@@ -155,11 +148,46 @@ export function BrandCampaignsTab({
       });
       if (bountiesError) throw bountiesError;
       console.log("Fetched bounties:", bountiesData);
-      setBounties((bountiesData || []) as BountyCampaign[]);
 
-      // Fetch pending applications count for campaigns
+      // Fetch actual payouts from submission_payout_items
       const campaignIds = (campaignsData || []).map(c => c.id);
       const bountyIds = (bountiesData || []).map(b => b.id);
+      const allSourceIds = [...campaignIds, ...bountyIds];
+      
+      let payoutsBySource: Record<string, number> = {};
+      
+      if (allSourceIds.length > 0) {
+        const { data: payoutItems } = await supabase
+          .from("submission_payout_items")
+          .select("source_id, amount, status")
+          .in("source_id", allSourceIds)
+          .in("status", ["approved", "completed", "clearing", "pending"]);
+        
+        // Aggregate payouts by source_id
+        (payoutItems || []).forEach((item: any) => {
+          if (!payoutsBySource[item.source_id]) {
+            payoutsBySource[item.source_id] = 0;
+          }
+          payoutsBySource[item.source_id] += item.amount;
+        });
+      }
+
+      // Parse application_questions from JSON to array and add actual budget_used
+      const parsedCampaigns = (campaignsData || []).map(campaign => ({
+        ...campaign,
+        application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions : [],
+        budget_used: payoutsBySource[campaign.id] || campaign.budget_used || 0
+      })) as Campaign[];
+      setCampaigns(parsedCampaigns);
+
+      // Update bounties with actual payouts
+      const parsedBounties = (bountiesData || []).map(bounty => ({
+        ...bounty,
+        budget_used: payoutsBySource[bounty.id] || bounty.budget_used || 0
+      })) as BountyCampaign[];
+      setBounties(parsedBounties);
+
+      // Fetch pending applications count for campaigns
       let totalPending = 0;
 
       // Fetch campaign members (approved submissions with profile data)
