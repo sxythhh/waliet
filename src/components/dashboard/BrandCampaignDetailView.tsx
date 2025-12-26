@@ -355,6 +355,21 @@ export function BrandCampaignDetailView({
 
   // Skip showing skeleton when swapping between campaigns - content loads fast enough
 
+  // Show empty state when no campaigns/boosts exist
+  if (isAllMode && !loading && campaigns.length === 0 && boosts.length === 0) {
+    return <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-4">
+        <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center">
+          <Video className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-semibold text-lg">No campaigns yet</h3>
+          <p className="text-muted-foreground text-sm max-w-sm">
+            Create your first campaign to start tracking creator content and managing payouts.
+          </p>
+        </div>
+      </div>;
+  }
+
   if (!isAllMode && !campaign && !boost && !loading) {
     return <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
