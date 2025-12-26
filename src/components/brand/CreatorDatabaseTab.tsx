@@ -1077,7 +1077,7 @@ export function CreatorDatabaseTab({
               <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' ? 'text-foreground' : 'text-muted-foreground'}`}>
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <span className="ml-1 h-4 w-4 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center">
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
                     {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all'].filter(Boolean).length}
                   </span>}
               </Button>
