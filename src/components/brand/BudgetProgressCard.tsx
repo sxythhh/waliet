@@ -46,39 +46,51 @@ export function BudgetProgressCard({
             <span className="text-sm font-medium text-foreground tracking-[-0.5px]">Budget Usage</span>
           </div>
           
-          {/* Progress bar with floating percentage */}
-          <div className="relative pt-6">
-            {/* Floating percentage badge */}
-            <div className="absolute -top-0 transform -translate-x-1/2 transition-all duration-500" style={{
-            left: `${Math.min(Math.max(budgetPercentage, 5), 95)}%`
-          }}>
-              <div className="bg-emerald-500 text-white text-xs tracking-[-0.5px] font-semibold px-2 py-1 rounded-md shadow-lg">
-                {budgetPercentage.toFixed(0)}%
+          {/* Semi-circle progress gauge */}
+          <div className="flex flex-col items-center">
+            <div className="relative" style={{
+              width: 180,
+              height: 100
+            }}>
+              <svg width="180" height="100" viewBox="0 0 180 100" className="overflow-visible">
+                {/* Background arc */}
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="14" strokeLinecap="round" />
+                
+                {/* Progress arc */}
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="url(#budgetGradient)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${budgetPercentage / 100 * (Math.PI * 75)} ${Math.PI * 75}`} className="transition-all duration-700" />
+                
+                {/* Gradient definition */}
+                <defs>
+                  <linearGradient id="budgetGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="hsl(160 84% 39%)" />
+                    <stop offset="100%" stopColor="hsl(142 71% 45%)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Center content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
+                <div className="flex items-baseline gap-0.5">
+                  <span className="font-bold tracking-[-1px] text-foreground text-lg">{budgetPercentage.toFixed(0)}%</span>
+                  <span className="text-sm text-muted-foreground font-medium">used</span>
+                </div>
               </div>
-              <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-l-transparent border-r-transparent border-t-emerald-500 mx-auto" />
-            </div>
-            
-            {/* Progress bar */}
-            <div className="h-2.5 bg-muted/30 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500" style={{
-              width: `${Math.min(budgetPercentage, 100)}%`
-            }} />
             </div>
           </div>
           
-          {/* Budget stats */}
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <div className="bg-muted/10 rounded-lg p-3 text-center">
-              <p className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Spent</p>
-              <p className="text-lg font-bold font-inter tracking-[-0.5px] text-amber-500">{formatCurrency(budgetUsed)}</p>
+          {/* Budget info */}
+          <div className="flex justify-center gap-4 mt-2 font-['Inter'] tracking-[-0.5px]">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400" />
+              <span className="text-xs text-muted-foreground">
+                <span className="text-foreground font-medium">{formatCurrency(budgetUsed)}</span> spent
+              </span>
             </div>
-            <div className="bg-muted/10 rounded-lg p-3 text-center">
-              <p className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Total</p>
-              <p className="text-lg font-bold font-inter tracking-[-0.5px] text-foreground">{formatCurrency(budgetTotal)}</p>
-            </div>
-            <div className="bg-muted/10 rounded-lg p-3 text-center">
-              <p className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground uppercase mb-1">Remaining</p>
-              <p className="text-lg font-bold font-inter tracking-[-0.5px] text-emerald-500">{formatCurrency(budgetRemaining)}</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-muted/50" />
+              <span className="text-xs text-muted-foreground">
+                <span className="text-foreground font-medium">{formatCurrency(budgetRemaining)}</span> left
+              </span>
             </div>
           </div>
         </div>
