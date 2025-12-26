@@ -20,12 +20,7 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-const SUGGESTED_TAGS = [
-  'growth', 'retargeting', 'seasonal', 'awareness', 'retention', 
-  'acquisition', 'promo', 'reactivation', 'launch', 'evergreen',
-  'holiday', 'influencer', 'performance', 'branding', 'viral'
-];
-
+const SUGGESTED_TAGS = ['growth', 'retargeting', 'seasonal', 'awareness', 'retention', 'acquisition', 'promo', 'reactivation', 'launch', 'evergreen', 'holiday', 'influencer', 'performance', 'branding', 'viral'];
 const CAMPAIGN_NICHES = [{
   id: 'tech',
   label: 'Tech & Software'
@@ -795,10 +790,7 @@ export function CampaignCreationWizard({
                               </div>
                             </FormControl>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {form.watch("payment_model") === "pay_per_post" 
-                                ? "Approved videos earn this rate per 1,000 views"
-                                : "Creators earn this rate per 1,000 views from their accounts"
-                              }
+                              {form.watch("payment_model") === "pay_per_post" ? "Approved videos earn this rate per 1,000 views" : "Creators earn this rate per 1,000 views from their accounts"}
                             </p>
                             <FormMessage />
                           </FormItem>} />
@@ -872,61 +864,32 @@ export function CampaignCreationWizard({
                           </div>
                           
                           {/* Selected Tags */}
-                          {field.value && field.value.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {field.value.map((tag: string, index: number) => (
-                                <div 
-                                  key={index} 
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-sm font-inter tracking-[-0.5px] text-foreground"
-                                >
+                          {field.value && field.value.length > 0 && <div className="flex flex-wrap gap-2">
+                              {field.value.map((tag: string, index: number) => <div key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50 border border-border text-sm font-inter tracking-[-0.5px] text-foreground">
                                   {tag}
-                                  <button 
-                                    type="button" 
-                                    onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))}
-                                    className="hover:text-destructive transition-colors"
-                                  >
+                                  <button type="button" onClick={() => field.onChange(field.value.filter((_: string, i: number) => i !== index))} className="hover:text-destructive transition-colors">
                                     <X className="h-3 w-3" />
                                   </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                                </div>)}
+                            </div>}
                           
                           {/* Add Tag Input */}
                           <FormControl>
-                            <Input 
-                              placeholder="Type a tag and press Enter..." 
-                              className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" 
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  const input = e.currentTarget;
-                                  const value = input.value.trim().toLowerCase();
-                                  if (value && !field.value?.includes(value)) {
-                                    field.onChange([...(field.value || []), value]);
-                                    input.value = '';
-                                  }
-                                }
-                              }} 
-                            />
+                            <Input placeholder="Type a tag and press Enter..." className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const input = e.currentTarget;
+                        const value = input.value.trim().toLowerCase();
+                        if (value && !field.value?.includes(value)) {
+                          field.onChange([...(field.value || []), value]);
+                          input.value = '';
+                        }
+                      }
+                    }} />
                           </FormControl>
                           
                           {/* Suggested Tags */}
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Suggested Tags</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {SUGGESTED_TAGS.filter(tag => !field.value?.includes(tag)).slice(0, 8).map((tag) => (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={() => field.onChange([...(field.value || []), tag])}
-                                  className="text-xs text-primary hover:text-primary/80 font-inter tracking-[-0.3px] transition-colors"
-                                >
-                                  {tag}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                          
                           <FormMessage />
                         </FormItem>} />
 
@@ -1081,12 +1044,7 @@ export function CampaignCreationWizard({
                     {/* Shortimize Collection Name */}
                     <div className="space-y-2">
                       <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Video Tracking Collection</Label>
-                      <Input 
-                        value={shortimizeCollectionName} 
-                        onChange={e => setShortimizeCollectionName(e.target.value)}
-                        placeholder="e.g., Campaign Videos" 
-                        className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" 
-                      />
+                      <Input value={shortimizeCollectionName} onChange={e => setShortimizeCollectionName(e.target.value)} placeholder="e.g., Campaign Videos" className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" />
                       <p className="text-[10px] text-muted-foreground">Approved videos will be tracked in this Shortimize collection</p>
                     </div>
 
