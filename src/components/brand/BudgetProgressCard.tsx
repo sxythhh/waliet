@@ -114,7 +114,7 @@ export function BudgetProgressCard({
               {/* Center content */}
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
                 <div className="flex items-baseline gap-0.5">
-                  <span className="text-3xl font-bold tracking-[-1px] text-foreground">{acceptedCreators}</span>
+                  <span className="font-bold tracking-[-1px] text-foreground text-lg">{acceptedCreators}</span>
                   <span className="text-lg text-muted-foreground font-medium">/{maxCreators}</span>
                 </div>
                 
