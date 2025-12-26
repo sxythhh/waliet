@@ -496,7 +496,7 @@ export function CampaignCreationWizard({
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
         payment_model: values.payment_model || "pay_per_view",
         rpm_rate: Number(values.rpm_rate) || 5,
-        post_rate: 0, // No longer used - both models use rpm_rate (CPM)
+        post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 0 : 0,
         embed_url: values.embed_url || null,
         preview_url: values.preview_url || null,
         brand_id: brandId,
@@ -552,7 +552,7 @@ export function CampaignCreationWizard({
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           payment_model: values.payment_model || "pay_per_view",
           rpm_rate: Number(values.rpm_rate) || 5,
-          post_rate: 0, // No longer used - both models use rpm_rate (CPM)
+          post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 0 : 0,
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
           allowed_platforms: values.allowed_platforms,
@@ -789,6 +789,26 @@ export function CampaignCreationWizard({
                             </p>
                             <FormMessage />
                           </FormItem>} />
+
+                    {/* Flat Rate Per Approved Video - only show for pay_per_post */}
+                    {form.watch("payment_model") === "pay_per_post" && <FormField control={form.control} name="post_rate" render={({
+                  field
+                }) => <FormItem>
+                            <div className="flex items-center justify-between">
+                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Flat Rate Per Approved Video</FormLabel>
+                              <span className="text-xs text-muted-foreground">optional</span>
+                            </div>
+                            <FormControl>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                                <Input type="number" placeholder="0" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
+                              </div>
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              One-time payment when a video is approved (in addition to CPM)
+                            </p>
+                            <FormMessage />
+                          </FormItem>} />}
 
                     <FormField control={form.control} name="category" render={({
                   field
