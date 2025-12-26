@@ -496,7 +496,7 @@ export function CampaignCreationWizard({
         budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
         payment_model: values.payment_model || "pay_per_view",
         rpm_rate: Number(values.rpm_rate) || 5,
-        post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 10 : 0,
+        post_rate: 0, // No longer used - both models use rpm_rate (CPM)
         embed_url: values.embed_url || null,
         preview_url: values.preview_url || null,
         brand_id: brandId,
@@ -552,7 +552,7 @@ export function CampaignCreationWizard({
           budget: values.is_infinite_budget ? 0 : Number(values.budget) || 0,
           payment_model: values.payment_model || "pay_per_view",
           rpm_rate: Number(values.rpm_rate) || 5,
-          post_rate: values.payment_model === "pay_per_post" ? Number(values.post_rate) || 10 : 0,
+          post_rate: 0, // No longer used - both models use rpm_rate (CPM)
           embed_url: values.embed_url || null,
           preview_url: values.preview_url || null,
           allowed_platforms: values.allowed_platforms,
@@ -756,19 +756,19 @@ export function CampaignCreationWizard({
                             <div className="grid grid-cols-2 gap-3">
                               <div onClick={() => field.onChange("pay_per_view")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "pay_per_view" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Account</p>
-                                <p className="text-xs text-muted-foreground mt-1">Creators are paid based on total views their accounts generate</p>
+                                <p className="text-xs text-muted-foreground mt-1">CPM based on total views from connected accounts</p>
                               </div>
                               <div onClick={() => field.onChange("pay_per_post")} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${field.value === "pay_per_post" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
                                 <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Per Video</p>
-                                <p className="text-xs text-muted-foreground mt-1">Payment based on each approved video</p>
+                                <p className="text-xs text-muted-foreground mt-1">CPM based on views from approved video submissions</p>
                               </div>
                             </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* CPM Rate - only show for pay_per_view */}
-                    {form.watch("payment_model") === "pay_per_view" && <FormField control={form.control} name="rpm_rate" render={({
+                    {/* CPM Rate - shown for both payment models */}
+                    <FormField control={form.control} name="rpm_rate" render={({
                   field
                 }) => <FormItem>
                             <div className="flex items-center justify-between">
@@ -781,25 +781,14 @@ export function CampaignCreationWizard({
                                 <Input type="number" placeholder="5" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
                               </div>
                             </FormControl>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {form.watch("payment_model") === "pay_per_post" 
+                                ? "Approved videos earn this rate per 1,000 views"
+                                : "Creators earn this rate per 1,000 views from their accounts"
+                              }
+                            </p>
                             <FormMessage />
-                          </FormItem>} />}
-
-                    {/* Post Rate - only show for pay_per_post */}
-                    {form.watch("payment_model") === "pay_per_post" && <FormField control={form.control} name="post_rate" render={({
-                  field
-                }) => <FormItem>
-                            <div className="flex items-center justify-between">
-                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Rate Per Approved Video</FormLabel>
-                              <span className="text-xs text-muted-foreground">fixed payment</span>
-                            </div>
-                            <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input type="number" placeholder="10" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>} />}
+                          </FormItem>} />
 
                     <FormField control={form.control} name="category" render={({
                   field
