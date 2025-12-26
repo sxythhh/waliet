@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Eye, Heart, MessageCircle, Share2, Video, Upload, Radar } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Eye, Heart, MessageCircle, Share2, Video, Upload, Radar, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -1215,7 +1215,7 @@ export function VideoSubmissionsTab({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2 min-w-max overflow-x-auto">
               {(() => {
                 // Get filtered videos
                 let filteredVids = selectedCreator 
@@ -1278,10 +1278,12 @@ export function VideoSubmissionsTab({
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border/40">
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Source</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Date</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
@@ -1304,6 +1306,24 @@ export function VideoSubmissionsTab({
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1.5">
+                                  {profile?.avatar_url ? (
+                                    <img 
+                                      src={profile.avatar_url} 
+                                      alt={profile.full_name || profile.username || "User"} 
+                                      className="h-5 w-5 rounded-full object-cover flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                      <User className="h-3 w-3 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <span className="text-xs text-foreground">
+                                    {profile?.full_name || profile?.username || "Unknown"}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
                                   <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
                                     <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
                                   </div>
@@ -1311,20 +1331,6 @@ export function VideoSubmissionsTab({
                                     {video.video_author_username || profile?.username || "Unknown"}
                                   </span>
                                 </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant="outline" 
-                                  className={cn(
-                                    "text-[10px] px-1.5 py-0",
-                                    video.source === "submitted" 
-                                      ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
-                                      : "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                                  )}
-                                >
-                                  {video.source === "submitted" ? <Upload className="h-2.5 w-2.5 mr-1" /> : <Radar className="h-2.5 w-2.5 mr-1" />}
-                                  {video.source === "submitted" ? "Submitted" : "Tracked"}
-                                </Badge>
                               </TableCell>
                               <TableCell>
                                 <Badge 
@@ -1342,6 +1348,12 @@ export function VideoSubmissionsTab({
                               </TableCell>
                               <TableCell className="text-right text-xs tabular-nums">
                                 {formatNumber(video.views)}
+                              </TableCell>
+                              <TableCell className="text-right text-xs tabular-nums">
+                                {formatNumber(video.likes)}
+                              </TableCell>
+                              <TableCell className="text-right text-xs tabular-nums">
+                                {formatNumber(video.comments)}
                               </TableCell>
                               <TableCell className="text-right text-xs font-medium tabular-nums text-green-500">
                                 ${getPayoutForSubmission(video).toFixed(2)}
