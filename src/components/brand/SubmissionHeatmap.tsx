@@ -167,9 +167,23 @@ export function SubmissionHeatmap({
       <div className="w-full">
         {/* Time Range Filter */}
         <div className="flex items-center gap-1 mb-3">
-          {(["week", "month", "3months"] as TimeRange[]).map(range => <Button key={range} variant="ghost" size="sm" onClick={() => setTimeRange(range)} className={cn("h-6 px-2 text-[10px] font-medium tracking-[-0.3px] rounded-md", timeRange === range ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>
+          {(["week", "month", "3months"] as TimeRange[]).map(range => (
+            <button
+              key={range}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTimeRange(range);
+              }}
+              className={cn(
+                "h-6 px-2.5 text-[10px] font-medium tracking-[-0.3px] rounded-md transition-colors font-inter",
+                timeRange === range 
+                  ? "bg-muted text-foreground" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
               {range === "week" ? "1W" : range === "month" ? "1M" : "3M"}
-            </Button>)}
+            </button>
+          ))}
         </div>
         
         {/* Month labels */}
