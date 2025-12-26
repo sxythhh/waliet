@@ -37,18 +37,24 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { sourceType, sourceId } = body;
+    const { sourceType, sourceId, videoSubmissionId, boostSubmissionId } = body;
 
-    console.log('Processing payout request', { userId: user.id, sourceType, sourceId });
+    console.log('Processing payout request', { userId: user.id, sourceType, sourceId, videoSubmissionId, boostSubmissionId });
 
-    // 1. Fetch all pending ledger entries for this user (optionally filtered by source)
+    // 1. Fetch all pending ledger entries for this user (optionally filtered)
     let ledgerQuery = supabase
       .from('payment_ledger')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'pending');
 
-    if (sourceType && sourceId) {
+    // Filter by specific video submission if provided
+    if (videoSubmissionId) {
+      ledgerQuery = ledgerQuery.eq('video_submission_id', videoSubmissionId);
+    } else if (boostSubmissionId) {
+      ledgerQuery = ledgerQuery.eq('boost_submission_id', boostSubmissionId);
+    } else if (sourceType && sourceId) {
+      // Filter by source (program) if provided
       ledgerQuery = ledgerQuery.eq('source_type', sourceType).eq('source_id', sourceId);
     }
 
