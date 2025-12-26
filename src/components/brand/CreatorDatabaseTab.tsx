@@ -1032,12 +1032,11 @@ export function CreatorDatabaseTab({
             <Skeleton className="h-4 w-16" />
           </div>
           
-          {/* Table Rows */}
+        {/* Table Rows */}
           <div className="space-y-1">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="px-4 md:px-6 py-4 flex items-center gap-4">
-                <Skeleton className="h-4 w-4" />
                 <div className="flex items-center gap-3 flex-1">
-                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <Skeleton className="h-10 w-10 rounded-xl" />
                   <div className="space-y-1.5">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-24" />
