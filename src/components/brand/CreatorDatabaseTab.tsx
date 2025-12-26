@@ -1068,13 +1068,9 @@ export function CreatorDatabaseTab({
   }
   return <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border px-[7px] py-[4px]">
-        {/* Search, Filters & Actions - Single Row */}
+      <div className="border-b border-border px-[7px] py-[5px]">
+        {/* Filters & Actions - Single Row */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative min-w-[180px] max-w-[220px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-            <Input placeholder="Search creators..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/20" />
-          </div>
 
           <Popover>
             <PopoverTrigger asChild>
