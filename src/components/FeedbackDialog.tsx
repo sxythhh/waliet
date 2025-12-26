@@ -76,9 +76,7 @@ export function FeedbackDialog({
         {/* Content */}
         <div className="p-5 pt-0 space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-medium text-neutral-500 font-inter tracking-[-0.5px] uppercase">
-              {isFeature ? "Your idea" : "Bug description"}
-            </label>
+            
             <Textarea placeholder={isFeature ? "I'd love to see..." : "I encountered an issue when..."} value={message} onChange={e => setMessage(e.target.value)} className="min-h-[140px] bg-[#111] border-[#222] rounded-xl resize-none font-inter tracking-[-0.5px] text-sm placeholder:text-neutral-600 focus:border-[#333] focus:ring-0" />
           </div>
 
