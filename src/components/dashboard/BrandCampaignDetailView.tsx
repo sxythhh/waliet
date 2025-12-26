@@ -488,6 +488,21 @@ export function BrandCampaignDetailView({
                 onSubmissionReviewed={fetchPendingApplicationsCount}
               />
             ) : null
+          ) : activeDetailTab === "creators" ? (
+            <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" />
+          ) : activeDetailTab === "payouts" ? (
+            isBoost && boostId ? (
+              <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div>
+            ) : campaignId ? (
+              <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" />
+            ) : null
+          ) : activeDetailTab === "links" ? (
+            entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null
+          ) : null}
+        </div>
+      </div>
+    </div>;
+}
 
 // All Programs Home Content - shows aggregated analytics
 function AllProgramsHomeContent({
