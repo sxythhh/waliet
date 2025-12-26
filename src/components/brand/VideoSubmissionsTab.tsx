@@ -1401,10 +1401,10 @@ export function VideoSubmissionsTab({
                               </TableCell>
                               <TableCell>
                                 {video.status === "pending" && <div className="flex items-center justify-center gap-1">
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-md" onClick={() => handleApprove(video)} disabled={processing}>
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm" onClick={() => handleApprove(video)} disabled={processing}>
                                       <Check className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-md" onClick={() => {
+                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm" onClick={() => {
                               setSelectedSubmission(video);
                               setRejectDialogOpen(true);
                             }} disabled={processing}>
