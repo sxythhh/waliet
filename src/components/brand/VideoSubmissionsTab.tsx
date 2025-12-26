@@ -1334,7 +1334,7 @@ export function VideoSubmissionsTab({
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", video.status === "approved" && "bg-green-500/10 text-green-500 border-green-500/20", video.status === "pending" && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", video.status === "rejected" && "bg-red-500/10 text-red-500 border-red-500/20", video.status === "tracked" && "bg-purple-500/10 text-purple-500 border-purple-500/20")}>
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-inter tracking-[-0.5px]", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
                                   {video.status}
                                 </Badge>
                               </TableCell>
