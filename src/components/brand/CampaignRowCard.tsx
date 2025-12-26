@@ -97,7 +97,7 @@ export function CampaignRowCard({
       className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-0"
       onClick={onClick}
     >
-      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px]">
+      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px] border border-[#0e0e0e] rounded-lg overflow-hidden">
         {/* Banner */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
           {bannerUrl ? (
