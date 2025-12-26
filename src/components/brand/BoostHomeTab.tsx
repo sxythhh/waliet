@@ -93,24 +93,21 @@ const getDateRange = (timeframe: TimeframeOption): {
       return null;
   }
 };
-
 const formatTimeframeLabel = (timeframe: TimeframeOption): string => {
   const dateRange = getDateRange(timeframe);
-  
   if (!dateRange) {
     return "All time";
   }
-  
-  const { start, end } = dateRange;
-  
+  const {
+    start,
+    end
+  } = dateRange;
   if (format(start, 'yyyy-MM-dd') === format(end, 'yyyy-MM-dd')) {
     return format(start, 'MMMM d');
   }
-  
   if (format(start, 'MMMM yyyy') === format(end, 'MMMM yyyy')) {
     return `${format(start, 'MMMM d')} - ${format(end, 'd')}`;
   }
-  
   return `${format(start, 'MMMM d')} - ${format(end, 'MMMM d')}`;
 };
 const formatCurrency = (amount: number) => {
@@ -162,10 +159,7 @@ export function BoostHomeTab({
         // Fetch video submissions for this boost from unified table with metrics
         const {
           data: submissions
-        } = await supabase.from('video_submissions')
-          .select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments, video_title, video_thumbnail_url, video_author_username, video_description, metrics_updated_at')
-          .eq('source_type', 'boost')
-          .eq('source_id', boost.id);
+        } = await supabase.from('video_submissions').select('id, status, payout_amount, submitted_at, video_url, platform, creator_id, views, likes, shares, bookmarks, comments, video_title, video_thumbnail_url, video_author_username, video_description, metrics_updated_at').eq('source_type', 'boost').eq('source_id', boost.id);
 
         // Fetch wallet transactions for payouts
         const {
@@ -201,16 +195,15 @@ export function BoostHomeTab({
         const approvedSubmissions = filteredSubmissions.filter(s => s.status === 'approved').length;
         const pendingSubmissions = filteredSubmissions.filter(s => s.status === 'pending').length;
         const rejectedSubmissions = filteredSubmissions.filter(s => s.status === 'rejected').length;
-        
+
         // Calculate total metrics from filtered submissions
         const totalViews = filteredSubmissions.reduce((sum, s) => sum + (Number(s.views) || 0), 0);
         const totalLikes = filteredSubmissions.reduce((sum, s) => sum + (Number(s.likes) || 0), 0);
         const totalShares = filteredSubmissions.reduce((sum, s) => sum + (Number(s.shares) || 0), 0);
         const totalBookmarks = filteredSubmissions.reduce((sum, s) => sum + (Number(s.bookmarks) || 0), 0);
-        
+
         // Calculate CPM (Cost Per Mille - cost per 1000 views)
-        const cpm = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
-        
+        const cpm = totalViews > 0 ? totalPayouts / totalViews * 1000 : 0;
         setStats({
           totalPayouts,
           payoutsLastWeek,
@@ -226,12 +219,9 @@ export function BoostHomeTab({
           totalBookmarks,
           cpm
         });
-        
+
         // Get the most recent metrics_updated_at for the sync time display
-        const latestSync = submissionsData
-          .filter(s => s.metrics_updated_at)
-          .map(s => new Date(s.metrics_updated_at!).getTime())
-          .sort((a, b) => b - a)[0];
+        const latestSync = submissionsData.filter(s => s.metrics_updated_at).map(s => new Date(s.metrics_updated_at!).getTime()).sort((a, b) => b - a)[0];
         setLastSyncedAt(latestSync ? new Date(latestSync).toISOString() : null);
 
         // Build metrics data from filtered submissions (grouped by date) with actual view data
@@ -293,11 +283,19 @@ export function BoostHomeTab({
         setMetricsData(formattedMetrics);
 
         // Calculate activity data (submissions and unique creators over time)
-        const activityMap = new Map<string, { submissions: number; creatorIds: Set<string>; applications: number }>();
+        const activityMap = new Map<string, {
+          submissions: number;
+          creatorIds: Set<string>;
+          applications: number;
+        }>();
         filteredSubmissions.forEach(sub => {
           if (sub.submitted_at) {
             const dateKey = format(new Date(sub.submitted_at), 'yyyy-MM-dd');
-            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
+            const existing = activityMap.get(dateKey) || {
+              submissions: 0,
+              creatorIds: new Set<string>(),
+              applications: 0
+            };
             existing.submissions += 1;
             if (sub.creator_id) {
               existing.creatorIds.add(sub.creator_id);
@@ -307,11 +305,9 @@ export function BoostHomeTab({
         });
 
         // Fetch and add applications data
-        const { data: applicationsData } = await supabase
-          .from('bounty_applications')
-          .select('applied_at, user_id')
-          .eq('bounty_campaign_id', boost.id);
-        
+        const {
+          data: applicationsData
+        } = await supabase.from('bounty_applications').select('applied_at, user_id').eq('bounty_campaign_id', boost.id);
         let filteredApplications = applicationsData || [];
         if (dateRange) {
           filteredApplications = filteredApplications.filter(app => {
@@ -320,21 +316,21 @@ export function BoostHomeTab({
             return date >= dateRange.start && date <= dateRange.end;
           });
         }
-        
         filteredApplications.forEach(app => {
           if (app.applied_at) {
             const dateKey = format(new Date(app.applied_at), 'yyyy-MM-dd');
-            const existing = activityMap.get(dateKey) || { submissions: 0, creatorIds: new Set<string>(), applications: 0 };
+            const existing = activityMap.get(dateKey) || {
+              submissions: 0,
+              creatorIds: new Set<string>(),
+              applications: 0
+            };
             existing.applications += 1;
             activityMap.set(dateKey, existing);
           }
         });
 
         // Convert to sorted array with cumulative counts
-        const sortedActivityDates = Array.from(activityMap.entries()).sort((a, b) => 
-          new Date(a[0]).getTime() - new Date(b[0]).getTime()
-        );
-        
+        const sortedActivityDates = Array.from(activityMap.entries()).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
         let cumulativeActivitySubmissions = 0;
         let cumulativeApplications = 0;
         const allActivityCreatorIds = new Set<string>();
@@ -356,11 +352,7 @@ export function BoostHomeTab({
         });
         setActivityData(formattedActivityData);
         // Map approved submissions from filtered data to top videos format - sort by views descending
-        const approvedVideos = filteredSubmissions
-          .filter(s => s.status === 'approved')
-          .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
-          .slice(0, 3);
-
+        const approvedVideos = filteredSubmissions.filter(s => s.status === 'approved').sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0)).slice(0, 3);
         if (approvedVideos.length > 0) {
           const mappedVideos: VideoData[] = approvedVideos.map(v => ({
             ad_id: v.id,
@@ -396,10 +388,14 @@ export function BoostHomeTab({
     setIsRefreshing(true);
     try {
       // Sync metrics only for this brand (much faster than syncing everything)
-      const { data, error } = await supabase.functions.invoke('sync-shortimize-metrics', {
-        body: { brandId: boost.brand_id }
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('sync-shortimize-metrics', {
+        body: {
+          brandId: boost.brand_id
+        }
       });
-
       if (error) {
         toast.error('Failed to sync metrics');
         console.error('Error syncing metrics:', error);
@@ -456,7 +452,7 @@ export function BoostHomeTab({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Views</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Views</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{stats.totalViews.toLocaleString()}</p>
             </div>
@@ -466,7 +462,7 @@ export function BoostHomeTab({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">CPM</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">CPM</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.cpm)}</p>
             </div>
@@ -476,7 +472,7 @@ export function BoostHomeTab({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
             </div>
@@ -486,7 +482,7 @@ export function BoostHomeTab({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Submissions</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Submissions</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{stats.totalSubmissions}</p>
               <div className="text-xs px-2 py-1 rounded-full tracking-[-0.5px] bg-primary/10 text-primary">
@@ -499,13 +495,7 @@ export function BoostHomeTab({
       </div>
 
       {/* Budget & Creators Card */}
-      <BudgetProgressCard
-        budgetUsed={budgetUsed}
-        budgetTotal={budgetTotal}
-        acceptedCreators={stats.acceptedCreators}
-        maxCreators={stats.maxCreators}
-        onTopUp={onTopUp}
-      />
+      <BudgetProgressCard budgetUsed={budgetUsed} budgetTotal={budgetTotal} acceptedCreators={stats.acceptedCreators} maxCreators={stats.maxCreators} onTopUp={onTopUp} />
 
       {/* Charts Row - Side by Side */}
       <div className="flex flex-col gap-4">
