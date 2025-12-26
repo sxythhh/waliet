@@ -1333,23 +1333,20 @@ export function VideoSubmissionsTab({
                       </div>
 
                       {/* Action Bar - For all pending videos */}
-                      {video.status === "pending" && <div className="flex items-center gap-2 px-3 pb-3 pt-1">
-                          <Button size="sm" className="h-8 flex-1 text-xs gap-1.5 bg-green-500/90 hover:bg-green-500 text-white rounded-lg" onClick={() => handleApprove(video)} disabled={processing}>
-                            <Check className="h-3.5 w-3.5" />
+                      {video.status === "pending" && <div className="flex items-center gap-1.5 px-3 pb-3 pt-1">
+                          <Button size="sm" className="h-7 flex-1 text-[11px] font-medium gap-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md shadow-none" onClick={() => handleApprove(video)} disabled={processing}>
+                            <Check className="h-3 w-3" />
                             Approve
                           </Button>
-                          <Button size="sm" variant="outline" className="h-8 flex-1 text-xs gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg" onClick={() => {
+                          <Button size="sm" className="h-7 flex-1 text-[11px] font-medium gap-1 bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground rounded-md shadow-none" onClick={() => {
                       setSelectedSubmission(video);
                       setRejectDialogOpen(true);
                     }} disabled={processing}>
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-3 w-3" />
                             Reject
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleFlag(video)} disabled={processing}>
-                            <img src={flagIcon} alt="Flag" className={cn("h-4 w-4", video.is_flagged && "opacity-50")} />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleRefreshMetadata(video)} disabled={processing}>
-                            <RefreshCw className="h-4 w-4" />
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50" onClick={() => handleRefreshMetadata(video)} disabled={processing}>
+                            <RefreshCw className="h-3.5 w-3.5" />
                           </Button>
                         </div>}
 
