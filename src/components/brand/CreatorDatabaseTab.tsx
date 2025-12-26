@@ -35,6 +35,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import xLogoBlack from "@/assets/x-logo.png";
 import xLogoWhite from "@/assets/x-logo-light.png";
+import discordWhiteIcon from "@/assets/discord-white-icon.webp";
 interface Creator {
   id: string;
   relationship_id: string;
@@ -1471,7 +1472,10 @@ export function CreatorDatabaseTab({
                   </div>}
                 {selectedCreatorPanel.discord_username && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord Username</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
+                    <div className="flex items-center gap-1.5">
+                      <img src={discordWhiteIcon} alt="Discord" className="h-3.5 w-3.5" />
+                      <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
+                    </div>
                   </div>}
                 {selectedCreatorPanel.country && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Country</p>
