@@ -289,17 +289,17 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
 
             return (
               <DropdownMenu key={blueprint.id}>
-                <DropdownMenuTrigger asChild>
-                  <div className="group cursor-pointer rounded-xl overflow-hidden bg-card border border-[#0e0e0e] hover:border-border/60 transition-all duration-200">
-                    {/* Status Header Banner */}
-                    <div className={`px-4 py-2 text-center ${statusConfig.bgColor}`}>
+              <DropdownMenuTrigger asChild>
+                  <div className="group cursor-pointer">
+                    {/* Status Tab Label */}
+                    <div className={`mx-auto w-fit px-6 py-1.5 rounded-t-lg ${statusConfig.bgColor}`}>
                       <span className={`text-xs font-semibold uppercase tracking-wider ${statusConfig.textColor}`}>
                         {statusConfig.label}
                       </span>
                     </div>
 
-                    {/* Content Area with Dashed Border */}
-                    <div className="m-2 p-4 rounded-lg border border-dashed border-border/50 bg-background/50">
+                    {/* Content Card with Dashed Border */}
+                    <div className="rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4">
                       {/* Title */}
                       <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px]">
                         {blueprint.title}
@@ -310,54 +310,50 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                         {contentPreview || "No content yet..."}
                       </p>
 
-                      {/* Avatar and Status Row */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center -space-x-2">
-                          {userInfo?.avatarUrl ? (
-                            <img
-                              src={userInfo.avatarUrl}
-                              alt={userInfo.name}
-                              className="h-8 w-8 rounded-full object-cover border-2 border-background"
-                            />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border-2 border-background">
-                              {(userInfo?.name || "U").charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        
-                        {status === 'draft' && (
-                          <span className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
-                            In Progress
-                          </span>
-                        )}
+                      {/* Status Badge Row */}
+                      <div className="flex items-center justify-end mb-4">
                         {status === 'assigned' && (
-                          <span className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-xs font-medium text-emerald-400">
+                          <span className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
                             Active
                           </span>
                         )}
                       </div>
-                    </div>
 
-                    {/* Footer Stats */}
-                    <div className="px-4 pb-3 flex items-center justify-between text-muted-foreground">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5">
-                          <MessageSquare className="h-4 w-4" />
-                          <span className="text-sm font-medium">0</span>
+                      {/* Footer Stats */}
+                      <div className="flex items-center justify-between text-muted-foreground pt-3 border-t border-border/20">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="text-sm font-medium">0</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Link className="h-4 w-4" />
+                            <span className="text-sm font-medium">{blueprint.platforms?.length || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm font-medium">{contentPreview ? 1 : 0}</span>
+                          </div>
+                          {/* User info */}
+                          <div className="flex items-center gap-1.5">
+                            {userInfo?.avatarUrl ? (
+                              <img
+                                src={userInfo.avatarUrl}
+                                alt={userInfo.name}
+                                className="h-4 w-4 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center text-[9px] font-medium">
+                                {(userInfo?.name || "U").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="text-sm">{userInfo?.name || "You"}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Link className="h-4 w-4" />
-                          <span className="text-sm font-medium">{blueprint.platforms?.length || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <FileText className="h-4 w-4" />
-                          <span className="text-sm font-medium">{contentPreview ? 1 : 0}</span>
-                        </div>
+                        <span className="text-sm">
+                          {format(new Date(blueprint.updated_at), 'dd/MM/yyyy')}
+                        </span>
                       </div>
-                      <span className="text-sm">
-                        {format(new Date(blueprint.updated_at), 'dd/MM/yyyy')}
-                      </span>
                     </div>
                   </div>
                 </DropdownMenuTrigger>
