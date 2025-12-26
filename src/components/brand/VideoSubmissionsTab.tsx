@@ -1195,7 +1195,7 @@ export function VideoSubmissionsTab({
                     }} />}
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
+                  <PopoverContent className="w-auto p-0 bg-background/80 backdrop-blur-xl border-border/50" align="end" sideOffset={8}>
                     <div className="p-3 border-b border-border">
                       <p className="text-xs font-medium font-inter tracking-[-0.5px] text-foreground">Select date range</p>
                       <p className="text-[10px] text-muted-foreground tracking-[-0.5px] mt-0.5">Filter videos by date</p>
