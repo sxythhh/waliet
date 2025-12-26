@@ -43,15 +43,15 @@ export function BudgetProgressCard({
         {/* Budget Usage Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm font-medium text-foreground tracking-[-0.5px]">Budget Usage</span>
+            
           </div>
           
           {/* Semi-circle progress gauge */}
           <div className="flex flex-col items-center">
             <div className="relative" style={{
-              width: 180,
-              height: 100
-            }}>
+            width: 180,
+            height: 100
+          }}>
               <svg width="180" height="100" viewBox="0 0 180 100" className="overflow-visible">
                 {/* Background arc */}
                 <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="14" strokeLinecap="round" />
@@ -98,7 +98,7 @@ export function BudgetProgressCard({
         {/* Creators Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-sm font-medium text-foreground tracking-[-0.5px]">Creators</span>
+            
           </div>
           
           {/* Semi-circle progress gauge */}
