@@ -284,49 +284,61 @@ export function CreatorContractsTab({
               
             </Card> : filteredContracts.map(contract => {
           const StatusIcon = statusConfig[contract.status].icon;
-          return <Card key={contract.id} className="hover:bg-muted/30 transition-colors cursor-pointer border-border" onClick={() => handleViewContract(contract)}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <Avatar className="h-10 w-10 flex-shrink-0">
+          return <Card key={contract.id} className="group hover:bg-muted/20 transition-all duration-200 cursor-pointer border-border/50 bg-card/50" onClick={() => handleViewContract(contract)}>
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <Avatar className="h-11 w-11 flex-shrink-0 ring-2 ring-border/30">
                           <AvatarImage src={contract.creator_avatar || undefined} />
-                          <AvatarFallback className="bg-muted">
-                            {contract.creator_name.charAt(0)}
+                          <AvatarFallback className="bg-muted font-['Inter'] font-medium text-sm">
+                            {contract.creator_name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium font-inter tracking-[-0.5px] truncate">
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] text-foreground truncate">
                               {contract.title}
-                            </p>
-                            <Badge className={`${statusConfig[contract.status].color} text-[10px] shrink-0`}>
+                            </h3>
+                            <Badge variant="secondary" className={`${statusConfig[contract.status].color} text-[10px] font-['Inter'] tracking-[-0.3px] px-2 py-0.5 shrink-0`}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {statusConfig[contract.status].label}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                            {contract.creator_name} • ${contract.monthly_rate}/mo • {contract.videos_per_month} videos/mo
+                          <p className="text-[13px] text-muted-foreground font-['Inter'] tracking-[-0.5px]">
+                            {contract.creator_name}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {contract.boost_title && <span className="text-primary">{contract.boost_title}</span>}
-                            {' • '}Created {formatDistanceToNow(new Date(contract.created_at), {
-                        addSuffix: true
-                      })}
+                          <div className="flex items-center gap-3 pt-1">
+                            <span className="inline-flex items-center text-xs font-['Inter'] tracking-[-0.3px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+                              ${contract.monthly_rate}/mo
+                            </span>
+                            <span className="inline-flex items-center text-xs font-['Inter'] tracking-[-0.3px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
+                              {contract.videos_per_month} videos/mo
+                            </span>
+                            {contract.boost_title && (
+                              <span className="inline-flex items-center text-xs font-['Inter'] tracking-[-0.3px] text-primary bg-primary/10 px-2 py-1 rounded-md">
+                                {contract.boost_title}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground/70 font-['Inter'] tracking-[-0.3px] pt-0.5">
+                            Created {formatDistanceToNow(new Date(contract.created_at), { addSuffix: true })}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 ml-4" onClick={e => e.stopPropagation()}>
-                        {contract.status === 'sent' && <Button variant="outline" size="sm" onClick={() => handleSendReminder(contract)}>
+                      <div className="flex items-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        {contract.status === 'sent' && (
+                          <Button variant="outline" size="sm" className="font-['Inter'] tracking-[-0.5px] text-xs h-8" onClick={() => handleSendReminder(contract)}>
                             <Send className="h-3.5 w-3.5 mr-1.5" />
                             Remind
-                          </Button>}
+                          </Button>
+                        )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="font-['Inter'] tracking-[-0.3px]">
                             <DropdownMenuItem onClick={() => handleViewContract(contract)}>
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
@@ -335,7 +347,8 @@ export function CreatorContractsTab({
                               <Download className="h-4 w-4 mr-2" />
                               Download PDF
                             </DropdownMenuItem>
-                            {contract.status === 'draft' && <>
+                            {contract.status === 'draft' && (
+                              <>
                                 <DropdownMenuItem>
                                   <Pencil className="h-4 w-4 mr-2" />
                                   Edit
@@ -345,7 +358,8 @@ export function CreatorContractsTab({
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>
-                              </>}
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
