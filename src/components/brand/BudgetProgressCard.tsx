@@ -117,7 +117,7 @@ export function BudgetProgressCard({
                   <span className="text-3xl font-bold tracking-[-1px] text-foreground">{acceptedCreators}</span>
                   <span className="text-lg text-muted-foreground font-medium">/{maxCreators}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground tracking-[-0.3px] uppercase">creators joined</span>
+                
               </div>
             </div>
           </div>
