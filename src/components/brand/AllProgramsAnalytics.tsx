@@ -372,7 +372,7 @@ export function AllProgramsAnalytics({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Effective CPM</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Effective CPM</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.effectiveCPM)}</p>
             </div>
@@ -382,7 +382,7 @@ export function AllProgramsAnalytics({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Total Payouts</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Payouts</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
               
@@ -393,7 +393,7 @@ export function AllProgramsAnalytics({
 
         <Card className="p-4 bg-stats-card border-table-border">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground tracking-[-0.5px]">Submissions</p>
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Submissions</p>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold tracking-[-0.5px]">{stats.totalSubmissions}</p>
               <div className="text-xs px-2 py-1 rounded-full tracking-[-0.5px] bg-primary/10 text-primary">
