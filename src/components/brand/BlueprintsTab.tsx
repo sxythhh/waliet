@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { CampaignCreationWizard } from "./CampaignCreationWizard";
 import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "./CreateBountyDialog";
 import { TemplateSelector } from "./TemplateSelector";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { format } from "date-fns";
 
@@ -259,8 +260,22 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">Blueprints</h2>
+          <TooltipProvider>
+            <Tooltip delayDuration={200}>
+              <TooltipTrigger asChild>
+                <div className="p-1 rounded-full bg-muted/50 hover:bg-muted transition-colors cursor-help">
+                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[280px] p-3">
+                <p className="text-sm leading-relaxed">
+                  Blueprints are content briefs that outline what creators should produce. Assign them to campaigns to guide creators with talking points, brand voice, and example videos.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <Button
           onClick={() => setTemplateSelectorOpen(true)}
