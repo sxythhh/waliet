@@ -3935,6 +3935,20 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          command: string
+          database: string
+          jobid: number
+          jobname: string
+          nodename: string
+          nodeport: number
+          schedule: string
+          username: string
+        }[]
+      }
       get_current_user_email: { Args: never; Returns: string }
       get_discord_tokens: {
         Args: { p_user_id: string }
