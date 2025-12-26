@@ -298,86 +298,79 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-full" />
-        <div className="grid grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20" />)}
+      <div className="space-y-5">
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <div className="grid grid-cols-5 gap-2">
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
         </div>
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header & Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Video className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Campaign Videos</h3>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-              {videos.length} videos • {accountStats.filter(a => a.videos.length > 0).length} accounts
-              {lastSynced && ` • Last synced ${format(lastSynced, "MMM d, h:mm a")}`}
-            </p>
-          </div>
+    <div className="space-y-5 font-['Inter'] tracking-[-0.5px]">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-border/40">
+        <div className="space-y-0.5">
+          <h3 className="text-base font-semibold text-foreground">Campaign Videos</h3>
+          <p className="text-[13px] text-muted-foreground">
+            {videos.length} videos · {accountStats.filter(a => a.videos.length > 0).length} accounts
+            {lastSynced && <span className="text-muted-foreground/60"> · Updated {format(lastSynced, "MMM d, h:mm a")}</span>}
+          </p>
         </div>
         <Button 
           onClick={handleSync} 
           disabled={syncing}
           size="sm"
-          variant="outline"
-          className="h-8 gap-2"
+          className="h-8 px-3 gap-1.5 text-xs font-medium bg-foreground text-background hover:bg-foreground/90"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Syncing..." : "Sync Videos"}
+          <RefreshCw className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing..." : "Sync"}
         </Button>
       </div>
 
       {/* Hashtags Display */}
       {hashtags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Filtering by:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70 font-medium">Tracking:</span>
           {hashtags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-xs">
+            <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
               #{tag.replace(/^#/, "")}
-            </Badge>
+            </span>
           ))}
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={filterAccount} onValueChange={setFilterAccount}>
-            <SelectTrigger className="w-[200px] h-8 text-sm">
-              <SelectValue placeholder="Filter by account" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Accounts</SelectItem>
-              {accountStats.map(stats => (
-                <SelectItem 
-                  key={`${stats.platform}:${stats.username}`} 
-                  value={`${stats.platform}:${stats.username}`}
-                >
-                  @{stats.username} ({stats.platform})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Filters Row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Select value={filterAccount} onValueChange={setFilterAccount}>
+          <SelectTrigger className="w-[180px] h-8 text-xs border-border/50 bg-background">
+            <User className="h-3 w-3 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="All Accounts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className="text-xs">All Accounts</SelectItem>
+            {accountStats.map(stats => (
+              <SelectItem 
+                key={`${stats.platform}:${stats.username}`} 
+                value={`${stats.platform}:${stats.username}`}
+                className="text-xs"
+              >
+                @{stats.username}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Select value={filterPlatform} onValueChange={setFilterPlatform}>
-          <SelectTrigger className="w-[140px] h-8 text-sm">
+          <SelectTrigger className="w-[130px] h-8 text-xs border-border/50 bg-background">
             <SelectValue placeholder="Platform" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Platforms</SelectItem>
+            <SelectItem value="all" className="text-xs">All Platforms</SelectItem>
             {platforms.map(platform => (
-              <SelectItem key={platform} value={platform} className="capitalize">
+              <SelectItem key={platform} value={platform} className="text-xs capitalize">
                 {platform}
               </SelectItem>
             ))}
@@ -385,143 +378,135 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
         </Select>
 
         <Input
-          placeholder="Search videos..."
+          placeholder="Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-[200px] h-8 text-sm"
+          className="w-[160px] h-8 text-xs border-border/50 bg-background"
         />
 
-        <div className="ml-auto flex gap-1">
-          <Button
-            variant={viewMode === "accounts" ? "secondary" : "ghost"}
-            size="sm"
-            className="h-8"
+        <div className="ml-auto flex rounded-lg border border-border/50 p-0.5 bg-muted/30">
+          <button
             onClick={() => setViewMode("accounts")}
+            className={`h-7 px-3 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "accounts" 
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Users className="h-3.5 w-3.5 mr-1" />
-            By Account
-          </Button>
-          <Button
-            variant={viewMode === "table" ? "secondary" : "ghost"}
-            size="sm"
-            className="h-8"
+            Accounts
+          </button>
+          <button
             onClick={() => setViewMode("table")}
+            className={`h-7 px-3 text-xs font-medium rounded-md transition-colors ${
+              viewMode === "table" 
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Video className="h-3.5 w-3.5 mr-1" />
-            All Videos
-          </Button>
+            Videos
+          </button>
         </div>
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-5 gap-3">
-        <div className="bg-muted/10 rounded-lg p-3 flex items-center gap-3">
-          <Video className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos</p>
-            <p className="text-sm font-semibold tabular-nums">{totals.videos.toLocaleString()}</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-5 gap-2">
+        {[
+          { label: "Videos", value: totals.videos, icon: Video },
+          { label: "Views", value: totals.views, icon: Eye },
+          { label: "Likes", value: totals.likes, icon: Heart },
+          { label: "Comments", value: totals.comments, icon: MessageCircle },
+          { label: "Shares", value: totals.shares, icon: Share2 },
+        ].map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-xl border border-border/40 bg-card/50 p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Icon className="h-3.5 w-3.5 text-muted-foreground/70" />
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium">{label}</span>
+            </div>
+            <p className="text-lg font-semibold tabular-nums text-foreground">{value.toLocaleString()}</p>
           </div>
-        </div>
-        <div className="bg-muted/10 rounded-lg p-3 flex items-center gap-3">
-          <Eye className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Views</p>
-            <p className="text-sm font-semibold tabular-nums">{totals.views.toLocaleString()}</p>
-          </div>
-        </div>
-        <div className="bg-muted/10 rounded-lg p-3 flex items-center gap-3">
-          <Heart className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Likes</p>
-            <p className="text-sm font-semibold tabular-nums">{totals.likes.toLocaleString()}</p>
-          </div>
-        </div>
-        <div className="bg-muted/10 rounded-lg p-3 flex items-center gap-3">
-          <MessageCircle className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Comments</p>
-            <p className="text-sm font-semibold tabular-nums">{totals.comments.toLocaleString()}</p>
-          </div>
-        </div>
-        <div className="bg-muted/10 rounded-lg p-3 flex items-center gap-3">
-          <Share2 className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Shares</p>
-            <p className="text-sm font-semibold tabular-nums">{totals.shares.toLocaleString()}</p>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Account-Based View */}
       {viewMode === "accounts" && (
-        <div className="space-y-4">
-          <h4 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px] flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Per-Account Analytics
-          </h4>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <h4 className="text-[13px] font-medium text-foreground">Per-Account Analytics</h4>
+          </div>
           
           {accountStats.filter(a => a.videos.length > 0).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/10 rounded-xl">
-              <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-                <Users className="h-5 w-5 text-muted-foreground/50" />
+            <div className="flex flex-col items-center justify-center py-14 text-center rounded-xl border border-dashed border-border/60 bg-muted/5">
+              <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center mb-2.5">
+                <Users className="h-4 w-4 text-muted-foreground/60" />
               </div>
-              <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">No accounts with videos</p>
-              <p className="text-xs text-muted-foreground/70 mt-1 font-inter tracking-[-0.5px]">
-                Click "Sync Videos" to fetch the latest data
+              <p className="text-[13px] text-muted-foreground font-medium">No accounts with videos</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
+                Click "Sync" to fetch the latest data
               </p>
             </div>
           ) : (
-            <div className="rounded-xl bg-muted/10 overflow-hidden">
+            <div className="rounded-xl border border-border/40 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border/30 hover:bg-transparent">
-                    <TableHead className="text-xs text-muted-foreground font-medium">Account</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Platform</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Matched User</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Videos</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Total Views</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Weekly Views</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Est. Weekly Payout</TableHead>
+                  <TableRow className="border-b border-border/40 bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Account</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Platform</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Creator</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Videos</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Total Views</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Weekly</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Est. Payout</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {accountStats.filter(a => a.videos.length > 0).map((stats) => (
                     <TableRow 
                       key={`${stats.platform}:${stats.username}`}
-                      className="border-b border-border/20 cursor-pointer hover:bg-muted/20"
+                      className="border-b border-border/30 cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => setFilterAccount(`${stats.platform}:${stats.username}`)}
                     >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          @{stats.username}
+                      <TableCell className="py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[13px] font-medium text-foreground">@{stats.username}</span>
                           {stats.userId && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              Matched
-                            </Badge>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-medium">
+                              Linked
+                            </span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="capitalize text-muted-foreground">{stats.platform}</TableCell>
-                      <TableCell>
+                      <TableCell className="py-2.5">
+                        <span className="text-[13px] capitalize text-muted-foreground">{stats.platform}</span>
+                      </TableCell>
+                      <TableCell className="py-2.5">
                         {stats.profile ? (
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
+                            <Avatar className="h-5 w-5">
                               <AvatarImage src={stats.profile.avatar_url || undefined} />
-                              <AvatarFallback className="text-[10px]">
+                              <AvatarFallback className="text-[9px] bg-muted">
                                 {stats.profile.username?.[0]?.toUpperCase() || "?"}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm">{stats.profile.full_name || stats.profile.username}</span>
+                            <span className="text-[13px] text-foreground">{stats.profile.full_name || stats.profile.username}</span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs">—</span>
+                          <span className="text-muted-foreground/50 text-xs">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{stats.totalVideos}</TableCell>
-                      <TableCell className="text-right tabular-nums">{stats.totalViews.toLocaleString()}</TableCell>
-                      <TableCell className="text-right tabular-nums">{stats.weeklyViews.toLocaleString()}</TableCell>
-                      <TableCell className="text-right tabular-nums font-medium text-green-500">
-                        ${stats.estimatedPayout.toFixed(2)}
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums text-foreground">{stats.totalVideos}</span>
+                      </TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums text-foreground">{stats.totalViews.toLocaleString()}</span>
+                      </TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums text-foreground">{stats.weeklyViews.toLocaleString()}</span>
+                      </TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums font-semibold text-emerald-600">
+                          ${stats.estimatedPayout.toFixed(2)}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -535,63 +520,73 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
       {/* Table View */}
       {viewMode === "table" && (
         filteredVideos.length > 0 ? (
-          <div className="rounded-xl bg-muted/10 overflow-hidden">
+          <div className="rounded-xl border border-border/40 overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-border/30 hover:bg-transparent">
-                    <TableHead className="text-xs text-muted-foreground font-medium">Username</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Platform</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Title</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Uploaded</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Views</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Likes</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium text-right">Est. Payout</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Status</TableHead>
-                    <TableHead className="text-xs text-muted-foreground font-medium">Link</TableHead>
+                  <TableRow className="border-b border-border/40 bg-muted/30 hover:bg-muted/30">
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Username</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Platform</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Title</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Uploaded</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Views</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Likes</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium text-right h-9">Payout</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium h-9"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredVideos.map((video) => (
                     <TableRow 
                       key={video.id}
-                      className="border-b border-border/20 hover:bg-muted/20"
+                      className="border-b border-border/30 hover:bg-muted/40 transition-colors"
                     >
-                      <TableCell className="text-sm font-medium">@{video.username}</TableCell>
-                      <TableCell className="text-sm capitalize text-muted-foreground">{video.platform}</TableCell>
-                      <TableCell className="text-sm max-w-[200px] truncate">{video.title || video.caption || "-"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {video.uploaded_at ? format(parseISO(video.uploaded_at), "MMM d, yyyy") : "-"}
+                      <TableCell className="py-2.5">
+                        <span className="text-[13px] font-medium text-foreground">@{video.username}</span>
                       </TableCell>
-                      <TableCell className="text-sm text-right tabular-nums">
-                        {(video.views || 0).toLocaleString()}
+                      <TableCell className="py-2.5">
+                        <span className="text-[13px] capitalize text-muted-foreground">{video.platform}</span>
                       </TableCell>
-                      <TableCell className="text-sm text-right tabular-nums">
-                        {(video.likes || 0).toLocaleString()}
+                      <TableCell className="py-2.5 max-w-[180px]">
+                        <span className="text-[13px] text-foreground truncate block">{video.title || video.caption || "—"}</span>
                       </TableCell>
-                      <TableCell className="text-sm text-right font-medium text-green-500 tabular-nums">
-                        ${(((video.views || 0) / 1000) * rpmRate).toFixed(2)}
+                      <TableCell className="py-2.5">
+                        <span className="text-[13px] text-muted-foreground">
+                          {video.uploaded_at ? format(parseISO(video.uploaded_at), "MMM d") : "—"}
+                        </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums text-foreground">{(video.views || 0).toLocaleString()}</span>
+                      </TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums text-foreground">{(video.likes || 0).toLocaleString()}</span>
+                      </TableCell>
+                      <TableCell className="text-right py-2.5">
+                        <span className="text-[13px] tabular-nums font-semibold text-emerald-600">
+                          ${(((video.views || 0) / 1000) * rpmRate).toFixed(2)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2.5">
                         {video.user_id ? (
-                          <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-500 border-green-500/30">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-medium">
                             Matched
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] bg-yellow-500/10 text-yellow-500 border-yellow-500/30">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-medium">
                             Unmatched
-                          </Badge>
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-2.5">
                         {video.video_url && (
                           <a 
                             href={video.video_url} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="text-primary text-sm hover:underline"
+                            className="text-[13px] text-primary hover:underline font-medium"
                           >
-                            View
+                            View →
                           </a>
                         )}
                       </TableCell>
@@ -602,13 +597,13 @@ export function CampaignVideosPanel({ campaignId, brandId, rpmRate, hashtags = [
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center bg-muted/10 rounded-xl">
-            <div className="w-12 h-12 rounded-full bg-muted/30 flex items-center justify-center mb-3">
-              <Video className="h-5 w-5 text-muted-foreground/50" />
+          <div className="flex flex-col items-center justify-center py-14 text-center rounded-xl border border-dashed border-border/60 bg-muted/5">
+            <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center mb-2.5">
+              <Video className="h-4 w-4 text-muted-foreground/60" />
             </div>
-            <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px]">No videos found</p>
-            <p className="text-xs text-muted-foreground/70 mt-1 font-inter tracking-[-0.5px]">
-              {videos.length === 0 ? 'Click "Sync Videos" to fetch the latest data' : "Try adjusting your filters"}
+            <p className="text-[13px] text-muted-foreground font-medium">No videos found</p>
+            <p className="text-xs text-muted-foreground/60 mt-0.5">
+              {videos.length === 0 ? 'Click "Sync" to fetch the latest data' : "Try adjusting your filters"}
             </p>
           </div>
         )
