@@ -14,6 +14,7 @@ import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
 import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
@@ -360,9 +361,7 @@ export function BrandCampaignsTab({
       {selectedBoostId ? <BrandCampaignDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{brandName}</h1>
-            </div>
+            <GlobalBrandSearch brandId={brandId} />
             <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
               <Plus className="h-4 w-4" />
               Create Campaign
