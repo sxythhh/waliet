@@ -484,8 +484,9 @@ export function AppSidebar() {
                 VIRALITY
               </span>}
           </Link>
-          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] text-neutral-400 hover:text-white transition-colors">
-              <PanelLeftClose className="h-4 w-4" />
+          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] transition-colors group">
+              <img src="/src/assets/left-panel-close.svg" alt="Collapse" className="h-4 w-4 group-hover:hidden" />
+              <img src="/src/assets/left-panel-close-hover.svg" alt="Collapse" className="h-4 w-4 hidden group-hover:block" />
             </button>}
         </div>
 
