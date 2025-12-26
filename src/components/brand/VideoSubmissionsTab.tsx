@@ -29,6 +29,7 @@ import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 import videoLibraryIcon from "@/assets/video-library-icon.svg";
 import flagIcon from "@/assets/flag-icon.svg";
+import { DemographicScoreIndicator } from "./DemographicScoreIndicator";
 
 // Helper to extract platform video ID from URL
 const extractPlatformVideoId = (url: string, platform: string): string | null => {
@@ -104,6 +105,12 @@ interface Profile {
   avatar_url: string | null;
   email?: string | null;
 }
+interface DemographicScore {
+  social_account_id: string;
+  user_id: string;
+  score: number | null;
+  platform: string;
+}
 interface CreatorStats {
   userId: string;
   profile: Profile;
@@ -147,6 +154,7 @@ export function VideoSubmissionsTab({
   const [submissions, setSubmissions] = useState<UnifiedVideo[]>([]);
   const [trackedVideos, setTrackedVideos] = useState<UnifiedVideo[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
+  const [demographicScores, setDemographicScores] = useState<Record<string, DemographicScore>>({});
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<UnifiedVideo | null>(null);
   const [selectedCreator, setSelectedCreator] = useState<string | null>(null);
@@ -302,6 +310,40 @@ export function VideoSubmissionsTab({
               ...prev,
               ...profileMap
             }));
+          }
+
+          // Fetch demographic scores for users
+          const { data: socialAccountsData } = await supabase
+            .from("social_accounts")
+            .select("id, user_id, platform")
+            .in("user_id", userIds);
+
+          if (socialAccountsData && socialAccountsData.length > 0) {
+            const socialAccountIds = socialAccountsData.map(sa => sa.id);
+            const { data: demographicsData } = await supabase
+              .from("demographic_submissions")
+              .select("social_account_id, score")
+              .in("social_account_id", socialAccountIds)
+              .eq("status", "approved");
+
+            if (demographicsData) {
+              const demoMap: Record<string, DemographicScore> = {};
+              demographicsData.forEach(d => {
+                const socialAccount = socialAccountsData.find(sa => sa.id === d.social_account_id);
+                if (socialAccount) {
+                  demoMap[socialAccount.user_id] = {
+                    social_account_id: d.social_account_id,
+                    user_id: socialAccount.user_id,
+                    score: d.score,
+                    platform: socialAccount.platform
+                  };
+                }
+              });
+              setDemographicScores(prev => ({
+                ...prev,
+                ...demoMap
+              }));
+            }
           }
         }
       }
@@ -1270,23 +1312,24 @@ export function VideoSubmissionsTab({
                               )}
                             </div>
                           </TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Date</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Date</TableHead>
+                          <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredVids.map(video => {
                       const profile = video.user_id ? profiles[video.user_id] : null;
+                      const demographicScore = video.user_id ? demographicScores[video.user_id] : null;
                       const isSelected = selectedVideos.has(video.id);
-                      return <TableRow key={video.id} className={cn("border-border/30 group", isSelected && "bg-primary/5")}>
+                      return <TableRow key={video.id} className={cn("border-border/30 group font-['Inter']", isSelected && "bg-primary/5")}>
                               <TableCell className="w-8 p-0 pl-2">
                                 <div 
                                   className={cn(
@@ -1301,7 +1344,7 @@ export function VideoSubmissionsTab({
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[200px]">
-                                <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline">
+                                <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium font-['Inter'] tracking-[-0.5px] line-clamp-1 hover:underline">
                                   {video.video_title || video.video_description || "Untitled Video"}
                                 </a>
                               </TableCell>
@@ -1312,45 +1355,50 @@ export function VideoSubmissionsTab({
                                       <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" />
                                     ) : (
                                       <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                        <span className="text-[10px] font-medium text-muted-foreground uppercase">
+                                        <span className="text-[10px] font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground uppercase">
                                           {(profile.full_name || profile.username || "U").charAt(0)}
                                         </span>
                                       </div>
                                     )}
-                                    <span className="text-xs text-foreground">
+                                    <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
                                       {profile.full_name || profile.username}
                                     </span>
                                   </div>
                                 ) : null}
                               </TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-1.5">
-                                  <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                                    <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
+                                <div className="flex flex-col gap-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                      <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
+                                    </div>
+                                    <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
+                                      {video.video_author_username || profile?.username || "Unknown"}
+                                    </span>
                                   </div>
-                                  <span className="text-xs text-foreground">
-                                    {video.video_author_username || profile?.username || "Unknown"}
-                                  </span>
+                                  {demographicScore && (
+                                    <DemographicScoreIndicator score={demographicScore.score} />
+                                  )}
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-inter tracking-[-0.5px]", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 border-transparent font-['Inter'] tracking-[-0.5px]", video.status === "approved" && "bg-green-500/10 text-green-500", video.status === "pending" && "bg-yellow-500/10 text-yellow-500", video.status === "rejected" && "bg-red-500/10 text-red-500", video.status === "tracked" && "bg-purple-500/10 text-purple-500")}>
                                   {video.status}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-right text-xs tabular-nums">
+                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
                                 {formatNumber(video.views)}
                               </TableCell>
-                              <TableCell className="text-right text-xs tabular-nums">
+                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
                                 {formatNumber(video.likes)}
                               </TableCell>
-                              <TableCell className="text-right text-xs tabular-nums">
+                              <TableCell className="text-right text-xs font-['Inter'] tracking-[-0.5px] tabular-nums">
                                 {formatNumber(video.comments)}
                               </TableCell>
-                              <TableCell className="text-right text-xs font-medium tabular-nums text-green-500">
+                              <TableCell className="text-right text-xs font-medium font-['Inter'] tracking-[-0.5px] tabular-nums text-green-500">
                                 ${getPayoutForSubmission(video).toFixed(2)}
                               </TableCell>
-                              <TableCell className="text-xs text-muted-foreground">
+                              <TableCell className="text-xs font-['Inter'] tracking-[-0.5px] text-muted-foreground">
                                 {format(new Date(video.submitted_at), "MMM d")}
                               </TableCell>
                               <TableCell>
