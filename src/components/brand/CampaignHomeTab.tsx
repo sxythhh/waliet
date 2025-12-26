@@ -517,12 +517,22 @@ export function CampaignHomeTab({
         setIsLoading(false);
 
         // Load top videos from video_submissions sorted by views (non-blocking)
-        supabase
+        // Build query with optional date filtering based on timeframe
+        let topVideosQuery = supabase
           .from('video_submissions')
           .select('id, video_url, platform, views, likes, comments, shares, video_title, video_description, video_upload_date, video_author_username, creator_id', { count: 'exact' })
           .eq('source_type', 'campaign')
           .eq('source_id', campaignId)
-          .eq('status', 'approved')
+          .eq('status', 'approved');
+        
+        // Apply date filter based on timeframe (filter by video_upload_date)
+        if (dateRange) {
+          topVideosQuery = topVideosQuery
+            .gte('video_upload_date', dateRange.start.toISOString())
+            .lte('video_upload_date', dateRange.end.toISOString());
+        }
+        
+        topVideosQuery
           .order('views', { ascending: false, nullsFirst: false })
           .limit(3)
           .then(async ({ data: submissions, count, error }) => {
@@ -547,6 +557,10 @@ export function CampaignHomeTab({
               }));
               setTopVideos(mappedVideos);
               setTotalVideos(count || 0);
+            } else {
+              // No videos found for this timeframe
+              setTopVideos([]);
+              setTotalVideos(0);
             }
           });
       } catch (error) {
