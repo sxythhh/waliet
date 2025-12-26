@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Eye, Heart, MessageCircle, Share2, Video, Upload, Radar } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Eye, Heart, MessageCircle, Share2, Video, Upload, Radar, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,7 @@ import flagIcon from "@/assets/flag-icon.svg";
 // Helper to extract platform video ID from URL
 const extractPlatformVideoId = (url: string, platform: string): string | null => {
   if (!url) return null;
+  
   try {
     if (platform.toLowerCase() === "tiktok") {
       // TikTok URLs: /video/ID or /photo/ID
@@ -55,15 +56,13 @@ const extractPlatformVideoId = (url: string, platform: string): string | null =>
 };
 
 // Get tracked video thumbnail URL from Supabase storage
-const getTrackedThumbnailUrl = (video: {
-  video_url: string;
-  video_author_username: string | null;
-  platform: string;
-}): string | null => {
+const getTrackedThumbnailUrl = (video: { video_url: string; video_author_username: string | null; platform: string }): string | null => {
   const username = video.video_author_username;
   const platform = video.platform?.toLowerCase();
   const adPlatformId = extractPlatformVideoId(video.video_url, platform);
+  
   if (!username || !adPlatformId || !platform) return null;
+  
   return `https://wtmetnsnhqfbswfddkdr.supabase.co/storage/v1/object/public/ads_tracked_thumbnails/${username}/${adPlatformId}_${platform}.jpg`;
 };
 
@@ -96,6 +95,7 @@ interface UnifiedVideo {
   weeklyViews?: number;
   uploaded_at?: string;
 }
+
 interface Profile {
   id: string;
   username: string;
@@ -103,6 +103,7 @@ interface Profile {
   avatar_url: string | null;
   email?: string | null;
 }
+
 interface CreatorStats {
   userId: string;
   profile: Profile;
@@ -133,6 +134,7 @@ interface VideoSubmissionsTabProps {
   videosPerMonth?: number;
   onSubmissionReviewed?: () => void;
 }
+
 export function VideoSubmissionsTab({
   campaign,
   boostId,
@@ -140,9 +142,7 @@ export function VideoSubmissionsTab({
   videosPerMonth = 1,
   onSubmissionReviewed
 }: VideoSubmissionsTabProps) {
-  const {
-    resolvedTheme
-  } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [submissions, setSubmissions] = useState<UnifiedVideo[]>([]);
   const [trackedVideos, setTrackedVideos] = useState<UnifiedVideo[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -159,7 +159,7 @@ export function VideoSubmissionsTab({
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-
+  
   // Sync state
   const [syncing, setSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
@@ -186,9 +186,9 @@ export function VideoSubmissionsTab({
   const getPayoutForSubmission = (video: UnifiedVideo) => {
     // For tracked videos, calculate based on RPM
     if (video.source === "tracked") {
-      return video.estimatedPayout || (video.views ? video.views / 1000 * rpmRate : 0);
+      return video.estimatedPayout || (video.views ? (video.views / 1000) * rpmRate : 0);
     }
-
+    
     // If payout_amount is already set and it's not a pay_per_post with views, use it
     if (video.payout_amount !== null && video.payout_amount !== undefined) {
       // For pay_per_post, add CPM earnings on top of flat rate
@@ -222,6 +222,7 @@ export function VideoSubmissionsTab({
   const payoutPerVideo = isBoost ? monthlyRetainer / videosPerMonth : campaign?.payment_model === "pay_per_post" ? campaign?.post_rate || 0 : 0;
   const isPayPerPost = isBoost || campaign?.payment_model === "pay_per_post";
   const hasCpmBonus = campaign?.payment_model === "pay_per_post" && campaign?.rpm_rate && campaign.rpm_rate > 0;
+  
   const getPlatformLogo = (platform: string) => {
     const isDark = resolvedTheme === "dark";
     switch (platform?.toLowerCase()) {
@@ -235,28 +236,31 @@ export function VideoSubmissionsTab({
         return isDark ? tiktokLogoWhite : tiktokLogoBlack;
     }
   };
+
   useEffect(() => {
     if (entityId) {
       fetchSubmissions();
       if (!isBoost && brandId) {
-        fetchTrackedVideos();
+        fetchTrackedVideosFromCache();
       }
     }
   }, [entityId, brandId]);
+
   const fetchSubmissions = async () => {
     if (!entityId) return;
     setLoading(true);
     try {
-      // Fetch from unified video_submissions table
-      const {
-        data,
-        error
-      } = await supabase.from("video_submissions").select("*").eq("source_type", isBoost ? "boost" : "campaign").eq("source_id", entityId).order("submitted_at", {
-        ascending: false
-      });
+      // Fetch from unified video_submissions table (includes both submitted and tracked videos)
+      const { data, error } = await supabase
+        .from("video_submissions")
+        .select("*")
+        .eq("source_type", isBoost ? "boost" : "campaign")
+        .eq("source_id", entityId)
+        .order("submitted_at", { ascending: false });
+
       if (error) throw error;
 
-      // Map to the expected format
+      // Map to the expected format - now includes both submitted and tracked videos
       const submissionsData: UnifiedVideo[] = (data || []).map(v => ({
         id: v.id,
         user_id: v.creator_id,
@@ -278,7 +282,9 @@ export function VideoSubmissionsTab({
         likes: v.likes,
         comments: v.comments,
         shares: v.shares,
-        source: "submitted" as const
+        // Use the source field from database, default to 'submitted' for legacy records
+        source: (v.source === "tracked" ? "tracked" : "submitted") as "submitted" | "tracked",
+        uploaded_at: v.video_upload_date
       }));
       setSubmissions(submissionsData);
 
@@ -286,20 +292,24 @@ export function VideoSubmissionsTab({
       if (submissionsData.length > 0) {
         const userIds = [...new Set(submissionsData.filter(s => s.user_id).map(s => s.user_id!))];
         if (userIds.length > 0) {
-          const {
-            data: profilesData
-          } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", userIds);
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("id, username, full_name, avatar_url, email")
+            .in("id", userIds);
           if (profilesData) {
             const profileMap: Record<string, Profile> = {};
             profilesData.forEach(p => {
               profileMap[p.id] = p;
             });
-            setProfiles(prev => ({
-              ...prev,
-              ...profileMap
-            }));
+            setProfiles(prev => ({ ...prev, ...profileMap }));
           }
         }
+      }
+
+      // Update last synced time from the most recent tracked video
+      const trackedVideos = submissionsData.filter(s => s.source === "tracked");
+      if (trackedVideos.length > 0) {
+        setLastSynced(new Date());
       }
     } catch (error) {
       console.error("Error fetching submissions:", error);
@@ -308,69 +318,61 @@ export function VideoSubmissionsTab({
       setLoading(false);
     }
   };
-  const fetchTrackedVideos = async () => {
+
+  const fetchTrackedVideosFromCache = async () => {
+    // Fetch ALL tracked videos from cached_campaign_videos
+    // This includes both matched and unmatched videos that haven't been synced to video_submissions yet
     if (!entityId || !brandId) return;
     try {
-      const {
-        data,
-        error
-      } = await supabase.from("cached_campaign_videos").select("*").eq("campaign_id", entityId).order("uploaded_at", {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from("cached_campaign_videos")
+        .select("*")
+        .eq("campaign_id", entityId)
+        .order("uploaded_at", { ascending: false });
+
       if (error) throw error;
-      const now = new Date();
-      const weekStart = startOfWeek(now, {
-        weekStartsOn: 0
-      });
-      const weekEnd = endOfWeek(now, {
-        weekStartsOn: 0
-      });
+
+      // Get existing shortimize_video_ids from submissions to avoid duplicates
+      const existingShortimizeIds = new Set(
+        submissions
+          .filter(s => s.source === "tracked")
+          .map(s => (s as any).shortimize_video_id)
+          .filter(Boolean)
+      );
+
+      // Filter out videos that are already in video_submissions
+      const newTrackedVideos = (data || []).filter(v => 
+        !existingShortimizeIds.has(v.shortimize_video_id)
+      );
 
       // Map tracked videos to unified format
-      const tracked: UnifiedVideo[] = (data || []).map(v => {
-        // Calculate weekly views
-        let weeklyViews = 0;
-        if (v.uploaded_at) {
-          const uploadDate = parseISO(v.uploaded_at);
-          if (isWithinInterval(uploadDate, {
-            start: weekStart,
-            end: weekEnd
-          })) {
-            weeklyViews = v.views || 0;
-          }
-        }
-        if (v.week_start_date && v.week_start_views !== null) {
-          const currentViews = v.views || 0;
-          weeklyViews = Math.max(weeklyViews, currentViews - (v.week_start_views || 0));
-        }
-        const estimatedPayout = weeklyViews / 1000 * rpmRate;
-        return {
-          id: v.id,
-          user_id: v.user_id,
-          video_url: v.video_url || "",
-          platform: v.platform,
-          submission_notes: null,
-          status: "tracked",
-          payout_amount: null,
-          submitted_at: v.uploaded_at || v.cached_at,
-          reviewed_at: null,
-          rejection_reason: null,
-          is_flagged: null,
-          video_description: v.caption || v.description,
-          video_thumbnail_url: v.thumbnail_url,
-          video_author_username: v.username,
-          video_author_avatar: null,
-          video_title: v.title,
-          views: v.views,
-          likes: v.likes,
-          comments: v.comments,
-          shares: v.shares,
-          source: "tracked" as const,
-          estimatedPayout,
-          weeklyViews,
-          uploaded_at: v.uploaded_at
-        };
-      });
+      const tracked: UnifiedVideo[] = newTrackedVideos.map(v => ({
+        id: v.id,
+        user_id: v.user_id,
+        video_url: v.video_url || "",
+        platform: v.platform,
+        submission_notes: null,
+        status: v.user_id ? "approved" : "tracked", // Matched videos show as approved
+        payout_amount: null,
+        submitted_at: v.uploaded_at || v.cached_at,
+        reviewed_at: null,
+        rejection_reason: null,
+        is_flagged: null,
+        video_description: v.caption || v.description,
+        video_thumbnail_url: v.thumbnail_url,
+        video_author_username: v.username,
+        video_author_avatar: null,
+        video_title: v.title,
+        views: v.views,
+        likes: v.likes,
+        comments: v.comments,
+        shares: v.shares,
+        source: "tracked" as const,
+        estimatedPayout: v.user_id ? ((v.views || 0) / 1000) * rpmRate : 0,
+        weeklyViews: 0,
+        uploaded_at: v.uploaded_at
+      }));
+
       setTrackedVideos(tracked);
 
       // Update last synced time
@@ -379,46 +381,44 @@ export function VideoSubmissionsTab({
           const vDate = new Date(v.updated_at);
           return vDate > latest ? vDate : latest;
         }, new Date(0));
-        setLastSynced(latestUpdate);
+        if (!lastSynced || latestUpdate > lastSynced) {
+          setLastSynced(latestUpdate);
+        }
       }
 
       // Fetch profiles for tracked video users
       const trackedUserIds = [...new Set(tracked.filter(t => t.user_id).map(t => t.user_id!))];
       if (trackedUserIds.length > 0) {
-        const {
-          data: profilesData
-        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").in("id", trackedUserIds);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", trackedUserIds);
         if (profilesData) {
           const profileMap: Record<string, Profile> = {};
           profilesData.forEach(p => {
             profileMap[p.id] = p;
           });
-          setProfiles(prev => ({
-            ...prev,
-            ...profileMap
-          }));
+          setProfiles(prev => ({ ...prev, ...profileMap }));
         }
       }
     } catch (error) {
       console.error("Error fetching tracked videos:", error);
     }
   };
+
   const handleSync = async () => {
     if (!brandId || !entityId) return;
     setSyncing(true);
     try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke("sync-campaign-videos", {
-        body: {
-          brandId,
-          campaignId: entityId
-        }
+      const { data, error } = await supabase.functions.invoke("sync-campaign-videos", {
+        body: { brandId, campaignId: entityId },
       });
+
       if (error) throw error;
+
       toast.success(`Synced ${data?.totalVideosMatched || 0} matched videos`);
-      await fetchTrackedVideos();
+      // Refetch both submissions and cached tracked videos
+      await Promise.all([fetchSubmissions(), fetchTrackedVideosFromCache()]);
     } catch (error) {
       console.error("Error syncing videos:", error);
       toast.error("Failed to sync videos");
@@ -431,15 +431,18 @@ export function VideoSubmissionsTab({
   const allVideos = useMemo(() => {
     // Create a set of video URLs from submissions to avoid duplicates
     const submissionUrls = new Set(submissions.map(s => s.video_url.toLowerCase()));
-
+    
     // Filter out tracked videos that are already in submissions
     const uniqueTracked = trackedVideos.filter(t => !submissionUrls.has(t.video_url.toLowerCase()));
+    
     return [...submissions, ...uniqueTracked];
   }, [submissions, trackedVideos]);
 
   // Calculate totals
   const totals = useMemo(() => {
     const vids = allVideos;
+    const submittedVideos = submissions.filter(s => s.source === "submitted");
+    const trackedInSubmissions = submissions.filter(s => s.source === "tracked");
     return {
       videos: vids.length,
       views: vids.reduce((sum, v) => sum + (v.views || 0), 0),
@@ -447,10 +450,13 @@ export function VideoSubmissionsTab({
       comments: vids.reduce((sum, v) => sum + (v.comments || 0), 0),
       shares: vids.reduce((sum, v) => sum + (v.shares || 0), 0),
       estimatedPayout: vids.reduce((sum, v) => sum + getPayoutForSubmission(v), 0),
-      submittedCount: submissions.length,
-      trackedCount: trackedVideos.length
+      submittedCount: submittedVideos.length,
+      trackedCount: trackedInSubmissions.length + trackedVideos.length, // matched + unmatched
+      matchedTrackedCount: trackedInSubmissions.length,
+      unmatchedTrackedCount: trackedVideos.length,
     };
   }, [allVideos, submissions, trackedVideos]);
+
   const handleApprove = async (submission: UnifiedVideo) => {
     if (submission.source === "tracked") {
       toast.error("Tracked videos cannot be approved");
@@ -458,42 +464,43 @@ export function VideoSubmissionsTab({
     }
     setProcessing(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Optimistic update
       setSubmissions(prev => prev.map(s => s.id === submission.id ? {
         ...s,
         status: "approved",
-        reviewed_at: new Date().toISOString()
+        reviewed_at: new Date().toISOString(),
       } : s));
 
       // Update unified video_submissions table
-      const {
-        error: updateError
-      } = await supabase.from("video_submissions").update({
-        status: "approved",
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user.id
-      }).eq("id", submission.id);
+      const { error: updateError } = await supabase
+        .from("video_submissions")
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id
+        })
+        .eq("id", submission.id);
+
       if (updateError) {
         // Revert on error
         setSubmissions(prev => prev.map(s => s.id === submission.id ? {
           ...s,
           status: "pending",
-          reviewed_at: null
+          reviewed_at: null,
         } : s));
         throw updateError;
       }
+
       if (isBoost) {
         // Credit creator's wallet for boost
-        const {
-          data: wallet
-        } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", submission.user_id).single();
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("balance, total_earned")
+          .eq("user_id", submission.user_id)
+          .single();
         if (wallet) {
           const payout = submission.payout_amount || payoutPerVideo;
           const newBalance = (wallet.balance || 0) + payout;
@@ -521,9 +528,7 @@ export function VideoSubmissionsTab({
         // For campaigns: pay_per_post flat rate is paid immediately
         if (campaign?.payment_model === "pay_per_post" && payoutPerVideo > 0) {
           try {
-            const {
-              error: paymentError
-            } = await supabase.functions.invoke("create-campaign-payment", {
+            const { error: paymentError } = await supabase.functions.invoke("create-campaign-payment", {
               body: {
                 campaign_id: entityId,
                 user_id: submission.user_id,
@@ -545,10 +550,7 @@ export function VideoSubmissionsTab({
 
       // Track video on Shortimize
       try {
-        const {
-          data: trackResult,
-          error: trackError
-        } = await supabase.functions.invoke("track-shortimize-video", {
+        const { data: trackResult, error: trackError } = await supabase.functions.invoke("track-shortimize-video", {
           body: {
             videoUrl: submission.video_url,
             campaignId: isBoost ? undefined : entityId,
@@ -560,13 +562,12 @@ export function VideoSubmissionsTab({
         if (trackError) {
           console.error("Shortimize tracking error:", trackError);
         } else if (trackResult?.success && !trackResult.skipped && !trackResult.alreadyTracked) {
-          toast.success("Video tracked on Shortimize", {
-            duration: 2000
-          });
+          toast.success("Video tracked on Shortimize", { duration: 2000 });
         }
       } catch (trackError) {
         console.error("Shortimize tracking failed:", trackError);
       }
+
       toast.success(isPayPerPost ? `Video approved! $${payoutPerVideo.toFixed(2)} paid to creator.` : "Video approved!");
       setSelectedSubmission(null);
       onSubmissionReviewed?.();
@@ -577,15 +578,12 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
+
   const handleReject = async () => {
     if (!selectedSubmission || selectedSubmission.source === "tracked") return;
     setProcessing(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Optimistic update
@@ -597,14 +595,16 @@ export function VideoSubmissionsTab({
       } : s));
 
       // Update unified video_submissions table
-      const {
-        error
-      } = await supabase.from("video_submissions").update({
-        status: "rejected",
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: user.id,
-        rejection_reason: rejectionReason.trim() || null
-      }).eq("id", selectedSubmission.id);
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
+          status: "rejected",
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user.id,
+          rejection_reason: rejectionReason.trim() || null
+        })
+        .eq("id", selectedSubmission.id);
+
       if (error) {
         // Revert on error
         setSubmissions(prev => prev.map(s => s.id === selectedSubmission.id ? {
@@ -615,6 +615,7 @@ export function VideoSubmissionsTab({
         } : s));
         throw error;
       }
+
       toast.success("Video rejected");
       setRejectDialogOpen(false);
       setSelectedSubmission(null);
@@ -627,6 +628,7 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
+
   const handleFlag = async (submission: UnifiedVideo) => {
     if (submission.source === "tracked") return;
     setProcessing(true);
@@ -640,12 +642,14 @@ export function VideoSubmissionsTab({
       } : s));
 
       // Update unified video_submissions table
-      const {
-        error
-      } = await supabase.from("video_submissions").update({
-        is_flagged: newFlagState,
-        updated_at: new Date().toISOString()
-      }).eq("id", submission.id);
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
+          is_flagged: newFlagState,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", submission.id);
+
       if (error) {
         // Revert on error
         setSubmissions(prev => prev.map(s => s.id === submission.id ? {
@@ -662,33 +666,32 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
+
   const handleRevertApproval = async (submission: UnifiedVideo) => {
     if (submission.source === "tracked") return;
     setProcessing(true);
     try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       // Optimistic update
       setSubmissions(prev => prev.map(s => s.id === submission.id ? {
         ...s,
         status: "pending",
-        reviewed_at: null
+        reviewed_at: null,
       } : s));
 
       // Update status back to pending
-      const {
-        error
-      } = await supabase.from("video_submissions").update({
-        status: "pending",
-        reviewed_at: null,
-        reviewed_by: null,
-        updated_at: new Date().toISOString()
-      }).eq("id", submission.id);
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
+          status: "pending",
+          reviewed_at: null,
+          reviewed_by: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", submission.id);
+
       if (error) {
         // Revert on error
         setSubmissions(prev => prev.map(s => s.id === submission.id ? {
@@ -717,35 +720,20 @@ export function VideoSubmissionsTab({
 
       // Determine which API to call based on platform
       if (url.includes('tiktok.com')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-tiktok-video', {
-          body: {
-            videoUrl: url
-          }
+        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: { videoUrl: url }
         });
         if (error) throw error;
         videoDetails = data?.data || null;
       } else if (url.includes('instagram.com')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-instagram-post', {
-          body: {
-            postUrl: url
-          }
+        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: { postUrl: url }
         });
         if (error) throw error;
         videoDetails = data?.data || null;
       } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-youtube-video', {
-          body: {
-            videoUrl: url
-          }
+        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: { videoUrl: url }
         });
         if (error) throw error;
         if (data) {
@@ -762,26 +750,29 @@ export function VideoSubmissionsTab({
           };
         }
       }
+
       if (!videoDetails) {
         toast.error("Could not fetch video metadata. The video may be private or unavailable.");
         return;
       }
 
       // Update the submission in the database
-      const {
-        error
-      } = await supabase.from("video_submissions").update({
-        views: videoDetails.views || 0,
-        likes: videoDetails.likes || 0,
-        comments: videoDetails.comments || 0,
-        shares: videoDetails.shares || 0,
-        video_description: videoDetails.description || null,
-        video_thumbnail_url: videoDetails.coverUrl || null,
-        video_author_username: videoDetails.authorUsername || null,
-        video_author_avatar: videoDetails.authorAvatar || null,
-        video_title: videoDetails.title || null,
-        updated_at: new Date().toISOString()
-      }).eq("id", submission.id);
+      const { error } = await supabase
+        .from("video_submissions")
+        .update({
+          views: videoDetails.views || 0,
+          likes: videoDetails.likes || 0,
+          comments: videoDetails.comments || 0,
+          shares: videoDetails.shares || 0,
+          video_description: videoDetails.description || null,
+          video_thumbnail_url: videoDetails.coverUrl || null,
+          video_author_username: videoDetails.authorUsername || null,
+          video_author_avatar: videoDetails.authorAvatar || null,
+          video_title: videoDetails.title || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", submission.id);
+
       if (error) throw error;
 
       // Update local state
@@ -805,15 +796,18 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
+
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
+
   const creatorStats: CreatorStats[] = useMemo(() => {
     const statsMap = new Map<string, CreatorStats>();
 
     // Process submissions
     allVideos.forEach(video => {
       if (!video.user_id) return;
+      
       let stats = statsMap.get(video.user_id);
       if (!stats) {
         const profile = profiles[video.user_id];
@@ -831,8 +825,10 @@ export function VideoSubmissionsTab({
         };
         statsMap.set(video.user_id, stats);
       }
+
       stats.submissions.push(video);
       stats.totalViews += video.views || 0;
+
       if (video.source === "tracked") {
         stats.trackedVideos++;
       } else {
@@ -848,10 +844,14 @@ export function VideoSubmissionsTab({
         }
       }
     });
-    return Array.from(statsMap.values()).sort((a, b) => b.approvedThisMonth - a.approvedThisMonth || b.totalViews - a.totalViews);
+
+    return Array.from(statsMap.values())
+      .sort((a, b) => b.approvedThisMonth - a.approvedThisMonth || b.totalViews - a.totalViews);
   }, [allVideos, profiles, monthStart, monthEnd]);
+
   if (loading) {
-    return <div className="h-full flex flex-col overflow-hidden">
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
         <div className="flex-1 flex overflow-hidden">
           <div className="w-[340px] flex-shrink-0 border-r border-border p-4 space-y-4">
             {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
@@ -861,8 +861,10 @@ export function VideoSubmissionsTab({
             <Skeleton className="h-64 w-full" />
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
+
   const formatNumber = (num: number | null | undefined) => {
     if (num === null || num === undefined) return '—';
     if (num === 0) return '0';
@@ -870,7 +872,9 @@ export function VideoSubmissionsTab({
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
-  return <div className="h-full flex flex-col overflow-hidden">
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Stats Header */}
       <div className="flex-shrink-0 p-4 border-b border-border space-y-3">
         {/* Top row: Title, hashtags, sync button */}
@@ -878,68 +882,39 @@ export function VideoSubmissionsTab({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground tracking-[-0.5px]">Videos</h3>
-              {lastSynced && <span className="text-[11px] text-muted-foreground">
+              {lastSynced && (
+                <span className="text-[11px] text-muted-foreground">
                   Updated {format(lastSynced, "MMM d, h:mm a")}
-                </span>}
+                </span>
+              )}
             </div>
             {/* Hashtags */}
-            {hashtags.length > 0 && <div className="flex items-center gap-1.5 flex-wrap">
+            {hashtags.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70 font-medium">Tracking:</span>
-                {hashtags.map(tag => <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                {hashtags.map(tag => (
+                  <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                     #{tag.replace(/^#/, "")}
-                  </span>)}
-              </div>}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Sync button - only for campaigns with brand */}
-          {!isBoost && brandId && <Button onClick={handleSync} disabled={syncing} size="sm" className="h-7 px-2.5 gap-1.5 text-[11px] font-medium bg-foreground text-background hover:bg-foreground/90">
+          {!isBoost && brandId && (
+            <Button
+              onClick={handleSync}
+              disabled={syncing}
+              size="sm"
+              className="h-7 px-2.5 gap-1.5 text-[11px] font-medium bg-foreground text-background hover:bg-foreground/90"
+            >
               <RefreshCw className={`h-3 w-3 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Syncing..." : "Sync"}
-            </Button>}
+            </Button>
+          )}
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-6 gap-2">
-          {[{
-          label: "Videos",
-          value: totals.videos,
-          icon: Video
-        }, {
-          label: "Views",
-          value: totals.views,
-          icon: Eye
-        }, {
-          label: "Likes",
-          value: totals.likes,
-          icon: Heart
-        }, {
-          label: "Comments",
-          value: totals.comments,
-          icon: MessageCircle
-        }, {
-          label: "Shares",
-          value: totals.shares,
-          icon: Share2
-        }, {
-          label: "Est. Payout",
-          value: `$${totals.estimatedPayout.toFixed(0)}`,
-          icon: DollarSign,
-          isString: true
-        }].map(({
-          label,
-          value,
-          icon: Icon,
-          isString
-        }) => <div key={label} className="rounded-lg border border-border/40 bg-card/30 p-2.5">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <Icon className="h-3 w-3 text-muted-foreground/70" />
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">{label}</span>
-              </div>
-              <p className="text-base font-semibold tabular-nums text-foreground">
-                {isString ? value : formatNumber(value as number)}
-              </p>
-            </div>)}
-        </div>
       </div>
 
       {/* Main Content */}
@@ -950,25 +925,41 @@ export function VideoSubmissionsTab({
           <div className="p-3 border-b space-y-2 border-border/50 py-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Search users..." value={userSearchQuery} onChange={e => setUserSearchQuery(e.target.value)} className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]" />
+              <Input 
+                placeholder="Search users..." 
+                value={userSearchQuery} 
+                onChange={e => setUserSearchQuery(e.target.value)} 
+                className="h-8 pl-8 text-sm font-inter tracking-[-0.5px]" 
+              />
             </div>
           </div>
           <ScrollArea className="flex-1">
             <div className="p-3 space-y-2">
               {(() => {
-              const filteredCreators = creatorStats.filter(creator => {
-                if (!userSearchQuery.trim()) return true;
-                const query = userSearchQuery.toLowerCase();
-                return creator.profile.username?.toLowerCase().includes(query) || creator.profile.full_name?.toLowerCase().includes(query) || creator.profile.email?.toLowerCase().includes(query);
-              });
-              if (filteredCreators.length === 0) {
-                return <div className="text-center py-8 text-muted-foreground">
+                const filteredCreators = creatorStats.filter(creator => {
+                  if (!userSearchQuery.trim()) return true;
+                  const query = userSearchQuery.toLowerCase();
+                  return creator.profile.username?.toLowerCase().includes(query) || 
+                         creator.profile.full_name?.toLowerCase().includes(query) || 
+                         creator.profile.email?.toLowerCase().includes(query);
+                });
+                
+                if (filteredCreators.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-muted-foreground">
                       <p className="text-sm">No creators found</p>
-                    </div>;
-              }
-              return filteredCreators.map(creator => {
-                const isSelected = selectedCreator === creator.userId;
-                return <button key={creator.userId} onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} className="w-full rounded-xl p-4 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30">
+                    </div>
+                  );
+                }
+                
+                return filteredCreators.map(creator => {
+                  const isSelected = selectedCreator === creator.userId;
+                  return (
+                    <button 
+                      key={creator.userId} 
+                      onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} 
+                      className="w-full rounded-xl p-4 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30"
+                    >
                       <div className="flex items-center gap-3 mb-3">
                         <Avatar className="h-10 w-10 border border-border/40">
                           <AvatarImage src={creator.profile.avatar_url || undefined} />
@@ -976,7 +967,14 @@ export function VideoSubmissionsTab({
                             {creator.profile.username?.[0]?.toUpperCase() || "?"}
                           </AvatarFallback>
                         </Avatar>
-                        
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {creator.profile.full_name || creator.profile.username}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            @{creator.profile.username}
+                          </p>
+                        </div>
                         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
                       </div>
 
@@ -997,19 +995,26 @@ export function VideoSubmissionsTab({
                       </div>
 
                       {/* Submission Heatmap - only show when selected */}
-                      {isSelected && <div className="mt-3">
-                          <SubmissionHeatmap submissions={creator.submissions.map(s => ({
-                      submitted_at: s.uploaded_at || s.submitted_at,
-                      status: s.status,
-                      source: s.source
-                    }))} onDateClick={date => {
-                      setSelectedCreator(creator.userId);
-                      setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
-                    }} selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} />
-                        </div>}
-                    </button>;
-              });
-            })()}
+                      {isSelected && (
+                        <div className="mt-3">
+                          <SubmissionHeatmap 
+                            submissions={creator.submissions.map(s => ({
+                              submitted_at: s.uploaded_at || s.submitted_at,
+                              status: s.status,
+                              source: s.source
+                            }))} 
+                            onDateClick={date => {
+                              setSelectedCreator(creator.userId);
+                              setSelectedDateFilter(prev => prev && isSameDay(prev, date) ? null : date);
+                            }} 
+                            selectedDate={selectedCreator === creator.userId ? selectedDateFilter : null} 
+                          />
+                        </div>
+                      )}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </ScrollArea>
         </div>
@@ -1019,12 +1024,14 @@ export function VideoSubmissionsTab({
           <div className="p-2.5 border-b border-border space-y-2 py-2">
             {/* Header */}
             <div className="flex items-center gap-2.5 h-8">
-              {selectedCreator && profiles[selectedCreator] && <Avatar className="h-7 w-7 ring-2 ring-background shrink-0">
+              {selectedCreator && profiles[selectedCreator] && (
+                <Avatar className="h-7 w-7 ring-2 ring-background shrink-0">
                   <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
                   <AvatarFallback className="text-xs font-medium bg-muted/60">
                     {profiles[selectedCreator]?.username?.[0]?.toUpperCase() || "?"}
                   </AvatarFallback>
-                </Avatar>}
+                </Avatar>
+              )}
               <h3 className="text-sm font-medium text-foreground tracking-[-0.5px]">
                 {selectedCreator ? `${profiles[selectedCreator]?.full_name || profiles[selectedCreator]?.username}'s Videos` : "All Videos"}
               </h3>
@@ -1043,18 +1050,19 @@ export function VideoSubmissionsTab({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="bg-background border border-border min-w-[120px]">
-                  {[{
-                  value: "all",
-                  label: "All Sources"
-                }, {
-                  value: "submitted",
-                  label: "Submitted"
-                }, {
-                  value: "tracked",
-                  label: "Tracked"
-                }].map(option => <DropdownMenuItem key={option.value} onClick={() => setFilterSource(option.value as typeof filterSource)} className={`text-xs tracking-[-0.5px] cursor-pointer ${filterSource === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}>
+                  {[
+                    { value: "all", label: "All Sources" },
+                    { value: "submitted", label: "Submitted" },
+                    { value: "tracked", label: "Tracked" },
+                  ].map(option => (
+                    <DropdownMenuItem 
+                      key={option.value} 
+                      onClick={() => setFilterSource(option.value as typeof filterSource)} 
+                      className={`text-xs tracking-[-0.5px] cursor-pointer ${filterSource === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
+                    >
                       {option.label}
-                    </DropdownMenuItem>)}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -1069,18 +1077,32 @@ export function VideoSubmissionsTab({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="bg-background border border-border min-w-[100px]">
-                  {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => <DropdownMenuItem key={status} onClick={() => setFilterStatus(status)} className={`text-xs tracking-[-0.5px] cursor-pointer ${filterStatus === status ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}>
+                  {(["all", "pending", "approved", "rejected", "flagged"] as const).map(status => (
+                    <DropdownMenuItem 
+                      key={status} 
+                      onClick={() => setFilterStatus(status)} 
+                      className={`text-xs tracking-[-0.5px] cursor-pointer ${filterStatus === status ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
+                    >
                       {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </DropdownMenuItem>)}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
               {/* View Toggle */}
               <div className="flex items-center gap-0.5 bg-muted/30 rounded-lg p-0.5">
-                <button onClick={() => setViewMode("cards")} className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Card view">
+                <button 
+                  onClick={() => setViewMode("cards")} 
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "cards" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} 
+                  title="Card view"
+                >
                   <LayoutGrid className="h-3.5 w-3.5" />
                 </button>
-                <button onClick={() => setViewMode("table")} className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Table view">
+                <button 
+                  onClick={() => setViewMode("table")} 
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} 
+                  title="Table view"
+                >
                   <TableIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -1089,13 +1111,31 @@ export function VideoSubmissionsTab({
               <div className="flex items-center gap-2 ml-auto">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className={cn("flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg transition-all duration-200", dateRange?.from ? "bg-primary/10 text-primary hover:bg-primary/15" : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground")}>
-                      {dateRange?.from ? dateRange.to ? <span>{format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}</span> : <span>{format(dateRange.from, "MMM d, yyyy")}</span> : <span>Date Range</span>}
-                      {dateRange?.from && <X className="h-3 w-3 ml-0.5 hover:text-destructive transition-colors" onClick={e => {
-                      e.stopPropagation();
-                      setDateRange(undefined);
-                      setSelectedDateFilter(null);
-                    }} />}
+                    <button className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 text-[11px] font-inter tracking-[-0.5px] rounded-lg transition-all duration-200",
+                      dateRange?.from 
+                        ? "bg-primary/10 text-primary hover:bg-primary/15" 
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}>
+                      {dateRange?.from ? (
+                        dateRange.to ? (
+                          <span>{format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}</span>
+                        ) : (
+                          <span>{format(dateRange.from, "MMM d, yyyy")}</span>
+                        )
+                      ) : (
+                        <span>Date Range</span>
+                      )}
+                      {dateRange?.from && (
+                        <X 
+                          className="h-3 w-3 ml-0.5 hover:text-destructive transition-colors" 
+                          onClick={e => {
+                            e.stopPropagation();
+                            setDateRange(undefined);
+                            setSelectedDateFilter(null);
+                          }} 
+                        />
+                      )}
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
@@ -1103,42 +1143,49 @@ export function VideoSubmissionsTab({
                       <p className="text-xs font-medium font-inter tracking-[-0.5px] text-foreground">Select date range</p>
                       <p className="text-[10px] text-muted-foreground tracking-[-0.5px] mt-0.5">Filter videos by date</p>
                     </div>
-                    <Calendar mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={range => {
-                    setDateRange(range);
-                    setSelectedDateFilter(null);
-                  }} numberOfMonths={2} className={cn("p-3 pointer-events-auto")} />
+                    <Calendar 
+                      mode="range" 
+                      defaultMonth={dateRange?.from} 
+                      selected={dateRange} 
+                      onSelect={range => {
+                        setDateRange(range);
+                        setSelectedDateFilter(null);
+                      }} 
+                      numberOfMonths={2} 
+                      className={cn("p-3 pointer-events-auto")} 
+                    />
                     <div className="p-3 border-t border-border flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1">
-                        {[{
-                        label: "Today",
-                        days: 0
-                      }, {
-                        label: "7d",
-                        days: 7
-                      }, {
-                        label: "30d",
-                        days: 30
-                      }].map(({
-                        label,
-                        days
-                      }) => <button key={label} onClick={() => {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(start.getDate() - days);
-                        setDateRange({
-                          from: start,
-                          to: end
-                        });
-                      }} className="px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        {[
+                          { label: "Today", days: 0 },
+                          { label: "7d", days: 7 },
+                          { label: "30d", days: 30 }
+                        ].map(({ label, days }) => (
+                          <button 
+                            key={label} 
+                            onClick={() => {
+                              const end = new Date();
+                              const start = new Date();
+                              start.setDate(start.getDate() - days);
+                              setDateRange({ from: start, to: end });
+                            }} 
+                            className="px-2 py-1 text-[10px] font-inter tracking-[-0.5px] rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          >
                             {label}
-                          </button>)}
+                          </button>
+                        ))}
                       </div>
-                      {dateRange?.from && <button onClick={() => {
-                      setDateRange(undefined);
-                      setSelectedDateFilter(null);
-                    }} className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors">
+                      {dateRange?.from && (
+                        <button 
+                          onClick={() => {
+                            setDateRange(undefined);
+                            setSelectedDateFilter(null);
+                          }} 
+                          className="text-[10px] font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
                           Clear
-                        </button>}
+                        </button>
+                      )}
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -1147,72 +1194,75 @@ export function VideoSubmissionsTab({
           </div>
 
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2">
+            <div className="p-3 space-y-2 min-w-max overflow-x-auto">
               {(() => {
-              // Get filtered videos
-              let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
+                // Get filtered videos
+                let filteredVids = selectedCreator 
+                  ? allVideos.filter(v => v.user_id === selectedCreator) 
+                  : allVideos;
 
-              // Apply source filter
-              if (filterSource !== "all") {
-                filteredVids = filteredVids.filter(v => v.source === filterSource);
-              }
-
-              // Apply status filter
-              if (filterStatus === "flagged") {
-                filteredVids = filteredVids.filter(v => v.is_flagged === true);
-              } else if (filterStatus !== "all") {
-                filteredVids = filteredVids.filter(v => v.status === filterStatus);
-              }
-
-              // Apply date filter
-              if (selectedDateFilter) {
-                filteredVids = filteredVids.filter(v => isSameDay(new Date(v.submitted_at), selectedDateFilter));
-              } else if (dateRange?.from) {
-                filteredVids = filteredVids.filter(v => {
-                  const videoDate = new Date(v.submitted_at);
-                  if (dateRange.to) {
-                    return isWithinInterval(videoDate, {
-                      start: startOfDay(dateRange.from!),
-                      end: endOfDay(dateRange.to)
-                    });
-                  }
-                  return isSameDay(videoDate, dateRange.from!);
-                });
-              }
-
-              // Apply sorting
-              filteredVids = [...filteredVids].sort((a, b) => {
-                if (sortBy === "date") {
-                  return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
-                } else if (sortBy === "status") {
-                  const statusOrder = {
-                    pending: 0,
-                    approved: 1,
-                    rejected: 2,
-                    tracked: 3
-                  };
-                  return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0);
-                } else if (sortBy === "platform") {
-                  return (a.platform || "").localeCompare(b.platform || "");
+                // Apply source filter
+                if (filterSource !== "all") {
+                  filteredVids = filteredVids.filter(v => v.source === filterSource);
                 }
-                return 0;
-              });
-              if (filteredVids.length === 0) {
-                return <div className="text-center py-12 text-muted-foreground">
-                      <p className="text-sm tracking-[-0.5px]">No videos found for the applied filter</p>
-                    </div>;
-              }
 
-              // Table View
-              if (viewMode === "table") {
-                return <Table>
+                // Apply status filter
+                if (filterStatus === "flagged") {
+                  filteredVids = filteredVids.filter(v => v.is_flagged === true);
+                } else if (filterStatus !== "all") {
+                  filteredVids = filteredVids.filter(v => v.status === filterStatus);
+                }
+
+                // Apply date filter
+                if (selectedDateFilter) {
+                  filteredVids = filteredVids.filter(v => isSameDay(new Date(v.submitted_at), selectedDateFilter));
+                } else if (dateRange?.from) {
+                  filteredVids = filteredVids.filter(v => {
+                    const videoDate = new Date(v.submitted_at);
+                    if (dateRange.to) {
+                      return isWithinInterval(videoDate, {
+                        start: startOfDay(dateRange.from!),
+                        end: endOfDay(dateRange.to)
+                      });
+                    }
+                    return isSameDay(videoDate, dateRange.from!);
+                  });
+                }
+
+                // Apply sorting
+                filteredVids = [...filteredVids].sort((a, b) => {
+                  if (sortBy === "date") {
+                    return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+                  } else if (sortBy === "status") {
+                    const statusOrder = { pending: 0, approved: 1, rejected: 2, tracked: 3 };
+                    return (statusOrder[a.status as keyof typeof statusOrder] || 0) - (statusOrder[b.status as keyof typeof statusOrder] || 0);
+                  } else if (sortBy === "platform") {
+                    return (a.platform || "").localeCompare(b.platform || "");
+                  }
+                  return 0;
+                });
+
+                if (filteredVids.length === 0) {
+                  return (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <p className="text-sm tracking-[-0.5px]">No videos found for the applied filter</p>
+                    </div>
+                  );
+                }
+
+                // Table View
+                if (viewMode === "table") {
+                  return (
+                    <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border/40">
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">User</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Account</TableHead>
-                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Source</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Status</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Views</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Likes</TableHead>
+                          <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Comments</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-right">Payout</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground">Date</TableHead>
                           <TableHead className="text-[10px] font-medium tracking-[-0.5px] text-muted-foreground text-center">Actions</TableHead>
@@ -1220,12 +1270,36 @@ export function VideoSubmissionsTab({
                       </TableHeader>
                       <TableBody>
                         {filteredVids.map(video => {
-                      const profile = video.user_id ? profiles[video.user_id] : null;
-                      return <TableRow key={video.id} className="border-border/30">
+                          const profile = video.user_id ? profiles[video.user_id] : null;
+                          return (
+                            <TableRow key={video.id} className="border-border/30">
                               <TableCell className="max-w-[200px]">
-                                <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline">
+                                <a 
+                                  href={video.video_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-xs font-medium tracking-[-0.3px] line-clamp-1 hover:underline"
+                                >
                                   {video.video_title || video.video_description || "Untitled Video"}
                                 </a>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
+                                  {profile?.avatar_url ? (
+                                    <img 
+                                      src={profile.avatar_url} 
+                                      alt={profile.full_name || profile.username || "User"} 
+                                      className="h-5 w-5 rounded-full object-cover flex-shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="h-5 w-5 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                      <User className="h-3 w-3 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <span className="text-xs text-foreground">
+                                    {profile?.full_name || profile?.username || "Unknown"}
+                                  </span>
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1.5">
@@ -1238,18 +1312,27 @@ export function VideoSubmissionsTab({
                                 </div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", video.source === "submitted" ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : "bg-purple-500/10 text-purple-500 border-purple-500/20")}>
-                                  {video.source === "submitted" ? <Upload className="h-2.5 w-2.5 mr-1" /> : <Radar className="h-2.5 w-2.5 mr-1" />}
-                                  {video.source === "submitted" ? "Submitted" : "Tracked"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", video.status === "approved" && "bg-green-500/10 text-green-500 border-green-500/20", video.status === "pending" && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20", video.status === "rejected" && "bg-red-500/10 text-red-500 border-red-500/20", video.status === "tracked" && "bg-purple-500/10 text-purple-500 border-purple-500/20")}>
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-[10px] px-1.5 py-0",
+                                    video.status === "approved" && "bg-green-500/10 text-green-500 border-green-500/20",
+                                    video.status === "pending" && "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+                                    video.status === "rejected" && "bg-red-500/10 text-red-500 border-red-500/20",
+                                    video.status === "tracked" && "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                                  )}
+                                >
                                   {video.status}
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right text-xs tabular-nums">
                                 {formatNumber(video.views)}
+                              </TableCell>
+                              <TableCell className="text-right text-xs tabular-nums">
+                                {formatNumber(video.likes)}
+                              </TableCell>
+                              <TableCell className="text-right text-xs tabular-nums">
+                                {formatNumber(video.comments)}
                               </TableCell>
                               <TableCell className="text-right text-xs font-medium tabular-nums text-green-500">
                                 ${getPayoutForSubmission(video).toFixed(2)}
@@ -1258,46 +1341,84 @@ export function VideoSubmissionsTab({
                                 {format(new Date(video.submitted_at), "MMM d")}
                               </TableCell>
                               <TableCell>
-                                {video.source === "submitted" && video.status === "pending" && <div className="flex items-center justify-center gap-1">
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-green-500/10 hover:text-green-500" onClick={() => handleApprove(video)} disabled={processing}>
+                                {video.source === "submitted" && video.status === "pending" && (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-6 w-6 p-0 hover:bg-green-500/10 hover:text-green-500" 
+                                      onClick={() => handleApprove(video)}
+                                      disabled={processing}
+                                    >
                                       <Check className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 hover:bg-red-500/10 hover:text-red-500" onClick={() => {
-                              setSelectedSubmission(video);
-                              setRejectDialogOpen(true);
-                            }} disabled={processing}>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-6 w-6 p-0 hover:bg-red-500/10 hover:text-red-500" 
+                                      onClick={() => {
+                                        setSelectedSubmission(video);
+                                        setRejectDialogOpen(true);
+                                      }}
+                                      disabled={processing}
+                                    >
                                       <X className="h-3.5 w-3.5" />
                                     </Button>
-                                  </div>}
+                                  </div>
+                                )}
                               </TableCell>
-                            </TableRow>;
-                    })}
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
-                    </Table>;
-              }
+                    </Table>
+                  );
+                }
 
-              // Card View - Redesigned for cleaner aesthetics
-              return filteredVids.map(video => {
-                const profile = video.user_id ? profiles[video.user_id] : null;
-                const uploadDate = video.uploaded_at || video.submitted_at;
-                return <div key={video.id} className="group relative rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300">
+                // Card View - Redesigned for cleaner aesthetics
+                return filteredVids.map(video => {
+                  const profile = video.user_id ? profiles[video.user_id] : null;
+                  const uploadDate = video.uploaded_at || video.submitted_at;
+                  
+                  return (
+                    <div 
+                      key={video.id} 
+                      className="group relative rounded-2xl border border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm overflow-hidden hover:border-border/60 hover:shadow-lg transition-all duration-300"
+                    >
                       {/* Main Content Row */}
                       <div className="flex gap-3 p-3">
                         {/* Thumbnail with overlay */}
-                        <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb">
+                        <a 
+                          href={video.video_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="relative w-20 h-28 rounded-xl overflow-hidden bg-muted/30 shrink-0 group/thumb"
+                        >
                           {(() => {
-                        const thumbnailUrl = video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url;
-                        return thumbnailUrl ? <img src={thumbnailUrl} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105" onError={e => {
-                          const target = e.target as HTMLImageElement;
-                          if (video.video_thumbnail_url && target.src !== video.video_thumbnail_url) {
-                            target.src = video.video_thumbnail_url;
-                          } else {
-                            target.style.display = 'none';
-                          }
-                        }} /> : <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                            const thumbnailUrl = video.source === "tracked" 
+                              ? (getTrackedThumbnailUrl(video) || video.video_thumbnail_url)
+                              : video.video_thumbnail_url;
+                            
+                            return thumbnailUrl ? (
+                              <img 
+                                src={thumbnailUrl} 
+                                alt="" 
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  if (video.video_thumbnail_url && target.src !== video.video_thumbnail_url) {
+                                    target.src = video.video_thumbnail_url;
+                                  } else {
+                                    target.style.display = 'none';
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted/50">
                                 <Video className="h-5 w-5 text-muted-foreground/50" />
-                              </div>;
-                      })()}
+                              </div>
+                            );
+                          })()}
                           {/* Platform badge - bottom left */}
                           <div className="absolute bottom-1.5 left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
                             <img src={getPlatformLogo(video.platform)} alt={video.platform} className="h-3 w-3" />
@@ -1316,7 +1437,12 @@ export function VideoSubmissionsTab({
                           {/* Header */}
                           <div>
                             {/* Title & Username */}
-                            <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:text-primary transition-colors leading-tight">
+                            <a 
+                              href={video.video_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-sm font-medium tracking-[-0.2px] line-clamp-2 hover:text-primary transition-colors leading-tight"
+                            >
                               {video.video_title || video.video_description || "Untitled Video"}
                             </a>
                             <div className="flex items-center gap-2 mt-1">
@@ -1325,9 +1451,7 @@ export function VideoSubmissionsTab({
                               </span>
                               <span className="text-muted-foreground/40">•</span>
                               <span className="text-[11px] text-muted-foreground/70">
-                                {uploadDate ? formatDistanceToNow(new Date(uploadDate), {
-                              addSuffix: true
-                            }) : "Unknown"}
+                                {uploadDate ? formatDistanceToNow(new Date(uploadDate), { addSuffix: true }) : "Unknown"}
                               </span>
                             </div>
                           </div>
@@ -1354,45 +1478,88 @@ export function VideoSubmissionsTab({
                                 ${getPayoutForSubmission(video).toFixed(2)}
                               </span>
                               {/* Source indicator */}
-                              <div className={cn("h-1.5 w-1.5 rounded-full", video.source === "submitted" ? "bg-blue-500" : "bg-purple-500")} title={video.source === "submitted" ? "Submitted" : "Tracked"} />
+                              <div className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                video.source === "submitted" ? "bg-blue-500" : "bg-purple-500"
+                              )} title={video.source === "submitted" ? "Submitted" : "Tracked"} />
                             </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Action Bar - Only for submitted videos needing action */}
-                      {video.source === "submitted" && video.status === "pending" && <div className="flex items-center gap-2 px-3 pb-3 pt-1">
-                          <Button size="sm" className="h-8 flex-1 text-xs gap-1.5 bg-green-500/90 hover:bg-green-500 text-white rounded-lg" onClick={() => handleApprove(video)} disabled={processing}>
+                      {video.source === "submitted" && video.status === "pending" && (
+                        <div className="flex items-center gap-2 px-3 pb-3 pt-1">
+                          <Button 
+                            size="sm" 
+                            className="h-8 flex-1 text-xs gap-1.5 bg-green-500/90 hover:bg-green-500 text-white rounded-lg"
+                            onClick={() => handleApprove(video)}
+                            disabled={processing}
+                          >
                             <Check className="h-3.5 w-3.5" />
                             Approve
                           </Button>
-                          <Button size="sm" variant="outline" className="h-8 flex-1 text-xs gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg" onClick={() => {
-                      setSelectedSubmission(video);
-                      setRejectDialogOpen(true);
-                    }} disabled={processing}>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-8 flex-1 text-xs gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg"
+                            onClick={() => {
+                              setSelectedSubmission(video);
+                              setRejectDialogOpen(true);
+                            }}
+                            disabled={processing}
+                          >
                             <X className="h-3.5 w-3.5" />
                             Reject
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleFlag(video)} disabled={processing}>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => handleFlag(video)}
+                            disabled={processing}
+                          >
                             <img src={flagIcon} alt="Flag" className={cn("h-4 w-4", video.is_flagged && "opacity-50")} />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleRefreshMetadata(video)} disabled={processing}>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => handleRefreshMetadata(video)}
+                            disabled={processing}
+                          >
                             <RefreshCw className="h-4 w-4" />
                           </Button>
-                        </div>}
+                        </div>
+                      )}
 
-                      {video.source === "submitted" && video.status === "approved" && <div className="px-3 pb-3 pt-1">
-                          <Button size="sm" variant="ghost" className="h-7 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-lg" onClick={() => handleRevertApproval(video)} disabled={processing}>
+                      {video.source === "submitted" && video.status === "approved" && (
+                        <div className="px-3 pb-3 pt-1">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="h-7 px-3 text-xs gap-1.5 text-muted-foreground hover:text-foreground rounded-lg"
+                            onClick={() => handleRevertApproval(video)}
+                            disabled={processing}
+                          >
                             <RotateCcw className="h-3 w-3" />
                             Revert to Pending
                           </Button>
-                        </div>}
+                        </div>
+                      )}
 
                       {/* Status indicator line at top */}
-                      <div className={cn("absolute top-0 left-0 right-0 h-0.5", video.status === "approved" && "bg-green-500", video.status === "pending" && "bg-yellow-500", video.status === "rejected" && "bg-red-500", video.status === "tracked" && "bg-purple-500")} />
-                    </div>;
-              });
-            })()}
+                      <div className={cn(
+                        "absolute top-0 left-0 right-0 h-0.5",
+                        video.status === "approved" && "bg-green-500",
+                        video.status === "pending" && "bg-yellow-500",
+                        video.status === "rejected" && "bg-red-500",
+                        video.status === "tracked" && "bg-purple-500"
+                      )} />
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </ScrollArea>
         </div>
@@ -1407,16 +1574,26 @@ export function VideoSubmissionsTab({
               Provide a reason for rejecting this video submission.
             </DialogDescription>
           </DialogHeader>
-          <Textarea placeholder="Reason for rejection (optional)" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="min-h-[100px]" />
+          <Textarea 
+            placeholder="Reason for rejection (optional)" 
+            value={rejectionReason} 
+            onChange={e => setRejectionReason(e.target.value)} 
+            className="min-h-[100px]"
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleReject} disabled={processing}>
+            <Button 
+              variant="destructive" 
+              onClick={handleReject}
+              disabled={processing}
+            >
               Reject
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 }
