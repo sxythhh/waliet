@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Flag, CheckCircle, ExternalLink } from "lucide-react";
+import { Flag, CheckCircle, ExternalLink, Pencil } from "lucide-react";
 import { FlaggingWindowBadge, canBeFlagged } from "./FlaggingWindowBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -26,6 +26,9 @@ interface PayoutItemRowProps {
     id: string;
     submission_id: string;
     amount: number;
+    original_amount?: number | null;
+    override_amount?: number | null;
+    override_reason?: string | null;
     status?: string;
     flagged_at: string | null;
     flag_reason: string | null;
@@ -36,6 +39,7 @@ interface PayoutItemRowProps {
   clearingEndsAt: string;
   onFlag: (itemId: string) => void;
   onApprove?: (itemId: string) => void;
+  onOverride?: (itemId: string, originalAmount: number) => void;
   isFlagging?: boolean;
   isApproving?: boolean;
 }
@@ -59,6 +63,7 @@ export function PayoutItemRow({
   clearingEndsAt,
   onFlag,
   onApprove,
+  onOverride,
   isFlagging = false,
   isApproving = false,
 }: PayoutItemRowProps) {
@@ -66,6 +71,9 @@ export function PayoutItemRow({
   const isFlagged = !!item.flagged_at;
   const isApproved = item.status === 'approved';
   const canFlag = !isFlagged && !isApproved && canBeFlagged(requestCreatedAt, clearingEndsAt);
+  const hasOverride = item.override_amount !== null && item.override_amount !== undefined;
+  const displayAmount = hasOverride ? item.override_amount! : item.amount;
+  const originalAmount = item.original_amount ?? item.amount;
   
   return (
     <div 
@@ -142,7 +150,24 @@ export function PayoutItemRow({
 
         {/* Amount & Status */}
         <div className="flex flex-col items-end gap-1">
-          <span className="text-lg font-semibold">${item.amount.toFixed(2)}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg font-semibold">${displayAmount.toFixed(2)}</span>
+            {hasOverride && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <span className="text-xs text-muted-foreground line-through">
+                    ${originalAmount.toFixed(2)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="font-medium mb-1">Amount overridden</p>
+                  {item.override_reason && (
+                    <p className="text-xs text-muted-foreground">{item.override_reason}</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           {isApproved ? (
             <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1">
               <CheckCircle className="h-3 w-3" />
@@ -164,6 +189,25 @@ export function PayoutItemRow({
 
         {/* Actions */}
         <div className="flex items-center gap-2 ml-2">
+          {/* Override button - only show for non-approved, non-flagged items */}
+          {!isApproved && !isFlagged && onOverride && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOverride(item.id, originalAmount);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Override amount</TooltipContent>
+            </Tooltip>
+          )}
           {canFlag && (
             <Tooltip>
               <TooltipTrigger asChild>

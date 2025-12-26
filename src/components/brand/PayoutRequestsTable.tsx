@@ -22,6 +22,7 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import flagAmberIcon from "@/assets/flag-amber-icon.svg";
 import { BrandPayoutStatusCards } from "./BrandPayoutStatusCards";
 import { PayoutItemRow } from "./PayoutItemRow";
+import { OverridePayoutAmountDialog } from "./OverridePayoutAmountDialog";
 import { canBeFlagged } from "./FlaggingWindowBadge";
 interface PayoutRequest {
   id: string;
@@ -43,6 +44,11 @@ interface PayoutItem {
   source_type: string;
   source_id: string;
   amount: number;
+  original_amount?: number | null;
+  override_amount?: number | null;
+  override_reason?: string | null;
+  overridden_at?: string | null;
+  overridden_by?: string | null;
   is_locked: boolean;
   flagged_at: string | null;
   flagged_by: string | null;
@@ -104,6 +110,12 @@ export function PayoutRequestsTable({
   const [flagItemId, setFlagItemId] = useState<string | null>(null);
   const [flagReason, setFlagReason] = useState("");
   const [selectedFlagReason, setSelectedFlagReason] = useState<string | null>(null);
+  
+  // Override dialog state
+  const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
+  const [overrideItemId, setOverrideItemId] = useState<string | null>(null);
+  const [overrideOriginalAmount, setOverrideOriginalAmount] = useState<number>(0);
+  const [isOverriding, setIsOverriding] = useState(false);
 
   const FLAG_REASON_OPTIONS = [
     "Suspicious activity",
@@ -120,13 +132,19 @@ export function PayoutRequestsTable({
       otherCount: 0
     };
 
+    // Helper to get the effective amount (override or original)
+    const getEffectiveAmount = (item: PayoutItem) => 
+      item.override_amount !== null && item.override_amount !== undefined 
+        ? item.override_amount 
+        : item.amount;
+
     // If viewing a specific campaign or boost, filter items
     if (campaignId) {
       const filtered = request.items.filter(item => item.source_type === 'campaign' && item.source_id === campaignId);
       const otherItems = request.items.filter(item => item.source_type !== 'campaign' || item.source_id !== campaignId);
       return {
         items: filtered,
-        total: filtered.reduce((sum, item) => sum + item.amount, 0),
+        total: filtered.reduce((sum, item) => sum + getEffectiveAmount(item), 0),
         otherCount: otherItems.length
       };
     }
@@ -135,15 +153,16 @@ export function PayoutRequestsTable({
       const otherItems = request.items.filter(item => item.source_type !== 'boost' || item.source_id !== boostId);
       return {
         items: filtered,
-        total: filtered.reduce((sum, item) => sum + item.amount, 0),
+        total: filtered.reduce((sum, item) => sum + getEffectiveAmount(item), 0),
         otherCount: otherItems.length
       };
     }
 
-    // If viewing all (brandId), show all items
+    // If viewing all (brandId), show all items with recalculated total
+    const recalculatedTotal = request.items.reduce((sum, item) => sum + getEffectiveAmount(item), 0);
     return {
       items: request.items,
-      total: request.total_amount,
+      total: recalculatedTotal,
       otherCount: 0
     };
   };
@@ -383,6 +402,55 @@ export function PayoutRequestsTable({
     handleFlagItem(flagItemId, reason);
   };
 
+  const openOverrideDialog = (itemId: string, originalAmount: number) => {
+    setOverrideItemId(itemId);
+    setOverrideOriginalAmount(originalAmount);
+    setOverrideDialogOpen(true);
+  };
+
+  const handleOverrideAmount = async (newAmount: number, reason: string) => {
+    if (!overrideItemId) return;
+    setIsOverriding(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Fetch the current item to get original amount if not set
+      const { data: currentItem } = await supabase
+        .from('submission_payout_items')
+        .select('amount, original_amount')
+        .eq('id', overrideItemId)
+        .single();
+
+      // Store original amount if this is the first override
+      const originalToStore = currentItem?.original_amount ?? currentItem?.amount ?? overrideOriginalAmount;
+
+      const { error } = await supabase
+        .from('submission_payout_items')
+        .update({
+          original_amount: originalToStore,
+          override_amount: newAmount,
+          override_reason: reason,
+          overridden_at: new Date().toISOString(),
+          overridden_by: user.id,
+          amount: newAmount, // Also update the main amount field for backward compatibility
+        })
+        .eq('id', overrideItemId);
+
+      if (error) throw error;
+      
+      toast.success(`Payout amount updated to $${newAmount.toFixed(2)}`);
+      setOverrideDialogOpen(false);
+      setOverrideItemId(null);
+      fetchPayoutRequests();
+    } catch (error) {
+      console.error('Error overriding amount:', error);
+      toast.error('Failed to override amount');
+    } finally {
+      setIsOverriding(false);
+    }
+  };
+
   const getPlatformIcon = (platform: string | null) => {
     switch (platform?.toLowerCase()) {
       case 'tiktok':
@@ -617,13 +685,20 @@ export function PayoutRequestsTable({
     let inReviewAmount = 0, inReviewCount = 0, approvedAmount = 0, approvedCount = 0, flaggedAmount = 0, flaggedCount = 0;
     let earliestClearingEndsAt: string | undefined;
     let canStillFlagAny = false;
+    
+    const getEffectiveAmount = (item: PayoutItem) => 
+      item.override_amount !== null && item.override_amount !== undefined 
+        ? item.override_amount 
+        : item.amount;
+    
     requests.forEach(request => {
       const { items: displayItems } = getFilteredItemsForRequest(request);
       displayItems.forEach(item => {
-        if (item.flagged_at) { flaggedAmount += item.amount; flaggedCount++; }
-        else if (item.status === 'approved') { approvedAmount += item.amount; approvedCount++; }
+        const effectiveAmount = getEffectiveAmount(item);
+        if (item.flagged_at) { flaggedAmount += effectiveAmount; flaggedCount++; }
+        else if (item.status === 'approved') { approvedAmount += effectiveAmount; approvedCount++; }
         else {
-          inReviewAmount += item.amount; inReviewCount++;
+          inReviewAmount += effectiveAmount; inReviewCount++;
           if (!earliestClearingEndsAt || request.clearing_ends_at < earliestClearingEndsAt) earliestClearingEndsAt = request.clearing_ends_at;
           if (canBeFlagged(request.created_at, request.clearing_ends_at)) canStillFlagAny = true;
         }
@@ -1237,6 +1312,15 @@ export function PayoutRequestsTable({
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Override Amount Dialog */}
+        <OverridePayoutAmountDialog
+          open={overrideDialogOpen}
+          onOpenChange={setOverrideDialogOpen}
+          originalAmount={overrideOriginalAmount}
+          onConfirm={handleOverrideAmount}
+          isSubmitting={isOverriding}
+        />
       </div>
     </TooltipProvider>;
 }

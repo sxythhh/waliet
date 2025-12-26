@@ -3387,6 +3387,11 @@ export type Database = {
           flagged_by: string | null
           id: string
           is_locked: boolean
+          original_amount: number | null
+          overridden_at: string | null
+          overridden_by: string | null
+          override_amount: number | null
+          override_reason: string | null
           payout_request_id: string
           source_id: string
           source_type: string
@@ -3408,6 +3413,11 @@ export type Database = {
           flagged_by?: string | null
           id?: string
           is_locked?: boolean
+          original_amount?: number | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_amount?: number | null
+          override_reason?: string | null
           payout_request_id: string
           source_id: string
           source_type: string
@@ -3429,6 +3439,11 @@ export type Database = {
           flagged_by?: string | null
           id?: string
           is_locked?: boolean
+          original_amount?: number | null
+          overridden_at?: string | null
+          overridden_by?: string | null
+          override_amount?: number | null
+          override_reason?: string | null
           payout_request_id?: string
           source_id?: string
           source_type?: string
