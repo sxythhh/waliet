@@ -675,7 +675,7 @@ export function CreatorsTab({
             {[1, 2, 3, 4, 5].map(i => <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{
             animationDelay: `${i * 100}ms`
           }}>
-                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
                 <div className="flex-1 space-y-2 pt-0.5">
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-3.5 w-24" />
@@ -690,7 +690,7 @@ export function CreatorsTab({
         {/* Center Panel Skeleton */}
         <div className="flex-1 hidden lg:flex flex-col">
           <div className="p-4 border-b border-border/50 flex items-center gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-xl" />
             
           </div>
           <div className="flex-1 flex items-center justify-center">
@@ -715,7 +715,7 @@ export function CreatorsTab({
             {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{
             animationDelay: `${i * 80}ms`
           }}>
-                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-3.5 w-28" />
                   <div className="flex gap-1.5">
@@ -723,7 +723,6 @@ export function CreatorsTab({
                     <Skeleton className="h-4 w-4 rounded" />
                   </div>
                 </div>
-                <Skeleton className="h-6 w-6 rounded" />
               </div>)}
           </div>
         </div>
