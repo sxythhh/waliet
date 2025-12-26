@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Flag, CheckCircle, ExternalLink, Pencil } from "lucide-react";
+import { Flag, CheckCircle, ExternalLink, Pencil, RotateCcw } from "lucide-react";
 import { FlaggingWindowBadge, canBeFlagged } from "./FlaggingWindowBadge";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -40,6 +40,8 @@ interface PayoutItemRowProps {
   onFlag: (itemId: string) => void;
   onApprove?: (itemId: string) => void;
   onOverride?: (itemId: string, originalAmount: number) => void;
+  onClawback?: (itemId: string, amount: number) => void;
+  isAdmin?: boolean;
   isFlagging?: boolean;
   isApproving?: boolean;
 }
@@ -64,6 +66,8 @@ export function PayoutItemRow({
   onFlag,
   onApprove,
   onOverride,
+  onClawback,
+  isAdmin = false,
   isFlagging = false,
   isApproving = false,
 }: PayoutItemRowProps) {
@@ -244,6 +248,25 @@ export function PayoutItemRow({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Approve payout</TooltipContent>
+            </Tooltip>
+          )}
+          {/* Clawback button - only show for approved items and admins */}
+          {isApproved && isAdmin && onClawback && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClawback(item.id, displayAmount);
+                  }}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Clawback payout</TooltipContent>
             </Tooltip>
           )}
         </div>

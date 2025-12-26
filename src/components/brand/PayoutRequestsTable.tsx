@@ -23,7 +23,9 @@ import flagAmberIcon from "@/assets/flag-amber-icon.svg";
 import { BrandPayoutStatusCards } from "./BrandPayoutStatusCards";
 import { PayoutItemRow } from "./PayoutItemRow";
 import { OverridePayoutAmountDialog } from "./OverridePayoutAmountDialog";
+import { ClawbackPayoutDialog } from "./ClawbackPayoutDialog";
 import { canBeFlagged } from "./FlaggingWindowBadge";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -116,6 +118,16 @@ export function PayoutRequestsTable({
   const [overrideItemId, setOverrideItemId] = useState<string | null>(null);
   const [overrideOriginalAmount, setOverrideOriginalAmount] = useState<number>(0);
   const [isOverriding, setIsOverriding] = useState(false);
+
+  // Clawback dialog state
+  const [clawbackDialogOpen, setClawbackDialogOpen] = useState(false);
+  const [clawbackItemId, setClawbackItemId] = useState<string | null>(null);
+  const [clawbackAmount, setClawbackAmount] = useState<number>(0);
+  const [clawbackUserId, setClawbackUserId] = useState<string | null>(null);
+  const [isClawingBack, setIsClawingBack] = useState(false);
+
+  // Admin check
+  const { isAdmin } = useAdminCheck();
 
   const FLAG_REASON_OPTIONS = [
     "Suspicious activity",
@@ -448,6 +460,84 @@ export function PayoutRequestsTable({
       toast.error('Failed to override amount');
     } finally {
       setIsOverriding(false);
+    }
+  };
+
+  const openClawbackDialog = (itemId: string, amount: number, userId: string) => {
+    setClawbackItemId(itemId);
+    setClawbackAmount(amount);
+    setClawbackUserId(userId);
+    setClawbackDialogOpen(true);
+  };
+
+  const handleClawback = async (reason: string) => {
+    if (!clawbackItemId || !clawbackUserId) return;
+    setIsClawingBack(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Update the payout item status to 'clawedback'
+      const { error: itemError } = await supabase
+        .from('submission_payout_items')
+        .update({
+          status: 'clawedback',
+          flag_reason: `Clawback: ${reason}`,
+          flagged_at: new Date().toISOString(),
+          flagged_by: user.id
+        })
+        .eq('id', clawbackItemId);
+
+      if (itemError) throw itemError;
+
+      // Deduct from creator's wallet
+      const { data: walletData, error: fetchWalletError } = await supabase
+        .from('wallets')
+        .select('balance, total_earned')
+        .eq('user_id', clawbackUserId)
+        .single();
+
+      if (fetchWalletError) throw fetchWalletError;
+
+      const { error: walletUpdateError } = await supabase
+        .from('wallets')
+        .update({
+          balance: Math.max(0, (walletData?.balance || 0) - clawbackAmount),
+          total_earned: Math.max(0, (walletData?.total_earned || 0) - clawbackAmount)
+        })
+        .eq('user_id', clawbackUserId);
+
+      if (walletUpdateError) throw walletUpdateError;
+
+      // Create wallet transaction record for the clawback
+      const { error: txError } = await supabase
+        .from('wallet_transactions')
+        .insert({
+          user_id: clawbackUserId,
+          amount: -clawbackAmount,
+          type: 'clawback',
+          description: `Clawback: ${reason}`,
+          metadata: {
+            payout_item_id: clawbackItemId,
+            campaign_id: campaignId || null,
+            boost_id: boostId || null,
+            clawed_back_by: user.id,
+            reason: reason
+          }
+        });
+
+      if (txError) throw txError;
+
+      toast.success(`$${clawbackAmount.toFixed(2)} clawed back from creator`);
+      setClawbackDialogOpen(false);
+      setClawbackItemId(null);
+      setClawbackUserId(null);
+      fetchPayoutRequests();
+    } catch (error) {
+      console.error('Error processing clawback:', error);
+      toast.error('Failed to process clawback');
+    } finally {
+      setIsClawingBack(false);
     }
   };
 
@@ -1000,7 +1090,20 @@ export function PayoutRequestsTable({
                                                 Flag
                                               </Button>}
                                             
-                                            
+                                            {/* Clawback button for admins on paid items */}
+                                            {isApproved && isAdmin && (
+                                              <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                className="h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 px-2.5 gap-1.5 transition-colors" 
+                                                onClick={e => {
+                                                  e.stopPropagation();
+                                                  openClawbackDialog(item.id, item.amount, request.user_id);
+                                                }}
+                                              >
+                                                Clawback
+                                              </Button>
+                                            )}
                                           </div>
                                         </div>
                                       </div>
@@ -1320,6 +1423,15 @@ export function PayoutRequestsTable({
           originalAmount={overrideOriginalAmount}
           onConfirm={handleOverrideAmount}
           isSubmitting={isOverriding}
+        />
+
+        {/* Clawback Dialog */}
+        <ClawbackPayoutDialog
+          open={clawbackDialogOpen}
+          onOpenChange={setClawbackDialogOpen}
+          itemAmount={clawbackAmount}
+          onConfirm={handleClawback}
+          isLoading={isClawingBack}
         />
       </div>
     </TooltipProvider>;
