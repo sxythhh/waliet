@@ -265,7 +265,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 h-screen overflow-hidden flex flex-col">
         <div className={`
-          pt-14 pb-20 md:pt-0 md:pb-0 flex-1 overflow-y-auto p-[10px]
+          pt-14 pb-20 md:pt-[10px] md:pb-[10px] flex-1 overflow-y-auto px-[10px]
           ${currentTab === "discover" || currentTab === "referrals" || currentTab === "training" ? "" : isBrandMode ? "" : "px-4 sm:px-6 md:px-8 py-6 md:py-8"}
         `}>
           {renderContent()}
