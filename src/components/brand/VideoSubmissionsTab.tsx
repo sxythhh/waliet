@@ -1545,7 +1545,7 @@ export function VideoSubmissionsTab({
               {hasApprovable && (
                 <Button 
                   size="sm" 
-                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-none tracking-[-0.3px]"
+                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm shadow-none tracking-[-0.3px]"
                   onClick={handleBulkApprove}
                   disabled={processing}
                 >
@@ -1556,7 +1556,7 @@ export function VideoSubmissionsTab({
               {hasRejectable && (
                 <Button 
                   size="sm" 
-                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg shadow-none tracking-[-0.3px]"
+                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm shadow-none tracking-[-0.3px]"
                   onClick={handleBulkReject}
                   disabled={processing}
                 >
