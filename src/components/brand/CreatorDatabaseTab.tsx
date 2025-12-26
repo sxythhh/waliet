@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
+import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
@@ -1509,7 +1510,7 @@ export function CreatorDatabaseTab({
                   <div className="space-y-1">
                     {selectedCreatorPanel.campaigns.map(campaign => <div key={campaign.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
                         <span className="text-xs font-inter tracking-[-0.5px]">{campaign.title}</span>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-amber-600 hover:text-amber-700 hover:bg-amber-500/10" onClick={e => {
+                        <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-red-500/10" onClick={e => {
                     e.stopPropagation();
                     setCampaignToKickFrom({
                       creatorId: selectedCreatorPanel.id,
@@ -1519,8 +1520,7 @@ export function CreatorDatabaseTab({
                     });
                     setKickFromCampaignDialogOpen(true);
                   }}>
-                          <UserX className="h-3 w-3 mr-1" />
-                          Remove
+                          <img src={removeCreatorIcon} alt="Remove" className="h-4 w-4" />
                         </Button>
                       </div>)}
                   </div>
