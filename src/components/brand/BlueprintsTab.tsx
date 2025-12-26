@@ -249,7 +249,7 @@ export function BlueprintsTab({
           <TooltipProvider>
             <Tooltip delayDuration={200}>
               <TooltipTrigger asChild>
-                <div className="p-1 rounded-full transition-colors cursor-help bg-[#1f1f1f]/[0.33]">
+                <div className="p-1 rounded-full transition-colors cursor-help bg-[#1f1f1f]/0">
                   <Info className="h-3.5 w-3.5 text-muted-foreground" />
                 </div>
               </TooltipTrigger>
