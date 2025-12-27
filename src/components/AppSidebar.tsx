@@ -761,20 +761,6 @@ export function AppSidebar() {
             </button>
           </div>}
 
-        {/* Swap to Business CTA - Only show in creator mode if user has no workspaces */}
-        {isCreatorMode && !isCollapsed && brandMemberships.length === 0 && !isAdmin && <div className="px-2 pb-2">
-            <div className="rounded-lg bg-muted p-3">
-              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-foreground mb-1">
-                Swap to Business
-              </p>
-              <p className="font-['Geist'] text-[11px] tracking-[-0.5px] text-muted-foreground mb-2">
-                Advanced analytics, unlimited campaigns, and priority support.
-              </p>
-              <button className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center" onClick={() => setShowCreateBrandDialog(true)}>
-                Create Workspace
-              </button>
-            </div>
-          </div>}
 
 
         {/* User Profile Section */}
