@@ -716,100 +716,54 @@ export function CampaignsTab({
       {/* Your Campaigns - Moved to appear first */}
       {!hasNoCampaigns && <div className="space-y-3">
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 w-full mx-auto">
       {campaigns.map(campaign => {
             const budgetUsed = campaign.budget_used || 0;
-            const budgetPercentage = campaign.budget > 0 ? budgetUsed / campaign.budget * 100 : 0;
             const isPending = campaign.submission_status === 'pending';
             const isEnded = campaign.status === 'ended';
-            return <Card key={campaign.id} className={`group bg-card dark:hover:bg-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border ${isPending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} onClick={() => {
-              if (!isPending) {
-                setSelectedCampaignForDetails(campaign);
-                setCampaignDetailsDialogOpen(true);
-              }
-            }}>
-            {/* Banner Image - Top Section */}
-            {campaign.banner_url && <div className="relative w-full h-32 flex-shrink-0 overflow-hidden bg-muted">
-                <img src={campaign.banner_url} alt={campaign.title} className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
-                {isEnded && <div className="absolute top-2 right-2">
-                  
-                </div>}
-              </div>}
-
-            {/* Content Section */}
-            <CardContent className="p-3 flex-1 flex flex-col gap-2.5 font-instrument tracking-tight">
-              {/* Brand Logo + Title */}
-              <div className="gap-2.5 flex items-center justify-start">
-                {campaign.brand_logo_url && <div className="w-8 h-8 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border">
-                    <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-full h-full object-cover" />
-                  </div>}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold line-clamp-2 leading-snug mb-0.5 flex-1 font-['Inter'] tracking-[-0.5px]">
-                      {campaign.title}
-                    </h3>
-                    {isEnded && !campaign.banner_url && <Badge variant="secondary" className="bg-muted/90 text-muted-foreground font-semibold text-[10px]">
-                      Ended
-                    </Badge>}
+            return (
+              <div key={campaign.id} className={`relative ${isPending ? 'opacity-60' : ''}`}>
+                <CampaignCard
+                  id={campaign.id}
+                  title={campaign.title}
+                  brand_name={campaign.brand_name}
+                  brand_logo_url={campaign.brand_logo_url}
+                  brand_is_verified={campaign.brand_is_verified}
+                  banner_url={campaign.banner_url}
+                  budget={campaign.budget}
+                  budget_used={budgetUsed}
+                  is_infinite_budget={campaign.is_infinite_budget}
+                  isEnded={isEnded}
+                  showBookmark={false}
+                  showFullscreen={false}
+                  onClick={() => {
+                    if (!isPending) {
+                      setSelectedCampaignForDetails(campaign);
+                      setCampaignDetailsDialogOpen(true);
+                    }
+                  }}
+                />
+                {/* Pending Application Overlay */}
+                {isPending && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
+                    <span className="text-xs font-medium text-muted-foreground mb-2">Pending Review</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={e => {
+                        e.stopPropagation();
+                        setSelectedCampaignId(campaign.id);
+                        setWithdrawDialogOpen(true);
+                      }} 
+                      className="h-7 text-[10px] hover:bg-destructive/10 hover:text-destructive font-medium"
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Withdraw
+                    </Button>
                   </div>
-                  
-                </div>
+                )}
               </div>
-
-              {/* Budget Section - Redesigned */}
-              <div className="rounded-lg p-2.5 space-y-1.5 bg-[#080808]/0">
-                <div className="flex items-baseline justify-between">
-                  <div className="flex items-baseline gap-1.5 font-['Inter'] tracking-[-0.5px]">
-                    {campaign.is_infinite_budget ? <>
-                        
-                        <span className="text-xs text-muted-foreground font-medium">Infinite Budget</span>
-                      </> : <>
-                        <span className="text-base font-bold tabular-nums">${Math.ceil(budgetUsed).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}</span>
-                        <span className="text-xs text-muted-foreground font-bold">/ ${Math.ceil(campaign.budget).toLocaleString(undefined, {
-                            maximumFractionDigits: 0
-                          })}</span>
-                      </>}
-                  </div>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="relative h-1.5 rounded-full overflow-hidden bg-muted/50">
-                  {campaign.is_infinite_budget ? <div className="absolute inset-0 animate-pulse" style={{
-                      background: 'repeating-linear-gradient(45deg, hsl(217, 91%, 60%), hsl(217, 91%, 60%) 10px, hsl(217, 91%, 45%) 10px, hsl(217, 91%, 45%) 20px)',
-                      backgroundSize: '200% 200%',
-                      animation: 'slide 2s linear infinite'
-                    }} /> : <div className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700" style={{
-                      width: `${budgetPercentage}%`
-                    }} />}
-                </div>
-                
-                {!campaign.is_infinite_budget && <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
-                    <span className="font-medium">{budgetPercentage.toFixed(0)}% used</span>
-                  </div>}
-              </div>
-
-              {/* Application Status */}
-              {isPending && <div className="mt-auto pt-2 space-y-2">
-                  <div className="bg-muted/30 rounded-md px-2.5 py-1.5 flex items-center justify-center">
-                    <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground font-semibold">
-                      Pending Review
-                    </span>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={e => {
-                    e.stopPropagation();
-                    setSelectedCampaignId(campaign.id);
-                    setWithdrawDialogOpen(true);
-                  }} className="w-full h-8 text-[11px] font-inter tracking-[-0.5px] hover:bg-destructive/10 hover:text-destructive font-semibold">
-                    <X className="w-3.5 h-3.5 mr-1.5" />
-                    Withdraw Application
-                  </Button>
-                </div>}
-              
-              {isEnded && !isPending}
-            </CardContent>
-          </Card>;
+            );
           })}
         </div>
       </div>}
