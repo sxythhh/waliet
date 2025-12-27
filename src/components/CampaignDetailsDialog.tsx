@@ -149,23 +149,20 @@ export function CampaignDetailsDialog({
   useEffect(() => {
     const fetchSubmissionStats = async () => {
       if (!campaign?.id || !open) return;
-
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data: submissions } = await supabase
-        .from('video_submissions')
-        .select('status')
-        .eq('source_type', 'campaign')
-        .eq('source_id', campaign.id)
-        .eq('creator_id', user.id);
-
+      const {
+        data: submissions
+      } = await supabase.from('video_submissions').select('status').eq('source_type', 'campaign').eq('source_id', campaign.id).eq('creator_id', user.id);
       if (submissions) {
         setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);
         setApprovedSubmissions(submissions.filter(s => s.status === 'approved').length);
       }
     };
-
     fetchSubmissionStats();
   }, [campaign?.id, open]);
 
@@ -177,19 +174,14 @@ export function CampaignDetailsDialog({
         setBlueprintAssets(null);
         return;
       }
-
-      const { data: blueprint } = await supabase
-        .from('blueprints')
-        .select('content, assets')
-        .eq('id', campaign.blueprint_id)
-        .single();
-
+      const {
+        data: blueprint
+      } = await supabase.from('blueprints').select('content, assets').eq('id', campaign.blueprint_id).single();
       if (blueprint?.content) {
         setBlueprintContent(blueprint.content);
       } else {
         setBlueprintContent(null);
       }
-
       if (blueprint?.assets && Array.isArray(blueprint.assets) && blueprint.assets.length > 0) {
         // Map blueprint assets from {notes, link} to {label, url} format
         const mappedAssets = blueprint.assets.map((asset: any) => ({
@@ -201,7 +193,6 @@ export function CampaignDetailsDialog({
         setBlueprintAssets(null);
       }
     };
-
     fetchBlueprintData();
   }, [campaign?.blueprint_id, open]);
 
@@ -264,24 +255,17 @@ export function CampaignDetailsDialog({
             </div>}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h2 
-                className="text-base sm:text-lg font-semibold cursor-pointer hover:underline" 
-                style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}
-                onClick={() => window.location.href = `/c/${campaign.slug}`}
-              >{campaign.title}</h2>
-              {campaign.status === 'ended' && onLeaveCampaign && (
-                <button
-                  onClick={onLeaveCampaign}
-                  className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                >
+              <h2 className="text-base sm:text-lg font-semibold cursor-pointer hover:underline" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.5px'
+            }} onClick={() => window.location.href = `/c/${campaign.slug}`}>{campaign.title}</h2>
+              {campaign.status === 'ended' && onLeaveCampaign && <button onClick={onLeaveCampaign} className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md transition-colors" style={{
+              fontFamily: 'Inter',
+              letterSpacing: '-0.3px'
+            }}>
                   <LogOut className="w-3 h-3" />
                   Leave
-                </button>
-              )}
+                </button>}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground" style={{
             fontFamily: 'Inter',
@@ -295,40 +279,39 @@ export function CampaignDetailsDialog({
           
           {/* Action Buttons - Top Right */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              onClick={() => window.location.href = `/c/${campaign.slug}`}
-              variant="ghost"
-              className="h-9 px-4 rounded-[10px] font-medium text-sm bg-muted hover:bg-muted/80 border-0"
-              style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-            >
+            <Button onClick={() => window.location.href = `/c/${campaign.slug}`} variant="ghost" className="h-9 px-4 rounded-[10px] font-medium text-sm bg-muted hover:bg-muted/80 border-0" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>
               View Full Details
             </Button>
-            {hasConnectedAccounts && (
-              <Button
-                onClick={() => setShowSubmitVideoDialog(true)}
-                className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border"
-                style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
-              >
+            {hasConnectedAccounts && <Button onClick={() => setShowSubmitVideoDialog(true)} className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.5px'
+          }}>
                 Submit Video
-              </Button>
-            )}
+              </Button>}
           </div>
         </div>
 
         {/* Campaign Update Banner */}
-        {campaign.campaign_update && (
-          <div className="mb-4 p-3 rounded-xl bg-[#2060df]/10 border border-[#2060df]/20 flex items-start gap-3">
+        {campaign.campaign_update && <div className="mb-4 p-3 rounded-xl bg-[#2060df]/10 border border-[#2060df]/20 flex items-start gap-3">
             <Megaphone className="w-4 h-4 text-[#2060df] flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#2060df] mb-1" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              <p className="text-xs font-medium text-[#2060df] mb-1" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                 Campaign Update
               </p>
-              <p className="text-sm text-foreground whitespace-pre-wrap" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              <p className="text-sm text-foreground whitespace-pre-wrap" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                 {campaign.campaign_update}
               </p>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Next Payout Card */}
         <div className="mb-4 p-4 rounded-2xl px-0 py-0">
@@ -365,14 +348,15 @@ export function CampaignDetailsDialog({
           </div>
           
           {/* Demographics Reminder Notice - show 1 day before payout */}
-          {nextPayout.daysUntil === 1 && (
-            <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-transparent flex items-center gap-3">
+          {nextPayout.daysUntil === 1 && <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-transparent flex items-center gap-3">
               <img src={warningIcon} alt="" className="w-4 h-4 flex-shrink-0" />
-              <p className="text-xs text-amber-600 dark:text-amber-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              <p className="text-xs text-amber-600 dark:text-amber-400" style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                 Payout is tomorrow! Make sure to submit your view demographics before the deadline.
               </p>
-            </div>
-          )}
+            </div>}
 
           {/* Expected Payout Card */}
           {expectedPayout !== null && <div className="mt-3 p-3 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f]">
@@ -458,34 +442,28 @@ export function CampaignDetailsDialog({
         {/* Description with gradient + read more */}
         {(blueprintContent || campaign.description) && <div className="mb-4">
             <div className="relative">
-              {blueprintContent ? (
-                <div 
-                  className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all prose prose-sm dark:prose-invert max-w-none break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} 
-                  style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px',
-                    overflowWrap: 'break-word',
-                    wordBreak: 'break-word'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: blueprintContent }}
-                />
-              ) : (
-                <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px',
-                  overflowWrap: 'break-word',
-                  wordBreak: 'break-word'
-                }}>
+              {blueprintContent ? <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all prose prose-sm dark:prose-invert max-w-none break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word'
+          }} dangerouslySetInnerHTML={{
+            __html: blueprintContent
+          }} /> : <div className={`text-sm text-foreground/90 leading-relaxed overflow-hidden transition-all whitespace-pre-line break-words ${showFullDescription ? '' : 'max-h-[100px]'}`} style={{
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word'
+          }}>
                   {renderDescriptionWithLinks(campaign.description!)}
-                </div>
-              )}
-              {!showFullDescription && ((blueprintContent && blueprintContent.length > 200) || (campaign.description && campaign.description.length > 200)) && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
+                </div>}
+              {!showFullDescription && (blueprintContent && blueprintContent.length > 200 || campaign.description && campaign.description.length > 200) && <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />}
             </div>
-            {((blueprintContent && blueprintContent.length > 200) || (campaign.description && campaign.description.length > 200)) && <div className="flex justify-center mt-2">
+            {(blueprintContent && blueprintContent.length > 200 || campaign.description && campaign.description.length > 200) && <div className="flex justify-center mt-2">
                 <button onClick={() => setShowFullDescription(!showFullDescription)} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
+            fontFamily: 'Inter',
+            letterSpacing: '-0.3px'
+          }}>
                   {showFullDescription ? 'Show less' : 'Show more'}
                 </button>
               </div>}
@@ -574,9 +552,7 @@ export function CampaignDetailsDialog({
             }}>{account.username}</span>
                   </button>)}
               </div> : <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-border/60 bg-muted/20">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <img src={addDiamondIcon} alt="Add" className="w-5 h-5" />
-                </div>
+                
                 <div>
                   <p className="text-sm font-medium" style={{
               fontFamily: 'Inter',
@@ -588,37 +564,33 @@ export function CampaignDetailsDialog({
           </div>}
 
         {/* Submit Video Dialog */}
-        <SubmitVideoDialog
-          campaign={{
-            id: campaign.id,
-            title: campaign.title,
-            brand_name: campaign.brand_name,
-            payment_model: campaign.payment_model,
-            rpm_rate: campaign.rpm_rate,
-            post_rate: campaign.post_rate,
-            allowed_platforms: campaign.allowed_platforms || undefined
-          }}
-          open={showSubmitVideoDialog}
-          onOpenChange={setShowSubmitVideoDialog}
-          onSuccess={() => {
-            // Refresh submission stats
-            const fetchStats = async () => {
-              const { data: { user } } = await supabase.auth.getUser();
-              if (!user) return;
-              const { data: submissions } = await supabase
-                .from('video_submissions')
-                .select('status')
-                .eq('source_type', 'campaign')
-                .eq('source_id', campaign.id)
-                .eq('creator_id', user.id);
-              if (submissions) {
-                setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);
-                setApprovedSubmissions(submissions.filter(s => s.status === 'approved').length);
-              }
-            };
-            fetchStats();
-          }}
-        />
+        <SubmitVideoDialog campaign={{
+        id: campaign.id,
+        title: campaign.title,
+        brand_name: campaign.brand_name,
+        payment_model: campaign.payment_model,
+        rpm_rate: campaign.rpm_rate,
+        post_rate: campaign.post_rate,
+        allowed_platforms: campaign.allowed_platforms || undefined
+      }} open={showSubmitVideoDialog} onOpenChange={setShowSubmitVideoDialog} onSuccess={() => {
+        // Refresh submission stats
+        const fetchStats = async () => {
+          const {
+            data: {
+              user
+            }
+          } = await supabase.auth.getUser();
+          if (!user) return;
+          const {
+            data: submissions
+          } = await supabase.from('video_submissions').select('status').eq('source_type', 'campaign').eq('source_id', campaign.id).eq('creator_id', user.id);
+          if (submissions) {
+            setPendingSubmissions(submissions.filter(s => s.status === 'pending').length);
+            setApprovedSubmissions(submissions.filter(s => s.status === 'approved').length);
+          }
+        };
+        fetchStats();
+      }} />
 
         {/* Asset Links Section - show blueprint assets or campaign assets */}
         {(blueprintAssets && blueprintAssets.length > 0 ? blueprintAssets : hasAssetLinks ? campaign.asset_links : null) && <div className="mb-4">
@@ -628,22 +600,17 @@ export function CampaignDetailsDialog({
             const faviconUrl = getFaviconUrl(link.url);
             return <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden">
-                      {faviconUrl ? (
-                        <img 
-                          src={faviconUrl} 
-                          alt="" 
-                          className="w-6 h-6 object-contain" 
-                          onError={e => {
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = parent.querySelector('.fallback-icon');
-                              if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                            }
-                          }} 
-                        />
-                      ) : null}
-                      <Link2 className="fallback-icon w-4 h-4 text-muted-foreground" style={{ display: faviconUrl ? 'none' : 'flex' }} />
+                      {faviconUrl ? <img src={faviconUrl} alt="" className="w-6 h-6 object-contain" onError={e => {
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = parent.querySelector('.fallback-icon');
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }
+                }} /> : null}
+                      <Link2 className="fallback-icon w-4 h-4 text-muted-foreground" style={{
+                  display: faviconUrl ? 'none' : 'flex'
+                }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium font-inter tracking-[-0.3px] text-xs sm:text-sm truncate">{link.label || 'Asset Link'}</p>
