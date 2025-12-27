@@ -146,8 +146,8 @@ export function PerformanceChart({
             // Use datetime if available, otherwise fall back to date
             const dataPoint = payload[0]?.payload as MetricsData;
             const displayLabel = dataPoint?.datetime || dataPoint?.date || '';
-            return <div className="bg-black/80 backdrop-blur-md rounded-lg px-3 py-2.5 shadow-xl min-w-[140px]">
-                      <p className="text-xs font-medium font-inter text-white/50 tracking-[-0.5px] mb-2">{displayLabel}</p>
+                    return <div className="bg-white/95 dark:bg-black/80 backdrop-blur-md rounded-lg px-3 py-2.5 shadow-xl min-w-[140px] border border-[#dedede] dark:border-transparent">
+                      <p className="text-xs font-medium font-inter text-muted-foreground dark:text-white/50 tracking-[-0.5px] mb-2">{displayLabel}</p>
                       <div className="space-y-1.5">
                         {payload.map((entry: any) => {
                   const metricName = String(entry.dataKey).replace('daily', '').replace(/([A-Z])/g, ' $1').trim();
