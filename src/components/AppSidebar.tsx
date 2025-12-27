@@ -755,7 +755,7 @@ export function AppSidebar() {
         {/* Joined Campaigns Section - Only show in creator mode */}
         {isCreatorMode && joinedCampaigns.length > 0 && <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
             {!isCollapsed && <button onClick={() => setCampaignsExpanded(!campaignsExpanded)} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-                <span className="font-['Inter'] tracking-[-0.3px]">Campaigns</span>
+                <span className="font-['Geist'] tracking-[-0.4px]">Campaigns</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${campaignsExpanded ? '' : '-rotate-90'}`} />
               </button>}
             <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'flex flex-col gap-0.5'} overflow-hidden transition-all duration-200 ease-out`} style={{
