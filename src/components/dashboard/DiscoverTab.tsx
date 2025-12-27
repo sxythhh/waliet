@@ -596,7 +596,7 @@ export function DiscoverTab({
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-4">
             {/* Combined Grid - Campaigns and Bounties interleaved */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full mx-auto">
               {/* Combine campaigns and bounties into a single sorted array */}
               {(() => {
             // Create unified list with type markers, applying type filter
