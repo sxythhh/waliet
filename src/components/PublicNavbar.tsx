@@ -65,7 +65,7 @@ export default function PublicNavbar({
   }, []);
   const isActive = (path: string) => location.pathname === path;
   return <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-6">
