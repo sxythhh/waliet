@@ -134,6 +134,7 @@ export default function CampaignApply() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isCampaignMember, setIsCampaignMember] = useState(false);
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
@@ -263,6 +264,18 @@ export default function CampaignApply() {
           }
         } = await supabase.auth.getSession();
         setIsLoggedIn(!!session);
+        
+        // Check if user is already a boost member
+        if (session && boostData) {
+          const { data: boostApplication } = await supabase
+            .from("bounty_applications")
+            .select("id")
+            .eq("bounty_campaign_id", boostData.id)
+            .eq("user_id", session.user.id)
+            .neq("status", "rejected")
+            .maybeSingle();
+          setIsCampaignMember(!!boostApplication);
+        }
       }
     } catch (error) {
       console.error("Error fetching campaign:", error);
@@ -287,6 +300,10 @@ export default function CampaignApply() {
     const {
       data: activeSubmissions
     } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaignData.id).eq("creator_id", session.user.id).neq("status", "withdrawn");
+    
+    // Check if user is already a campaign member
+    setIsCampaignMember((activeSubmissions?.length ?? 0) > 0);
+    
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
     setSocialAccounts(availableAccounts);
@@ -831,6 +848,7 @@ export default function CampaignApply() {
         </div>
 
         {/* Right Column - Fixed Application Sidebar (Desktop Only) */}
+        {!isCampaignMember && (
         <div className="hidden lg:flex fixed top-14 right-0 w-[380px] h-[calc(100vh-56px)] border-l border-border bg-background">
           <div className="flex-1 overflow-y-auto p-6" id="desktop-apply">
             <div className="space-y-6">
@@ -965,10 +983,11 @@ export default function CampaignApply() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Fixed bottom CTA for mobile */}
-      {!isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
+      {!isCampaignMember && !isFull && !isEnded && <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-xl border-t border-border lg:hidden">
           <Button 
             className="w-full font-['Inter'] tracking-[-0.5px]" 
             size="lg" 
