@@ -21,6 +21,8 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import dualScreenIconWhite from "@/assets/dual-screen-icon-white.svg";
+import dualScreenIconBlack from "@/assets/dual-screen-icon-black.svg";
 
 interface Submission {
   id: string;
@@ -539,7 +541,7 @@ export function SubmissionsTab() {
                   {/* Type Filter */}
                   <button onClick={() => setFilterSubmenu('type')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Video className="h-4 w-4" />
+                      <img src={resolvedTheme === 'dark' ? dualScreenIconWhite : dualScreenIconBlack} alt="" className="h-4 w-4" />
                       <span className="text-sm">Type</span>
                     </div>
                     <div className="flex items-center gap-2">
