@@ -249,7 +249,7 @@ export function TransactionShareDialog({
           <rect width="${width}" height="${height}" fill="url(#bgGradient)" rx="36"/>
           
           <!-- Pattern overlay -->
-          ${patternBase64 ? `<image href="${patternBase64}" x="0" y="0" width="${width}" height="${height}" opacity="0.15" preserveAspectRatio="xMidYMid slice"/>` : ''}
+          ${patternBase64 ? `<image href="${patternBase64}" x="0" y="0" width="${width}" height="${height}" opacity="0.5" preserveAspectRatio="xMidYMid slice"/>` : ''}
           
           <!-- Virality logo at top center -->
           ${showViralityLogo ? `
