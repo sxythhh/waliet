@@ -870,6 +870,8 @@ export function ProfileTab() {
       {/* Onboarding Checklist */}
       <ProfileOnboardingChecklist tasks={onboardingTasks} />
 
+      {/* Payment Methods Section */}
+      <PaymentMethodsSection />
 
       {/* Profile Header */}
       <Card className="bg-card border-0">
@@ -1521,9 +1523,6 @@ export function ProfileTab() {
           </form>
         </CardContent>
       </Card>
-
-      {/* Payment Methods Section */}
-      <PaymentMethodsSection />
 
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} />
 
