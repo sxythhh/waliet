@@ -49,7 +49,7 @@ export function CampaignCard({
   return (
     <div className="flex flex-col gap-1.5">
       <Card
-        className="group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border-0"
+        className="group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-xl border-0"
         onClick={onClick}
       >
         {/* Banner Background */}
