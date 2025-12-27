@@ -585,24 +585,25 @@ export function DiscoverTab({
                   <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
                     Campaigns
                   </h2>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
                     <button
                       onClick={() => {
                         const container = document.getElementById('campaigns-scroll');
                         if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
                       }}
-                      className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
                     </button>
+                    <div className="w-px h-5 bg-border/50" />
                     <button
                       onClick={() => {
                         const container = document.getElementById('campaigns-scroll');
                         if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
                       }}
-                      className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 </div>
