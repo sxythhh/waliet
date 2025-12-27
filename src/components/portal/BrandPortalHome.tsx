@@ -160,9 +160,9 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-card dark:to-background rounded-2xl p-6 border border-gray-100 dark:border-border shadow-sm">
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
+          <Avatar className="h-16 w-16 ring-4 ring-white dark:ring-border shadow-lg">
             <AvatarImage src={profile?.avatar_url || ""} />
             <AvatarFallback 
               className="text-lg font-semibold text-white"
@@ -172,10 +172,10 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-tight">
               Welcome back, {profile?.username || "Creator"}!
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-muted-foreground">
               Here's your performance summary with {brand.name}
             </p>
           </div>
