@@ -16,6 +16,8 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import alternateEmailIcon from "@/assets/alternate-email-icon.svg";
 import fullscreenIcon from "@/assets/fullscreen-icon.svg";
+import fullscreenIconDark from "@/assets/fullscreen-icon-dark.svg";
+import { useTheme } from "@/components/ThemeProvider";
 interface BountyCampaign {
   id: string;
   title: string;
@@ -49,6 +51,7 @@ export function ApplyToBountySheet({
   bounty,
   onSuccess
 }: ApplyToBountySheetProps) {
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
@@ -229,8 +232,8 @@ export function ApplyToBountySheet({
           <button onClick={() => {
           onOpenChange(false);
           navigate(`/c/${bounty.slug || bounty.id}`);
-        }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50" title="Open full page">
-            <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
+        }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-card backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors z-50" title="Open full page">
+            <img src={resolvedTheme === 'dark' ? fullscreenIcon : fullscreenIconDark} alt="Fullscreen" className="w-5 h-5" />
           </button>
           {/* Always show boost details */}
           <>
