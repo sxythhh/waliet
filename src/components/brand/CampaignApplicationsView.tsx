@@ -317,7 +317,7 @@ export function CampaignApplicationsView({
               addSuffix: true
             });
             const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
-            return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-[#111111]" : ""}`}>
+            return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted" : ""}`}>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={app.profile?.avatar_url || ""} />
