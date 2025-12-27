@@ -354,6 +354,7 @@ export function ProfileHeader({
                   xpForCurrentLevel={levelThresholds.xpForCurrentLevel}
                   xpForNextLevel={levelThresholds.xpForNextLevel}
                   rank={(profile.current_rank || 'Bronze') as RankType}
+                  level={profile.current_level || 1}
                 />
               </div>
             )}
