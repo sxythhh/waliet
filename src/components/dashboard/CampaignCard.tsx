@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useNavigate } from "react-router-dom";
 
 export interface CampaignCardProps {
   id: string;
@@ -19,6 +20,7 @@ export interface CampaignCardProps {
   isEnded?: boolean;
   isBookmarked?: boolean;
   slug?: string;
+  brand_slug?: string;
   onClick?: () => void;
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
@@ -40,12 +42,15 @@ export function CampaignCard({
   platforms = [],
   isEnded,
   isBookmarked,
+  slug,
+  brand_slug,
   onClick,
   onBookmarkClick,
   onFullscreenClick,
   showBookmark = true,
   showFullscreen = true,
 }: CampaignCardProps) {
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -138,6 +143,9 @@ export function CampaignCard({
         
         {/* Brand Badge */}
         <div className="flex items-center gap-1.5 mt-1">
+          <span className="text-[10px] text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
+            Created by
+          </span>
           {brand_logo_url && (
             <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
               <OptimizedImage
@@ -147,9 +155,15 @@ export function CampaignCard({
               />
             </div>
           )}
-          <span className="text-[10px] font-medium text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (brand_slug) navigate(`/b/${brand_slug}`);
+            }}
+            className="text-[10px] font-medium text-foreground tracking-[-0.3px] font-['Geist',sans-serif] hover:underline cursor-pointer bg-transparent border-none p-0"
+          >
             {brand_name}
-          </span>
+          </button>
           {brand_is_verified && <VerifiedBadge size="sm" />}
         </div>
       </div>
