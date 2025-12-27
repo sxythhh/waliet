@@ -79,14 +79,12 @@ interface SubItem {
   iconInactive: string;
   iconActive: string;
 }
-
 interface MenuItem {
   title: string;
   tab: string;
   icon: any;
   subItems?: SubItem[];
 }
-
 const creatorMenuItems: MenuItem[] = [{
   title: "Home",
   tab: "campaigns",
@@ -124,11 +122,23 @@ const brandMenuItems: MenuItem[] = [{
   title: "Creators",
   tab: "creators",
   icon: null as any,
-  subItems: [
-    { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
-    { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },
-    { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive },
-    // { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
+  subItems: [{
+    title: "Messages",
+    subtab: "messages",
+    iconInactive: messagesInactive,
+    iconActive: messagesActive
+  }, {
+    title: "Database",
+    subtab: "database",
+    iconInactive: databaseInactive,
+    iconActive: databaseActive
+  }, {
+    title: "Contracts",
+    subtab: "contracts",
+    iconInactive: contractsInactive,
+    iconActive: contractsActive
+  }
+  // { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
   ]
 }, {
   title: "Settings",
@@ -288,7 +298,6 @@ export function AppSidebar() {
     }
     setSearchParams(newParams);
   };
-
   const handleSubtabClick = (subtab: string) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("tab", "creators");
@@ -329,10 +338,9 @@ export function AppSidebar() {
     if (currentBrandLogo) {
       return <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />;
     }
-    return <div 
-      className="w-6 h-6 rounded flex items-center justify-center"
-      style={{ backgroundColor: currentBrandColor || 'hsl(var(--muted))' }}
-    >
+    return <div className="w-6 h-6 rounded flex items-center justify-center" style={{
+      backgroundColor: currentBrandColor || 'hsl(var(--muted))'
+    }}>
         <span className="text-[10px] font-semibold text-white uppercase">{currentBrandName?.charAt(0) || 'B'}</span>
       </div>;
   };
@@ -613,25 +621,20 @@ export function AppSidebar() {
             {menuItems.map(item => {
             const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
             const hasSubItems = item.subItems && item.subItems.length > 0;
-            
+
             // For items with subitems (like Creators), render expandable menu
             if (hasSubItems) {
-              return (
-                <div key={item.title}>
-                  <button 
-                    onClick={() => {
-                      if (isCollapsed) {
-                        handleTabClick(item.tab, "messages");
-                      } else {
-                        setCreatorsExpanded(!creatorsExpanded);
-                        if (!creatorsExpanded) {
-                          handleTabClick(item.tab, currentSubtab || "messages");
-                        }
-                      }
-                    }} 
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
-                    title={isCollapsed ? item.title : undefined}
-                  >
+              return <div key={item.title}>
+                  <button onClick={() => {
+                  if (isCollapsed) {
+                    handleTabClick(item.tab, "messages");
+                  } else {
+                    setCreatorsExpanded(!creatorsExpanded);
+                    if (!creatorsExpanded) {
+                      handleTabClick(item.tab, currentSubtab || "messages");
+                    }
+                  }
+                }} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
                     <div className="flex items-center gap-2">
                       <div className="relative h-[24px] w-[24px]">
                         <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -639,36 +642,21 @@ export function AppSidebar() {
                       </div>
                       {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                     </div>
-                    {!isCollapsed && (
-                      <ChevronDown className={`w-4 h-4 transition-transform ${creatorsExpanded ? 'rotate-180' : ''}`} />
-                    )}
+                    {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform ${creatorsExpanded ? 'rotate-180' : ''}`} />}
                   </button>
                   
                   {/* Subitems */}
-                  {!isCollapsed && creatorsExpanded && (
-                    <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
-                      {item.subItems.map((subItem) => {
-                        const isSubActive = isActive && currentSubtab === subItem.subtab;
-                        return (
-                          <button
-                            key={subItem.subtab}
-                            onClick={() => handleSubtabClick(subItem.subtab)}
-                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isSubActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                          >
-                            <div className="relative h-4 w-4">
-                              <img src={subItem.iconInactive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-0' : 'opacity-100'}`} />
-                              <img src={subItem.iconActive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-100' : 'opacity-0'}`} />
-                            </div>
+                  {!isCollapsed && creatorsExpanded && <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
+                      {item.subItems.map(subItem => {
+                    const isSubActive = isActive && currentSubtab === subItem.subtab;
+                    return <button key={subItem.subtab} onClick={() => handleSubtabClick(subItem.subtab)} className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isSubActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                            
                             <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px]">{subItem.title}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
+                          </button>;
+                  })}
+                    </div>}
+                </div>;
             }
-            
             return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -774,15 +762,10 @@ export function AppSidebar() {
               </div>
 
               {/* Menu Items */}
-              <SidebarMenuButtons 
-                onFeedback={(type) => {
-                  setFeedbackType(type);
-                  setFeedbackOpen(true);
-                }}
-                supportIcon={supportIcon}
-                lightbulbIcon={lightbulbIcon}
-                bugIcon={bugIcon}
-              />
+              <SidebarMenuButtons onFeedback={type => {
+              setFeedbackType(type);
+              setFeedbackOpen(true);
+            }} supportIcon={supportIcon} lightbulbIcon={lightbulbIcon} bugIcon={bugIcon} />
 
               {/* Sign Out Button */}
               <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
