@@ -647,18 +647,26 @@ export default function CampaignApply() {
               </div> : <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />}
             
             {/* Breadcrumb Navigation */}
-            <div className="absolute top-4 right-4 z-10">
-              <nav className="flex items-center gap-1 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5">
+            <div className="absolute top-4 left-4 z-10">
+              <nav className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 font-['Inter'] tracking-[-0.5px]">
                 <Link to="/dashboard?tab=discover" className="hover:text-white transition-colors">
                   Marketplace
                 </Link>
                 <ChevronRight className="h-3 w-3 opacity-60" />
                 {brandSlug ? (
-                  <Link to={`/b/${brandSlug}`} className="hover:text-white transition-colors">
+                  <Link to={`/b/${brandSlug}`} className="hover:text-white transition-colors flex items-center gap-1.5">
+                    {brandLogo && (
+                      <img src={brandLogo} alt="" className="h-4 w-4 rounded object-cover" />
+                    )}
                     {brandName}
                   </Link>
                 ) : (
-                  <span>{brandName}</span>
+                  <span className="flex items-center gap-1.5">
+                    {brandLogo && (
+                      <img src={brandLogo} alt="" className="h-4 w-4 rounded object-cover" />
+                    )}
+                    {brandName}
+                  </span>
                 )}
                 <ChevronRight className="h-3 w-3 opacity-60" />
                 <span className="text-white truncate max-w-[150px]">{title}</span>
