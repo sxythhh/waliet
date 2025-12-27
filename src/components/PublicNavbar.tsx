@@ -8,6 +8,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { FloatingFooter } from "@/components/FloatingFooter";
 import forBrandsIcon from "@/assets/for-brands-icon.png";
+import forBrandsIconLight from "@/assets/for-brands-icon-light.svg";
 import exploreIconDark from "@/assets/explore-icon-dark.svg";
 interface PublicNavbarProps {
   searchQuery?: string;
@@ -96,7 +97,8 @@ export default function PublicNavbar({
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
                             <Link to="/new" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
-                              <img src={forBrandsIcon} alt="" className="w-5 h-5" />
+                              <img src={forBrandsIcon} alt="" className="w-5 h-5 hidden dark:block" />
+                              <img src={forBrandsIconLight} alt="" className="w-5 h-5 dark:hidden" />
                               <div>
                                 <div className="font-medium text-foreground">For Brands</div>
                                 <div className="text-xs text-muted-foreground">Launch opportunities on Virality</div>
