@@ -31,6 +31,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { CampaignCard } from "./CampaignCard";
 import { RecentActivity } from "./RecentActivity";
+import { BoostDiscoverCard } from "./BoostDiscoverCard";
 interface Campaign {
   id: string;
   title: string;
@@ -576,197 +577,155 @@ export function DiscoverTab({
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
-          </div> : <div className="space-y-4">
-            {/* Combined Grid - Campaigns and Bounties interleaved */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full mx-auto">
-              {/* Combine campaigns and bounties into a single sorted array */}
-              {(() => {
-            // Create unified list with type markers, applying type filter
-            const campaignItems = typeFilter === 'boosts' ? [] : sortedCampaigns.map(c => ({
-              type: 'campaign' as const,
-              data: c,
-              isEnded: c.status === 'ended',
-              createdAt: c.start_date || c.created_at,
-              views: c.budget_used || 0,
-              // popularity proxy
-              payRate: c.rpm_rate
-            }));
-            const bountyItems = typeFilter === 'campaigns' ? [] : bounties.filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id)).filter(b => {
-              // Apply search filter to bounties too
-              if (!searchQuery) return true;
-              const query = searchQuery.toLowerCase();
-              return b.title.toLowerCase().includes(query) || b.description?.toLowerCase().includes(query) || b.brands?.name?.toLowerCase().includes(query);
-            }).map(b => ({
-              type: 'bounty' as const,
-              data: b,
-              isEnded: b.status === 'ended',
-              createdAt: b.created_at,
-              views: b.accepted_creators_count || 0,
-              // popularity proxy
-              payRate: b.monthly_retainer
-            }));
-            const allItems: Array<{
-              type: 'campaign';
-              data: Campaign;
-              isEnded: boolean;
-              createdAt: string;
-              views: number;
-              payRate: number;
-            } | {
-              type: 'bounty';
-              data: BountyCampaign;
-              isEnded: boolean;
-              createdAt: string;
-              views: number;
-              payRate: number;
-            }> = [...campaignItems, ...bountyItems];
-
-            // Sort based on browse filter
-            const sortedItems = allItems.sort((a, b) => {
-              // Ended items always go last
-              if (a.isEnded && !b.isEnded) return 1;
-              if (!a.isEnded && b.isEnded) return -1;
-
-              // Apply browse filter sorting
-              if (browseFilter === 'new') {
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-              }
-              if (browseFilter === 'trending' || browseFilter === 'popular') {
-                return b.views - a.views;
-              }
-              if (browseFilter === 'high-paying') {
-                return b.payRate - a.payRate;
-              }
-              if (browseFilter === 'ending-soon') {
-                // For ending soon, we want active campaigns with end dates coming up first
-                const getEndDate = (item: typeof a) => {
-                  if (item.type === 'bounty') return item.data.end_date;
-                  return null; // Campaigns don't have end_date in our type
-                };
-                const aEnd = getEndDate(a);
-                const bEnd = getEndDate(b);
-                if (aEnd && bEnd) {
-                  return new Date(aEnd).getTime() - new Date(bEnd).getTime();
-                }
-                if (aEnd) return -1;
-                if (bEnd) return 1;
-              }
-
-              // Default: newest first
-              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-            return sortedItems.map(item => {
-              if (item.type === 'campaign') {
-                const campaign = item.data;
-                const handleCampaignClick = () => {
-                  if (navigateOnClick) {
-                    navigate(`/c/${campaign.slug}`);
-                  } else {
-                    setSelectedCampaign(campaign);
-                    setSheetOpen(true);
-                  }
-                };
-                const isEnded = campaign.status === "ended";
-                const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                return <CampaignCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.platforms} isEnded={isEnded} isBookmarked={isBookmarked} onClick={handleCampaignClick} onBookmarkClick={e => toggleBookmark(campaign.id, e)} onFullscreenClick={e => {
-                  e.stopPropagation();
-                  navigate(`/c/${campaign.slug}`);
-                }} />;
-              } else {
-                const bounty = item.data;
-                const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-                const isFull = spotsRemaining <= 0;
-                const isEnded = bounty.status === "ended";
-                const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
-                return <Card key={`bounty-${bounty.id}`} className={`group bg-card border border-[#dce1eb] dark:border-[#0f0f0f] transition-all duration-300 animate-fade-in flex flex-col overflow-hidden relative dark:hover:bg-[#0f0f0f] ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={() => {
-                  if (!isEnded) {
-                    if (navigateOnClick && bounty.slug) {
-                      navigate(`/c/${bounty.slug}`);
-                    } else {
-                      setSelectedBounty(bounty);
-                      setBountySheetOpen(true);
-                    }
-                  }
-                }}>
-                      {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
-                      
-                      {/* Bookmark & Fullscreen Buttons */}
-                      <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5">
-                        <button onClick={e => {
-                      e.stopPropagation();
-                      navigate(`/c/${bounty.slug}`);
-                    }} className="md:hidden p-1.5 rounded-md transition-all bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground">
-                          <Maximize2 className="h-4 w-4" />
-                        </button>
-                        <button onClick={e => toggleBountyBookmark(bounty.id, e)} className={`p-1.5 rounded-md transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground"}`}>
-                          <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-                        </button>
+          </div> : <div className="space-y-8">
+            {/* Campaigns Section - Horizontal Scroll */}
+            {typeFilter !== 'boosts' && sortedCampaigns.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                    Campaigns
+                  </h2>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('campaigns-scroll');
+                        if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('campaigns-scroll');
+                        if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="campaigns-scroll"
+                  className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {sortedCampaigns.map(campaign => {
+                    const handleCampaignClick = () => {
+                      if (navigateOnClick) {
+                        navigate(`/c/${campaign.slug}`);
+                      } else {
+                        setSelectedCampaign(campaign);
+                        setSheetOpen(true);
+                      }
+                    };
+                    const isEnded = campaign.status === "ended";
+                    const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
+                    return (
+                      <div key={campaign.id} className="flex-shrink-0 w-[160px]">
+                        <CampaignCard
+                          id={campaign.id}
+                          title={campaign.title}
+                          brand_name={campaign.brand_name}
+                          brand_logo_url={campaign.brand_logo_url}
+                          brand_is_verified={campaign.brand_is_verified}
+                          banner_url={campaign.banner_url}
+                          budget={campaign.budget}
+                          budget_used={campaign.budget_used}
+                          is_infinite_budget={campaign.is_infinite_budget}
+                          platforms={campaign.platforms}
+                          isEnded={isEnded}
+                          isBookmarked={isBookmarked}
+                          onClick={handleCampaignClick}
+                          onBookmarkClick={e => toggleBookmark(campaign.id, e)}
+                          onFullscreenClick={e => {
+                            e.stopPropagation();
+                            navigate(`/c/${campaign.slug}`);
+                          }}
+                        />
                       </div>
-                      
-                      <CardContent className="p-4 flex-1 flex flex-col gap-1.5">
-                        {/* Brand Info */}
-                        <div className="flex items-center gap-2">
-                      {bounty.brands?.logo_url ? <div className="w-6 h-6 rounded-[3px] overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-                              <OptimizedImage src={bounty.brands.logo_url} alt={bounty.brands.name || ''} className="w-full h-full object-cover" />
-                            </div> : <div className="w-6 h-6 rounded-[3px] bg-muted flex items-center justify-center flex-shrink-0 ring-1 ring-border/50">
-                              <span className="text-[10px] font-semibold text-muted-foreground">
-                                {bounty.brands?.name?.charAt(0) || 'B'}
-                              </span>
-                            </div>}
-                          <span className="text-xs text-foreground font-semibold font-['Inter'] tracking-[-0.5px] flex items-center gap-1">
-                            {bounty.brands?.name || 'Unknown Brand'}
-                            {bounty.brands?.is_verified && <VerifiedBadge size="sm" />}
-                          </span>
-                        </div>
-                        
-                        {/* Title */}
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base font-semibold line-clamp-1 leading-snug group-hover:underline font-['Inter'] tracking-[-0.5px]">
-                            {bounty.title}
-                          </h3>
-                          {isEnded && <span className="flex items-center gap-1 text-white text-[10px] font-medium px-1.5 py-0.5 font-['Inter'] tracking-[-0.5px] shrink-0" style={{
-                        backgroundColor: '#b60b0b',
-                        borderTop: '1px solid #ed3030',
-                        borderRadius: '20px'
-                      }}>
-                              Ended
-                            </span>}
-                        </div>
-                        
-                        {/* Metadata Row */}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs font-medium font-['Inter'] tracking-[-0.5px]" style={{
-                      color: '#a1a1a1'
-                    }}>
-                          <span className="flex items-center gap-1 font-['Inter'] tracking-[-0.5px]">
-                            <img src={videosIcon} alt="" className="h-3 w-3 dark:invert" />
-                            {bounty.videos_per_month} videos/mo
-                          </span>
-                          <span className={`flex items-center gap-1 font-['Inter'] tracking-[-0.5px] ${isFull ? 'text-red-400' : ''}`}>
-                            <img src={personIcon} alt="" className="h-3 w-3 dark:invert" />
-                            {spotsRemaining > 0 ? `${spotsRemaining} spots left` : 'Full'}
-                          </span>
-                          {bounty.start_date}
-                        </div>
-                        
-                        {/* Description */}
-                        {bounty.description}
-                        
-                        {/* Retainer Amount */}
-                        <div className="flex items-baseline gap-1 pt-2">
-                          <span className="text-lg font-bold text-foreground font-['Inter'] tracking-[-0.5px]">
-                            ${bounty.monthly_retainer.toLocaleString()}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">/month</span>
-                        </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-                        {/* Action Buttons */}
-                        
-                      </CardContent>
-                    </Card>;
-              }
-            });
-          })()}
-            </div>
+            {/* Boosts Section - Grid */}
+            {typeFilter !== 'campaigns' && (() => {
+              const filteredBounties = bounties
+                .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
+                .filter(b => {
+                  if (!searchQuery) return true;
+                  const query = searchQuery.toLowerCase();
+                  return b.title.toLowerCase().includes(query) || 
+                    b.description?.toLowerCase().includes(query) || 
+                    b.brands?.name?.toLowerCase().includes(query);
+                })
+                .sort((a, b) => {
+                  const aEnded = a.status === 'ended';
+                  const bEnded = b.status === 'ended';
+                  if (aEnded && !bEnded) return 1;
+                  if (!aEnded && bEnded) return -1;
+                  
+                  if (browseFilter === 'new') {
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                  }
+                  if (browseFilter === 'high-paying') {
+                    return b.monthly_retainer - a.monthly_retainer;
+                  }
+                  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                });
+
+              if (filteredBounties.length === 0) return null;
+
+              return (
+                <div className="space-y-3">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                    Boosts
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    {filteredBounties.map(bounty => {
+                      const isEnded = bounty.status === "ended";
+                      const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
+                      return (
+                        <BoostDiscoverCard
+                          key={bounty.id}
+                          id={bounty.id}
+                          title={bounty.title}
+                          description={bounty.description}
+                          brand_name={bounty.brands?.name || 'Unknown'}
+                          brand_logo_url={bounty.brands?.logo_url || null}
+                          brand_is_verified={bounty.brands?.is_verified}
+                          monthly_retainer={bounty.monthly_retainer}
+                          videos_per_month={bounty.videos_per_month}
+                          max_accepted_creators={bounty.max_accepted_creators}
+                          accepted_creators_count={bounty.accepted_creators_count}
+                          isEnded={isEnded}
+                          isBookmarked={isBookmarked}
+                          slug={bounty.slug}
+                          onClick={() => {
+                            if (!isEnded) {
+                              if (navigateOnClick && bounty.slug) {
+                                navigate(`/c/${bounty.slug}`);
+                              } else {
+                                setSelectedBounty(bounty);
+                                setBountySheetOpen(true);
+                              }
+                            }
+                          }}
+                          onBookmarkClick={e => toggleBountyBookmark(bounty.id, e)}
+                          onFullscreenClick={e => {
+                            e.stopPropagation();
+                            navigate(`/c/${bounty.slug}`);
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             
             {/* Recent Activity */}
             <RecentActivity />
