@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -100,6 +101,7 @@ export function BrandCampaignsTab({
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
+  const { resolvedTheme } = useTheme();
 
   // Removed beta gate - brands without subscription can create drafts
   const showBetaGate = false;
@@ -443,8 +445,8 @@ export function BrandCampaignsTab({
                 </div>
               </div>}
 
-            {/* Subscription Required CTA and Embed - Only show if not subscribed */}
-            {subscriptionStatus !== "active" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
+            {/* Subscription Required CTA and Embed - Only show if not subscribed and in dark mode */}
+            {subscriptionStatus !== "active" && resolvedTheme === "dark" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
                 <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
               </div>}
           </div>
