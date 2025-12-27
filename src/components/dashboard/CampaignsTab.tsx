@@ -873,7 +873,7 @@ export function CampaignsTab({
 
       {/* Boost Applications Section - Pending/Rejected Only */}
       {boostApplications.filter(app => app.status !== 'accepted').length > 0 && <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-primary-foreground">Boost Applications</h3>
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {boostApplications.filter(app => app.status !== 'accepted').map(application => <Card key={application.id} className="group bg-card transition-all duration-300 animate-fade-in flex flex-col overflow-hidden border">
                 {/* Banner Image */}
