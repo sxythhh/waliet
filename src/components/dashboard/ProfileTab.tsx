@@ -70,6 +70,7 @@ interface Profile {
   content_styles: string[] | null;
   content_niches: string[] | null;
   hide_from_leaderboard: boolean;
+  is_private: boolean;
 }
 interface SocialAccount {
   id: string;
@@ -588,7 +589,8 @@ export function ProfileTab() {
         content_languages: profile.content_languages,
         content_styles: profile.content_styles,
         content_niches: profile.content_niches,
-        hide_from_leaderboard: profile.hide_from_leaderboard
+        hide_from_leaderboard: profile.hide_from_leaderboard,
+        is_private: profile.is_private
       }).eq("id", session.user.id);
       if (error) {
         console.error('Profile update error:', error);
@@ -1457,6 +1459,51 @@ export function ProfileTab() {
               ...profile,
               phone_number: value
             })} placeholder="Enter phone number" />
+            </div>
+
+            {/* Private Profile */}
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>Private Profile</p>
+                  <p className="text-xs text-muted-foreground" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>
+                    When enabled, your public profile page will show "This profile is private" to other users
+                  </p>
+                </div>
+                <Switch
+                  checked={profile.is_private}
+                  onCheckedChange={(checked) => setProfile({ ...profile, is_private: checked })}
+                />
+              </div>
+              {profile.is_private && (
+                <div className="mt-3 p-3 bg-muted/30 rounded-md">
+                  <p className="text-xs text-muted-foreground" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>
+                    When private profile is enabled:
+                  </p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground" style={{
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.3px'
+                  }}>
+                    <li className="flex items-start gap-2">
+                      <span className="text-muted-foreground/60">•</span>
+                      Your public profile page will be hidden from other users
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-muted-foreground/60">•</span>
+                      Your username will be anonymized (e.g., J***n) in leaderboards and live submissions, recent activity feed
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Brand Workspace */}
