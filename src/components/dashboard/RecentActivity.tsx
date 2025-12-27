@@ -382,8 +382,8 @@ export function RecentActivity() {
               {/* Time */}
               <span className="text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
                 {formatDistanceToNow(new Date(activity.created_at), {
-                  addSuffix: false,
-                })}
+                  addSuffix: true,
+                }).replace(/^about /, '')}
               </span>
 
               {/* Campaign with brand logo */}
