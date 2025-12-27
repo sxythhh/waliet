@@ -276,7 +276,7 @@ export function BlueprintsTab({
         const statusConfig = getStatusConfig(status);
         return <DropdownMenu key={blueprint.id}>
               <DropdownMenuTrigger asChild>
-                  <div className={`group cursor-pointer rounded-xl overflow-hidden ${statusConfig.bgColor} flex flex-col h-full`}>
+                  <div className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full`}>
                     {/* Status Label */}
                     <div className="px-4 py-1 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
@@ -285,7 +285,7 @@ export function BlueprintsTab({
                     </div>
 
                     {/* Content Card overlaying the status background */}
-                    <div className="flex-1 rounded-t-xl border border-[#c5c5c5] dark:border-[#2a2a2a] bg-white dark:bg-[#0a0a0a] group-hover:bg-[#f5f5f5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col">
+                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col">
                       {/* Title */}
                       <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px]">
                         {blueprint.title}
