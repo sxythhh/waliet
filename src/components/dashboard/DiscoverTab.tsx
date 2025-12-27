@@ -556,21 +556,26 @@ export function DiscoverTab({
         {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full mx-auto">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="flex flex-col gap-1.5">
-                {/* Card skeleton */}
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted/50">
+                {/* Card skeleton matching CampaignCard */}
+                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted/30">
                   <Skeleton className="absolute inset-0 w-full h-full" />
-                  {/* Bottom content overlay */}
+                  {/* Gradient overlay like CampaignCard */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  {/* Bottom content */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
-                    <Skeleton className="h-4 w-3/4 mx-auto" />
+                    <Skeleton className="h-4 w-3/4 mx-auto bg-white/10" />
                     <div className="flex justify-center">
-                      <Skeleton className="h-5 w-16 rounded-full" />
+                      <Skeleton className="h-5 w-20 rounded-md bg-white/10" />
                     </div>
                   </div>
                 </div>
-                {/* Status indicator skeleton */}
-                <div className="flex items-center gap-1.5 px-0.5">
-                  <Skeleton className="w-1.5 h-1.5 rounded-full" />
-                  <Skeleton className="h-2.5 w-16" />
+                {/* Budget progress skeleton */}
+                <div className="flex flex-col gap-1 px-0.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-2.5 w-12 bg-muted/50" />
+                    <Skeleton className="h-2.5 w-10 bg-muted/50" />
+                  </div>
+                  <Skeleton className="h-1.5 w-full rounded-full bg-muted/50" />
                 </div>
               </div>
             ))}

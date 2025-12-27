@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
-import { DollarSign, UserPlus } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useNavigate } from "react-router-dom";
 
 interface ActivityItem {
   id: string;
-  type: "earning" | "join";
-  amount?: number;
+  amount: number;
   description: string;
   created_at: string;
   username?: string;
@@ -26,7 +25,6 @@ export function RecentActivity() {
 
   useEffect(() => {
     const fetchActivities = async () => {
-      // Fetch earnings with campaign info
       const { data: earnings } = await supabase
         .from("wallet_transactions")
         .select("id, amount, type, description, created_at, metadata, user_id")
@@ -35,22 +33,8 @@ export function RecentActivity() {
         .order("created_at", { ascending: false })
         .limit(10);
 
-      // Fetch campaign joins (submissions) with campaign and profile info
-      const { data: joins } = await supabase
-        .from("campaign_submissions")
-        .select(`
-          id,
-          submitted_at,
-          platform,
-          campaign_id,
-          creator_id
-        `)
-        .order("submitted_at", { ascending: false })
-        .limit(10);
-
       const formattedActivities: ActivityItem[] = [];
 
-      // Process earnings
       if (earnings) {
         for (const earning of earnings) {
           const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
@@ -59,7 +43,6 @@ export function RecentActivity() {
           let brandLogoUrl: string | undefined;
           let isPrivate = false;
 
-          // Get campaign info
           if (metadata.campaign_id) {
             const { data: campaign } = await supabase
               .from("campaigns")
@@ -73,7 +56,6 @@ export function RecentActivity() {
             }
           }
 
-          // Get user privacy setting
           if (earning.user_id) {
             const { data: profile } = await supabase
               .from("profiles")
@@ -87,7 +69,6 @@ export function RecentActivity() {
 
           formattedActivities.push({
             id: earning.id,
-            type: "earning",
             amount: earning.amount,
             description: earning.description,
             created_at: earning.created_at,
@@ -101,61 +82,7 @@ export function RecentActivity() {
         }
       }
 
-      // Process joins
-      if (joins) {
-        for (const join of joins) {
-          let campaignName = "Campaign";
-          let campaignSlug: string | undefined;
-          let brandLogoUrl: string | undefined;
-          let isPrivate = false;
-          let username: string | undefined;
-
-          // Get campaign info
-          const { data: campaign } = await supabase
-            .from("campaigns")
-            .select("title, slug, brand_logo_url")
-            .eq("id", join.campaign_id)
-            .single();
-          if (campaign) {
-            campaignName = campaign.title;
-            campaignSlug = campaign.slug || undefined;
-            brandLogoUrl = campaign.brand_logo_url || undefined;
-          }
-
-          // Get user privacy setting and username
-          if (join.creator_id) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("username, is_private")
-              .eq("id", join.creator_id)
-              .single();
-            if (profile) {
-              isPrivate = profile.is_private || false;
-              username = profile.username || undefined;
-            }
-          }
-
-          formattedActivities.push({
-            id: join.id,
-            type: "join",
-            description: "Joined campaign",
-            created_at: join.submitted_at || new Date().toISOString(),
-            username,
-            platform: join.platform || undefined,
-            campaign_name: campaignName,
-            campaign_slug: campaignSlug,
-            brand_logo_url: brandLogoUrl,
-            is_private: isPrivate,
-          });
-        }
-      }
-
-      // Sort by created_at and take top 10
-      formattedActivities.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setActivities(formattedActivities.slice(0, 10));
+      setActivities(formattedActivities);
       setLoading(false);
     };
 
@@ -214,7 +141,6 @@ export function RecentActivity() {
 
             const newActivity: ActivityItem = {
               id: newTransaction.id,
-              type: "earning",
               amount: newTransaction.amount,
               description: newTransaction.description,
               created_at: newTransaction.created_at,
@@ -229,66 +155,6 @@ export function RecentActivity() {
           }
         }
       )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "campaign_submissions",
-        },
-        async (payload) => {
-          const newJoin = payload.new as {
-            id: string;
-            submitted_at: string;
-            platform?: string;
-            campaign_id: string;
-            creator_id?: string;
-          };
-
-          let campaignName = "Campaign";
-          let campaignSlug: string | undefined;
-          let brandLogoUrl: string | undefined;
-          let isPrivate = false;
-          let username: string | undefined;
-
-          const { data: campaign } = await supabase
-            .from("campaigns")
-            .select("title, slug, brand_logo_url")
-            .eq("id", newJoin.campaign_id)
-            .single();
-          if (campaign) {
-            campaignName = campaign.title;
-            campaignSlug = campaign.slug || undefined;
-            brandLogoUrl = campaign.brand_logo_url || undefined;
-          }
-
-          if (newJoin.creator_id) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("username, is_private")
-              .eq("id", newJoin.creator_id)
-              .single();
-            if (profile) {
-              isPrivate = profile.is_private || false;
-              username = profile.username || undefined;
-            }
-          }
-
-          const newActivity: ActivityItem = {
-            id: newJoin.id,
-            type: "join",
-            description: "Joined campaign",
-            created_at: newJoin.submitted_at,
-            username,
-            platform: newJoin.platform,
-            campaign_name: campaignName,
-            campaign_slug: campaignSlug,
-            brand_logo_url: brandLogoUrl,
-            is_private: isPrivate,
-          };
-          setActivities((prev) => [newActivity, ...prev.slice(0, 9)]);
-        }
-      )
       .subscribe();
 
     return () => {
@@ -299,7 +165,6 @@ export function RecentActivity() {
   const formatUsername = (username?: string, isPrivate?: boolean) => {
     if (!username) return "Creator";
     if (!isPrivate) return username;
-    // Only anonymize if privacy is on
     if (username.length <= 4) return username.charAt(0) + "***";
     return username.slice(0, 3) + "***" + username.slice(-2);
   };
@@ -326,7 +191,7 @@ export function RecentActivity() {
     return (
       <div className="mt-8 space-y-3">
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          Recent Activity
+          Recent Transactions
         </h3>
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => (
@@ -343,7 +208,7 @@ export function RecentActivity() {
     <div className="mt-8 space-y-3">
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          Recent Activity
+          Recent Transactions
         </h3>
       </div>
 
@@ -353,7 +218,7 @@ export function RecentActivity() {
           <span>Creator</span>
           <span>Time</span>
           <span>Campaign</span>
-          <span className="text-right">Action</span>
+          <span className="text-right">Earned</span>
         </div>
 
         {/* Rows */}
@@ -406,27 +271,14 @@ export function RecentActivity() {
                 </button>
               </div>
 
-              {/* Action */}
+              {/* Earned */}
               <div className="flex items-center justify-end gap-1">
-                {activity.type === "earning" ? (
-                  <>
-                    <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
-                      Earned ${activity.amount?.toFixed(2)}
-                    </span>
-                    <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <DollarSign className="w-2.5 h-2.5 text-emerald-500" />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold text-blue-500 tracking-[-0.3px] font-['Geist',sans-serif]">
-                      Joined campaign
-                    </span>
-                    <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <UserPlus className="w-2.5 h-2.5 text-blue-500" />
-                    </div>
-                  </>
-                )}
+                <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
+                  ${activity.amount?.toFixed(2)}
+                </span>
+                <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <DollarSign className="w-2.5 h-2.5 text-emerald-500" />
+                </div>
               </div>
             </div>
           ))}
