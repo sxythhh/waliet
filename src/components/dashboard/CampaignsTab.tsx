@@ -44,6 +44,7 @@ interface Campaign {
   brand_name: string;
   brand_logo_url: string;
   brand_is_verified?: boolean;
+  brand_slug?: string;
   budget: number;
   budget_used?: number;
   rpm_rate: number;
@@ -396,7 +397,8 @@ export function CampaignsTab({
         brands (
           name,
           logo_url,
-          is_verified
+          is_verified,
+          slug
         )
       `).in("id", campaignIds).order("created_at", {
       ascending: false
@@ -441,6 +443,7 @@ export function CampaignsTab({
         brand_name: (campaign.brands as any)?.name || campaign.brand_name,
         brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
         brand_is_verified: (campaign.brands as any)?.is_verified || false,
+        brand_slug: (campaign.brands as any)?.slug,
         submission_status: submissionStatusMap.get(campaign.id),
         connected_accounts: accountsByCampaign.get(campaign.id) || []
       }));
@@ -732,6 +735,7 @@ export function CampaignsTab({
                 brand_name={campaign.brand_name}
                 brand_logo_url={campaign.brand_logo_url}
                 brand_is_verified={campaign.brand_is_verified}
+                brand_slug={campaign.brand_slug}
                 banner_url={campaign.banner_url}
                 budget={campaign.budget}
                 budget_used={campaign.budget_used}

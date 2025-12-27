@@ -39,6 +39,7 @@ interface Campaign {
   brand_name: string;
   brand_logo_url: string;
   brand_is_verified?: boolean;
+  brand_slug?: string;
   budget: number;
   budget_used?: number;
   rpm_rate: number;
@@ -56,6 +57,7 @@ interface Campaign {
   brands?: {
     logo_url: string;
     is_verified?: boolean;
+    slug?: string;
   };
 }
 interface BountyCampaign {
@@ -341,7 +343,8 @@ export function DiscoverTab({
         *,
         brands (
           logo_url,
-          is_verified
+          is_verified,
+          slug
         )
       `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
@@ -352,6 +355,7 @@ export function DiscoverTab({
         ...campaign,
         brand_logo_url: (campaign.brands as any)?.logo_url || campaign.brand_logo_url,
         brand_is_verified: (campaign.brands as any)?.is_verified || false,
+        brand_slug: (campaign.brands as any)?.slug,
         platforms: campaign.allowed_platforms || [],
         application_questions: Array.isArray(campaign.application_questions) ? campaign.application_questions as string[] : []
       }));
@@ -655,6 +659,7 @@ export function DiscoverTab({
                           brand_name={campaign.brand_name}
                           brand_logo_url={campaign.brand_logo_url}
                           brand_is_verified={campaign.brand_is_verified}
+                          brand_slug={campaign.brand_slug}
                           banner_url={campaign.banner_url}
                           budget={campaign.budget}
                           budget_used={campaign.budget_used}
