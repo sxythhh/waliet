@@ -355,21 +355,21 @@ export function BoostCard({
 
           {/* Stats Overview */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-muted/30 rounded-xl p-3 text-center text-white dark:text-foreground">
+            <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
               <p className="text-lg font-bold text-green-500">${earnedThisMonth.toFixed(0)}</p>
-              <p className="text-[10px] text-white/70 dark:text-muted-foreground">Earned this month</p>
+              <p className="text-[10px] text-muted-foreground">Earned this month</p>
             </div>
-            <div className="bg-muted/30 rounded-xl p-3 text-center text-white dark:text-foreground">
+            <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
               <p className="text-lg font-bold text-orange-500">${(pendingThisMonth * payoutPerVideo).toFixed(0)}</p>
-              <p className="text-[10px] text-white/70 dark:text-muted-foreground">Pending payout</p>
+              <p className="text-[10px] text-muted-foreground">Pending payout</p>
             </div>
-            <div className="bg-muted/30 rounded-xl p-3 text-center text-white dark:text-foreground">
+            <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
               <p className="text-lg font-bold">${payoutPerVideo.toFixed(0)}</p>
-              <p className="text-[10px] text-white/70 dark:text-muted-foreground">Per video</p>
+              <p className="text-[10px] text-muted-foreground">Per video</p>
             </div>
-            <div className="bg-muted/30 rounded-xl p-3 text-center text-white dark:text-foreground">
+            <div className="bg-white dark:bg-muted/30 rounded-xl p-3 text-center">
               <p className="text-lg font-bold">${boost.monthly_retainer}</p>
-              <p className="text-[10px] text-white/70 dark:text-muted-foreground">Max monthly</p>
+              <p className="text-[10px] text-muted-foreground">Max monthly</p>
             </div>
           </div>
 
