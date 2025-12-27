@@ -1409,11 +1409,11 @@ export function WalletTab() {
                 }) => {
                   if (active && payload && payload.length) {
                     const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5 font-['Inter']" style={{
+                    return <div className="bg-background text-foreground rounded shadow-lg px-2 py-1 font-['Inter']" style={{
                       letterSpacing: '-0.3px'
                     }}>
                             <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
-                            <p className="text-sm font-bold">${value.toFixed(2)}</p>
+                            <p className="text-xs font-bold">${value.toFixed(2)}</p>
                           </div>;
                   }
                   return null;
