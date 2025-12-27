@@ -84,31 +84,6 @@ export function TransactionShareDialog({
     }
   }, [open, transaction, selectedTheme, showViralityLogo, useDarkCard]);
 
-  const generatePatternSvg = (theme: typeof COLOR_THEMES[0]) => {
-    // Using larger canvas size (1200x750)
-    const w = 1200;
-    const h = 750;
-    
-    // Use confetti pattern by default
-    return `
-      <g opacity="0.3">
-        ${Array.from({ length: 60 }, (_, i) => {
-          const x = Math.random() * w;
-          const y = Math.random() * h;
-          const rotation = Math.random() * 360;
-          const size = 12 + Math.random() * 18;
-          const colors = [theme.primary, theme.secondary, '#a5b4fc', '#c4b5fd'];
-          const color = colors[Math.floor(Math.random() * colors.length)];
-          const shapes = ['rect', 'circle'];
-          const shape = shapes[Math.floor(Math.random() * shapes.length)];
-          if (shape === 'circle') {
-            return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="${color}" opacity="${0.4 + Math.random() * 0.4}"/>`;
-          }
-          return `<rect x="${x}" y="${y}" width="${size}" height="${size/3}" fill="${color}" transform="rotate(${rotation} ${x} ${y})" opacity="${0.4 + Math.random() * 0.4}"/>`;
-        }).join('')}
-      </g>
-    `;
-  };
 
   const generateImage = async () => {
     if (!transaction) return;
@@ -230,44 +205,35 @@ export function TransactionShareDialog({
           <!-- Main background with gradient -->
           <rect width="${width}" height="${height}" fill="url(#bgGradient)" rx="36"/>
           
-          <!-- Pattern overlay -->
-          ${generatePatternSvg(selectedTheme)}
+          <!-- Virality logo at top center -->
+          ${showViralityLogo ? `
+            <image href="${logoBase64}" x="${(width - 60) / 2}" y="30" width="60" height="60"/>
+          ` : ''}
           
           <!-- Card background - dark or light based on mode -->
-          <rect x="90" y="90" width="1020" height="450" fill="${useDarkCard ? '#0a0a0a' : '#fff'}" rx="30"/>
-          
-          <!-- Card content - Brand logo + Program name -->
-          <g>
-            ${brandLogoBase64 ? `
-              <image href="${brandLogoBase64}" x="120" y="135" width="48" height="48" preserveAspectRatio="xMidYMid slice" clip-path="url(#brandLogoClip)"/>
-              <circle cx="144" cy="159" r="24" fill="none" stroke="${useDarkCard ? '#333' : '#e5e5e5'}" stroke-width="1"/>
-              <text x="180" y="168" font-size="22" fill="${useDarkCard ? '#999' : '#666'}" font-weight="500">${programName}</text>
-            ` : `
-              <text x="135" y="168" font-size="22" fill="${useDarkCard ? '#999' : '#666'}" font-weight="500">${programName}</text>
-            `}
-          </g>
+          <rect x="90" y="110" width="1020" height="430" fill="${useDarkCard ? '#0a0a0a' : '#fff'}" rx="30"/>
           
           <!-- Amount -->
-          <text x="135" y="280" font-size="84" font-weight="700" fill="${amountColor}">${amountSign}$${Math.abs(transaction.amount).toFixed(2)}</text>
+          <text x="135" y="230" font-size="84" font-weight="700" fill="${amountColor}">${amountSign}$${Math.abs(transaction.amount).toFixed(2)}</text>
           
           <!-- Secondary info -->
-          <text x="135" y="340" font-size="24" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          <text x="135" y="290" font-size="24" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMMM dd, yyyy')}</text>
           
           <!-- Status -->
           ${transaction.status === 'completed' ? `
-            <rect x="135" y="370" width="150" height="42" fill="#10b98120" rx="21"/>
-            <text x="210" y="400" font-size="20" font-weight="600" fill="#10b981" text-anchor="middle">Completed</text>
+            <rect x="135" y="320" width="150" height="42" fill="#10b98120" rx="21"/>
+            <text x="210" y="350" font-size="20" font-weight="600" fill="#10b981" text-anchor="middle">Completed</text>
           ` : transaction.status === 'pending' ? `
-            <rect x="135" y="370" width="135" height="42" fill="#f59e0b20" rx="21"/>
-            <text x="202" y="400" font-size="20" font-weight="600" fill="#f59e0b" text-anchor="middle">Pending</text>
+            <rect x="135" y="320" width="135" height="42" fill="#f59e0b20" rx="21"/>
+            <text x="202" y="350" font-size="20" font-weight="600" fill="#f59e0b" text-anchor="middle">Pending</text>
           ` : ''}
           
           <!-- Decorative line in card -->
-          <rect x="135" y="450" width="900" height="3" fill="${useDarkCard ? '#222' : '#f0f0f0'}" rx="1.5"/>
+          <rect x="135" y="400" width="900" height="3" fill="${useDarkCard ? '#222' : '#f0f0f0'}" rx="1.5"/>
           
           <!-- Date range at bottom of card -->
-          <text x="135" y="510" font-size="20" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMM dd')}</text>
-          <text x="1035" y="510" font-size="20" fill="${useDarkCard ? '#666' : '#999'}" text-anchor="end">Today</text>
+          <text x="135" y="470" font-size="20" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMM dd')}</text>
+          <text x="1035" y="470" font-size="20" fill="${useDarkCard ? '#666' : '#999'}" text-anchor="end">Today</text>
           
           <!-- User profile at bottom -->
           ${avatarBase64 ? `
@@ -277,11 +243,6 @@ export function TransactionShareDialog({
           `}
           ${userProfile?.username ? `
             <text x="144" y="668" font-size="22" font-weight="600" fill="#fff">virality.gg/@${userProfile.username}</text>
-          ` : ''}
-          
-          <!-- Virality logo -->
-          ${showViralityLogo ? `
-            <image href="${logoBase64}" x="1050" y="638" width="48" height="48"/>
           ` : ''}
         </svg>
       `;
@@ -437,7 +398,7 @@ export function TransactionShareDialog({
                     key={theme.id}
                     onClick={() => setSelectedTheme(theme)}
                     className={cn(
-                      "flex flex-col items-center gap-1 p-2 rounded-lg border transition-all",
+                      "p-2 rounded-lg border transition-all flex items-center justify-center",
                       selectedTheme.id === theme.id 
                         ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2 ring-offset-background" 
                         : "border-border hover:border-primary/50"
@@ -447,7 +408,6 @@ export function TransactionShareDialog({
                       className="w-8 h-8 rounded-full" 
                       style={{ background: theme.gradient }}
                     />
-                    <span className="text-xs font-medium">{theme.name}</span>
                   </button>
                 ))}
               </div>
