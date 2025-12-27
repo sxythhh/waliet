@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { DollarSign, UserPlus } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { useNavigate } from "react-router-dom";
 
 interface ActivityItem {
   id: string;
@@ -13,6 +14,7 @@ interface ActivityItem {
   username?: string;
   platform?: string;
   campaign_name?: string;
+  campaign_slug?: string;
   brand_logo_url?: string;
   is_private?: boolean;
 }
@@ -20,6 +22,7 @@ interface ActivityItem {
 export function RecentActivity() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -32,18 +35,17 @@ export function RecentActivity() {
         .order("created_at", { ascending: false })
         .limit(10);
 
-      // Fetch campaign joins with campaign and profile info
+      // Fetch campaign joins (submissions) with campaign and profile info
       const { data: joins } = await supabase
-        .from("campaign_videos")
+        .from("campaign_submissions")
         .select(`
           id,
-          created_at,
+          submitted_at,
           platform,
-          video_author_username,
           campaign_id,
           creator_id
         `)
-        .order("created_at", { ascending: false })
+        .order("submitted_at", { ascending: false })
         .limit(10);
 
       const formattedActivities: ActivityItem[] = [];
@@ -53,6 +55,7 @@ export function RecentActivity() {
         for (const earning of earnings) {
           const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
           let campaignName = "Campaign";
+          let campaignSlug: string | undefined;
           let brandLogoUrl: string | undefined;
           let isPrivate = false;
 
@@ -60,11 +63,12 @@ export function RecentActivity() {
           if (metadata.campaign_id) {
             const { data: campaign } = await supabase
               .from("campaigns")
-              .select("title, brand_logo_url")
+              .select("title, slug, brand_logo_url")
               .eq("id", metadata.campaign_id)
               .single();
             if (campaign) {
               campaignName = campaign.title;
+              campaignSlug = campaign.slug || undefined;
               brandLogoUrl = campaign.brand_logo_url || undefined;
             }
           }
@@ -90,6 +94,7 @@ export function RecentActivity() {
             username: metadata.account_username,
             platform: metadata.platform,
             campaign_name: campaignName,
+            campaign_slug: campaignSlug,
             brand_logo_url: brandLogoUrl,
             is_private: isPrivate,
           });
@@ -100,22 +105,24 @@ export function RecentActivity() {
       if (joins) {
         for (const join of joins) {
           let campaignName = "Campaign";
+          let campaignSlug: string | undefined;
           let brandLogoUrl: string | undefined;
           let isPrivate = false;
-          let username = join.video_author_username || undefined;
+          let username: string | undefined;
 
           // Get campaign info
           const { data: campaign } = await supabase
             .from("campaigns")
-            .select("title, brand_logo_url")
+            .select("title, slug, brand_logo_url")
             .eq("id", join.campaign_id)
             .single();
           if (campaign) {
             campaignName = campaign.title;
+            campaignSlug = campaign.slug || undefined;
             brandLogoUrl = campaign.brand_logo_url || undefined;
           }
 
-          // Get user privacy setting and username if not available
+          // Get user privacy setting and username
           if (join.creator_id) {
             const { data: profile } = await supabase
               .from("profiles")
@@ -124,9 +131,7 @@ export function RecentActivity() {
               .single();
             if (profile) {
               isPrivate = profile.is_private || false;
-              if (!username) {
-                username = profile.username || undefined;
-              }
+              username = profile.username || undefined;
             }
           }
 
@@ -134,10 +139,11 @@ export function RecentActivity() {
             id: join.id,
             type: "join",
             description: "Joined campaign",
-            created_at: join.created_at,
+            created_at: join.submitted_at || new Date().toISOString(),
             username,
             platform: join.platform || undefined,
             campaign_name: campaignName,
+            campaign_slug: campaignSlug,
             brand_logo_url: brandLogoUrl,
             is_private: isPrivate,
           });
@@ -178,17 +184,19 @@ export function RecentActivity() {
           if (newTransaction.type === "earning" && newTransaction.amount > 0) {
             const metadata = newTransaction.metadata || {};
             let campaignName = "Campaign";
+            let campaignSlug: string | undefined;
             let brandLogoUrl: string | undefined;
             let isPrivate = false;
 
             if (metadata.campaign_id) {
               const { data: campaign } = await supabase
                 .from("campaigns")
-                .select("title, brand_logo_url")
+                .select("title, slug, brand_logo_url")
                 .eq("id", metadata.campaign_id)
                 .single();
               if (campaign) {
                 campaignName = campaign.title;
+                campaignSlug = campaign.slug || undefined;
                 brandLogoUrl = campaign.brand_logo_url || undefined;
               }
             }
@@ -213,6 +221,7 @@ export function RecentActivity() {
               username: metadata.account_username,
               platform: metadata.platform,
               campaign_name: campaignName,
+              campaign_slug: campaignSlug,
               brand_logo_url: brandLogoUrl,
               is_private: isPrivate,
             };
@@ -225,30 +234,31 @@ export function RecentActivity() {
         {
           event: "INSERT",
           schema: "public",
-          table: "campaign_videos",
+          table: "campaign_submissions",
         },
         async (payload) => {
           const newJoin = payload.new as {
             id: string;
-            created_at: string;
+            submitted_at: string;
             platform?: string;
-            video_author_username?: string;
             campaign_id: string;
             creator_id?: string;
           };
 
           let campaignName = "Campaign";
+          let campaignSlug: string | undefined;
           let brandLogoUrl: string | undefined;
           let isPrivate = false;
-          let username = newJoin.video_author_username;
+          let username: string | undefined;
 
           const { data: campaign } = await supabase
             .from("campaigns")
-            .select("title, brand_logo_url")
+            .select("title, slug, brand_logo_url")
             .eq("id", newJoin.campaign_id)
             .single();
           if (campaign) {
             campaignName = campaign.title;
+            campaignSlug = campaign.slug || undefined;
             brandLogoUrl = campaign.brand_logo_url || undefined;
           }
 
@@ -260,9 +270,7 @@ export function RecentActivity() {
               .single();
             if (profile) {
               isPrivate = profile.is_private || false;
-              if (!username) {
-                username = profile.username || undefined;
-              }
+              username = profile.username || undefined;
             }
           }
 
@@ -270,10 +278,11 @@ export function RecentActivity() {
             id: newJoin.id,
             type: "join",
             description: "Joined campaign",
-            created_at: newJoin.created_at,
+            created_at: newJoin.submitted_at,
             username,
             platform: newJoin.platform,
             campaign_name: campaignName,
+            campaign_slug: campaignSlug,
             brand_logo_url: brandLogoUrl,
             is_private: isPrivate,
           };
@@ -388,12 +397,13 @@ export function RecentActivity() {
                     />
                   </div>
                 )}
-                <span
-                  className="text-muted-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]"
+                <button
+                  onClick={() => activity.campaign_slug && navigate(`/c/${activity.campaign_slug}`)}
+                  className="text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif] hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs"
                   title={activity.campaign_name}
                 >
                   {truncateCampaignName(activity.campaign_name || "Campaign")}
-                </span>
+                </button>
               </div>
 
               {/* Action */}
