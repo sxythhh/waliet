@@ -695,37 +695,6 @@ export function CampaignsTab({
           </button>
         </div>}
 
-      {/* Your Campaigns - Moved to appear first */}
-      {!hasNoCampaigns && <div className="space-y-3">
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 w-full mx-auto">
-      {campaigns.map(campaign => {
-            const budgetUsed = campaign.budget_used || 0;
-            const isPending = campaign.submission_status === 'pending';
-            const isEnded = campaign.status === 'ended';
-            return <div key={campaign.id} className={`relative ${isPending ? 'opacity-60' : ''}`}>
-                <CampaignCard id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={budgetUsed} is_infinite_budget={campaign.is_infinite_budget} isEnded={isEnded} showBookmark={false} showFullscreen={false} onClick={() => {
-                if (!isPending) {
-                  setSelectedCampaignForDetails(campaign);
-                  setCampaignDetailsDialogOpen(true);
-                }
-              }} />
-                {/* Pending Application Overlay */}
-                {isPending && <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
-                    <span className="text-xs font-medium text-muted-foreground mb-2">Pending Review</span>
-                    <Button variant="ghost" size="sm" onClick={e => {
-                  e.stopPropagation();
-                  setSelectedCampaignId(campaign.id);
-                  setWithdrawDialogOpen(true);
-                }} className="h-7 text-[10px] hover:bg-destructive/10 hover:text-destructive font-medium">
-                      <X className="w-3 h-3 mr-1" />
-                      Withdraw
-                    </Button>
-                  </div>}
-              </div>;
-          })}
-        </div>
-      </div>}
 
       {/* Recommended for You */}
       {recommendedCampaigns.length > 0}
