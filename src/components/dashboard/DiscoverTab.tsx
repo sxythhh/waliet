@@ -464,7 +464,7 @@ export function DiscoverTab({
   const totalBounties = bounties.filter(b => b.status !== "ended").length;
   return <div className="md:flex md:flex-col">
         {/* Header and Filters */}
-        <div className="bg-background px-6 pt-4 pb-4 space-y-6">
+        <div className="px-6 pt-4 pb-4 space-y-6">
           {/* Featured Programs Carousel - Hidden */}
 
         {/* Quick Stats */}
