@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Copy, Download, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
+import viralityLogoWhite from "@/assets/virality-logo-white.png";
 import { cn } from "@/lib/utils";
 
 interface Transaction {
@@ -51,15 +51,10 @@ const COLOR_THEMES = [
   { id: 'melon', name: 'Melon', primary: '#10b981', secondary: '#34d399', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
   { id: 'peach', name: 'Peach', primary: '#f97316', secondary: '#fb923c', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
   { id: 'apple', name: 'Apple', primary: '#22c55e', secondary: '#4ade80', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
-];
-
-const PATTERNS = [
-  { id: 'none', name: 'Solid' },
-  { id: 'confetti', name: 'Confetti' },
-  { id: 'dots', name: 'Dots' },
-  { id: 'lines', name: 'Lines' },
-  { id: 'waves', name: 'Waves' },
-  { id: 'circles', name: 'Circles' },
+  { id: 'rose', name: 'Rose', primary: '#f43f5e', secondary: '#fb7185', gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)' },
+  { id: 'sky', name: 'Sky', primary: '#0ea5e9', secondary: '#38bdf8', gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
+  { id: 'amber', name: 'Amber', primary: '#f59e0b', secondary: '#fbbf24', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+  { id: 'violet', name: 'Violet', primary: '#8b5cf6', secondary: '#a78bfa', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
 ];
 
 export function TransactionShareDialog({
@@ -69,8 +64,8 @@ export function TransactionShareDialog({
   userProfile,
 }: TransactionShareDialogProps) {
   const [selectedTheme, setSelectedTheme] = useState(COLOR_THEMES[0]);
-  const [selectedPattern, setSelectedPattern] = useState(PATTERNS[1]);
   const [showViralityLogo, setShowViralityLogo] = useState(true);
+  const [useDarkCard, setUseDarkCard] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -78,74 +73,41 @@ export function TransactionShareDialog({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // Detect system dark mode preference
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    setUseDarkCard(isDarkMode);
+  }, [open]);
+
+  useEffect(() => {
     if (open && transaction) {
       generateImage();
     }
-  }, [open, transaction, selectedTheme, selectedPattern, showViralityLogo]);
+  }, [open, transaction, selectedTheme, showViralityLogo, useDarkCard]);
 
-  const generatePatternSvg = (theme: typeof COLOR_THEMES[0], pattern: typeof PATTERNS[0]) => {
+  const generatePatternSvg = (theme: typeof COLOR_THEMES[0]) => {
     // Using larger canvas size (1200x750)
     const w = 1200;
     const h = 750;
     
-    const patterns: Record<string, string> = {
-      none: '',
-      confetti: `
-        <g opacity="0.3">
-          ${Array.from({ length: 60 }, (_, i) => {
-            const x = Math.random() * w;
-            const y = Math.random() * h;
-            const rotation = Math.random() * 360;
-            const size = 12 + Math.random() * 18;
-            const colors = [theme.primary, theme.secondary, '#a5b4fc', '#c4b5fd'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const shapes = ['rect', 'circle'];
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
-            if (shape === 'circle') {
-              return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="${color}" opacity="${0.4 + Math.random() * 0.4}"/>`;
-            }
-            return `<rect x="${x}" y="${y}" width="${size}" height="${size/3}" fill="${color}" transform="rotate(${rotation} ${x} ${y})" opacity="${0.4 + Math.random() * 0.4}"/>`;
-          }).join('')}
-        </g>
-      `,
-      dots: `
-        <g opacity="0.15">
-          ${Array.from({ length: 300 }, (_, i) => {
-            const x = (i % 25) * 50 + 25;
-            const y = Math.floor(i / 25) * 60 + 30;
-            const size = 4 + Math.random() * 6;
-            return `<circle cx="${x}" cy="${y}" r="${size}" fill="${theme.secondary}"/>`;
-          }).join('')}
-        </g>
-      `,
-      lines: `
-        <g opacity="0.2">
-          ${Array.from({ length: 30 }, (_, i) => {
-            const x = i * 45;
-            const height = 90 + Math.random() * 600;
-            const y = h - height;
-            return `<rect x="${x}" y="${y}" width="16" height="${height}" fill="${theme.secondary}" rx="8"/>`;
-          }).join('')}
-        </g>
-      `,
-      waves: `
-        <g opacity="0.15">
-          <path d="M0,375 Q300,300 600,375 T${w},375 L${w},${h} L0,${h} Z" fill="${theme.secondary}"/>
-          <path d="M0,450 Q300,375 600,450 T${w},450 L${w},${h} L0,${h} Z" fill="${theme.primary}" opacity="0.5"/>
-        </g>
-      `,
-      circles: `
-        <g opacity="0.2">
-          ${Array.from({ length: 20 }, (_, i) => {
-            const x = Math.random() * w;
-            const y = Math.random() * h;
-            const r = 30 + Math.random() * 90;
-            return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${theme.secondary}" stroke-width="3"/>`;
-          }).join('')}
-        </g>
-      `,
-    };
-    return patterns[pattern.id] || '';
+    // Use confetti pattern by default
+    return `
+      <g opacity="0.3">
+        ${Array.from({ length: 60 }, (_, i) => {
+          const x = Math.random() * w;
+          const y = Math.random() * h;
+          const rotation = Math.random() * 360;
+          const size = 12 + Math.random() * 18;
+          const colors = [theme.primary, theme.secondary, '#a5b4fc', '#c4b5fd'];
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          const shapes = ['rect', 'circle'];
+          const shape = shapes[Math.floor(Math.random() * shapes.length)];
+          if (shape === 'circle') {
+            return `<circle cx="${x}" cy="${y}" r="${size/2}" fill="${color}" opacity="${0.4 + Math.random() * 0.4}"/>`;
+          }
+          return `<rect x="${x}" y="${y}" width="${size}" height="${size/3}" fill="${color}" transform="rotate(${rotation} ${x} ${y})" opacity="${0.4 + Math.random() * 0.4}"/>`;
+        }).join('')}
+      </g>
+    `;
   };
 
   const generateImage = async () => {
@@ -161,7 +123,7 @@ export function TransactionShareDialog({
       // Load Virality logo
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
-      logoImg.src = viralityGhostLogo;
+      logoImg.src = viralityLogoWhite;
       await new Promise((resolve, reject) => {
         logoImg.onload = resolve;
         logoImg.onerror = reject;
@@ -269,19 +231,19 @@ export function TransactionShareDialog({
           <rect width="${width}" height="${height}" fill="url(#bgGradient)" rx="36"/>
           
           <!-- Pattern overlay -->
-          ${generatePatternSvg(selectedTheme, selectedPattern)}
+          ${generatePatternSvg(selectedTheme)}
           
-          <!-- White card -->
-          <rect x="90" y="90" width="1020" height="450" fill="#fff" rx="30"/>
+          <!-- Card background - dark or light based on mode -->
+          <rect x="90" y="90" width="1020" height="450" fill="${useDarkCard ? '#0a0a0a' : '#fff'}" rx="30"/>
           
           <!-- Card content - Brand logo + Program name -->
           <g>
             ${brandLogoBase64 ? `
               <image href="${brandLogoBase64}" x="120" y="135" width="48" height="48" preserveAspectRatio="xMidYMid slice" clip-path="url(#brandLogoClip)"/>
-              <circle cx="144" cy="159" r="24" fill="none" stroke="#e5e5e5" stroke-width="1"/>
-              <text x="180" y="168" font-size="22" fill="#666" font-weight="500">${programName}</text>
+              <circle cx="144" cy="159" r="24" fill="none" stroke="${useDarkCard ? '#333' : '#e5e5e5'}" stroke-width="1"/>
+              <text x="180" y="168" font-size="22" fill="${useDarkCard ? '#999' : '#666'}" font-weight="500">${programName}</text>
             ` : `
-              <text x="135" y="168" font-size="22" fill="#666" font-weight="500">${programName}</text>
+              <text x="135" y="168" font-size="22" fill="${useDarkCard ? '#999' : '#666'}" font-weight="500">${programName}</text>
             `}
           </g>
           
@@ -289,7 +251,7 @@ export function TransactionShareDialog({
           <text x="135" y="280" font-size="84" font-weight="700" fill="${amountColor}">${amountSign}$${Math.abs(transaction.amount).toFixed(2)}</text>
           
           <!-- Secondary info -->
-          <text x="135" y="340" font-size="24" fill="#999">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          <text x="135" y="340" font-size="24" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMMM dd, yyyy')}</text>
           
           <!-- Status -->
           ${transaction.status === 'completed' ? `
@@ -301,11 +263,11 @@ export function TransactionShareDialog({
           ` : ''}
           
           <!-- Decorative line in card -->
-          <rect x="135" y="450" width="900" height="3" fill="#f0f0f0" rx="1.5"/>
+          <rect x="135" y="450" width="900" height="3" fill="${useDarkCard ? '#222' : '#f0f0f0'}" rx="1.5"/>
           
           <!-- Date range at bottom of card -->
-          <text x="135" y="510" font-size="20" fill="#999">${format(transaction.date, 'MMM dd')}</text>
-          <text x="1035" y="510" font-size="20" fill="#999" text-anchor="end">Today</text>
+          <text x="135" y="510" font-size="20" fill="${useDarkCard ? '#666' : '#999'}">${format(transaction.date, 'MMM dd')}</text>
+          <text x="1035" y="510" font-size="20" fill="${useDarkCard ? '#666' : '#999'}" text-anchor="end">Today</text>
           
           <!-- User profile at bottom -->
           ${avatarBase64 ? `
@@ -317,15 +279,10 @@ export function TransactionShareDialog({
             <text x="144" y="668" font-size="22" font-weight="600" fill="#fff">virality.gg/@${userProfile.username}</text>
           ` : ''}
           
-          <!-- Powered by Virality with logo -->
+          <!-- Virality logo -->
           ${showViralityLogo ? `
-            <g>
-              <image href="${logoBase64}" x="1000" y="638" width="44" height="44"/>
-              <text x="1050" y="668" font-size="18" font-weight="500" fill="rgba(255,255,255,0.8)">Powered by Virality</text>
-            </g>
-          ` : `
-            <text x="1110" y="710" font-size="18" fill="rgba(255,255,255,0.5)" text-anchor="end">Powered by Virality</text>
-          `}
+            <image href="${logoBase64}" x="1050" y="638" width="48" height="48"/>
+          ` : ''}
         </svg>
       `;
 
@@ -474,56 +431,23 @@ export function TransactionShareDialog({
             {/* Color theme */}
             <div className="space-y-3">
               <Label className="text-sm font-medium">Color theme</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {COLOR_THEMES.map((theme) => (
                   <button
                     key={theme.id}
                     onClick={() => setSelectedTheme(theme)}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all",
+                      "flex flex-col items-center gap-1 p-2 rounded-lg border transition-all",
                       selectedTheme.id === theme.id 
                         ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2 ring-offset-background" 
                         : "border-border hover:border-primary/50"
                     )}
                   >
                     <div 
-                      className="w-5 h-5 rounded-full" 
+                      className="w-8 h-8 rounded-full" 
                       style={{ background: theme.gradient }}
                     />
-                    <span className="text-sm font-medium">{theme.name}</span>
-                    {selectedTheme.id === theme.id && (
-                      <Check className="h-4 w-4 text-primary ml-auto" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Pattern */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Pattern</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {PATTERNS.map((pattern) => (
-                  <button
-                    key={pattern.id}
-                    onClick={() => setSelectedPattern(pattern)}
-                    className={cn(
-                      "aspect-square rounded-lg border transition-all flex items-center justify-center text-xs font-medium",
-                      selectedPattern.id === pattern.id 
-                        ? "border-primary bg-primary/10 ring-2 ring-primary ring-offset-2 ring-offset-background" 
-                        : "border-border hover:border-primary/50 bg-muted/30"
-                    )}
-                    style={{ 
-                      background: pattern.id !== 'none' ? selectedTheme.primary : undefined,
-                      opacity: pattern.id !== 'none' ? 0.8 : 1
-                    }}
-                  >
-                    {pattern.id === 'none' && (
-                      <span className="text-muted-foreground">{pattern.name}</span>
-                    )}
-                    {selectedPattern.id === pattern.id && pattern.id !== 'none' && (
-                      <Check className="h-4 w-4 text-white" />
-                    )}
+                    <span className="text-xs font-medium">{theme.name}</span>
                   </button>
                 ))}
               </div>
