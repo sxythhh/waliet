@@ -82,22 +82,22 @@ export default function PublicNavbar({
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-black/40 backdrop-blur-2xl rounded-xl shadow-2xl py-[7px] px-[7px]">
+                        <div className="w-64 p-3 bg-white dark:bg-[#0a0a0a] border border-border rounded-xl shadow-2xl py-[7px] px-[7px]">
                           <NavigationMenuLink asChild>
-                            <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
+                            <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img alt="" className="w-5 h-5" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
                               <div>
-                                <div className="font-medium text-white">Discover</div>
-                                <div className="text-xs text-white/50">Find content opportunities</div>
+                                <div className="font-medium text-foreground">Discover</div>
+                                <div className="text-xs text-muted-foreground">Find content opportunities</div>
                               </div>
                             </Link>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <Link to="/new" className="flex items-center gap-3 px-3 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
+                            <Link to="/new" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img src={forBrandsIcon} alt="" className="w-5 h-5" />
                               <div>
-                                <div className="font-medium text-white">For Brands</div>
-                                <div className="text-xs text-white/50">Launch opportunities on Virality</div>
+                                <div className="font-medium text-foreground">For Brands</div>
+                                <div className="text-xs text-muted-foreground">Launch opportunities on Virality</div>
                               </div>
                             </Link>
                           </NavigationMenuLink>
