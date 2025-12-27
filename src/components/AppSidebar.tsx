@@ -742,19 +742,19 @@ export function AppSidebar() {
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl overflow-hidden" side="top" align="start" sideOffset={8}>
-              {/* Banner with fade */}
+              {/* Banner with fade - positioned absolutely behind content */}
               {bannerUrl && (
-                <div className="relative h-16 w-full">
+                <div className="absolute inset-x-0 top-0 h-24 w-full">
                   <img 
                     src={bannerUrl} 
                     alt="" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover opacity-60"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
                 </div>
               )}
               
-              <div className={`p-3 ${bannerUrl ? '-mt-3 relative z-10' : ''}`}>
+              <div className={`p-3 relative z-10 ${bannerUrl ? 'pt-4' : ''}`}>
                 {/* User Info + Theme Toggle */}
                 <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
                   <div className="flex items-center gap-2.5">
