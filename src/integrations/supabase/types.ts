@@ -2854,6 +2854,7 @@ export type Database = {
           full_name: string | null
           hide_from_leaderboard: boolean
           id: string
+          is_private: boolean
           legal_business_name: string | null
           onboarding_completed: boolean
           phone_number: string | null
@@ -2908,6 +2909,7 @@ export type Database = {
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id: string
+          is_private?: boolean
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
@@ -2962,6 +2964,7 @@ export type Database = {
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id?: string
+          is_private?: boolean
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
