@@ -881,7 +881,7 @@ export function ProfileTab() {
       {/* Connected Accounts */}
       <Card ref={connectedAccountsRef} className="bg-card border-0">
         <CardHeader className="py-0 my-0 px-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
             <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
               <Plus className="mr-2 h-4 w-4" />
