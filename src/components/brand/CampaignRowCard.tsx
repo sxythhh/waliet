@@ -8,6 +8,8 @@ import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import animatedImagesIcon from "@/assets/animated-images-icon.svg";
 import copyIcon from "@/assets/copy-icon.svg";
+import clippingIcon from "@/assets/clipping-icon.svg";
+import boostIcon from "@/assets/boost-icon.svg";
 import { useToast } from "@/hooks/use-toast";
 interface CampaignMember {
   id: string;
@@ -132,7 +134,12 @@ export function CampaignRowCard({
 
             {/* Tags Row */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className={`px-2 py-0.5 rounded-full font-medium ${type === "campaign" ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600 dark:text-amber-400"}`}>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-[#2a2a2a] text-white">
+                <img 
+                  src={type === "campaign" ? clippingIcon : boostIcon} 
+                  alt="" 
+                  className="w-3.5 h-3.5" 
+                />
                 {type === "campaign" ? "Clipping" : "Boost"}
               </span>
 
