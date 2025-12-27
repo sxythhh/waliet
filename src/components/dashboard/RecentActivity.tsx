@@ -33,54 +33,58 @@ export function RecentActivity() {
         .order("created_at", { ascending: false })
         .limit(10);
 
-      const formattedActivities: ActivityItem[] = [];
-
-      if (earnings) {
-        for (const earning of earnings) {
-          const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
-          let campaignName = "Campaign";
-          let campaignSlug: string | undefined;
-          let brandLogoUrl: string | undefined;
-          let isPrivate = false;
-
-          if (metadata.campaign_id) {
-            const { data: campaign } = await supabase
-              .from("campaigns")
-              .select("title, slug, brand_logo_url")
-              .eq("id", metadata.campaign_id)
-              .single();
-            if (campaign) {
-              campaignName = campaign.title;
-              campaignSlug = campaign.slug || undefined;
-              brandLogoUrl = campaign.brand_logo_url || undefined;
-            }
-          }
-
-          if (earning.user_id) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("is_private")
-              .eq("id", earning.user_id)
-              .single();
-            if (profile) {
-              isPrivate = profile.is_private || false;
-            }
-          }
-
-          formattedActivities.push({
-            id: earning.id,
-            amount: earning.amount,
-            description: earning.description,
-            created_at: earning.created_at,
-            username: metadata.account_username,
-            platform: metadata.platform,
-            campaign_name: campaignName,
-            campaign_slug: campaignSlug,
-            brand_logo_url: brandLogoUrl,
-            is_private: isPrivate,
-          });
-        }
+      if (!earnings || earnings.length === 0) {
+        setActivities([]);
+        setLoading(false);
+        return;
       }
+
+      // Collect unique campaign IDs and user IDs for batch fetching
+      const campaignIds = new Set<string>();
+      const userIds = new Set<string>();
+      
+      earnings.forEach(earning => {
+        const metadata = (earning.metadata as { campaign_id?: string }) || {};
+        if (metadata.campaign_id) campaignIds.add(metadata.campaign_id);
+        if (earning.user_id) userIds.add(earning.user_id);
+      });
+
+      // Batch fetch campaigns and profiles in parallel
+      const [campaignsResult, profilesResult] = await Promise.all([
+        campaignIds.size > 0 
+          ? supabase.from("campaigns").select("id, title, slug, brand_logo_url").in("id", Array.from(campaignIds))
+          : Promise.resolve({ data: [] }),
+        userIds.size > 0
+          ? supabase.from("profiles").select("id, is_private").in("id", Array.from(userIds))
+          : Promise.resolve({ data: [] })
+      ]);
+
+      // Create lookup maps
+      const campaignMap = new Map<string, { title: string; slug: string | null; brand_logo_url: string | null }>();
+      (campaignsResult.data || []).forEach(c => campaignMap.set(c.id, c));
+      
+      const profileMap = new Map<string, { is_private: boolean | null }>();
+      (profilesResult.data || []).forEach(p => profileMap.set(p.id, p));
+
+      // Format activities using the maps
+      const formattedActivities: ActivityItem[] = earnings.map(earning => {
+        const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
+        const campaign = metadata.campaign_id ? campaignMap.get(metadata.campaign_id) : null;
+        const profile = earning.user_id ? profileMap.get(earning.user_id) : null;
+
+        return {
+          id: earning.id,
+          amount: earning.amount,
+          description: earning.description,
+          created_at: earning.created_at,
+          username: metadata.account_username,
+          platform: metadata.platform,
+          campaign_name: campaign?.title || "Campaign",
+          campaign_slug: campaign?.slug || undefined,
+          brand_logo_url: campaign?.brand_logo_url || undefined,
+          is_private: profile?.is_private || false,
+        };
+      });
 
       setActivities(formattedActivities);
       setLoading(false);
