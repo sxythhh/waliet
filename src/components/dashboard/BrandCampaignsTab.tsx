@@ -102,9 +102,7 @@ export function BrandCampaignsTab({
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
-  const {
-    resolvedTheme
-  } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
 
   // Removed beta gate - brands without subscription can create drafts
   const showBetaGate = false;
@@ -464,7 +462,7 @@ export function BrandCampaignsTab({
 
           {/* Empty State */}
           {campaigns.length === 0 && bounties.length === 0 && <div className="px-4 items-center justify-center flex flex-col py-[23px]">
-              <img alt="" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src={resolvedTheme === "light" ? emptyCampaignsLight : "/lovable-uploads/91c8dfd7-ab7c-4497-854c-7b1c899c749e.png"} />
+              <img alt="Empty campaigns folder icon" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src={theme === "light" || resolvedTheme === "light" ? emptyCampaignsLight : "/lovable-uploads/91c8dfd7-ab7c-4497-854c-7b1c899c749e.png"} />
               
               <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
                 Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
