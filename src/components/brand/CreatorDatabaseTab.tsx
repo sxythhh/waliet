@@ -1047,45 +1047,67 @@ export function CreatorDatabaseTab({
         </div>
         
         {/* Table Skeleton */}
+        {/* Header Skeleton */}
+        <div className="border-b border-border px-[7px] py-[5px]">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Skeleton className="h-8 w-[72px] rounded-md" />
+            <div className="flex items-center gap-1.5 ml-auto">
+              <Skeleton className="h-8 w-[110px] rounded-md" />
+              <Skeleton className="h-8 w-[72px] rounded-md" />
+              <Skeleton className="h-8 w-[56px] rounded-md" />
+            </div>
+          </div>
+        </div>
+
+        {/* Table Container */}
         <div className="flex-1 overflow-hidden">
           {/* Table Header */}
-          <div className="px-4 md:px-6 py-3 flex items-center gap-4">
-            <Skeleton className="h-4 w-4" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-24 ml-auto" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-24" />
+          <div className="px-4 py-3 flex items-center gap-4 border-b border-border/40">
+            <Skeleton className="h-4 w-4 rounded-[3px]" />
             <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-4 w-12 ml-auto" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-14" />
           </div>
           
-        {/* Table Rows */}
-          <div className="space-y-1">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="px-4 md:px-6 py-4 flex items-center gap-4">
-                <div className="flex items-center gap-3 flex-1">
-                  <Skeleton className="h-10 w-10 rounded-xl" />
+          {/* Table Rows */}
+          <div className="divide-y divide-border/20">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+              <div key={i} className="px-4 py-3 flex items-center gap-4">
+                <Skeleton className="h-4 w-4 rounded-[3px]" />
+                <div className="flex items-center gap-3 min-w-[180px]">
+                  <Skeleton className="h-8 w-8 rounded-full" />
                   <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-16" />
                   </div>
                 </div>
+                <Skeleton className="h-5 w-[70px] rounded" />
                 <div className="flex items-center gap-1">
-                  <Skeleton className="h-5 w-5 rounded" />
-                  <Skeleton className="h-5 w-5 rounded" />
+                  <Skeleton className="h-7 w-7 rounded-md" />
+                  <Skeleton className="h-7 w-7 rounded-md" />
                 </div>
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-4 w-12 ml-auto" />
+                <Skeleton className="h-4 w-14" />
                 <Skeleton className="h-4 w-20" />
-              </div>)}
+              </div>
+            ))}
           </div>
         </div>
         
         {/* Footer Skeleton */}
-        <div className="px-4 md:px-6 py-3 flex items-center justify-between">
-          <Skeleton className="h-4 w-32" />
+        <div className="border-t border-border/40 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-10" />
+            <Skeleton className="h-7 w-[70px] rounded-md" />
+            <Skeleton className="h-4 w-24" />
+          </div>
           <div className="flex items-center gap-1">
+            <Skeleton className="h-4 w-20 mr-2" />
             <Skeleton className="h-7 w-7 rounded-md" />
             <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-4 w-20 mx-2" />
             <Skeleton className="h-7 w-7 rounded-md" />
             <Skeleton className="h-7 w-7 rounded-md" />
           </div>
