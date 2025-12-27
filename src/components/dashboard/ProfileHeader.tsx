@@ -113,15 +113,17 @@ export function ProfileHeader({
           publicUrl
         }
       } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      // Add cache-busting timestamp to URL
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
       const {
         error: updateError
       } = await supabase.from('profiles').update({
-        avatar_url: publicUrl
+        avatar_url: urlWithCacheBuster
       }).eq('id', profile.id);
       if (updateError) throw updateError;
       setProfile({
         ...profile,
-        avatar_url: publicUrl
+        avatar_url: urlWithCacheBuster
       });
       toast({
         title: "Avatar updated successfully"
