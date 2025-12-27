@@ -90,8 +90,8 @@ export function CampaignRowCard({
   };
   const visibleMembers = members.slice(0, 3);
   const remainingCount = members.length - 3;
-  return <Card className="group bg-card hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-0" onClick={onClick}>
-      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px] border border-[#0e0e0e] rounded-lg overflow-hidden">
+  return <Card className="group bg-card hover:bg-accent/50 dark:hover:bg-[#101010] transition-all duration-200 overflow-hidden cursor-pointer border-0" onClick={onClick}>
+      <div className="flex flex-col sm:flex-row font-['Inter'] tracking-[-0.5px] border border-border dark:border-[#0e0e0e] rounded-lg overflow-hidden">
         {/* Banner */}
         <div className="relative w-full sm:w-40 md:w-48 h-28 sm:h-auto flex-shrink-0 overflow-hidden bg-muted">
           {bannerUrl ? <OptimizedImage src={bannerUrl} alt={title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="w-full h-full flex items-center justify-center" style={{
@@ -134,7 +134,7 @@ export function CampaignRowCard({
 
             {/* Tags Row */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-[#2a2a2a] text-white">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white">
                 <img 
                   src={type === "campaign" ? clippingIcon : boostIcon} 
                   alt="" 
@@ -181,7 +181,7 @@ export function CampaignRowCard({
               </button>}
 
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => {
+              {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => {
                 e.stopPropagation();
                 const url = type === "campaign" 
                   ? `${window.location.origin}/c/${slug}` 
@@ -192,7 +192,7 @@ export function CampaignRowCard({
                 <img src={copyIcon} alt="" className="w-3.5 h-3.5" />
               </Button>}
 
-              {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-0 bg-[#0a0a0a] hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
+              {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
                   Resume
                 </Button>}
 
