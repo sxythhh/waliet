@@ -264,11 +264,7 @@ export function ReferralsTab(): JSX.Element {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-        <Button variant="ghost" size="sm" className="group gap-2 text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]" onClick={() => window.open('https://join.virality.gg/affiliate', '_blank')}>
-          <img src={quizIcon} alt="" className="w-5 h-5 group-hover:hidden" />
-          <img src={quizIconWhite} alt="" className="w-5 h-5 hidden group-hover:block" />
-          How Referrals Work
-        </Button>
+        
       </div>
 
       <div className="space-y-8">
