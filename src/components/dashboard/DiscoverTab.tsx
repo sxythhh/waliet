@@ -555,30 +555,49 @@ export function DiscoverTab({
         {/* Scrollable Campaigns Section */}
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
-        {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 w-full mx-auto">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="flex flex-col gap-1.5">
-                {/* Card skeleton matching CampaignCard */}
-                <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted/30">
-                  <Skeleton className="absolute inset-0 w-full h-full" />
-                  {/* Bottom content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
-                    <Skeleton className="h-4 w-3/4 mx-auto bg-white/10" />
-                    <div className="flex justify-center">
-                      <Skeleton className="h-5 w-20 rounded-md bg-white/10" />
+        {loading ? <div className="space-y-8">
+            {/* Campaigns Section Skeleton */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-9 w-20 rounded-full" />
+              </div>
+              <div className="flex gap-3 overflow-hidden">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-[160px] flex flex-col gap-1.5">
+                    <div className="relative aspect-[3/4] rounded-xl overflow-hidden">
+                      <Skeleton className="absolute inset-0 w-full h-full" />
+                    </div>
+                    <div className="flex flex-col gap-1 px-0.5">
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-2.5 w-12" />
+                        <Skeleton className="h-2.5 w-10" />
+                      </div>
+                      <Skeleton className="h-1.5 w-full rounded-full" />
                     </div>
                   </div>
-                </div>
-                {/* Budget progress skeleton */}
-                <div className="flex flex-col gap-1 px-0.5">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-2.5 w-12 bg-muted/50" />
-                    <Skeleton className="h-2.5 w-10 bg-muted/50" />
-                  </div>
-                  <Skeleton className="h-1.5 w-full rounded-full bg-muted/50" />
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Recent Activity Skeleton */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-36" />
+              <div className="space-y-0">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-4 w-14" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div> : sortedCampaigns.length === 0 && bounties.length === 0 ? <div className="text-center py-12 flex flex-col items-center gap-4">
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
