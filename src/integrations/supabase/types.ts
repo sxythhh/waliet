@@ -1839,6 +1839,7 @@ export type Database = {
           is_private: boolean | null
           payment_model: string | null
           payout_day_of_week: number | null
+          platform_rates: Json | null
           post_rate: number | null
           preview_url: string | null
           requirements: string[] | null
@@ -1883,6 +1884,7 @@ export type Database = {
           is_private?: boolean | null
           payment_model?: string | null
           payout_day_of_week?: number | null
+          platform_rates?: Json | null
           post_rate?: number | null
           preview_url?: string | null
           requirements?: string[] | null
@@ -1927,6 +1929,7 @@ export type Database = {
           is_private?: boolean | null
           payment_model?: string | null
           payout_day_of_week?: number | null
+          platform_rates?: Json | null
           post_rate?: number | null
           preview_url?: string | null
           requirements?: string[] | null

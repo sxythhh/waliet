@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet, Tag } from "lucide-react";
+import { Eye, Target, TrendingUp, ArrowRight, Bookmark, Upload, X, Check, ExternalLink, Hash, Trash2, Copy, Wallet, Tag, Plus, DollarSign, Play } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -144,6 +145,13 @@ interface Blueprint {
   id: string;
   title: string;
 }
+interface PlatformRate {
+  platform: string;
+  type: 'cpm' | 'per_post';
+  cpm_rate?: number;
+  post_rate?: number;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -178,7 +186,15 @@ interface Campaign {
   payout_day_of_week?: number | null;
   blueprint_id?: string | null;
   shortimize_collection_name?: string | null;
+  platform_rates?: Record<string, PlatformRate> | null;
 }
+
+const PLATFORM_OPTIONS = [
+  { id: 'tiktok', label: 'TikTok', icon: tiktokLogo },
+  { id: 'instagram', label: 'Instagram', icon: instagramLogo },
+  { id: 'youtube', label: 'YouTube', icon: youtubeLogo },
+  { id: 'x', label: 'X', icon: null },
+];
 interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
@@ -222,6 +238,15 @@ export function CampaignCreationWizard({
   const [loadingBalance, setLoadingBalance] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [shortimizeCollectionName, setShortimizeCollectionName] = useState<string>("");
+  const [platformRates, setPlatformRates] = useState<Record<string, PlatformRate>>(() => {
+    if (campaign?.platform_rates) {
+      return campaign.platform_rates as Record<string, PlatformRate>;
+    }
+    return {};
+  });
+  const [pendingRateType, setPendingRateType] = useState<'cpm' | 'per_post'>('cpm');
+  const [pendingRatePlatform, setPendingRatePlatform] = useState<string | null>(null);
+  const [pendingRateValue, setPendingRateValue] = useState<string>('5');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     isAdmin
@@ -414,13 +439,40 @@ export function CampaignCreationWizard({
     loadBlueprints();
   }, [open, brandId]);
 
-  // Reset selected blueprint and collection name when dialog opens
+  // Reset selected blueprint, collection name, and platform rates when dialog opens
   useEffect(() => {
     if (open) {
       setSelectedBlueprintId(campaign?.blueprint_id || initialBlueprintId || null);
       setShortimizeCollectionName(campaign?.shortimize_collection_name || "");
+      setPlatformRates(campaign?.platform_rates as Record<string, PlatformRate> || {});
+      setPendingRateType('cpm');
+      setPendingRatePlatform(null);
+      setPendingRateValue('5');
     }
-  }, [open, campaign?.blueprint_id, campaign?.shortimize_collection_name, initialBlueprintId]);
+  }, [open, campaign?.blueprint_id, campaign?.shortimize_collection_name, campaign?.platform_rates, initialBlueprintId]);
+
+  // Helper functions for platform rates
+  const addPlatformRate = (platform: string, type: 'cpm' | 'per_post', value: number) => {
+    setPlatformRates(prev => ({
+      ...prev,
+      [platform]: {
+        platform,
+        type,
+        ...(type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
+      }
+    }));
+  };
+
+  const removePlatformRate = (platform: string) => {
+    setPlatformRates(prev => {
+      const newRates = { ...prev };
+      delete newRates[platform];
+      return newRates;
+    });
+  };
+
+  const getConfiguredPlatforms = () => Object.keys(platformRates);
+  const getAvailablePlatforms = () => PLATFORM_OPTIONS.filter(p => !platformRates[p.id]);
   const watchedValues = form.watch();
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -518,8 +570,9 @@ export function CampaignCreationWizard({
         is_featured: false,
         hashtags: values.hashtags || [],
         tags: values.tags || [],
-        shortimize_collection_name: shortimizeCollectionName || null
-      };
+        shortimize_collection_name: shortimizeCollectionName || null,
+        platform_rates: Object.keys(platformRates).length > 0 ? platformRates as unknown as Record<string, unknown> : null
+      } as any;
       const {
         error
       } = await supabase.from("campaigns").insert(campaignData);
@@ -571,10 +624,11 @@ export function CampaignCreationWizard({
           payout_day_of_week: values.payout_day_of_week,
           blueprint_id: selectedBlueprintId || null,
           shortimize_collection_name: shortimizeCollectionName || null,
+          platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null,
           ...(bannerFile ? {
             banner_url: bannerUrl
           } : {})
-        };
+        } as any;
         console.log('Updating campaign with data:', updateData);
         const {
           data,
@@ -623,8 +677,9 @@ export function CampaignCreationWizard({
           slug: slug,
           is_featured: false,
           blueprint_id: selectedBlueprintId || initialBlueprintId || null,
-          shortimize_collection_name: shortimizeCollectionName || null
-        };
+          shortimize_collection_name: shortimizeCollectionName || null,
+          platform_rates: Object.keys(platformRates).length > 0 ? platformRates : null
+        } as any;
         const {
           data: newCampaign,
           error
@@ -775,13 +830,154 @@ export function CampaignCreationWizard({
                           <FormMessage />
                         </FormItem>} />
 
-                    {/* CPM Rate - shown for both payment models */}
+                    {/* Per-Platform Payment Rates */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Payment Rates</FormLabel>
+                          <p className="text-xs text-muted-foreground mt-0.5">Configure payment rates per platform</p>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm"
+                              className="gap-2"
+                              disabled={getAvailablePlatforms().length === 0}
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add Payment Rate
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Payment Basis</DropdownMenuLabel>
+                            <DropdownMenuItem 
+                              onClick={() => setPendingRateType('cpm')}
+                              className={pendingRateType === 'cpm' ? 'bg-primary/10' : ''}
+                            >
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              Pay per 1k views (CPM)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => setPendingRateType('per_post')}
+                              className={pendingRateType === 'per_post' ? 'bg-primary/10' : ''}
+                            >
+                              <Play className="h-4 w-4 mr-2" />
+                              Per post (flat rate)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Platform</DropdownMenuLabel>
+                            {getAvailablePlatforms().map(platform => (
+                              <DropdownMenuItem 
+                                key={platform.id}
+                                onClick={() => {
+                                  addPlatformRate(platform.id, pendingRateType, pendingRateType === 'cpm' ? 5 : 10);
+                                }}
+                              >
+                                {platform.icon ? (
+                                  <img src={platform.icon} alt={platform.label} className="h-4 w-4 mr-2" />
+                                ) : (
+                                  <span className="h-4 w-4 mr-2 flex items-center justify-center text-xs font-bold">𝕏</span>
+                                )}
+                                {platform.label}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+
+                      {/* Configured Platform Rates */}
+                      {Object.keys(platformRates).length > 0 ? (
+                        <div className="space-y-2">
+                          {Object.values(platformRates).map((rate) => {
+                            const platformInfo = PLATFORM_OPTIONS.find(p => p.id === rate.platform);
+                            return (
+                              <div 
+                                key={rate.platform} 
+                                className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border"
+                              >
+                                <div className="flex items-center gap-2 min-w-[100px]">
+                                  {platformInfo?.icon ? (
+                                    <img src={platformInfo.icon} alt={platformInfo.label} className="h-5 w-5" />
+                                  ) : (
+                                    <span className="h-5 w-5 flex items-center justify-center text-sm font-bold">𝕏</span>
+                                  )}
+                                  <span className="text-sm font-medium text-foreground">{platformInfo?.label}</span>
+                                </div>
+                                <div className="flex-1">
+                                  <Select 
+                                    value={rate.type} 
+                                    onValueChange={(value: 'cpm' | 'per_post') => {
+                                      setPlatformRates(prev => ({
+                                        ...prev,
+                                        [rate.platform]: {
+                                          ...prev[rate.platform],
+                                          type: value,
+                                          ...(value === 'cpm' 
+                                            ? { cpm_rate: prev[rate.platform].cpm_rate || 5, post_rate: undefined }
+                                            : { post_rate: prev[rate.platform].post_rate || 10, cpm_rate: undefined }
+                                          )
+                                        }
+                                      }));
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-8 text-xs bg-background">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="cpm">Per 1k views</SelectItem>
+                                      <SelectItem value="per_post">Per post</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className="relative w-24">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
+                                  <Input
+                                    type="number"
+                                    value={rate.type === 'cpm' ? rate.cpm_rate || '' : rate.post_rate || ''}
+                                    onChange={(e) => {
+                                      const value = parseFloat(e.target.value) || 0;
+                                      setPlatformRates(prev => ({
+                                        ...prev,
+                                        [rate.platform]: {
+                                          ...prev[rate.platform],
+                                          ...(rate.type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
+                                        }
+                                      }));
+                                    }}
+                                    className="h-8 pl-5 text-xs bg-background"
+                                    placeholder={rate.type === 'cpm' ? '5' : '10'}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                  onClick={() => removePlatformRate(rate.platform)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border text-center">
+                          <p className="text-sm text-muted-foreground">No payment rates configured</p>
+                          <p className="text-xs text-muted-foreground mt-1">Click "Add Payment Rate" to set rates per platform</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Default CPM Rate (fallback) */}
                     <FormField control={form.control} name="rpm_rate" render={({
                   field
                 }) => <FormItem>
                             <div className="flex items-center justify-between">
-                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">CPM Rate</FormLabel>
-                              <span className="text-xs text-muted-foreground">per 1K views</span>
+                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Default CPM Rate</FormLabel>
+                              <span className="text-xs text-muted-foreground">fallback rate</span>
                             </div>
                             <FormControl>
                               <div className="relative">
@@ -790,30 +986,10 @@ export function CampaignCreationWizard({
                               </div>
                             </FormControl>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {form.watch("payment_model") === "pay_per_post" ? "Approved videos earn this rate per 1,000 views" : "Creators earn this rate per 1,000 views from their accounts"}
+                              Used when no platform-specific rate is set
                             </p>
                             <FormMessage />
                           </FormItem>} />
-
-                    {/* Flat Rate Per Approved Video - only show for pay_per_post */}
-                    {form.watch("payment_model") === "pay_per_post" && <FormField control={form.control} name="post_rate" render={({
-                  field
-                }) => <FormItem>
-                            <div className="flex items-center justify-between">
-                              <FormLabel className="text-sm font-inter tracking-[-0.5px] text-foreground">Flat Rate Per Approved Video</FormLabel>
-                              <span className="text-xs text-muted-foreground">optional</span>
-                            </div>
-                            <FormControl>
-                              <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                                <Input type="number" placeholder="0" className="pl-7 h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30" {...field} />
-                              </div>
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              One-time payment when a video is approved (in addition to CPM)
-                            </p>
-                            <FormMessage />
-                          </FormItem>} />}
 
                     <FormField control={form.control} name="category" render={({
                   field
