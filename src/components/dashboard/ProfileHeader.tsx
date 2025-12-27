@@ -283,7 +283,8 @@ export function ProfileHeader({
                 @{profile?.username || "username"}
               </span>
               <div className="flex-1" />
-              <Button size="sm" variant="outline" className="h-auto py-[2px] px-2.5 text-xs font-medium bg-[#4b85f7] text-primary-foreground hover:bg-[#4b85f7]/90 border-0 border-t border-t-[#4b85f7]" onClick={() => navigate('/dashboard?tab=profile')}>
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 border-0" onClick={() => navigate('/dashboard?tab=profile')}>
+                <Pencil className="h-3 w-3 mr-1" />
                 Edit Profile
               </Button>
             </div>
