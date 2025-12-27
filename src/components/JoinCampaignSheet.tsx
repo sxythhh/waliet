@@ -20,6 +20,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import emptyAccountsImage from "@/assets/empty-accounts.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import fullscreenIcon from "@/assets/fullscreen-icon.svg";
+import fullscreenIconDark from "@/assets/expand-icon-dark.svg";
 interface Blueprint {
   id: string;
   title: string;
@@ -450,8 +451,9 @@ export function JoinCampaignSheet({
         <button onClick={() => {
         onOpenChange(false);
         navigate(`/c/${campaign.slug}`);
-      }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-[#080808] backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-[#080808]/80 transition-colors z-50" title="Open full page">
-          <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5" />
+      }} className="absolute -left-12 top-4 w-9 h-9 rounded-lg bg-background backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors z-50" title="Open full page">
+          <img src={fullscreenIcon} alt="Fullscreen" className="w-5 h-5 hidden dark:block" />
+          <img src={fullscreenIconDark} alt="Fullscreen" className="w-5 h-5 block dark:hidden" />
         </button>
         <div className="flex-1 overflow-y-auto px-6 pb-24">
           <div className="mt-6 space-y-6 pb-[80px]">
