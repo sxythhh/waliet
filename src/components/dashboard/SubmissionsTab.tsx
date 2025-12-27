@@ -478,15 +478,7 @@ export function SubmissionsTab() {
   const paginatedSubmissions = filteredSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all' || programFilter !== 'all';
   if (loading) {
-    return <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-32 w-full rounded-xl" />
-        </div>
-        <Skeleton className="h-10 w-32" />
-        <Skeleton className="h-[400px] w-full rounded-xl" />
-      </div>;
+    return null;
   }
   return <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
       {/* Filter */}
