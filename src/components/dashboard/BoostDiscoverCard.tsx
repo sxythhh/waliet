@@ -65,16 +65,7 @@ export function BoostDiscoverCard({
         </h3>
 
         {/* Metadata Row */}
-        <div className="flex flex-wrap gap-x-2.5 gap-y-1 text-[10px] font-medium text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          <span className="flex items-center gap-1 text-[#545d69]">
-            <img src={videosIcon} alt="" className="h-3 w-3 opacity-80" />
-            {videos_per_month} videos/mo
-          </span>
-          <span className={`flex items-center gap-1 ${isFull ? "text-red-400" : "text-[#6a7482]"}`}>
-            <img src={personIcon} alt="" className="h-3 w-3 opacity-80" />
-            {spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}
-          </span>
-        </div>
+        
 
         {/* Retainer Amount */}
         <div className="flex items-baseline gap-1 mt-auto pt-2">
