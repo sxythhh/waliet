@@ -650,30 +650,6 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Your Boosts Section - Accepted Applications */}
-      {boostApplications.filter(app => app.status === 'accepted').length > 0 && <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Your Boosts</h3>
-          <div className="space-y-3">
-          {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
-            id: application.boost_campaigns.id,
-            title: application.boost_campaigns.title,
-            monthly_retainer: application.boost_campaigns.monthly_retainer,
-            videos_per_month: application.boost_campaigns.videos_per_month,
-            brands: application.boost_campaigns.brands,
-            blueprint_id: application.boost_campaigns.blueprint_id,
-            blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
-            content_style_requirements: application.boost_campaigns.content_style_requirements,
-            blueprint: application.boost_campaigns.blueprint
-          }} />)}
-          </div>
-        </div>}
-
-      {/* Submissions Section */}
-      <SubmissionsTab />
-      
-      {/* Campaigns Content */}
-      <>
-
       {/* Actions Section - Hidden if user has joined campaigns AND has payment method */}
       {!shouldHideActionCards && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <button onClick={() => window.open('https://discord.gg/virality', '_blank')} className="flex items-start gap-4 p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] hover:bg-[#e8e8e8] dark:hover:bg-[#141414] transition-colors text-left border border-border dark:border-transparent">
@@ -712,6 +688,30 @@ export function CampaignsTab({
             </div>
           </button>
         </div>}
+
+      {/* Your Boosts Section - Accepted Applications */}
+      {boostApplications.filter(app => app.status === 'accepted').length > 0 && <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Your Boosts</h3>
+          <div className="space-y-3">
+          {boostApplications.filter(app => app.status === 'accepted').map(application => <BoostCard key={application.id} boost={{
+            id: application.boost_campaigns.id,
+            title: application.boost_campaigns.title,
+            monthly_retainer: application.boost_campaigns.monthly_retainer,
+            videos_per_month: application.boost_campaigns.videos_per_month,
+            brands: application.boost_campaigns.brands,
+            blueprint_id: application.boost_campaigns.blueprint_id,
+            blueprint_embed_url: application.boost_campaigns.blueprint_embed_url,
+            content_style_requirements: application.boost_campaigns.content_style_requirements,
+            blueprint: application.boost_campaigns.blueprint
+          }} />)}
+          </div>
+        </div>}
+
+      {/* Submissions Section */}
+      <SubmissionsTab />
+      
+      {/* Campaigns Content */}
+      <>
 
 
       {/* Recommended for You */}
