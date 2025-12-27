@@ -6,12 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight, ChevronDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
@@ -53,7 +48,9 @@ export function BrandWalletTab({
   const [settingUp, setSettingUp] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
-  const { isAdmin } = useAdminCheck();
+  const {
+    isAdmin
+  } = useAdminCheck();
   const fetchWalletData = async () => {
     try {
       const {
@@ -319,7 +316,7 @@ export function BrandWalletTab({
       {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
 
       {/* Balance Card */}
-      <Card className="border-border overflow-hidden">
+      <Card className="border-border overflow-hidden bg-black/0">
         <CardHeader className="pb-2 px-0">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Virality Balance
@@ -338,8 +335,8 @@ export function BrandWalletTab({
       {/* Actions */}
       <div className="flex gap-2">
         <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-          fontFamily: 'Inter, sans-serif'
-        }}>
+        fontFamily: 'Inter, sans-serif'
+      }}>
           <WalletIcon className="w-4 h-4 mr-1.5" />
           Withdraw
         </Button>
@@ -347,8 +344,8 @@ export function BrandWalletTab({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>
+            fontFamily: 'Inter, sans-serif'
+          }}>
               <ArrowUpRight className="w-4 h-4 mr-1.5" />
               Transfer
               <ChevronDown className="w-3.5 h-3.5 ml-1" />
@@ -359,39 +356,31 @@ export function BrandWalletTab({
               <ArrowUpRight className="w-4 h-4 mr-2" />
               Fund Campaign
             </DropdownMenuItem>
-            {isAdmin && (
-              <DropdownMenuItem onClick={() => setTransferOpen(true)}>
+            {isAdmin && <DropdownMenuItem onClick={() => setTransferOpen(true)}>
                 <ArrowRight className="w-4 h-4 mr-2" />
                 Transfer to Withdraw
-              </DropdownMenuItem>
-            )}
+              </DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
 
         <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
-          fontFamily: 'Inter, sans-serif'
-        }}>
+        fontFamily: 'Inter, sans-serif'
+      }}>
           <Plus className="w-4 h-4 mr-1.5" />
           Add Funds
         </Button>
       </div>
 
       {/* Transaction History */}
-      <Card className="border-border">
+      <Card className="border-border bg-black/0">
         <CardHeader className="px-0">
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent className="py-0 px-0">
-          {transactions.filter(tx => tx.status !== 'pending').length === 0 ? (
-            <div className="text-center py-8">
+          {transactions.filter(tx => tx.status !== 'pending').length === 0 ? <div className="text-center py-8">
               <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
-            </div>
-          ) : (
-            <div className="space-y-0">
-              {transactions
-                .filter(tx => tx.status !== 'pending')
-                .map(tx => (
-                  <div key={tx.id} className="flex items-center justify-between py-3">
+            </div> : <div className="space-y-0">
+              {transactions.filter(tx => tx.status !== 'pending').map(tx => <div key={tx.id} className="flex items-center justify-between py-3">
                     <div>
                       <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
                         {tx.description || getTransactionTypeLabel(tx.type)}
@@ -403,10 +392,8 @@ export function BrandWalletTab({
                     <p className={`font-['Inter'] text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
                       {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
                     </p>
-                  </div>
-                ))}
-            </div>
-          )}
+                  </div>)}
+            </div>}
         </CardContent>
       </Card>
 
@@ -423,17 +410,9 @@ export function BrandWalletTab({
 
       <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} brandId={brandId} brandSlug={brandSlug} />
 
-      {isAdmin && (
-        <TransferToWithdrawDialog 
-          open={transferOpen} 
-          onOpenChange={setTransferOpen} 
-          brandId={brandId} 
-          viralityBalance={walletData?.virality_balance || 0} 
-          onSuccess={() => {
-            fetchWalletData();
-            fetchTransactions();
-          }} 
-        />
-      )}
+      {isAdmin && <TransferToWithdrawDialog open={transferOpen} onOpenChange={setTransferOpen} brandId={brandId} viralityBalance={walletData?.virality_balance || 0} onSuccess={() => {
+      fetchWalletData();
+      fetchTransactions();
+    }} />}
     </div>;
 }
