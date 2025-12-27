@@ -1373,7 +1373,7 @@ export function WalletTab() {
       {/* Balance Cards - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Lifetime Earnings Card */}
-        <Card className="bg-card border-0">
+        <Card className="bg-card border-0 py-0 px-0">
           <CardContent className="pt-4 pb-4 py-0">
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
@@ -1436,7 +1436,7 @@ export function WalletTab() {
 
         {/* Current Balance Card */}
         <Card className="bg-card border-0">
-          <CardContent className="pt-4 pb-4 py-0">
+          <CardContent className="pt-4 pb-4 py-0 px-[10px]">
             <div className="flex items-center gap-3 mb-2">
               
               <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
