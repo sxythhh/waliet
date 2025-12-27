@@ -70,7 +70,7 @@ export function BoostDiscoverCard({
             <img src={videosIcon} alt="" className="h-3 w-3 opacity-80" />
             {videos_per_month} videos/mo
           </span>
-          <span className={`flex items-center gap-1 ${isFull ? "text-red-400" : ""}`}>
+          <span className={`flex items-center gap-1 ${isFull ? "text-red-400" : "text-[#6a7482]"}`}>
             <img src={personIcon} alt="" className="h-3 w-3 opacity-80" />
             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}
           </span>
