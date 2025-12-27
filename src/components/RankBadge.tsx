@@ -69,22 +69,19 @@ const sizeConfig = {
 export function RankBadge({ rank, level, size = 'md', showLevel = true, className }: RankBadgeProps) {
   const config = rankConfig[rank];
   const sizeStyles = sizeConfig[size];
-  const Icon = config.icon;
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full border font-semibold",
+        "inline-flex items-center rounded-full font-semibold",
         config.bgClass,
-        config.borderClass,
         config.colorClass,
         config.glowClass,
         sizeStyles.container,
         className
       )}
     >
-      <Icon className={sizeStyles.icon} />
-      {showLevel && <span>Lv.{level}</span>}
+      <span>{rank}</span>
     </div>
   );
 }
@@ -95,6 +92,7 @@ interface XPProgressBarProps {
   xpForCurrentLevel: number;
   xpForNextLevel: number;
   rank: RankType;
+  level: number;
   className?: string;
 }
 
@@ -103,6 +101,7 @@ export function XPProgressBar({
   xpForCurrentLevel, 
   xpForNextLevel, 
   rank,
+  level,
   className 
 }: XPProgressBarProps) {
   const xpIntoLevel = currentXP - xpForCurrentLevel;
@@ -114,8 +113,10 @@ export function XPProgressBar({
   return (
     <div className={cn("w-full", className)}>
       <div className="flex justify-between text-xs text-muted-foreground mb-1">
-        <span>{currentXP.toLocaleString()} XP</span>
-        <span>{xpForNextLevel.toLocaleString()} XP</span>
+        <span className="font-medium" style={{ color: `hsl(var(--rank-${rank.toLowerCase()}))` }}>
+          Level {level}
+        </span>
+        <span>{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <div 
