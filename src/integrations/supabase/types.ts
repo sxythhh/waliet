@@ -2294,7 +2294,9 @@ export type Database = {
           brand_id: string
           content: string
           created_at: string
+          creator_avatar_url: string | null
           creator_id: string
+          creator_name: string | null
           id: string
           rating: number | null
           updated_at: string
@@ -2303,7 +2305,9 @@ export type Database = {
           brand_id: string
           content: string
           created_at?: string
+          creator_avatar_url?: string | null
           creator_id: string
+          creator_name?: string | null
           id?: string
           rating?: number | null
           updated_at?: string
@@ -2312,7 +2316,9 @@ export type Database = {
           brand_id?: string
           content?: string
           created_at?: string
+          creator_avatar_url?: string | null
           creator_id?: string
+          creator_name?: string | null
           id?: string
           rating?: number | null
           updated_at?: string
@@ -3523,6 +3529,9 @@ export type Database = {
       }
       video_submissions: {
         Row: {
+          analytics_recording_requested_at: string | null
+          analytics_recording_uploaded_at: string | null
+          analytics_recording_url: string | null
           bookmarks: number | null
           bot_score: number | null
           brand_id: string | null
@@ -3561,6 +3570,9 @@ export type Database = {
           views: number | null
         }
         Insert: {
+          analytics_recording_requested_at?: string | null
+          analytics_recording_uploaded_at?: string | null
+          analytics_recording_url?: string | null
           bookmarks?: number | null
           bot_score?: number | null
           brand_id?: string | null
@@ -3599,6 +3611,9 @@ export type Database = {
           views?: number | null
         }
         Update: {
+          analytics_recording_requested_at?: string | null
+          analytics_recording_uploaded_at?: string | null
+          analytics_recording_url?: string | null
           bookmarks?: number | null
           bot_score?: number | null
           brand_id?: string | null

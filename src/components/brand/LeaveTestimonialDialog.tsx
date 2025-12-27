@@ -47,9 +47,9 @@ export function LeaveTestimonialDialog({
           creator_id: creatorId,
           creator_name: creatorName,
           creator_avatar_url: creatorAvatarUrl,
-          testimonial_text: testimonialText.trim(),
+          content: testimonialText.trim(),
           rating
-        });
+        } as any);
 
       if (error) throw error;
 
