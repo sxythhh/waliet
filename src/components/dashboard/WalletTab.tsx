@@ -1952,21 +1952,7 @@ export function WalletTab() {
                   </div>
 
                   {/* Status */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Status</span>
-                    {selectedTransaction.status === 'completed' ? <Badge className="capitalize font-inter tracking-[-0.5px] border-t-2 border-t-[#4f89ff] bg-[#2060df] hover:bg-[#2060df]/90 text-white border-none text-xs px-2 py-0.5">
-                        <img src={checkCircleFilledIcon} alt="" className="h-3 w-3 mr-1" />
-                        Completed
-                      </Badge> : selectedTransaction.status === 'pending' ? <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 border-orange-500/20">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Pending
-                      </Badge> : selectedTransaction.status === 'in_transit' ? <Badge variant="outline" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5 bg-blue-500/10 text-blue-500 border-blue-500/20">
-                        <Hourglass className="h-3 w-3 mr-1" />
-                        In Transit
-                      </Badge> : selectedTransaction.status === 'rejected' ? <Badge variant="destructive" className="capitalize font-inter tracking-[-0.5px] text-xs px-2 py-0.5">
-                        Rejected
-                      </Badge> : <span className="text-sm font-medium tracking-[-0.5px]">-</span>}
-                  </div>
+                  
 
                   {/* Initiated */}
                   <div className="flex items-center justify-between">
