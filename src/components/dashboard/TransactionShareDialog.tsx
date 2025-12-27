@@ -368,7 +368,7 @@ export function TransactionShareDialog({
     });
   };
   const handleShareOnX = () => {
-    const tweetText = encodeURIComponent(`Just earned $${Math.abs(transaction?.amount || 0).toFixed(2)} on @viralityhq! 💰`);
+    const tweetText = encodeURIComponent(`Just earned $${Math.abs(transaction?.amount || 0).toFixed(2)} on @JoinVirality! 💰`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank', 'width=550,height=420');
     toast({
       title: "Share on X",
