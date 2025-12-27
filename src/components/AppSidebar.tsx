@@ -60,7 +60,6 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import SidebarMenuButtons from "@/components/SidebarMenuButtons";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
-
 interface JoinedCampaign {
   id: string;
   title: string;
@@ -315,30 +314,23 @@ export function AppSidebar() {
   };
   const fetchJoinedCampaigns = async () => {
     if (!user) return;
-    
+
     // First get campaign IDs user has joined (accepted submissions)
-    const { data: submissions } = await supabase
-      .from("campaign_submissions")
-      .select("campaign_id")
-      .eq("creator_id", user.id)
-      .eq("status", "approved");
-    
+    const {
+      data: submissions
+    } = await supabase.from("campaign_submissions").select("campaign_id").eq("creator_id", user.id).eq("status", "approved");
     if (!submissions || submissions.length === 0) {
       setJoinedCampaigns([]);
       return;
     }
-    
     const campaignIds = submissions.map(s => s.campaign_id);
-    
+
     // Fetch campaign details
-    const { data: campaigns } = await supabase
-      .from("campaigns")
-      .select("*")
-      .in("id", campaignIds)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(5);
-    
+    const {
+      data: campaigns
+    } = await supabase.from("campaigns").select("*").in("id", campaignIds).eq("status", "active").order("created_at", {
+      ascending: false
+    }).limit(5);
     if (campaigns) {
       setJoinedCampaigns(campaigns as JoinedCampaign[]);
     }
@@ -760,40 +752,25 @@ export function AppSidebar() {
         </nav>
 
         {/* Joined Campaigns Section - Only show in creator mode */}
-        {isCreatorMode && joinedCampaigns.length > 0 && (
-          <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
-            {!isCollapsed && (
-              <span className="px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Joined
-              </span>
-            )}
+        {isCreatorMode && joinedCampaigns.length > 0 && <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
+            {!isCollapsed}
             <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'mt-2 flex flex-col gap-0.5'}`}>
-              {joinedCampaigns.map(campaign => (
-                <button
-                  key={campaign.id}
-                  onClick={() => {
-                    setSelectedCampaignForDetails(campaign);
-                    setCampaignDetailsDialogOpen(true);
-                  }}
-                  className={`flex items-center rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors ${isCollapsed ? 'p-1.5 justify-center' : 'w-full gap-2 px-3 py-2 text-left'}`}
-                  title={isCollapsed ? campaign.title : undefined}
-                >
+              {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => {
+            setSelectedCampaignForDetails(campaign);
+            setCampaignDetailsDialogOpen(true);
+          }} className={`flex items-center rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors ${isCollapsed ? 'p-1.5 justify-center' : 'w-full gap-2 px-3 py-2 text-left'}`} title={isCollapsed ? campaign.title : undefined}>
                   <Avatar className="w-6 h-6 rounded-md">
                     <AvatarImage src={campaign.brand_logo_url || undefined} alt={campaign.brand_name} />
                     <AvatarFallback className="rounded-md text-[10px] bg-muted">
                       {campaign.brand_name?.charAt(0).toUpperCase() || "C"}
                     </AvatarFallback>
                   </Avatar>
-                  {!isCollapsed && (
-                    <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-foreground truncate">
+                  {!isCollapsed && <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-foreground truncate">
                       {campaign.title}
-                    </span>
-                  )}
-                </button>
-              ))}
+                    </span>}
+                </button>)}
             </div>
-          </div>
-        )}
+          </div>}
 
         {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
             <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
@@ -840,16 +817,10 @@ export function AppSidebar() {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl overflow-hidden" side="top" align="start" sideOffset={8}>
               {/* Banner with fade - positioned absolutely behind content */}
-              {bannerUrl && (
-                <div className="absolute inset-x-0 top-0 h-24 w-full rounded-t-xl overflow-hidden">
-                  <img 
-                    src={bannerUrl} 
-                    alt="" 
-                    className="w-full h-full object-cover opacity-60"
-                  />
+              {bannerUrl && <div className="absolute inset-x-0 top-0 h-24 w-full rounded-t-xl overflow-hidden">
+                  <img src={bannerUrl} alt="" className="w-full h-full object-cover opacity-60" />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
-                </div>
-              )}
+                </div>}
               
               <div className={`p-3 relative z-10 ${bannerUrl ? 'pt-4' : ''}`}>
                 {/* User Info + Theme Toggle */}
@@ -906,10 +877,6 @@ export function AppSidebar() {
       };
       fetchMemberCount();
     }} />
-      <CampaignDetailsDialog 
-        campaign={selectedCampaignForDetails} 
-        open={campaignDetailsDialogOpen} 
-        onOpenChange={setCampaignDetailsDialogOpen} 
-      />
+      <CampaignDetailsDialog campaign={selectedCampaignForDetails} open={campaignDetailsDialogOpen} onOpenChange={setCampaignDetailsDialogOpen} />
     </>;
 }
