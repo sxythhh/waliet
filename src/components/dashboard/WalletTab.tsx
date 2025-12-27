@@ -1749,12 +1749,6 @@ export function WalletTab() {
                       <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Type</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
-                      <TableHead className="text-foreground font-medium text-sm h-12">
-                        <button className="flex items-center gap-1 hover:text-muted-foreground transition-colors">
-                          Initiated
-                          <ChevronDown className="h-3 w-3" />
-                        </button>
-                      </TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Processed</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
                     </TableRow>
@@ -1814,28 +1808,6 @@ export function WalletTab() {
                           </span>
                         </TableCell>
                         
-                        {/* Initiated */}
-                        <TableCell className="py-4">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-sm text-muted-foreground underline decoration-dotted cursor-pointer hover:text-foreground">
-                                  {format(transaction.date, 'MMM d')}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-popover border border-border rounded-xl shadow-xl p-3 max-w-[200px]">
-                                <div className="space-y-1.5">
-                                  <p className="text-xs text-muted-foreground">Initiated</p>
-                                  <p className="text-sm font-medium">{format(transaction.date, 'MMMM d, yyyy')}</p>
-                                  <p className="text-xs text-muted-foreground">{format(transaction.date, 'h:mm a')}</p>
-                                  {transaction.type === 'earning' && transaction.campaign && <p className="text-xs text-muted-foreground pt-1 border-t border-border mt-1">
-                                      Payment for {transaction.campaign.title}
-                                    </p>}
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </TableCell>
                         
                         {/* Processed */}
                         <TableCell className="py-4 text-sm text-muted-foreground">
