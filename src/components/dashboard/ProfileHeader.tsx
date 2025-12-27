@@ -15,6 +15,7 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
 interface Profile {
   id: string;
   username: string;
@@ -53,6 +54,9 @@ export function ProfileHeader({
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [showCropDialog, setShowCropDialog] = useState(false);
+  const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
+  const [bannerCropData, setBannerCropData] = useState<{ zoom: number; positionX: number; positionY: number } | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -132,45 +136,58 @@ export function ProfileHeader({
       setUploadingAvatar(false);
     }
   };
-  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
+    
+    // Create temporary URL for cropping
+    const url = URL.createObjectURL(file);
+    setTempBannerUrl(url);
+    setShowCropDialog(true);
+  };
+
+  const handleBannerCropApply = async (cropData: { zoom: number; positionX: number; positionY: number }) => {
+    if (!tempBannerUrl || !profile) return;
+    
     setUploadingBanner(true);
+    setBannerCropData(cropData);
+    
     try {
+      // Get the file from the input
+      const file = bannerInputRef.current?.files?.[0];
+      if (!file) throw new Error("No file selected");
+
       const fileExt = file.name.split('.').pop();
       const filePath = `${profile.id}/banner.${fileExt}`;
-      const {
-        error: uploadError
-      } = await supabase.storage.from('avatars').upload(filePath, file, {
-        upsert: true
-      });
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+      
       if (uploadError) throw uploadError;
-      const {
-        data: {
-          publicUrl
-        }
-      } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      const {
-        error: updateError
-      } = await supabase.from('profiles').update({
-        banner_url: publicUrl
-      }).eq('id', profile.id);
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: publicUrl })
+        .eq('id', profile.id);
+      
       if (updateError) throw updateError;
-      setProfile({
-        ...profile,
-        banner_url: publicUrl
-      });
-      toast({
-        title: "Banner updated successfully"
-      });
+      
+      setProfile({ ...profile, banner_url: publicUrl });
+      toast({ title: "Banner updated successfully" });
     } catch (error: any) {
       toast({
         title: "Error uploading banner",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setUploadingBanner(false);
+      setTempBannerUrl(null);
     }
   };
   const getPlatformIcon = (platform: string) => {
@@ -223,7 +240,7 @@ export function ProfileHeader({
           </div>
         </div>
         
-        <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
+        <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
 
         {/* Profile Picture - overlapping banner */}
         <div className="absolute -bottom-10 left-6 group cursor-pointer z-10" onClick={e => {
@@ -272,5 +289,21 @@ export function ProfileHeader({
       </div>
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
-    </div>;
+      
+      {tempBannerUrl && (
+        <BannerCropDialog
+          open={showCropDialog}
+          onOpenChange={(open) => {
+            setShowCropDialog(open);
+            if (!open) {
+              URL.revokeObjectURL(tempBannerUrl);
+              setTempBannerUrl(null);
+            }
+          }}
+          imageUrl={tempBannerUrl}
+          onApply={handleBannerCropApply}
+        />
+      )}
+    </div>
+  );
 }
