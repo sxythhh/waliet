@@ -84,15 +84,19 @@ export function TransactionShareDialog({
   }, [open, transaction, selectedTheme, selectedPattern, showViralityLogo]);
 
   const generatePatternSvg = (theme: typeof COLOR_THEMES[0], pattern: typeof PATTERNS[0]) => {
+    // Using larger canvas size (1200x750)
+    const w = 1200;
+    const h = 750;
+    
     const patterns: Record<string, string> = {
       none: '',
       confetti: `
         <g opacity="0.3">
-          ${Array.from({ length: 40 }, (_, i) => {
-            const x = Math.random() * 800;
-            const y = Math.random() * 500;
+          ${Array.from({ length: 60 }, (_, i) => {
+            const x = Math.random() * w;
+            const y = Math.random() * h;
             const rotation = Math.random() * 360;
-            const size = 8 + Math.random() * 12;
+            const size = 12 + Math.random() * 18;
             const colors = [theme.primary, theme.secondary, '#a5b4fc', '#c4b5fd'];
             const color = colors[Math.floor(Math.random() * colors.length)];
             const shapes = ['rect', 'circle'];
@@ -106,37 +110,37 @@ export function TransactionShareDialog({
       `,
       dots: `
         <g opacity="0.15">
-          ${Array.from({ length: 200 }, (_, i) => {
-            const x = (i % 20) * 45 + 20;
-            const y = Math.floor(i / 20) * 45 + 20;
-            const size = 3 + Math.random() * 4;
+          ${Array.from({ length: 300 }, (_, i) => {
+            const x = (i % 25) * 50 + 25;
+            const y = Math.floor(i / 25) * 60 + 30;
+            const size = 4 + Math.random() * 6;
             return `<circle cx="${x}" cy="${y}" r="${size}" fill="${theme.secondary}"/>`;
           }).join('')}
         </g>
       `,
       lines: `
         <g opacity="0.2">
-          ${Array.from({ length: 25 }, (_, i) => {
-            const x = i * 40;
-            const height = 60 + Math.random() * 400;
-            const y = 500 - height;
-            return `<rect x="${x}" y="${y}" width="12" height="${height}" fill="${theme.secondary}" rx="6"/>`;
+          ${Array.from({ length: 30 }, (_, i) => {
+            const x = i * 45;
+            const height = 90 + Math.random() * 600;
+            const y = h - height;
+            return `<rect x="${x}" y="${y}" width="16" height="${height}" fill="${theme.secondary}" rx="8"/>`;
           }).join('')}
         </g>
       `,
       waves: `
         <g opacity="0.15">
-          <path d="M0,250 Q200,200 400,250 T800,250 L800,500 L0,500 Z" fill="${theme.secondary}"/>
-          <path d="M0,300 Q200,250 400,300 T800,300 L800,500 L0,500 Z" fill="${theme.primary}" opacity="0.5"/>
+          <path d="M0,375 Q300,300 600,375 T${w},375 L${w},${h} L0,${h} Z" fill="${theme.secondary}"/>
+          <path d="M0,450 Q300,375 600,450 T${w},450 L${w},${h} L0,${h} Z" fill="${theme.primary}" opacity="0.5"/>
         </g>
       `,
       circles: `
         <g opacity="0.2">
-          ${Array.from({ length: 15 }, (_, i) => {
-            const x = Math.random() * 800;
-            const y = Math.random() * 500;
-            const r = 20 + Math.random() * 60;
-            return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${theme.secondary}" stroke-width="2"/>`;
+          ${Array.from({ length: 20 }, (_, i) => {
+            const x = Math.random() * w;
+            const y = Math.random() * h;
+            const r = 30 + Math.random() * 90;
+            return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${theme.secondary}" stroke-width="3"/>`;
           }).join('')}
         </g>
       `,
@@ -147,6 +151,11 @@ export function TransactionShareDialog({
   const generateImage = async () => {
     if (!transaction) return;
     setIsGenerating(true);
+
+    // Higher resolution for better quality (2x scale)
+    const scale = 2;
+    const width = 1200;
+    const height = 750;
 
     try {
       // Load Virality logo
@@ -167,7 +176,7 @@ export function TransactionShareDialog({
       }
       const logoBase64 = logoCanvas.toDataURL('image/png');
 
-      // Load user avatar if available
+      // Load user avatar if available - crop to square for proper circle display
       let avatarBase64 = '';
       if (userProfile?.avatar_url) {
         try {
@@ -178,16 +187,52 @@ export function TransactionShareDialog({
             avatarImg.onload = resolve;
             avatarImg.onerror = () => resolve(null);
           });
-          const avatarCanvas = document.createElement('canvas');
-          avatarCanvas.width = avatarImg.width || 100;
-          avatarCanvas.height = avatarImg.height || 100;
-          const avatarCtx = avatarCanvas.getContext('2d');
-          if (avatarCtx && avatarImg.width > 0) {
-            avatarCtx.drawImage(avatarImg, 0, 0);
-            avatarBase64 = avatarCanvas.toDataURL('image/png');
+          
+          if (avatarImg.width > 0 && avatarImg.height > 0) {
+            // Create a square canvas and center-crop the image
+            const size = Math.min(avatarImg.width, avatarImg.height);
+            const avatarCanvas = document.createElement('canvas');
+            avatarCanvas.width = size;
+            avatarCanvas.height = size;
+            const avatarCtx = avatarCanvas.getContext('2d');
+            if (avatarCtx) {
+              // Calculate crop position to center
+              const sx = (avatarImg.width - size) / 2;
+              const sy = (avatarImg.height - size) / 2;
+              avatarCtx.drawImage(avatarImg, sx, sy, size, size, 0, 0, size, size);
+              avatarBase64 = avatarCanvas.toDataURL('image/png');
+            }
           }
         } catch (e) {
           console.log('Failed to load avatar:', e);
+        }
+      }
+
+      // Load brand logo if available
+      let brandLogoBase64 = '';
+      const brandLogoUrl = transaction.campaign?.brand_logo_url || transaction.boost?.brand_logo_url;
+      if (brandLogoUrl) {
+        try {
+          const brandLogoImg = new Image();
+          brandLogoImg.crossOrigin = "anonymous";
+          brandLogoImg.src = brandLogoUrl;
+          await new Promise((resolve) => {
+            brandLogoImg.onload = resolve;
+            brandLogoImg.onerror = () => resolve(null);
+          });
+          
+          if (brandLogoImg.width > 0) {
+            const brandLogoCanvas = document.createElement('canvas');
+            brandLogoCanvas.width = brandLogoImg.width;
+            brandLogoCanvas.height = brandLogoImg.height;
+            const brandLogoCtx = brandLogoCanvas.getContext('2d');
+            if (brandLogoCtx) {
+              brandLogoCtx.drawImage(brandLogoImg, 0, 0);
+              brandLogoBase64 = brandLogoCanvas.toDataURL('image/png');
+            }
+          }
+        } catch (e) {
+          console.log('Failed to load brand logo:', e);
         }
       }
 
@@ -202,14 +247,17 @@ export function TransactionShareDialog({
       const programName = transaction.campaign?.title || transaction.boost?.title || transaction.campaign?.brand_name || transaction.boost?.brand_name || 'Virality';
 
       const svg = `
-        <svg width="800" height="500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <defs>
             <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style="stop-color:${selectedTheme.primary}"/>
               <stop offset="100%" style="stop-color:${selectedTheme.secondary}"/>
             </linearGradient>
             <clipPath id="avatarClip">
-              <circle cx="60" cy="440" r="24"/>
+              <circle cx="90" cy="660" r="36"/>
+            </clipPath>
+            <clipPath id="brandLogoClip">
+              <circle cx="165" cy="180" r="24"/>
             </clipPath>
           </defs>
           
@@ -218,78 +266,91 @@ export function TransactionShareDialog({
           </style>
           
           <!-- Main background with gradient -->
-          <rect width="800" height="500" fill="url(#bgGradient)" rx="24"/>
+          <rect width="${width}" height="${height}" fill="url(#bgGradient)" rx="36"/>
           
           <!-- Pattern overlay -->
           ${generatePatternSvg(selectedTheme, selectedPattern)}
           
-          <!-- Virality Badge at top -->
-          ${showViralityLogo ? `
-            <rect x="320" y="20" width="160" height="44" fill="rgba(255,255,255,0.2)" rx="22"/>
-            <image href="${logoBase64}" x="335" y="27" width="30" height="30"/>
-            <text x="372" y="50" font-size="18" font-weight="600" fill="#fff">Virality</text>
-          ` : ''}
-          
           <!-- White card -->
-          <rect x="60" y="85" width="680" height="300" fill="#fff" rx="20"/>
+          <rect x="90" y="90" width="1020" height="450" fill="#fff" rx="30"/>
           
-          <!-- Card content -->
-          <text x="90" y="130" font-size="16" fill="#666" font-weight="500">${programName}</text>
+          <!-- Card content - Brand logo + Program name -->
+          <g>
+            ${brandLogoBase64 ? `
+              <image href="${brandLogoBase64}" x="120" y="135" width="48" height="48" preserveAspectRatio="xMidYMid slice" clip-path="url(#brandLogoClip)"/>
+              <circle cx="144" cy="159" r="24" fill="none" stroke="#e5e5e5" stroke-width="1"/>
+              <text x="180" y="168" font-size="22" fill="#666" font-weight="500">${programName}</text>
+            ` : `
+              <text x="135" y="168" font-size="22" fill="#666" font-weight="500">${programName}</text>
+            `}
+          </g>
           
           <!-- Amount -->
-          <text x="90" y="200" font-size="56" font-weight="700" fill="${amountColor}">${amountSign}$${Math.abs(transaction.amount).toFixed(2)}</text>
+          <text x="135" y="280" font-size="84" font-weight="700" fill="${amountColor}">${amountSign}$${Math.abs(transaction.amount).toFixed(2)}</text>
           
           <!-- Secondary info -->
-          <text x="90" y="240" font-size="16" fill="#999">${format(transaction.date, 'MMMM dd, yyyy')}</text>
+          <text x="135" y="340" font-size="24" fill="#999">${format(transaction.date, 'MMMM dd, yyyy')}</text>
           
           <!-- Status -->
           ${transaction.status === 'completed' ? `
-            <rect x="90" y="260" width="100" height="28" fill="#10b98120" rx="14"/>
-            <text x="140" y="280" font-size="14" font-weight="600" fill="#10b981" text-anchor="middle">Completed</text>
+            <rect x="135" y="370" width="150" height="42" fill="#10b98120" rx="21"/>
+            <text x="210" y="400" font-size="20" font-weight="600" fill="#10b981" text-anchor="middle">Completed</text>
           ` : transaction.status === 'pending' ? `
-            <rect x="90" y="260" width="90" height="28" fill="#f59e0b20" rx="14"/>
-            <text x="135" y="280" font-size="14" font-weight="600" fill="#f59e0b" text-anchor="middle">Pending</text>
+            <rect x="135" y="370" width="135" height="42" fill="#f59e0b20" rx="21"/>
+            <text x="202" y="400" font-size="20" font-weight="600" fill="#f59e0b" text-anchor="middle">Pending</text>
           ` : ''}
           
           <!-- Decorative line in card -->
-          <rect x="90" y="310" width="600" height="2" fill="#f0f0f0" rx="1"/>
+          <rect x="135" y="450" width="900" height="3" fill="#f0f0f0" rx="1.5"/>
           
           <!-- Date range at bottom of card -->
-          <text x="90" y="360" font-size="14" fill="#999">${format(transaction.date, 'MMM dd')}</text>
-          <text x="690" y="360" font-size="14" fill="#999" text-anchor="end">Today</text>
+          <text x="135" y="510" font-size="20" fill="#999">${format(transaction.date, 'MMM dd')}</text>
+          <text x="1035" y="510" font-size="20" fill="#999" text-anchor="end">Today</text>
           
           <!-- User profile at bottom -->
           ${avatarBase64 ? `
-            <image href="${avatarBase64}" x="36" y="416" width="48" height="48" clip-path="url(#avatarClip)"/>
+            <image href="${avatarBase64}" x="54" y="624" width="72" height="72" clip-path="url(#avatarClip)" preserveAspectRatio="xMidYMid slice"/>
           ` : `
-            <circle cx="60" cy="440" r="24" fill="rgba(255,255,255,0.3)"/>
+            <circle cx="90" cy="660" r="36" fill="rgba(255,255,255,0.3)"/>
           `}
           ${userProfile?.username ? `
-            <text x="96" y="446" font-size="16" font-weight="600" fill="#fff">@${userProfile.username}</text>
+            <text x="144" y="668" font-size="22" font-weight="600" fill="#fff">virality.gg/@${userProfile.username}</text>
           ` : ''}
           
-          <!-- Powered by text -->
-          <text x="700" y="475" font-size="12" fill="rgba(255,255,255,0.6)" text-anchor="end">Powered by Virality</text>
+          <!-- Powered by Virality with logo -->
+          ${showViralityLogo ? `
+            <g>
+              <image href="${logoBase64}" x="1000" y="638" width="44" height="44"/>
+              <text x="1050" y="668" font-size="18" font-weight="500" fill="rgba(255,255,255,0.8)">Powered by Virality</text>
+            </g>
+          ` : `
+            <text x="1110" y="710" font-size="18" fill="rgba(255,255,255,0.5)" text-anchor="end">Powered by Virality</text>
+          `}
         </svg>
       `;
 
       // Convert SVG to blob
       const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
 
-      // Create canvas to convert to PNG
+      // Create canvas at higher resolution
       const canvas = document.createElement('canvas');
-      canvas.width = 800;
-      canvas.height = 500;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      
+      // Enable high quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       const img = new Image();
       const url = URL.createObjectURL(svgBlob);
       
       img.onload = () => {
+        ctx.scale(scale, scale);
         ctx.drawImage(img, 0, 0);
         URL.revokeObjectURL(url);
-        const imageDataUrl = canvas.toDataURL('image/png');
+        const imageDataUrl = canvas.toDataURL('image/png', 1.0);
         setGeneratedImageUrl(imageDataUrl);
         setIsGenerating(false);
       };
