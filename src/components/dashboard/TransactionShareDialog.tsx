@@ -368,7 +368,7 @@ export function TransactionShareDialog({
             <div className="flex gap-3">
               <Button 
                 variant="ghost" 
-                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px]" 
+                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" 
                 onClick={handleCopyImage}
                 disabled={!generatedImageUrl || isGenerating}
               >
@@ -377,7 +377,7 @@ export function TransactionShareDialog({
               </Button>
               <Button 
                 variant="ghost" 
-                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px]" 
+                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" 
                 onClick={handleDownload}
                 disabled={!generatedImageUrl || isGenerating}
               >
