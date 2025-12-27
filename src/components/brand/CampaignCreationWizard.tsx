@@ -151,7 +151,6 @@ interface PlatformRate {
   cpm_rate?: number;
   post_rate?: number;
 }
-
 interface Campaign {
   id: string;
   title: string;
@@ -188,13 +187,23 @@ interface Campaign {
   shortimize_collection_name?: string | null;
   platform_rates?: Record<string, PlatformRate> | null;
 }
-
-const PLATFORM_OPTIONS = [
-  { id: 'tiktok', label: 'TikTok', icon: tiktokLogo },
-  { id: 'instagram', label: 'Instagram', icon: instagramLogo },
-  { id: 'youtube', label: 'YouTube', icon: youtubeLogo },
-  { id: 'x', label: 'X', icon: null },
-];
+const PLATFORM_OPTIONS = [{
+  id: 'tiktok',
+  label: 'TikTok',
+  icon: tiktokLogo
+}, {
+  id: 'instagram',
+  label: 'Instagram',
+  icon: instagramLogo
+}, {
+  id: 'youtube',
+  label: 'YouTube',
+  icon: youtubeLogo
+}, {
+  id: 'x',
+  label: 'X',
+  icon: null
+}];
 interface CampaignCreationWizardProps {
   brandId: string;
   brandName: string;
@@ -458,19 +467,23 @@ export function CampaignCreationWizard({
       [platform]: {
         platform,
         type,
-        ...(type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
+        ...(type === 'cpm' ? {
+          cpm_rate: value
+        } : {
+          post_rate: value
+        })
       }
     }));
   };
-
   const removePlatformRate = (platform: string) => {
     setPlatformRates(prev => {
-      const newRates = { ...prev };
+      const newRates = {
+        ...prev
+      };
       delete newRates[platform];
       return newRates;
     });
   };
-
   const getConfiguredPlatforms = () => Object.keys(platformRates);
   const getAvailablePlatforms = () => PLATFORM_OPTIONS.filter(p => !platformRates[p.id]);
   const watchedValues = form.watch();
@@ -839,89 +852,59 @@ export function CampaignCreationWizard({
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              type="button" 
-                              variant="outline" 
-                              size="sm"
-                              className="gap-2"
-                              disabled={getAvailablePlatforms().length === 0}
-                            >
+                            <Button type="button" variant="outline" size="sm" className="gap-2" disabled={getAvailablePlatforms().length === 0}>
                               <Plus className="h-4 w-4" />
                               Add Payment Rate
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>Payment Basis</DropdownMenuLabel>
-                            <DropdownMenuItem 
-                              onClick={() => setPendingRateType('cpm')}
-                              className={pendingRateType === 'cpm' ? 'bg-primary/10' : ''}
-                            >
+                            <DropdownMenuItem onClick={() => setPendingRateType('cpm')} className={pendingRateType === 'cpm' ? 'bg-primary/10' : ''}>
                               <DollarSign className="h-4 w-4 mr-2" />
                               Pay per 1k views (CPM)
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setPendingRateType('per_post')}
-                              className={pendingRateType === 'per_post' ? 'bg-primary/10' : ''}
-                            >
+                            <DropdownMenuItem onClick={() => setPendingRateType('per_post')} className={pendingRateType === 'per_post' ? 'bg-primary/10' : ''}>
                               <Play className="h-4 w-4 mr-2" />
                               Per post (flat rate)
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>Platform</DropdownMenuLabel>
-                            {getAvailablePlatforms().map(platform => (
-                              <DropdownMenuItem 
-                                key={platform.id}
-                                onClick={() => {
-                                  addPlatformRate(platform.id, pendingRateType, pendingRateType === 'cpm' ? 5 : 10);
-                                }}
-                              >
-                                {platform.icon ? (
-                                  <img src={platform.icon} alt={platform.label} className="h-4 w-4 mr-2" />
-                                ) : (
-                                  <span className="h-4 w-4 mr-2 flex items-center justify-center text-xs font-bold">𝕏</span>
-                                )}
+                            {getAvailablePlatforms().map(platform => <DropdownMenuItem key={platform.id} onClick={() => {
+                          addPlatformRate(platform.id, pendingRateType, pendingRateType === 'cpm' ? 5 : 10);
+                        }}>
+                                {platform.icon ? <img src={platform.icon} alt={platform.label} className="h-4 w-4 mr-2" /> : <span className="h-4 w-4 mr-2 flex items-center justify-center text-xs font-bold">𝕏</span>}
                                 {platform.label}
-                              </DropdownMenuItem>
-                            ))}
+                              </DropdownMenuItem>)}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
 
                       {/* Configured Platform Rates */}
-                      {Object.keys(platformRates).length > 0 ? (
-                        <div className="space-y-2">
-                          {Object.values(platformRates).map((rate) => {
-                            const platformInfo = PLATFORM_OPTIONS.find(p => p.id === rate.platform);
-                            return (
-                              <div 
-                                key={rate.platform} 
-                                className="flex items-center gap-3 p-3 rounded-xl font-['Inter']"
-                              >
+                      {Object.keys(platformRates).length > 0 ? <div className="space-y-2">
+                          {Object.values(platformRates).map(rate => {
+                      const platformInfo = PLATFORM_OPTIONS.find(p => p.id === rate.platform);
+                      return <div key={rate.platform} className="flex items-center gap-3 p-3 rounded-xl font-['Inter']">
                                 <div className="flex items-center gap-2 min-w-[100px]">
-                                  {platformInfo?.icon ? (
-                                    <img src={platformInfo.icon} alt={platformInfo.label} className="h-5 w-5" />
-                                  ) : (
-                                    <span className="h-5 w-5 flex items-center justify-center text-sm font-bold">𝕏</span>
-                                  )}
-                                  <span className="text-sm font-medium text-foreground">{platformInfo?.label}</span>
+                                  {platformInfo?.icon ? <img src={platformInfo.icon} alt={platformInfo.label} className="h-5 w-5" /> : <span className="h-5 w-5 flex items-center justify-center text-sm font-bold">𝕏</span>}
+                                  <span className="text-sm font-medium text-foreground tracking-[-0.5px]">{platformInfo?.label}</span>
                                 </div>
                                 <div className="flex-1">
-                                  <Select 
-                                    value={rate.type} 
-                                    onValueChange={(value: 'cpm' | 'per_post') => {
-                                      setPlatformRates(prev => ({
-                                        ...prev,
-                                        [rate.platform]: {
-                                          ...prev[rate.platform],
-                                          type: value,
-                                          ...(value === 'cpm' 
-                                            ? { cpm_rate: prev[rate.platform].cpm_rate || 5, post_rate: undefined }
-                                            : { post_rate: prev[rate.platform].post_rate || 10, cpm_rate: undefined }
-                                          )
-                                        }
-                                      }));
-                                    }}
-                                  >
+                                  <Select value={rate.type} onValueChange={(value: 'cpm' | 'per_post') => {
+                            setPlatformRates(prev => ({
+                              ...prev,
+                              [rate.platform]: {
+                                ...prev[rate.platform],
+                                type: value,
+                                ...(value === 'cpm' ? {
+                                  cpm_rate: prev[rate.platform].cpm_rate || 5,
+                                  post_rate: undefined
+                                } : {
+                                  post_rate: prev[rate.platform].post_rate || 10,
+                                  cpm_rate: undefined
+                                })
+                              }
+                            }));
+                          }}>
                                     <SelectTrigger className="h-8 text-xs border-0 bg-transparent shadow-none focus:ring-0">
                                       <SelectValue />
                                     </SelectTrigger>
@@ -933,42 +916,30 @@ export function CampaignCreationWizard({
                                 </div>
                                 <div className="relative w-24">
                                   <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">$</span>
-                                  <Input
-                                    type="number"
-                                    value={rate.type === 'cpm' ? rate.cpm_rate || '' : rate.post_rate || ''}
-                                    onChange={(e) => {
-                                      const value = parseFloat(e.target.value) || 0;
-                                      setPlatformRates(prev => ({
-                                        ...prev,
-                                        [rate.platform]: {
-                                          ...prev[rate.platform],
-                                          ...(rate.type === 'cpm' ? { cpm_rate: value } : { post_rate: value })
-                                        }
-                                      }));
-                                    }}
-                                    className="h-8 pl-5 text-xs bg-background"
-                                    placeholder={rate.type === 'cpm' ? '5' : '10'}
-                                  />
+                                  <Input type="number" value={rate.type === 'cpm' ? rate.cpm_rate || '' : rate.post_rate || ''} onChange={e => {
+                            const value = parseFloat(e.target.value) || 0;
+                            setPlatformRates(prev => ({
+                              ...prev,
+                              [rate.platform]: {
+                                ...prev[rate.platform],
+                                ...(rate.type === 'cpm' ? {
+                                  cpm_rate: value
+                                } : {
+                                  post_rate: value
+                                })
+                              }
+                            }));
+                          }} className="h-8 pl-5 text-xs bg-background" placeholder={rate.type === 'cpm' ? '5' : '10'} />
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                  onClick={() => removePlatformRate(rate.platform)}
-                                >
+                                <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => removePlatformRate(rate.platform)}>
                                   <X className="h-4 w-4" />
                                 </Button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border text-center">
+                              </div>;
+                    })}
+                        </div> : <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border text-center">
                           <p className="text-sm text-muted-foreground">No payment rates configured</p>
                           <p className="text-xs text-muted-foreground mt-1">Click "Add Payment Rate" to set rates per platform</p>
-                        </div>
-                      )}
+                        </div>}
                     </div>
 
                     {/* Default CPM Rate (fallback) */}
