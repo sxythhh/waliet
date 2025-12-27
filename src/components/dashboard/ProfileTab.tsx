@@ -939,12 +939,6 @@ export function ProfileTab() {
                                 
                                 {/* Stats Row */}
                                 <div className="flex items-center gap-3 mt-0.5">
-                                  {account.follower_count !== null && account.follower_count > 0 && <span className="text-xs text-muted-foreground" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
-                                      {account.follower_count >= 1000000 ? `${(account.follower_count / 1000000).toFixed(1)}M` : account.follower_count >= 1000 ? `${(account.follower_count / 1000).toFixed(1)}K` : account.follower_count} followers
-                                    </span>}
                                   <span className="text-xs text-muted-foreground" style={{
                               fontFamily: 'Inter',
                               letterSpacing: '-0.3px'
@@ -955,14 +949,6 @@ export function ProfileTab() {
                                 </div>
                               </div>
                             </div>
-                            
-                            {/* Bio Preview */}
-                            {account.bio && <p className="text-xs text-muted-foreground mt-2 line-clamp-2 ml-[52px]" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.3px'
-                      }}>
-                                {account.bio}
-                              </p>}
                           </div>
                         </PopoverTrigger>
                         <PopoverContent className="w-72 p-4 bg-[#0a0a0a] border-0 rounded-xl" align="start" side="bottom" sideOffset={8}>
