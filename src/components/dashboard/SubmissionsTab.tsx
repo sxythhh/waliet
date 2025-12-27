@@ -537,7 +537,7 @@ export function SubmissionsTab() {
                   {/* Type Filter */}
                   <button onClick={() => setFilterSubmenu('type')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
-                      <img src={resolvedTheme === 'dark' ? dualScreenIconWhite : dualScreenIconBlack} alt="" className="h-4 w-4" />
+                      <img src={resolvedTheme === 'dark' ? dualScreenIconWhite : dualScreenIconBlack} alt="" className="h-5 w-5" />
                       <span className="text-sm">Type</span>
                     </div>
                     <div className="flex items-center gap-2">
