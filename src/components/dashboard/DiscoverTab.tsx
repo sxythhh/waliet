@@ -608,7 +608,7 @@ export function DiscoverTab({
                 </div>
                 <div
                   id="campaigns-scroll"
-                  className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide"
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {sortedCampaigns.map(campaign => {
@@ -684,7 +684,7 @@ export function DiscoverTab({
                   <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
                     Boosts
                   </h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                     {filteredBounties.map(bounty => {
                       const isEnded = bounty.status === "ended";
                       const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
