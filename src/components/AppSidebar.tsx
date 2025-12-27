@@ -17,8 +17,10 @@ import walletInactive from "@/assets/wallet-inactive.svg";
 import walletActive from "@/assets/wallet-active.svg";
 import discoverInactive from "@/assets/discover-inactive.svg";
 import discoverActive from "@/assets/discover-active.svg";
-import profileInactive from "@/assets/chef-hat-gray.svg";
-import profileActive from "@/assets/chef-hat-blue.svg";
+import profileInactive from "@/assets/profile-inactive.svg";
+import profileActive from "@/assets/profile-active.svg";
+import chefHatInactive from "@/assets/chef-hat-gray.svg";
+import chefHatActive from "@/assets/chef-hat-blue.svg";
 import blueprintsInactive from "@/assets/blueprints-inactive.svg";
 import blueprintsActive from "@/assets/blueprints-active.svg";
 import creatorsInactive from "@/assets/creators-inactive.svg";
@@ -662,8 +664,8 @@ export function AppSidebar() {
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "wallet" ? <div className="relative h-[24px] w-[24px]">
-                      <img src={profileInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                      <img src={profileActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                      <img src={chefHatInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={chefHatActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "discover" ? <div className="relative h-[24px] w-[24px]">
                       <img src={discoverInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={discoverActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
