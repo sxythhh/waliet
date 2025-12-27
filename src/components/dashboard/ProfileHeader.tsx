@@ -14,6 +14,7 @@ import youtubeLogo from "@/assets/youtube-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
+import defaultProfileBanner from "@/assets/default-profile-banner.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
 interface Profile {
@@ -233,7 +234,7 @@ export function ProfileHeader({
       <div className="relative">
         {/* Banner */}
         <div className="w-full h-40 md:h-52 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
-          {profile?.banner_url ? <img src={profile.banner_url} alt="Profile banner" className="w-full h-full object-cover" /> : <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900" />}
+          <img src={profile?.banner_url || defaultProfileBanner} alt="Profile banner" className="w-full h-full object-cover" />
           
           {/* Upload overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
