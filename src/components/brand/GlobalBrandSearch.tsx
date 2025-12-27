@@ -261,33 +261,23 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
       {/* Search Trigger Bar */}
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-3 w-full max-w-md h-10 px-4 rounded-lg transition-colors"
-        style={{ backgroundColor: '#0e0e0e' }}
+        className="flex items-center gap-3 w-full max-w-md h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e]"
       >
-        <Search className="h-4 w-4" style={{ color: '#616161' }} />
-        <span 
-          className="flex-1 text-left text-sm font-inter tracking-[-0.5px]"
-          style={{ color: '#616161' }}
-        >
+        <Search className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
+        <span className="flex-1 text-left text-sm font-inter tracking-[-0.5px] text-[#6b6b6b] dark:text-[#616161]">
           Filter by campaign name, budget
         </span>
-        <div 
-          className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium"
-          style={{ backgroundColor: '#1f1f1f', color: '#616161' }}
-        >
+        <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
           /
         </div>
       </button>
 
       {/* Search Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent 
-          className="p-0 gap-0 overflow-hidden max-w-2xl border-0"
-          style={{ backgroundColor: '#0e0e0e' }}
-        >
+        <DialogContent className="p-0 gap-0 overflow-hidden max-w-2xl border-0 bg-white dark:bg-[#0e0e0e]">
           {/* Search Input */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1f1f1f]">
-            <Search className="h-5 w-5 flex-shrink-0" style={{ color: '#616161' }} />
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e0e0e0] dark:border-[#1f1f1f]">
+            <Search className="h-5 w-5 flex-shrink-0 text-[#6b6b6b] dark:text-[#616161]" />
             <input
               ref={inputRef}
               type="text"
@@ -295,17 +285,14 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-white placeholder:text-[#616161]"
+              className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-black dark:text-white placeholder:text-[#6b6b6b] dark:placeholder:text-[#616161]"
             />
             {query && (
-              <button onClick={() => setQuery("")} className="p-1 hover:bg-[#1f1f1f] rounded">
-                <X className="h-4 w-4" style={{ color: '#616161' }} />
+              <button onClick={() => setQuery("")} className="p-1 hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] rounded">
+                <X className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
               </button>
             )}
-            <div 
-              className="flex items-center justify-center h-6 px-1.5 rounded text-xs font-medium"
-              style={{ backgroundColor: '#1f1f1f', color: '#616161' }}
-            >
+            <div className="flex items-center justify-center h-6 px-1.5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
               ESC
             </div>
           </div>
@@ -313,15 +300,15 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
           {/* Results */}
           <ScrollArea className="max-h-[400px]">
             {loading ? (
-              <div className="p-8 text-center" style={{ color: '#616161' }}>
+              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Searching...</span>
               </div>
             ) : results.length === 0 && query.length >= 2 ? (
-              <div className="p-8 text-center" style={{ color: '#616161' }}>
+              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">No results found for "{query}"</span>
               </div>
             ) : results.length === 0 ? (
-              <div className="p-8 text-center" style={{ color: '#616161' }}>
+              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Start typing to search...</span>
               </div>
             ) : (
@@ -329,7 +316,7 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
                 {Object.entries(groupedResults).map(([type, items]) => (
                   <div key={type}>
                     <div className="px-4 py-2">
-                      <span className="text-xs font-medium uppercase tracking-wider" style={{ color: '#616161' }}>
+                      <span className="text-xs font-medium uppercase tracking-wider text-[#6b6b6b] dark:text-[#616161]">
                         {getCategoryLabel(type as SearchResult['type'])}
                       </span>
                     </div>
@@ -344,30 +331,27 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
                           onClick={() => handleSelect(result)}
                           onMouseEnter={() => setSelectedIndex(globalIndex)}
                           className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                            isSelected ? 'bg-[#1f1f1f]' : 'hover:bg-[#1f1f1f]/50'
+                            isSelected ? 'bg-[#f0f0f0] dark:bg-[#1f1f1f]' : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f]/50'
                           }`}
                         >
                           {result.imageUrl ? (
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={result.imageUrl} />
-                              <AvatarFallback className="bg-[#1f1f1f]">
-                                <Icon className="h-4 w-4" style={{ color: '#616161' }} />
+                              <AvatarFallback className="bg-[#e0e0e0] dark:bg-[#1f1f1f]">
+                                <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
                               </AvatarFallback>
                             </Avatar>
                           ) : (
-                            <div 
-                              className="h-8 w-8 rounded-full flex items-center justify-center"
-                              style={{ backgroundColor: '#1f1f1f' }}
-                            >
-                              <Icon className="h-4 w-4" style={{ color: '#616161' }} />
+                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-[#e0e0e0] dark:bg-[#1f1f1f]">
+                              <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">
+                            <p className="text-sm font-medium text-black dark:text-white truncate font-inter tracking-[-0.5px]">
                               {result.title}
                             </p>
                             {result.subtitle && (
-                              <p className="text-xs truncate font-inter" style={{ color: '#616161' }}>
+                              <p className="text-xs truncate font-inter text-[#6b6b6b] dark:text-[#616161]">
                                 {result.subtitle}
                               </p>
                             )}
@@ -382,18 +366,18 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
           </ScrollArea>
 
           {/* Footer hint */}
-          <div className="px-4 py-2 border-t border-[#1f1f1f] flex items-center gap-4">
+          <div className="px-4 py-2 border-t border-[#e0e0e0] dark:border-[#1f1f1f] flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: '#1f1f1f', color: '#616161' }}>↑↓</span>
-              <span className="text-xs font-inter" style={{ color: '#616161' }}>Navigate</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">↑↓</span>
+              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Navigate</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: '#1f1f1f', color: '#616161' }}>↵</span>
-              <span className="text-xs font-inter" style={{ color: '#616161' }}>Select</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">↵</span>
+              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Select</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: '#1f1f1f', color: '#616161' }}>⌘F</span>
-              <span className="text-xs font-inter" style={{ color: '#616161' }}>Open</span>
+              <span className="text-xs px-1.5 py-0.5 rounded font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">⌘F</span>
+              <span className="text-xs font-inter text-[#6b6b6b] dark:text-[#616161]">Open</span>
             </div>
           </div>
         </DialogContent>
