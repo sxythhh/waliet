@@ -100,9 +100,7 @@ export function XPProgressBar({
   const config = rankConfig[rank];
   return <div className={cn("w-full", className)}>
       <div className="flex justify-between text-xs text-muted-foreground mb-1">
-        <span style={{
-        color: `hsl(var(--rank-${rank.toLowerCase()}))`
-      }} className="font-medium text-primary-foreground">
+      <span className="font-medium text-foreground">
           Level {level}
         </span>
         <span>{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP</span>
