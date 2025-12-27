@@ -15,7 +15,6 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
-
 interface Profile {
   id: string;
   username: string;
@@ -25,7 +24,6 @@ interface Profile {
   banner_url: string | null;
   total_earnings: number;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -34,134 +32,147 @@ interface SocialAccount {
   follower_count: number | null;
   is_verified: boolean;
 }
-
 interface ProfileHeaderProps {
   totalViews?: number;
   totalPosts?: number;
 }
-
-export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderProps) {
+export function ProfileHeader({
+  totalViews = 0,
+  totalPosts = 0
+}: ProfileHeaderProps) {
   const navigate = useNavigate();
-  const { resolvedTheme } = useTheme();
-  const { toast } = useToast();
-  
+  const {
+    resolvedTheme
+  } = useTheme();
+  const {
+    toast
+  } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
-  
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
   }, []);
-
   const fetchProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-    
     setLoading(true);
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, bio, avatar_url, banner_url, total_earnings")
-      .eq("id", session.user.id)
-      .single();
-    
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings").eq("id", session.user.id).single();
     if (profileData) {
       setProfile(profileData);
     }
     setLoading(false);
   };
-
   const fetchSocialAccounts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-
-    const { data } = await supabase
-      .from("social_accounts")
-      .select("id, platform, username, account_link, follower_count, is_verified")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: true });
-
+    const {
+      data
+    } = await supabase.from("social_accounts").select("id, platform, username, account_link, follower_count, is_verified").eq("user_id", session.user.id).order("created_at", {
+      ascending: true
+    });
     if (data) {
       setSocialAccounts(data);
     }
   };
-
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
-
     setUploadingAvatar(true);
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${profile.id}/avatar.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
-
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        avatar_url: publicUrl
+      }).eq('id', profile.id);
       if (updateError) throw updateError;
-
-      setProfile({ ...profile, avatar_url: publicUrl });
-      toast({ title: "Avatar updated successfully" });
+      setProfile({
+        ...profile,
+        avatar_url: publicUrl
+      });
+      toast({
+        title: "Avatar updated successfully"
+      });
     } catch (error: any) {
-      toast({ title: "Error uploading avatar", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error uploading avatar",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setUploadingAvatar(false);
     }
   };
-
   const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
-
     setUploadingBanner(true);
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${profile.id}/banner.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ banner_url: publicUrl })
-        .eq('id', profile.id);
-
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        banner_url: publicUrl
+      }).eq('id', profile.id);
       if (updateError) throw updateError;
-
-      setProfile({ ...profile, banner_url: publicUrl });
-      toast({ title: "Banner updated successfully" });
+      setProfile({
+        ...profile,
+        banner_url: publicUrl
+      });
+      toast({
+        title: "Banner updated successfully"
+      });
     } catch (error: any) {
-      toast({ title: "Error uploading banner", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error uploading banner",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setUploadingBanner(false);
     }
   };
-
   const getPlatformIcon = (platform: string) => {
     const isLightMode = resolvedTheme === "light";
     switch (platform.toLowerCase()) {
@@ -175,19 +186,15 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
         return null;
     }
   };
-
   const formatFollowerCount = (count: number | null) => {
     if (!count) return "0";
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
     if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
     return count.toString();
   };
-
   const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
-
   if (loading) {
-    return (
-      <div className="space-y-4">
+    return <div className="space-y-4">
         <Skeleton className="w-full h-32 rounded-xl" />
         <div className="flex items-start gap-4">
           <Skeleton className="w-20 h-20 rounded-xl" />
@@ -196,57 +203,33 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
             <Skeleton className="h-4 w-48" />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Banner with Profile Picture Overlap */}
       <div className="relative">
         {/* Banner */}
-        <div 
-          className="w-full h-40 md:h-52 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer"
-          onClick={() => bannerInputRef.current?.click()}
-        >
-          {profile?.banner_url ? (
-            <img 
-              src={profile.banner_url} 
-              alt="Profile banner" 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900" />
-          )}
+        <div className="w-full h-40 md:h-52 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer" onClick={() => bannerInputRef.current?.click()}>
+          {profile?.banner_url ? <img src={profile.banner_url} alt="Profile banner" className="w-full h-full object-cover" /> : <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900" />}
           
           {/* Upload overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              {uploadingBanner ? (
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              ) : (
-                <>
+              {uploadingBanner ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <>
                   <Camera className="h-4 w-4" />
                   <span>Change Banner</span>
-                </>
-              )}
+                </>}
             </div>
           </div>
         </div>
         
-        <input
-          ref={bannerInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleBannerUpload}
-        />
+        <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
 
         {/* Profile Picture - overlapping banner */}
-        <div 
-          className="absolute -bottom-10 left-6 group cursor-pointer z-10"
-          onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }}
-        >
+        <div className="absolute -bottom-10 left-6 group cursor-pointer z-10" onClick={e => {
+        e.stopPropagation();
+        avatarInputRef.current?.click();
+      }}>
           <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-2xl border-4 border-background shadow-xl">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} className="rounded-2xl" />
             <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold rounded-2xl">
@@ -256,20 +239,10 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
           
           {/* Upload overlay */}
           <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            {uploadingAvatar ? (
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-            ) : (
-              <Camera className="h-5 w-5 text-white" />
-            )}
+            {uploadingAvatar ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <Camera className="h-5 w-5 text-white" />}
           </div>
           
-          <input
-            ref={avatarInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarUpload}
-          />
+          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
         </div>
       </div>
 
@@ -283,55 +256,21 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
                 {profile?.username || "Username"}
               </h2>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 border-0"
-                onClick={() => navigate('/dashboard?tab=profile')}
-              >
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 border-0" onClick={() => navigate('/dashboard?tab=profile')}>
                 <Pencil className="h-3 w-3 mr-1" />
                 Edit Profile
               </Button>
             </div>
             
             {/* Stats row */}
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold text-primary">{formatFollowerCount(totalFollowers)}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{socialAccounts.length}</span>
-              </div>
-            </div>
+            
           </div>
         </div>
 
         {/* Right: Stats Cards */}
-        <div className="flex gap-3">
-          <div className="bg-muted/50 dark:bg-[#141414] rounded-xl px-4 py-3 min-w-[100px]">
-            <div className="flex items-center gap-2 mb-1">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">Total Views</span>
-            </div>
-            <p className="text-xl font-bold font-inter tracking-[-0.5px]">{formatFollowerCount(totalViews)}</p>
-          </div>
-          <div className="bg-muted/50 dark:bg-[#141414] rounded-xl px-4 py-3 min-w-[100px]">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">Total Posts</span>
-            </div>
-            <p className="text-xl font-bold font-inter tracking-[-0.5px]">{totalPosts}</p>
-          </div>
-        </div>
+        
       </div>
 
-      <AddSocialAccountDialog 
-        open={showAddAccountDialog} 
-        onOpenChange={setShowAddAccountDialog}
-        onSuccess={fetchSocialAccounts}
-      />
-    </div>
-  );
+      <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
+    </div>;
 }
