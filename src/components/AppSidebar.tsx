@@ -754,12 +754,12 @@ export function AppSidebar() {
         {/* Joined Campaigns Section - Only show in creator mode */}
         {isCreatorMode && joinedCampaigns.length > 0 && <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
             {!isCollapsed}
-            <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'mt-2 flex flex-col gap-0.5'}`}>
+            <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'mt-2 flex flex-col gap-0.5'} max-h-[200px] overflow-y-auto`}>
               {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => {
             setSelectedCampaignForDetails(campaign);
             setCampaignDetailsDialogOpen(true);
           }} className={`flex items-center rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors ${isCollapsed ? 'p-1.5 justify-center' : 'w-full gap-2 px-3 py-2 text-left'}`} title={isCollapsed ? campaign.title : undefined}>
-                  <Avatar className="w-6 h-6 rounded-md">
+                  <Avatar className="w-6 h-6 rounded-md flex-shrink-0">
                     <AvatarImage src={campaign.brand_logo_url || undefined} alt={campaign.brand_name} />
                     <AvatarFallback className="rounded-md text-[10px] bg-muted">
                       {campaign.brand_name?.charAt(0).toUpperCase() || "C"}
