@@ -1047,18 +1047,6 @@ export function CreatorDatabaseTab({
         </div>
         
         {/* Table Skeleton */}
-        {/* Header Skeleton */}
-        <div className="border-b border-border px-[7px] py-[5px]">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Skeleton className="h-8 w-[72px] rounded-md" />
-            <div className="flex items-center gap-1.5 ml-auto">
-              <Skeleton className="h-8 w-[110px] rounded-md" />
-              <Skeleton className="h-8 w-[72px] rounded-md" />
-              <Skeleton className="h-8 w-[56px] rounded-md" />
-            </div>
-          </div>
-        </div>
-
         {/* Table Container */}
         <div className="flex-1 overflow-hidden">
           {/* Table Header */}
