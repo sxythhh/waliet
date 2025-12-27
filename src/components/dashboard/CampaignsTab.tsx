@@ -721,88 +721,32 @@ export function CampaignsTab({
             const budgetUsed = campaign.budget_used || 0;
             const isPending = campaign.submission_status === 'pending';
             const isEnded = campaign.status === 'ended';
-            return (
-              <div key={campaign.id} className={`relative ${isPending ? 'opacity-60' : ''}`}>
-                <CampaignCard
-                  id={campaign.id}
-                  title={campaign.title}
-                  brand_name={campaign.brand_name}
-                  brand_logo_url={campaign.brand_logo_url}
-                  brand_is_verified={campaign.brand_is_verified}
-                  banner_url={campaign.banner_url}
-                  budget={campaign.budget}
-                  budget_used={budgetUsed}
-                  is_infinite_budget={campaign.is_infinite_budget}
-                  isEnded={isEnded}
-                  showBookmark={false}
-                  showFullscreen={false}
-                  onClick={() => {
-                    if (!isPending) {
-                      setSelectedCampaignForDetails(campaign);
-                      setCampaignDetailsDialogOpen(true);
-                    }
-                  }}
-                />
+            return <div key={campaign.id} className={`relative ${isPending ? 'opacity-60' : ''}`}>
+                <CampaignCard id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={budgetUsed} is_infinite_budget={campaign.is_infinite_budget} isEnded={isEnded} showBookmark={false} showFullscreen={false} onClick={() => {
+                if (!isPending) {
+                  setSelectedCampaignForDetails(campaign);
+                  setCampaignDetailsDialogOpen(true);
+                }
+              }} />
                 {/* Pending Application Overlay */}
-                {isPending && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
+                {isPending && <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm rounded-xl">
                     <span className="text-xs font-medium text-muted-foreground mb-2">Pending Review</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={e => {
-                        e.stopPropagation();
-                        setSelectedCampaignId(campaign.id);
-                        setWithdrawDialogOpen(true);
-                      }} 
-                      className="h-7 text-[10px] hover:bg-destructive/10 hover:text-destructive font-medium"
-                    >
+                    <Button variant="ghost" size="sm" onClick={e => {
+                  e.stopPropagation();
+                  setSelectedCampaignId(campaign.id);
+                  setWithdrawDialogOpen(true);
+                }} className="h-7 text-[10px] hover:bg-destructive/10 hover:text-destructive font-medium">
                       <X className="w-3 h-3 mr-1" />
                       Withdraw
                     </Button>
-                  </div>
-                )}
-              </div>
-            );
+                  </div>}
+              </div>;
           })}
         </div>
       </div>}
 
       {/* Recommended for You */}
-      {recommendedCampaigns.length > 0 && <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Recommended for You</h3>
-            
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 w-full mx-auto">
-            {recommendedCampaigns.map(campaign => {
-            const handleClick = () => {
-              setSelectedCampaignForJoin({
-                id: campaign.id,
-                title: campaign.title,
-                description: (campaign as any).description || '',
-                brand_name: campaign.brand_name,
-                brand_logo_url: campaign.brand_logo_url || '',
-                budget: campaign.budget,
-                budget_used: campaign.budget_used || 0,
-                rpm_rate: campaign.rpm_rate,
-                status: (campaign as any).status || 'active',
-                start_date: (campaign as any).start_date || null,
-                banner_url: campaign.banner_url,
-                platforms: campaign.allowed_platforms || [],
-                slug: campaign.slug,
-                guidelines: (campaign as any).guidelines || null,
-                application_questions: Array.isArray((campaign as any).application_questions) ? (campaign as any).application_questions as string[] : [],
-                requires_application: (campaign as any).requires_application,
-                is_infinite_budget: campaign.is_infinite_budget,
-                blueprint_id: (campaign as any).blueprint_id || null
-              });
-              setJoinCampaignSheetOpen(true);
-            };
-            return <CampaignCard key={campaign.id} id={campaign.id} title={campaign.title} brand_name={campaign.brand_name} brand_logo_url={campaign.brand_logo_url} brand_is_verified={campaign.brand_is_verified} banner_url={campaign.banner_url} budget={campaign.budget} budget_used={campaign.budget_used} is_infinite_budget={campaign.is_infinite_budget} platforms={campaign.allowed_platforms || []} onClick={handleClick} showBookmark={false} showFullscreen={false} />;
-          })}
-          </div>
-        </div>}
+      {recommendedCampaigns.length > 0}
 
       {/* Recent Activity Section */}
       {recentActivity.length > 0}
