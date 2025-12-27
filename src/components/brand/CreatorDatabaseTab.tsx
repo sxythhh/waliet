@@ -1021,32 +1021,6 @@ export function CreatorDatabaseTab({
   };
   if (loading) {
     return <div className="h-full flex flex-col">
-        {/* Header Skeleton */}
-        <div className="p-4 md:p-6 py-[8px] px-[8px]">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-9 w-32" />
-              <Skeleton className="h-9 w-28" />
-            </div>
-          </div>
-          
-          {/* Filters Skeleton */}
-          <div className="flex flex-wrap items-center gap-2 mt-4">
-            <Skeleton className="h-9 flex-1 min-w-[200px] max-w-sm" />
-            <Skeleton className="h-9 w-28" />
-            <Skeleton className="h-9 w-28" />
-            <Skeleton className="h-9 w-28" />
-          </div>
-          
-          {/* Tab Pills Skeleton */}
-          <div className="flex items-center gap-2 mt-4">
-            <Skeleton className="h-8 w-20 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-28 rounded-full" />
-          </div>
-        </div>
-        
-        {/* Table Skeleton */}
         {/* Table Container */}
         <div className="flex-1 overflow-hidden">
           {/* Table Header */}
