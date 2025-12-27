@@ -400,7 +400,7 @@ export function BrandCampaignDetailView({
             {/* Timeframe selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 px-2 sm:px-3">
+                <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3">
                   <span className="hidden sm:inline">{TIMEFRAME_LABELS[timeframe]}</span>
                   <span className="sm:hidden text-xs">{TIMEFRAME_LABELS[timeframe].split(' ')[0]}</span>
                   <ChevronDown className="h-3.5 w-3.5" />
@@ -414,7 +414,7 @@ export function BrandCampaignDetailView({
             </DropdownMenu>
 
             {/* Edit button - only when specific entity selected */}
-            {!isAllMode && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 px-2 sm:px-3" onClick={() => setEditDialogOpen(true)}>
+            {!isAllMode && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3" onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
               </Button>}
