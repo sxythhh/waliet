@@ -4,13 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { format, differenceInHours, startOfMonth, endOfMonth } from "date-fns";
-import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Link2, Lightbulb, Trash2 } from "lucide-react";
+import { Video, CheckCircle, XCircle, Clock, ExternalLink, FileText, Download, Expand, Trash2 } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { SubmitVideoDialog } from "@/components/SubmitVideoDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -62,8 +62,6 @@ export function BoostCard({
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<VideoSubmission[]>([]);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [videoUrl, setVideoUrl] = useState("");
   const [postsDialogOpen, setPostsDialogOpen] = useState(false);
   const [directionsDialogOpen, setDirectionsDialogOpen] = useState(false);
   useEffect(() => {
@@ -100,170 +98,6 @@ export function BoostCard({
       }
     } catch (error) {
       console.error("Error fetching submissions:", error);
-    }
-  };
-  // Fetch video details from TikTok, Instagram, or YouTube API
-  const fetchVideoDetails = async (url: string) => {
-    try {
-      if (url.includes('tiktok.com')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-tiktok-video', {
-          body: {
-            videoUrl: url
-          }
-        });
-        if (error) throw error;
-        return data?.data || null;
-      } else if (url.includes('instagram.com')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-instagram-post', {
-          body: {
-            postUrl: url
-          }
-        });
-        if (error) throw error;
-        return data?.data || null;
-      } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('fetch-youtube-video', {
-          body: {
-            videoUrl: url
-          }
-        });
-        if (error) throw error;
-        // Map YouTube response to common format
-        if (data) {
-          return {
-            description: data.title || data.description,
-            coverUrl: data.thumbnail_url,
-            authorUsername: data.author_username,
-            authorAvatar: data.author_avatar,
-            uploadDate: data.published_date,
-            views: data.view_count,
-            likes: data.like_count,
-            comments: 0,
-            shares: 0
-          };
-        }
-        return null;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error fetching video details:", error);
-      return null;
-    }
-  };
-  const handleSubmitVideo = async () => {
-    if (!videoUrl.trim()) {
-      toast.error("Please enter a video URL");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please sign in");
-        return;
-      }
-      const payoutPerVideo = boost.monthly_retainer / boost.videos_per_month;
-
-      // Detect platform from URL
-      let detectedPlatform = "tiktok";
-      const url = videoUrl.toLowerCase();
-      if (url.includes("instagram.com") || url.includes("instagr.am")) {
-        detectedPlatform = "instagram";
-      } else if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        detectedPlatform = "youtube";
-      } else if (url.includes("twitter.com") || url.includes("x.com")) {
-        detectedPlatform = "x";
-      }
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
-      // Only count non-rejected submissions for monthly limit
-      const thisMonthSubmissions = submissions.filter(s => {
-        const submitDate = new Date(s.submitted_at);
-        return submitDate >= monthStart && submitDate <= monthEnd && s.status !== 'rejected';
-      });
-      if (thisMonthSubmissions.length >= boost.videos_per_month) {
-        toast.error(`You've reached your monthly limit of ${boost.videos_per_month} videos`);
-        setSubmitting(false);
-        return;
-      }
-      const dailyLimit = Math.ceil(boost.videos_per_month / 30);
-      // Only count non-rejected submissions for daily limit
-      const last24Hours = submissions.filter(s => {
-        const hoursDiff = differenceInHours(now, new Date(s.submitted_at));
-        return hoursDiff < 24 && s.status !== 'rejected';
-      });
-      if (last24Hours.length >= dailyLimit) {
-        toast.error(`You can only submit ${dailyLimit} video(s) per day`);
-        setSubmitting(false);
-        return;
-      }
-
-      // Fetch video details from API
-      const videoDetails = await fetchVideoDetails(videoUrl.trim());
-
-      // Warn if metadata couldn't be fetched
-      if (!videoDetails) {
-        console.warn("Could not fetch video metadata for:", videoUrl.trim());
-      }
-
-      // Get brand_id from boost
-      const {
-        data: boostData
-      } = await supabase.from("bounty_campaigns").select("brand_id").eq("id", boost.id).single();
-      const {
-        error
-      } = await supabase.from("video_submissions").insert({
-        source_type: "boost",
-        source_id: boost.id,
-        brand_id: boostData?.brand_id || null,
-        creator_id: user.id,
-        video_url: videoUrl.trim(),
-        platform: detectedPlatform,
-        submission_notes: null,
-        payout_amount: payoutPerVideo,
-        submitted_at: new Date().toISOString(),
-        // Add video metadata if fetched - use null instead of 0 for missing data
-        views: videoDetails?.views ?? null,
-        likes: videoDetails?.likes ?? null,
-        comments: videoDetails?.comments ?? null,
-        shares: videoDetails?.shares ?? null,
-        video_description: videoDetails?.description || null,
-        video_thumbnail_url: videoDetails?.coverUrl || null,
-        video_author_username: videoDetails?.authorUsername || null,
-        video_author_avatar: videoDetails?.authorAvatar || null,
-        video_title: videoDetails?.title || null,
-        video_upload_date: videoDetails?.uploadDate || null
-      });
-      if (error) throw error;
-      if (!videoDetails) {
-        toast.success("Video submitted! Metadata couldn't be fetched - it can be refreshed later.");
-      } else {
-        toast.success("Video submitted successfully!");
-      }
-      setSubmitDialogOpen(false);
-      setVideoUrl("");
-      fetchSubmissions();
-      setVideoUrl("");
-      fetchSubmissions();
-    } catch (error) {
-      console.error("Error submitting video:", error);
-      toast.error("Failed to submit video");
-    } finally {
-      setSubmitting(false);
     }
   };
   const handleWithdrawSubmission = async (submissionId: string) => {
@@ -444,64 +278,23 @@ export function BoostCard({
       </Card>
 
       {/* Submit Video Dialog */}
-      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-card border-none [&>button]:hidden">
-          {/* Header */}
-          <div className="pt-5 pb-0 px-[20px]">
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="font-geist tracking-[-0.5px] text-lg font-semibold">
-                Submit post
-              </h2>
-              <span className="text-xs font-inter tracking-[-0.5px] text-muted-foreground">
-                {last24Hours.length}/{dailyLimit} today
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-              Link your Instagram, TikTok, or YouTube post
-            </p>
-          </div>
-          
-          {/* Content */}
-          <div className="px-5 py-4 space-y-4">
-            <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Link2 className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input placeholder="Paste video link..." value={videoUrl} onChange={e => setVideoUrl(e.target.value)} className="pl-11 h-12 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground/60" onKeyDown={e => {
-              if (e.key === "Enter" && !submitting) {
-                handleSubmitVideo();
-              }
-            }} />
-            </div>
-
-            <div className="bg-muted/20 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <div className="h-8 w-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
-                  <Lightbulb className="h-4 w-4 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium font-inter tracking-[-0.5px]">
-                    Submit clips immediately
-                  </p>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
-                    Views before submission don't count toward payouts
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex gap-2 px-5 pb-5">
-            <Button variant="ghost" onClick={() => setSubmitDialogOpen(false)} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitVideo} disabled={submitting || !videoUrl.trim()} className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm">
-              {submitting ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SubmitVideoDialog
+        source={{
+          id: boost.id,
+          title: boost.title,
+          brand_name: boost.brands?.name,
+          payment_model: 'pay_per_post',
+          post_rate: boost.monthly_retainer / boost.videos_per_month,
+          allowed_platforms: ['tiktok', 'instagram', 'youtube'],
+          guidelines: boost.content_style_requirements,
+          sourceType: 'boost'
+        }}
+        open={submitDialogOpen}
+        onOpenChange={setSubmitDialogOpen}
+        onSuccess={() => {
+          fetchSubmissions();
+        }}
+      />
 
       {/* Directions Dialog */}
       <Dialog open={directionsDialogOpen} onOpenChange={setDirectionsDialogOpen}>
