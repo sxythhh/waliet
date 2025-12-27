@@ -469,9 +469,7 @@ export function BrandCampaignsTab({
                 Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
               </p>
               <div className="flex gap-3">
-                <Button onClick={() => setCreateCampaignOpen(true)} className="bg-white text-black hover:bg-white/90 font-inter text-sm tracking-[-0.5px]">
-                  Create Campaign
-                </Button>
+                
                 <Button variant="outline" onClick={() => navigate('/resources')} className="bg-[#2a2a2a] border-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-inter text-sm tracking-[-0.5px]">
                   Learn more
                 </Button>
