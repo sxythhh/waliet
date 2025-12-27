@@ -1,59 +1,189 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
-import { DollarSign, Eye } from "lucide-react";
+import { DollarSign, UserPlus } from "lucide-react";
+
 interface ActivityItem {
   id: string;
-  amount: number;
-  type: string;
+  type: "earning" | "join";
+  amount?: number;
   description: string;
   created_at: string;
-  metadata: {
-    account_username?: string;
-    platform?: string;
-    views?: number;
-    campaign_id?: string;
-  } | null;
+  username?: string;
+  platform?: string;
+  campaign_name?: string;
 }
+
 export function RecentActivity() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchActivities = async () => {
-      const {
-        data,
-        error
-      } = await supabase.from("wallet_transactions").select("id, amount, type, description, created_at, metadata").eq("type", "earning").gt("amount", 0).order("created_at", {
-        ascending: false
-      }).limit(10);
-      if (!error && data) {
-        setActivities(data as ActivityItem[]);
+      // Fetch earnings
+      const { data: earnings, error: earningsError } = await supabase
+        .from("wallet_transactions")
+        .select("id, amount, type, description, created_at, metadata")
+        .eq("type", "earning")
+        .gt("amount", 0)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      // Fetch campaign joins (first video submission per user per campaign)
+      const { data: joins, error: joinsError } = await supabase
+        .from("campaign_videos")
+        .select(`
+          id,
+          created_at,
+          platform,
+          video_author_username,
+          campaign_id,
+          campaigns!inner(title)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      const formattedActivities: ActivityItem[] = [];
+
+      // Process earnings
+      if (!earningsError && earnings) {
+        for (const earning of earnings) {
+          const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
+          let campaignName = "Campaign";
+          
+          if (metadata.campaign_id) {
+            const { data: campaign } = await supabase
+              .from("campaigns")
+              .select("title")
+              .eq("id", metadata.campaign_id)
+              .single();
+            if (campaign) {
+              campaignName = campaign.title;
+            }
+          }
+
+          formattedActivities.push({
+            id: earning.id,
+            type: "earning",
+            amount: earning.amount,
+            description: earning.description,
+            created_at: earning.created_at,
+            username: metadata.account_username,
+            platform: metadata.platform,
+            campaign_name: campaignName,
+          });
+        }
       }
+
+      // Process joins
+      if (!joinsError && joins) {
+        for (const join of joins) {
+          const campaigns = join.campaigns as { title: string } | null;
+          formattedActivities.push({
+            id: join.id,
+            type: "join",
+            description: "Joined campaign",
+            created_at: join.created_at,
+            username: join.video_author_username || undefined,
+            platform: join.platform || undefined,
+            campaign_name: campaigns?.title || "Campaign",
+          });
+        }
+      }
+
+      // Sort by created_at and take top 10
+      formattedActivities.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setActivities(formattedActivities.slice(0, 10));
       setLoading(false);
     };
+
     fetchActivities();
 
-    // Set up realtime subscription
-    const channel = supabase.channel("recent-activity").on("postgres_changes", {
-      event: "INSERT",
-      schema: "public",
-      table: "wallet_transactions"
-    }, payload => {
-      const newActivity = payload.new as ActivityItem;
-      if (newActivity.type === "earning" && newActivity.amount > 0) {
-        setActivities(prev => [newActivity, ...prev.slice(0, 9)]);
-      }
-    }).subscribe();
+    // Set up realtime subscription for earnings
+    const channel = supabase
+      .channel("recent-activity")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "wallet_transactions",
+        },
+        async (payload) => {
+          const newTransaction = payload.new as { id: string; type: string; amount: number; description: string; created_at: string; metadata: { account_username?: string; platform?: string; campaign_id?: string } | null };
+          if (newTransaction.type === "earning" && newTransaction.amount > 0) {
+            const metadata = newTransaction.metadata || {};
+            let campaignName = "Campaign";
+            
+            if (metadata.campaign_id) {
+              const { data: campaign } = await supabase
+                .from("campaigns")
+                .select("title")
+                .eq("id", metadata.campaign_id)
+                .single();
+              if (campaign) {
+                campaignName = campaign.title;
+              }
+            }
+
+            const newActivity: ActivityItem = {
+              id: newTransaction.id,
+              type: "earning",
+              amount: newTransaction.amount,
+              description: newTransaction.description,
+              created_at: newTransaction.created_at,
+              username: metadata.account_username,
+              platform: metadata.platform,
+              campaign_name: campaignName,
+            };
+            setActivities((prev) => [newActivity, ...prev.slice(0, 9)]);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "campaign_videos",
+        },
+        async (payload) => {
+          const newJoin = payload.new as { id: string; created_at: string; platform?: string; video_author_username?: string; campaign_id: string };
+          
+          const { data: campaign } = await supabase
+            .from("campaigns")
+            .select("title")
+            .eq("id", newJoin.campaign_id)
+            .single();
+
+          const newActivity: ActivityItem = {
+            id: newJoin.id,
+            type: "join",
+            description: "Joined campaign",
+            created_at: newJoin.created_at,
+            username: newJoin.video_author_username,
+            platform: newJoin.platform,
+            campaign_name: campaign?.title || "Campaign",
+          };
+          setActivities((prev) => [newActivity, ...prev.slice(0, 9)]);
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
   const formatUsername = (username?: string) => {
     if (!username) return "Creator";
-    // Anonymize the username partially
     if (username.length <= 4) return username.charAt(0) + "***";
     return username.slice(0, 3) + "***" + username.slice(-2);
   };
+
   const getPlatformColor = (platform?: string) => {
     switch (platform) {
       case "tiktok":
@@ -66,22 +196,34 @@ export function RecentActivity() {
         return "bg-primary";
     }
   };
+
+  const truncateCampaignName = (name: string, maxLength = 20) => {
+    if (name.length <= maxLength) return name;
+    return name.slice(0, maxLength) + "...";
+  };
+
   if (loading) {
-    return <div className="mt-8 space-y-3">
+    return (
+      <div className="mt-8 space-y-3">
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
           Recent Activity
         </h3>
         <div className="space-y-2">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />)}
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />
+          ))}
         </div>
-      </div>;
+      </div>
+    );
   }
+
   if (activities.length === 0) return null;
-  return <div className="mt-8 space-y-3">
+
+  return (
+    <div className="mt-8 space-y-3">
       <div className="flex items-center gap-2">
-        
         <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          Recent Earnings
+          Recent Activity
         </h3>
       </div>
 
@@ -90,54 +232,71 @@ export function RecentActivity() {
         <div className="grid grid-cols-4 gap-4 px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50 bg-muted/20">
           <span>Creator</span>
           <span>Time</span>
-          <span className="text-right">Views</span>
-          <span className="text-right">Payout</span>
+          <span>Campaign</span>
+          <span className="text-right">Action</span>
         </div>
 
         {/* Rows */}
         <div className="divide-y divide-border/30">
-          {activities.map((activity, index) => {
-          const metadata = activity.metadata || {};
-          return <div key={activity.id} className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${index % 2 === 0 ? "bg-transparent" : "bg-muted/10"}`}>
-                {/* Creator */}
-                <div className="flex items-center gap-2">
-                  <div className={`w-5 h-5 rounded-full ${getPlatformColor(metadata.platform)} flex items-center justify-center`}>
-                    <span className="text-[8px] font-bold text-white">
-                      {metadata.platform?.charAt(0).toUpperCase() || "?"}
-                    </span>
-                  </div>
-                  <span className="font-medium text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]">
-                    {formatUsername(metadata.account_username)}
+          {activities.map((activity, index) => (
+            <div
+              key={activity.id}
+              className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${
+                index % 2 === 0 ? "bg-transparent" : "bg-muted/10"
+              }`}
+            >
+              {/* Creator */}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-5 h-5 rounded-full ${getPlatformColor(activity.platform)} flex items-center justify-center`}
+                >
+                  <span className="text-[8px] font-bold text-white">
+                    {activity.platform?.charAt(0).toUpperCase() || "?"}
                   </span>
                 </div>
-
-                {/* Time */}
-                <span className="text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-                  {formatDistanceToNow(new Date(activity.created_at), {
-                addSuffix: false
-              })}
+                <span className="font-medium text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]">
+                  {formatUsername(activity.username)}
                 </span>
+              </div>
 
-                {/* Views */}
-                <div className="flex items-center justify-end gap-1 text-muted-foreground">
-                  <Eye className="w-3 h-3" />
-                  <span className="tracking-[-0.3px] font-['Geist',sans-serif]">
-                    {metadata.views ? metadata.views >= 1000000 ? (metadata.views / 1000000).toFixed(1) + "M" : metadata.views >= 1000 ? (metadata.views / 1000).toFixed(1) + "K" : metadata.views.toString() : "-"}
-                  </span>
-                </div>
+              {/* Time */}
+              <span className="text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
+                {formatDistanceToNow(new Date(activity.created_at), {
+                  addSuffix: false,
+                })}
+              </span>
 
-                {/* Payout */}
-                <div className="flex items-center justify-end gap-1">
-                  <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
-                    +${activity.amount.toFixed(2)}
-                  </span>
-                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <DollarSign className="w-2.5 h-2.5 text-emerald-500" />
-                  </div>
-                </div>
-              </div>;
-        })}
+              {/* Campaign */}
+              <span className="text-muted-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]" title={activity.campaign_name}>
+                {truncateCampaignName(activity.campaign_name || "Campaign")}
+              </span>
+
+              {/* Action */}
+              <div className="flex items-center justify-end gap-1">
+                {activity.type === "earning" ? (
+                  <>
+                    <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
+                      Earned ${activity.amount?.toFixed(2)}
+                    </span>
+                    <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                      <DollarSign className="w-2.5 h-2.5 text-emerald-500" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-blue-500 tracking-[-0.3px] font-['Geist',sans-serif]">
+                      Joined campaign
+                    </span>
+                    <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <UserPlus className="w-2.5 h-2.5 text-blue-500" />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
