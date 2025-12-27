@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { DollarSign, UserPlus } from "lucide-react";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface ActivityItem {
   id: string;
@@ -12,6 +13,8 @@ interface ActivityItem {
   username?: string;
   platform?: string;
   campaign_name?: string;
+  brand_logo_url?: string;
+  is_private?: boolean;
 }
 
 export function RecentActivity() {
@@ -20,17 +23,17 @@ export function RecentActivity() {
 
   useEffect(() => {
     const fetchActivities = async () => {
-      // Fetch earnings
-      const { data: earnings, error: earningsError } = await supabase
+      // Fetch earnings with campaign info
+      const { data: earnings } = await supabase
         .from("wallet_transactions")
-        .select("id, amount, type, description, created_at, metadata")
+        .select("id, amount, type, description, created_at, metadata, user_id")
         .eq("type", "earning")
         .gt("amount", 0)
         .order("created_at", { ascending: false })
         .limit(10);
 
-      // Fetch campaign joins (first video submission per user per campaign)
-      const { data: joins, error: joinsError } = await supabase
+      // Fetch campaign joins with campaign and profile info
+      const { data: joins } = await supabase
         .from("campaign_videos")
         .select(`
           id,
@@ -38,7 +41,7 @@ export function RecentActivity() {
           platform,
           video_author_username,
           campaign_id,
-          campaigns!inner(title)
+          creator_id
         `)
         .order("created_at", { ascending: false })
         .limit(10);
@@ -46,19 +49,35 @@ export function RecentActivity() {
       const formattedActivities: ActivityItem[] = [];
 
       // Process earnings
-      if (!earningsError && earnings) {
+      if (earnings) {
         for (const earning of earnings) {
           const metadata = (earning.metadata as { account_username?: string; platform?: string; campaign_id?: string }) || {};
           let campaignName = "Campaign";
-          
+          let brandLogoUrl: string | undefined;
+          let isPrivate = false;
+
+          // Get campaign info
           if (metadata.campaign_id) {
             const { data: campaign } = await supabase
               .from("campaigns")
-              .select("title")
+              .select("title, brand_logo_url")
               .eq("id", metadata.campaign_id)
               .single();
             if (campaign) {
               campaignName = campaign.title;
+              brandLogoUrl = campaign.brand_logo_url || undefined;
+            }
+          }
+
+          // Get user privacy setting
+          if (earning.user_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("is_private")
+              .eq("id", earning.user_id)
+              .single();
+            if (profile) {
+              isPrivate = profile.is_private || false;
             }
           }
 
@@ -71,29 +90,63 @@ export function RecentActivity() {
             username: metadata.account_username,
             platform: metadata.platform,
             campaign_name: campaignName,
+            brand_logo_url: brandLogoUrl,
+            is_private: isPrivate,
           });
         }
       }
 
       // Process joins
-      if (!joinsError && joins) {
+      if (joins) {
         for (const join of joins) {
-          const campaigns = join.campaigns as { title: string } | null;
+          let campaignName = "Campaign";
+          let brandLogoUrl: string | undefined;
+          let isPrivate = false;
+          let username = join.video_author_username || undefined;
+
+          // Get campaign info
+          const { data: campaign } = await supabase
+            .from("campaigns")
+            .select("title, brand_logo_url")
+            .eq("id", join.campaign_id)
+            .single();
+          if (campaign) {
+            campaignName = campaign.title;
+            brandLogoUrl = campaign.brand_logo_url || undefined;
+          }
+
+          // Get user privacy setting and username if not available
+          if (join.creator_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username, is_private")
+              .eq("id", join.creator_id)
+              .single();
+            if (profile) {
+              isPrivate = profile.is_private || false;
+              if (!username) {
+                username = profile.username || undefined;
+              }
+            }
+          }
+
           formattedActivities.push({
             id: join.id,
             type: "join",
             description: "Joined campaign",
             created_at: join.created_at,
-            username: join.video_author_username || undefined,
+            username,
             platform: join.platform || undefined,
-            campaign_name: campaigns?.title || "Campaign",
+            campaign_name: campaignName,
+            brand_logo_url: brandLogoUrl,
+            is_private: isPrivate,
           });
         }
       }
 
       // Sort by created_at and take top 10
-      formattedActivities.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      formattedActivities.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
       setActivities(formattedActivities.slice(0, 10));
@@ -113,19 +166,41 @@ export function RecentActivity() {
           table: "wallet_transactions",
         },
         async (payload) => {
-          const newTransaction = payload.new as { id: string; type: string; amount: number; description: string; created_at: string; metadata: { account_username?: string; platform?: string; campaign_id?: string } | null };
+          const newTransaction = payload.new as {
+            id: string;
+            type: string;
+            amount: number;
+            description: string;
+            created_at: string;
+            user_id?: string;
+            metadata: { account_username?: string; platform?: string; campaign_id?: string } | null;
+          };
           if (newTransaction.type === "earning" && newTransaction.amount > 0) {
             const metadata = newTransaction.metadata || {};
             let campaignName = "Campaign";
-            
+            let brandLogoUrl: string | undefined;
+            let isPrivate = false;
+
             if (metadata.campaign_id) {
               const { data: campaign } = await supabase
                 .from("campaigns")
-                .select("title")
+                .select("title, brand_logo_url")
                 .eq("id", metadata.campaign_id)
                 .single();
               if (campaign) {
                 campaignName = campaign.title;
+                brandLogoUrl = campaign.brand_logo_url || undefined;
+              }
+            }
+
+            if (newTransaction.user_id) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("is_private")
+                .eq("id", newTransaction.user_id)
+                .single();
+              if (profile) {
+                isPrivate = profile.is_private || false;
               }
             }
 
@@ -138,6 +213,8 @@ export function RecentActivity() {
               username: metadata.account_username,
               platform: metadata.platform,
               campaign_name: campaignName,
+              brand_logo_url: brandLogoUrl,
+              is_private: isPrivate,
             };
             setActivities((prev) => [newActivity, ...prev.slice(0, 9)]);
           }
@@ -151,22 +228,54 @@ export function RecentActivity() {
           table: "campaign_videos",
         },
         async (payload) => {
-          const newJoin = payload.new as { id: string; created_at: string; platform?: string; video_author_username?: string; campaign_id: string };
-          
+          const newJoin = payload.new as {
+            id: string;
+            created_at: string;
+            platform?: string;
+            video_author_username?: string;
+            campaign_id: string;
+            creator_id?: string;
+          };
+
+          let campaignName = "Campaign";
+          let brandLogoUrl: string | undefined;
+          let isPrivate = false;
+          let username = newJoin.video_author_username;
+
           const { data: campaign } = await supabase
             .from("campaigns")
-            .select("title")
+            .select("title, brand_logo_url")
             .eq("id", newJoin.campaign_id)
             .single();
+          if (campaign) {
+            campaignName = campaign.title;
+            brandLogoUrl = campaign.brand_logo_url || undefined;
+          }
+
+          if (newJoin.creator_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("username, is_private")
+              .eq("id", newJoin.creator_id)
+              .single();
+            if (profile) {
+              isPrivate = profile.is_private || false;
+              if (!username) {
+                username = profile.username || undefined;
+              }
+            }
+          }
 
           const newActivity: ActivityItem = {
             id: newJoin.id,
             type: "join",
             description: "Joined campaign",
             created_at: newJoin.created_at,
-            username: newJoin.video_author_username,
+            username,
             platform: newJoin.platform,
-            campaign_name: campaign?.title || "Campaign",
+            campaign_name: campaignName,
+            brand_logo_url: brandLogoUrl,
+            is_private: isPrivate,
           };
           setActivities((prev) => [newActivity, ...prev.slice(0, 9)]);
         }
@@ -178,8 +287,10 @@ export function RecentActivity() {
     };
   }, []);
 
-  const formatUsername = (username?: string) => {
+  const formatUsername = (username?: string, isPrivate?: boolean) => {
     if (!username) return "Creator";
+    if (!isPrivate) return username;
+    // Only anonymize if privacy is on
     if (username.length <= 4) return username.charAt(0) + "***";
     return username.slice(0, 3) + "***" + username.slice(-2);
   };
@@ -197,7 +308,7 @@ export function RecentActivity() {
     }
   };
 
-  const truncateCampaignName = (name: string, maxLength = 20) => {
+  const truncateCampaignName = (name: string, maxLength = 18) => {
     if (name.length <= maxLength) return name;
     return name.slice(0, maxLength) + "...";
   };
@@ -255,7 +366,7 @@ export function RecentActivity() {
                   </span>
                 </div>
                 <span className="font-medium text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]">
-                  {formatUsername(activity.username)}
+                  {formatUsername(activity.username, activity.is_private)}
                 </span>
               </div>
 
@@ -266,10 +377,24 @@ export function RecentActivity() {
                 })}
               </span>
 
-              {/* Campaign */}
-              <span className="text-muted-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]" title={activity.campaign_name}>
-                {truncateCampaignName(activity.campaign_name || "Campaign")}
-              </span>
+              {/* Campaign with brand logo */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                {activity.brand_logo_url && (
+                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                    <OptimizedImage
+                      src={activity.brand_logo_url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <span
+                  className="text-muted-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]"
+                  title={activity.campaign_name}
+                >
+                  {truncateCampaignName(activity.campaign_name || "Campaign")}
+                </span>
+              </div>
 
               {/* Action */}
               <div className="flex items-center justify-end gap-1">
