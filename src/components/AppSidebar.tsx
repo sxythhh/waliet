@@ -37,6 +37,7 @@ import nutFillIcon from "@/assets/nut-fill.svg";
 import settingsFilledIcon from "@/assets/settings-filled-icon.svg";
 import personEditIcon from "@/assets/person-edit-icon.svg";
 import swapHorizIcon from "@/assets/swap-horiz-icon.svg";
+import swapHorizLightIcon from "@/assets/swap-horiz-light.svg";
 import storefrontIcon from "@/assets/storefront-icon.svg";
 import messagesInactive from "@/assets/mail-inactive.svg";
 import messagesActive from "@/assets/mail-active.svg";
@@ -507,7 +508,7 @@ export function AppSidebar() {
               <button className="w-full flex items-center justify-between px-3 py-2 transition-colors hover:bg-muted/50 rounded-md">
                   <div className="flex items-center gap-2">
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
-                        <img src={swapHorizIcon} alt="" className="w-3.5 h-3.5" />
+                        <img src={theme === 'light' ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-3.5 h-3.5" />
                       </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{
                   backgroundColor: currentBrandColor || '#8B5CF6'
                 }}>
