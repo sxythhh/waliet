@@ -86,8 +86,8 @@ export default function PublicNavbar({
                         <div className="w-64 p-3 bg-white dark:bg-[#0a0a0a] border border-border rounded-xl shadow-2xl py-[7px] px-[7px]">
                           <NavigationMenuLink asChild>
                             <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
-                              <img alt="" className="w-5 h-5 dark:hidden" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
-                              <img alt="" className="w-5 h-5 hidden dark:block" src={exploreIconDark} />
+                              <img alt="" className="w-5 h-5 hidden dark:block" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
+                              <img alt="" className="w-5 h-5 dark:hidden" src={exploreIconDark} />
                               <div>
                                 <div className="font-medium text-foreground">Discover</div>
                                 <div className="text-xs text-muted-foreground">Find content opportunities</div>
