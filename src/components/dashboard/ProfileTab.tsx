@@ -887,7 +887,7 @@ export function ProfileTab() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-[20px]">
+        <CardContent className="px-0">
             {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8">
               <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                 <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
@@ -1036,21 +1036,20 @@ export function ProfileTab() {
                       })()}
 
                             {/* Hide from public profile toggle */}
-                            <button
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                const newValue = !account.hidden_from_public;
-                                await supabase
-                                  .from("social_accounts")
-                                  .update({ hidden_from_public: newValue })
-                                  .eq("id", account.id);
-                                setSocialAccounts(prev => 
-                                  prev.map(a => a.id === account.id ? { ...a, hidden_from_public: newValue } : a)
-                                );
-                              }}
-                              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors"
-                              style={{ fontFamily: 'Geist', letterSpacing: '-0.5px' }}
-                            >
+                            <button onClick={async e => {
+                        e.stopPropagation();
+                        const newValue = !account.hidden_from_public;
+                        await supabase.from("social_accounts").update({
+                          hidden_from_public: newValue
+                        }).eq("id", account.id);
+                        setSocialAccounts(prev => prev.map(a => a.id === account.id ? {
+                          ...a,
+                          hidden_from_public: newValue
+                        } : a));
+                      }} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
+                        fontFamily: 'Geist',
+                        letterSpacing: '-0.5px'
+                      }}>
                               <span className="text-white/70">Hide from public profile</span>
                               <div className={`w-8 h-4 rounded-full transition-colors relative ${account.hidden_from_public ? 'bg-primary' : 'bg-white/20'}`}>
                                 <div className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all duration-200 ${account.hidden_from_public ? 'left-4' : 'left-0.5'}`} />
@@ -1466,33 +1465,32 @@ export function ProfileTab() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>Private Profile</p>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>Private Profile</p>
                   <p className="text-xs text-muted-foreground" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>
                     When enabled, your public profile page will show "This profile is private" to other users
                   </p>
                 </div>
-                <Switch
-                  checked={profile.is_private}
-                  onCheckedChange={(checked) => setProfile({ ...profile, is_private: checked })}
-                />
+                <Switch checked={profile.is_private} onCheckedChange={checked => setProfile({
+                ...profile,
+                is_private: checked
+              })} />
               </div>
-              {profile.is_private && (
-                <div className="mt-3 p-3 bg-muted/30 rounded-md">
+              {profile.is_private && <div className="mt-3 p-3 bg-muted/30 rounded-md">
                   <p className="text-xs text-muted-foreground" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
                     When private profile is enabled:
                   </p>
                   <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.3px'
-                  }}>
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
                     <li className="flex items-start gap-2">
                       <span className="text-muted-foreground/60">•</span>
                       Your public profile page will be hidden from other users
@@ -1502,8 +1500,7 @@ export function ProfileTab() {
                       Your username will be anonymized (e.g., J***n) in leaderboards and live submissions, recent activity feed
                     </li>
                   </ul>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Brand Workspace */}
