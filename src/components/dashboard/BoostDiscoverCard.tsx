@@ -3,8 +3,8 @@ import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
-import videosIcon from "@/assets/videos-icon.svg";
-import personIcon from "@/assets/person-icon.svg";
+import videosIcon from "@/assets/videos-icon-new.svg";
+import personIcon from "@/assets/person-icon-new.svg";
 export interface BoostDiscoverCardProps {
   id: string;
   title: string;
@@ -67,11 +67,11 @@ export function BoostDiscoverCard({
         {/* Metadata Row */}
         <div className="flex flex-wrap gap-x-2.5 gap-y-1 text-[10px] font-medium text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
           <span className="flex items-center gap-1">
-            <img src={videosIcon} alt="" className="h-3 w-3 opacity-60 dark:invert" />
+            <img src={videosIcon} alt="" className="h-3 w-3 opacity-80" />
             {videos_per_month} videos/mo
           </span>
           <span className={`flex items-center gap-1 ${isFull ? "text-red-400" : ""}`}>
-            <img src={personIcon} alt="" className="h-3 w-3 opacity-60 dark:invert" />
+            <img src={personIcon} alt="" className="h-3 w-3 opacity-80" />
             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}
           </span>
         </div>
