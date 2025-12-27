@@ -1321,69 +1321,7 @@ export function WalletTab() {
 
 
       {/* Balance Cards - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Lifetime Earnings Card */}
-        <Card className="border-0 py-0 px-0 bg-neutral-100/0">
-          <CardContent className="pt-4 pb-4 py-0">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
-              letterSpacing: '-0.5px'
-            }}>Your Earnings</p>
-              <div className="flex bg-muted/50 rounded-md p-0.5 py-[4px] px-[5px]">
-                {(['1D', '1W', '1M', 'ALL'] as const).map(period => <button key={period} onClick={() => setEarningsChartPeriod(period)} className={`px-2.5 py-1 text-xs font-medium font-['Inter'] rounded transition-all ${earningsChartPeriod === period ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`} style={{
-                letterSpacing: '-0.5px'
-              }}>
-                    {period}
-                  </button>)}
-              </div>
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <p className="text-3xl font-bold font-geist" style={{
-              letterSpacing: '-0.3px'
-            }}>
-                {isBalanceVisible ? `$${wallet?.total_earned?.toFixed(2) || "0.00"}` : "••••••"}
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => setIsBalanceVisible(!isBalanceVisible)} className="h-8 w-8 p-0 hover:bg-muted">
-                {isBalanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </Button>
-            </div>
-            
-            {/* Mini Earnings Chart */}
-            <div className="h-20 -mx-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={earningsData}>
-                  <defs>
-                    <linearGradient id="earningsGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <RechartsTooltip content={({
-                  active,
-                  payload
-                }) => {
-                  if (active && payload && payload.length) {
-                    const value = typeof payload[0].value === 'number' ? payload[0].value : Number(payload[0].value);
-                    return <div className="bg-background text-foreground rounded shadow-lg px-2 py-1 font-['Inter']" style={{
-                      letterSpacing: '-0.3px'
-                    }}>
-                            <p className="text-[10px] text-muted-foreground mb-0.5">{payload[0].payload.date}</p>
-                            <p className="text-xs font-bold">${value.toFixed(2)}</p>
-                          </div>;
-                  }
-                  return null;
-                }} cursor={false} />
-                  <Area type="monotone" dataKey="amount" stroke="#3b82f6" strokeWidth={2} fill="url(#earningsGradient)" dot={false} activeDot={{
-                  r: 4,
-                  fill: '#3b82f6',
-                  stroke: 'none'
-                }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-6">
         {/* Current Balance Card */}
         <Card className="border-0 bg-neutral-100/0">
           <CardContent className="pt-4 pb-4 py-0 px-[10px] bg-black/0">
