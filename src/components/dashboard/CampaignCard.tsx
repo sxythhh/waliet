@@ -108,32 +108,11 @@ export function CampaignCard({
           )}
 
           {/* Bottom Content */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
+          <div className="absolute bottom-0 left-0 right-0 p-3">
             {/* Title */}
-            <h3 className="text-base font-semibold text-white tracking-[-0.3px] text-center line-clamp-2 leading-tight font-['Geist',sans-serif]">
+            <h3 className="text-sm font-semibold text-white tracking-[-0.3px] text-center line-clamp-2 leading-tight font-['Geist',sans-serif]">
               {title}
             </h3>
-            
-            {/* Brand Badge */}
-            <div className="flex items-center justify-center">
-              <div className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm">
-                <div className="flex items-center gap-1.5">
-                  {brand_logo_url && (
-                    <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
-                      <OptimizedImage
-                        src={brand_logo_url}
-                        alt={brand_name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <span className="text-[9px] font-medium text-white/90 tracking-[-0.3px] font-['Geist',sans-serif]">
-                    {brand_name}
-                  </span>
-                  {brand_is_verified && <VerifiedBadge size="sm" className="text-white" />}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </Card>
@@ -144,18 +123,35 @@ export function CampaignCard({
           <span className="text-[10px] text-foreground font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
             {is_infinite_budget ? '∞ unlimited' : `$${budget.toLocaleString()}`}
           </span>
-          {!is_infinite_budget && !isEnded && (
+          {!is_infinite_budget && (
             <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif]">
               {Math.round((budget_used / budget) * 100)}% used
             </span>
           )}
         </div>
-        {!is_infinite_budget && !isEnded && (
+        {!is_infinite_budget && (
           <Progress 
             value={(budget_used / budget) * 100} 
             className="h-1.5 rounded-full"
           />
         )}
+        
+        {/* Brand Badge */}
+        <div className="flex items-center gap-1.5 mt-1">
+          {brand_logo_url && (
+            <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
+              <OptimizedImage
+                src={brand_logo_url}
+                alt={brand_name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          <span className="text-[10px] font-medium text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
+            {brand_name}
+          </span>
+          {brand_is_verified && <VerifiedBadge size="sm" />}
+        </div>
       </div>
     </div>
   );
