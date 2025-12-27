@@ -298,11 +298,11 @@ export function ProfileHeader({
         <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={handleBannerSelect} />
 
         {/* Profile Picture - overlapping banner */}
-        <div className="absolute -bottom-10 left-0 group cursor-pointer z-[5]" onClick={e => {
+        <div className="absolute -bottom-10 left-6 group cursor-pointer z-[5]" onClick={e => {
         e.stopPropagation();
         avatarInputRef.current?.click();
       }}>
-          <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-2xl shadow-xl">
+          <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-2xl border-4 border-background shadow-xl">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} className="rounded-2xl" />
             <AvatarFallback className="text-white text-2xl font-bold rounded-2xl" style={{
             backgroundColor: '#143fd4'
