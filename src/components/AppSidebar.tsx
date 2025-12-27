@@ -760,12 +760,14 @@ export function AppSidebar() {
         </nav>
 
         {/* Joined Campaigns Section - Only show in creator mode */}
-        {isCreatorMode && joinedCampaigns.length > 0 && !isCollapsed && (
-          <div className="px-2 py-2 border-t border-border">
-            <span className="px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Joined
-            </span>
-            <div className="mt-2 flex flex-col gap-0.5">
+        {isCreatorMode && joinedCampaigns.length > 0 && (
+          <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
+            {!isCollapsed && (
+              <span className="px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Joined
+              </span>
+            )}
+            <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'mt-2 flex flex-col gap-0.5'}`}>
               {joinedCampaigns.map(campaign => (
                 <button
                   key={campaign.id}
@@ -773,7 +775,8 @@ export function AppSidebar() {
                     setSelectedCampaignForDetails(campaign);
                     setCampaignDetailsDialogOpen(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors text-left"
+                  className={`flex items-center rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors ${isCollapsed ? 'p-1.5 justify-center' : 'w-full gap-2 px-3 py-2 text-left'}`}
+                  title={isCollapsed ? campaign.title : undefined}
                 >
                   <Avatar className="w-6 h-6 rounded-md">
                     <AvatarImage src={campaign.brand_logo_url || undefined} alt={campaign.brand_name} />
@@ -781,9 +784,11 @@ export function AppSidebar() {
                       {campaign.brand_name?.charAt(0).toUpperCase() || "C"}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-foreground truncate">
-                    {campaign.title}
-                  </span>
+                  {!isCollapsed && (
+                    <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-foreground truncate">
+                      {campaign.title}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
