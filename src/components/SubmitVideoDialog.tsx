@@ -22,6 +22,19 @@ import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 
+interface SubmissionSource {
+  id: string;
+  title: string;
+  brand_name?: string;
+  payment_model?: string | null;
+  rpm_rate?: number;
+  post_rate?: number | null;
+  allowed_platforms?: string[];
+  guidelines?: string | null;
+  sourceType: 'campaign' | 'boost';
+}
+
+// Legacy Campaign interface for backwards compatibility
 interface Campaign {
   id: string;
   title: string;
@@ -42,7 +55,8 @@ interface SocialAccount {
 }
 
 interface SubmitVideoDialogProps {
-  campaign: Campaign;
+  campaign?: Campaign;
+  source?: SubmissionSource;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -80,10 +94,17 @@ const PLATFORM_CONFIG: Record<string, {
 
 export function SubmitVideoDialog({
   campaign,
+  source,
   open,
   onOpenChange,
   onSuccess
 }: SubmitVideoDialogProps) {
+  // Support both legacy campaign prop and new source prop
+  const submissionSource: SubmissionSource = source || {
+    ...campaign!,
+    sourceType: 'campaign'
+  };
+  
   const [videoUrl, setVideoUrl] = useState("");
   const [platform, setPlatform] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState("");
@@ -94,8 +115,9 @@ export function SubmitVideoDialog({
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const { resolvedTheme } = useTheme();
 
-  const allowedPlatforms = campaign.allowed_platforms || ["tiktok", "instagram", "youtube"];
-  const isPayPerPost = campaign.payment_model === "pay_per_post";
+  const allowedPlatforms = submissionSource.allowed_platforms || ["tiktok", "instagram", "youtube"];
+  const isPayPerPost = submissionSource.payment_model === "pay_per_post";
+  const isBoost = submissionSource.sourceType === 'boost';
   const isLightMode = resolvedTheme === "light";
 
   // Fetch user's social accounts
@@ -260,7 +282,7 @@ export function SubmitVideoDialog({
       const { data: existing } = await supabase
         .from("video_submissions")
         .select("id")
-        .eq("source_id", campaign.id)
+        .eq("source_id", submissionSource.id)
         .eq("video_url", videoUrl.trim())
         .maybeSingle();
 
@@ -270,21 +292,32 @@ export function SubmitVideoDialog({
         return;
       }
 
-      // Get campaign brand_id
-      const { data: campaignData } = await supabase
-        .from("campaigns")
-        .select("brand_id")
-        .eq("id", campaign.id)
-        .single();
+      // Get brand_id based on source type
+      let brandId: string | null = null;
+      if (isBoost) {
+        const { data: boostData } = await supabase
+          .from("bounty_campaigns")
+          .select("brand_id")
+          .eq("id", submissionSource.id)
+          .single();
+        brandId = boostData?.brand_id || null;
+      } else {
+        const { data: campaignData } = await supabase
+          .from("campaigns")
+          .select("brand_id")
+          .eq("id", submissionSource.id)
+          .single();
+        brandId = campaignData?.brand_id || null;
+      }
 
-      // Calculate estimated payout for pay_per_post
-      const estimatedPayout = isPayPerPost ? campaign.post_rate || 0 : null;
+      // Calculate estimated payout
+      const estimatedPayout = isPayPerPost ? submissionSource.post_rate || 0 : null;
 
       // Insert into video_submissions table (unified table)
       const { error } = await supabase.from("video_submissions").insert({
-        source_type: "campaign",
-        source_id: campaign.id,
-        brand_id: campaignData?.brand_id || null,
+        source_type: submissionSource.sourceType,
+        source_id: submissionSource.id,
+        brand_id: brandId,
         creator_id: user.id,
         video_url: videoUrl.trim(),
         platform: platform,
@@ -349,13 +382,13 @@ export function SubmitVideoDialog({
               Please ensure you adhere to all the rules and requirements before submitting to maximize your chance of approval.
             </p>
 
-            {campaign.guidelines && (
+            {submissionSource.guidelines && (
               <>
                 <h3 className="text-sm font-semibold mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
                   General
                 </h3>
                 <p className="text-sm text-white/90 mb-6 uppercase font-medium tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
-                  {campaign.guidelines}
+                  {submissionSource.guidelines}
                 </p>
               </>
             )}
