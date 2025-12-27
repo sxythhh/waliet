@@ -149,7 +149,7 @@ export function CampaignsTab({
     platform: string;
     username: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<'campaigns' | 'submissions'>('campaigns');
+  
 
   // New state for dashboard sections
   const [profile, setProfile] = useState<{
@@ -650,29 +650,11 @@ export function CampaignsTab({
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-6 border-b border-border">
-        <button onClick={() => setActiveTab('campaigns')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'campaigns' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`} style={{
-        fontFamily: 'Inter',
-        letterSpacing: '-0.5px'
-      }}>
-          Campaigns
-          {activeTab === 'campaigns' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />}
-        </button>
-        <button onClick={() => setActiveTab('submissions')} className={`pb-3 text-sm font-medium transition-colors relative ${activeTab === 'submissions' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`} style={{
-        fontFamily: 'Inter',
-        letterSpacing: '-0.5px'
-      }}>
-          Submissions
-          {activeTab === 'submissions' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2060df] rounded-full" />}
-        </button>
-      </div>
-
-      {/* Submissions Tab Content */}
-      {activeTab === 'submissions' && <SubmissionsTab />}
-
-      {/* Campaigns Tab Content */}
-      {activeTab === 'campaigns' && <>
+      {/* Submissions Section */}
+      <SubmissionsTab />
+      
+      {/* Campaigns Content */}
+      <>
 
       {/* Actions Section - Hidden if user has joined campaigns AND has payment method */}
       {!shouldHideActionCards && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -815,6 +797,7 @@ export function CampaignsTab({
               </Card>)}
           </div>
         </div>}
+    </>
     
     {/* Link Account Options Dialog */}
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -965,6 +948,5 @@ export function CampaignsTab({
           }, 300);
         }
       }} />
-    </>}
     </div>;
 }
