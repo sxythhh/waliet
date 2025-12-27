@@ -1,4 +1,4 @@
-import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, ChevronRight, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
+import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -754,23 +754,15 @@ export function AppSidebar() {
 
         {/* Joined Campaigns Section - Only show in creator mode */}
         {isCreatorMode && joinedCampaigns.length > 0 && <div className={`px-2 py-2 border-t border-border ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
-            {!isCollapsed && (
-              <button 
-                onClick={() => setCampaignsExpanded(!campaignsExpanded)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
+            {!isCollapsed && <button onClick={() => setCampaignsExpanded(!campaignsExpanded)} className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
                 <span className="font-['Inter'] tracking-[-0.3px]">Campaigns</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${campaignsExpanded ? '' : '-rotate-90'}`} />
-              </button>
-            )}
-            <div 
-              className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'flex flex-col gap-0.5'} overflow-hidden transition-all duration-200 ease-out`}
-              style={{
-                maxHeight: !isCollapsed && !campaignsExpanded ? '0px' : '200px',
-                opacity: !isCollapsed && !campaignsExpanded ? 0 : 1,
-                marginTop: !isCollapsed && !campaignsExpanded ? '0px' : undefined
-              }}
-            >
+              </button>}
+            <div className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'flex flex-col gap-0.5'} overflow-hidden transition-all duration-200 ease-out`} style={{
+          maxHeight: !isCollapsed && !campaignsExpanded ? '0px' : '200px',
+          opacity: !isCollapsed && !campaignsExpanded ? 0 : 1,
+          marginTop: !isCollapsed && !campaignsExpanded ? '0px' : undefined
+        }}>
               {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => {
             setSelectedCampaignForDetails(campaign);
             setCampaignDetailsDialogOpen(true);
@@ -827,7 +819,7 @@ export function AppSidebar() {
                       <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
                       <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">{user?.email}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    
                   </>}
               </button>
             </PopoverTrigger>
