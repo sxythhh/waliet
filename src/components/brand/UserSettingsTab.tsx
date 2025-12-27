@@ -405,7 +405,7 @@ export function UserSettingsTab() {
   if (loading) {
     return <div className="p-4 space-y-6 max-w-xl mx-auto">
         {/* Header Skeleton */}
-        <div className="space-y-2 bg-black/0">
+        <div className="space-y-2">
           <Skeleton className="h-8 w-24 rounded-lg" />
           <Skeleton className="h-4 w-56 rounded-md" />
         </div>
