@@ -17,7 +17,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import defaultProfileBanner from "@/assets/default-profile-banner.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
-import { RankBadge, type RankType } from "@/components/RankBadge";
+import { RankBadge, XPProgressBar, type RankType } from "@/components/RankBadge";
 
 interface Profile {
   id: string;
@@ -63,11 +63,13 @@ export function ProfileHeader({
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
   const [bannerCropData, setBannerCropData] = useState<{ zoom: number; positionX: number; positionY: number } | null>(null);
+  const [levelThresholds, setLevelThresholds] = useState<{ xpForCurrentLevel: number; xpForNextLevel: number }>({ xpForCurrentLevel: 0, xpForNextLevel: 500 });
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
+    fetchLevelThresholds();
   }, []);
   const fetchProfile = async () => {
     const {
@@ -104,6 +106,37 @@ export function ProfileHeader({
     });
     if (data) {
       setSocialAccounts(data);
+    }
+  };
+
+  const fetchLevelThresholds = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Get current user's level
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("current_level")
+      .eq("id", session.user.id)
+      .single();
+
+    const currentLevel = profileData?.current_level ?? 1;
+
+    // Get thresholds for current and next level
+    const { data: thresholds } = await supabase
+      .from("level_thresholds")
+      .select("level, xp_required")
+      .in("level", [currentLevel, currentLevel + 1])
+      .order("level");
+
+    if (thresholds && thresholds.length > 0) {
+      const currentThreshold = thresholds.find(t => t.level === currentLevel);
+      const nextThreshold = thresholds.find(t => t.level === currentLevel + 1);
+      
+      setLevelThresholds({
+        xpForCurrentLevel: currentThreshold?.xp_required ?? 0,
+        xpForNextLevel: nextThreshold?.xp_required ?? (currentThreshold?.xp_required ?? 0) + 500
+      });
     }
   };
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -311,6 +344,18 @@ export function ProfileHeader({
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {profile.bio}
               </p>
+            )}
+
+            {/* XP Progress Bar */}
+            {profile && (
+              <div className="mt-3">
+                <XPProgressBar
+                  currentXP={profile.current_xp || 0}
+                  xpForCurrentLevel={levelThresholds.xpForCurrentLevel}
+                  xpForNextLevel={levelThresholds.xpForNextLevel}
+                  rank={(profile.current_rank || 'Bronze') as RankType}
+                />
+              </div>
             )}
           </div>
         </div>
