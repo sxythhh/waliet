@@ -30,6 +30,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { CampaignCard } from "./CampaignCard";
+import { RecentActivity } from "./RecentActivity";
 interface Campaign {
   id: string;
   title: string;
@@ -766,6 +767,9 @@ export function DiscoverTab({
             });
           })()}
             </div>
+            
+            {/* Recent Activity */}
+            <RecentActivity />
           </div>}
         </div>
 
