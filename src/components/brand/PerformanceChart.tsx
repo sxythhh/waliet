@@ -171,7 +171,7 @@ export function PerformanceChart({
               {activeMetrics.map(metric => <Area key={metric} type="linear" dataKey={getChartDataKey(metric)} name={metric} stroke={METRIC_COLORS[metric]} strokeWidth={2} fill={`url(#gradient-${metric})`} dot={false} activeDot={{
             r: 5,
             fill: METRIC_COLORS[metric],
-            stroke: '#1a1a1a',
+            stroke: 'var(--chart-cursor-stroke)',
             strokeWidth: 2
           }} />)}
             </AreaChart>

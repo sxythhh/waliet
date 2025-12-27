@@ -170,7 +170,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
                     </div>
                   );
                 }}
-                cursor={{ stroke: '#0e0e0e', strokeWidth: 1 }}
+                cursor={{ stroke: 'var(--chart-cursor-stroke)', strokeWidth: 1 }}
               />
               {activeMetrics.map(metric => (
                 <Area
@@ -185,7 +185,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
                   activeDot={{
                     r: 5,
                     fill: ACTIVITY_METRIC_COLORS[metric],
-                    stroke: '#1a1a1a',
+                    stroke: 'var(--chart-cursor-stroke)',
                     strokeWidth: 2
                   }}
                 />
