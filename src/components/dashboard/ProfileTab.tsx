@@ -1142,20 +1142,7 @@ export function ProfileTab() {
         <CardContent className="pt-0">
           <form onSubmit={handleSaveProfile} className="space-y-4">
             {/* Profile Picture */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-3" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Profile picture</p>
-              <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }} className="gap-2 bg-muted/40 hover:bg-muted/60 px-4 rounded-md">
-                <RefreshCw className="h-4 w-4" />
-                {uploading ? "Uploading..." : "Replace picture"}
-              </Button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
-            </div>
+            
 
             {/* Discord Account */}
             <div>
