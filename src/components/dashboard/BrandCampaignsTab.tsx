@@ -12,6 +12,7 @@ import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDet
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CampaignRowCard } from "@/components/brand/CampaignRowCard";
 import { AllocateBudgetDialog } from "@/components/brand/AllocateBudgetDialog";
+import { CreateJobPostDialog } from "@/components/brand/CreateJobPostDialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
@@ -89,6 +90,7 @@ export function BrandCampaignsTab({
   const [statusFilter, setStatusFilter] = useState<CampaignStatusFilter>("all");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [campaignTypeDialogOpen, setCampaignTypeDialogOpen] = useState(false);
+  const [createJobPostOpen, setCreateJobPostOpen] = useState(false);
   const [allocateBudgetOpen, setAllocateBudgetOpen] = useState(false);
   const [selectedCampaignForFunding, setSelectedCampaignForFunding] = useState<{
     id: string;
@@ -400,6 +402,8 @@ export function BrandCampaignsTab({
           setCreateBountyOpen(true);
         }} onSelectBoost={() => {
           setCreateBountyOpen(true);
+        }} onSelectJobPost={() => {
+          setCreateJobPostOpen(true);
         }} />
           </div>
 
@@ -558,6 +562,16 @@ export function BrandCampaignsTab({
 
       {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
+
+      {/* Create Job Post Dialog */}
+      <CreateJobPostDialog 
+        open={createJobPostOpen} 
+        onOpenChange={setCreateJobPostOpen} 
+        brandId={brandId} 
+        brandName={brandName}
+        brandLogoUrl={brandLogoUrl}
+        onSuccess={fetchBrandData} 
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
