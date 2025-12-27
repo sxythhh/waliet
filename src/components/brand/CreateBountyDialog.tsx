@@ -83,6 +83,8 @@ export function CreateBountyDialog({
     view_bonus_tiers: [] as { bonus_type: 'milestone' | 'cpm'; view_threshold: number; min_views?: number; bonus_amount: number; cpm_rate?: number }[]
   });
   const [newQuestion, setNewQuestion] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
 
   // Fetch brand's available balance and subscription status
   useEffect(() => {
@@ -256,7 +258,8 @@ export function CreateBountyDialog({
         work_location: formData.work_location || null,
         slug: uniqueSlug,
         shortimize_collection_name: formData.shortimize_collection_name || null,
-        view_bonuses_enabled: formData.view_bonuses_enabled
+        view_bonuses_enabled: formData.view_bonuses_enabled,
+        tags: tags.length > 0 ? tags : null
       }).select().single();
       if (error) throw error;
 
@@ -314,6 +317,8 @@ export function CreateBountyDialog({
       view_bonus_tiers: []
     });
     setNewQuestion("");
+    setTagInput("");
+    setTags([]);
     setBannerFile(null);
     setBannerPreview(null);
     setSelectedBlueprintId("");
@@ -642,7 +647,68 @@ export function CreateBountyDialog({
                 </p>
               </div>
 
-              {/* Summary Card */}
+              {/* Tags */}
+              <div className="space-y-3">
+                <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Tags</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const trimmed = tagInput.trim();
+                        if (trimmed && !tags.includes(trimmed)) {
+                          setTags([...tags, trimmed]);
+                          setTagInput("");
+                        }
+                      }
+                    }}
+                    placeholder="Add a tag and press Enter"
+                    className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-10 px-3 font-inter tracking-[-0.5px]"
+                    disabled={!tagInput.trim()}
+                    onClick={() => {
+                      const trimmed = tagInput.trim();
+                      if (trimmed && !tags.includes(trimmed)) {
+                        setTags([...tags, trimmed]);
+                        setTagInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="secondary" 
+                        className="pl-2 pr-1 py-1 gap-1 text-xs font-inter tracking-[-0.5px]"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => setTags(tags.filter((_, i) => i !== index))}
+                          className="ml-1 hover:bg-muted rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                  Add tags to help categorize this boost (e.g., "Gaming", "Tech", "Lifestyle")
+                </p>
+              </div>
+
               <div className="rounded-xl bg-muted/20 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-4 w-4 text-muted-foreground" />
