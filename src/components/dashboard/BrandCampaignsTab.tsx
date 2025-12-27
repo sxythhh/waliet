@@ -340,7 +340,7 @@ export function BrandCampaignsTab({
 
         {/* Campaign Cards Skeleton - Row layout */}
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card border border-[#0e0e0e]">
+          {[1, 2, 3].map(i => <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card border border-border">
               {/* Banner */}
               <Skeleton className="w-full sm:w-40 md:w-48 h-28 sm:h-auto rounded-none flex-shrink-0" />
               {/* Content */}
