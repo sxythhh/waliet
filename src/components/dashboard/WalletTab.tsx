@@ -1325,17 +1325,21 @@ export function WalletTab() {
         {/* Current Balance Card */}
         <Card className="border-0 bg-neutral-100/0">
           <CardContent className="pt-4 pb-4 py-0 px-[10px] bg-black/0">
-            <div className="flex items-center gap-3 mb-2">
-              
-              <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
-              letterSpacing: '-0.5px'
-            }}>Current Balance</p>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
+                  letterSpacing: '-0.5px'
+                }}>Current Balance</p>
+                <p className="text-3xl font-bold font-geist" style={{
+                  letterSpacing: '-0.3px'
+                }}>
+                  {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
+                </p>
+              </div>
+              <Button onClick={handleRequestPayout} className="w-40 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
+                Withdraw Balance
+              </Button>
             </div>
-            <p className="text-3xl font-bold font-geist mb-4" style={{
-            letterSpacing: '-0.3px'
-          }}>
-              {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
-            </p>
             <Separator className="my-2" />
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -1352,9 +1356,6 @@ export function WalletTab() {
               <span className="text-xs text-muted-foreground font-medium">In Transit</span>
               <span className="text-base font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
             </div>
-            <Button onClick={handleRequestPayout} className="w-40 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
-              Withdraw Balance
-            </Button>
           </CardContent>
         </Card>
       </div>
