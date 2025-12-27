@@ -559,8 +559,6 @@ export function DiscoverTab({
                 {/* Card skeleton matching CampaignCard */}
                 <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted/30">
                   <Skeleton className="absolute inset-0 w-full h-full" />
-                  {/* Gradient overlay like CampaignCard */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   {/* Bottom content */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
                     <Skeleton className="h-4 w-3/4 mx-auto bg-white/10" />
