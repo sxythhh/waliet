@@ -2502,6 +2502,24 @@ export type Database = {
         }
         Relationships: []
       }
+      level_thresholds: {
+        Row: {
+          level: number
+          rank: string
+          xp_required: number
+        }
+        Insert: {
+          level: number
+          rank: string
+          xp_required: number
+        }
+        Update: {
+          level?: number
+          rank?: string
+          xp_required?: number
+        }
+        Relationships: []
+      }
       link_clicks: {
         Row: {
           browser: string | null
@@ -2840,6 +2858,9 @@ export type Database = {
           content_styles: string[] | null
           country: string | null
           created_at: string | null
+          current_level: number | null
+          current_rank: string | null
+          current_xp: number | null
           demographics_score: number | null
           discord_access_token: string | null
           discord_avatar: string | null
@@ -2895,6 +2916,9 @@ export type Database = {
           content_styles?: string[] | null
           country?: string | null
           created_at?: string | null
+          current_level?: number | null
+          current_rank?: string | null
+          current_xp?: number | null
           demographics_score?: number | null
           discord_access_token?: string | null
           discord_avatar?: string | null
@@ -2950,6 +2974,9 @@ export type Database = {
           content_styles?: string[] | null
           country?: string | null
           created_at?: string | null
+          current_level?: number | null
+          current_rank?: string | null
+          current_xp?: number | null
           demographics_score?: number | null
           discord_access_token?: string | null
           discord_avatar?: string | null
@@ -3822,6 +3849,51 @@ export type Database = {
           },
         ]
       }
+      xp_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          source_id: string | null
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          source_id?: string | null
+          source_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          source_id?: string | null
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_campaigns: {
@@ -3984,6 +4056,14 @@ export type Database = {
           discord_id: string
           refresh_token: string
           token_expires_at: string
+        }[]
+      }
+      get_level_from_xp: {
+        Args: { xp: number }
+        Returns: {
+          level: number
+          rank: string
+          xp_for_next_level: number
         }[]
       }
       get_pending_amount: {

@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Trophy, Medal, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RankBadge, formatXP, type RankType } from "@/components/RankBadge";
 
 interface LeaderboardUser {
   id: string;
   username: string;
   full_name: string | null;
   avatar_url: string | null;
-  total_earnings: number;
+  current_xp: number;
+  current_level: number;
+  current_rank: string;
   rank: number;
 }
 
@@ -22,7 +25,7 @@ type TimePeriod = 'week' | 'month' | 'all';
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('week');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserStats, setCurrentUserStats] = useState<LeaderboardUser | null>(null);
@@ -50,7 +53,7 @@ export default function Leaderboard() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Calculate date range based on period
+    // Calculate date range based on period for XP transactions
     let dateFilter = '';
     const now = new Date();
     
@@ -62,71 +65,80 @@ export default function Leaderboard() {
       dateFilter = monthAgo.toISOString();
     }
 
-    // Fetch wallet transactions for the time period
-    let query = supabase
-      .from("wallet_transactions")
-      .select("user_id, amount");
+    if (timePeriod === 'all') {
+      // For all time, use the current_xp from profiles directly
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, current_xp, current_level, current_rank, hide_from_leaderboard")
+        .eq("hide_from_leaderboard", false)
+        .gt("current_xp", 0)
+        .order("current_xp", { ascending: false })
+        .limit(50);
 
-    if (dateFilter) {
-      query = query.gte("created_at", dateFilter);
-    }
+      const leaderboardData: LeaderboardUser[] = profiles?.map((profile, index) => ({
+        id: profile.id,
+        username: profile.username || "Anonymous",
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+        current_xp: profile.current_xp ?? 0,
+        current_level: profile.current_level ?? 1,
+        current_rank: profile.current_rank ?? 'Bronze',
+        rank: index + 1
+      })) || [];
 
-    query = query.eq("type", "earning");
+      // Find current user
+      const currentUser = leaderboardData.find(u => u.id === currentUserId);
+      if (currentUser) {
+        setCurrentUserStats(currentUser.rank <= 20 ? currentUser : {
+          ...currentUser,
+          rank: -1
+        });
+      } else {
+        // Fetch current user's profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, current_xp, current_level, current_rank")
+          .eq("id", currentUserId)
+          .single();
+        
+        if (profile) {
+          setCurrentUserStats({
+            id: profile.id,
+            username: profile.username || "You",
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+            current_xp: profile.current_xp ?? 0,
+            current_level: profile.current_level ?? 1,
+            current_rank: profile.current_rank ?? 'Bronze',
+            rank: -1
+          });
+        }
+      }
 
-    const { data: transactions } = await query;
-
-    // Group by user and sum earnings
-    const userEarnings = new Map<string, number>();
-    transactions?.forEach((txn) => {
-      const current = userEarnings.get(txn.user_id) || 0;
-      userEarnings.set(txn.user_id, current + Number(txn.amount));
-    });
-
-    // Fetch profile data for users with earnings
-    const userIds = Array.from(userEarnings.keys());
-    if (userIds.length === 0) {
-      setLeaderboard([]);
+      setLeaderboard(leaderboardData.slice(0, 20));
       setLoading(false);
       return;
     }
 
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, username, full_name, avatar_url, hide_from_leaderboard")
-      .in("id", userIds)
-      .eq("hide_from_leaderboard", false);
+    // For week/month, calculate XP earned in that period
+    const { data: xpTransactions } = await supabase
+      .from("xp_transactions")
+      .select("user_id, amount")
+      .gte("created_at", dateFilter);
 
-    // Combine and sort
-    const leaderboardData: LeaderboardUser[] = profiles?.map((profile) => ({
-      id: profile.id,
-      username: profile.username || "Anonymous",
-      full_name: profile.full_name,
-      avatar_url: profile.avatar_url,
-      total_earnings: userEarnings.get(profile.id) || 0,
-      rank: 0
-    })) || [];
-
-    leaderboardData.sort((a, b) => b.total_earnings - a.total_earnings);
-    
-    // Assign ranks
-    leaderboardData.forEach((user, index) => {
-      user.rank = index + 1;
+    // Group by user and sum XP
+    const userXP = new Map<string, number>();
+    xpTransactions?.forEach((txn) => {
+      const current = userXP.get(txn.user_id) || 0;
+      userXP.set(txn.user_id, current + Number(txn.amount));
     });
 
-    // Find current user in full leaderboard
-    const currentUser = leaderboardData.find(u => u.id === currentUserId);
-    if (currentUser) {
-      // If user is in top 20, show their actual rank
-      // If not, we'll show "-"
-      setCurrentUserStats(currentUser.rank <= 20 ? currentUser : {
-        ...currentUser,
-        rank: -1 // Special value to indicate outside top 20
-      });
-    } else {
-      // User has no earnings in this period
+    const userIds = Array.from(userXP.keys());
+    if (userIds.length === 0) {
+      // Still show current user even if no XP in period
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, username, full_name, avatar_url")
+        .select("id, username, full_name, avatar_url, current_xp, current_level, current_rank")
         .eq("id", currentUserId)
         .single();
       
@@ -136,13 +148,68 @@ export default function Leaderboard() {
           username: profile.username || "You",
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
-          total_earnings: 0,
+          current_xp: 0,
+          current_level: profile.current_level ?? 1,
+          current_rank: profile.current_rank ?? 'Bronze',
+          rank: -1
+        });
+      }
+      setLeaderboard([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, full_name, avatar_url, current_level, current_rank, hide_from_leaderboard")
+      .in("id", userIds)
+      .eq("hide_from_leaderboard", false);
+
+    const leaderboardData: LeaderboardUser[] = profiles?.map((profile) => ({
+      id: profile.id,
+      username: profile.username || "Anonymous",
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
+      current_xp: userXP.get(profile.id) || 0,
+      current_level: profile.current_level ?? 1,
+      current_rank: profile.current_rank ?? 'Bronze',
+      rank: 0
+    })) || [];
+
+    leaderboardData.sort((a, b) => b.current_xp - a.current_xp);
+    
+    leaderboardData.forEach((user, index) => {
+      user.rank = index + 1;
+    });
+
+    const currentUser = leaderboardData.find(u => u.id === currentUserId);
+    if (currentUser) {
+      setCurrentUserStats(currentUser.rank <= 20 ? currentUser : {
+        ...currentUser,
+        rank: -1
+      });
+    } else {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url, current_level, current_rank")
+        .eq("id", currentUserId)
+        .single();
+      
+      if (profile) {
+        setCurrentUserStats({
+          id: profile.id,
+          username: profile.username || "You",
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          current_xp: 0,
+          current_level: profile.current_level ?? 1,
+          current_rank: profile.current_rank ?? 'Bronze',
           rank: -1
         });
       }
     }
 
-    setLeaderboard(leaderboardData.slice(0, 20)); // Only show top 20
+    setLeaderboard(leaderboardData.slice(0, 20));
     setLoading(false);
   };
 
@@ -174,7 +241,7 @@ export default function Leaderboard() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
-          <p className="text-muted-foreground">Top earning creators on the platform</p>
+          <p className="text-muted-foreground">Top creators ranked by XP</p>
         </div>
 
         {/* Filters */}
@@ -223,7 +290,7 @@ export default function Leaderboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold">Rankings</CardTitle>
               <div className="flex gap-8 text-sm font-medium">
-                <span className="text-muted-foreground">Earnings</span>
+                <span className="text-muted-foreground">XP</span>
               </div>
             </div>
           </CardHeader>
@@ -273,6 +340,11 @@ export default function Leaderboard() {
                         <p className="font-semibold truncate">
                           {user.full_name || user.username}
                         </p>
+                        <RankBadge 
+                          rank={user.current_rank as RankType} 
+                          level={user.current_level} 
+                          size="sm"
+                        />
                         {user.id === currentUserId && (
                           <Badge variant="outline" className="text-xs">You</Badge>
                         )}
@@ -282,10 +354,10 @@ export default function Leaderboard() {
                       )}
                     </div>
 
-                    {/* Earnings */}
+                    {/* XP */}
                     <div className="text-right">
-                      <span className="text-lg font-bold text-green-500">
-                        +${user.total_earnings.toFixed(2)}
+                      <span className="text-lg font-bold text-primary">
+                        {formatXP(user.current_xp)} XP
                       </span>
                     </div>
                   </div>
@@ -328,21 +400,26 @@ export default function Leaderboard() {
                     <p className="font-semibold truncate">
                       {currentUserStats.full_name || currentUserStats.username}
                     </p>
+                    <RankBadge 
+                      rank={currentUserStats.current_rank as RankType} 
+                      level={currentUserStats.current_level} 
+                      size="sm"
+                    />
                     <Badge variant="outline" className="text-xs bg-primary text-primary-foreground border-primary">
                       You
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {currentUserStats.rank === -1 
-                      ? "Keep earning to reach the top 20!" 
+                      ? "Keep earning XP to reach the top 20!" 
                       : "Your ranking"}
                   </p>
                 </div>
 
-                {/* Earnings */}
+                {/* XP */}
                 <div className="text-right">
-                  <span className="text-lg font-bold text-green-500">
-                    {currentUserStats.total_earnings > 0 ? '+' : ''}${currentUserStats.total_earnings.toFixed(2)}
+                  <span className="text-lg font-bold text-primary">
+                    {formatXP(currentUserStats.current_xp)} XP
                   </span>
                 </div>
               </div>
