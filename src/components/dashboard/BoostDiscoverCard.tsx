@@ -66,7 +66,7 @@ export function BoostDiscoverCard({
 
         {/* Metadata Row */}
         <div className="flex flex-wrap gap-x-2.5 gap-y-1 text-[10px] font-medium text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-[#545d69]">
             <img src={videosIcon} alt="" className="h-3 w-3 opacity-80" />
             {videos_per_month} videos/mo
           </span>
