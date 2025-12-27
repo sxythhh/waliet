@@ -272,7 +272,7 @@ export function ProfileHeader({
       {/* Profile Card Section */}
       <div className="flex flex-col md:flex-row gap-6 pt-8">
         {/* Left: Info (avatar is now overlapping banner above) */}
-        <div className="flex items-start gap-4 flex-1 pl-2">
+        <div className="flex items-start gap-4 flex-1 pl-2 md:pl-[15px]">
           {/* Name + Edit */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -282,14 +282,19 @@ export function ProfileHeader({
               <span className="text-muted-foreground text-sm">
                 @{profile?.username || "username"}
               </span>
+              <div className="flex-1" />
               <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 border-0" onClick={() => navigate('/dashboard?tab=profile')}>
                 <Pencil className="h-3 w-3 mr-1" />
                 Edit Profile
               </Button>
             </div>
             
-            {/* Stats row */}
-            
+            {/* Bio */}
+            {profile?.bio && (
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                {profile.bio}
+              </p>
+            )}
           </div>
         </div>
 
