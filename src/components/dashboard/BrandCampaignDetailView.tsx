@@ -370,7 +370,7 @@ export function BrandCampaignDetailView({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64 z-50 bg-white dark:bg-[#080808] border-[#dedede] dark:border-[#1f1f1f] rounded-[7px]">
                 {/* All Programs option */}
-                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={`focus:bg-[#f0f0f0] dark:focus:bg-white/5 focus:text-foreground ${isAllMode ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}`}>
+                <DropdownMenuItem onClick={() => handleSelectEntity("all")} className={isAllMode ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
                   <span className="font-medium">All Programs</span>
                 </DropdownMenuItem>
                 
@@ -381,14 +381,14 @@ export function BrandCampaignDetailView({
                   {campaigns.map(c => <DropdownMenuItem key={c.id} onClick={() => handleSelectEntity({
                   type: "campaign",
                   id: c.id
-                })} className={`focus:bg-[#f0f0f0] dark:focus:bg-white/5 focus:text-foreground ${campaignId === c.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}`}>
+                })} className={campaignId === c.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
                       <span className="truncate">{c.title}</span>
                       
                     </DropdownMenuItem>)}
                   {boosts.map(b => <DropdownMenuItem key={b.id} onClick={() => handleSelectEntity({
                   type: "boost",
                   id: b.id
-                })} className={`focus:bg-[#f0f0f0] dark:focus:bg-white/5 focus:text-foreground ${boostId === b.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}`}>
+                })} className={boostId === b.id ? "bg-[#f0f0f0] dark:bg-[#1a1a1a]" : ""}>
                       <span className="truncate">{b.title}</span>
                       
                     </DropdownMenuItem>)}
@@ -407,7 +407,7 @@ export function BrandCampaignDetailView({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="z-50 bg-white dark:bg-[#080808] border-[#dedede] dark:border-[#1f1f1f]">
-                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} className="focus:bg-[#f0f0f0] dark:focus:bg-muted focus:text-foreground" onClick={() => setTimeframe(option)}>
+                {(Object.keys(TIMEFRAME_LABELS) as TimeframeOption[]).map(option => <DropdownMenuItem key={option} onClick={() => setTimeframe(option)}>
                     {TIMEFRAME_LABELS[option]}
                   </DropdownMenuItem>)}
               </DropdownMenuContent>
