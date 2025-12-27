@@ -1326,7 +1326,7 @@ export function WalletTab() {
         <Card className="border-0 bg-neutral-100/0">
           <CardContent className="pt-4 pb-4 py-0 bg-black/0 px-0">
             <div className="flex items-center justify-between mb-4">
-              <div className="items-center gap-4 flex flex-col">
+              <div className="items-center flex flex-col gap-[5px]">
                 <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
                 letterSpacing: '-0.5px'
               }}>Current Balance</p>

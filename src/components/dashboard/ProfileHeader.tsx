@@ -18,7 +18,6 @@ import defaultProfileBanner from "@/assets/default-profile-banner.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
 import { RankBadge, XPProgressBar, type RankType } from "@/components/RankBadge";
-
 interface Profile {
   id: string;
   username: string;
@@ -62,8 +61,18 @@ export function ProfileHeader({
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
-  const [bannerCropData, setBannerCropData] = useState<{ zoom: number; positionX: number; positionY: number } | null>(null);
-  const [levelThresholds, setLevelThresholds] = useState<{ xpForCurrentLevel: number; xpForNextLevel: number }>({ xpForCurrentLevel: 0, xpForNextLevel: 500 });
+  const [bannerCropData, setBannerCropData] = useState<{
+    zoom: number;
+    positionX: number;
+    positionY: number;
+  } | null>(null);
+  const [levelThresholds, setLevelThresholds] = useState<{
+    xpForCurrentLevel: number;
+    xpForNextLevel: number;
+  }>({
+    xpForCurrentLevel: 0,
+    xpForNextLevel: 500
+  });
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -108,31 +117,27 @@ export function ProfileHeader({
       setSocialAccounts(data);
     }
   };
-
   const fetchLevelThresholds = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
 
     // Get current user's level
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("current_level")
-      .eq("id", session.user.id)
-      .single();
-
+    const {
+      data: profileData
+    } = await supabase.from("profiles").select("current_level").eq("id", session.user.id).single();
     const currentLevel = profileData?.current_level ?? 1;
 
     // Get thresholds for current and next level
-    const { data: thresholds } = await supabase
-      .from("level_thresholds")
-      .select("level, xp_required")
-      .in("level", [currentLevel, currentLevel + 1])
-      .order("level");
-
+    const {
+      data: thresholds
+    } = await supabase.from("level_thresholds").select("level, xp_required").in("level", [currentLevel, currentLevel + 1]).order("level");
     if (thresholds && thresholds.length > 0) {
       const currentThreshold = thresholds.find(t => t.level === currentLevel);
       const nextThreshold = thresholds.find(t => t.level === currentLevel + 1);
-      
       setLevelThresholds({
         xpForCurrentLevel: currentThreshold?.xp_required ?? 0,
         xpForNextLevel: nextThreshold?.xp_required ?? (currentThreshold?.xp_required ?? 0) + 500
@@ -185,51 +190,55 @@ export function ProfileHeader({
   const handleBannerSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
-    
+
     // Create temporary URL for cropping
     const url = URL.createObjectURL(file);
     setTempBannerUrl(url);
     setShowCropDialog(true);
   };
-
-  const handleBannerCropApply = async (cropData: { zoom: number; positionX: number; positionY: number }) => {
+  const handleBannerCropApply = async (cropData: {
+    zoom: number;
+    positionX: number;
+    positionY: number;
+  }) => {
     if (!tempBannerUrl || !profile) return;
-    
     setUploadingBanner(true);
     setBannerCropData(cropData);
-    
     try {
       // Get the file from the input
       const file = bannerInputRef.current?.files?.[0];
       if (!file) throw new Error("No file selected");
-
       const fileExt = file.name.split('.').pop();
       const filePath = `${profile.id}/banner.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-      
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-      
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ banner_url: publicUrl })
-        .eq('id', profile.id);
-      
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const {
+        error: updateError
+      } = await supabase.from('profiles').update({
+        banner_url: publicUrl
+      }).eq('id', profile.id);
       if (updateError) throw updateError;
-      
-      setProfile({ ...profile, banner_url: publicUrl });
-      toast({ title: "Banner updated successfully" });
+      setProfile({
+        ...profile,
+        banner_url: publicUrl
+      });
+      toast({
+        title: "Banner updated successfully"
+      });
     } catch (error: any) {
       toast({
         title: "Error uploading banner",
         description: error.message,
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setUploadingBanner(false);
@@ -257,8 +266,7 @@ export function ProfileHeader({
   };
   const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
   if (loading) {
-    return (
-      <div className="space-y-4">
+    return <div className="space-y-4">
         <Skeleton className="w-full h-32 rounded-xl" />
         <div className="flex items-start gap-4">
           <Skeleton className="w-20 h-20 rounded-xl" />
@@ -267,12 +275,9 @@ export function ProfileHeader({
             <Skeleton className="h-4 w-48" />
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Banner with Profile Picture Overlap */}
       <div className="relative">
         {/* Banner */}
@@ -299,7 +304,9 @@ export function ProfileHeader({
       }}>
           <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-2xl border-4 border-background shadow-xl">
             <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} className="rounded-2xl" />
-            <AvatarFallback className="text-white text-2xl font-bold rounded-2xl" style={{ backgroundColor: '#143fd4' }}>
+            <AvatarFallback className="text-white text-2xl font-bold rounded-2xl" style={{
+            backgroundColor: '#143fd4'
+          }}>
               {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
@@ -316,48 +323,34 @@ export function ProfileHeader({
       {/* Profile Card Section */}
       <div className="flex flex-col md:flex-row gap-6 pt-8">
         {/* Left: Info (avatar is now overlapping banner above) */}
-        <div className="flex items-start gap-4 flex-1 pl-2 md:pl-[15px]">
+        <div className="flex items-start gap-4 flex-1 pl-2 md:pl-[15px] px-0">
           {/* Name + Edit */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
                 {profile?.full_name || profile?.username || "Username"}
               </h2>
-              {profile && (
-                <RankBadge 
-                  rank={(profile.current_rank || 'Bronze') as RankType} 
-                  level={profile.current_level || 1} 
-                  size="sm"
-                />
-              )}
+              {profile && <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />}
               <span className="text-muted-foreground text-sm">
                 @{profile?.username || "username"}
               </span>
               <div className="flex-1" />
-              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-white hover:opacity-90 border-0 border-t border-t-[#4b85f7]" style={{ backgroundColor: '#1f60dd' }} onClick={() => navigate('/dashboard?tab=profile')}>
+              <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-white hover:opacity-90 border-0 border-t border-t-[#4b85f7]" style={{
+              backgroundColor: '#1f60dd'
+            }} onClick={() => navigate('/dashboard?tab=profile')}>
                 Edit Profile
               </Button>
             </div>
             
             {/* Bio */}
-            {profile?.bio && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+            {profile?.bio && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {profile.bio}
-              </p>
-            )}
+              </p>}
 
             {/* XP Progress Bar */}
-            {profile && (
-              <div className="mt-3">
-                <XPProgressBar
-                  currentXP={profile.current_xp || 0}
-                  xpForCurrentLevel={levelThresholds.xpForCurrentLevel}
-                  xpForNextLevel={levelThresholds.xpForNextLevel}
-                  rank={(profile.current_rank || 'Bronze') as RankType}
-                  level={profile.current_level || 1}
-                />
-              </div>
-            )}
+            {profile && <div className="mt-3">
+                <XPProgressBar currentXP={profile.current_xp || 0} xpForCurrentLevel={levelThresholds.xpForCurrentLevel} xpForNextLevel={levelThresholds.xpForNextLevel} rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} />
+              </div>}
           </div>
         </div>
 
@@ -367,20 +360,12 @@ export function ProfileHeader({
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
       
-      {tempBannerUrl && (
-        <BannerCropDialog
-          open={showCropDialog}
-          onOpenChange={(open) => {
-            setShowCropDialog(open);
-            if (!open) {
-              URL.revokeObjectURL(tempBannerUrl);
-              setTempBannerUrl(null);
-            }
-          }}
-          imageUrl={tempBannerUrl}
-          onApply={handleBannerCropApply}
-        />
-      )}
-    </div>
-  );
+      {tempBannerUrl && <BannerCropDialog open={showCropDialog} onOpenChange={open => {
+      setShowCropDialog(open);
+      if (!open) {
+        URL.revokeObjectURL(tempBannerUrl);
+        setTempBannerUrl(null);
+      }
+    }} imageUrl={tempBannerUrl} onApply={handleBannerCropApply} />}
+    </div>;
 }
