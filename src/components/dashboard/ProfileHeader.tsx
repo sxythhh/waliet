@@ -17,6 +17,8 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import defaultProfileBanner from "@/assets/default-profile-banner.png";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
+import { RankBadge, type RankType } from "@/components/RankBadge";
+
 interface Profile {
   id: string;
   username: string;
@@ -25,6 +27,9 @@ interface Profile {
   avatar_url: string | null;
   banner_url: string | null;
   total_earnings: number;
+  current_xp: number;
+  current_level: number;
+  current_rank: string;
 }
 interface SocialAccount {
   id: string;
@@ -74,9 +79,14 @@ export function ProfileHeader({
     setLoading(true);
     const {
       data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings").eq("id", session.user.id).single();
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank").eq("id", session.user.id).single();
     if (profileData) {
-      setProfile(profileData);
+      setProfile({
+        ...profileData,
+        current_xp: profileData.current_xp ?? 0,
+        current_level: profileData.current_level ?? 1,
+        current_rank: profileData.current_rank ?? 'Bronze'
+      });
     }
     setLoading(false);
   };
@@ -280,6 +290,13 @@ export function ProfileHeader({
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
                 {profile?.full_name || profile?.username || "Username"}
               </h2>
+              {profile && (
+                <RankBadge 
+                  rank={(profile.current_rank || 'Bronze') as RankType} 
+                  level={profile.current_level || 1} 
+                  size="sm"
+                />
+              )}
               <span className="text-muted-foreground text-sm">
                 @{profile?.username || "username"}
               </span>

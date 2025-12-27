@@ -68,6 +68,13 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         "stats-card": "hsl(var(--stats-card))",
+        rank: {
+          bronze: "hsl(var(--rank-bronze))",
+          silver: "hsl(var(--rank-silver))",
+          gold: "hsl(var(--rank-gold))",
+          platinum: "hsl(var(--rank-platinum))",
+          elite: "hsl(var(--rank-elite))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

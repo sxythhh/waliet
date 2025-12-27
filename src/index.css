@@ -105,6 +105,13 @@ All colors MUST be HSL.
     --table-border: 220 13% 85%;
     --stats-card: 0 0% 98%;
 
+    /* Rank Colors */
+    --rank-bronze: 30 60% 50%;
+    --rank-silver: 220 10% 60%;
+    --rank-gold: 45 93% 55%;
+    --rank-platinum: 190 80% 50%;
+    --rank-elite: 280 70% 55%;
+
     --radius: 0.75rem;
 
     /* Sidebar */
@@ -176,6 +183,13 @@ All colors MUST be HSL.
     --ring: 235 86% 65%;
     --table-border: 0 0% 8%;
     --stats-card: 0 0% 4%;
+
+    /* Rank Colors */
+    --rank-bronze: 30 60% 50%;
+    --rank-silver: 220 10% 70%;
+    --rank-gold: 45 93% 55%;
+    --rank-platinum: 190 80% 55%;
+    --rank-elite: 280 70% 60%;
 
     /* Sidebar */
     --sidebar-background: 0 0% 5%;
