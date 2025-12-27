@@ -1485,7 +1485,7 @@ export function ProfileTab() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-muted-foreground/60">•</span>
-                      Your username will be anonymized (e.g., J***n) in leaderboards and live submissions, recent activity feed
+                      Your username will remain anonymous              
                     </li>
                   </ul>
                 </div>}
