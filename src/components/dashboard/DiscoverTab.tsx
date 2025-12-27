@@ -79,6 +79,7 @@ interface BountyCampaign {
     name: string;
     logo_url: string;
     is_verified?: boolean;
+    slug?: string;
   };
 }
 interface DiscoverTabProps {
@@ -366,7 +367,8 @@ export function DiscoverTab({
         brands (
           name,
           logo_url,
-          is_verified
+          is_verified,
+          slug
         )
       `).in("status", ["active", "ended"]).eq("is_private", false).order("created_at", {
       ascending: false
@@ -701,6 +703,7 @@ export function DiscoverTab({
                           brand_name={bounty.brands?.name || 'Unknown'}
                           brand_logo_url={bounty.brands?.logo_url || null}
                           brand_is_verified={bounty.brands?.is_verified}
+                          brand_slug={bounty.brands?.slug}
                           monthly_retainer={bounty.monthly_retainer}
                           videos_per_month={bounty.videos_per_month}
                           max_accepted_creators={bounty.max_accepted_creators}
