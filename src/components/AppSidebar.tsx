@@ -616,7 +616,7 @@ export function AppSidebar() {
                     {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
-                            <img src={swapHorizIcon} alt="" className="w-4 h-4" />
+                            <img src={theme === 'light' ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-4 h-4" />
                           </div>
                           <span className="text-[13px] font-medium text-foreground">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                         </div>
