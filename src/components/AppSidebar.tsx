@@ -322,8 +322,8 @@ export function AppSidebar() {
   };
   const getWorkspaceIcon = () => {
     if (isCreatorMode) {
-      return <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
-          <User className="w-3.5 h-3.5 text-neutral-400" />
+      return <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+          <User className="w-3.5 h-3.5 text-muted-foreground" />
         </div>;
     }
     if (currentBrandLogo) {
@@ -331,21 +331,21 @@ export function AppSidebar() {
     }
     return <div 
       className="w-6 h-6 rounded flex items-center justify-center"
-      style={{ backgroundColor: currentBrandColor || '#1f1f1f' }}
+      style={{ backgroundColor: currentBrandColor || 'hsl(var(--muted))' }}
     >
         <span className="text-[10px] font-semibold text-white uppercase">{currentBrandName?.charAt(0) || 'B'}</span>
       </div>;
   };
   return <>
       {/* Mobile Header - Top */}
-      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-[#0a0a0a] px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
-          <span className="font-geist font-bold tracking-tighter-custom text-base text-white">VIRALITY</span>
+          <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
         </Link>
         <div className="flex items-center gap-3">
           {/* Upgrade Plan Button - Mobile */}
-          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center gap-1.5">
+          {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
               Upgrade
             </button>}
@@ -360,22 +360,22 @@ export function AppSidebar() {
                 </Avatar>
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-0 bg-[#0a0a0a] border-0 rounded-xl shadow-2xl" align="end" sideOffset={8}>
+            <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl shadow-2xl" align="end" sideOffset={8}>
               <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
-                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                    <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                       <img src={swapHorizIcon} alt="" className="w-4 h-4" />
                       <span className="text-sm">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
-                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                      {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                           {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm truncate">{brand.name}</span>
                         </button>)}
-                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-[#1f1f1f] text-foreground' : 'text-muted-foreground hover:bg-[#141414] hover:text-foreground'}`}>
+                      {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                           {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
@@ -383,7 +383,7 @@ export function AppSidebar() {
                         </button>)}
                       <button onClick={() => {
                     setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-[#141414] hover:text-foreground">
+                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
@@ -392,11 +392,11 @@ export function AppSidebar() {
                 
                 {/* Quick Links */}
                 <div className="space-y-0.5">
-                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
+                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
                     <img src={supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Support</span>
                   </button>
-                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
+                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
                     <div className="flex items-center gap-3">
                       <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
                       <span className="text-sm font-inter tracking-[-0.5px]">Discord</span>
@@ -406,14 +406,14 @@ export function AppSidebar() {
                   <button onClick={() => {
                   setFeedbackType("feature");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
                     <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
                   </button>
                   <button onClick={() => {
                   setFeedbackType("bug");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-[#141414] hover:text-foreground transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
                     <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
                     <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
                   </button>
@@ -421,11 +421,11 @@ export function AppSidebar() {
 
                 {/* Theme & Logout */}
                 <div className="pt-1 flex items-center gap-2">
-                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
                     {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                     <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                   </button>
-                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-[#141414] text-muted-foreground hover:text-red-400 transition-colors">
+                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-muted-foreground hover:text-red-400 transition-colors">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Log out</span>
                   </button>
@@ -437,10 +437,10 @@ export function AppSidebar() {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-[#0a0a0a] px-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-10 flex h-16 items-center justify-around bg-background border-t border-border px-2">
         {menuItems.map(item => {
         const isActive = location.pathname === '/dashboard' && currentTab === item.tab;
-        return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}>
+        return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground/80'}`}>
               {item.tab === "campaigns" ? <div className="relative h-6 w-6">
                   <img src={homeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={homeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -475,16 +475,16 @@ export function AppSidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-[#0a0a0a] shrink-0 border-r border-[#141414] transition-all duration-200`}>
+      <aside className={`hidden md:flex flex-col ${isCollapsed ? 'w-16' : 'w-56 lg:w-64'} h-screen sticky top-0 bg-background shrink-0 border-r border-border transition-all duration-200`}>
         {/* Logo */}
         <div className="flex items-center justify-between px-[14px] py-[8px] pl-[17px]">
           <Link to="/" className={`flex items-center gap-0 hover:opacity-80 transition-opacity ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-6 w-6 rounded-none object-cover mr-[2px]" />
-            {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-white">
+            {!isCollapsed && <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">
                 VIRALITY
               </span>}
           </Link>
-          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-[#1f1f1f] transition-colors group">
+          {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-muted transition-colors group">
               <img src="/src/assets/left-panel-close.svg" alt="Collapse" className="h-4 w-4 group-hover:hidden" />
               <img src="/src/assets/left-panel-close-hover.svg" alt="Collapse" className="h-4 w-4 hidden group-hover:block" />
             </button>}
@@ -494,9 +494,9 @@ export function AppSidebar() {
         {!isCollapsed ? <div className="px-2 py-[5px]">
             <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
               <PopoverTrigger asChild>
-                <button className="w-full flex items-center justify-between px-3 py-2 transition-colors hover:bg-[#0e0e0e] rounded-md">
+              <button className="w-full flex items-center justify-between px-3 py-2 transition-colors hover:bg-muted/50 rounded-md">
                   <div className="flex items-center gap-2">
-                    {isCreatorMode ? <div className="w-6 h-6 rounded bg-[#1f1f1f] flex items-center justify-center">
+                    {isCreatorMode ? <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
                         <img src={swapHorizIcon} alt="" className="w-3.5 h-3.5" />
                       </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{
                   backgroundColor: currentBrandColor || '#8B5CF6'
@@ -508,10 +508,10 @@ export function AppSidebar() {
                   <img src={unfoldMoreIcon} alt="" className="w-4 h-4" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-[260px] p-0 bg-[#0a0a0a] border border-[#1a1a1a]" align="start" sideOffset={4}>
+              <PopoverContent className="w-[260px] p-0 bg-background border border-border" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Current Workspace Details - Only show when in brand mode */}
-                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-[#1a1a1a] flex items-center justify-start">
+                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-border flex items-center justify-start">
                       <div className="flex items-center gap-3">
                         {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
                     backgroundColor: currentBrandColor || '#8B5CF6'
@@ -519,36 +519,36 @@ export function AppSidebar() {
                             <span className="text-sm font-medium text-white uppercase">{currentBrandName?.charAt(0)}</span>
                           </div>}
                         <div>
-                          <p className="text-[13px] font-medium text-white truncate max-w-[160px]">{currentBrandName}</p>
-                          <p className="text-[11px] text-neutral-500">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
+                          <p className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{currentBrandName}</p>
+                          <p className="text-[11px] text-muted-foreground">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
                     </div>}
                   
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                    <span className="text-[11px] font-medium font-inter tracking-[-0.3px] text-primary-foreground">Workspaces</span>
+                    <span className="text-[11px] font-medium font-inter tracking-[-0.3px] text-foreground">Workspaces</span>
                     <span className="text-[11px] font-normal text-muted-foreground">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
                   </div>
                   
                   {/* Search */}
                   <div className="px-3 pb-2">
-                    <div className="flex items-center gap-2 px-2.5 py-2 bg-[#0f0f0f] rounded-md">
-                      <Search className="w-4 h-4 text-neutral-500" />
-                      <input type="text" placeholder="Type to filter..." className="flex-1 bg-transparent text-sm text-white placeholder:text-neutral-500 outline-none" value={workspaceSearch} onChange={e => setWorkspaceSearch(e.target.value)} />
+                    <div className="flex items-center gap-2 px-2.5 py-2 bg-muted/50 rounded-md">
+                      <Search className="w-4 h-4 text-muted-foreground" />
+                      <input type="text" placeholder="Type to filter..." className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none" value={workspaceSearch} onChange={e => setWorkspaceSearch(e.target.value)} />
                     </div>
                   </div>
                   
-                  <div className="border-t border-[#1a1a1a]" />
+                  <div className="border-t border-border" />
                   
                   {/* Active Section */}
                   
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[5px]">
                     {/* Creator Dashboard */}
-                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
                             <img src={swapHorizIcon} alt="" className="w-4 h-4" />
                           </div>
                           <span className="text-[13px] font-medium text-foreground">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
@@ -557,41 +557,41 @@ export function AppSidebar() {
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>
                                 <span className="text-[11px] font-medium text-white uppercase">{brand.name.charAt(0)}</span>
                               </div>}
-                            <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{brand.name}</span>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{brand.name}</span>
                           </div>
-                          {workspace === brand.slug && <Check className="w-4 h-4 text-neutral-400" />}
+                          {workspace === brand.slug && <Check className="w-4 h-4 text-muted-foreground" />}
                         </button>)}
                     
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#141414]' : 'hover:bg-[#0f0f0f]'}`}>
+                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>
                                 <span className="text-[11px] font-medium text-white uppercase">{membership.brands.name.charAt(0)}</span>
                               </div>}
-                            <span className="text-[13px] font-medium text-white truncate max-w-[140px]">{membership.brands.name}</span>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{membership.brands.name}</span>
                           </div>
-                          {workspace === membership.brands.slug && <Check className="w-4 h-4 text-neutral-400" />}
+                          {workspace === membership.brands.slug && <Check className="w-4 h-4 text-muted-foreground" />}
                         </button>)}
                   </div>
                   
-                  <div className="border-t border-[#1a1a1a]" />
+                  <div className="border-t border-border" />
                   
                   {/* Create Brand */}
                   <div className="p-1.5">
                     <button onClick={() => {
                   setWorkspaceOpen(false);
                   setShowCreateBrandDialog(true);
-                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#0f0f0f] text-neutral-400 hover:text-white">
-                      <div className="w-7 h-7 rounded-md bg-[#1a1a1a] flex items-center justify-center">
+                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-muted/50 text-muted-foreground hover:text-foreground">
+                      <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
                         <Plus className="w-3.5 h-3.5" />
                       </div>
                       <span className="text-[13px] font-medium">Create Brand</span>
@@ -601,7 +601,7 @@ export function AppSidebar() {
               </PopoverContent>
             </Popover>
           </div> : <div className="px-2 py-2 flex justify-center">
-            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#1f1f1f] transition-colors group">
+            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors group">
               <img src="/src/assets/dock-to-right.svg" alt="Expand" className="h-4 w-4 group-hover:hidden" />
               <img src="/src/assets/dock-to-right-hover.svg" alt="Expand" className="h-4 w-4 hidden group-hover:block" />
             </button>
@@ -629,7 +629,7 @@ export function AppSidebar() {
                         }
                       }
                     }} 
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-[#0e0e0e] ${isActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`} 
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
                     title={isCollapsed ? item.title : undefined}
                   >
                     <div className="flex items-center gap-2">
@@ -646,14 +646,14 @@ export function AppSidebar() {
                   
                   {/* Subitems */}
                   {!isCollapsed && creatorsExpanded && (
-                    <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-[#1f1f1f] pl-3">
+                    <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-border pl-3">
                       {item.subItems.map((subItem) => {
                         const isSubActive = isActive && currentSubtab === subItem.subtab;
                         return (
                           <button
                             key={subItem.subtab}
                             onClick={() => handleSubtabClick(subItem.subtab)}
-                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-[#0e0e0e] ${isSubActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`}
+                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 ${isSubActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             <div className="relative h-4 w-4">
                               <img src={subItem.iconInactive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -669,7 +669,7 @@ export function AppSidebar() {
               );
             }
             
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-[#0e0e0e] ${isActive ? 'bg-[#0e0e0e] text-white' : 'text-[#6f6f6f] hover:text-white'}`} title={isCollapsed ? item.title : undefined}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -706,7 +706,7 @@ export function AppSidebar() {
 
         {/* Upgrade Plan Button - Only show in brand workspace when not subscribed */}
         {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
-            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center gap-2">
+            <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
               <img src={nutFillIcon} alt="" className="h-4 w-4" />
               Upgrade Plan
             </button>
@@ -714,14 +714,14 @@ export function AppSidebar() {
 
         {/* Swap to Business CTA - Only show in creator mode if user has no workspaces */}
         {isCreatorMode && !isCollapsed && brandMemberships.length === 0 && !isAdmin && <div className="px-2 pb-2">
-            <div className="rounded-lg bg-[#1a1a1a] p-3">
-              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-white mb-1">
+            <div className="rounded-lg bg-muted p-3">
+              <p className="font-['Geist'] text-[13px] font-medium tracking-[-0.5px] text-foreground mb-1">
                 Swap to Business
               </p>
-              <p className="font-['Geist'] text-[11px] tracking-[-0.5px] text-[#6f6f6f] mb-2">
+              <p className="font-['Geist'] text-[11px] tracking-[-0.5px] text-muted-foreground mb-2">
                 Advanced analytics, unlimited campaigns, and priority support.
               </p>
-              <button className="w-full py-2 px-3 bg-[#2060de] border-t border-[#4b85f7] rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors flex items-center justify-center" onClick={() => setShowCreateBrandDialog(true)}>
+              <button className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-md font-['Geist'] text-[12px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center" onClick={() => setShowCreateBrandDialog(true)}>
                 Create Workspace
               </button>
             </div>
@@ -732,19 +732,19 @@ export function AppSidebar() {
         <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
           <Popover>
             <PopoverTrigger asChild>
-              <button className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full gap-3 p-2.5'} flex items-center rounded-lg hover:bg-[#141414] transition-colors`}>
+              <button className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full gap-3 p-2.5'} flex items-center rounded-lg hover:bg-muted/50 transition-colors`}>
                 <Avatar className={isCollapsed ? "w-8 h-8" : "w-9 h-9"}>
                   <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                  <AvatarFallback className="bg-neutral-800 text-neutral-300 text-sm">
+                  <AvatarFallback className="bg-muted text-muted-foreground text-sm">
                     {getInitial()}
                   </AvatarFallback>
                 </Avatar>
                 {!isCollapsed && <>
                     <div className="flex-1 text-left min-w-0">
-                      <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                      <p className="text-xs text-neutral-500 truncate font-inter tracking-[-0.5px]">{user?.email}</p>
+                      <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.5px]">{user?.email}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-neutral-500" />
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </>}
               </button>
             </PopoverTrigger>
