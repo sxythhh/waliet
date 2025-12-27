@@ -269,7 +269,7 @@ export default function Dashboard() {
         return <CampaignsTab onOpenPrivateDialog={() => setPrivateDialogOpen(true)} />;
     }
   };
-  return <div className="flex h-screen w-full bg-background">
+  return <div className="flex h-screen w-full bg-white dark:bg-background">
       <AppSidebar />
       
       {/* Main Content */}
