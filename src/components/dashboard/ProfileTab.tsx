@@ -28,6 +28,7 @@ import { DiscordLinkDialog } from "@/components/DiscordLinkDialog";
 import { VerifyAccountDialog } from "@/components/VerifyAccountDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
+import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -1476,6 +1477,9 @@ export function ProfileTab() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Payment Methods Section */}
+      <PaymentMethodsSection />
 
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} />
 
