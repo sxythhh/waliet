@@ -166,6 +166,7 @@ export function AppSidebar() {
     isAdmin
   } = useAdminCheck();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
   const [accountType, setAccountType] = useState<string>("creator");
   const [brandMemberships, setBrandMemberships] = useState<BrandMembership[]>([]);
@@ -253,9 +254,10 @@ export function AppSidebar() {
     if (!user) return;
     const {
       data
-    } = await supabase.from("profiles").select("avatar_url, full_name, username, account_type").eq("id", user.id).single();
+    } = await supabase.from("profiles").select("avatar_url, banner_url, full_name, username, account_type").eq("id", user.id).single();
     if (data) {
       setAvatarUrl(data.avatar_url);
+      setBannerUrl(data.banner_url);
       setDisplayName(data.full_name || data.username || user.email || "");
       setAccountType(data.account_type || "creator");
     } else {
@@ -739,42 +741,56 @@ export function AppSidebar() {
                   </>}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 bg-background border border-border rounded-xl" side="top" align="start" sideOffset={8}>
-              {/* User Info + Theme Toggle */}
-              <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
-                <div className="flex items-center gap-2.5">
-                  <Avatar className="w-5 h-5">
-                    <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                    <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                      {getInitial()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
+            <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl overflow-hidden" side="top" align="start" sideOffset={8}>
+              {/* Banner with fade */}
+              {bannerUrl && (
+                <div className="relative h-16 w-full">
+                  <img 
+                    src={bannerUrl} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" />
+                </div>
+              )}
+              
+              <div className={`p-3 ${bannerUrl ? '-mt-3 relative z-10' : ''}`}>
+                {/* User Info + Theme Toggle */}
+                <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar className="w-5 h-5">
+                      <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+                      <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
+                        {getInitial()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/50">
+                    <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                      <Sun className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => setTheme('dark')} className={`p-1 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                      <Moon className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/50">
-                  <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                    <Sun className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setTheme('dark')} className={`p-1 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                    <Moon className="w-4 h-4" />
-                  </button>
-                </div>
+
+                {/* Menu Items */}
+                <SidebarMenuButtons onFeedback={type => {
+                setFeedbackType(type);
+                setFeedbackOpen(true);
+              }} supportIcon={supportIcon} lightbulbIcon={lightbulbIcon} bugIcon={bugIcon} />
+
+                {/* Sign Out Button */}
+                <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
+                  
+                  <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
+                </button>
               </div>
-
-              {/* Menu Items */}
-              <SidebarMenuButtons onFeedback={type => {
-              setFeedbackType(type);
-              setFeedbackOpen(true);
-            }} supportIcon={supportIcon} lightbulbIcon={lightbulbIcon} bugIcon={bugIcon} />
-
-              {/* Sign Out Button */}
-              <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
-                
-                <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
-              </button>
             </PopoverContent>
           </Popover>
         </div>
