@@ -25,24 +25,6 @@ export interface CampaignCardProps {
   showFullscreen?: boolean;
 }
 
-// Generate a vibrant gradient based on brand color or index
-const gradientPresets = [
-  "from-purple-500 via-purple-600 to-pink-500",
-  "from-emerald-400 via-green-500 to-teal-600",
-  "from-blue-400 via-cyan-500 to-blue-600",
-  "from-orange-400 via-amber-500 to-yellow-500",
-  "from-rose-400 via-pink-500 to-purple-500",
-  "from-indigo-400 via-blue-500 to-purple-600",
-  "from-teal-400 via-cyan-500 to-blue-500",
-  "from-fuchsia-500 via-purple-500 to-indigo-500",
-];
-
-function getGradientClass(id: string, brandColor?: string | null): string {
-  // Use the id to consistently pick a gradient
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return gradientPresets[hash % gradientPresets.length];
-}
-
 export function CampaignCard({
   id,
   title,
@@ -63,83 +45,80 @@ export function CampaignCard({
   showBookmark = true,
   showFullscreen = true,
 }: CampaignCardProps) {
-  const budgetPercentage = budget > 0 ? Math.min((budget_used / budget) * 100, 100) : 0;
-  const gradientClass = getGradientClass(id, brand_color);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <Card
-        className={`group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl border-0 bg-gradient-to-br ${gradientClass}`}
+        className="group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border-0"
         onClick={onClick}
       >
-        {/* Action Buttons */}
-        {(showBookmark || showFullscreen) && (
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            {showFullscreen && onFullscreenClick && (
-              <button
-                onClick={onFullscreenClick}
-                className="md:hidden p-2 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all"
-              >
-                <Maximize2 className="h-4 w-4" />
-              </button>
-            )}
-            {showBookmark && onBookmarkClick && (
-              <button
-                onClick={onBookmarkClick}
-                className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                  isBookmarked
-                    ? "bg-white text-primary"
-                    : "bg-black/40 text-white hover:bg-black/60"
-                }`}
-              >
-                <Bookmark className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
-              </button>
-            )}
-          </div>
-        )}
+        {/* Banner Background */}
+        <div className="relative aspect-[4/5]">
+          {banner_url ? (
+            <OptimizedImage
+              src={banner_url}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div 
+              className="absolute inset-0 w-full h-full"
+              style={{ backgroundColor: brand_color || '#6366f1' }}
+            >
+              {brand_logo_url && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <OptimizedImage
+                    src={brand_logo_url}
+                    alt={brand_name}
+                    className="w-16 h-16 object-contain opacity-30"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
-        {/* Card Content */}
-        <div className="relative aspect-[4/5] p-4 flex flex-col">
-          {/* Banner Image Area */}
-          <div className="flex-1 flex items-center justify-center">
-            {banner_url ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <OptimizedImage
-                  src={banner_url}
-                  alt={title}
-                  className="max-w-[85%] max-h-[85%] object-contain drop-shadow-2xl rounded-lg"
-                />
-              </div>
-            ) : brand_logo_url ? (
-              <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20">
-                <OptimizedImage
-                  src={brand_logo_url}
-                  alt={brand_name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-2xl">
-                <span className="text-4xl font-bold text-white">
-                  {brand_name?.charAt(0) || "?"}
-                </span>
-              </div>
-            )}
-          </div>
+          {/* Gradient Overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          {/* Bottom Section */}
-          <div className="mt-auto space-y-2">
+          {/* Action Buttons */}
+          {(showBookmark || showFullscreen) && (
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              {showFullscreen && onFullscreenClick && (
+                <button
+                  onClick={onFullscreenClick}
+                  className="md:hidden p-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {showBookmark && onBookmarkClick && (
+                <button
+                  onClick={onBookmarkClick}
+                  className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${
+                    isBookmarked
+                      ? "bg-white text-primary"
+                      : "bg-black/40 text-white hover:bg-black/60"
+                  }`}
+                >
+                  <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Bottom Content */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 space-y-1.5">
             {/* Title */}
-            <h3 className="text-xl font-black text-white uppercase tracking-wide text-center drop-shadow-lg line-clamp-2 leading-tight">
+            <h3 className="text-base font-semibold text-white tracking-[-0.3px] text-center line-clamp-2 leading-tight font-['Geist',sans-serif]">
               {title}
             </h3>
             
             {/* Brand Badge */}
-            <div className="flex items-center justify-center gap-1.5">
-              <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+            <div className="flex items-center justify-center">
+              <div className="px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm">
                 <div className="flex items-center gap-1.5">
                   {brand_logo_url && (
-                    <div className="w-4 h-4 rounded-full overflow-hidden">
+                    <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
                       <OptimizedImage
                         src={brand_logo_url}
                         alt={brand_name}
@@ -147,7 +126,7 @@ export function CampaignCard({
                       />
                     </div>
                   )}
-                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                  <span className="text-[9px] font-medium text-white/90 tracking-[-0.3px] font-['Geist',sans-serif]">
                     {brand_name}
                   </span>
                   {brand_is_verified && <VerifiedBadge size="sm" className="text-white" />}
@@ -159,9 +138,9 @@ export function CampaignCard({
       </Card>
 
       {/* Status indicator below the card */}
-      <div className="flex items-center gap-1.5 px-1">
-        <div className={`w-2 h-2 rounded-full ${isEnded ? 'bg-muted-foreground' : 'bg-emerald-500'} animate-pulse`} />
-        <span className="text-xs text-muted-foreground font-medium">
+      <div className="flex items-center gap-1.5 px-0.5">
+        <div className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-muted-foreground' : 'bg-emerald-500'}`} />
+        <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif]">
           {is_infinite_budget ? (
             <><span className="text-foreground font-semibold">∞</span> unlimited</>
           ) : (
