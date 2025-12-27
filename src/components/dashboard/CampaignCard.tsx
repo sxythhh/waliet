@@ -96,7 +96,7 @@ export function CampaignCard({
                   onClick={onBookmarkClick}
                   className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${
                     isBookmarked
-                      ? "bg-white text-primary"
+                      ? "bg-blue-500 text-white"
                       : "bg-black/40 text-white hover:bg-black/60"
                   }`}
                 >
