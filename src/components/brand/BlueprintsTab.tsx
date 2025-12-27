@@ -44,7 +44,7 @@ const getStatusConfig = (status: BlueprintStatus) => {
     default:
       return {
         label: 'Empty',
-        bgColor: 'bg-muted',
+        bgColor: 'bg-muted-foreground/30',
         textColor: 'text-muted-foreground'
       };
   }
@@ -309,7 +309,7 @@ export function BlueprintsTab({
                           {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
                               {(userInfo?.name || "U").charAt(0).toUpperCase()}
                             </div>}
-                          <span className="text-sm font-inter tracking-[-0.5px] text-white">
+                          <span className="text-sm font-inter tracking-[-0.5px] text-foreground">
                             {userInfo?.name || "You"}
                           </span>
                         </div>
