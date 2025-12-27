@@ -225,11 +225,25 @@ export function CampaignApplicationsView({
         }
       }
 
+      // Find next application before updating the list
+      const currentIndex = filteredApplications.findIndex(a => a.id === applicationId);
+      const nextPendingApp = applications.find((a, i) => 
+        a.id !== applicationId && a.status === 'pending'
+      );
+      const nextApp = nextPendingApp || 
+        filteredApplications[currentIndex + 1] || 
+        filteredApplications[currentIndex - 1];
+
       // Update status in list instead of removing
       setApplications(prev => prev.map(a => a.id === applicationId ? {
         ...a,
         status: finalStatus
       } : a));
+
+      // Auto-select next application
+      if (nextApp && nextApp.id !== applicationId) {
+        setSelectedAppId(nextApp.id);
+      }
 
       // Notify parent that an application was reviewed
       onApplicationReviewed?.();
