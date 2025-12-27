@@ -350,7 +350,7 @@ export function BrandCampaignDetailView({
       </div>;
   }
   return <div className="p-[10px] h-full flex flex-col">
-      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#141414]">
+      <div className="flex flex-col h-full border rounded-[20px] overflow-hidden border-[#dedede] dark:border-[#141414]">
         {/* Header with title and campaign selector */}
         <div className="flex-shrink-0 flex items-center justify-between px-2 bg-background gap-2 sm:px-[15px] py-[8px]">
           <div className="flex items-center gap-2 min-w-0 flex-1">
