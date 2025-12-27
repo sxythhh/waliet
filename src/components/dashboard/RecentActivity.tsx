@@ -230,7 +230,7 @@ export function RecentActivity() {
 
               {/* Earned */}
               <div className="flex items-center justify-end gap-1">
-                <span className="font-semibold tracking-[-0.3px] font-['Geist',sans-serif] text-[#1fb74f]">
+                <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
                   ${activity.amount?.toFixed(2)}
                 </span>
                 
