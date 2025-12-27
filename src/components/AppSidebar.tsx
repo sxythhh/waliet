@@ -758,12 +758,6 @@ export function AppSidebar() {
                 {/* User Info + Theme Toggle */}
                 <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
                   <div className="flex items-center gap-2.5">
-                    <Avatar className="w-5 h-5 rounded-sm">
-                      <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                      <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
-                        {getInitial()}
-                      </AvatarFallback>
-                    </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
                       <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
