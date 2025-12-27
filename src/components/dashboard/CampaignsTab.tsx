@@ -32,7 +32,7 @@ import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog"
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
-import { Switch } from "@/components/ui/switch";
+
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
@@ -153,7 +153,6 @@ export function CampaignsTab({
   } | null>(null);
   const [reapplyDialogOpen, setReapplyDialogOpen] = useState(false);
   const [selectedBoostForReapply, setSelectedBoostForReapply] = useState<BoostApplication | null>(null);
-  const [reapplyingId, setReapplyingId] = useState<string | null>(null);
 
   // New state for dashboard sections
   const [profile, setProfile] = useState<{
@@ -585,44 +584,9 @@ export function CampaignsTab({
     }
   };
 
-  const handleReapplyToggle = async (application: BoostApplication) => {
-    setReapplyingId(application.id);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please sign in to re-apply"
-        });
-        return;
-      }
-
-      // Delete the rejected application
-      const { error } = await supabase
-        .from("bounty_applications")
-        .delete()
-        .eq("id", application.id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      // Set the boost for re-apply and open the dialog
-      setSelectedBoostForReapply(application);
-      setReapplyDialogOpen(true);
-      
-      // Refresh the applications list
-      fetchBoostApplications();
-    } catch (error) {
-      console.error("Error preparing re-apply:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to prepare re-application"
-      });
-    } finally {
-      setReapplyingId(null);
-    }
+  const handleReapply = (application: BoostApplication) => {
+    setSelectedBoostForReapply(application);
+    setReapplyDialogOpen(true);
   };
 
   if (loading) {
@@ -809,19 +773,17 @@ export function CampaignsTab({
                     </div>
                   </div>
 
-                  {/* Re-apply Toggle for Rejected Applications */}
+                  {/* Re-apply Button for Rejected Applications */}
                   {application.status === 'rejected' && (
-                    <div className="flex items-center justify-between border-t border-border/50 pt-3">
-                      <div className="flex items-center gap-2">
-                        <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Re-apply</span>
-                      </div>
-                      <Switch
-                        checked={false}
-                        disabled={reapplyingId === application.id}
-                        onCheckedChange={() => handleReapplyToggle(application)}
-                      />
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-3 border-t border-border/50 rounded-lg text-xs"
+                      onClick={() => handleReapply(application)}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                      Re-apply
+                    </Button>
                   )}
                 </CardContent>
               </Card>)}
