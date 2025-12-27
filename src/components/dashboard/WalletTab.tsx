@@ -1363,11 +1363,6 @@ export function WalletTab() {
       {/* Profile Header Section */}
       <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
 
-      {/* Earnings Section Header */}
-      <div className="pt-4">
-        <h2 className="text-lg font-semibold text-foreground font-inter tracking-[-0.5px] mb-4">Your Earnings</h2>
-        <p className="text-sm text-muted-foreground mb-4">Your Monthly Earnings so far</p>
-      </div>
 
 
       {/* Balance Cards - Side by Side */}
