@@ -7,7 +7,8 @@ import tiktokLogo from "@/assets/tiktok-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-black.png";
 import instagramLogo from "@/assets/instagram-logo-black.png";
 import animatedImagesIcon from "@/assets/animated-images-icon.svg";
-import copyIcon from "@/assets/copy-icon.svg";
+import copyIconBlack from "@/assets/copy-icon-black.svg";
+import copyIconWhite from "@/assets/copy-icon-white.svg";
 import clippingIcon from "@/assets/clipping-icon.svg";
 import boostIcon from "@/assets/boost-icon.svg";
 import { useToast } from "@/hooks/use-toast";
@@ -189,7 +190,8 @@ export function CampaignRowCard({
                 navigator.clipboard.writeText(url);
                 toast({ title: "Link copied", description: "URL copied to clipboard" });
               }}>
-                <img src={copyIcon} alt="" className="w-3.5 h-3.5" />
+                <img src={copyIconBlack} alt="" className="w-3.5 h-3.5 dark:hidden" />
+                <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
               </Button>}
 
               {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
