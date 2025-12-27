@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { PayoutStatusBadge, type PayoutStatus } from "./PayoutStatusBadge";
 import { RequestVideoPayoutDialog } from "./RequestVideoPayoutDialog";
+import { SubmitAnalyticsDialog } from "./SubmitAnalyticsDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -34,6 +35,8 @@ interface Submission {
   reviewed_at?: string | null;
   type: 'campaign' | 'boost';
   payout_status?: 'available' | 'locked' | 'paid';
+  is_flagged?: boolean | null;
+  analytics_recording_url?: string | null;
   // Video details
   video_title?: string | null;
   video_cover_url?: string | null;
@@ -77,6 +80,12 @@ export function SubmissionsTab() {
     submission: Submission | null;
   }>({ open: false, submission: null });
   const [requestingVideoPayout, setRequestingVideoPayout] = useState(false);
+  
+  // Analytics submission dialog state
+  const [analyticsDialog, setAnalyticsDialog] = useState<{
+    open: boolean;
+    submission: Submission | null;
+  }>({ open: false, submission: null });
   
   // Use unified payment ledger
   const { 
@@ -221,6 +230,8 @@ export function SubmissionsTab() {
           reviewed_at: video.reviewed_at,
           type: (isBoost ? 'boost' : 'campaign') as 'boost' | 'campaign',
           payout_status: (video.payout_status || 'available') as 'available' | 'locked' | 'paid',
+          is_flagged: video.is_flagged,
+          analytics_recording_url: (video as any).analytics_recording_url,
           // Video details
           video_title: video.video_description || video.video_title,
           video_cover_url: video.video_thumbnail_url,
@@ -742,19 +753,51 @@ export function SubmissionsTab() {
                         
                         {/* Status */}
                         <TableCell className="py-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            submission.status === 'approved' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 
-                            submission.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : 
-                            submission.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {submission.status === 'approved' && <Check className="h-3 w-3" />}
-                            {submission.status === 'pending' && <Clock className="h-3 w-3" />}
-                            {submission.status === 'rejected' && <X className="h-3 w-3" />}
-                            <span style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-                              {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                              submission.status === 'approved' ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 
+                              submission.status === 'pending' ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400' : 
+                              submission.status === 'rejected' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 
+                              'bg-muted text-muted-foreground'
+                            }`}>
+                              {submission.status === 'approved' && <Check className="h-3 w-3" />}
+                              {submission.status === 'pending' && <Clock className="h-3 w-3" />}
+                              {submission.status === 'rejected' && <X className="h-3 w-3" />}
+                              <span style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                                {submission.status.charAt(0).toUpperCase() + submission.status.slice(1)}
+                              </span>
                             </span>
-                          </span>
+                            {submission.is_flagged && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setAnalyticsDialog({ open: true, submission });
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors"
+                                    >
+                                      ⚠️ Flagged
+                                      {!submission.analytics_recording_url && (
+                                        <span className="ml-1 underline">Submit Proof</span>
+                                      )}
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p className="text-sm font-medium mb-1">Video Flagged for Review</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {submission.analytics_recording_url 
+                                        ? "You've submitted analytics proof. The brand is reviewing it."
+                                        : "Submit a screen recording of your analytics dashboard to verify your views."
+                                      }
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
                         </TableCell>
                         
                         {/* Views */}
@@ -856,6 +899,20 @@ export function SubmissionsTab() {
           </>
         )}
       </div>
+
+      {/* Analytics Submission Dialog */}
+      {analyticsDialog.submission && (
+        <SubmitAnalyticsDialog
+          open={analyticsDialog.open}
+          onOpenChange={(open) => setAnalyticsDialog({ ...analyticsDialog, open })}
+          submissionId={analyticsDialog.submission.id}
+          videoTitle={analyticsDialog.submission.video_title || undefined}
+          onSuccess={() => {
+            fetchSubmissions();
+            setAnalyticsDialog({ open: false, submission: null });
+          }}
+        />
+      )}
     </Card>
   );
 }

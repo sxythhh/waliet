@@ -109,7 +109,7 @@ export function SubmitAnalyticsDialog({
         .update({
           analytics_recording_url: publicUrl,
           analytics_recording_uploaded_at: new Date().toISOString()
-        })
+        } as any)
         .eq("id", submissionId);
 
       if (updateError) throw updateError;

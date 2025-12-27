@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
+import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
@@ -294,6 +295,10 @@ export function CreatorDatabaseTab({
   const [showFilters, setShowFilters] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
+
+  // Testimonial dialog state
+  const [testimonialDialogOpen, setTestimonialDialogOpen] = useState(false);
+  const [testimonialCreator, setTestimonialCreator] = useState<Creator | null>(null);
 
   // Column configuration state
   const ALL_COLUMNS = [{
@@ -1541,6 +1546,16 @@ export function CreatorDatabaseTab({
           }}>
               Send Message
             </button>
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
+              <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
+                e.stopPropagation();
+                setTestimonialCreator(selectedCreatorPanel);
+                setTestimonialDialogOpen(true);
+              }}>
+                <Star className="h-3.5 w-3.5" />
+                Leave Review
+              </button>
+            )}
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
             e.stopPropagation();
             initiateRemoveCreator(selectedCreatorPanel);
@@ -1892,5 +1907,20 @@ export function CreatorDatabaseTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Leave Testimonial Dialog */}
+      {testimonialCreator && (
+        <LeaveTestimonialDialog
+          open={testimonialDialogOpen}
+          onOpenChange={setTestimonialDialogOpen}
+          brandId={brandId}
+          creatorId={testimonialCreator.id}
+          creatorName={testimonialCreator.full_name || testimonialCreator.username || 'Creator'}
+          creatorAvatarUrl={testimonialCreator.avatar_url}
+          onSuccess={() => {
+            setTestimonialCreator(null);
+          }}
+        />
+      )}
     </div>;
 }
