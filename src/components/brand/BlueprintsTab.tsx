@@ -285,7 +285,7 @@ export function BlueprintsTab({
                     </div>
 
                     {/* Content Card overlaying the status background */}
-                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-muted/50 transition-colors duration-200 p-4 flex flex-col">
+                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-muted transition-colors duration-200 p-4 flex flex-col">
                       {/* Title */}
                       <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px]">
                         {blueprint.title}
