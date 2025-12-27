@@ -115,7 +115,7 @@ export function CampaignCard({
             
             {/* Brand Badge */}
             <div className="flex items-center justify-center">
-              <div className="px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm">
+              <div className="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm">
                 <div className="flex items-center gap-1.5">
                   {brand_logo_url && (
                     <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
