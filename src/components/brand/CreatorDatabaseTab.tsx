@@ -934,12 +934,29 @@ export function CreatorDatabaseTab({
       } = campaignToKickFrom;
       if (campaignType === 'boost') {
         // Remove from bounty_applications
-        const { error: appError } = await supabase.from('bounty_applications').delete().eq('bounty_campaign_id', campaignId).eq('user_id', creatorId);
+        const { error: appError } = await supabase
+          .from('bounty_applications')
+          .delete()
+          .eq('bounty_campaign_id', campaignId)
+          .eq('user_id', creatorId);
         if (appError) throw appError;
 
-        // Also remove any video submissions
-        const { error: subError } = await supabase.from('boost_video_submissions').delete().eq('bounty_campaign_id', campaignId).eq('user_id', creatorId);
+        // Also remove any boost video submissions
+        const { error: subError } = await supabase
+          .from('boost_video_submissions')
+          .delete()
+          .eq('bounty_campaign_id', campaignId)
+          .eq('user_id', creatorId);
         if (subError) throw subError;
+
+        // Remove from unified video_submissions (this is what powers the "Active Campaigns" list)
+        const { error: vsBoostError } = await supabase
+          .from('video_submissions')
+          .delete()
+          .eq('source_type', 'boost')
+          .eq('source_id', campaignId)
+          .eq('creator_id', creatorId);
+        if (vsBoostError) throw vsBoostError;
       } else {
         // Remove from social_account_campaigns junction table
         const {
