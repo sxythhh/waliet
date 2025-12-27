@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import viralityLogoWhite from "@/assets/virality-logo-white.png";
 import { cn } from "@/lib/utils";
-
 interface Transaction {
   id: string;
   type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning';
@@ -32,36 +31,71 @@ interface Transaction {
     brand_logo_url: string | null;
   } | null;
 }
-
 interface UserProfile {
   username?: string;
   avatar_url?: string;
   banner_url?: string;
 }
-
 interface TransactionShareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
   userProfile?: UserProfile;
 }
-
-const COLOR_THEMES = [
-  { id: 'plum', name: 'Plum', primary: '#6366f1', secondary: '#818cf8', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
-  { id: 'melon', name: 'Melon', primary: '#10b981', secondary: '#34d399', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-  { id: 'peach', name: 'Peach', primary: '#f97316', secondary: '#fb923c', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
-  { id: 'apple', name: 'Apple', primary: '#22c55e', secondary: '#4ade80', gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
-  { id: 'rose', name: 'Rose', primary: '#f43f5e', secondary: '#fb7185', gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)' },
-  { id: 'sky', name: 'Sky', primary: '#0ea5e9', secondary: '#38bdf8', gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
-  { id: 'amber', name: 'Amber', primary: '#f59e0b', secondary: '#fbbf24', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-  { id: 'violet', name: 'Violet', primary: '#8b5cf6', secondary: '#a78bfa', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-];
-
+const COLOR_THEMES = [{
+  id: 'plum',
+  name: 'Plum',
+  primary: '#6366f1',
+  secondary: '#818cf8',
+  gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
+}, {
+  id: 'melon',
+  name: 'Melon',
+  primary: '#10b981',
+  secondary: '#34d399',
+  gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+}, {
+  id: 'peach',
+  name: 'Peach',
+  primary: '#f97316',
+  secondary: '#fb923c',
+  gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
+}, {
+  id: 'apple',
+  name: 'Apple',
+  primary: '#22c55e',
+  secondary: '#4ade80',
+  gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+}, {
+  id: 'rose',
+  name: 'Rose',
+  primary: '#f43f5e',
+  secondary: '#fb7185',
+  gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)'
+}, {
+  id: 'sky',
+  name: 'Sky',
+  primary: '#0ea5e9',
+  secondary: '#38bdf8',
+  gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)'
+}, {
+  id: 'amber',
+  name: 'Amber',
+  primary: '#f59e0b',
+  secondary: '#fbbf24',
+  gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+}, {
+  id: 'violet',
+  name: 'Violet',
+  primary: '#8b5cf6',
+  secondary: '#a78bfa',
+  gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+}];
 export function TransactionShareDialog({
   open,
   onOpenChange,
   transaction,
-  userProfile,
+  userProfile
 }: TransactionShareDialogProps) {
   const [selectedTheme, setSelectedTheme] = useState(COLOR_THEMES[0]);
   const [showViralityLogo, setShowViralityLogo] = useState(true);
@@ -69,22 +103,20 @@ export function TransactionShareDialog({
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     // Detect system dark mode preference
     const isDarkMode = document.documentElement.classList.contains('dark');
     setUseDarkCard(isDarkMode);
   }, [open]);
-
   useEffect(() => {
     if (open && transaction) {
       generateImage();
     }
   }, [open, transaction, selectedTheme, showViralityLogo, useDarkCard]);
-
-
   const generateImage = async () => {
     if (!transaction) return;
     setIsGenerating(true);
@@ -93,7 +125,6 @@ export function TransactionShareDialog({
     const scale = 2;
     const width = 1200;
     const height = 750;
-
     try {
       // Load Virality logo
       const logoImg = new Image();
@@ -103,7 +134,6 @@ export function TransactionShareDialog({
         logoImg.onload = resolve;
         logoImg.onerror = reject;
       });
-
       const logoCanvas = document.createElement('canvas');
       logoCanvas.width = logoImg.width;
       logoCanvas.height = logoImg.height;
@@ -120,11 +150,10 @@ export function TransactionShareDialog({
           const avatarImg = new Image();
           avatarImg.crossOrigin = "anonymous";
           avatarImg.src = userProfile.avatar_url;
-          await new Promise((resolve) => {
+          await new Promise(resolve => {
             avatarImg.onload = resolve;
             avatarImg.onerror = () => resolve(null);
           });
-          
           if (avatarImg.width > 0 && avatarImg.height > 0) {
             // Create a square canvas and center-crop the image
             const size = Math.min(avatarImg.width, avatarImg.height);
@@ -153,11 +182,10 @@ export function TransactionShareDialog({
           const brandLogoImg = new Image();
           brandLogoImg.crossOrigin = "anonymous";
           brandLogoImg.src = brandLogoUrl;
-          await new Promise((resolve) => {
+          await new Promise(resolve => {
             brandLogoImg.onload = resolve;
             brandLogoImg.onerror = () => resolve(null);
           });
-          
           if (brandLogoImg.width > 0) {
             const brandLogoCanvas = document.createElement('canvas');
             brandLogoCanvas.width = brandLogoImg.width;
@@ -172,17 +200,9 @@ export function TransactionShareDialog({
           console.log('Failed to load brand logo:', e);
         }
       }
-
-      const amountColor = transaction.type === 'earning' || transaction.type === 'boost_earning' || transaction.type === 'transfer_received' || transaction.type === 'referral' 
-        ? '#10b981' 
-        : transaction.type === 'balance_correction' 
-          ? '#f97316' 
-          : '#ef4444';
-
+      const amountColor = transaction.type === 'earning' || transaction.type === 'boost_earning' || transaction.type === 'transfer_received' || transaction.type === 'referral' ? '#10b981' : transaction.type === 'balance_correction' ? '#f97316' : '#ef4444';
       const amountSign = transaction.type === 'earning' || transaction.type === 'boost_earning' || transaction.type === 'transfer_received' || transaction.type === 'referral' ? '+' : '';
-
       const programName = transaction.campaign?.title || transaction.boost?.title || transaction.campaign?.brand_name || transaction.boost?.brand_name || 'Virality';
-
       const svg = `
         <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <defs>
@@ -248,7 +268,9 @@ export function TransactionShareDialog({
       `;
 
       // Convert SVG to blob
-      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const svgBlob = new Blob([svg], {
+        type: 'image/svg+xml;charset=utf-8'
+      });
 
       // Create canvas at higher resolution
       const canvas = document.createElement('canvas');
@@ -256,14 +278,12 @@ export function TransactionShareDialog({
       canvas.height = height * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      
+
       // Enable high quality rendering
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-
       const img = new Image();
       const url = URL.createObjectURL(svgBlob);
-      
       img.onload = () => {
         ctx.scale(scale, scale);
         ctx.drawImage(img, 0, 0);
@@ -272,12 +292,10 @@ export function TransactionShareDialog({
         setGeneratedImageUrl(imageDataUrl);
         setIsGenerating(false);
       };
-      
       img.onerror = () => {
         URL.revokeObjectURL(url);
         setIsGenerating(false);
       };
-      
       img.src = url;
     } catch (error) {
       console.error('Error generating image:', error);
@@ -289,16 +307,14 @@ export function TransactionShareDialog({
       });
     }
   };
-
   const handleCopyImage = async () => {
     if (!generatedImageUrl) return;
-    
     try {
       const response = await fetch(generatedImageUrl);
       const blob = await response.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ]);
+      await navigator.clipboard.write([new ClipboardItem({
+        'image/png': blob
+      })]);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast({
@@ -314,21 +330,17 @@ export function TransactionShareDialog({
       });
     }
   };
-
   const handleDownload = () => {
     if (!generatedImageUrl) return;
-    
     const link = document.createElement('a');
     link.download = `virality-transaction-${transaction?.id?.slice(0, 8) || Date.now()}.png`;
     link.href = generatedImageUrl;
     link.click();
-    
     toast({
       title: "Downloaded!",
       description: "Image saved to your device"
     });
   };
-
   const handleShareOnX = () => {
     const tweetText = encodeURIComponent(`Just earned $${Math.abs(transaction?.amount || 0).toFixed(2)} on @viralityhq! 💰`);
     window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank', 'width=550,height=420');
@@ -337,11 +349,8 @@ export function TransactionShareDialog({
       description: "Attach the downloaded image to your post!"
     });
   };
-
   if (!transaction) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl font-inter">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold tracking-[-0.5px]">Share your stats</DialogTitle>
@@ -351,36 +360,20 @@ export function TransactionShareDialog({
           {/* Preview */}
           <div className="space-y-4">
             <div className="rounded-xl overflow-hidden border border-border bg-muted/30">
-              {isGenerating ? (
-                <div className="w-full aspect-[8/5] flex items-center justify-center">
+              {isGenerating ? <div className="w-full aspect-[8/5] flex items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : generatedImageUrl ? (
-                <img src={generatedImageUrl} alt="Transaction" className="w-full h-auto" />
-              ) : (
-                <div className="w-full aspect-[8/5] flex items-center justify-center text-muted-foreground">
+                </div> : generatedImageUrl ? <img src={generatedImageUrl} alt="Transaction" className="w-full h-auto" /> : <div className="w-full aspect-[8/5] flex items-center justify-center text-muted-foreground">
                   Generating preview...
-                </div>
-              )}
+                </div>}
             </div>
             
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button 
-                variant="ghost" 
-                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" 
-                onClick={handleCopyImage}
-                disabled={!generatedImageUrl || isGenerating}
-              >
+              <Button variant="ghost" className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" onClick={handleCopyImage} disabled={!generatedImageUrl || isGenerating}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'Copied!' : 'Copy'}
               </Button>
-              <Button 
-                variant="ghost" 
-                className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" 
-                onClick={handleDownload}
-                disabled={!generatedImageUrl || isGenerating}
-              >
+              <Button variant="ghost" className="flex-1 gap-2 bg-muted/50 hover:bg-muted border-0 font-inter tracking-[-0.5px] text-foreground hover:text-foreground" onClick={handleDownload} disabled={!generatedImageUrl || isGenerating}>
                 <Download className="h-4 w-4" />
                 Save image
               </Button>
@@ -393,44 +386,19 @@ export function TransactionShareDialog({
             <div className="space-y-3">
               <Label className="text-sm font-medium">Color theme</Label>
               <div className="grid grid-cols-4 gap-2">
-                {COLOR_THEMES.map((theme) => (
-                  <button
-                    key={theme.id}
-                    onClick={() => setSelectedTheme(theme)}
-                    className={cn(
-                      "p-2 rounded-lg border transition-all flex items-center justify-center",
-                      selectedTheme.id === theme.id 
-                        ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2 ring-offset-background" 
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <div 
-                      className="w-8 h-8 rounded-full" 
-                      style={{ background: theme.gradient }}
-                    />
-                  </button>
-                ))}
+                {COLOR_THEMES.map(theme => <button key={theme.id} onClick={() => setSelectedTheme(theme)} className={cn("p-2 rounded-lg border transition-all flex items-center justify-center", selectedTheme.id === theme.id ? "border-primary bg-primary/5 ring-2 ring-primary ring-offset-2 ring-offset-background" : "border-border hover:border-primary/50")}>
+                    <div className="w-8 h-8 rounded-full" style={{
+                  background: theme.gradient
+                }} />
+                  </button>)}
               </div>
             </div>
             
             {/* Toggle options */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-logo" className="text-sm font-medium">Show Virality logo</Label>
-                <Switch 
-                  id="show-logo" 
-                  checked={showViralityLogo} 
-                  onCheckedChange={setShowViralityLogo}
-                />
-              </div>
-            </div>
+            
             
             {/* Share button */}
-            <Button 
-              className="w-full gap-2 bg-foreground text-background hover:bg-foreground/90"
-              onClick={handleShareOnX}
-              disabled={!generatedImageUrl || isGenerating}
-            >
+            <Button className="w-full gap-2 bg-foreground text-background hover:bg-foreground/90" onClick={handleShareOnX} disabled={!generatedImageUrl || isGenerating}>
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
@@ -439,6 +407,5 @@ export function TransactionShareDialog({
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
