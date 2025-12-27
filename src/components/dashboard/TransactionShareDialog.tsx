@@ -7,6 +7,7 @@ import { Copy, Download, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import viralityLogoWhite from "@/assets/virality-logo-white.png";
+import sharePattern from "@/assets/share-pattern.png";
 import { cn } from "@/lib/utils";
 interface Transaction {
   id: string;
@@ -143,6 +144,28 @@ export function TransactionShareDialog({
       }
       const logoBase64 = logoCanvas.toDataURL('image/png');
 
+      // Load pattern image
+      const patternImg = new Image();
+      patternImg.crossOrigin = "anonymous";
+      patternImg.src = sharePattern;
+      let patternBase64 = '';
+      try {
+        await new Promise((resolve, reject) => {
+          patternImg.onload = resolve;
+          patternImg.onerror = reject;
+        });
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = patternImg.width;
+        patternCanvas.height = patternImg.height;
+        const patternCtx = patternCanvas.getContext('2d');
+        if (patternCtx) {
+          patternCtx.drawImage(patternImg, 0, 0);
+        }
+        patternBase64 = patternCanvas.toDataURL('image/png');
+      } catch (e) {
+        console.log('Failed to load pattern:', e);
+      }
+
       // Load user avatar if available - crop to square for proper circle display
       let avatarBase64 = '';
       if (userProfile?.avatar_url) {
@@ -224,6 +247,9 @@ export function TransactionShareDialog({
           
           <!-- Main background with gradient -->
           <rect width="${width}" height="${height}" fill="url(#bgGradient)" rx="36"/>
+          
+          <!-- Pattern overlay -->
+          ${patternBase64 ? `<image href="${patternBase64}" x="0" y="0" width="${width}" height="${height}" opacity="0.15" preserveAspectRatio="xMidYMid slice"/>` : ''}
           
           <!-- Virality logo at top center -->
           ${showViralityLogo ? `
