@@ -625,7 +625,7 @@ export function AppSidebar() {
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#f2f2f2] dark:bg-muted' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
@@ -638,7 +638,7 @@ export function AppSidebar() {
                         </button>)}
                     
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#f2f2f2] dark:bg-muted' : 'hover:bg-muted/50'}`}>
                           <div className="flex items-center gap-2.5">
                             {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
@@ -658,7 +658,7 @@ export function AppSidebar() {
                     <button onClick={() => {
                   setWorkspaceOpen(false);
                   setShowCreateBrandDialog(true);
-                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-muted/50 text-muted-foreground hover:text-foreground">
+                }} className="w-full flex items-center gap-2.5 px-2 py-2 rounded-md transition-colors hover:bg-[#f2f2f2] dark:hover:bg-muted/50 text-muted-foreground hover:text-foreground">
                       <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
                         <Plus className="w-3.5 h-3.5" />
                       </div>
