@@ -1348,7 +1348,7 @@ export function WalletTab() {
                     ${(ledgerSummary?.totalLocked || 0).toFixed(2)} Locked
                   </span>}
               </div>
-              <span className="text-base font-semibold text-amber-500">
+              <span className="text-base font-semibold text-muted-foreground">
                 {isBalanceVisible ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` : "••••••"}
               </span>
             </div>
