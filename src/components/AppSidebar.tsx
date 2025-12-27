@@ -744,7 +744,7 @@ export function AppSidebar() {
             <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl overflow-hidden" side="top" align="start" sideOffset={8}>
               {/* Banner with fade - positioned absolutely behind content */}
               {bannerUrl && (
-                <div className="absolute inset-x-0 top-0 h-24 w-full">
+                <div className="absolute inset-x-0 top-0 h-24 w-full rounded-t-xl overflow-hidden">
                   <img 
                     src={bannerUrl} 
                     alt="" 
