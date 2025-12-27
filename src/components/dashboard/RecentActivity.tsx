@@ -205,12 +205,7 @@ export function RecentActivity() {
         <div className="divide-y divide-border/30">
           {activities.map((activity, index) => <div key={activity.id} className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${index % 2 === 0 ? "bg-transparent" : "bg-muted/10"}`}>
               {/* Creator */}
-              <div className="flex items-center gap-2">
-                <div className={`w-5 h-5 rounded-full ${getPlatformColor(activity.platform)} flex items-center justify-center`}>
-                  <span className="text-[8px] font-bold text-white">
-                    {activity.platform?.charAt(0).toUpperCase() || "?"}
-                  </span>
-                </div>
+              <div className="flex items-center">
                 <span className="font-medium text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]">
                   {formatUsername(activity.username, activity.is_private)}
                 </span>
