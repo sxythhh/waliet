@@ -39,7 +39,7 @@ const DropdownMenuItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPr
   className,
   inset,
   ...props
-}, ref) => <DropdownMenuPrimitive.Item ref={ref} className={cn("relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm font-sans tracking-[-0.5px] outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50 focus:bg-accent focus:text-foreground", inset && "pl-8", className)} {...props} />);
+}, ref) => <DropdownMenuPrimitive.Item ref={ref} className={cn("relative flex cursor-default select-none items-center gap-2 rounded-md px-2 py-1.5 text-sm font-sans tracking-[-0.5px] outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50", inset && "pl-8", className)} {...props} />);
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 const DropdownMenuCheckboxItem = React.forwardRef<React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>, React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>>(({
   className,
