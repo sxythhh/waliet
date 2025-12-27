@@ -748,26 +748,26 @@ export function AppSidebar() {
                   </>}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 bg-[#0a0a0a] border border-[#0f0f0f] rounded-xl" side="top" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 bg-background border border-border rounded-xl" side="top" align="start" sideOffset={8}>
               {/* User Info + Theme Toggle */}
               <div className="flex items-center justify-between mb-1.5 px-2.5 py-2">
                 <div className="flex items-center gap-2.5">
                   <Avatar className="w-5 h-5">
                     <AvatarImage src={avatarUrl || undefined} alt={displayName} />
-                    <AvatarFallback className="bg-neutral-800 text-neutral-300 text-[10px]">
+                    <AvatarFallback className="bg-muted text-muted-foreground text-[10px]">
                       {getInitial()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate font-inter tracking-[-0.5px]">{displayName}</p>
-                    <p className="text-xs text-neutral-500 truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
+                    <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.5px]">{displayName}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[100px] font-inter tracking-[-0.5px]">{user?.email}</p>
                   </div>
                 </div>
-                <div className="hidden flex items-center gap-0.5 p-0.5 rounded-md bg-[#1f1f1f]/[0.51]">
-                  <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
+                <div className="flex items-center gap-0.5 p-0.5 rounded-md bg-muted/50">
+                  <button onClick={() => setTheme('light')} className={`p-1 rounded-md transition-colors ${theme === 'light' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                     <Sun className="w-4 h-4" />
                   </button>
-                  <button onClick={() => setTheme('dark')} className={`p-1 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-[#2a2a2a] text-white' : 'text-neutral-500 hover:text-white'}`}>
+                  <button onClick={() => setTheme('dark')} className={`p-1 rounded-md transition-colors ${theme === 'dark' || theme === 'system' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                     <Moon className="w-4 h-4" />
                   </button>
                 </div>
