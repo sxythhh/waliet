@@ -101,7 +101,9 @@ export function BrandCampaignsTab({
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
-  const { resolvedTheme } = useTheme();
+  const {
+    resolvedTheme
+  } = useTheme();
 
   // Removed beta gate - brands without subscription can create drafts
   const showBetaGate = false;
@@ -119,16 +121,12 @@ export function BrandCampaignsTab({
     setLoading(true);
     try {
       // Fetch brand info for logo, color and subscription status
-      const { data: brandData } = await supabase
-        .from("brands")
-        .select("logo_url, brand_color, subscription_status")
-        .eq("id", brandId)
-        .single();
-
+      const {
+        data: brandData
+      } = await supabase.from("brands").select("logo_url, brand_color, subscription_status").eq("id", brandId).single();
       if (brandData?.logo_url) {
         setBrandLogoUrl(brandData.logo_url);
       }
-
       if (brandData?.brand_color) {
         setBrandColor(brandData.brand_color);
       }
@@ -157,16 +155,12 @@ export function BrandCampaignsTab({
       const campaignIds = (campaignsData || []).map(c => c.id);
       const bountyIds = (bountiesData || []).map(b => b.id);
       const allSourceIds = [...campaignIds, ...bountyIds];
-      
       let payoutsBySource: Record<string, number> = {};
-      
       if (allSourceIds.length > 0) {
-        const { data: payoutItems } = await supabase
-          .from("submission_payout_items")
-          .select("source_id, amount, status")
-          .in("source_id", allSourceIds)
-          .in("status", ["approved", "completed", "clearing", "pending"]);
-        
+        const {
+          data: payoutItems
+        } = await supabase.from("submission_payout_items").select("source_id, amount, status").in("source_id", allSourceIds).in("status", ["approved", "completed", "clearing", "pending"]);
+
         // Aggregate payouts by source_id
         (payoutItems || []).forEach((item: any) => {
           if (!payoutsBySource[item.source_id]) {
@@ -412,38 +406,7 @@ export function BrandCampaignsTab({
           {/* Action Cards & Embed Group */}
           <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
             {/* Action Cards */}
-            {campaigns.length === 0 && bounties.length === 0 && <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => navigate('/resources')}>
-                  <div className="p-2 bg-muted rounded-lg shrink-0">
-                    <img src={schoolIcon} alt="" className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Start Learning</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Everything you need to master organic marketing for your business.</p>
-                  </div>
-                </div>
-                <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setCampaignTypeDialogOpen(true)}>
-                  <div className="p-2 bg-muted rounded-lg shrink-0">
-                    <img src={webStoriesIcon} alt="" className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Launch Campaign</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Connect with Virality's vetted network of video editors, clippers, and themepages</p>
-                  </div>
-                </div>
-                <div className="bg-[#0e0e0e] rounded-xl p-4 flex items-start gap-3 cursor-pointer hover:bg-[#151515] transition-colors" onClick={() => setSearchParams(prev => {
-            prev.set('tab', 'scope');
-            return prev;
-          })}>
-                  <div className="p-2 bg-muted rounded-lg shrink-0">
-                    <img src={scopeIcon} alt="" className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-sm font-inter tracking-[-0.3px]">Discover Winning Content</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Spy on your competitor's Viral videos through our curated content library</p>
-                  </div>
-                </div>
-              </div>}
+            {campaigns.length === 0 && bounties.length === 0}
 
             {/* Subscription Required CTA and Embed - Only show if not subscribed and in dark mode */}
             {subscriptionStatus !== "active" && resolvedTheme === "dark" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
@@ -474,67 +437,25 @@ export function BrandCampaignsTab({
               const campaign = item as Campaign & {
                 type: "campaign";
               };
-              return (
-                <CampaignRowCard
-                  key={`campaign-${campaign.id}`}
-                  id={campaign.id}
-                  title={campaign.title}
-                  type="campaign"
-                  bannerUrl={campaign.banner_url}
-                  brandColor={brandColor || null}
-                  budget={Number(campaign.budget)}
-                  budgetUsed={Number(campaign.budget_used || 0)}
-                  rpmRate={Number(campaign.rpm_rate)}
-                  status={campaign.status}
-                  allowedPlatforms={campaign.allowed_platforms}
-                  members={campaignMembers[campaign.id] || []}
-                  slug={campaign.slug}
-                  onClick={() => handleCampaignClick(campaign)}
-                  onTopUp={() => {
-                    setSelectedCampaignForFunding({
-                      id: campaign.id,
-                      type: 'campaign'
-                    });
-                    setAllocateBudgetOpen(true);
-                  }}
-                />
-              );
+              return <CampaignRowCard key={`campaign-${campaign.id}`} id={campaign.id} title={campaign.title} type="campaign" bannerUrl={campaign.banner_url} brandColor={brandColor || null} budget={Number(campaign.budget)} budgetUsed={Number(campaign.budget_used || 0)} rpmRate={Number(campaign.rpm_rate)} status={campaign.status} allowedPlatforms={campaign.allowed_platforms} members={campaignMembers[campaign.id] || []} slug={campaign.slug} onClick={() => handleCampaignClick(campaign)} onTopUp={() => {
+                setSelectedCampaignForFunding({
+                  id: campaign.id,
+                  type: 'campaign'
+                });
+                setAllocateBudgetOpen(true);
+              }} />;
             } else {
               const bounty = item as BountyCampaign & {
                 type: "boost";
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return (
-                <CampaignRowCard
-                  key={`boost-${bounty.id}`}
-                  id={bounty.id}
-                  title={bounty.title}
-                  type="boost"
-                  bannerUrl={bounty.banner_url}
-                  brandColor={brandColor || null}
-                  budget={Number(bounty.budget || 0)}
-                  budgetUsed={Number(bounty.budget_used || 0)}
-                  videosPerMonth={bounty.videos_per_month}
-                  spotsRemaining={spotsRemaining}
-                  maxCreators={bounty.max_accepted_creators}
-                  status={bounty.status}
-                  endDate={bounty.end_date}
-                  members={bountyMembers[bounty.id] || []}
-                  slug={bounty.slug || undefined}
-                  onClick={() =>
-                    navigate(
-                      `/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`
-                    )
-                  }
-                  onTopUp={() => {
-                    setSelectedCampaignForFunding({
-                      id: bounty.id,
-                      type: 'boost'
-                    });
-                    setAllocateBudgetOpen(true);
-                  }}
-                />
-              );
+              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)} onTopUp={() => {
+                setSelectedCampaignForFunding({
+                  id: bounty.id,
+                  type: 'boost'
+                });
+                setAllocateBudgetOpen(true);
+              }} />;
             }
           })}
               </div>
@@ -566,14 +487,7 @@ export function BrandCampaignsTab({
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
 
       {/* Create Job Post Dialog */}
-      <CreateJobPostDialog 
-        open={createJobPostOpen} 
-        onOpenChange={setCreateJobPostOpen} 
-        brandId={brandId} 
-        brandName={brandName}
-        brandLogoUrl={brandLogoUrl}
-        onSuccess={fetchBrandData} 
-      />
+      <CreateJobPostDialog open={createJobPostOpen} onOpenChange={setCreateJobPostOpen} brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
