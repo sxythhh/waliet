@@ -187,8 +187,8 @@ export function RecentActivity() {
   if (activities.length === 0) return null;
   return <div className="mt-8 space-y-3">
       <div className="flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          Recent Transactions
+        <h3 className="font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif] text-lg">
+          Activity
         </h3>
       </div>
 
