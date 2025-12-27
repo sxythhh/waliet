@@ -104,6 +104,7 @@ All colors MUST be HSL.
     --ring: 235 86% 65%;
     --table-border: 220 13% 85%;
     --stats-card: 0 0% 98%;
+    --chart-cursor-stroke: #efefef;
 
     /* Rank Colors */
     --rank-bronze: 30 60% 50%;
@@ -183,6 +184,7 @@ All colors MUST be HSL.
     --ring: 235 86% 65%;
     --table-border: 0 0% 8%;
     --stats-card: 0 0% 4%;
+    --chart-cursor-stroke: #0e0e0e;
 
     /* Rank Colors */
     --rank-bronze: 30 60% 50%;
