@@ -764,9 +764,12 @@ export function AppSidebar() {
               </button>
             )}
             <div 
-              className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'flex flex-col gap-0.5'} max-h-[200px] overflow-y-auto transition-all duration-200 ${
-                !isCollapsed && !campaignsExpanded ? 'max-h-0 overflow-hidden opacity-0' : 'opacity-100'
-              }`}
+              className={`${isCollapsed ? 'flex flex-col items-center gap-2 mt-0' : 'flex flex-col gap-0.5'} overflow-hidden transition-all duration-200 ease-out`}
+              style={{
+                maxHeight: !isCollapsed && !campaignsExpanded ? '0px' : '200px',
+                opacity: !isCollapsed && !campaignsExpanded ? 0 : 1,
+                marginTop: !isCollapsed && !campaignsExpanded ? '0px' : undefined
+              }}
             >
               {joinedCampaigns.map(campaign => <button key={campaign.id} onClick={() => {
             setSelectedCampaignForDetails(campaign);
