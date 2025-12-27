@@ -15,7 +15,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -646,8 +646,24 @@ export default function CampaignApply() {
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
               </div> : <div className="h-40 md:h-56 w-full bg-gradient-to-br from-primary/10 via-primary/5 to-transparent" />}
             
-            {/* Back button */}
-            
+            {/* Breadcrumb Navigation */}
+            <div className="absolute top-4 right-4 z-10">
+              <nav className="flex items-center gap-1 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                <Link to="/dashboard?tab=discover" className="hover:text-white transition-colors">
+                  Marketplace
+                </Link>
+                <ChevronRight className="h-3 w-3 opacity-60" />
+                {brandSlug ? (
+                  <Link to={`/b/${brandSlug}`} className="hover:text-white transition-colors">
+                    {brandName}
+                  </Link>
+                ) : (
+                  <span>{brandName}</span>
+                )}
+                <ChevronRight className="h-3 w-3 opacity-60" />
+                <span className="text-white truncate max-w-[150px]">{title}</span>
+              </nav>
+            </div>
           </div>
 
           <div className="max-w-3xl mx-auto px-4 pb-32 lg:pb-8">
