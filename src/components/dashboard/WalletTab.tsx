@@ -1313,7 +1313,7 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 max-w-6xl mx-auto pt-6 font-inter tracking-[-0.5px]">
+  return <div className="space-y-6 max-w-[650px] mx-auto pt-6 font-inter tracking-[-0.5px]">
 
       {/* Profile Header Section */}
       <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
