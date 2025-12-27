@@ -53,7 +53,7 @@ export function CampaignCard({
         onClick={onClick}
       >
         {/* Banner Background */}
-        <div className="relative aspect-[4/5]">
+        <div className="relative aspect-[3/4]">
           {banner_url ? (
             <OptimizedImage
               src={banner_url}
@@ -141,7 +141,9 @@ export function CampaignCard({
       <div className="flex items-center gap-1.5 px-0.5">
         <div className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-muted-foreground' : 'bg-emerald-500'}`} />
         <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif]">
-          {is_infinite_budget ? (
+          {isEnded ? (
+            <span className="text-muted-foreground">Campaign ended</span>
+          ) : is_infinite_budget ? (
             <><span className="text-foreground font-semibold">∞</span> unlimited</>
           ) : (
             <>
