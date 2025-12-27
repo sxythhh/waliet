@@ -38,7 +38,6 @@ import { PayoutStatusCards } from "./PayoutStatusCards";
 import { ProfileHeader } from "./ProfileHeader";
 import { TransactionShareDialog } from "./TransactionShareDialog";
 import { addDays } from "date-fns";
-
 interface UserProfile {
   username?: string;
   avatar_url?: string;
@@ -929,23 +928,22 @@ export function WalletTab() {
     setPayoutAmount(wallet.balance.toString());
     setPayoutDialogOpen(true);
   };
-  
+
   // Fetch user profile for share dialog
   const fetchUserProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('username, avatar_url, banner_url')
-      .eq('id', session.user.id)
-      .single();
-    
+    const {
+      data: profile
+    } = await supabase.from('profiles').select('username, avatar_url, banner_url').eq('id', session.user.id).single();
     if (profile) {
       setUserProfile(profile);
     }
   };
-  
   useEffect(() => {
     fetchUserProfile();
   }, []);
@@ -1679,7 +1677,7 @@ export function WalletTab() {
               </div>
               
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#dadce2]/0">
                 <p className="text-sm text-muted-foreground">
                   Viewing {Math.min((currentPage - 1) * itemsPerPage + 1, transactions.filter(transaction => {
                 if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
@@ -2093,10 +2091,7 @@ export function WalletTab() {
               
               {/* Fixed Share Button */}
               <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto">
-                <Button 
-                  onClick={() => setShareDialogOpen(true)} 
-                  className="w-full gap-2"
-                >
+                <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
                   <Share2 className="h-4 w-4" />
                   Share Transaction
                 </Button>
@@ -2112,11 +2107,6 @@ export function WalletTab() {
     }} />
 
       {/* Share Transaction Dialog */}
-      <TransactionShareDialog 
-        open={shareDialogOpen} 
-        onOpenChange={setShareDialogOpen} 
-        transaction={selectedTransaction}
-        userProfile={userProfile}
-      />
+      <TransactionShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} transaction={selectedTransaction} userProfile={userProfile} />
     </div>;
 }
