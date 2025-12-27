@@ -559,9 +559,7 @@ export function UserSettingsTab() {
                     .virality.gg
                   </span>
                 </div>
-                <a href={`/b/${brand.slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
-                  Preview public page →
-                </a>
+                
               </div>
 
               <Spacer />
