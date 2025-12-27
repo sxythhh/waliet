@@ -293,16 +293,26 @@ export function CampaignDetailsDialog({
             </div>
           </div>
           
-          {/* Submit Video Button - Top Right */}
-          {hasConnectedAccounts && (
+          {/* Action Buttons - Top Right */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
-              onClick={() => setShowSubmitVideoDialog(true)}
-              className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border flex-shrink-0"
+              onClick={() => window.location.href = `/c/${campaign.slug}`}
+              variant="outline"
+              className="h-9 px-4 rounded-[10px] font-medium text-sm"
               style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
             >
-              Submit Video
+              View Full Details
             </Button>
-          )}
+            {hasConnectedAccounts && (
+              <Button
+                onClick={() => setShowSubmitVideoDialog(true)}
+                className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border"
+                style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}
+              >
+                Submit Video
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Campaign Update Banner */}
