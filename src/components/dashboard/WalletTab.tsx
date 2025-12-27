@@ -136,28 +136,33 @@ export function WalletTab() {
   const {
     toast
   } = useToast();
-  
+
   // Use payment ledger for unified pending earnings
-  const { summary: ledgerSummary, loading: ledgerLoading, requestPayout: ledgerRequestPayout, refetch: refetchLedger } = usePaymentLedger();
-  
+  const {
+    summary: ledgerSummary,
+    loading: ledgerLoading,
+    requestPayout: ledgerRequestPayout,
+    refetch: refetchLedger
+  } = usePaymentLedger();
+
   // Calculate payout pipeline data
   const payoutPipelineData = {
     accruing: {
-      amount: (ledgerSummary?.totalPending || 0),
-      videoCount: (ledgerSummary?.accruingCount || 0)
+      amount: ledgerSummary?.totalPending || 0,
+      videoCount: ledgerSummary?.accruingCount || 0
     },
     clearing: {
       amount: (ledgerSummary?.totalClearing || 0) + (ledgerSummary?.totalLocked || 0) + clearingPayouts,
-      videoCount: (ledgerSummary?.clearingCount || 0),
+      videoCount: ledgerSummary?.clearingCount || 0,
       clearingEndsAt: ledgerSummary?.earliestClearingEndsAt,
       canBeFlagged: ledgerSummary?.hasActiveFlaggableItems || false
     },
     paid: {
       amount: (ledgerSummary?.totalPaid || 0) + (wallet?.total_withdrawn || 0),
-      videoCount: (ledgerSummary?.paidCount || 0)
+      videoCount: ledgerSummary?.paidCount || 0
     }
   };
-  
+
   // Handle request payout for earnings pipeline
   const handleRequestEarningsPayout = async () => {
     if (payoutPipelineData.accruing.amount < 1) {
@@ -168,10 +173,13 @@ export function WalletTab() {
       });
       return;
     }
-
     setIsRequestingEarningsPayout(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       // Request payout via ledger
@@ -195,7 +203,6 @@ export function WalletTab() {
       setIsRequestingEarningsPayout(false);
     }
   };
-  
   useEffect(() => {
     fetchWallet();
     fetchPendingBoostEarnings();
@@ -217,17 +224,16 @@ export function WalletTab() {
       supabase.removeChannel(channel);
     };
   }, []);
-  
   const fetchClearingPayouts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-    
-    const { data: requests } = await supabase
-      .from('submission_payout_requests')
-      .select('total_amount')
-      .eq('user_id', session.user.id)
-      .in('status', ['clearing']);
-    
+    const {
+      data: requests
+    } = await supabase.from('submission_payout_requests').select('total_amount').eq('user_id', session.user.id).in('status', ['clearing']);
     if (requests && requests.length > 0) {
       const total = requests.reduce((sum, r) => sum + (r.total_amount || 0), 0);
       setClearingPayouts(total);
@@ -235,19 +241,18 @@ export function WalletTab() {
       setClearingPayouts(0);
     }
   };
-  
   const fetchPendingBoostEarnings = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: {
+        session
+      }
+    } = await supabase.auth.getSession();
     if (!session) return;
-    
+
     // Get all pending boost submissions from unified table
-    const { data: pendingSubmissions } = await supabase
-      .from("video_submissions")
-      .select("payout_amount, source_id")
-      .eq("creator_id", session.user.id)
-      .eq("source_type", "boost")
-      .eq("status", "pending");
-    
+    const {
+      data: pendingSubmissions
+    } = await supabase.from("video_submissions").select("payout_amount, source_id").eq("creator_id", session.user.id).eq("source_type", "boost").eq("status", "pending");
     if (pendingSubmissions && pendingSubmissions.length > 0) {
       let totalPending = 0;
       pendingSubmissions.forEach(sub => {
@@ -365,7 +370,7 @@ export function WalletTab() {
     // Generate data points - show daily earnings (not cumulative) for better visualization
     const pointCount = Math.min(days, 30); // Max 30 points for performance
     const interval = Math.max(1, Math.floor(days / pointCount));
-    
+
     // Group transactions by date
     const earningsByDate: Record<string, number> = {};
     if (allTransactions) {
@@ -379,16 +384,14 @@ export function WalletTab() {
         }
       });
     }
-    
     for (let i = 0; i <= pointCount; i++) {
       const currentDate = new Date(start.getTime() + i * interval * 24 * 60 * 60 * 1000);
       if (currentDate > now) break;
       const dateStr = format(currentDate, earningsChartPeriod === '1D' ? 'HH:mm' : 'MMM dd');
       const dateKey = format(currentDate, 'yyyy-MM-dd');
-      
+
       // Show daily earnings for that specific day
       const dailyEarnings = earningsByDate[dateKey] || 0;
-      
       dataPoints.push({
         date: dateStr,
         amount: Number(dailyEarnings.toFixed(2))
@@ -1546,16 +1549,12 @@ export function WalletTab() {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-                {(ledgerSummary?.totalLocked || 0) > 0 && (
-                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                {(ledgerSummary?.totalLocked || 0) > 0 && <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
                     ${(ledgerSummary?.totalLocked || 0).toFixed(2)} Locked
-                  </span>
-                )}
+                  </span>}
               </div>
               <span className="text-base font-semibold text-amber-500">
-                {isBalanceVisible 
-                  ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` 
-                  : "••••••"}
+                {isBalanceVisible ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` : "••••••"}
               </span>
             </div>
             <div className="flex items-center justify-between mb-3">
@@ -1571,21 +1570,17 @@ export function WalletTab() {
 
       {/* Payout Pipeline Section */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4 font-['Inter']" style={{ letterSpacing: '-0.3px' }}>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4 font-['Inter']" style={{
+        letterSpacing: '-0.3px'
+      }}>
           Payout Pipeline
         </h3>
-        <PayoutStatusCards
-          accruing={payoutPipelineData.accruing}
-          clearing={payoutPipelineData.clearing}
-          paid={payoutPipelineData.paid}
-          onRequestPayout={handleRequestEarningsPayout}
-          isRequesting={isRequestingEarningsPayout}
-        />
+        <PayoutStatusCards accruing={payoutPipelineData.accruing} clearing={payoutPipelineData.clearing} paid={payoutPipelineData.paid} onRequestPayout={handleRequestEarningsPayout} isRequesting={isRequestingEarningsPayout} />
       </div>
 
-{/* Team & Affiliate Earnings Charts - Hidden */}
+    {/* Team & Affiliate Earnings Charts - Hidden */}
 
-      <Card className="bg-card border rounded-xl overflow-hidden border-[#141414]/0">
+      <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
         {/* Filter Button */}
         <div className="pt-5 pb-4 px-0">
           <DropdownMenu open={filterOpen} onOpenChange={open => {
@@ -1607,47 +1602,39 @@ export function WalletTab() {
                 {/* Main Menu */}
                 <div className={`transition-all duration-200 ease-out ${filterSubmenu === 'main' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full absolute inset-0'}`}>
                   <div className="relative mb-3">
-                    <Input 
-                      placeholder="Filter..." 
-                      value={filterSearch}
-                      onChange={(e) => setFilterSearch(e.target.value)}
-                      className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" 
-                    />
+                    <Input placeholder="Filter..." value={filterSearch} onChange={e => setFilterSearch(e.target.value)} className="bg-background/50 border-border h-10 pr-10 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border" />
                     <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">F</kbd>
                   </div>
                   
                   {/* Show matching filter options when searching */}
-                  {filterSearch ? (
-                    <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                  {filterSearch ? <div className="space-y-1 max-h-[250px] overflow-y-auto">
                       {/* Type options */}
                       {[{
-                        value: 'earning',
-                        label: 'Campaign Payout'
-                      }, {
-                        value: 'withdrawal',
-                        label: 'Withdrawal'
-                      }, {
-                        value: 'team_earning',
-                        label: 'Team Earnings'
-                      }, {
-                        value: 'affiliate_earning',
-                        label: 'Affiliate Earnings'
-                      }, {
-                        value: 'referral',
-                        label: 'Referral Bonus'
-                      }, {
-                        value: 'transfer_sent',
-                        label: 'Transfer Sent'
-                      }, {
-                        value: 'transfer_received',
-                        label: 'Transfer Received'
-                      }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase()))
-                        .map(option => (
-                          <button key={option.value} onClick={e => {
-                            e.preventDefault();
-                            setTypeFilter(option.value);
-                            setFilterSearch('');
-                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setTypeFilter(option.value);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                             <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
                               <div className="w-1.5 h-1.5 rounded-sm bg-current" />
                               <div className="w-1.5 h-1.5 rounded-sm bg-current" />
@@ -1656,70 +1643,85 @@ export function WalletTab() {
                             </div>
                             <span className="text-sm">{option.label}</span>
                             {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
-                          </button>
-                        ))}
+                          </button>)}
                       
                       {/* Status options */}
                       {[{
-                        value: 'completed',
-                        label: 'Completed'
-                      }, {
-                        value: 'pending',
-                        label: 'Pending'
-                      }, {
-                        value: 'in_transit',
-                        label: 'In Transit'
-                      }, {
-                        value: 'rejected',
-                        label: 'Rejected'
-                      }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase()))
-                        .map(option => (
-                          <button key={option.value} onClick={e => {
-                            e.preventDefault();
-                            setStatusFilter(option.value);
-                            setFilterSearch('');
-                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setStatusFilter(option.value);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                             <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
                             <span className="text-sm">{option.label}</span>
                             {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
-                          </button>
-                        ))}
+                          </button>)}
                       
                       {/* Program options */}
-                      {availableCampaigns
-                        .filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase()))
-                        .map(campaign => (
-                          <button key={campaign.id} onClick={e => {
-                            e.preventDefault();
-                            setCampaignFilter(campaign.id);
-                            setFilterSearch('');
-                          }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                            {campaign.brand_logo_url ? (
-                              <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                      {availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).map(campaign => <button key={campaign.id} onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter(campaign.id);
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                            {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
                                 <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                              </div>
-                            ) : (
-                              <Briefcase className="h-4 w-4" />
-                            )}
+                              </div> : <Briefcase className="h-4 w-4" />}
                             <span className="text-sm truncate">{campaign.title}</span>
                             {campaignFilter === campaign.id && <Check className="h-4 w-4 ml-auto flex-shrink-0" />}
-                          </button>
-                        ))}
+                          </button>)}
                       
                       {/* No results */}
-                      {[{value: 'earning', label: 'Campaign Payout'}, {value: 'withdrawal', label: 'Withdrawal'}, {value: 'team_earning', label: 'Team Earnings'}, {value: 'affiliate_earning', label: 'Affiliate Earnings'}, {value: 'referral', label: 'Referral Bonus'}, {value: 'transfer_sent', label: 'Transfer Sent'}, {value: 'transfer_received', label: 'Transfer Received'}].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 &&
-                       [{value: 'completed', label: 'Completed'}, {value: 'pending', label: 'Pending'}, {value: 'in_transit', label: 'In Transit'}, {value: 'rejected', label: 'Rejected'}].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 &&
-                       availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">No matching filters</p>
-                      )}
-                    </div>
-                  ) : (
-                    /* Default menu items when not searching */
-                    <div className="space-y-1">
+                      {[{
+                    value: 'earning',
+                    label: 'Campaign Payout'
+                  }, {
+                    value: 'withdrawal',
+                    label: 'Withdrawal'
+                  }, {
+                    value: 'team_earning',
+                    label: 'Team Earnings'
+                  }, {
+                    value: 'affiliate_earning',
+                    label: 'Affiliate Earnings'
+                  }, {
+                    value: 'referral',
+                    label: 'Referral Bonus'
+                  }, {
+                    value: 'transfer_sent',
+                    label: 'Transfer Sent'
+                  }, {
+                    value: 'transfer_received',
+                    label: 'Transfer Received'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && [{
+                    value: 'completed',
+                    label: 'Completed'
+                  }, {
+                    value: 'pending',
+                    label: 'Pending'
+                  }, {
+                    value: 'in_transit',
+                    label: 'In Transit'
+                  }, {
+                    value: 'rejected',
+                    label: 'Rejected'
+                  }].filter(opt => opt.label.toLowerCase().includes(filterSearch.toLowerCase()) || opt.value.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && availableCampaigns.filter(c => c.title.toLowerCase().includes(filterSearch.toLowerCase()) || c.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No matching filters</p>}
+                    </div> : (/* Default menu items when not searching */
+                <div className="space-y-1">
                       <button onClick={e => {
-                      e.preventDefault();
-                      setFilterSubmenu('type');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    e.preventDefault();
+                    setFilterSubmenu('type');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
                           <div className="w-1.5 h-1.5 rounded-sm bg-current" />
                           <div className="w-1.5 h-1.5 rounded-sm bg-current" />
@@ -1731,18 +1733,18 @@ export function WalletTab() {
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
                       </button>
                       <button onClick={e => {
-                      e.preventDefault();
-                      setFilterSubmenu('status');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    e.preventDefault();
+                    setFilterSubmenu('status');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
                         <span className="font-medium">Status</span>
                         {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
                       </button>
                       {availableCampaigns.length > 0 && <button onClick={e => {
-                      e.preventDefault();
-                      setFilterSubmenu('program');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    e.preventDefault();
+                    setFilterSubmenu('program');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                           <Briefcase className="h-4 w-4" />
                           <span className="font-medium">Program</span>
                           {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
@@ -1750,8 +1752,7 @@ export function WalletTab() {
                             </span>}
                           <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
                         </button>}
-                    </div>
-                  )}
+                    </div>)}
                   
                   {(typeFilter !== 'all' || statusFilter !== 'all' || campaignFilter !== 'all') && !filterSearch && <Button variant="ghost" size="sm" className="w-full text-muted-foreground hover:text-foreground mt-3" onClick={e => {
                   e.preventDefault();
@@ -1798,13 +1799,12 @@ export function WalletTab() {
                   }, {
                     value: 'transfer_received',
                     label: 'Transfer Received'
-                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase()))
-                    .map(option => <button key={option.value} onClick={e => {
-                      e.preventDefault();
-                      setTypeFilter(option.value);
-                      setFilterSubmenu('main');
-                      setFilterSearch('');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setTypeFilter(option.value);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {typeFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
                       </button>)}
@@ -1837,13 +1837,12 @@ export function WalletTab() {
                   }, {
                     value: 'rejected',
                     label: 'Rejected'
-                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase()))
-                    .map(option => <button key={option.value} onClick={e => {
-                      e.preventDefault();
-                      setStatusFilter(option.value);
-                      setFilterSubmenu('main');
-                      setFilterSearch('');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                  }].filter(option => !filterSearch || option.label.toLowerCase().includes(filterSearch.toLowerCase()) || option.value.toLowerCase().includes(filterSearch.toLowerCase())).map(option => <button key={option.value} onClick={e => {
+                    e.preventDefault();
+                    setStatusFilter(option.value);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter === option.value ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         <span className="text-sm">{option.label}</span>
                         {statusFilter === option.value && <Check className="h-4 w-4 ml-auto" />}
                       </button>)}
@@ -1870,14 +1869,12 @@ export function WalletTab() {
                       <span className="text-sm">All Programs</span>
                       {campaignFilter === 'all' && <Check className="h-4 w-4 ml-auto" />}
                     </button>
-                    {availableCampaigns
-                      .filter(campaign => !filterSearch || campaign.title.toLowerCase().includes(filterSearch.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(filterSearch.toLowerCase()))
-                      .map(campaign => <button key={campaign.id} onClick={e => {
-                      e.preventDefault();
-                      setCampaignFilter(campaign.id);
-                      setFilterSubmenu('main');
-                      setFilterSearch('');
-                    }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
+                    {availableCampaigns.filter(campaign => !filterSearch || campaign.title.toLowerCase().includes(filterSearch.toLowerCase()) || campaign.brand_name?.toLowerCase().includes(filterSearch.toLowerCase())).map(campaign => <button key={campaign.id} onClick={e => {
+                    e.preventDefault();
+                    setCampaignFilter(campaign.id);
+                    setFilterSubmenu('main');
+                    setFilterSearch('');
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter === campaign.id ? 'bg-muted' : 'hover:bg-muted/50'}`}>
                         {campaign.brand_logo_url ? <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
                             <img src={campaign.brand_logo_url} alt={campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
                           </div> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -2267,19 +2264,10 @@ export function WalletTab() {
           </div>
 
           <DialogFooter className="gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => setPayoutDialogOpen(false)} 
-              disabled={isSubmittingPayout}
-              className="font-inter tracking-[-0.5px] border-0 hover:bg-destructive/10 hover:text-destructive"
-            >
+            <Button variant="ghost" onClick={() => setPayoutDialogOpen(false)} disabled={isSubmittingPayout} className="font-inter tracking-[-0.5px] border-0 hover:bg-destructive/10 hover:text-destructive">
               Cancel
             </Button>
-            <Button 
-              onClick={handleConfirmPayout} 
-              disabled={isSubmittingPayout}
-              className="font-inter tracking-[-0.5px]"
-            >
+            <Button onClick={handleConfirmPayout} disabled={isSubmittingPayout} className="font-inter tracking-[-0.5px]">
               {isSubmittingPayout ? "Processing..." : "Confirm Payout"}
             </Button>
           </DialogFooter>
