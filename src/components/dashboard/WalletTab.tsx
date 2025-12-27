@@ -35,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { P2PTransferDialog } from "@/components/P2PTransferDialog";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { PayoutStatusCards } from "./PayoutStatusCards";
+import { ProfileHeader } from "./ProfileHeader";
 import { addDays } from "date-fns";
 interface WalletData {
   id: string;
@@ -1359,6 +1360,14 @@ export function WalletTab() {
   };
   return <div className="space-y-6 max-w-6xl mx-auto pt-6 font-inter tracking-[-0.5px]">
 
+      {/* Profile Header Section */}
+      <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
+
+      {/* Earnings Section Header */}
+      <div className="pt-4">
+        <h2 className="text-lg font-semibold text-foreground font-inter tracking-[-0.5px] mb-4">Your Earnings</h2>
+        <p className="text-sm text-muted-foreground mb-4">Your Monthly Earnings so far</p>
+      </div>
 
       {/* Payment Methods Section */}
       <div className="space-y-3">

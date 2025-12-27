@@ -2831,6 +2831,7 @@ export type Database = {
           account_type: string
           audience_quality_score: number | null
           avatar_url: string | null
+          banner_url: string | null
           billing_address: string | null
           bio: string | null
           city: string | null
@@ -2884,6 +2885,7 @@ export type Database = {
           account_type?: string
           audience_quality_score?: number | null
           avatar_url?: string | null
+          banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
           city?: string | null
@@ -2937,6 +2939,7 @@ export type Database = {
           account_type?: string
           audience_quality_score?: number | null
           avatar_url?: string | null
+          banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
           city?: string | null
