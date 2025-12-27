@@ -275,8 +275,11 @@ export function ProfileHeader({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
-                {profile?.username || "Username"}
+                {profile?.full_name || profile?.username || "Username"}
               </h2>
+              <span className="text-muted-foreground text-sm">
+                @{profile?.username || "username"}
+              </span>
               <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 border-0" onClick={() => navigate('/dashboard?tab=profile')}>
                 <Pencil className="h-3 w-3 mr-1" />
                 Edit Profile
