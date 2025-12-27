@@ -512,11 +512,11 @@ export function ProfileTab() {
     // Add timestamp to prevent browser caching
     const publicUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
 
-    // Update profile with new avatar URL
+    // Update profile with new avatar URL (including timestamp for cache-busting)
     const {
       error: updateError
     } = await supabase.from('profiles').update({
-      avatar_url: publicUrl // Store without timestamp in DB
+      avatar_url: publicUrlWithTimestamp
     }).eq('id', session.user.id);
     setUploading(false);
     if (updateError) {
