@@ -58,7 +58,7 @@ export function BoostDiscoverCard({
           </button>}
       </div>
 
-      <CardContent className="p-4 flex-1 flex flex-col gap-2">
+      <CardContent className="p-4 flex-1 flex flex-col gap-2 shadow-none">
         {/* Title */}
         <h3 className="text-sm font-semibold line-clamp-2 leading-snug group-hover:underline tracking-[-0.3px] font-['Geist',sans-serif]">
           {title}
