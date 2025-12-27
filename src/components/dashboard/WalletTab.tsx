@@ -1430,7 +1430,7 @@ export function WalletTab() {
         </Card>
 
         {/* Current Balance Card */}
-        <Card className="bg-card border-0">
+        <Card className="border-0 bg-neutral-100/0">
           <CardContent className="pt-4 pb-4 py-0 px-[10px] bg-black/0">
             <div className="flex items-center gap-3 mb-2">
               
