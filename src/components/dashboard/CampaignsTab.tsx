@@ -718,16 +718,40 @@ export function CampaignsTab({
 
       {/* Submissions Section */}
       <SubmissionsTab />
+
+      {/* Your Campaigns Section */}
+      {campaigns.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold">Your Campaigns</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {campaigns.map((campaign) => (
+              <CampaignCard
+                key={campaign.id}
+                id={campaign.id}
+                title={campaign.title}
+                brand_name={campaign.brand_name}
+                brand_logo_url={campaign.brand_logo_url}
+                brand_is_verified={campaign.brand_is_verified}
+                banner_url={campaign.banner_url}
+                budget={campaign.budget}
+                budget_used={campaign.budget_used}
+                is_infinite_budget={campaign.is_infinite_budget}
+                platforms={campaign.allowed_platforms || []}
+                isEnded={campaign.status === 'ended'}
+                showBookmark={false}
+                showFullscreen={false}
+                onClick={() => {
+                  setSelectedCampaignForDetails(campaign);
+                  setCampaignDetailsDialogOpen(true);
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       
       {/* Campaigns Content */}
       <>
-
-
-      {/* Recommended for You */}
-      {recommendedCampaigns.length > 0}
-
-      {/* Recent Activity Section */}
-      {recentActivity.length > 0}
 
 
       {/* Boost Applications Section - Pending/Rejected Only */}
