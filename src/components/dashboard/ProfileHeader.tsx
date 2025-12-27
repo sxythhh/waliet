@@ -211,7 +211,8 @@ export function ProfileHeader({
   };
   const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
   if (loading) {
-    return <div className="space-y-4">
+    return (
+      <div className="space-y-4">
         <Skeleton className="w-full h-32 rounded-xl" />
         <div className="flex items-start gap-4">
           <Skeleton className="w-20 h-20 rounded-xl" />
@@ -220,9 +221,12 @@ export function ProfileHeader({
             <Skeleton className="h-4 w-48" />
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       {/* Banner with Profile Picture Overlap */}
       <div className="relative">
         {/* Banner */}
