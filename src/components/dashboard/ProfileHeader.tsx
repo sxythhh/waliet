@@ -202,10 +202,11 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
 
   return (
     <div className="space-y-6">
-      {/* Banner */}
+      {/* Banner with Profile Picture Overlap */}
       <div className="relative">
+        {/* Banner */}
         <div 
-          className="w-full h-32 md:h-40 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer"
+          className="w-full h-40 md:h-52 rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 overflow-hidden relative group cursor-pointer"
           onClick={() => bannerInputRef.current?.click()}
         >
           {profile?.banner_url ? (
@@ -217,6 +218,9 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900" />
           )}
+          
+          {/* Bottom fade gradient */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
           
           {/* Upload overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -240,42 +244,42 @@ export function ProfileHeader({ totalViews = 0, totalPosts = 0 }: ProfileHeaderP
           className="hidden"
           onChange={handleBannerUpload}
         />
+
+        {/* Profile Picture - overlapping banner */}
+        <div 
+          className="absolute -bottom-10 left-6 group cursor-pointer z-10"
+          onClick={(e) => { e.stopPropagation(); avatarInputRef.current?.click(); }}
+        >
+          <Avatar className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-background shadow-xl">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} />
+            <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold rounded-full">
+              {profile?.username?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Upload overlay */}
+          <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            {uploadingAvatar ? (
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+            ) : (
+              <Camera className="h-5 w-5 text-white" />
+            )}
+          </div>
+          
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
+        </div>
       </div>
 
       {/* Profile Card Section */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left: Avatar + Info */}
-        <div className="flex items-start gap-4 flex-1">
-          {/* Avatar */}
-          <div 
-            className="relative group cursor-pointer shrink-0"
-            onClick={() => avatarInputRef.current?.click()}
-          >
-            <Avatar className="w-20 h-20 md:w-24 md:h-24 rounded-xl border-4 border-background shadow-lg">
-              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username} />
-              <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold rounded-xl">
-                {profile?.username?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            
-            {/* Upload overlay */}
-            <div className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              {uploadingAvatar ? (
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-              ) : (
-                <Camera className="h-5 w-5 text-white" />
-              )}
-            </div>
-            
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarUpload}
-            />
-          </div>
-
+      <div className="flex flex-col md:flex-row gap-6 pt-8">
+        {/* Left: Info (avatar is now overlapping banner above) */}
+        <div className="flex items-start gap-4 flex-1 pl-36 md:pl-40">
           {/* Name + Edit */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
