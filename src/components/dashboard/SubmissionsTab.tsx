@@ -669,7 +669,7 @@ export function SubmissionsTab() {
       {/* Submissions Table */}
       <div className="pb-6 px-0">
         {submissions.length === 0 ? <div className="text-center py-12">
-            <Video className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+            
             <p className="text-sm text-muted-foreground" style={{
           fontFamily: 'Inter',
           letterSpacing: '-0.3px'
