@@ -1172,7 +1172,7 @@ export function CreatorDatabaseTab({
               <Plus className="h-3.5 w-3.5" />
               Add Creators
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground">
+            <Button variant="ghost" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground">
               <Download className="h-3.5 w-3.5" />
               Export
             </Button>
