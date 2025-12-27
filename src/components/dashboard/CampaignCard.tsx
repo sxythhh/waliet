@@ -222,7 +222,7 @@ export function CampaignCard({
                   </div>
                 )}
               </div>
-              <div className="relative h-1.5 rounded-full overflow-hidden bg-muted">
+              <div className="relative h-1.5 rounded-full overflow-hidden bg-[#f4f4f4] dark:bg-muted">
                 <div
                   className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-700"
                   style={{ width: `${budgetPercentage}%` }}
