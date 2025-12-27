@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search } from "lucide-react";
+import { DollarSign, Calendar, Infinity, Instagram, Video, Youtube, Share2, Plus, Link2, UserPlus, X, AlertTriangle, LogOut, MessageCircle, Wallet, Users, Sparkles, ChevronRight, Clock, CheckCircle2, Bell, GraduationCap, Play, Search, RotateCcw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTheme } from "@/components/ThemeProvider";
@@ -31,6 +31,8 @@ import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
+import { ApplyToBoostDialog } from "@/components/ApplyToBoostDialog";
+import { Switch } from "@/components/ui/switch";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
@@ -149,7 +151,9 @@ export function CampaignsTab({
     platform: string;
     username: string;
   } | null>(null);
-  
+  const [reapplyDialogOpen, setReapplyDialogOpen] = useState(false);
+  const [selectedBoostForReapply, setSelectedBoostForReapply] = useState<BoostApplication | null>(null);
+  const [reapplyingId, setReapplyingId] = useState<string | null>(null);
 
   // New state for dashboard sections
   const [profile, setProfile] = useState<{
@@ -580,6 +584,47 @@ export function CampaignsTab({
       setSelectedCampaignId(null);
     }
   };
+
+  const handleReapplyToggle = async (application: BoostApplication) => {
+    setReapplyingId(application.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please sign in to re-apply"
+        });
+        return;
+      }
+
+      // Delete the rejected application
+      const { error } = await supabase
+        .from("bounty_applications")
+        .delete()
+        .eq("id", application.id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Set the boost for re-apply and open the dialog
+      setSelectedBoostForReapply(application);
+      setReapplyDialogOpen(true);
+      
+      // Refresh the applications list
+      fetchBoostApplications();
+    } catch (error) {
+      console.error("Error preparing re-apply:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to prepare re-application"
+      });
+    } finally {
+      setReapplyingId(null);
+    }
+  };
+
   if (loading) {
     return <div className="space-y-8 px-6 pt-8 pb-6">
       {/* Welcome Section Skeleton */}
@@ -763,6 +808,21 @@ export function CampaignsTab({
                       <span className="font-semibold">{application.boost_campaigns.videos_per_month}/mo</span>
                     </div>
                   </div>
+
+                  {/* Re-apply Toggle for Rejected Applications */}
+                  {application.status === 'rejected' && (
+                    <div className="flex items-center justify-between border-t border-border/50 pt-3">
+                      <div className="flex items-center gap-2">
+                        <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Re-apply</span>
+                      </div>
+                      <Switch
+                        checked={false}
+                        disabled={reapplyingId === application.id}
+                        onCheckedChange={() => handleReapplyToggle(application)}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>)}
           </div>
@@ -918,5 +978,35 @@ export function CampaignsTab({
           }, 300);
         }
       }} />
+      
+      {/* Re-apply to Boost Dialog */}
+      <ApplyToBoostDialog
+        open={reapplyDialogOpen}
+        onOpenChange={setReapplyDialogOpen}
+        bounty={selectedBoostForReapply ? {
+          id: selectedBoostForReapply.boost_campaigns.id,
+          title: selectedBoostForReapply.boost_campaigns.title,
+          description: null,
+          monthly_retainer: selectedBoostForReapply.boost_campaigns.monthly_retainer,
+          videos_per_month: selectedBoostForReapply.boost_campaigns.videos_per_month,
+          content_style_requirements: selectedBoostForReapply.boost_campaigns.content_style_requirements || '',
+          max_accepted_creators: 0,
+          accepted_creators_count: 0,
+          start_date: null,
+          end_date: null,
+          banner_url: selectedBoostForReapply.boost_campaigns.banner_url,
+          status: 'active',
+          brands: selectedBoostForReapply.boost_campaigns.brands
+        } : null}
+        onSuccess={() => {
+          setReapplyDialogOpen(false);
+          setSelectedBoostForReapply(null);
+          fetchBoostApplications();
+          toast({
+            title: "Application submitted",
+            description: "Your re-application has been submitted successfully"
+          });
+        }}
+      />
     </div>;
 }
