@@ -78,7 +78,7 @@ export function BoostDiscoverCard({
 
         {/* Retainer Amount */}
         <div className="flex items-baseline gap-1 mt-auto pt-2">
-          <span className="text-base font-bold tracking-[-0.3px] font-['Geist',sans-serif] text-primary">
+          <span className="text-base font-bold tracking-[-0.3px] font-['Geist',sans-serif] text-primary-foreground">
             ${monthly_retainer.toLocaleString()}
           </span>
           <span className="text-[10px] text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
