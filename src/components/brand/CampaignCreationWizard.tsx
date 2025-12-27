@@ -895,7 +895,7 @@ export function CampaignCreationWizard({
                             return (
                               <div 
                                 key={rate.platform} 
-                                className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border"
+                                className="flex items-center gap-3 p-3 rounded-xl font-['Inter']"
                               >
                                 <div className="flex items-center gap-2 min-w-[100px]">
                                   {platformInfo?.icon ? (
@@ -922,7 +922,7 @@ export function CampaignCreationWizard({
                                       }));
                                     }}
                                   >
-                                    <SelectTrigger className="h-8 text-xs bg-background">
+                                    <SelectTrigger className="h-8 text-xs border-0 bg-transparent shadow-none focus:ring-0">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
