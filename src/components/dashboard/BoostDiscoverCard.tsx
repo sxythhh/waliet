@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { useNavigate } from "react-router-dom";
 import videosIcon from "@/assets/videos-icon.svg";
 import personIcon from "@/assets/person-icon.svg";
 
@@ -41,6 +42,7 @@ export function BoostDiscoverCard({
   onBookmarkClick,
   onFullscreenClick,
 }: BoostDiscoverCardProps) {
+  const navigate = useNavigate();
   const spotsRemaining = max_accepted_creators - accepted_creators_count;
   const isFull = spotsRemaining <= 0;
 
@@ -126,7 +128,13 @@ export function BoostDiscoverCard({
           )}
           <span className="text-[10px] tracking-[-0.3px] font-['Geist',sans-serif] flex items-center gap-1">
             <span className="text-muted-foreground">Created by</span>
-            <span className="text-foreground font-medium">{brand_name}</span>
+            <span 
+              className="text-foreground font-medium hover:underline cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate("/b");
+              }}
+            >{brand_name}</span>
             {brand_is_verified && <VerifiedBadge size="sm" />}
           </span>
         </div>
