@@ -235,7 +235,7 @@ export function CreateBrandDialog({
                       variant="ghost" 
                       size="sm" 
                       onClick={() => fileInputRef.current?.click()} 
-                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground"
+                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-black/5 dark:bg-white/5 border-0 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
                     >
                       <Upload className="h-3 w-3" />
                       {logoPreview ? 'Change' : 'Upload'}
