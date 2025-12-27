@@ -629,7 +629,7 @@ export function AppSidebar() {
                         }
                       }
                     }} 
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
                     title={isCollapsed ? item.title : undefined}
                   >
                     <div className="flex items-center gap-2">
@@ -653,7 +653,7 @@ export function AppSidebar() {
                           <button
                             key={subItem.subtab}
                             onClick={() => handleSubtabClick(subItem.subtab)}
-                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 ${isSubActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                            className={`w-full flex items-center gap-2 px-2.5 py-2 transition-colors rounded-md hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isSubActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
                           >
                             <div className="relative h-4 w-4">
                               <img src={subItem.iconInactive} alt="" className={`absolute inset-0 h-4 w-4 ${isSubActive ? 'opacity-0' : 'opacity-100'}`} />
@@ -669,7 +669,7 @@ export function AppSidebar() {
               );
             }
             
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
