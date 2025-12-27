@@ -31,7 +31,7 @@ import { ManageAccountDialog } from "@/components/ManageAccountDialog";
 import { SubmitDemographicsDialog } from "@/components/SubmitDemographicsDialog";
 import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
-import { ApplyToBoostDialog } from "@/components/ApplyToBoostDialog";
+import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { Switch } from "@/components/ui/switch";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { BoostCard } from "@/components/dashboard/BoostCard";
@@ -979,8 +979,8 @@ export function CampaignsTab({
         }
       }} />
       
-      {/* Re-apply to Boost Dialog */}
-      <ApplyToBoostDialog
+      {/* Re-apply to Boost Sheet */}
+      <ApplyToBountySheet
         open={reapplyDialogOpen}
         onOpenChange={setReapplyDialogOpen}
         bounty={selectedBoostForReapply ? {
