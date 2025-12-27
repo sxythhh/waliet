@@ -483,7 +483,7 @@ export function DiscoverTab({
               </button>}
 
             {/* Filter buttons row */}
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 items-center h-9">
               {/* Bookmarked Toggle */}
               <button onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${showBookmarkedOnly ? "bg-foreground text-background" : "bg-muted/40 text-muted-foreground hover:bg-muted/60"}`}>
                 <Bookmark className={`h-3.5 w-3.5 ${showBookmarkedOnly ? "fill-current" : ""}`} />
