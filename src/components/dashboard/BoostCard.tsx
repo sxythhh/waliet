@@ -447,7 +447,7 @@ export function BoostCard({
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
         <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-card border-none [&>button]:hidden">
           {/* Header */}
-          <div className="pt-5 pb-0 px-0">
+          <div className="pt-5 pb-0 px-[20px]">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-geist tracking-[-0.5px] text-lg font-semibold">
                 Submit post
