@@ -59,6 +59,34 @@ import { useTheme } from "@/components/ThemeProvider";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import SidebarMenuButtons from "@/components/SidebarMenuButtons";
+import { CampaignDetailsDialog } from "@/components/CampaignDetailsDialog";
+
+interface JoinedCampaign {
+  id: string;
+  title: string;
+  slug: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  description: string | null;
+  status: string;
+  budget: number;
+  budget_used?: number | null;
+  rpm_rate: number;
+  allowed_platforms: string[] | null;
+  end_date: string | null;
+  created_at: string;
+  hashtags?: string[] | null;
+  guidelines?: string | null;
+  embed_url?: string | null;
+  asset_links?: any[] | null;
+  requirements?: string[] | null;
+  campaign_update?: string | null;
+  campaign_update_at?: string | null;
+  payout_day_of_week?: number | null;
+  blueprint_id?: string | null;
+  payment_model?: string | null;
+  post_rate?: number | null;
+}
 interface Brand {
   id: string;
   name: string;
@@ -185,6 +213,9 @@ export function AppSidebar() {
   const [currentBrandMemberCount, setCurrentBrandMemberCount] = useState<number>(0);
   const [inviteMemberOpen, setInviteMemberOpen] = useState(false);
   const [creatorsExpanded, setCreatorsExpanded] = useState(false);
+  const [joinedCampaigns, setJoinedCampaigns] = useState<JoinedCampaign[]>([]);
+  const [selectedCampaignForDetails, setSelectedCampaignForDetails] = useState<JoinedCampaign | null>(null);
+  const [campaignDetailsDialogOpen, setCampaignDetailsDialogOpen] = useState(false);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
   const currentSubtab = searchParams.get("subtab") || "messages";
 
@@ -194,6 +225,7 @@ export function AppSidebar() {
     if (user) {
       fetchProfile();
       fetchBrandMemberships();
+      fetchJoinedCampaigns();
     }
   }, [user]);
   useEffect(() => {
@@ -279,6 +311,36 @@ export function AppSidebar() {
     } = await supabase.from("brands").select("id, name, slug, logo_url, brand_color").order("name");
     if (data) {
       setAllBrands(data);
+    }
+  };
+  const fetchJoinedCampaigns = async () => {
+    if (!user) return;
+    
+    // First get campaign IDs user has joined (accepted submissions)
+    const { data: submissions } = await supabase
+      .from("campaign_submissions")
+      .select("campaign_id")
+      .eq("creator_id", user.id)
+      .eq("status", "approved");
+    
+    if (!submissions || submissions.length === 0) {
+      setJoinedCampaigns([]);
+      return;
+    }
+    
+    const campaignIds = submissions.map(s => s.campaign_id);
+    
+    // Fetch campaign details
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("*")
+      .in("id", campaignIds)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    
+    if (campaigns) {
+      setJoinedCampaigns(campaigns as JoinedCampaign[]);
     }
   };
   const getInitial = () => {
@@ -697,7 +759,37 @@ export function AppSidebar() {
           </div>
         </nav>
 
-        {/* Upgrade Plan Button - Only show in brand workspace when not subscribed */}
+        {/* Joined Campaigns Section - Only show in creator mode */}
+        {isCreatorMode && joinedCampaigns.length > 0 && !isCollapsed && (
+          <div className="px-2 py-2 border-t border-border">
+            <span className="px-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Joined
+            </span>
+            <div className="mt-2 flex flex-col gap-0.5">
+              {joinedCampaigns.map(campaign => (
+                <button
+                  key={campaign.id}
+                  onClick={() => {
+                    setSelectedCampaignForDetails(campaign);
+                    setCampaignDetailsDialogOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] transition-colors text-left"
+                >
+                  <Avatar className="w-6 h-6 rounded-md">
+                    <AvatarImage src={campaign.brand_logo_url || undefined} alt={campaign.brand_name} />
+                    <AvatarFallback className="rounded-md text-[10px] bg-muted">
+                      {campaign.brand_name?.charAt(0).toUpperCase() || "C"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-foreground truncate">
+                    {campaign.title}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {!isCreatorMode && !isCollapsed && currentBrandSubscriptionStatus !== "active" && <div className="px-2 py-1">
             <button onClick={() => setSubscriptionGateOpen(true)} className="w-full py-2 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[14px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
               <img src={nutFillIcon} alt="" className="h-4 w-4" />
@@ -809,5 +901,10 @@ export function AppSidebar() {
       };
       fetchMemberCount();
     }} />
+      <CampaignDetailsDialog 
+        campaign={selectedCampaignForDetails} 
+        open={campaignDetailsDialogOpen} 
+        onOpenChange={setCampaignDetailsDialogOpen} 
+      />
     </>;
 }
