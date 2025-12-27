@@ -108,9 +108,8 @@ export function XPProgressBar({
         <span>{currentXP.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div className={cn("h-full rounded-full transition-all duration-500", config.bgClass.replace('/0.1', ''))} style={{
-        width: `${progress}%`,
-        backgroundColor: `hsl(var(--rank-${rank.toLowerCase()}))`
+      <div className={cn("h-full rounded-full transition-all duration-500 bg-foreground")} style={{
+        width: `${progress}%`
       }} />
       </div>
     </div>;
