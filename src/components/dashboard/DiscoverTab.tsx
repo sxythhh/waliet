@@ -684,7 +684,7 @@ export function DiscoverTab({
                   <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
                     Boosts
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredBounties.map(bounty => {
                       const isEnded = bounty.status === "ended";
                       const isBookmarked = bookmarkedBountyIds.includes(bounty.id);
