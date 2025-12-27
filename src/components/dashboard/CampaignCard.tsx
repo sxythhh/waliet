@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -137,23 +138,24 @@ export function CampaignCard({
         </div>
       </Card>
 
-      {/* Status indicator below the card */}
-      <div className="flex items-center gap-1.5 px-0.5">
-        <div className={`w-1.5 h-1.5 rounded-full ${isEnded ? 'bg-muted-foreground' : 'bg-emerald-500'}`} />
-        <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif]">
-          {isEnded ? (
-            <span className="text-muted-foreground">Campaign ended</span>
-          ) : is_infinite_budget ? (
-            <><span className="text-foreground font-semibold">∞</span> unlimited</>
-          ) : (
-            <>
-              <span className="text-foreground font-semibold">
-                ${Math.ceil(budget - budget_used).toLocaleString()}
-              </span>
-              {' '}remaining
-            </>
+      {/* Budget progress below the card */}
+      <div className="flex flex-col gap-1 px-0.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-foreground font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+            {is_infinite_budget ? '∞ unlimited' : `$${budget.toLocaleString()}`}
+          </span>
+          {!is_infinite_budget && !isEnded && (
+            <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif]">
+              {Math.round((budget_used / budget) * 100)}% used
+            </span>
           )}
-        </span>
+        </div>
+        {!is_infinite_budget && !isEnded && (
+          <Progress 
+            value={(budget_used / budget) * 100} 
+            className="h-1.5 rounded-full"
+          />
+        )}
       </div>
     </div>
   );
