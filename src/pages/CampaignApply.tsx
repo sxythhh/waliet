@@ -649,7 +649,7 @@ export default function CampaignApply() {
             {/* Breadcrumb Navigation */}
             <div className="absolute top-4 left-4 z-10">
               <nav className="flex items-center gap-1.5 text-xs font-medium text-white/80 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 font-['Inter'] tracking-[-0.5px]">
-                <Link to="/dashboard?tab=discover" className="hover:text-white transition-colors">
+                <Link to="/discover" className="hover:text-white transition-colors">
                   Marketplace
                 </Link>
                 <ChevronRight className="h-3 w-3 opacity-60" />
