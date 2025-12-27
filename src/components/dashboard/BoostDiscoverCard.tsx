@@ -13,6 +13,7 @@ export interface BoostDiscoverCardProps {
   brand_name: string;
   brand_logo_url: string | null;
   brand_is_verified?: boolean;
+  brand_slug?: string | null;
   monthly_retainer: number;
   videos_per_month: number;
   max_accepted_creators: number;
@@ -32,6 +33,7 @@ export function BoostDiscoverCard({
   brand_name,
   brand_logo_url,
   brand_is_verified,
+  brand_slug,
   monthly_retainer,
   videos_per_month,
   max_accepted_creators,
@@ -132,7 +134,7 @@ export function BoostDiscoverCard({
               className="text-foreground font-medium hover:underline cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate("/b");
+                if (brand_slug) navigate(`/b/${brand_slug}`);
               }}
             >{brand_name}</span>
             {brand_is_verified && <VerifiedBadge size="sm" />}
