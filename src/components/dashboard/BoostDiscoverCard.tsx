@@ -124,8 +124,9 @@ export function BoostDiscoverCard({
               </span>
             </div>
           )}
-          <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Geist',sans-serif] flex items-center gap-1">
-            {brand_name}
+          <span className="text-[10px] tracking-[-0.3px] font-['Geist',sans-serif] flex items-center gap-1">
+            <span className="text-muted-foreground">Created by</span>
+            <span className="text-foreground font-medium">{brand_name}</span>
             {brand_is_verified && <VerifiedBadge size="sm" />}
           </span>
         </div>
