@@ -20,7 +20,6 @@ import { GlobalBrandSearch } from "@/components/brand/GlobalBrandSearch";
 import schoolIcon from "@/assets/school-icon-grey.svg";
 import webStoriesIcon from "@/assets/web-stories-card-icon.svg";
 import scopeIcon from "@/assets/scope-inactive.svg";
-import emptyCampaignsLight from "@/assets/empty-campaigns-light-v2.png";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 type CampaignStatusFilter = "all" | "active" | "draft" | "ended";
@@ -102,8 +101,10 @@ export function BrandCampaignsTab({
     isAdmin,
     loading: adminLoading
   } = useAdminCheck();
-  const { theme, resolvedTheme } = useTheme();
-  const isDarkTheme = theme === "dark" || resolvedTheme === "dark" || (typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
+  const {
+    resolvedTheme
+  } = useTheme();
+
   // Removed beta gate - brands without subscription can create drafts
   const showBetaGate = false;
   const handleBackToCreator = () => {
@@ -462,7 +463,7 @@ export function BrandCampaignsTab({
 
           {/* Empty State */}
           {campaigns.length === 0 && bounties.length === 0 && <div className="px-4 items-center justify-center flex flex-col py-[23px]">
-              <img alt="Empty campaigns folder icon" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src={!isDarkTheme ? emptyCampaignsLight : "/lovable-uploads/91c8dfd7-ab7c-4497-854c-7b1c899c749e.png"} />
+              <img alt="" className="w-24 h-24 mb-3 -mt-[10px] -mb-[10px]" src="/lovable-uploads/91c8dfd7-ab7c-4497-854c-7b1c899c749e.png" />
               
               <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
                 Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
