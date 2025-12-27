@@ -1471,15 +1471,7 @@ export function WalletTab() {
         </Card>
       </div>
 
-      {/* Payout Pipeline Section */}
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-muted-foreground mb-4 font-['Inter']" style={{
-        letterSpacing: '-0.3px'
-      }}>
-          Payout Pipeline
-        </h3>
-        <PayoutStatusCards accruing={payoutPipelineData.accruing} clearing={payoutPipelineData.clearing} paid={payoutPipelineData.paid} onRequestPayout={handleRequestEarningsPayout} isRequesting={isRequestingEarningsPayout} />
-      </div>
+      {/* Payout Pipeline Section - Hidden */}
 
     {/* Team & Affiliate Earnings Charts - Hidden */}
 
