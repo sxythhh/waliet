@@ -624,11 +624,11 @@ export function JoinCampaignSheet({
         {/* Sticky Submit Button at bottom */}
         {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
             <div className="flex flex-col gap-3">
-              <Button className="w-full text-white" style={{
+              <Button style={{
             fontFamily: 'Geist',
             letterSpacing: '-0.5px',
             backgroundColor: campaign.status === "ended" ? '#6b7280' : '#2060df'
-          }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0}>
+          }} onClick={handleSubmit} disabled={campaign.status === "ended" || submitting || selectedAccounts.length === 0} className="w-full text-white tracking-tighter">
                 {campaign.status === "ended" ? "Campaign Ended" : submitting ? campaign.requires_application === false ? "Joining..." : "Submitting..." : campaign.requires_application === false ? "Join Campaign" : "Submit Application"}
               </Button>
               <Button variant="ghost" className="w-full md:hidden" style={{
