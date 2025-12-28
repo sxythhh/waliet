@@ -145,14 +145,14 @@ export function DemographicStatusCard({
         {/* Action Button */}
         <Button
           size="sm"
-          className={`h-7 px-2.5 text-xs bg-blue-500 hover:bg-blue-600 text-white border-0 ${!availability.canSubmit ? 'opacity-50 cursor-default' : ''}`}
+          className={`h-7 px-2.5 text-xs bg-blue-500 hover:bg-blue-600 text-white border-0 rounded-full ${!availability.canSubmit ? 'opacity-50 cursor-default' : ''}`}
           style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
           disabled={!availability.canSubmit}
           onClick={onSubmitNew}
         >
           {availability.canSubmit ? (
             <>
-              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-1 brightness-0 invert" />
+              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-0.5 brightness-0 invert" />
               {submissions.length > 0 ? 'Update' : 'Submit'}
             </>
           ) : (
