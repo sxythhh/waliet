@@ -1823,73 +1823,87 @@ export function WalletTab() {
                   </Badge>}
               </div>
 
-              {/* Invoice Details Content */}
+              {/* Transaction Details Content */}
               <div className="flex-1 px-6 py-5">
-                <h3 className="text-base font-semibold tracking-[-0.5px] mb-5">Invoice details</h3>
-                
-                <div className="space-y-4">
-                  {/* Program */}
-                  <div className="flex items-start justify-between">
-                    <span className="text-sm text-muted-foreground">Program</span>
-                    <div className="flex items-center gap-2">
-                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt="" className="w-5 h-5 rounded-full object-cover" /> : <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center">
-                          <DollarSign className="h-3 w-3 text-muted-foreground" />
+                <div className="space-y-6">
+                  {/* Source Section */}
+                  <div>
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Source</span>
+                    <div className="flex items-center gap-3 mt-2">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt="" className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
+                          <span className="text-base font-semibold text-muted-foreground">
+                            {(selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N')?.charAt(0).toUpperCase()}
+                          </span>
                         </div>}
-                      <span className="text-sm font-medium tracking-[-0.5px] truncate max-w-[180px]">
-                        {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
-                      </span>
+                      <div>
+                        <span className="text-base font-semibold tracking-[-0.5px] block">
+                          {selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N/A'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {selectedTransaction.campaign?.title || selectedTransaction.boost?.title || ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Period */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Period</span>
-                    <span className="text-sm font-medium tracking-[-0.5px]">
-                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')}-${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
+                  {/* Timeline Section */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Initiated</span>
+                      <div className="mt-1.5">
+                        <span className="text-sm font-medium tracking-[-0.5px] block">
+                          {format(selectedTransaction.date, 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(selectedTransaction.date, 'h:mm a')}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Paid</span>
+                      <div className="mt-1.5">
+                        {selectedTransaction.status === 'completed' ? <>
+                          <span className="text-sm font-medium tracking-[-0.5px] block">
+                            {format(selectedTransaction.date, 'MMM d, yyyy')}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(selectedTransaction.date, 'h:mm a')}
+                          </span>
+                        </> : <span className="text-sm text-muted-foreground">—</span>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Period Section */}
+                  <div>
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Period</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
+                      {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')} – ${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
                     </span>
                   </div>
 
-                  {/* Status */}
-                  
-
-                  {/* Initiated */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground border-b border-dashed border-muted-foreground/50">Initiated</span>
-                    <span className="text-sm font-medium tracking-[-0.5px]">
-                      {format(selectedTransaction.date, 'MMM d, yyyy')}
-                    </span>
-                  </div>
-
-                  {/* Paid */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground border-b border-dashed border-muted-foreground/50">Paid</span>
-                    <span className="text-sm font-medium tracking-[-0.5px]">
-                      {selectedTransaction.status === 'completed' ? format(selectedTransaction.date, 'MMM d, yyyy') : '-'}
-                    </span>
-                  </div>
-
-                  {/* Amount */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Amount</span>
-                    <span className="text-sm font-semibold tracking-[-0.5px]">
+                  {/* Amount Section */}
+                  <div>
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Amount</span>
+                    <span className="text-lg font-bold tracking-[-0.5px] block mt-1">
                       ${Math.abs(selectedTransaction.amount).toFixed(2)}
                     </span>
                   </div>
 
-                  {/* Description */}
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-sm text-muted-foreground shrink-0">Description</span>
-                    <span className="text-sm font-medium tracking-[-0.5px] text-right truncate">
+                  {/* Description Section */}
+                  <div>
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Description</span>
+                    <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
                       {selectedTransaction.source || (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' : selectedTransaction.type === 'referral' ? 'Referral bonus' : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` : selectedTransaction.type === 'balance_correction' ? 'Balance correction' : 'Transaction')}
                     </span>
                   </div>
 
-                  {/* Transaction ID - Collapsible */}
-                  <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                    <span className="text-xs text-muted-foreground">Transaction ID</span>
-                    <div className="flex items-center gap-1">
+                  {/* Transaction ID */}
+                  <div className="pt-4">
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Transaction ID</span>
+                    <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-xs font-mono text-muted-foreground">
-                        {selectedTransaction.id.slice(0, 6)}...{selectedTransaction.id.slice(-4)}
+                        {selectedTransaction.id.slice(0, 8)}...{selectedTransaction.id.slice(-6)}
                       </span>
                       <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground" onClick={() => {
                     navigator.clipboard.writeText(selectedTransaction.id);
