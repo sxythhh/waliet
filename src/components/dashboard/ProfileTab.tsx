@@ -29,6 +29,7 @@ import { VerifyAccountDialog } from "@/components/VerifyAccountDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
+import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -1496,6 +1497,9 @@ export function ProfileTab() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Security Section */}
+      <SecuritySection />
 
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} />
 
