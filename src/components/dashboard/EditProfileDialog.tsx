@@ -110,7 +110,7 @@ export function EditProfileDialog({
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
         {/* Form Content */}
-        <div className="py-5 space-y-5 px-[5px]">
+        <div className="space-y-5 py-[4px] px-[13px]">
           {/* Display Name */}
           <div className="space-y-2">
             <Label htmlFor="full_name" className="text-sm font-medium text-foreground" style={labelStyle}>
