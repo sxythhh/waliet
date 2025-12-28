@@ -285,7 +285,7 @@ export function CampaignDetailsDialog({
           }}>
               View Full Details
             </Button>
-            {hasConnectedAccounts && <Button onClick={() => setShowSubmitVideoDialog(true)} className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border" style={{
+            {hasConnectedAccounts && campaign.payment_model === 'pay_per_post' && <Button onClick={() => setShowSubmitVideoDialog(true)} className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>
