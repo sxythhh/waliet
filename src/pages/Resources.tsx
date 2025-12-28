@@ -143,7 +143,7 @@ export default function Resources() {
   const pageImage = "https://app.virality.gg/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png";
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0a]">
+    <div className="h-screen flex flex-col bg-background">
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="title" content={pageTitle} />
@@ -182,21 +182,21 @@ export default function Resources() {
             <nav className="flex items-center gap-2" aria-label="Filter resources">
               <button 
                 onClick={() => setFilter('all')} 
-                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'all' ? 'bg-white text-black' : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'all' ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'}`}
                 aria-pressed={filter === 'all'}
               >
                 All
               </button>
               <button 
                 onClick={() => setFilter('articles')} 
-                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'articles' ? 'bg-white text-black' : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'articles' ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'}`}
                 aria-pressed={filter === 'articles'}
               >
                 Articles
               </button>
               <button 
                 onClick={() => setFilter('courses')} 
-                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'courses' ? 'bg-white text-black' : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
+                className={`px-4 py-2 rounded-full text-sm font-inter tracking-[-0.5px] transition-all ${filter === 'courses' ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'}`}
                 aria-pressed={filter === 'courses'}
               >
                 Courses
@@ -207,16 +207,16 @@ export default function Resources() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-label="Loading resources">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-[#111] rounded-xl overflow-hidden animate-pulse">
-                  <div className="w-full h-48 bg-white/5" />
+                <div key={i} className="bg-card rounded-xl overflow-hidden animate-pulse">
+                  <div className="w-full h-48 bg-muted" />
                   <div className="p-5 space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-16 bg-white/5 rounded" />
+                      <div className="h-4 w-16 bg-muted rounded" />
                     </div>
-                    <div className="h-5 bg-white/10 rounded w-3/4" />
+                    <div className="h-5 bg-muted rounded w-3/4" />
                     <div className="space-y-2">
-                      <div className="h-3 bg-white/5 rounded w-full" />
-                      <div className="h-3 bg-white/5 rounded w-2/3" />
+                      <div className="h-3 bg-muted rounded w-full" />
+                      <div className="h-3 bg-muted rounded w-2/3" />
                     </div>
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export default function Resources() {
                 <Link 
                   key={course.id} 
                   to={`/course/${course.id}`} 
-                  className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all"
+                  className="group cursor-pointer bg-card rounded-xl overflow-hidden transition-all border border-border"
                   role="listitem"
                   itemScope 
                   itemType="https://schema.org/Course"
@@ -256,15 +256,15 @@ export default function Resources() {
                   )}
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-white/40 text-xs font-inter tracking-[-0.5px]">
+                      <span className="text-muted-foreground text-xs font-inter tracking-[-0.5px]">
                         {course.module_count} lessons
                       </span>
                     </div>
-                    <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 line-clamp-2" itemProp="name">
+                    <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-foreground mb-2 line-clamp-2" itemProp="name">
                       {course.title}
                     </h2>
                     {course.description && (
-                      <p className="text-white/60 text-sm font-inter tracking-[-0.5px] line-clamp-2" itemProp="description">
+                      <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px] line-clamp-2" itemProp="description">
                         {course.description}
                       </p>
                     )}
@@ -277,7 +277,7 @@ export default function Resources() {
                 <Link 
                   key={post.id} 
                   to={`/blog/${post.slug}`} 
-                  className="group cursor-pointer bg-[#111] rounded-xl overflow-hidden transition-all"
+                  className="group cursor-pointer bg-card rounded-xl overflow-hidden transition-all border border-border"
                   role="listitem"
                   itemScope 
                   itemType="https://schema.org/Article"
@@ -308,7 +308,7 @@ export default function Resources() {
                       {post.published_at && (
                         <time 
                           dateTime={formatISODate(post.published_at)} 
-                          className="text-white/40 text-xs font-inter tracking-[-0.5px]"
+                          className="text-muted-foreground text-xs font-inter tracking-[-0.5px]"
                           itemProp="datePublished"
                         >
                           {formatDate(post.published_at)}
@@ -316,16 +316,16 @@ export default function Resources() {
                       )}
                       {post.read_time && (
                         <>
-                          <span className="text-white/20">·</span>
-                          <span className="text-white/40 text-xs font-inter tracking-[-0.5px]">{post.read_time}</span>
+                          <span className="text-muted-foreground/50">·</span>
+                          <span className="text-muted-foreground text-xs font-inter tracking-[-0.5px]">{post.read_time}</span>
                         </>
                       )}
                     </div>
-                    <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-white mb-2 line-clamp-2" itemProp="headline">
+                    <h2 className="text-lg font-inter tracking-[-0.5px] font-semibold text-foreground mb-2 line-clamp-2" itemProp="headline">
                       {post.title}
                     </h2>
                     {post.excerpt && (
-                      <p className="text-white/60 text-sm font-inter tracking-[-0.5px] line-clamp-2" itemProp="description">
+                      <p className="text-muted-foreground text-sm font-inter tracking-[-0.5px] line-clamp-2" itemProp="description">
                         {post.excerpt}
                       </p>
                     )}
@@ -339,22 +339,22 @@ export default function Resources() {
           {/* Empty States */}
           {!loading && filter === 'all' && blogPosts.length === 0 && courses.length === 0 && (
             <div className="text-center py-16">
-              <BookOpen className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
-              <p className="text-white/60 font-inter tracking-[-0.5px]">No resources available yet</p>
+              <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">No resources available yet</p>
             </div>
           )}
 
           {!loading && filter === 'articles' && blogPosts.length === 0 && (
             <div className="text-center py-16">
-              <BookOpen className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
-              <p className="text-white/60 font-inter tracking-[-0.5px]">No articles available yet</p>
+              <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">No articles available yet</p>
             </div>
           )}
 
           {!loading && filter === 'courses' && courses.length === 0 && (
             <div className="text-center py-16">
-              <Folder className="w-12 h-12 text-white/20 mx-auto mb-4" aria-hidden="true" />
-              <p className="text-white/60 font-inter tracking-[-0.5px]">No courses available yet</p>
+              <Folder className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" aria-hidden="true" />
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">No courses available yet</p>
             </div>
           )}
         </section>
