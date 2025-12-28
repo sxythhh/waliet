@@ -386,11 +386,14 @@ export function BrandCampaignsTab({
 
       {selectedBoostId ? <BrandCampaignDetailView boostId={selectedBoostId} onBack={() => setSelectedBoostId(null)} /> : <>
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <GlobalBrandSearch brandId={brandId} />
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <GlobalBrandSearch brandId={brandId} />
+            </div>
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
               <Plus className="h-4 w-4" />
-              Create Campaign
+              <span className="hidden sm:inline">Create Campaign</span>
+              <span className="sm:hidden">Create</span>
             </Button>
             <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
           setCreateCampaignOpen(true);
