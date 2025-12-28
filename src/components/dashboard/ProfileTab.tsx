@@ -1140,7 +1140,7 @@ export function ProfileTab() {
           letterSpacing: '-0.5px'
         }}>User Settings</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 px-0">
           <form onSubmit={handleSaveProfile} className="space-y-4">
             {/* Profile Picture */}
             
