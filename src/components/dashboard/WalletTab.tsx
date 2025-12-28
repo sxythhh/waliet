@@ -1113,56 +1113,7 @@ export function WalletTab() {
       setIsSubmittingPayout(false);
     }
   };
-  if (loading) {
-    return <div className="space-y-6 max-w-6xl mx-auto pt-6">
-        {/* Profile Header Skeleton */}
-        <div className="flex items-start gap-4">
-          <Skeleton className="w-16 h-16 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-48" />
-            <Skeleton className="h-3 w-40" />
-          </div>
-        </div>
-
-        {/* Balance Cards - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Earnings Card Skeleton */}
-          <div className="space-y-3 pt-4">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-4 w-24" />
-              <div className="flex gap-1">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-7 w-8 rounded-md" />)}
-              </div>
-            </div>
-            <Skeleton className="h-9 w-28" />
-            <Skeleton className="h-20 w-full rounded-lg" />
-          </div>
-
-          {/* Current Balance Card Skeleton */}
-          <div className="space-y-3 pt-4 px-2">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-px w-full" />
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-4 w-16" />
-            </div>
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-4 w-14" />
-            </div>
-            <Skeleton className="h-10 w-full rounded-lg" />
-          </div>
-        </div>
-
-        {/* Transactions Skeleton */}
-        <div className="space-y-4 pt-5">
-          <Skeleton className="h-9 w-20 rounded-lg" />
-          
-        </div>
-      </div>;
-  }
+  // Loading state removed - ProfileHeader handles its own loading skeleton
   const totalEarnings = earningsData.reduce((sum, point) => sum + point.amount, 0);
   const timePeriodLabels: Record<TimePeriod, string> = {
     '3D': '3 Days',
@@ -1179,45 +1130,7 @@ export function WalletTab() {
 
 
 
-      {/* Balance Cards - Side by Side */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Current Balance Card */}
-        <Card className="border-0 bg-neutral-100/0">
-          <CardContent className="pt-4 pb-4 py-0 bg-black/0 px-0">
-            <div className="flex items-center justify-between mb-4">
-              <div className="items-center flex flex-col gap-[5px]">
-                <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
-                letterSpacing: '-0.5px'
-              }}>Current Balance</p>
-                <p className="text-3xl font-bold font-geist" style={{
-                letterSpacing: '-0.3px'
-              }}>
-                  {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
-                </p>
-              </div>
-              <Button onClick={handleRequestPayout} className="w-40 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
-                Withdraw Balance
-              </Button>
-            </div>
-            <Separator className="my-2" />
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-                {(ledgerSummary?.totalLocked || 0) > 0 && <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                    ${(ledgerSummary?.totalLocked || 0).toFixed(2)} Locked
-                  </span>}
-              </div>
-              <span className="text-base font-semibold text-muted-foreground">
-                {isBalanceVisible ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` : "••••••"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-muted-foreground font-medium">In Transit</span>
-              <span className="text-base font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Balance Cards - Hidden */}
 
       {/* Payout Pipeline Section - Hidden */}
 
