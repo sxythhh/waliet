@@ -205,7 +205,7 @@ function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onWi
       <div className="flex flex-col gap-2">
         <Button 
           variant="outline"
-          className="w-full font-inter tracking-[-0.5px] hover:bg-muted hover:text-foreground" 
+          className="w-full font-inter tracking-[-0.5px] border-transparent hover:bg-muted hover:text-foreground" 
           size="sm"
           onClick={onTransfer}
         >
