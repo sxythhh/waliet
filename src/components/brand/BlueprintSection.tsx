@@ -68,7 +68,14 @@ export function BlueprintSection({
           {title}
         </span>
         {getStatusBadge()}
-        {onRemove}
+        {onRemove && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); onRemove(); }} 
+            className="text-muted-foreground hover:text-destructive transition-colors"
+          >
+            Remove
+          </button>
+        )}
         {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
       </button>
 
