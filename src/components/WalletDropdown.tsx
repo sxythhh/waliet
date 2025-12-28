@@ -72,7 +72,7 @@ export function WalletDropdown({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 transition-colors">
-              <img src={walletIconWhite} alt="Wallet" className="w-5 h-5" />
+              <img alt="Wallet" className="w-5 h-5" src="/lovable-uploads/f5c0b6b2-e477-47ab-964e-a838fd0f4ee0.png" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-3 bg-background border border-border rounded-xl shadow-2xl" side="right" align="center" sideOffset={8}>
