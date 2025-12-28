@@ -236,7 +236,7 @@ export function SubmitDemographicsDialog({
             letterSpacing: '-0.3px'
           }}>Demographics Video</Label>
             
-            <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-muted/50 transition-colors" onClick={() => !uploading && fileInputRef.current?.click()}>
+            <div className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => !uploading && fileInputRef.current?.click()}>
               {videoFile ? <div className="space-y-2">
                   <CheckCircle2 className="h-8 w-8 mx-auto text-primary" />
                   <p className="text-sm font-medium" style={{
