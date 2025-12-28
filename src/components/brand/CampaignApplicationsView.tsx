@@ -460,14 +460,7 @@ export function CampaignApplicationsView({
             {/* Action Buttons - Fixed at bottom (only show for pending applications) */}
             {selectedApp.status === 'pending' && <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <Button onClick={() => {
-              const creatorId = selectedApp.creator_id || selectedApp.user_id;
-              if (creatorId && workspace) {
-                navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=messages&creator=${creatorId}`);
-              }
-            }} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100 order-3 sm:order-1">
-                    Message
-                  </Button>
+                  
                   <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
                     <X className="h-4 w-4 mr-2" />
                     Reject
