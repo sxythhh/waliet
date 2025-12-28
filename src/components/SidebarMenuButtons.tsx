@@ -81,7 +81,7 @@ const SidebarMenuButtons = ({ onFeedback, supportIcon, lightbulbIcon, bugIcon }:
         <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
       </button>
       <button 
-        onClick={() => window.open("mailto:support@virality.gg", "_blank")} 
+        onClick={() => window.location.href = "/support"} 
         className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
       >
         <img src={currentSupportIcon} alt="Support" className="w-5 h-5 opacity-60" />
