@@ -1458,7 +1458,7 @@ export function WalletTab() {
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
-                      <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Source</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Type</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Processed</TableHead>
@@ -1479,26 +1479,26 @@ export function WalletTab() {
                   setSelectedTransaction(transaction);
                   setTransactionSheetOpen(true);
                 }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
-                        {/* Program */}
+                        {/* Source */}
                         <TableCell className="py-4">
-                          {transaction.boost?.title ? <div className="flex items-center gap-2">
-                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                                  <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          {transaction.boost?.brand_name ? <div className="flex items-center gap-2">
+                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                                  <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
-                                    {transaction.boost.title.charAt(0).toUpperCase()}
+                                    {transaction.boost.brand_name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>}
-                              <span className="text-sm font-medium">{transaction.boost.title}</span>
-                            </div> : transaction.campaign?.title ? <div className="flex items-center gap-2">
-                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
-                                  <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name || 'Brand'} className="w-full h-full object-cover" />
-                                </div> : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                              <span className="text-sm font-medium">{transaction.boost.brand_name}</span>
+                            </div> : transaction.campaign?.brand_name ? <div className="flex items-center gap-2">
+                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                                  <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
-                                    {transaction.campaign.title.charAt(0).toUpperCase()}
+                                    {transaction.campaign.brand_name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>}
-                              <span className="text-sm font-medium">{transaction.campaign.title}</span>
+                              <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
                             </div> : <span className="text-sm text-muted-foreground">-</span>}
                         </TableCell>
                         
