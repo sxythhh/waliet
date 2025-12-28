@@ -1808,18 +1808,16 @@ export function WalletTab() {
         <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto border-l-0 font-inter tracking-[-0.3px]">
           {selectedTransaction && <div className="flex flex-col h-full">
               {/* Hero Header with Amount */}
-              <div className="px-6 pt-8 pb-6 text-center border-b border-[#242424]/0 relative">
+              {selectedTransaction.status && selectedTransaction.status !== 'completed' && <div className="px-6 pt-4 pb-2 text-center relative">
                 <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
-                
-                
-                {selectedTransaction.status && selectedTransaction.status !== 'completed' && <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
+                <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
                     {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
                     {selectedTransaction.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
                     {selectedTransaction.status === 'in_transit' ? 'In Transit' : selectedTransaction.status}
-                  </Badge>}
-              </div>
+                  </Badge>
+              </div>}
 
               {/* Transaction Details Content */}
               <div className="flex-1 px-6 py-5">
@@ -1847,7 +1845,7 @@ export function WalletTab() {
                   {/* Timeline Section */}
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Initiated</span>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Initiated</span>
                       <div className="mt-1.5">
                         <span className="text-sm font-medium tracking-[-0.5px] block">
                           {format(selectedTransaction.date, 'MMM d, yyyy')}
@@ -1858,7 +1856,7 @@ export function WalletTab() {
                       </div>
                     </div>
                     <div>
-                      <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Paid</span>
+                      <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Paid</span>
                       <div className="mt-1.5">
                         {selectedTransaction.status === 'completed' ? <>
                           <span className="text-sm font-medium tracking-[-0.5px] block">
@@ -1872,13 +1870,13 @@ export function WalletTab() {
                     </div>
                   </div>
 
-                  {/* Period Section */}
-                  <div>
-                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Period</span>
+                  {/* Period Section - only show for non-boost transactions */}
+                  {selectedTransaction.type !== 'boost_earning' && <div>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Period</span>
                     <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
                       {selectedTransaction.metadata?.period_start && selectedTransaction.metadata?.period_end ? `${format(new Date(selectedTransaction.metadata.period_start), 'MMM d')} – ${format(new Date(selectedTransaction.metadata.period_end), 'MMM d, yyyy')}` : format(selectedTransaction.date, 'MMM d, yyyy')}
                     </span>
-                  </div>
+                  </div>}
 
                   {/* Amount Section */}
                   <div>
@@ -1898,12 +1896,12 @@ export function WalletTab() {
 
                   {/* Transaction ID */}
                   <div className="pt-4">
-                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Transaction ID</span>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Transaction ID</span>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {selectedTransaction.id.slice(0, 8)}...{selectedTransaction.id.slice(-6)}
+                      <span className="text-xs font-mono text-muted-foreground break-all">
+                        {selectedTransaction.id}
                       </span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-5 w-5 hover:bg-muted hover:text-foreground flex-shrink-0" onClick={() => {
                     navigator.clipboard.writeText(selectedTransaction.id);
                     setCopiedId(true);
                     setTimeout(() => setCopiedId(false), 2000);
