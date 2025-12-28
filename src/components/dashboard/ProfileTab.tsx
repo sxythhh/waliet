@@ -904,9 +904,6 @@ export function ProfileTab() {
       {/* Onboarding Checklist */}
       <ProfileOnboardingChecklist tasks={onboardingTasks} />
 
-      {/* Payment Methods Section */}
-      <PaymentMethodsSection />
-
       {/* Profile Header */}
       <Card className="bg-card border-0">
         
