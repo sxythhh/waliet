@@ -279,7 +279,7 @@ export function CampaignDetailsDialog({
           
           {/* Action Buttons - Top Right */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button onClick={() => window.location.href = `/c/${campaign.slug}`} variant="ghost" className="h-9 px-4 rounded-[10px] font-medium text-sm bg-muted hover:bg-muted/80 border-0" style={{
+            <Button onClick={() => window.location.href = `/c/${campaign.slug}`} variant="ghost" className="h-9 px-4 rounded-[10px] font-medium text-sm bg-muted text-foreground border-0" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
           }}>
