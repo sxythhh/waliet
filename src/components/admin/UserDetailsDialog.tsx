@@ -144,6 +144,7 @@ export function UserDetailsDialog({
   } = useToast();
   const navigate = useNavigate();
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [adjustMode, setAdjustMode] = useState<'add' | 'subtract'>('add');
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustDescription, setAdjustDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -412,38 +413,56 @@ export function UserDetailsDialog({
       const {
         data: wallet,
         error: walletError
-      } = await supabase.from("wallets").select("balance").eq("user_id", user.id).single();
+      } = await supabase.from("wallets").select("balance, total_earned").eq("user_id", user.id).single();
       if (walletError) throw walletError;
       const currentBalance = wallet.balance || 0;
-      const newBalance = currentBalance - amount;
-      if (newBalance < 0) {
-        toast({
-          title: "Insufficient Balance",
-          description: "Cannot subtract more than the current balance",
-          variant: "destructive"
-        });
-        setIsSubmitting(false);
-        return;
+      const currentTotalEarned = wallet.total_earned || 0;
+      
+      let newBalance: number;
+      let transactionAmount: number;
+      let description: string;
+      
+      if (adjustMode === 'subtract') {
+        newBalance = currentBalance - amount;
+        if (newBalance < 0) {
+          toast({
+            title: "Insufficient Balance",
+            description: "Cannot subtract more than the current balance",
+            variant: "destructive"
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        transactionAmount = -amount;
+        description = adjustDescription || "Balance Correction (Subtraction)";
+      } else {
+        newBalance = currentBalance + amount;
+        transactionAmount = amount;
+        description = adjustDescription || "Balance Correction (Addition)";
       }
+      
       const {
         error: updateError
       } = await supabase.from("wallets").update({
-        balance: newBalance
+        balance: newBalance,
+        total_earned: adjustMode === 'add' ? currentTotalEarned + amount : currentTotalEarned
       }).eq("user_id", user.id);
       if (updateError) throw updateError;
       const {
         error: transactionError
       } = await supabase.from("wallet_transactions").insert({
         user_id: user.id,
-        amount: -amount,
+        amount: transactionAmount,
         type: "balance_correction",
         status: "completed",
-        description: adjustDescription || "Balance Correction"
+        description: description
       });
       if (transactionError) throw transactionError;
       toast({
         title: "Balance Updated",
-        description: `Successfully subtracted $${amount.toFixed(2)} from balance`
+        description: adjustMode === 'add' 
+          ? `Successfully added $${amount.toFixed(2)} to balance`
+          : `Successfully subtracted $${amount.toFixed(2)} from balance`
       });
       setAdjustDialogOpen(false);
       setAdjustAmount("");
@@ -983,12 +1002,17 @@ export function UserDetailsDialog({
                 {/* Balance Adjustment */}
                 <div className="p-4 rounded-lg bg-[#111]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Minus className="w-4 h-4 text-red-400" />
+                    <DollarSign className="w-4 h-4 text-emerald-400" />
                     <span className="text-sm font-medium font-inter tracking-[-0.5px]">Balance Adjustment</span>
                   </div>
-                  <Button variant="outline" size="sm" className="w-full border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" onClick={() => setAdjustDialogOpen(true)}>
-                    Subtract from Balance
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" onClick={() => { setAdjustMode('add'); setAdjustDialogOpen(true); }}>
+                      <Plus className="w-3 h-3 mr-1" /> Add
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1 border-0 bg-[#0a0a0a] hover:bg-[#1a1a1a]" onClick={() => { setAdjustMode('subtract'); setAdjustDialogOpen(true); }}>
+                      <Minus className="w-3 h-3 mr-1" /> Subtract
+                    </Button>
+                  </div>
                 </div>
 
                 {/* IP Ban */}
@@ -1069,7 +1093,9 @@ export function UserDetailsDialog({
         <Dialog open={adjustDialogOpen} onOpenChange={setAdjustDialogOpen}>
           <DialogContent className="bg-[#0a0a0a] border-0">
             <DialogHeader>
-              <DialogTitle className="font-inter tracking-[-0.5px]">Subtract from Balance</DialogTitle>
+              <DialogTitle className="font-inter tracking-[-0.5px]">
+                {adjustMode === 'add' ? 'Add to Balance' : 'Subtract from Balance'}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -1086,13 +1112,18 @@ export function UserDetailsDialog({
                     <span>${(user.wallets?.balance || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtract</span>
-                    <span className="text-red-400">-${parseFloat(adjustAmount).toFixed(2)}</span>
+                    <span className="text-muted-foreground">{adjustMode === 'add' ? 'Add' : 'Subtract'}</span>
+                    <span className={adjustMode === 'add' ? 'text-emerald-400' : 'text-red-400'}>
+                      {adjustMode === 'add' ? '+' : '-'}${parseFloat(adjustAmount).toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm pt-2 border-t border-[#1a1a1a]">
                     <span className="text-muted-foreground">New Balance</span>
                     <span className="font-semibold">
-                      ${((user.wallets?.balance || 0) - parseFloat(adjustAmount)).toFixed(2)}
+                      ${(adjustMode === 'add' 
+                        ? (user.wallets?.balance || 0) + parseFloat(adjustAmount)
+                        : (user.wallets?.balance || 0) - parseFloat(adjustAmount)
+                      ).toFixed(2)}
                     </span>
                   </div>
                 </div>}
@@ -1101,8 +1132,8 @@ export function UserDetailsDialog({
               <Button variant="outline" onClick={() => setAdjustDialogOpen(false)} disabled={isSubmitting} className="border-0 bg-[#111]">
                 Cancel
               </Button>
-              <Button onClick={handleBalanceAdjustment} disabled={isSubmitting}>
-                {isSubmitting ? "Processing..." : "Subtract"}
+              <Button onClick={handleBalanceAdjustment} disabled={isSubmitting} className={adjustMode === 'add' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}>
+                {isSubmitting ? "Processing..." : (adjustMode === 'add' ? 'Add' : 'Subtract')}
               </Button>
             </DialogFooter>
           </DialogContent>
