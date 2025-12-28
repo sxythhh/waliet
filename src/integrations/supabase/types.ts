@@ -2917,6 +2917,7 @@ export type Database = {
           referral_tier: Database["public"]["Enums"]["referral_tier"] | null
           referred_by: string | null
           signup_url: string | null
+          subscribed_to_updates: boolean
           successful_referrals: number | null
           tier_bonus_claimed_at: Json | null
           total_earnings: number | null
@@ -2975,6 +2976,7 @@ export type Database = {
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
           signup_url?: string | null
+          subscribed_to_updates?: boolean
           successful_referrals?: number | null
           tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
@@ -3033,6 +3035,7 @@ export type Database = {
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
           signup_url?: string | null
+          subscribed_to_updates?: boolean
           successful_referrals?: number | null
           tier_bonus_claimed_at?: Json | null
           total_earnings?: number | null
