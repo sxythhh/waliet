@@ -143,7 +143,7 @@ export const SupportChat = () => {
                 className={`rounded-lg px-4 py-3 ${
                   message.role === "user"
                     ? "bg-muted text-foreground ml-auto max-w-[85%]"
-                    : "bg-primary/10 text-foreground"
+                    : "bg-primary text-primary-foreground"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
