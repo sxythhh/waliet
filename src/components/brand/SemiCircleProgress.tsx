@@ -38,9 +38,10 @@ export const SemiCircleProgress = ({ total, pending, accepted, rejected }: SemiC
           <path
             d={`M 10 80 A ${radius} ${radius} 0 0 1 150 80`}
             fill="none"
-            stroke="hsl(var(--muted))"
+            stroke="rgba(0,0,0,0.1)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
+            className="dark:stroke-white/10"
           />
           
           {/* Accepted segment (green) */}

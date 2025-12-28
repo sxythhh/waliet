@@ -221,7 +221,7 @@ export function BoostCard({
                   </defs>
                   
                   {/* Background arc */}
-                  <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" strokeLinecap="round" />
+                  <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" className="stroke-black/10 dark:stroke-white/10" strokeWidth="8" strokeLinecap="round" />
                   
                   {/* Approved arc (green) */}
                   {approvedThisMonth > 0 && <path d="M 5 50 A 45 45 0 0 1 95 50" fill="none" stroke="#22c55e" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${approvedThisMonth / boost.videos_per_month * 141.37} 141.37`} className="transition-all duration-500" />}
