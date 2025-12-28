@@ -19,7 +19,7 @@ export function OptimizedImage({
   const [error, setError] = useState(false);
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className="relative overflow-hidden w-full h-full">
       {isLoading && (
         <div className="absolute inset-0 bg-muted animate-pulse" />
       )}
@@ -34,7 +34,7 @@ export function OptimizedImage({
           setIsLoading(false);
         }}
         className={cn(
-          "transition-opacity duration-300",
+          "w-full h-full transition-opacity duration-300",
           isLoading ? "opacity-0" : "opacity-100",
           className
         )}
