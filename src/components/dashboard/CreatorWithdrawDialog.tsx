@@ -48,28 +48,28 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       return;
     }
 
-    // Fetch wallet
+    // Fetch wallet with payout details
     const { data: walletData } = await supabase
       .from("wallets")
-      .select("id, balance, total_withdrawn")
+      .select("id, balance, total_withdrawn, payout_method, payout_details")
       .eq("user_id", session.user.id)
       .single();
 
     if (walletData) {
       setWallet(walletData);
       setPayoutAmount(walletData.balance.toString());
-    }
-
-    // Fetch payout methods - use any type to avoid Supabase typing issues
-    const { data: methods } = await supabase
-      .from("payout_methods" as any)
-      .select("id, method, details")
-      .eq("user_id", session.user.id)
-      .order("created_at", { ascending: false }) as { data: PayoutMethod[] | null };
-
-    if (methods && methods.length > 0) {
-      setPayoutMethods(methods);
-      setSelectedPayoutMethod(methods[0].id);
+      
+      // Extract payout methods from wallet's payout_details array
+      const payoutDetails = walletData.payout_details as Array<{ method: string; details: any }> | null;
+      if (payoutDetails && Array.isArray(payoutDetails) && payoutDetails.length > 0) {
+        const methods: PayoutMethod[] = payoutDetails.map((item, index) => ({
+          id: `method-${index}`,
+          method: item.method,
+          details: item.details
+        }));
+        setPayoutMethods(methods);
+        setSelectedPayoutMethod(methods[0].id);
+      }
     }
 
     // Fetch pending withdrawals
