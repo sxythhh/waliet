@@ -68,15 +68,15 @@ export function CampaignCard({
             />
           ) : (
             <div 
-              className="absolute inset-0 w-full h-full"
-              style={{ backgroundColor: brand_color || '#6366f1' }}
+              className="absolute inset-0 w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: brand_color || 'hsl(var(--muted))' }}
             >
               {brand_logo_url && (
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg bg-background/10 backdrop-blur-sm p-2">
                   <OptimizedImage
                     src={brand_logo_url}
                     alt={brand_name}
-                    className="w-16 h-16 object-contain opacity-30"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               )}
