@@ -109,7 +109,7 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full ${variant === "header" ? "h-9" : ""}`}>
+          <button className={`flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full ${variant === "header" ? "h-9" : ""}`}>
             <div className="flex items-center gap-2 flex-1">
               <span className="text-base font-semibold font-inter tracking-[-0.5px]">
                 ${balance.toFixed(2)}
