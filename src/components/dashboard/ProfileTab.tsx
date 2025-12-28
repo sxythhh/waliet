@@ -73,6 +73,7 @@ interface Profile {
   content_niches: string[] | null;
   hide_from_leaderboard: boolean;
   is_private: boolean;
+  subscribed_to_updates: boolean;
 }
 interface SocialAccount {
   id: string;
@@ -146,6 +147,8 @@ export function ProfileTab() {
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [originalUsername, setOriginalUsername] = useState('');
+  const [originalSubscribedToUpdates, setOriginalSubscribedToUpdates] = useState(true);
+  const [savingSubscription, setSavingSubscription] = useState(false);
   const [expandedCampaignAccounts, setExpandedCampaignAccounts] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileInfoRef = useRef<HTMLDivElement>(null);
@@ -177,6 +180,32 @@ export function ProfileTab() {
       setUpdatingEmail(false);
     }
   };
+
+  const handleSaveSubscription = async () => {
+    if (!profile) return;
+    setSavingSubscription(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ subscribed_to_updates: profile.subscribed_to_updates })
+        .eq("id", profile.id);
+      if (error) throw error;
+      setOriginalSubscribedToUpdates(profile.subscribed_to_updates);
+      toast({
+        title: "Preferences saved",
+        description: "Your email preferences have been updated."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error saving preferences",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSavingSubscription(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
@@ -197,6 +226,7 @@ export function ProfileTab() {
       setProfile(profileData);
       setNewEmail(profileData.email || '');
       setOriginalUsername(profileData.username || '');
+      setOriginalSubscribedToUpdates(profileData.subscribed_to_updates ?? true);
     }
     setLoading(false);
   };
@@ -1154,6 +1184,11 @@ export function ProfileTab() {
           onSave={handleUpdateEmail}
           saving={updatingEmail}
           hasChanges={newEmail !== profile.email}
+          subscribeToUpdates={profile.subscribed_to_updates}
+          onSubscribeChange={(checked) => setProfile({ ...profile, subscribed_to_updates: checked })}
+          subscriptionHasChanges={profile.subscribed_to_updates !== originalSubscribedToUpdates}
+          onSaveSubscription={handleSaveSubscription}
+          savingSubscription={savingSubscription}
         />
 
         {/* Discord Card */}
