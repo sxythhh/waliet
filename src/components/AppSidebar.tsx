@@ -395,9 +395,9 @@ export function AppSidebar() {
           <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
         </Link>
         <div className="flex items-center gap-2">
-          {/* Wallet Dropdown - Mobile */}
-          {isCreatorMode && <WalletDropdown variant="header" />}
-          {/* Upgrade Plan Button - Mobile */}
+          {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
+          {(isCreatorMode || (!isCreatorMode && currentBrandSubscriptionStatus === "active")) && <WalletDropdown variant="header" />}
+          {/* Upgrade Plan Button - Mobile (only for brands without active plan) */}
           {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
               Upgrade
@@ -521,6 +521,9 @@ export function AppSidebar() {
                 </div> : item.tab === "education" ? <div className="relative h-6 w-6">
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                </div> : item.tab === "analytics" ? <div className="relative h-6 w-6">
+                  <img src={scopeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={scopeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
               <span className="text-[12px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
