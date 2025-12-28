@@ -815,8 +815,8 @@ export function AppSidebar() {
               }} supportIcon={supportIcon} lightbulbIcon={lightbulbIcon} bugIcon={bugIcon} />
 
                 {/* Sign Out Button */}
-                <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-md transition-colors">
-                  
+                <button onClick={handleSignOut} className="w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground rounded-md transition-colors">
+                  <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium font-inter tracking-[-0.5px]">Sign Out</span>
                 </button>
               </div>
