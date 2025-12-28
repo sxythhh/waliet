@@ -561,7 +561,7 @@ export function TeamsSection(): JSX.Element {
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
             Build a team of creators and earn a commission from their campaign earnings.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <Button 
               variant="ghost"
               className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] bg-black/5 dark:bg-white/5 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground rounded-lg"
