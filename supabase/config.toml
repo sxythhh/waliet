@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.auto-process-boost-payouts]
 verify_jwt = false
+
+[functions.support-chat]
+verify_jwt = false
