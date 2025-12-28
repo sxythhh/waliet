@@ -22,9 +22,22 @@ export const useAuth = () => {
   return context;
 };
 
+// Get or create a unique browser/device session identifier
+const getBrowserSessionId = (): string => {
+  const storageKey = 'browser_session_id';
+  let sessionId = localStorage.getItem(storageKey);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(storageKey, sessionId);
+  }
+  return sessionId;
+};
+
 // Track user session for security/device tracking
-const trackUserSession = async (userId: string, sessionId: string) => {
+const trackUserSession = async (userId: string) => {
   try {
+    const browserSessionId = getBrowserSessionId();
+    
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-user-session`,
       {
@@ -35,7 +48,7 @@ const trackUserSession = async (userId: string, sessionId: string) => {
         },
         body: JSON.stringify({
           userId,
-          sessionId,
+          sessionId: browserSessionId,
         }),
       }
     );
@@ -78,15 +91,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           updateAuthState(currentSession);
           
-          // Track session on sign in (only once per session)
-          if (event === 'SIGNED_IN' && currentSession.access_token !== hasTrackedSession.current) {
-            hasTrackedSession.current = currentSession.access_token;
+          // Track session on sign in (only once per browser session)
+          const browserSessionId = getBrowserSessionId();
+          if (event === 'SIGNED_IN' && browserSessionId !== hasTrackedSession.current) {
+            hasTrackedSession.current = browserSessionId;
             // Use setTimeout to avoid blocking the auth flow
             setTimeout(() => {
-              trackUserSession(
-                currentSession.user.id,
-                currentSession.access_token.substring(0, 32) // Use first 32 chars as session identifier
-              );
+              trackUserSession(currentSession.user.id);
             }, 0);
           }
         } else if (event === 'INITIAL_SESSION' && !currentSession) {
@@ -104,11 +115,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Track existing session on page load (but only once)
       if (existingSession && !hasTrackedSession.current) {
-        hasTrackedSession.current = existingSession.access_token;
-        trackUserSession(
-          existingSession.user.id,
-          existingSession.access_token.substring(0, 32)
-        );
+        const browserSessionId = getBrowserSessionId();
+        hasTrackedSession.current = browserSessionId;
+        trackUserSession(existingSession.user.id);
       }
     });
 
