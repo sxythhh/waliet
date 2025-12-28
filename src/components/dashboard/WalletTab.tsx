@@ -1824,7 +1824,7 @@ export function WalletTab() {
                 <div className="space-y-6">
                   {/* Source Section */}
                   <div>
-                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Source</span>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Source</span>
                     <div className="flex items-center gap-3 mt-2">
                       {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt="" className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
                           <span className="text-base font-semibold text-muted-foreground">
@@ -1880,7 +1880,7 @@ export function WalletTab() {
 
                   {/* Amount Section */}
                   <div>
-                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Amount</span>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Amount</span>
                     <span className="text-lg font-bold tracking-[-0.5px] block mt-1">
                       ${Math.abs(selectedTransaction.amount).toFixed(2)}
                     </span>
@@ -1888,7 +1888,7 @@ export function WalletTab() {
 
                   {/* Description Section */}
                   <div>
-                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60 font-medium">Description</span>
+                    <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Description</span>
                     <span className="text-sm font-medium tracking-[-0.5px] block mt-1.5">
                       {selectedTransaction.source || (selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' ? `${selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'Campaign'} payout` : selectedTransaction.type === 'withdrawal' ? 'Withdrawal request' : selectedTransaction.type === 'referral' ? 'Referral bonus' : selectedTransaction.type === 'transfer_sent' ? `Sent to @${selectedTransaction.metadata?.recipient_username || 'user'}` : selectedTransaction.type === 'transfer_received' ? `Received from @${selectedTransaction.metadata?.sender_username || 'user'}` : selectedTransaction.type === 'balance_correction' ? 'Balance correction' : 'Transaction')}
                     </span>
