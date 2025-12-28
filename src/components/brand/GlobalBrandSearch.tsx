@@ -235,7 +235,7 @@ export function GlobalBrandSearch({
       {/* Search Trigger Bar */}
       <button onClick={() => setOpen(true)} className="flex items-center gap-3 w-full max-w-md h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e]">
         <Search className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
-        <span className="flex-1 text-left text-sm font-inter tracking-[-0.5px] text-[#6b6b6b] dark:text-[#616161]">
+        <span className="flex-1 text-left text-sm font-inter text-[#6b6b6b] dark:text-[#616161]">
           Browse workspace   
         </span>
         <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
