@@ -781,7 +781,7 @@ export function ProfileTab() {
         </div>
 
         {/* Connected Integrations Skeleton */}
-        <Card className="bg-card border overflow-hidden">
+        <Card className="border overflow-hidden bg-neutral-100/0 border-black/0">
           <CardContent className="p-6">
             <div className="space-y-1 mb-5">
               <Skeleton className="h-6 w-44" />
