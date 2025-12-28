@@ -83,9 +83,6 @@ export function CampaignCard({
           </div>
           )}
 
-          {/* Gradient Overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
           {/* Action Buttons */}
           {(showBookmark || showFullscreen) && (
             <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -111,14 +108,6 @@ export function CampaignCard({
               )}
             </div>
           )}
-
-          {/* Bottom Content */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            {/* Title */}
-            <h3 className="text-sm font-semibold text-white tracking-[-0.3px] text-center line-clamp-2 leading-tight font-['Geist',sans-serif]">
-              {title}
-            </h3>
-          </div>
         </div>
       </Card>
 
