@@ -7,8 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Copy, Check, Users, Crown, UserPlus, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
-import settingsIcon from "@/assets/icons/settings-icon.svg";
-import deleteIcon from "@/assets/icons/delete-icon.svg";
+import settingsIconLight from "@/assets/icons/settings-icon.svg";
+import settingsIconDark from "@/assets/icons/settings-icon-dark.svg";
+import deleteIconLight from "@/assets/icons/delete-icon.svg";
+import deleteIconDark from "@/assets/icons/delete-icon-dark.svg";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
@@ -47,6 +50,11 @@ interface MembershipInfo {
 }
 
 export function TeamsSection(): JSX.Element {
+  const { theme, resolvedTheme } = useTheme();
+  const isDark = theme === "dark" || resolvedTheme === "dark";
+  const settingsIcon = isDark ? settingsIconDark : settingsIconLight;
+  const deleteIcon = isDark ? deleteIconDark : deleteIconLight;
+  
   const [userId, setUserId] = useState<string | null>(null);
   const [myTeam, setMyTeam] = useState<Team | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
