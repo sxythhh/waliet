@@ -151,9 +151,6 @@ export function CampaignRowCard({
                   {spotsRemaining}/{maxCreators} spots
                 </span>}
 
-              {allowedPlatforms && allowedPlatforms.length > 0 && <div className="flex items-center gap-1.5">
-                  {allowedPlatforms.map(platform => <span key={platform}>{getPlatformIcon(platform)}</span>)}
-                </div>}
             </div>
           </div>
 
