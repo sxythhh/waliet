@@ -1983,11 +1983,13 @@ export function WalletTab() {
             })()}
               </div>
               
-              {/* Fixed Share Button */}
-              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto">
+              {/* Fixed Buttons */}
+              <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto flex flex-col gap-2">
                 <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
-                  
                   Share Transaction
+                </Button>
+                <Button variant="outline" onClick={() => setSelectedTransaction(null)} className="w-full md:hidden">
+                  Close
                 </Button>
               </div>
             </div>}
