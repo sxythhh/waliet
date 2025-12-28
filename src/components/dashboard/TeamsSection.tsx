@@ -384,13 +384,53 @@ export function TeamsSection(): JSX.Element {
     }
   };
   if (loading) {
-    return <Card className="bg-card">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>;
+    return <div className="min-h-[calc(100vh-200px)] space-y-6">
+        {/* Team Header Skeleton */}
+        <Card className="bg-card">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+              <div className="flex gap-2">
+                <div className="h-9 flex-1 bg-muted rounded animate-pulse" />
+                <div className="h-9 w-12 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Earnings Chart Skeleton */}
+        <Card className="bg-card">
+          <CardContent className="p-6">
+            <div className="h-4 w-28 bg-muted rounded animate-pulse mb-4" />
+            <div className="h-48 bg-muted rounded animate-pulse" />
+          </CardContent>
+        </Card>
+
+        {/* Team Members Skeleton */}
+        <Card className="bg-card">
+          <CardContent className="p-6">
+            <div className="h-4 w-28 bg-muted rounded animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                  <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-2 w-16 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="h-4 w-12 bg-muted rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>;
   }
 
   // User is a member of a team (not owner)
@@ -435,7 +475,7 @@ export function TeamsSection(): JSX.Element {
 
   // User owns a team
   if (myTeam) {
-    return <div className="space-y-6">
+    return <div className="min-h-[calc(100vh-200px)] space-y-6">
         {/* Team Header */}
         <Card className="bg-card">
           <CardContent className="p-6">
