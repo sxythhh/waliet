@@ -1210,7 +1210,7 @@ export function CreatorDatabaseTab({
 
       {/* Table */}
       <div className="flex flex-col flex-1 h-full overflow-hidden">
-          <ScrollArea className="flex-1 p-[5px]">
+          <ScrollArea className="flex-1 p-0">
             <TooltipProvider delayDuration={100}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
