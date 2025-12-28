@@ -512,6 +512,6 @@ export function BrandCampaignsTab({
       <AllocateBudgetDialog open={allocateBudgetOpen} onOpenChange={open => {
       setAllocateBudgetOpen(open);
       if (!open) setSelectedCampaignForFunding(null);
-    }} brandId={brandId} availableBalance={0} onSuccess={fetchBrandData} />
+    }} brandId={brandId} onSuccess={fetchBrandData} />
     </div>;
 }

@@ -5,15 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowUpRight, Wallet, AlertCircle } from "lucide-react";
+import { ArrowUpRight, Wallet, AlertCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AllocateBudgetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   brandId: string;
-  availableBalance: number;
   onSuccess?: () => void;
 }
 
@@ -33,9 +33,9 @@ export function AllocateBudgetDialog({
   open,
   onOpenChange,
   brandId,
-  availableBalance,
   onSuccess,
 }: AllocateBudgetDialogProps) {
+  const { user } = useAuth();
   const [type, setType] = useState<'campaign' | 'boost'>('campaign');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [boosts, setBoosts] = useState<Boost[]>([]);
@@ -43,12 +43,33 @@ export function AllocateBudgetDialog({
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
   useEffect(() => {
     if (open) {
       fetchData();
+      fetchWalletBalance();
     }
-  }, [open, brandId]);
+  }, [open, brandId, user]);
+
+  const fetchWalletBalance = async () => {
+    if (!user) return;
+    setLoadingBalance(true);
+    try {
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single();
+
+      setWalletBalance(walletData?.balance || 0);
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+    } finally {
+      setLoadingBalance(false);
+    }
+  };
 
   const fetchData = async () => {
     setFetchingData(true);
@@ -106,8 +127,8 @@ export function AllocateBudgetDialog({
       return;
     }
 
-    if (parsedAmount > availableBalance) {
-      toast.error('Insufficient balance');
+    if (parsedAmount > walletBalance) {
+      toast.error('Insufficient wallet balance');
       return;
     }
 
@@ -148,16 +169,26 @@ export function AllocateBudgetDialog({
         <div className="p-6 pb-0 flex-shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-medium tracking-tight">
-              Allocate Budget
+              Fund Campaign
             </DialogTitle>
+            <p className="text-sm text-neutral-500 font-inter tracking-[-0.3px] mt-1">
+              Transfer funds from your Virality wallet
+            </p>
           </DialogHeader>
         </div>
 
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
-          {/* Virality Balance */}
+          {/* Wallet Balance */}
           <div className="bg-white/[0.03] rounded-xl p-5">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Virality Balance</p>
-            <p className="text-3xl font-semibold text-white tracking-tight">{formatCurrency(availableBalance)}</p>
+            <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Your Wallet Balance</p>
+            {loadingBalance ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-neutral-500" />
+                <span className="text-neutral-500">Loading...</span>
+              </div>
+            ) : (
+              <p className="text-3xl font-semibold text-white tracking-tight">{formatCurrency(walletBalance)}</p>
+            )}
           </div>
 
           {/* Type Selection */}
@@ -248,18 +279,18 @@ export function AllocateBudgetDialog({
           </div>
 
           {/* Validation Warning */}
-          {parsedAmount > availableBalance && (
+          {parsedAmount > walletBalance && (
             <div className="flex items-center gap-2.5 text-red-400 text-sm bg-red-500/10 rounded-lg p-3.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Amount exceeds available balance</span>
+              <span>Amount exceeds your wallet balance</span>
             </div>
           )}
 
           {/* Summary */}
-          {selectedItem && parsedAmount > 0 && parsedAmount <= availableBalance && (
+          {selectedItem && parsedAmount > 0 && parsedAmount <= walletBalance && (
             <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Allocating to</span>
+                <span className="text-neutral-500">Funding</span>
                 <span className="text-white">{selectedItem.title}</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -276,9 +307,9 @@ export function AllocateBudgetDialog({
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Remaining balance</span>
+                <span className="text-neutral-500">Remaining wallet balance</span>
                 <span className="text-neutral-300">
-                  {formatCurrency(availableBalance - parsedAmount)}
+                  {formatCurrency(walletBalance - parsedAmount)}
                 </span>
               </div>
             </div>
@@ -295,10 +326,10 @@ export function AllocateBudgetDialog({
             </Button>
             <Button
               onClick={handleAllocate}
-              disabled={loading || !selectedId || parsedAmount <= 0 || parsedAmount > availableBalance}
+              disabled={loading || !selectedId || parsedAmount <= 0 || parsedAmount > walletBalance || loadingBalance}
               className="flex-1 bg-white text-black hover:bg-neutral-200 h-12 rounded-lg font-medium disabled:opacity-30"
             >
-              {loading ? 'Allocating...' : 'Allocate'}
+              {loading ? 'Funding...' : 'Fund'}
             </Button>
           </div>
         </div>

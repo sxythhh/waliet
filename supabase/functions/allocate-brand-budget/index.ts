@@ -14,7 +14,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const whopApiKey = Deno.env.get('WHOP_API_KEY')!;
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -75,50 +74,27 @@ serve(async (req) => {
       });
     }
 
-    // Get brand
-    const { data: brand, error: brandError } = await supabase
-      .from('brands')
-      .select('id, whop_company_id')
-      .eq('id', brand_id)
+    // Get user's personal wallet balance
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('id, balance')
+      .eq('user_id', user.id)
       .single();
 
-    if (brandError || !brand) {
-      return new Response(JSON.stringify({ error: 'Brand not found' }), {
+    if (walletError || !wallet) {
+      return new Response(JSON.stringify({ error: 'Wallet not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Calculate Virality balance from brand_wallet_transactions
-    const { data: transactions, error: txError } = await supabase
-      .from('brand_wallet_transactions')
-      .select('type, amount, status')
-      .eq('brand_id', brand_id);
+    const userBalance = wallet.balance || 0;
+    console.log(`User ${user.id} wallet balance: $${userBalance}`);
 
-    if (txError) {
-      console.error('Error fetching transactions:', txError);
-    }
-
-    const viralityBalance = (transactions || []).reduce((acc, tx) => {
-      if (tx.status !== 'completed') return acc;
-      const txAmount = Number(tx.amount) || 0;
-      // Credit types add to balance
-      if (['topup', 'refund', 'admin_credit'].includes(tx.type)) {
-        return acc + txAmount;
-      }
-      // Debit types subtract from balance
-      if (['withdrawal', 'campaign_allocation', 'boost_allocation', 'admin_debit', 'transfer_to_withdraw'].includes(tx.type)) {
-        return acc - txAmount;
-      }
-      return acc;
-    }, 0);
-
-    console.log(`Virality balance for brand ${brand_id}: $${viralityBalance}`);
-
-    if (viralityBalance < amount) {
+    if (userBalance < amount) {
       return new Response(JSON.stringify({ 
-        error: 'Insufficient Virality balance',
-        current_balance: viralityBalance,
+        error: 'Insufficient wallet balance',
+        current_balance: userBalance,
         requested_amount: amount
       }), {
         status: 400,
@@ -156,24 +132,43 @@ serve(async (req) => {
         });
       }
 
-      // Log transaction (debit from Virality balance)
+      // Deduct from user's personal wallet
+      const { error: walletUpdateError } = await supabase
+        .from('wallets')
+        .update({ balance: userBalance - amount })
+        .eq('user_id', user.id);
+
+      if (walletUpdateError) {
+        console.error('Error updating wallet:', walletUpdateError);
+        // Rollback campaign budget update
+        await supabase
+          .from('campaigns')
+          .update({ budget: campaign.budget || 0 })
+          .eq('id', campaign_id);
+        return new Response(JSON.stringify({ error: 'Failed to update wallet' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Log transaction in wallet_transactions
       await supabase
-        .from('brand_wallet_transactions')
+        .from('wallet_transactions')
         .insert({
-          brand_id: brand_id,
-          type: 'campaign_allocation',
-          amount: amount, // Positive amount, type indicates it's a debit
-          status: 'completed',
-          campaign_id: campaign_id,
-          description: `Budget allocated to campaign: ${campaign.title}`,
+          wallet_id: wallet.id,
+          user_id: user.id,
+          type: 'campaign_funding',
+          amount: -amount,
+          balance_before: userBalance,
+          balance_after: userBalance - amount,
+          description: `Funded campaign: ${campaign.title}`,
           metadata: {
-            previous_balance: viralityBalance,
-            new_balance: viralityBalance - amount
-          },
-          created_by: user.id
+            campaign_id: campaign_id,
+            brand_id: brand_id
+          }
         });
 
-      console.log(`Allocated $${amount} to campaign ${campaign_id}`);
+      console.log(`User ${user.id} funded campaign ${campaign_id} with $${amount}`);
 
     } else if (boost_id) {
       // Verify boost belongs to this brand
@@ -204,30 +199,49 @@ serve(async (req) => {
         });
       }
 
-      // Log transaction (debit from Virality balance)
+      // Deduct from user's personal wallet
+      const { error: walletUpdateError } = await supabase
+        .from('wallets')
+        .update({ balance: userBalance - amount })
+        .eq('user_id', user.id);
+
+      if (walletUpdateError) {
+        console.error('Error updating wallet:', walletUpdateError);
+        // Rollback boost budget update
+        await supabase
+          .from('bounty_campaigns')
+          .update({ budget: boost.budget || 0 })
+          .eq('id', boost_id);
+        return new Response(JSON.stringify({ error: 'Failed to update wallet' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Log transaction in wallet_transactions
       await supabase
-        .from('brand_wallet_transactions')
+        .from('wallet_transactions')
         .insert({
-          brand_id: brand_id,
-          type: 'boost_allocation',
-          amount: amount, // Positive amount, type indicates it's a debit
-          status: 'completed',
-          boost_id: boost_id,
-          description: `Budget allocated to boost: ${boost.title}`,
+          wallet_id: wallet.id,
+          user_id: user.id,
+          type: 'boost_funding',
+          amount: -amount,
+          balance_before: userBalance,
+          balance_after: userBalance - amount,
+          description: `Funded boost: ${boost.title}`,
           metadata: {
-            previous_balance: viralityBalance,
-            new_balance: viralityBalance - amount
-          },
-          created_by: user.id
+            boost_id: boost_id,
+            brand_id: brand_id
+          }
         });
 
-      console.log(`Allocated $${amount} to boost ${boost_id}`);
+      console.log(`User ${user.id} funded boost ${boost_id} with $${amount}`);
     }
 
     return new Response(JSON.stringify({ 
       success: true,
       allocated_amount: amount,
-      remaining_balance: viralityBalance - amount
+      remaining_balance: userBalance - amount
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

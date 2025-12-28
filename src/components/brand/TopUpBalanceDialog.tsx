@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TopUpBalanceDialogProps {
   open: boolean;
@@ -23,9 +24,10 @@ export function TopUpBalanceDialog({
   currentBalance,
   onSuccess,
 }: TopUpBalanceDialogProps) {
+  const { user } = useAuth();
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
-  const [viralityBalance, setViralityBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
 
   const formatCurrency = (value: number) => {
@@ -38,33 +40,24 @@ export function TopUpBalanceDialog({
   };
 
   useEffect(() => {
-    if (open) {
-      fetchViralityBalance();
+    if (open && user) {
+      fetchWalletBalance();
     }
-  }, [open, boostId]);
+  }, [open, user]);
 
-  const fetchViralityBalance = async () => {
+  const fetchWalletBalance = async () => {
+    if (!user) return;
     setLoadingBalance(true);
     try {
-      const { data: boostData, error: boostError } = await supabase
-        .from("bounty_campaigns")
-        .select("brand_id")
-        .eq("id", boostId)
+      const { data: walletData } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
         .single();
 
-      if (boostError || !boostData) {
-        console.error("Error fetching boost:", boostError);
-        return;
-      }
-
-      const { data, error } = await supabase.functions.invoke("get-brand-balance", {
-        body: { brand_id: boostData.brand_id },
-      });
-
-      if (error) throw error;
-      setViralityBalance(data?.virality_balance || 0);
+      setWalletBalance(walletData?.balance || 0);
     } catch (error) {
-      console.error("Error fetching balance:", error);
+      console.error("Error fetching wallet balance:", error);
     } finally {
       setLoadingBalance(false);
     }
@@ -78,16 +71,14 @@ export function TopUpBalanceDialog({
       return;
     }
 
-    if (parsedAmount > viralityBalance) {
-      toast.error("Insufficient Virality balance");
+    if (parsedAmount > walletBalance) {
+      toast.error("Insufficient wallet balance");
       return;
     }
 
     setLoading(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      
       const { data: boostData, error: boostError } = await supabase
         .from("bounty_campaigns")
         .select("brand_id, budget")
@@ -98,28 +89,16 @@ export function TopUpBalanceDialog({
         throw new Error("Failed to fetch boost data");
       }
 
-      const { error: transactionError } = await supabase
-        .from("brand_wallet_transactions")
-        .insert({
+      // Use edge function to handle the transfer
+      const { data, error } = await supabase.functions.invoke('allocate-brand-budget', {
+        body: {
           brand_id: boostData.brand_id,
           boost_id: boostId,
-          type: "boost_allocation",
-          amount: -parsedAmount,
-          status: "completed",
-          description: `Funds allocated to boost: ${boostTitle}`,
-          created_by: userData?.user?.id,
-        });
+          amount: parsedAmount,
+        },
+      });
 
-      if (transactionError) throw transactionError;
-
-      const { error: updateError } = await supabase
-        .from("bounty_campaigns")
-        .update({
-          budget: (boostData.budget || 0) + parsedAmount,
-        })
-        .eq("id", boostId);
-
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       toast.success(`${formatCurrency(parsedAmount)} transferred to boost`);
       onOpenChange(false);
@@ -134,7 +113,7 @@ export function TopUpBalanceDialog({
   };
 
   const parsedAmount = parseFloat(amount) || 0;
-  const exceedsBalance = parsedAmount > viralityBalance;
+  const exceedsBalance = parsedAmount > walletBalance;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,10 +121,10 @@ export function TopUpBalanceDialog({
         <div className="p-6 pb-0">
           <DialogHeader>
             <DialogTitle className="font-inter tracking-[-0.5px] text-lg">
-              Transfer to Boost
+              Fund Boost
             </DialogTitle>
             <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
-              Move funds from your Virality wallet
+              Transfer funds from your Virality wallet
             </p>
           </DialogHeader>
         </div>
@@ -153,12 +132,12 @@ export function TopUpBalanceDialog({
         <div className="p-6 space-y-6">
           {/* Available Balance */}
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] uppercase">Available Balance</p>
+            <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px] uppercase">Your Wallet Balance</p>
             {loadingBalance ? (
               <div className="h-9 w-32 bg-muted/50 animate-pulse rounded" />
             ) : (
               <p className="text-3xl font-semibold font-inter tracking-[-1px]">
-                {formatCurrency(viralityBalance)}
+                {formatCurrency(walletBalance)}
               </p>
             )}
           </div>
@@ -186,7 +165,7 @@ export function TopUpBalanceDialog({
           {exceedsBalance && parsedAmount > 0 && (
             <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/5 rounded-lg">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span className="font-inter tracking-[-0.3px]">Exceeds available balance</span>
+              <span className="font-inter tracking-[-0.3px]">Exceeds your wallet balance</span>
             </div>
           )}
 
@@ -200,9 +179,9 @@ export function TopUpBalanceDialog({
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Remaining balance</span>
+                <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Remaining wallet balance</span>
                 <span className="text-sm font-medium font-inter tracking-[-0.3px]">
-                  {formatCurrency(viralityBalance - parsedAmount)}
+                  {formatCurrency(walletBalance - parsedAmount)}
                 </span>
               </div>
             </div>
