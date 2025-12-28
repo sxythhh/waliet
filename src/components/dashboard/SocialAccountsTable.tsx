@@ -164,9 +164,9 @@ export function SocialAccountsTable({
                 <TableCell className="py-3">
                   {connectedCampaigns.length > 0 ? <Popover>
                       <PopoverTrigger asChild>
-                        <button className="text-sm text-primary hover:underline cursor-pointer" style={{
+                        <button className="text-sm text-foreground hover:underline cursor-pointer" style={{
                     fontFamily: "Inter",
-                    letterSpacing: "-0.3px"
+                    letterSpacing: "-0.5px"
                   }}>
                           {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? "s" : ""}
                         </button>
