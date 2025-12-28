@@ -463,11 +463,11 @@ export function TeamsSection(): JSX.Element {
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Team Invite Link</Label>
               <div className="flex gap-2">
-                <Input readOnly value={`${window.location.origin}/join-team/${myTeam.invite_code}`} className="bg-muted/50 text-sm h-9" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px' }} />
-                <button 
-                  onClick={copyInviteLink} 
-                  className="shrink-0 px-3 h-9 flex items-center justify-center rounded-md bg-transparent hover:bg-muted transition-colors"
-                >
+                <Input readOnly value={`${window.location.origin}/join-team/${myTeam.invite_code}`} className="bg-muted/50 text-sm h-9" style={{
+                fontFamily: 'Inter, sans-serif',
+                letterSpacing: '-0.5px'
+              }} />
+                <button onClick={copyInviteLink} className="shrink-0 px-3 h-9 flex items-center justify-center rounded-md bg-transparent hover:bg-muted transition-colors">
                   {copied ? <Check className="h-4 w-4 text-foreground" /> : <img src={copyIcon} alt="Copy" className="h-4 w-4 opacity-60" />}
                 </button>
               </div>
@@ -483,8 +483,8 @@ export function TeamsSection(): JSX.Element {
         }}>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h4 className="font-semibold text-sm">Earnings Comparison</h4>
-                <p className="text-xs text-muted-foreground mt-0.5">Team vs Personal Commission (Last 6 months)</p>
+                <h4 className="font-semibold text-sm">Team Earnings </h4>
+                
               </div>
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5">
