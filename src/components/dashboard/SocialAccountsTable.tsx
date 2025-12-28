@@ -112,7 +112,7 @@ export function SocialAccountsTable({
         <TableHeader>
           <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#080808]">
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Account</TableHead>
-            <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Followers</TableHead>
+            
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Campaigns</TableHead>
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Demographics</TableHead>
             <TableHead className="text-foreground font-medium text-sm h-12 tracking-tighter">Status</TableHead>
@@ -150,15 +150,6 @@ export function SocialAccountsTable({
                   </div>
                 </TableCell>
 
-                {/* Followers */}
-                <TableCell className="py-3">
-                  <span className="text-sm text-foreground" style={{
-                fontFamily: "Inter",
-                letterSpacing: "-0.3px"
-              }}>
-                    {formatFollowerCount(account.follower_count)}
-                  </span>
-                </TableCell>
 
                 {/* Campaigns */}
                 <TableCell className="py-3">
