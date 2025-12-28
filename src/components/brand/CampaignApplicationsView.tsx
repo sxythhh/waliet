@@ -277,9 +277,9 @@ export function CampaignApplicationsView({
     switch (status) {
       case 'approved':
       case 'accepted':
-        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-0 bg-emerald-500/10">Approved</Badge>;
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-emerald-500/30 bg-emerald-500/10">Approved</Badge>;
       case 'rejected':
-        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-0 bg-red-500/10">Rejected</Badge>;
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-red-500/30 bg-red-500/10">Rejected</Badge>;
       default:
         return <Badge variant="outline" className="text-xs font-inter font-medium tracking-[-0.5px] text-amber-500 border-0 bg-amber-500/10">Pending</Badge>;
     }

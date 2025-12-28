@@ -136,11 +136,6 @@ export function usePaymentLedger(userId?: string) {
           summaryData.totalPending += pending;
           uiStatus = 'accruing';
           summaryData.accruingCount++;
-        } else if (entry.status === 'paid' && pending > 0) {
-          // Previously paid entry that has accrued more earnings
-          summaryData.totalPending += pending;
-          uiStatus = 'accruing'; // Show as accruing since there's more to claim
-          summaryData.accruingCount++;
         } else if (entry.status === 'clearing') {
           summaryData.totalClearing += pending;
           uiStatus = 'clearing';

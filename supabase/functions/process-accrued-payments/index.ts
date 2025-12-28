@@ -58,16 +58,7 @@ interface PaymentLedgerEntry {
   rate: number;
   milestone_threshold?: number;
   accrued_amount: number;
-  paid_amount?: number;
-  status?: string;
   last_calculated_at: string;
-}
-
-interface ExistingLedgerEntry {
-  id: string;
-  status: string;
-  paid_amount: number;
-  accrued_amount: number;
 }
 
 Deno.serve(async (req) => {
@@ -90,7 +81,6 @@ Deno.serve(async (req) => {
       boostsProcessed: 0,
       ledgerEntriesCreated: 0,
       ledgerEntriesUpdated: 0,
-      entriesSkipped: 0,
       errors: [] as string[],
     };
 
@@ -100,7 +90,6 @@ Deno.serve(async (req) => {
       results.campaignsProcessed = campaignResult.processed;
       results.ledgerEntriesCreated += campaignResult.created;
       results.ledgerEntriesUpdated += campaignResult.updated;
-      results.entriesSkipped += campaignResult.skipped;
       if (campaignResult.errors.length) {
         results.errors.push(...campaignResult.errors);
       }
@@ -112,7 +101,6 @@ Deno.serve(async (req) => {
       results.boostsProcessed = boostResult.processed;
       results.ledgerEntriesCreated += boostResult.created;
       results.ledgerEntriesUpdated += boostResult.updated;
-      results.entriesSkipped += boostResult.skipped;
       if (boostResult.errors.length) {
         results.errors.push(...boostResult.errors);
       }
@@ -140,7 +128,7 @@ Deno.serve(async (req) => {
 });
 
 async function processCampaignPayments(supabase: any, campaignId?: string) {
-  const result = { processed: 0, created: 0, updated: 0, skipped: 0, errors: [] as string[] };
+  const result = { processed: 0, created: 0, updated: 0, errors: [] as string[] };
 
   try {
     // Fetch active campaigns with RPM rate
@@ -182,29 +170,9 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
           continue;
         }
 
-        // Get all submission IDs to check existing entries
-        const submissionIds = submissions.map((s: any) => s.id);
-        
-        // Fetch existing ledger entries for these submissions
-        const { data: existingEntries, error: existingError } = await supabase
-          .from('payment_ledger')
-          .select('id, video_submission_id, status, paid_amount, accrued_amount')
-          .in('video_submission_id', submissionIds)
-          .eq('payment_type', 'cpm');
+        // Prepare batch upsert entries
+        const ledgerEntries: PaymentLedgerEntry[] = [];
 
-        if (existingError) {
-          console.error(`Failed to fetch existing entries for campaign ${campaign.id}:`, existingError.message);
-        }
-
-        // Create a map of existing entries by submission ID
-        const existingMap: Record<string, ExistingLedgerEntry> = {};
-        for (const entry of existingEntries || []) {
-          if (entry.video_submission_id) {
-            existingMap[entry.video_submission_id] = entry;
-          }
-        }
-
-        // Process each submission individually to handle status correctly
         for (const submission of submissions) {
           const views = submission.views || 0;
           const rpmRate = campaign.rpm_rate || 0;
@@ -214,87 +182,35 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
           
           // Add flat rate if applicable
           const flatRate = campaign.flat_rate_per_video || 0;
-          const newAccrued = parseFloat((cpmEarnings + flatRate).toFixed(2));
+          const totalAccrued = cpmEarnings + flatRate;
 
-          const existing = existingMap[submission.id];
+          ledgerEntries.push({
+            user_id: submission.creator_id,
+            video_submission_id: submission.id,
+            source_type: 'campaign',
+            source_id: campaign.id,
+            payment_type: 'cpm',
+            views_snapshot: views,
+            rate: rpmRate,
+            accrued_amount: parseFloat(totalAccrued.toFixed(2)),
+            last_calculated_at: new Date().toISOString(),
+          });
+        }
 
-          if (existing) {
-            // Entry exists - check status
-            if (existing.status === 'locked' || existing.status === 'clearing') {
-              // Skip entries in clearing period
-              console.log(`Skipping locked/clearing entry for submission ${submission.id}`);
-              result.skipped++;
-              continue;
-            }
+        // Batch upsert to payment_ledger
+        if (ledgerEntries.length > 0) {
+          const { data: upsertResult, error: upsertError } = await supabase
+            .from('payment_ledger')
+            .upsert(ledgerEntries, {
+              onConflict: 'video_submission_id,payment_type,COALESCE(milestone_threshold,0)',
+              ignoreDuplicates: false,
+            })
+            .select();
 
-            if (existing.status === 'paid') {
-              // Check if there are additional earnings beyond what was paid
-              const existingPaid = Number(existing.paid_amount) || 0;
-              
-              if (newAccrued > existingPaid) {
-                // Update with new accrued amount, preserve paid_amount, set status to pending
-                const { error: updateError } = await supabase
-                  .from('payment_ledger')
-                  .update({
-                    accrued_amount: newAccrued,
-                    views_snapshot: views,
-                    status: 'pending', // Re-enable for payout
-                    last_calculated_at: new Date().toISOString(),
-                  })
-                  .eq('id', existing.id);
-
-                if (updateError) {
-                  result.errors.push(`Failed to update paid entry ${existing.id}: ${updateError.message}`);
-                } else {
-                  console.log(`Updated paid entry ${existing.id}: accrued ${existingPaid} -> ${newAccrued}, now pending`);
-                  result.updated++;
-                }
-              } else {
-                // No additional earnings, skip
-                result.skipped++;
-              }
-              continue;
-            }
-
-            // For pending entries, update normally
-            const { error: updateError } = await supabase
-              .from('payment_ledger')
-              .update({
-                accrued_amount: newAccrued,
-                views_snapshot: views,
-                rate: rpmRate,
-                last_calculated_at: new Date().toISOString(),
-              })
-              .eq('id', existing.id);
-
-            if (updateError) {
-              result.errors.push(`Failed to update entry ${existing.id}: ${updateError.message}`);
-            } else {
-              result.updated++;
-            }
+          if (upsertError) {
+            result.errors.push(`Campaign ${campaign.id} upsert: ${upsertError.message}`);
           } else {
-            // No existing entry - create new one
-            const { error: insertError } = await supabase
-              .from('payment_ledger')
-              .insert({
-                user_id: submission.creator_id,
-                video_submission_id: submission.id,
-                source_type: 'campaign',
-                source_id: campaign.id,
-                payment_type: 'cpm',
-                views_snapshot: views,
-                rate: rpmRate,
-                accrued_amount: newAccrued,
-                paid_amount: 0,
-                status: 'pending',
-                last_calculated_at: new Date().toISOString(),
-              });
-
-            if (insertError) {
-              result.errors.push(`Failed to insert entry for submission ${submission.id}: ${insertError.message}`);
-            } else {
-              result.created++;
-            }
+            result.created += upsertResult?.length || 0;
           }
         }
 
@@ -312,7 +228,7 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
 }
 
 async function processBoostPayments(supabase: any, boostId?: string) {
-  const result = { processed: 0, created: 0, updated: 0, skipped: 0, errors: [] as string[] };
+  const result = { processed: 0, created: 0, updated: 0, errors: [] as string[] };
 
   try {
     // Fetch active boosts
@@ -348,26 +264,6 @@ async function processBoostPayments(supabase: any, boostId?: string) {
           continue;
         }
 
-        // Get all submission IDs
-        const submissionIds = (submissions || []).map((s: any) => s.id);
-        
-        // Fetch existing ledger entries for these submissions
-        const { data: existingEntries, error: existingError } = await supabase
-          .from('payment_ledger')
-          .select('id, boost_submission_id, payment_type, milestone_threshold, status, paid_amount, accrued_amount')
-          .in('boost_submission_id', submissionIds);
-
-        if (existingError) {
-          console.error(`Failed to fetch existing entries for boost ${boost.id}:`, existingError.message);
-        }
-
-        // Create a map of existing entries by composite key
-        const existingMap: Record<string, ExistingLedgerEntry> = {};
-        for (const entry of existingEntries || []) {
-          const key = `${entry.boost_submission_id}:${entry.payment_type}:${entry.milestone_threshold || 0}`;
-          existingMap[key] = entry;
-        }
-
         // Fetch view bonuses if enabled
         let viewBonuses: ViewBonus[] = [];
         if (boost.view_bonuses_enabled) {
@@ -382,65 +278,28 @@ async function processBoostPayments(supabase: any, boostId?: string) {
           }
         }
 
+        const ledgerEntries: PaymentLedgerEntry[] = [];
+
         for (const submission of submissions || []) {
-          // Process flat rate / retainer entry
+          // Add flat rate / retainer entry
           if (submission.payout_amount && submission.payout_amount > 0) {
-            const flatRateKey = `${submission.id}:flat_rate:0`;
-            const existing = existingMap[flatRateKey];
-            const newAccrued = parseFloat(submission.payout_amount.toFixed(2));
-
-            if (existing) {
-              if (existing.status === 'locked' || existing.status === 'clearing') {
-                result.skipped++;
-              } else if (existing.status === 'paid') {
-                const existingPaid = Number(existing.paid_amount) || 0;
-                if (newAccrued > existingPaid) {
-                  const { error: updateError } = await supabase
-                    .from('payment_ledger')
-                    .update({
-                      accrued_amount: newAccrued,
-                      status: 'pending',
-                      last_calculated_at: new Date().toISOString(),
-                    })
-                    .eq('id', existing.id);
-
-                  if (!updateError) result.updated++;
-                }
-              } else {
-                const { error: updateError } = await supabase
-                  .from('payment_ledger')
-                  .update({
-                    accrued_amount: newAccrued,
-                    rate: submission.payout_amount,
-                    last_calculated_at: new Date().toISOString(),
-                  })
-                  .eq('id', existing.id);
-
-                if (!updateError) result.updated++;
-              }
-            } else {
-              const { error: insertError } = await supabase
-                .from('payment_ledger')
-                .insert({
-                  user_id: submission.user_id,
-                  boost_submission_id: submission.id,
-                  source_type: 'boost',
-                  source_id: boost.id,
-                  payment_type: 'flat_rate',
-                  views_snapshot: 0,
-                  rate: submission.payout_amount,
-                  accrued_amount: newAccrued,
-                  paid_amount: 0,
-                  status: 'pending',
-                  last_calculated_at: new Date().toISOString(),
-                });
-
-              if (!insertError) result.created++;
-            }
+            ledgerEntries.push({
+              user_id: submission.user_id,
+              boost_submission_id: submission.id,
+              source_type: 'boost',
+              source_id: boost.id,
+              payment_type: 'flat_rate',
+              views_snapshot: 0,
+              rate: submission.payout_amount,
+              accrued_amount: parseFloat(submission.payout_amount.toFixed(2)),
+              last_calculated_at: new Date().toISOString(),
+            });
           }
 
           // Process view bonuses if submission has a shortimize video linked
           if (viewBonuses.length > 0) {
+            // Fetch video views from boost_video_submissions or linked metrics
+            // For now, we'll check if there's view data in video_submissions table
             const { data: videoData } = await supabase
               .from('video_submissions')
               .select('views')
@@ -451,110 +310,58 @@ async function processBoostPayments(supabase: any, boostId?: string) {
 
             for (const bonus of viewBonuses) {
               if (bonus.bonus_type === 'milestone' && views >= bonus.view_threshold) {
-                const milestoneKey = `${submission.id}:milestone:${bonus.view_threshold}`;
-                const existing = existingMap[milestoneKey];
-                const newAccrued = parseFloat(bonus.bonus_amount.toFixed(2));
-
-                if (existing) {
-                  if (existing.status === 'locked' || existing.status === 'clearing') {
-                    result.skipped++;
-                  } else if (existing.status === 'paid') {
-                    // Milestone is one-time, no need to update
-                    result.skipped++;
-                  } else {
-                    const { error: updateError } = await supabase
-                      .from('payment_ledger')
-                      .update({
-                        accrued_amount: newAccrued,
-                        views_snapshot: views,
-                        last_calculated_at: new Date().toISOString(),
-                      })
-                      .eq('id', existing.id);
-
-                    if (!updateError) result.updated++;
-                  }
-                } else {
-                  const { error: insertError } = await supabase
-                    .from('payment_ledger')
-                    .insert({
-                      user_id: submission.user_id,
-                      boost_submission_id: submission.id,
-                      source_type: 'boost',
-                      source_id: boost.id,
-                      payment_type: 'milestone',
-                      views_snapshot: views,
-                      rate: bonus.bonus_amount,
-                      milestone_threshold: bonus.view_threshold,
-                      accrued_amount: newAccrued,
-                      paid_amount: 0,
-                      status: 'pending',
-                      last_calculated_at: new Date().toISOString(),
-                    });
-
-                  if (!insertError) result.created++;
-                }
+                // Milestone bonus - pay once when threshold reached
+                ledgerEntries.push({
+                  user_id: submission.user_id,
+                  boost_submission_id: submission.id,
+                  source_type: 'boost',
+                  source_id: boost.id,
+                  payment_type: 'milestone',
+                  views_snapshot: views,
+                  rate: bonus.bonus_amount,
+                  milestone_threshold: bonus.view_threshold,
+                  accrued_amount: parseFloat(bonus.bonus_amount.toFixed(2)),
+                  last_calculated_at: new Date().toISOString(),
+                });
               } else if (bonus.bonus_type === 'cpm' && views >= (bonus.min_views || 0)) {
+                // CPM bonus - calculated based on views
                 const cpmRate = bonus.cpm_rate || 0;
                 const eligibleViews = Math.max(0, views - (bonus.min_views || 0));
-                const cpmAmount = parseFloat(((eligibleViews / 1000) * cpmRate).toFixed(2));
+                const cpmAmount = (eligibleViews / 1000) * cpmRate;
 
                 if (cpmAmount > 0) {
-                  const viewBonusKey = `${submission.id}:view_bonus:${bonus.view_threshold}`;
-                  const existing = existingMap[viewBonusKey];
-
-                  if (existing) {
-                    if (existing.status === 'locked' || existing.status === 'clearing') {
-                      result.skipped++;
-                    } else if (existing.status === 'paid') {
-                      const existingPaid = Number(existing.paid_amount) || 0;
-                      if (cpmAmount > existingPaid) {
-                        const { error: updateError } = await supabase
-                          .from('payment_ledger')
-                          .update({
-                            accrued_amount: cpmAmount,
-                            views_snapshot: views,
-                            status: 'pending',
-                            last_calculated_at: new Date().toISOString(),
-                          })
-                          .eq('id', existing.id);
-
-                        if (!updateError) result.updated++;
-                      }
-                    } else {
-                      const { error: updateError } = await supabase
-                        .from('payment_ledger')
-                        .update({
-                          accrued_amount: cpmAmount,
-                          views_snapshot: views,
-                          last_calculated_at: new Date().toISOString(),
-                        })
-                        .eq('id', existing.id);
-
-                      if (!updateError) result.updated++;
-                    }
-                  } else {
-                    const { error: insertError } = await supabase
-                      .from('payment_ledger')
-                      .insert({
-                        user_id: submission.user_id,
-                        boost_submission_id: submission.id,
-                        source_type: 'boost',
-                        source_id: boost.id,
-                        payment_type: 'view_bonus',
-                        views_snapshot: views,
-                        rate: cpmRate,
-                        milestone_threshold: bonus.view_threshold,
-                        accrued_amount: cpmAmount,
-                        paid_amount: 0,
-                        status: 'pending',
-                        last_calculated_at: new Date().toISOString(),
-                      });
-
-                    if (!insertError) result.created++;
-                  }
+                  ledgerEntries.push({
+                    user_id: submission.user_id,
+                    boost_submission_id: submission.id,
+                    source_type: 'boost',
+                    source_id: boost.id,
+                    payment_type: 'view_bonus',
+                    views_snapshot: views,
+                    rate: cpmRate,
+                    milestone_threshold: bonus.view_threshold,
+                    accrued_amount: parseFloat(cpmAmount.toFixed(2)),
+                    last_calculated_at: new Date().toISOString(),
+                  });
                 }
               }
             }
+          }
+        }
+
+        // Batch upsert to payment_ledger
+        if (ledgerEntries.length > 0) {
+          const { data: upsertResult, error: upsertError } = await supabase
+            .from('payment_ledger')
+            .upsert(ledgerEntries, {
+              onConflict: 'boost_submission_id,payment_type,COALESCE(milestone_threshold,0)',
+              ignoreDuplicates: false,
+            })
+            .select();
+
+          if (upsertError) {
+            result.errors.push(`Boost ${boost.id} upsert: ${upsertError.message}`);
+          } else {
+            result.created += upsertResult?.length || 0;
           }
         }
 

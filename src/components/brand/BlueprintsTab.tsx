@@ -274,7 +274,9 @@ export function BlueprintsTab({
         const contentPreview = getContentPreview(blueprint.content);
         const status = getBlueprintStatus(blueprint);
         const statusConfig = getStatusConfig(status);
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full overflow-hidden`}>
+        return <DropdownMenu key={blueprint.id}>
+              <DropdownMenuTrigger asChild>
+                  <div className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full`}>
                     {/* Status Label */}
                     <div className="px-4 py-1 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
@@ -283,39 +285,9 @@ export function BlueprintsTab({
                     </div>
 
                     {/* Content Card overlaying the status background */}
-                    <div className="flex-1 rounded-b-xl bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col relative">
-                      {/* Menu Button */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={e => {
-                  e.stopPropagation();
-                  openBlueprint(blueprint.id);
-                }}>
-                            <Pencil className="h-3.5 w-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={e => {
-                  e.stopPropagation();
-                  handleActivateBlueprint(blueprint.id);
-                }}>
-                            <Plus className="h-3.5 w-3.5 mr-2" />
-                            Create Campaign
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={e => {
-                  e.stopPropagation();
-                  deleteBlueprint(blueprint.id);
-                }}>
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
+                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col">
                       {/* Title */}
-                      <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px] pr-8">
+                      <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px]">
                         {blueprint.title}
                       </h3>
 
@@ -346,7 +318,23 @@ export function BlueprintsTab({
                         </span>
                       </div>
                     </div>
-                  </div>;
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-44">
+                  <DropdownMenuItem onClick={() => openBlueprint(blueprint.id)}>
+                    <Pencil className="h-3.5 w-3.5 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleActivateBlueprint(blueprint.id)}>
+                    <Plus className="h-3.5 w-3.5 mr-2" />
+                    Create Campaign
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => deleteBlueprint(blueprint.id)}>
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>;
       })}
         </div>}
 

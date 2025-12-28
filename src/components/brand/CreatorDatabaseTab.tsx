@@ -1206,9 +1206,8 @@ export function CreatorDatabaseTab({
       {/* Table */}
       <div className="flex flex-col flex-1 h-full overflow-hidden">
           <ScrollArea className="flex-1 p-0">
-            <div className="overflow-x-auto min-w-full">
             <TooltipProvider delayDuration={100}>
-              <Table className="min-w-[800px]">
+              <Table>
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
                   <TableRow className="hover:bg-transparent border-0">
                     <TableHead className="w-[32px] h-11">
@@ -1351,7 +1350,6 @@ export function CreatorDatabaseTab({
                 </TableBody>
               </Table>
             </TooltipProvider>
-            </div>
           </ScrollArea>
 
           {/* Pagination */}
