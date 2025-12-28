@@ -115,11 +115,11 @@ export default function AuthDialog({
           clearStoredUtmParams();
           toast({
             title: "Account created!",
-            description: "Let's set up your profile."
+            description: "Welcome to Virality."
           });
-          setNewUserId(signUpData.user.id);
+          setLoading(false);
           onOpenChange(false);
-          setShowOnboarding(true);
+          navigate("/dashboard");
         }
       } else {
         setLoading(false);
