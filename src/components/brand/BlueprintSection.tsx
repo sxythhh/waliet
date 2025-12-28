@@ -1,5 +1,5 @@
 import { useState, ReactNode } from "react";
-import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -67,8 +67,6 @@ export function BlueprintSection({
         <span className="flex-1 text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
           {title}
         </span>
-        {getStatusBadge()}
-        {onRemove && <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive cursor-pointer" onClick={(e) => { e.stopPropagation(); onRemove(); }} />}
         {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
       </button>
 
