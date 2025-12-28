@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -88,16 +89,19 @@ interface Transaction {
     title: string;
     brand_name: string;
     brand_logo_url: string | null;
+    brand_slug?: string;
   } | null;
   boost?: {
     id: string;
     title: string;
     brand_name: string;
     brand_logo_url: string | null;
+    brand_slug?: string;
   } | null;
 }
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
+  const navigate = useNavigate();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [earningsData, setEarningsData] = useState<EarningsDataPoint[]>([]);
@@ -607,12 +611,13 @@ export function WalletTab() {
     if (campaignIds.length > 0) {
       const {
         data: campaigns
-      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, brands(logo_url)").in("id", campaignIds);
+      } = await supabase.from("campaigns").select("id, title, brand_name, brand_logo_url, brands(logo_url, slug)").in("id", campaignIds);
       campaigns?.forEach(campaign => {
         campaignsMap.set(campaign.id, {
           ...campaign,
           // Use brands.logo_url as fallback if brand_logo_url is null
-          brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url
+          brand_logo_url: campaign.brand_logo_url || (campaign.brands as any)?.logo_url,
+          brand_slug: (campaign.brands as any)?.slug
         });
       });
     }
@@ -622,13 +627,14 @@ export function WalletTab() {
     if (boostIds.length > 0) {
       const {
         data: boosts
-      } = await supabase.from("bounty_campaigns").select("id, title, brands(name, logo_url)").in("id", boostIds);
+      } = await supabase.from("bounty_campaigns").select("id, title, brands(name, logo_url, slug)").in("id", boostIds);
       boosts?.forEach(boost => {
         boostsMap.set(boost.id, {
           id: boost.id,
           title: boost.title,
           brand_name: (boost.brands as any)?.name || '',
-          brand_logo_url: (boost.brands as any)?.logo_url || null
+          brand_logo_url: (boost.brands as any)?.logo_url || null,
+          brand_slug: (boost.brands as any)?.slug
         });
       });
     }
@@ -687,6 +693,7 @@ export function WalletTab() {
             destination = 'Wallet';
             break;
           case 'withdrawal':
+            source = 'Wallet';
             const payoutMethod = metadata?.payout_method;
             if (payoutMethod === 'paypal') {
               destination = 'PayPal';
@@ -1486,25 +1493,67 @@ export function WalletTab() {
                 }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Source */}
                         <TableCell className="py-4">
-                          {transaction.boost?.brand_name ? <div className="flex items-center gap-2">
-                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                          {transaction.boost?.brand_name ? (
+                            <div 
+                              className="flex items-center gap-2 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (transaction.boost?.brand_slug) {
+                                  navigate(`/b/${transaction.boost.brand_slug}`);
+                                }
+                              }}
+                            >
+                              {transaction.boost?.brand_logo_url ? (
+                                <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
                                   <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name} className="w-full h-full object-cover" />
-                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.boost.brand_name.charAt(0).toUpperCase()}
                                   </span>
-                                </div>}
+                                </div>
+                              )}
                               <span className="text-sm font-medium">{transaction.boost.brand_name}</span>
-                            </div> : transaction.campaign?.brand_name ? <div className="flex items-center gap-2">
-                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                            </div>
+                          ) : transaction.campaign?.brand_name ? (
+                            <div 
+                              className="flex items-center gap-2 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (transaction.campaign?.brand_slug) {
+                                  navigate(`/b/${transaction.campaign.brand_slug}`);
+                                }
+                              }}
+                            >
+                              {transaction.campaign?.brand_logo_url ? (
+                                <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
                                   <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
-                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.brand_name.charAt(0).toUpperCase()}
                                   </span>
-                                </div>}
+                                </div>
+                              )}
                               <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
-                            </div> : <span className="text-sm text-muted-foreground">-</span>}
+                            </div>
+                          ) : transaction.type === 'transfer_received' && transaction.metadata?.sender_username ? (
+                            <div 
+                              className="flex items-center gap-2 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/@${transaction.metadata.sender_username}`);
+                              }}
+                            >
+                              <span className="text-sm font-medium">@{transaction.metadata.sender_username}</span>
+                            </div>
+                          ) : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? (
+                            <span className="text-sm text-foreground">Wallet</span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>
+                          )}
                         </TableCell>
                         
                         {/* Destination */}
