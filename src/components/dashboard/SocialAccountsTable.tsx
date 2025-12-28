@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { ArrowUpRight, Link2, Trash2, X, MoreHorizontal, CheckCircle2, AlertCircle, Eye, EyeOff } from "lucide-react";
@@ -219,20 +220,33 @@ export function SocialAccountsTable({
 
                 {/* Actions */}
                 <TableCell className="py-3 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => onLinkCampaign(account)} title="Link to campaign">
-                      <Link2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => handleToggleVisibility(account)} title={account.hidden_from_public ? "Show on public profile" : "Hide from public profile"}>
-                      {account.hidden_from_public ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                    </Button>
-                    {account.account_link && <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => window.open(account.account_link!, "_blank")} title="Open profile">
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                      </Button>}
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10" onClick={() => onDeleteAccount(account.id)} title="Delete account">
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
+                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48 bg-popover border border-border">
+                      <DropdownMenuItem onClick={() => onLinkCampaign(account)} className="cursor-pointer">
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Link to campaign
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleVisibility(account)} className="cursor-pointer">
+                        {account.hidden_from_public ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+                        {account.hidden_from_public ? "Show on profile" : "Hide from profile"}
+                      </DropdownMenuItem>
+                      {account.account_link && (
+                        <DropdownMenuItem onClick={() => window.open(account.account_link!, "_blank")} className="cursor-pointer">
+                          <ArrowUpRight className="h-4 w-4 mr-2" />
+                          Open profile
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => onDeleteAccount(account.id)} className="cursor-pointer text-destructive focus:text-destructive">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete account
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>;
         })}
