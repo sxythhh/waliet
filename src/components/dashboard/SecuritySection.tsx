@@ -267,7 +267,7 @@ export function SecuritySection() {
                   }}>
                           {getDeviceName(sessionItem)}
                         </p>
-                        {sessionItem.is_current && <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
+                        {sessionItem.is_current && <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary" style={{ fontFamily: "Inter", letterSpacing: "-0.5px" }}>
                             This device
                           </span>}
                       </div>
