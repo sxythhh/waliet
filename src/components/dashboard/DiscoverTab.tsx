@@ -481,9 +481,9 @@ export function DiscoverTab({
           {/* Search and Filters Row */}
           <div className="flex flex-row gap-2 items-center">
             {/* Search Input - Click to open overlay (only show if not using external search) */}
-            {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 sm:flex-none sm:w-72 text-left">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
+            {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 sm:flex-none sm:w-72 text-left group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="pl-9 h-9 bg-muted/40 border-0 rounded-lg text-sm text-muted-foreground flex items-center transition-all group-hover:bg-muted/60">
                   {searchQuery || 'Search..'}
                 </div>
               </button>}
