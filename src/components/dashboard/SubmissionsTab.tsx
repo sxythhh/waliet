@@ -476,7 +476,8 @@ export function SubmissionsTab() {
   const uniquePrograms = Array.from(new Map(submissions.map(s => [s.program.id, s.program])).values());
   const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
   const paginatedSubmissions = filteredSubmissions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const hasActiveFilters = statusFilter !== 'all' || typeFilter !== 'all' || programFilter !== 'all';
+  const activeFilterCount = [statusFilter !== 'all', typeFilter !== 'all', programFilter !== 'all'].filter(Boolean).length;
+  const hasActiveFilters = activeFilterCount > 0;
   if (loading) {
     return null;
   }
@@ -497,7 +498,7 @@ export function SubmissionsTab() {
               fontFamily: 'Inter',
               letterSpacing: '-0.5px'
             }}>Filter</span>
-              {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-[#2060df]" />}
+              {hasActiveFilters && <span className="w-5 h-5 rounded-full bg-[#2060df] text-white text-xs font-medium flex items-center justify-center">{activeFilterCount}</span>}
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${filterOpen ? 'rotate-180' : ''}`} />
             </Button>
           </DropdownMenuTrigger>
