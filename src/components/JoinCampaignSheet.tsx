@@ -622,7 +622,7 @@ export function JoinCampaignSheet({
         </div>
 
         {/* Sticky Submit Button at bottom */}
-        {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-border">
+        {isLoggedIn && <div className="absolute bottom-0 left-0 right-0 p-6 bg-background border-t border-[#dadce2]/0">
             <div className="flex flex-col gap-3">
               <Button style={{
             fontFamily: 'Geist',
