@@ -194,7 +194,7 @@ export function CampaignRowCard({
                 <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
               </Button>}
 
-              {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => e.stopPropagation()}>
+              {status === "ended" && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515] text-foreground hover:text-foreground" onClick={e => e.stopPropagation()}>
                   Resume
                 </Button>}
 
