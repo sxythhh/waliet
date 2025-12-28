@@ -1988,7 +1988,7 @@ export function WalletTab() {
                 <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
                   Share Transaction
                 </Button>
-                <Button variant="ghost" onClick={() => setSelectedTransaction(null)} className="w-full md:hidden text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                <Button variant="ghost" onClick={() => setTransactionSheetOpen(false)} className="w-full md:hidden text-muted-foreground hover:text-foreground hover:bg-muted/50">
                   Close
                 </Button>
               </div>
