@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown, Users, Database } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -69,6 +69,7 @@ export function CampaignApplicationsView({
   const [processing, setProcessing] = useState<string | null>(null);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const isBoost = !!boostId && !brandId;
   const isAllMode = !!brandId && !campaignId && !boostId;
   useEffect(() => {
@@ -285,12 +286,22 @@ export function CampaignApplicationsView({
   };
   const getAppUrl = (app: Application) => app.content_url || app.video_url;
   const getSubmittedAt = (app: Application) => app.submitted_at || app.applied_at;
+  // Handle mobile application selection
+  const handleSelectApp = (appId: string) => {
+    setSelectedAppId(appId);
+    setMobileShowDetail(true);
+  };
+
+  const handleMobileBack = () => {
+    setMobileShowDetail(false);
+  };
+
   if (loading) {
     return <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-48 bg-muted/50 dark:bg-muted-foreground/20" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Skeleton className="h-64 bg-muted/50 dark:bg-muted-foreground/20" />
-          <Skeleton className="h-64 col-span-2 bg-muted/50 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-64 md:col-span-2 bg-muted/50 dark:bg-muted-foreground/20 hidden md:block" />
         </div>
       </div>;
   }
@@ -304,8 +315,8 @@ export function CampaignApplicationsView({
       </div>;
   }
   return <div className="flex h-full">
-      {/* Applications List - Left Column */}
-      <div className="w-80 border-r border-border flex flex-col">
+      {/* Applications List - Left Column (hidden on mobile when detail is shown) */}
+      <div className={`w-full md:w-80 border-r border-border flex flex-col ${mobileShowDetail ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-semibold">Applications</h3>
@@ -331,7 +342,7 @@ export function CampaignApplicationsView({
               addSuffix: true
             });
             const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
-            return <button key={app.id} onClick={() => setSelectedAppId(app.id)} className={`w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted" : ""}`}>
+            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted md:bg-muted" : "md:hover:bg-muted/50"}`}>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={app.profile?.avatar_url || ""} />
@@ -344,7 +355,7 @@ export function CampaignApplicationsView({
                           <p className="font-medium tracking-[-0.5px] truncate">
                             {app.profile?.full_name || app.profile?.username || "Unknown"}
                           </p>
-                          {app.status !== 'pending'}
+                          {app.status !== 'pending' && getStatusBadge(app.status)}
                         </div>
                         <p className="text-xs text-muted-foreground tracking-[-0.5px]">
                           {capitalizedTime}
@@ -357,16 +368,25 @@ export function CampaignApplicationsView({
         </ScrollArea>
       </div>
 
-      {/* Application Details - Right Column */}
-      <div className="flex-1 flex flex-col relative">
+      {/* Application Details - Right Column (hidden on mobile when list is shown) */}
+      <div className={`flex-1 flex flex-col relative ${mobileShowDetail ? 'flex' : 'hidden md:flex'}`}>
         {selectedApp ? <>
-            <div className="flex-1 overflow-auto p-6 pb-24">
+            <div className="flex-1 overflow-auto p-4 md:p-6 pb-24">
               <div className="space-y-5">
+                {/* Mobile Back Button */}
+                <button 
+                  onClick={handleMobileBack}
+                  className="flex md:hidden items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-sm font-medium">Back to applications</span>
+                </button>
+
                 {/* Creator Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    {/* Navigation Arrows */}
-                    <div className="items-center gap-1 flex flex-col">
+                    {/* Navigation Arrows - Hidden on mobile */}
+                    <div className="items-center gap-1 hidden md:flex flex-col">
                       <button onClick={() => {
                     const currentIndex = filteredApplications.findIndex(a => a.id === selectedApp.id);
                     if (currentIndex > 0) {
@@ -390,11 +410,11 @@ export function CampaignApplicationsView({
                         {selectedApp.profile?.username?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="space-y-0.5">
-                      <h2 className="text-base font-semibold tracking-[-0.5px]">
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <h2 className="text-base font-semibold tracking-[-0.5px] truncate">
                         {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
                       </h2>
-                      <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+                      <p className="text-sm text-muted-foreground tracking-[-0.3px] truncate">
                         @{selectedApp.profile?.username}
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
@@ -403,7 +423,7 @@ export function CampaignApplicationsView({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground hidden sm:flex"
                       onClick={(e) => {
                         e.stopPropagation();
                         const creatorId = selectedApp.creator_id || selectedApp.user_id;
@@ -462,20 +482,20 @@ export function CampaignApplicationsView({
 
             {/* Action Buttons - Fixed at bottom (only show for pending applications) */}
             {selectedApp.status === 'pending' && <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button onClick={() => {
               const creatorId = selectedApp.creator_id || selectedApp.user_id;
               if (creatorId && workspace) {
                 navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=messages&creator=${creatorId}`);
               }
-            }} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100">
+            }} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-white text-black hover:bg-gray-100 order-3 sm:order-1">
                     Message
                   </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400">
+                  <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
                     <X className="h-4 w-4 mr-2" />
                     Reject
                   </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-1 sm:order-3">
                     <Check className="h-4 w-4 mr-2" />
                     Accept
                   </Button>
