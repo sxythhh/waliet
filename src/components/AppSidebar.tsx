@@ -390,13 +390,13 @@ export function AppSidebar() {
   return <>
       {/* Mobile Header - Top */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-10 flex h-14 items-center justify-between bg-background px-4">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link to="/" className="flex items-center gap-0 hover:opacity-80 transition-opacity">
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
           <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
         </Link>
         <div className="flex items-center gap-2">
           {/* Wallet Dropdown - Mobile (for creators, or brands with active plan) */}
-          {(isCreatorMode || (!isCreatorMode && currentBrandSubscriptionStatus === "active")) && <WalletDropdown variant="header" />}
+          {(isCreatorMode || !isCreatorMode && currentBrandSubscriptionStatus === "active") && <WalletDropdown variant="header" />}
           {/* Upgrade Plan Button - Mobile (only for brands without active plan) */}
           {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
