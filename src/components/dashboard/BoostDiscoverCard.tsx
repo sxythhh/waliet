@@ -70,7 +70,7 @@ export function BoostDiscoverCard({
             <img src={videosIcon} alt="" className="w-3 h-3" />
             {videos_per_month} {videos_per_month === 1 ? 'video' : 'videos'}
           </span>
-          <span className={`flex items-center gap-1 ${isFull ? "text-neutral-400 dark:text-neutral-500" : ""}`}>
+          <span className="text-neutral-500">
             <img src={personIcon} alt="" className="w-3 h-3" />
             {spotsRemaining > 0 ? `${spotsRemaining} spots remaining` : "Full"}
           </span>
