@@ -430,7 +430,7 @@ export function TeamsSection(): JSX.Element {
       <div className="space-y-6">
         {/* Team Header */}
         <Card className="bg-card">
-          <CardContent className="py-6">
+          <CardContent className="p-0">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="relative group">
