@@ -406,16 +406,10 @@ export function BrandCampaignsTab({
         }} />
           </div>
 
-          {/* Action Cards & Embed Group */}
-          <div className="flex flex-col gap-[5px] mt-4 -mb-[8px]">
-            {/* Action Cards */}
-            {campaigns.length === 0 && bounties.length === 0}
-
-            {/* Subscription Required CTA and Embed - Only show if not subscribed and in dark mode */}
-            {subscriptionStatus !== "active" && resolvedTheme === "dark" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden">
-                <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
-              </div>}
-          </div>
+          {/* Subscription Required CTA and Embed - Only show if not subscribed and in dark mode */}
+          {subscriptionStatus !== "active" && resolvedTheme === "dark" && <div className="w-full h-[440px] sm:h-[250px] rounded-xl overflow-hidden mt-4">
+              <iframe src="https://join.virality.gg/pickplan-4" className="w-full h-full border-0" title="Pick Plan" />
+            </div>}
 
           {/* Combined Campaigns & Boosts Grid */}
           {(campaigns.length > 0 || bounties.length > 0) && <div className="space-y-3 mt-4">
