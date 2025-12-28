@@ -527,7 +527,7 @@ export function UserSettingsTab() {
 
                   {/* Upload/Remove Buttons */}
                   <div className="flex items-center gap-1">
-                    <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
+                    <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-muted dark:bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-muted/80 dark:hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
                       <Upload className="h-3 w-3" />
                       {brand.logo_url ? 'Change' : 'Upload'}
                       <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
