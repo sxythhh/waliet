@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import wordmarkLogo from "@/assets/wordmark.ai.png";
 import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
-import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Share2, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
@@ -1812,9 +1812,7 @@ export function WalletTab() {
                 <button onClick={() => setTransactionSheetOpen(false)} className="absolute top-4 right-4 md:hidden p-2 rounded-full bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
-                <div className={`text-4xl font-bold tracking-[-0.5px] mb-2 ${selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? 'text-green-500' : selectedTransaction.type === 'balance_correction' ? 'text-orange-500' : 'text-red-500'}`}>
-                  {selectedTransaction.type === 'earning' || selectedTransaction.type === 'boost_earning' || selectedTransaction.type === 'transfer_received' || selectedTransaction.type === 'referral' ? '+' : selectedTransaction.amount < 0 ? '-' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
-                </div>
+                
                 
                 {selectedTransaction.status && selectedTransaction.status !== 'completed' && <Badge variant={selectedTransaction.status === 'rejected' ? 'destructive' : selectedTransaction.status === 'in_transit' ? 'default' : 'secondary'} className="capitalize">
                     {selectedTransaction.status === 'in_transit' && <Hourglass className="h-3 w-3 mr-1" />}
@@ -1990,7 +1988,7 @@ export function WalletTab() {
               {/* Fixed Share Button */}
               <div className="sticky bottom-0 left-0 right-0 p-4 bg-background border-t border-border mt-auto">
                 <Button onClick={() => setShareDialogOpen(true)} className="w-full gap-2">
-                  <Share2 className="h-4 w-4" />
+                  
                   Share Transaction
                 </Button>
               </div>
