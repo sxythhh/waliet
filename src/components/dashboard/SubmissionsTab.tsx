@@ -776,10 +776,10 @@ export function SubmissionsTab() {
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="text-sm font-medium tabular-nums cursor-default" style={{
+                                <span style={{
                             fontFamily: 'Inter',
                             letterSpacing: '-0.3px'
-                          }}>
+                          }} className="text-sm font-medium tabular-nums cursor-default tracking-tighter">
                                   {formatNumber(submission.views)}
                                 </span>
                               </TooltipTrigger>
