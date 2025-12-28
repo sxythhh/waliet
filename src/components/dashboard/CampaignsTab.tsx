@@ -652,7 +652,7 @@ export function CampaignsTab({
   const hasNoCampaigns = campaigns.length === 0;
   const hasJoinedCampaigns = campaigns.length > 0;
   const shouldHideActionCards = hasJoinedCampaigns && hasPaymentMethod;
-  return <div className={`space-y-6 pt-6 ${className || ''}`}>
+  return <div className={`space-y-4 pt-6 ${className || ''}`}>
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
