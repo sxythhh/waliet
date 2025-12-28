@@ -270,33 +270,30 @@ export function ReferralsTab(): JSX.Element {
   ];
 
   return (
-    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-6 w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-border">
-        <nav className="flex gap-0">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${
-                activeTab === tab.id 
-                  ? "border-primary text-foreground" 
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
+    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 w-full">
       {/* Content Wrapper with Border and Rounded Corners */}
-      <div className="border border-border rounded-2xl p-[10px]">
+      <div className="border border-border rounded-2xl overflow-hidden">
+        {/* Tab Navigation inside the border */}
+        <div className="border-b border-border px-[10px] pt-[10px]">
+          <nav className="flex gap-0">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${
+                  activeTab === tab.id 
+                    ? "border-primary text-foreground" 
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-[10px]">
         {activeTab === 'team' ? (
           /* Team Tab Content */
           <div className="space-y-6">
@@ -513,6 +510,7 @@ export function ReferralsTab(): JSX.Element {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
