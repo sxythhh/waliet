@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { format, subDays, subMonths } from "date-fns";
+import { TeamsSection } from "./TeamsSection";
 interface Milestone {
   id: string;
   milestone_type: string;
@@ -263,11 +264,17 @@ export function ReferralsTab(): JSX.Element {
   return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 space-y-6 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
-        
+        <h1 className="text-2xl font-semibold tracking-tight">Referrals</h1>
         
       </div>
 
       <div className="space-y-8">
+
+      {/* Teams Section */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">My Team</h2>
+        <TeamsSection />
+      </div>
 
       {/* Chart and Referral Link Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
