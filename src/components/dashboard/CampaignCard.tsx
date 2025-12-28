@@ -67,20 +67,20 @@ export function CampaignCard({
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <div 
-              className="absolute inset-0 w-full h-full flex items-center justify-center"
-              style={{ backgroundColor: brand_color || 'hsl(var(--muted))' }}
-            >
-              {brand_logo_url && (
-                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">
-                  <OptimizedImage
-                    src={brand_logo_url}
-                    alt={brand_name}
-                    className="w-full h-full object-contain rounded-2xl"
-                  />
-                </div>
-              )}
-            </div>
+          <div 
+            className="absolute inset-0 w-full h-full flex items-center justify-center"
+            style={{ backgroundColor: brand_color || undefined }}
+          >
+            {brand_logo_url && (
+              <div className="w-14 h-14 rounded-xl overflow-hidden shadow-lg">
+                <OptimizedImage
+                  src={brand_logo_url}
+                  alt={brand_name}
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              </div>
+            )}
+          </div>
           )}
 
           {/* Gradient Overlay for text readability */}
