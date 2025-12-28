@@ -92,19 +92,19 @@ export function AllocateBudgetDialog({
   const fetchData = async () => {
     setFetchingData(true);
     try {
-      // Fetch campaigns
+      // Fetch campaigns (all non-deleted campaigns can be funded)
       const { data: campaignsData } = await supabase
         .from('campaigns')
-        .select('id, title, budget')
+        .select('id, title, budget, status')
         .eq('brand_id', brandId)
-        .eq('status', 'active');
+        .neq('status', 'deleted');
 
-      // Fetch boosts
+      // Fetch boosts (all non-deleted boosts can be funded)
       const { data: boostsData } = await supabase
         .from('bounty_campaigns')
-        .select('id, title, budget')
+        .select('id, title, budget, status')
         .eq('brand_id', brandId)
-        .eq('status', 'active');
+        .neq('status', 'deleted');
 
       const allItems: FundingItem[] = [
         ...(campaignsData || []).map(c => ({ ...c, type: 'campaign' as const })),
