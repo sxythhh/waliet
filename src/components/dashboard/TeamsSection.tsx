@@ -501,42 +501,30 @@ export function TeamsSection(): JSX.Element {
       <div className="space-y-6">
         {/* Team Header */}
         <Card className="bg-card">
-          <CardContent className="p-0">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="relative group">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={myTeam.image_url || undefined} />
-                    <AvatarFallback className="bg-muted text-2xl">
-                      {myTeam.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <button
-                    onClick={openEditTeamDialog}
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Pencil className="h-4 w-4 text-white" />
-                  </button>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-xl">{myTeam.name}</h3>
-                    <button
-                      onClick={openEditTeamDialog}
-                      className="p-1 rounded-md hover:bg-muted transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" />
-                    {teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="relative group">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={myTeam.image_url || undefined} />
+                  <AvatarFallback className="bg-[#8B5CF6] text-white text-sm font-semibold font-inter">
+                    {myTeam.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={openEditTeamDialog}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Pencil className="h-3 w-3 text-white" />
+                </button>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Earnings</p>
-                <p className="text-2xl font-bold text-green-500">${totalTeamEarnings.toFixed(2)}</p>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-base font-inter tracking-[-0.5px]">{myTeam.name}</h3>
+                <button
+                  onClick={openEditTeamDialog}
+                  className="p-1 rounded-md hover:bg-muted transition-colors"
+                >
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </button>
               </div>
             </div>
 
