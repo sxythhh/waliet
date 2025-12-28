@@ -913,10 +913,10 @@ export function BlueprintEditor({
                 </span>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={() => window.open(`/blueprint/${blueprintId}/preview`, '_blank')} className="p-2 rounded-md border border-border text-white transition-colors px-[4px] py-[4px] bg-warning-foreground">
+              <button onClick={() => window.open(`/blueprint/${blueprintId}/preview`, '_blank')} className="p-2 rounded-md border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
                 <img src={playArrowIcon} alt="Preview" className="h-6 w-6" />
               </button>
-              <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-white border border-border text-bold font-['Inter'] font-bold tracking-[-0.4px] text-xs sm:text-sm hover:bg-white/90 transition-opacity">
+              <button onClick={activateBlueprint} className="px-3 sm:px-4 py-2 rounded-md bg-primary text-primary-foreground border border-primary/20 font-['Inter'] font-bold tracking-[-0.4px] text-xs sm:text-sm hover:bg-primary/90 transition-colors">
                 Publish
               </button>
             </div>
