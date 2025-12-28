@@ -887,9 +887,9 @@ export function BlueprintEditor({
   if (!blueprint) return null;
   return <>
       <div className="h-full p-[5px]">
-        <div className="h-full flex flex-col bg-background border border-[#141414] rounded-[20px] overflow-hidden">
+        <div className="h-full flex flex-col bg-background border border-border rounded-[20px] overflow-hidden">
           {/* Header - Fixed */}
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-2 sm:py-2.5 bg-background border-b border-[#141414] px-3 sm:px-[14px]">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-2 py-2 sm:py-2.5 bg-background border-b border-border px-3 sm:px-[14px]">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
               
               <div className="h-4 w-px bg-border/50 shrink-0" />
