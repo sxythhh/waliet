@@ -703,34 +703,42 @@ export function TeamsSection(): JSX.Element {
 
         {/* Edit Member Commission Dialog */}
         <Dialog open={editMemberOpen} onOpenChange={setEditMemberOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Commission Rate</DialogTitle>
-              <DialogDescription>
-                Set the percentage of earnings you receive from this member.
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+            {/* Header */}
+            <div className="px-6 pt-6">
+              <DialogHeader className="space-y-1">
+                <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
+                  Edit Commission Rate
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
+                  Set the percentage of earnings you receive from this member.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
 
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12">
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5">
+              {/* Member Info */}
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedMember?.profile?.avatar_url || undefined} />
-                  <AvatarFallback>
+                  <AvatarFallback className="bg-[#8B5CF6] text-white text-sm font-semibold font-inter">
                     {selectedMember?.profile?.username?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">@{selectedMember?.profile?.username}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-sm font-inter tracking-[-0.5px]">@{selectedMember?.profile?.username}</p>
+                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                     Current rate: {((selectedMember?.commission_rate || 0) * 100).toFixed(0)}%
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              {/* Commission Slider */}
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label>Commission Rate</Label>
-                  <span className="text-2xl font-bold">{commissionRate}%</span>
+                  <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">Commission Rate</Label>
+                  <span className="text-lg font-semibold font-inter tracking-[-0.5px]">{commissionRate}%</span>
                 </div>
                 <Slider
                   value={[commissionRate]}
@@ -740,21 +748,38 @@ export function TeamsSection(): JSX.Element {
                   step={1}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                   You'll receive {commissionRate}% of this member's campaign earnings
                 </p>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditMemberOpen(false)}>
+            {/* Footer */}
+            <div className="px-6 pb-6 flex items-center justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setEditMemberOpen(false)} 
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateCommission} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+              <Button 
+                onClick={handleUpdateCommission} 
+                disabled={saving}
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg"
+              >
+                {saving ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Saving...
+                  </span>
+                ) : "Save Changes"}
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
 
