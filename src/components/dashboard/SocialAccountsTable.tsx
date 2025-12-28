@@ -15,6 +15,7 @@ import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import demographicsIcon from "@/assets/demographics-icon.svg";
+import demographicsRequiredIcon from "@/assets/demographics-required-icon.svg";
 interface Campaign {
   id: string;
   title: string;
@@ -195,8 +196,8 @@ export function SocialAccountsTable({
                 id: account.id,
                 platform: account.platform,
                 username: account.username
-              })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
-                      <AlertCircle className="h-3 w-3" />
+              })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors">
+                      <img src={demographicsRequiredIcon} alt="" className="h-3 w-3" />
                       Required
                     </button> : <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={connectedCampaigns.map(c => c.campaign.id)} onSubmitNew={() => onSubmitDemographics({
                 id: account.id,
