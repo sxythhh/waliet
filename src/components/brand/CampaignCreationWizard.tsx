@@ -261,10 +261,10 @@ export function CampaignCreationWizard({
     isAdmin
   } = useAdminCheck();
 
-  // Fetch brand's available balance and subscription status
+  // Fetch user's personal balance and subscription status
   useEffect(() => {
-    const fetchBrandData = async () => {
-      if (open && brandId) {
+    const fetchUserData = async () => {
+      if (open) {
         setLoadingBalance(true);
         try {
           const {
@@ -274,31 +274,29 @@ export function CampaignCreationWizard({
           } = await supabase.auth.getSession();
           if (!session) return;
 
-          // Fetch balance
+          // Fetch user's personal balance from wallets table
           const {
-            data,
-            error
-          } = await supabase.functions.invoke('get-brand-balance', {
-            body: {
-              brand_id: brandId
-            }
-          });
-          if (error) throw error;
-          setAvailableBalance(data?.virality_balance || 0);
+            data: walletData,
+            error: walletError
+          } = await supabase.from('wallets').select('balance').eq('user_id', session.user.id).single();
+          if (walletError && walletError.code !== 'PGRST116') throw walletError;
+          setAvailableBalance(walletData?.balance || 0);
 
-          // Fetch subscription status
-          const {
-            data: brandData
-          } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
-          setSubscriptionStatus(brandData?.subscription_status || null);
+          // Fetch subscription status if brandId is provided
+          if (brandId) {
+            const {
+              data: brandData
+            } = await supabase.from('brands').select('subscription_status').eq('id', brandId).single();
+            setSubscriptionStatus(brandData?.subscription_status || null);
+          }
         } catch (error) {
-          console.error('Error fetching brand data:', error);
+          console.error('Error fetching user data:', error);
         } finally {
           setLoadingBalance(false);
         }
       }
     };
-    fetchBrandData();
+    fetchUserData();
   }, [open, brandId]);
 
   // Initialize manual budget used with current value
@@ -780,7 +778,7 @@ export function CampaignCreationWizard({
                     <div className="p-4 rounded-xl bg-primary/5">
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Virality Balance</p>
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Personal Balance</p>
                           <p className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
                             {loadingBalance ? "Loading..." : `$${availableBalance.toLocaleString('en-US', {
                           minimumFractionDigits: 2,
