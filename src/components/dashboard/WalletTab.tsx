@@ -1459,7 +1459,7 @@ export function WalletTab() {
                   <TableHeader>
                     <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                       <TableHead className="text-foreground font-medium text-sm h-12">Source</TableHead>
-                      <TableHead className="text-foreground font-medium text-sm h-12">Type</TableHead>
+                      <TableHead className="text-foreground font-medium text-sm h-12">Destination</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12">Processed</TableHead>
                       <TableHead className="text-foreground font-medium text-sm h-12 text-right">Amount</TableHead>
@@ -1502,10 +1502,10 @@ export function WalletTab() {
                             </div> : <span className="text-sm text-muted-foreground">-</span>}
                         </TableCell>
                         
-                        {/* Type */}
+                        {/* Destination */}
                         <TableCell className="py-4">
                           <span className="text-sm text-muted-foreground">
-                            {transaction.type === 'boost_earning' ? 'Boost Payout' : transaction.type === 'earning' ? 'Campaign Payout' : transaction.type === 'withdrawal' ? 'Withdrawal' : transaction.type === 'referral' ? 'Referral Bonus' : transaction.type === 'balance_correction' ? 'Balance Correction' : transaction.type === 'transfer_sent' ? 'Transfer Sent' : transaction.type === 'transfer_received' ? 'Transfer Received' : 'Other'}
+                            {transaction.destination || 'Wallet'}
                           </span>
                         </TableCell>
                         
