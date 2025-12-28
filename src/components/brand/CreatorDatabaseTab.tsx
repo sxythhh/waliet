@@ -1561,18 +1561,6 @@ export function CreatorDatabaseTab({
 
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
-            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors" onClick={e => {
-            e.stopPropagation();
-            handleViewProfile(selectedCreatorPanel);
-          }}>
-              View Profile
-            </button>
-            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/60 text-foreground rounded-lg hover:bg-muted transition-colors" onClick={e => {
-            e.stopPropagation();
-            handleSendMessage(selectedCreatorPanel);
-          }}>
-              Send Message
-            </button>
             {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
               <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
                 e.stopPropagation();
