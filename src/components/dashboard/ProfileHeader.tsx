@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
-import { Camera, Upload, Pencil, Users, Grid3X3, Eye, FileText, X, Plus, ExternalLink, Check, HelpCircle } from "lucide-react";
+import { Camera, Upload, Pencil, Users, Grid3X3, Eye, FileText, X, Plus, ExternalLink, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -333,21 +333,10 @@ export function ProfileHeader({
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
                 {profile?.full_name || profile?.username || "Username"}
               </h2>
-              {profile && (
-                <div 
-                  className="relative flex items-center gap-1 cursor-pointer group"
-                  onMouseEnter={() => setIsRankHovered(true)}
-                  onMouseLeave={() => setIsRankHovered(false)}
-                  onClick={() => setShowRankInfo(true)}
-                >
+              {profile && <div className="relative flex items-center gap-1 cursor-pointer group" onMouseEnter={() => setIsRankHovered(true)} onMouseLeave={() => setIsRankHovered(false)} onClick={() => setShowRankInfo(true)}>
                   <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />
-                  <HelpCircle 
-                    className={`h-3.5 w-3.5 text-muted-foreground transition-opacity duration-200 ${
-                      isRankHovered ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  />
-                </div>
-              )}
+                  
+                </div>}
               <span className="text-muted-foreground text-sm">
                 @{profile?.username || "username"}
               </span>
@@ -377,12 +366,7 @@ export function ProfileHeader({
 
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
       
-      <RankInfoDialog 
-        open={showRankInfo} 
-        onOpenChange={setShowRankInfo}
-        currentRank={profile?.current_rank || 'Bronze'}
-        currentLevel={profile?.current_level || 1}
-      />
+      <RankInfoDialog open={showRankInfo} onOpenChange={setShowRankInfo} currentRank={profile?.current_rank || 'Bronze'} currentLevel={profile?.current_level || 1} />
       
       {tempBannerUrl && <BannerCropDialog open={showCropDialog} onOpenChange={open => {
       setShowCropDialog(open);
