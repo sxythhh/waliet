@@ -403,7 +403,7 @@ export function BrandWalletTab({
       fetchTransactions();
     }} />
 
-      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} availableBalance={walletData?.virality_balance || 0} onSuccess={() => {
+      <AllocateBudgetDialog open={allocateOpen} onOpenChange={setAllocateOpen} brandId={brandId} onSuccess={() => {
       fetchWalletData();
       fetchTransactions();
     }} />

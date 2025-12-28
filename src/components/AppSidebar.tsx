@@ -813,10 +813,10 @@ export function AppSidebar() {
           </Popover>
         </div>
 
-        {/* Wallet Dropdown - Desktop Sidebar (Creator Mode Only) */}
-        {isCreatorMode && <div className={`px-2 pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        {/* Wallet Dropdown - Desktop Sidebar */}
+        <div className={`px-2 pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
             <WalletDropdown variant="sidebar" isCollapsed={isCollapsed} />
-          </div>}
+          </div>
       </aside>
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
       fetchBrandMemberships();

@@ -16,7 +16,7 @@ import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
-import { BrandWalletTab } from "./BrandWalletTab";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -918,8 +918,6 @@ export function UserSettingsTab() {
             })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
-          {/* Brand Wallet Section */}
-          {isBrandMode && brand && <BrandWalletTab brandId={brand.id} brandSlug={brand.slug} />}
 
           
 
