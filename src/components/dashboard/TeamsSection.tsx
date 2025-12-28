@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Copy, Check, Users, Crown, UserPlus, Settings, Trash2, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
 
 interface Team {
   id: string;
@@ -49,6 +50,8 @@ export function TeamsSection(): JSX.Element {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [membershipInfo, setMembershipInfo] = useState<MembershipInfo | null>(null);
   const [totalTeamEarnings, setTotalTeamEarnings] = useState(0);
+  const [myCommissionEarnings, setMyCommissionEarnings] = useState(0);
+  const [earningsChartData, setEarningsChartData] = useState<{ month: string; team: number; personal: number }[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Dialog states
@@ -90,6 +93,8 @@ export function TeamsSection(): JSX.Element {
       setMyTeam(ownedTeam);
       await fetchTeamMembers(ownedTeam.id);
       await fetchTotalTeamEarnings(ownedTeam.id);
+      await fetchMyCommissionEarnings(user.id);
+      await fetchEarningsChartData(ownedTeam.id, user.id);
     } else {
       // Check if user is a member of a team
       const { data: membership } = await supabase
@@ -171,6 +176,62 @@ export function TeamsSection(): JSX.Element {
 
     const total = data?.reduce((sum, e) => sum + Number(e.commission_amount), 0) || 0;
     setTotalTeamEarnings(total);
+  };
+
+  const fetchMyCommissionEarnings = async (userId: string) => {
+    const { data } = await supabase
+      .from("wallet_transactions")
+      .select("amount")
+      .eq("user_id", userId)
+      .eq("type", "referral");
+
+    const total = data?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+    setMyCommissionEarnings(total);
+  };
+
+  const fetchEarningsChartData = async (teamId: string, userId: string) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    
+    // Get last 6 months
+    const chartData: { month: string; team: number; personal: number }[] = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const monthIndex = (currentMonth - i + 12) % 12;
+      const year = currentMonth - i < 0 ? now.getFullYear() - 1 : now.getFullYear();
+      const monthStart = new Date(year, monthIndex, 1).toISOString();
+      const monthEnd = new Date(year, monthIndex + 1, 0, 23, 59, 59).toISOString();
+      
+      // Fetch team earnings for this month
+      const { data: teamData } = await supabase
+        .from("team_earnings")
+        .select("commission_amount")
+        .eq("team_id", teamId)
+        .gte("created_at", monthStart)
+        .lte("created_at", monthEnd);
+      
+      const teamTotal = teamData?.reduce((sum, e) => sum + Number(e.commission_amount), 0) || 0;
+      
+      // Fetch personal referral earnings for this month
+      const { data: personalData } = await supabase
+        .from("wallet_transactions")
+        .select("amount")
+        .eq("user_id", userId)
+        .eq("type", "referral")
+        .gte("created_at", monthStart)
+        .lte("created_at", monthEnd);
+      
+      const personalTotal = personalData?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+      
+      chartData.push({
+        month: months[monthIndex],
+        team: Number(teamTotal.toFixed(2)),
+        personal: Number(personalTotal.toFixed(2))
+      });
+    }
+    
+    setEarningsChartData(chartData);
   };
 
   const handleCreateTeam = async () => {
@@ -490,7 +551,82 @@ export function TeamsSection(): JSX.Element {
           </CardContent>
         </Card>
 
-        {/* Team Members */}
+        {/* Earnings Comparison Chart */}
+        <Card className="bg-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h4 className="font-semibold text-sm">Earnings Comparison</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">Team vs Personal Commission (Last 6 months)</p>
+              </div>
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                  <span className="text-muted-foreground">Team</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
+                  <span className="text-muted-foreground">Personal</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={earningsChartData} barGap={4}>
+                  <XAxis 
+                    dataKey="month" 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                    tickFormatter={(value) => `$${value}`}
+                    width={45}
+                  />
+                  <RechartsTooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5">
+                            <p className="text-xs font-medium mb-1.5">{label}</p>
+                            <div className="space-y-1">
+                              <p className="text-xs flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-sm bg-emerald-500" />
+                                Team: ${Number(payload[0]?.value || 0).toFixed(2)}
+                              </p>
+                              <p className="text-xs flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-sm bg-blue-500" />
+                                Personal: ${Number(payload[1]?.value || 0).toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                    cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
+                  />
+                  <Bar 
+                    dataKey="team" 
+                    fill="#10b981" 
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={32}
+                  />
+                  <Bar 
+                    dataKey="personal" 
+                    fill="#3b82f6" 
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={32}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="bg-card">
           <CardContent className="p-6">
             <h4 className="font-semibold mb-4 flex items-center gap-2">
