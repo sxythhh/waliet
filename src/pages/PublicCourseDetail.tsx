@@ -1,13 +1,9 @@
 import { Link, useParams } from "react-router-dom";
-import { LogOut, ChevronRight, ExternalLink, Check } from "lucide-react";
+import { ChevronRight, ExternalLink, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthDialog from "@/components/AuthDialog";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
-import blueprintsMenuIcon from "@/assets/blueprints-menu-icon.svg";
-import campaignsMenuIcon from "@/assets/campaigns-menu-icon.svg";
-import boostsMenuIcon from "@/assets/boosts-menu-icon.svg";
 import arrowBackIcon from "@/assets/arrow-back-icon.svg";
 import checkboxChecked from "@/assets/checkbox-checked.svg";
 import checkboxUnchecked from "@/assets/checkbox-unchecked.svg";
@@ -159,9 +155,9 @@ export default function PublicCourseDetail() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col bg-[#0a0a0a]">
+      <div className="h-screen flex flex-col bg-background">
         <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-white/60">Loading course...</div>
+          <div className="animate-pulse text-muted-foreground">Loading course...</div>
         </div>
       </div>
     );
@@ -169,135 +165,43 @@ export default function PublicCourseDetail() {
 
   if (!course) {
     return (
-      <div className="h-screen flex flex-col bg-[#0a0a0a]">
+      <div className="h-screen flex flex-col bg-background">
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-white/60">Course not found</div>
+          <div className="text-muted-foreground">Course not found</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0a]">
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-2">
-                <img alt="Virality" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-                <span className="text-lg font-clash font-semibold text-white">VIRALITY</span>
-              </Link>
-              
-              <div className="hidden md:flex items-center gap-1">
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent text-white/80 hover:text-white hover:bg-[#1a1a1a] font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-[#1a1a1a]">
-                        Product
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-[#0a0a0a] border border-white/10 rounded-xl shadow-2xl">
-                          <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                              <img src={blueprintsMenuIcon} alt="" className="w-5 h-5" />
-                              <div>
-                                <div className="font-medium text-white">Blueprints</div>
-                                <div className="text-xs text-white/50">Campaign templates & briefs</div>
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                              <img src={campaignsMenuIcon} alt="" className="w-5 h-5" />
-                              <div>
-                                <div className="font-medium text-white">Campaigns</div>
-                                <div className="text-xs text-white/50">RPM-based creator programs</div>
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                          <NavigationMenuLink asChild>
-                            <Link to="/dashboard?tab=discover" className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors">
-                              <img src={boostsMenuIcon} alt="" className="w-5 h-5" />
-                              <div>
-                                <div className="font-medium text-white">Boosts</div>
-                                <div className="text-xs text-white/50">Fixed-rate video bounties</div>
-                              </div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </div>
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
-                
-                <Link to="/resources" className="px-3 py-2 text-sm text-white font-inter tracking-[-0.5px]">
-                  Resources
-                </Link>
-                
-                <Link to="/new" className="px-3 py-2 text-sm text-white/80 hover:text-white font-inter tracking-[-0.5px]">
-                  Contact
-                </Link>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {isAuthenticated ? (
-                <>
-                  <Link to="/dashboard">
-                    <Button size="sm" className="font-inter tracking-[-0.3px] font-medium bg-[#2060df] hover:bg-[#2060df]/90 border-t border-[#4f89ff] text-white">
-                      Dashboard
-                    </Button>
-                  </Link>
-                  <Button variant="ghost" size="sm" onClick={async () => {
-                    await supabase.auth.signOut();
-                  }} className="font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-white hover:bg-destructive/20 gap-1.5 rounded-xl">
-                    <LogOut className="h-4 w-4" />
-                    Sign Out
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" size="sm" className="font-geist font-medium tracking-[-0.5px] hover:bg-transparent hover:text-foreground px-[10px] rounded-3xl text-white/80" onClick={() => setShowAuthDialog(true)}>
-                    Sign In
-                  </Button>
-                  <Button size="sm" onClick={() => setShowAuthDialog(true)} className="font-geist font-medium tracking-[-0.5px] px-5 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl">
-                    Create Account
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="h-screen flex flex-col bg-background">
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-14">
+      <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Back Button */}
-          <Link to="/resources" className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-white/5 hover:bg-white/10 border rounded-full text-white/80 hover:text-white font-inter tracking-[-0.5px] text-sm transition-all border-white/0">
-            <img src={arrowBackIcon} alt="" className="w-4 h-4" />
+          <Link to="/resources" className="inline-flex items-center gap-2 px-4 py-2 mb-6 bg-muted hover:bg-muted/80 border border-border rounded-full text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px] text-sm transition-all">
+            <img src={arrowBackIcon} alt="" className="w-4 h-4 dark:invert" />
             All Resources
           </Link>
 
           {/* Course Header */}
           <div className="mb-8">
-            <span className="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-inter tracking-[-0.5px] mb-4">
+            <span className="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-inter tracking-[-0.5px] mb-4">
               Course
             </span>
-            <h1 className="text-3xl md:text-4xl font-inter tracking-[-0.5px] font-semibold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-inter tracking-[-0.5px] font-semibold text-foreground mb-2">
               {course.title}
             </h1>
             {course.description && (
-              <p className="text-white/60 font-inter tracking-[-0.5px] max-w-2xl">
+              <p className="text-muted-foreground font-inter tracking-[-0.5px] max-w-2xl">
                 {course.description}
               </p>
             )}
             <div className="flex items-center gap-4 mt-4">
               <div className="flex-1 max-w-xs">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-white/50">{completedModules.size} / {modules.length} lessons completed</span>
-                  <span className="text-white/70">{Math.round(progressPercentage)}%</span>
+                  <span className="text-muted-foreground">{completedModules.size} / {modules.length} lessons completed</span>
+                  <span className="text-muted-foreground">{Math.round(progressPercentage)}%</span>
                 </div>
                 <Progress value={progressPercentage} className="h-2" />
               </div>
@@ -308,8 +212,8 @@ export default function PublicCourseDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Module List - Sidebar */}
             <div className="lg:col-span-1 order-1 lg:order-1">
-              <div className="bg-[#111] rounded-xl p-4 sticky top-20">
-                <h3 className="text-white font-inter tracking-[-0.5px] font-medium mb-4">
+              <div className="bg-card border border-border rounded-xl p-4 sticky top-20">
+                <h3 className="text-foreground font-inter tracking-[-0.5px] font-medium mb-4">
                   Course Content
                 </h3>
                 <div className="space-y-2">
@@ -319,14 +223,14 @@ export default function PublicCourseDetail() {
                       onClick={() => setSelectedModule(module)}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
                         selectedModule?.id === module.id
-                          ? 'bg-white/10 text-white'
-                          : 'hover:bg-white/5 text-white/70'
+                          ? 'bg-muted text-foreground'
+                          : 'hover:bg-muted/50 text-muted-foreground'
                       }`}
                     >
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                         completedModules.has(module.id)
-                          ? 'bg-emerald-500/20 text-emerald-400'
-                          : 'bg-white/10 text-white/50'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-muted text-muted-foreground'
                       }`}>
                         {completedModules.has(module.id) ? (
                           <Check className="w-4 h-4" />
@@ -371,7 +275,7 @@ export default function PublicCourseDetail() {
                   {/* Module Title & Actions */}
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h2 className="text-2xl font-inter tracking-[-0.5px] font-semibold text-white mb-2">
+                      <h2 className="text-2xl font-inter tracking-[-0.5px] font-semibold text-foreground mb-2">
                         {selectedModule.title}
                       </h2>
                     </div>
@@ -396,7 +300,7 @@ export default function PublicCourseDetail() {
                   {/* Module Content */}
                   {selectedModule.content && (
                     <div 
-                      className="prose prose-invert prose-lg max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:text-white/80 [&_li]:text-white/80 [&_a]:text-primary"
+                      className="prose prose-neutral dark:prose-invert prose-lg max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:text-muted-foreground [&_li]:text-muted-foreground [&_a]:text-primary"
                       dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                     />
                   )}
@@ -404,7 +308,7 @@ export default function PublicCourseDetail() {
                   {/* Assets */}
                   {selectedModule.assets && selectedModule.assets.length > 0 && (
                     <div className="pt-6 mt-6">
-                      <h4 className="text-white font-inter tracking-[-0.5px] font-medium mb-4">
+                      <h4 className="text-foreground font-inter tracking-[-0.5px] font-medium mb-4">
                         Resources & Assets
                       </h4>
                       <div className="space-y-2">
@@ -414,7 +318,7 @@ export default function PublicCourseDetail() {
                             href={asset.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg text-white/80 hover:text-white transition-colors"
+                            className="flex items-center gap-3 p-3 bg-muted hover:bg-muted/80 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
                           >
                             <ExternalLink className="w-4 h-4 flex-shrink-0" />
                             <span className="font-inter tracking-[-0.5px] text-sm">
@@ -437,7 +341,7 @@ export default function PublicCourseDetail() {
                             setSelectedModule(modules[currentIndex - 1]);
                           }
                         }}
-                        className="text-white/70 hover:text-white"
+                        className="text-muted-foreground hover:text-foreground"
                       >
                         ← Previous Lesson
                       </Button>
@@ -459,7 +363,7 @@ export default function PublicCourseDetail() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-64 text-white/50">
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
                   Select a lesson to begin
                 </div>
               )}
