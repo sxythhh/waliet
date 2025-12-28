@@ -484,7 +484,7 @@ export function DiscoverTab({
             {!externalSetSearchOverlayOpen && <button onClick={() => setSearchOverlayOpen(true)} className="relative flex-1 sm:flex-none sm:w-72 text-left">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <div className="pl-9 h-9 bg-muted/30 border-0 rounded-lg text-sm text-muted-foreground/50 flex items-center">
-                  {searchQuery || 'Search campaigns...'}
+                  {searchQuery || 'Search..'}
                 </div>
               </button>}
 
