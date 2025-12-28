@@ -1,14 +1,24 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, CheckCircle2 } from "lucide-react";
+import { Upload, CheckCircle2, Clock, XCircle, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+
+interface DemographicSubmission {
+  id: string;
+  status: string;
+  submitted_at: string;
+  tier1_percentage: number;
+}
+
 interface SubmitDemographicsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -17,6 +27,7 @@ interface SubmitDemographicsDialogProps {
   platform: string;
   username: string;
 }
+
 export function SubmitDemographicsDialog({
   open,
   onOpenChange,
@@ -28,10 +39,39 @@ export function SubmitDemographicsDialog({
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [previousSubmissions, setPreviousSubmissions] = useState<DemographicSubmission[]>([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     toast
   } = useToast();
+
+  // Fetch previous submissions when dialog opens
+  useEffect(() => {
+    if (open && socialAccountId) {
+      fetchPreviousSubmissions();
+    }
+  }, [open, socialAccountId]);
+
+  const fetchPreviousSubmissions = async () => {
+    setLoadingSubmissions(true);
+    try {
+      const { data, error } = await supabase
+        .from('demographic_submissions')
+        .select('id, status, submitted_at, tier1_percentage')
+        .eq('social_account_id', socialAccountId)
+        .order('submitted_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setPreviousSubmissions(data || []);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
     switch (platform.toLowerCase()) {
@@ -45,6 +85,20 @@ export function SubmitDemographicsDialog({
         return null;
     }
   };
+
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return { label: 'Approved', icon: CheckCircle, className: 'bg-green-500/20 text-green-400 border-green-500/30' };
+      case 'rejected':
+        return { label: 'Rejected', icon: XCircle, className: 'bg-red-500/20 text-red-400 border-red-500/30' };
+      case 'pending':
+      default:
+        return { label: 'Pending', icon: Clock, className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
+    }
+  };
+
+  const hasPendingSubmission = previousSubmissions.some(s => s.status === 'pending');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoFile) {
@@ -225,9 +279,58 @@ export function SubmitDemographicsDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Account Info */}
+        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-border/50">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
+            {getPlatformIcon(platform)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              @{username}
+            </p>
+            <p className="text-xs text-muted-foreground capitalize">{platform}</p>
+          </div>
+        </div>
+
+        {/* Previous Submissions */}
+        {!loadingSubmissions && previousSubmissions.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Previous Submissions</Label>
+            <div className="space-y-2 max-h-[120px] overflow-y-auto">
+              {previousSubmissions.map((submission) => {
+                const statusConfig = getStatusConfig(submission.status);
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <div 
+                    key={submission.id} 
+                    className="flex items-center justify-between p-2 bg-muted/30 rounded-md border border-border/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      <StatusIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(submission.submitted_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${statusConfig.className}`}>
+                      {statusConfig.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {hasPendingSubmission && (
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-xs text-yellow-400" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+              You have a pending submission being reviewed. You cannot submit again until it's processed.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Account Display */}
-          
+
 
           {/* Video Upload */}
           <div className="space-y-2">
