@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Check, Users, Crown, UserPlus, Settings, Trash2, Upload, Loader2, DollarSign, Percent } from "lucide-react";
+import { Copy, Check, Users, Crown, UserPlus, Settings, Trash2, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 
@@ -53,6 +53,7 @@ export function TeamsSection(): JSX.Element {
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editTeamOpen, setEditTeamOpen] = useState(false);
   const [editMemberOpen, setEditMemberOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   
@@ -228,6 +229,65 @@ export function TeamsSection(): JSX.Element {
     setSaving(false);
   };
 
+  const handleEditTeam = async () => {
+    if (!myTeam || !teamName.trim()) {
+      toast.error("Please enter a team name");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      let imageUrl = myTeam.image_url;
+
+      // Upload new image if provided
+      if (teamImage) {
+        const fileExt = teamImage.name.split('.').pop();
+        const fileName = `team-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, teamImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from("teams")
+        .update({
+          name: teamName.trim(),
+          image_url: imageUrl
+        })
+        .eq("id", myTeam.id);
+
+      if (error) throw error;
+
+      setMyTeam({ ...myTeam, name: teamName.trim(), image_url: imageUrl });
+      setEditTeamOpen(false);
+      setTeamName("");
+      setTeamImage(null);
+      setTeamImagePreview(null);
+      toast.success("Team updated successfully!");
+    } catch (error: any) {
+      console.error("Error updating team:", error);
+      toast.error(error.message || "Failed to update team");
+    }
+    setSaving(false);
+  };
+
+  const openEditTeamDialog = () => {
+    if (myTeam) {
+      setTeamName(myTeam.name);
+      setTeamImagePreview(myTeam.image_url);
+      setEditTeamOpen(true);
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -370,17 +430,33 @@ export function TeamsSection(): JSX.Element {
       <div className="space-y-6">
         {/* Team Header */}
         <Card className="bg-card">
-          <CardContent className="p-6">
+          <CardContent className="py-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={myTeam.image_url || undefined} />
-                  <AvatarFallback className="bg-muted text-2xl">
-                    {myTeam.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative group">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={myTeam.image_url || undefined} />
+                    <AvatarFallback className="bg-muted text-2xl">
+                      {myTeam.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={openEditTeamDialog}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-4 w-4 text-white" />
+                  </button>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-xl">{myTeam.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-xl">{myTeam.name}</h3>
+                    <button
+                      onClick={openEditTeamDialog}
+                      className="p-1 rounded-md hover:bg-muted transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
                     {teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}
@@ -543,6 +619,131 @@ export function TeamsSection(): JSX.Element {
                 Save Changes
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Team Dialog */}
+        <Dialog open={editTeamOpen} onOpenChange={(open) => {
+          setEditTeamOpen(open);
+          if (!open) {
+            setTeamName("");
+            setTeamImage(null);
+            setTeamImagePreview(null);
+          }
+        }}>
+          <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+            {/* Header */}
+            <div className="px-6 pt-6">
+              <DialogHeader className="space-y-1">
+                <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
+                  Edit Team
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
+                  Update your team's name and logo.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-5 space-y-5">
+              {/* Team Image */}
+              <div className="space-y-2">
+                <label className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                  Team Logo
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  
+                  <div 
+                    className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity bg-[#8B5CF6]"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {teamImagePreview ? (
+                      <img src={teamImagePreview} alt="Team logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-sm font-semibold font-inter">
+                        {teamName ? teamName.charAt(0).toUpperCase() : "T"}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      className="h-7 text-xs font-inter tracking-[-0.3px] gap-1.5 px-2.5 bg-black/5 dark:bg-white/5 border-0 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
+                    >
+                      <Upload className="h-3 w-3" />
+                      {teamImagePreview ? 'Change' : 'Upload'}
+                    </Button>
+                    {teamImagePreview && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setTeamImage(null);
+                          setTeamImagePreview(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }} 
+                        className="h-7 text-xs font-inter tracking-[-0.3px] px-2.5 bg-black/5 dark:bg-white/5 border-0 text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Name */}
+              <div className="space-y-2">
+                <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">
+                  Team Name
+                </Label>
+                <Input
+                  id="editTeamName"
+                  placeholder="Enter team name"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 flex items-center justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => setEditTeamOpen(false)} 
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleEditTeam} 
+                disabled={saving || !teamName.trim()}
+                className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg"
+              >
+                {saving ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Saving...
+                  </span>
+                ) : "Save Changes"}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
