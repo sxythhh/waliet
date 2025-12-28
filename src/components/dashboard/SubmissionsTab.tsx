@@ -675,34 +675,16 @@ export function SubmissionsTab() {
               Submit videos to campaigns to see them here
             </p>
           </div> : <>
-            <div className="overflow-x-auto border border-[#dce1eb] dark:border-[#141414] rounded-xl">
+            <div className="overflow-x-auto rounded-xl">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Video</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Program</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Status</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12 text-right" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Views</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Submitted</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12 text-right" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>Payout</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12">Video</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12 text-right">Views</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12">Submitted</TableHead>
+                    <TableHead className="text-foreground font-medium text-sm h-12 text-right">Payout</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
