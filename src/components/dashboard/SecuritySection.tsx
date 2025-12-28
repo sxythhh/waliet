@@ -5,19 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Laptop, 
-  Smartphone, 
-  Tablet, 
-  Monitor,
-  Shield,
-  Lock,
-  LogOut,
-  Loader2,
-  MapPin
-} from "lucide-react";
+import { Laptop, Smartphone, Tablet, Monitor, Lock, LogOut, Loader2, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
 interface UserSession {
   id: string;
   session_id: string;
@@ -32,29 +21,30 @@ interface UserSession {
   last_active_at: string;
   created_at: string;
 }
-
 export function SecuritySection() {
-  const { user, session } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    session
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingReset, setSendingReset] = useState(false);
   const [signingOut, setSigningOut] = useState<string | null>(null);
-
   useEffect(() => {
     fetchSessions();
   }, [user]);
-
   const fetchSessions = async () => {
     if (!user) return;
-
     try {
-      const { data, error } = await supabase
-        .from("user_sessions")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("last_active_at", { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("user_sessions").select("*").eq("user_id", user.id).order("last_active_at", {
+        ascending: false
+      });
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
@@ -63,102 +53,90 @@ export function SecuritySection() {
       setLoading(false);
     }
   };
-
   const handleSetPassword = async () => {
     if (!user?.email) {
       toast({
         title: "Error",
         description: "No email found for your account",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setSendingReset(true);
     try {
-      const { error } = await supabase.functions.invoke("send-password-reset", {
-        body: { email: user.email },
+      const {
+        error
+      } = await supabase.functions.invoke("send-password-reset", {
+        body: {
+          email: user.email
+        }
       });
-
       if (error) throw error;
-
       toast({
         title: "Password reset email sent",
-        description: "Check your inbox for instructions to set your password",
+        description: "Check your inbox for instructions to set your password"
       });
     } catch (error) {
       console.error("Error sending password reset:", error);
       toast({
         title: "Error",
         description: "Failed to send password reset email",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setSendingReset(false);
     }
   };
-
   const handleSignOutSession = async (sessionToRemove: UserSession) => {
     if (sessionToRemove.is_current) {
       // Sign out current session
       await supabase.auth.signOut();
       return;
     }
-
     setSigningOut(sessionToRemove.id);
     try {
-      const { error } = await supabase
-        .from("user_sessions")
-        .delete()
-        .eq("id", sessionToRemove.id);
-
+      const {
+        error
+      } = await supabase.from("user_sessions").delete().eq("id", sessionToRemove.id);
       if (error) throw error;
-
       setSessions(sessions.filter(s => s.id !== sessionToRemove.id));
       toast({
         title: "Session removed",
-        description: "The device has been signed out",
+        description: "The device has been signed out"
       });
     } catch (error) {
       console.error("Error removing session:", error);
       toast({
         title: "Error",
         description: "Failed to remove session",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setSigningOut(null);
     }
   };
-
   const handleSignOutAllOther = async () => {
     const otherSessions = sessions.filter(s => !s.is_current);
     if (otherSessions.length === 0) return;
-
     try {
-      const { error } = await supabase
-        .from("user_sessions")
-        .delete()
-        .eq("user_id", user?.id)
-        .eq("is_current", false);
-
+      const {
+        error
+      } = await supabase.from("user_sessions").delete().eq("user_id", user?.id).eq("is_current", false);
       if (error) throw error;
-
       setSessions(sessions.filter(s => s.is_current));
       toast({
         title: "All other sessions removed",
-        description: "You've been signed out from all other devices",
+        description: "You've been signed out from all other devices"
       });
     } catch (error) {
       console.error("Error signing out all sessions:", error);
       toast({
         title: "Error",
         description: "Failed to sign out from other devices",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const getDeviceIcon = (deviceType: string | null, os: string | null) => {
     if (deviceType === "Mobile" || os === "iOS" || os === "Android") {
       return <Smartphone className="h-5 w-5" />;
@@ -171,9 +149,11 @@ export function SecuritySection() {
     }
     return <Monitor className="h-5 w-5" />;
   };
-
   const getDeviceName = (session: UserSession): string => {
-    const { os, device_type } = session;
+    const {
+      os,
+      device_type
+    } = session;
     if (os === "macOS") return "Macintosh";
     if (os === "Windows") return "Windows PC";
     if (os === "iOS" && device_type === "Mobile") return "iPhone";
@@ -184,11 +164,11 @@ export function SecuritySection() {
     if (os === "Chrome OS") return "Chromebook";
     return os || "Unknown Device";
   };
-
   const formatLastActive = (lastActive: string): string => {
-    return formatDistanceToNow(new Date(lastActive), { addSuffix: true });
+    return formatDistanceToNow(new Date(lastActive), {
+      addSuffix: true
+    });
   };
-
   const getLocationDisplay = (session: UserSession): string | null => {
     if (session.city && session.country) {
       return `${session.city}, ${session.country}`;
@@ -198,10 +178,8 @@ export function SecuritySection() {
     }
     return null;
   };
-
   if (loading) {
-    return (
-      <Card className="border-border bg-card">
+    return <Card className="border-border bg-card">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-4 w-64" />
@@ -210,15 +188,12 @@ export function SecuritySection() {
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-20 w-full" />
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card className="border-border bg-card">
+  return <Card className="border-border bg-card">
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" />
+          
           <CardTitle className="text-lg">Security</CardTitle>
         </div>
         <CardDescription>
@@ -239,20 +214,11 @@ export function SecuritySection() {
               </p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleSetPassword}
-            disabled={sendingReset}
-          >
-            {sendingReset ? (
-              <>
+          <Button variant="outline" size="sm" onClick={handleSetPassword} disabled={sendingReset}>
+            {sendingReset ? <>
                 <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                 Sending...
-              </>
-            ) : (
-              "Set password"
-            )}
+              </> : "Set password"}
           </Button>
         </div>
 
@@ -260,29 +226,15 @@ export function SecuritySection() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-medium text-sm">Active Devices</h4>
-            {sessions.filter(s => !s.is_current).length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs"
-                onClick={handleSignOutAllOther}
-              >
+            {sessions.filter(s => !s.is_current).length > 0 && <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs" onClick={handleSignOutAllOther}>
                 Sign out all other devices
-              </Button>
-            )}
+              </Button>}
           </div>
 
           <div className="space-y-2">
-            {sessions.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
+            {sessions.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">
                 No active sessions found
-              </p>
-            ) : (
-              sessions.map((sessionItem) => (
-                <div
-                  key={sessionItem.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border"
-                >
+              </p> : sessions.map(sessionItem => <div key={sessionItem.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-full bg-background border border-border mt-0.5">
                       {getDeviceIcon(sessionItem.device_type, sessionItem.os)}
@@ -292,46 +244,29 @@ export function SecuritySection() {
                         <p className="font-medium text-sm">
                           {getDeviceName(sessionItem)}
                         </p>
-                        {sessionItem.is_current && (
-                          <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
+                        {sessionItem.is_current && <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
                             This device
-                          </span>
-                        )}
+                          </span>}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {sessionItem.browser}
                         {sessionItem.browser_version && ` ${sessionItem.browser_version}`}
                       </p>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        {getLocationDisplay(sessionItem) && (
-                          <span className="flex items-center gap-1">
+                        {getLocationDisplay(sessionItem) && <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {getLocationDisplay(sessionItem)}
-                          </span>
-                        )}
+                          </span>}
                         <span>Active {formatLastActive(sessionItem.last_active_at)}</span>
                       </div>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => handleSignOutSession(sessionItem)}
-                    disabled={signingOut === sessionItem.id}
-                  >
-                    {signingOut === sessionItem.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <LogOut className="h-4 w-4" />
-                    )}
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleSignOutSession(sessionItem)} disabled={signingOut === sessionItem.id}>
+                    {signingOut === sessionItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
                   </Button>
-                </div>
-              ))
-            )}
+                </div>)}
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
