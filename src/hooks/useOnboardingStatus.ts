@@ -67,8 +67,8 @@ export function useOnboardingStatus(): OnboardingStatus {
       // 1. Add basic profile info
       if (profile?.full_name && profile?.username) completed++;
 
-      // 2. Choose content preferences
-      if (profile?.content_styles && profile.content_styles.length > 0) completed++;
+      // 2. Connect your Discord
+      if (profile?.discord_username) completed++;
 
       // 3. Add your location
       if (profile?.country) completed++;
@@ -87,8 +87,16 @@ export function useOnboardingStatus(): OnboardingStatus {
       // 7. Join your first campaign
       if (joinedCampaigns && joinedCampaigns.length > 0) completed++;
 
-      // 8. Earn your first payout
-      if ((profile?.total_earnings || 0) > 0) completed++;
+      // 8. Earn your first payout - check wallet_transactions for any earnings
+      const { data: walletEarnings } = await supabase
+        .from("wallet_transactions")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("type", "earning")
+        .gt("amount", 0)
+        .limit(1);
+      
+      if (walletEarnings && walletEarnings.length > 0) completed++;
 
       setCompletedCount(completed);
     } catch (error) {
