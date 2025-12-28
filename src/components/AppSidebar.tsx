@@ -610,7 +610,7 @@ export function AppSidebar() {
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === brand.slug ? 'bg-[#f2f2f2] dark:bg-muted' : 'hover:bg-muted/50'}`}>
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors hover:bg-transparent ${workspace === brand.slug ? 'bg-[#f2f2f2] dark:bg-[#0e0e0e]' : ''}`}>
                           <div className="flex items-center gap-2.5">
                             {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
