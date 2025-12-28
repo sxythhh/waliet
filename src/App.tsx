@@ -61,6 +61,7 @@ import BlogPost from "./pages/BlogPost";
 import BrandPublicPage from "./pages/BrandPublicPage";
 import Install from "./pages/Install";
 import BrandPortal from "./pages/BrandPortal";
+import JoinTeam from "./pages/JoinTeam";
 
 import PublicCourseDetail from "./pages/PublicCourseDetail";
 import { getSubdomainSlug } from "./utils/subdomain";
@@ -225,6 +226,7 @@ const App = () => (
               <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
               <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
               <Route path="/portal/:slug" element={<BrandPortal />} />
+              <Route path="/join-team/:inviteCode" element={<JoinTeam />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path=":username" element={<PublicProfile />} />
                 <Route path="*" element={<NotFound />} />
