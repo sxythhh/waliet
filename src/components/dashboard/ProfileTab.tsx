@@ -883,7 +883,7 @@ export function ProfileTab() {
       </Card>
 
       {/* Connected Accounts */}
-      <Card ref={connectedAccountsRef} className="bg-card border-0">
+      <Card ref={connectedAccountsRef} className="bg-transparent border-0">
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
