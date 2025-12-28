@@ -149,3 +149,6 @@ verify_jwt = false
 
 [functions.p2p-transfer]
 verify_jwt = true
+
+[functions.track-user-session]
+verify_jwt = false
