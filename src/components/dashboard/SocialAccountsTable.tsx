@@ -195,9 +195,9 @@ export function SocialAccountsTable({
                 id: account.id,
                 platform: account.platform,
                 username: account.username
-              })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors">
-                      <img src={demographicsRequiredIcon} alt="" className="h-3 w-3" />
-                      Required
+              })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors tracking-tight">
+                      <img alt="" className="h-3 w-3" src="/lovable-uploads/549503b2-3fc7-49f7-b720-d9de61247b1e.png" />
+                      Submit
                     </button> : <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={connectedCampaigns.map(c => c.campaign.id)} onSubmitNew={() => onSubmitDemographics({
                 id: account.id,
                 platform: account.platform,
@@ -235,12 +235,10 @@ export function SocialAccountsTable({
                         {account.hidden_from_public ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
                         {account.hidden_from_public ? "Show on profile" : "Hide from profile"}
                       </DropdownMenuItem>
-                      {account.account_link && (
-                        <DropdownMenuItem onClick={() => window.open(account.account_link!, "_blank")} className="cursor-pointer">
+                      {account.account_link && <DropdownMenuItem onClick={() => window.open(account.account_link!, "_blank")} className="cursor-pointer">
                           <ArrowUpRight className="h-4 w-4 mr-2" />
                           Open profile
-                        </DropdownMenuItem>
-                      )}
+                        </DropdownMenuItem>}
                       <DropdownMenuItem onClick={() => onDeleteAccount(account.id)} className="cursor-pointer text-destructive focus:text-destructive">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete account
