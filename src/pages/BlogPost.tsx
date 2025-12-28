@@ -97,7 +97,7 @@ export default function BlogPostPage() {
     author: post.author,
     publishedTime: formatISODate(post.published_at),
     image: post.image_url || undefined,
-    url: `/blog/${post.slug}`,
+    url: `/blog/${post.slug}`
   }) : null;
   if (loading) {
     return <div className="h-[100dvh] bg-background overflow-y-auto">
@@ -116,11 +116,7 @@ export default function BlogPostPage() {
   }
   if (notFound || !post) {
     return <div className="h-[100dvh] bg-background overflow-y-auto flex items-center justify-center">
-        <SEOHead
-          title="Article Not Found"
-          description="The article you're looking for doesn't exist or has been removed."
-          noIndex={true}
-        />
+        <SEOHead title="Article Not Found" description="The article you're looking for doesn't exist or has been removed." noIndex={true} />
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-foreground mb-4">Article not found</h1>
           <p className="text-muted-foreground mb-6">The article you're looking for doesn't exist or has been removed.</p>
@@ -132,22 +128,16 @@ export default function BlogPostPage() {
       </div>;
   }
   return <div className="h-[100dvh] flex flex-col bg-background">
-      <SEOHead
-        title={post.title}
-        description={post.excerpt || `Read ${post.title} on Virality`}
-        ogImage={post.image_url || undefined}
-        ogType="article"
-        canonical={getCanonicalUrl(`/blog/${post.slug}`)}
-        author={post.author}
-        publishedTime={formatISODate(post.published_at)}
-        keywords={post.tags || undefined}
-        breadcrumbs={[
-          { name: 'Home', url: '/' },
-          { name: 'Resources', url: '/resources' },
-          { name: post.title, url: `/blog/${post.slug}` },
-        ]}
-        structuredData={articleStructuredData || undefined}
-      />
+      <SEOHead title={post.title} description={post.excerpt || `Read ${post.title} on Virality`} ogImage={post.image_url || undefined} ogType="article" canonical={getCanonicalUrl(`/blog/${post.slug}`)} author={post.author} publishedTime={formatISODate(post.published_at)} keywords={post.tags || undefined} breadcrumbs={[{
+      name: 'Home',
+      url: '/'
+    }, {
+      name: 'Resources',
+      url: '/resources'
+    }, {
+      name: post.title,
+      url: `/blog/${post.slug}`
+    }]} structuredData={articleStructuredData || undefined} />
 
       <PublicNavbar />
 
@@ -213,7 +203,7 @@ export default function BlogPostPage() {
         </div>
 
         {/* CTA at bottom of article */}
-        {!isAuthenticated && <section className="mt-12 p-8 bg-gradient-to-br from-primary/20 via-card to-background border border-primary/20 rounded-2xl">
+        {!isAuthenticated && <section className="mt-12 p-8 border border-primary/20 rounded-2xl">
             <h2 className="text-xl font-inter tracking-[-0.5px] font-semibold text-foreground mb-2">
               Ready to start earning?
             </h2>
