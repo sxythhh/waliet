@@ -936,28 +936,21 @@ export function CreatorDatabaseTab({
       } = campaignToKickFrom;
       if (campaignType === 'boost') {
         // Remove from bounty_applications
-        const { error: appError } = await supabase
-          .from('bounty_applications')
-          .delete()
-          .eq('bounty_campaign_id', campaignId)
-          .eq('user_id', creatorId);
+        const {
+          error: appError
+        } = await supabase.from('bounty_applications').delete().eq('bounty_campaign_id', campaignId).eq('user_id', creatorId);
         if (appError) throw appError;
 
         // Also remove any boost video submissions
-        const { error: subError } = await supabase
-          .from('boost_video_submissions')
-          .delete()
-          .eq('bounty_campaign_id', campaignId)
-          .eq('user_id', creatorId);
+        const {
+          error: subError
+        } = await supabase.from('boost_video_submissions').delete().eq('bounty_campaign_id', campaignId).eq('user_id', creatorId);
         if (subError) throw subError;
 
         // Remove from unified video_submissions (this is what powers the "Active Campaigns" list)
-        const { error: vsBoostError } = await supabase
-          .from('video_submissions')
-          .delete()
-          .eq('source_type', 'boost')
-          .eq('source_id', campaignId)
-          .eq('creator_id', creatorId);
+        const {
+          error: vsBoostError
+        } = await supabase.from('video_submissions').delete().eq('source_type', 'boost').eq('source_id', campaignId).eq('creator_id', creatorId);
         if (vsBoostError) throw vsBoostError;
       } else {
         // Remove from social_account_campaigns junction table
@@ -965,12 +958,16 @@ export function CreatorDatabaseTab({
           data: socialAccounts
         } = await supabase.from('social_accounts').select('id').eq('user_id', creatorId);
         if (socialAccounts && socialAccounts.length > 0) {
-          const { error: sacError } = await supabase.from('social_account_campaigns').delete().eq('campaign_id', campaignId).in('social_account_id', socialAccounts.map(sa => sa.id));
+          const {
+            error: sacError
+          } = await supabase.from('social_account_campaigns').delete().eq('campaign_id', campaignId).in('social_account_id', socialAccounts.map(sa => sa.id));
           if (sacError) throw sacError;
         }
 
         // Remove video submissions
-        const { error: vsError } = await supabase.from('video_submissions').delete().eq('source_id', campaignId).eq('creator_id', creatorId);
+        const {
+          error: vsError
+        } = await supabase.from('video_submissions').delete().eq('source_id', campaignId).eq('creator_id', creatorId);
         if (vsError) throw vsError;
       }
       toast.success(`Removed creator from ${campaignTitle}`);
@@ -1038,8 +1035,7 @@ export function CreatorDatabaseTab({
           
           {/* Table Rows */}
           <div className="divide-y divide-border/20">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
-              <div key={i} className="px-4 py-3 flex items-center gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => <div key={i} className="px-4 py-3 flex items-center gap-4">
                 <Skeleton className="h-4 w-4 rounded-[3px]" />
                 <div className="flex items-center gap-3 min-w-[180px]">
                   <Skeleton className="h-8 w-8 rounded-full" />
@@ -1056,8 +1052,7 @@ export function CreatorDatabaseTab({
                 <Skeleton className="h-4 w-12 ml-auto" />
                 <Skeleton className="h-4 w-14" />
                 <Skeleton className="h-4 w-20" />
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
         
@@ -1450,16 +1445,7 @@ export function CreatorDatabaseTab({
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-muted/30 rounded-lg p-3">
-                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Total Views</p>
-                  <p className="text-lg font-medium font-inter tracking-[-0.5px]">{formatNumber(selectedCreatorPanel.total_views)}</p>
-                </div>
-                <div className="bg-muted/30 rounded-lg p-3">
-                  <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-1">Earnings</p>
-                  <p className="text-lg font-medium font-inter tracking-[-0.5px] text-emerald-500">${selectedCreatorPanel.total_earnings.toFixed(2)}</p>
-                </div>
-              </div>
+              
 
               {/* Details */}
               <div className="space-y-3">
@@ -1481,26 +1467,20 @@ export function CreatorDatabaseTab({
                   </div>}
                 {selectedCreatorPanel.email && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Email</p>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(selectedCreatorPanel.email || '');
-                        toast.success('Email copied to clipboard');
-                      }}
-                      className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer"
-                    >
+                    <button onClick={() => {
+                  navigator.clipboard.writeText(selectedCreatorPanel.email || '');
+                  toast.success('Email copied to clipboard');
+                }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
                       <span>{selectedCreatorPanel.email}</span>
                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                     </button>
                   </div>}
                 {selectedCreatorPanel.phone_number && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Phone Number</p>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(selectedCreatorPanel.phone_number || '');
-                        toast.success('Phone number copied to clipboard');
-                      }}
-                      className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer"
-                    >
+                    <button onClick={() => {
+                  navigator.clipboard.writeText(selectedCreatorPanel.phone_number || '');
+                  toast.success('Phone number copied to clipboard');
+                }} className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer">
                       <span>{selectedCreatorPanel.phone_number}</span>
                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                     </button>
@@ -1561,16 +1541,14 @@ export function CreatorDatabaseTab({
 
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
-            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && (
-              <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
-                e.stopPropagation();
-                setTestimonialCreator(selectedCreatorPanel);
-                setTestimonialDialogOpen(true);
-              }}>
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
+            e.stopPropagation();
+            setTestimonialCreator(selectedCreatorPanel);
+            setTestimonialDialogOpen(true);
+          }}>
                 <Star className="h-3.5 w-3.5" />
                 Leave Review
-              </button>
-            )}
+              </button>}
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
             e.stopPropagation();
             initiateRemoveCreator(selectedCreatorPanel);
@@ -1924,18 +1902,8 @@ export function CreatorDatabaseTab({
       </AlertDialog>
 
       {/* Leave Testimonial Dialog */}
-      {testimonialCreator && (
-        <LeaveTestimonialDialog
-          open={testimonialDialogOpen}
-          onOpenChange={setTestimonialDialogOpen}
-          brandId={brandId}
-          creatorId={testimonialCreator.id}
-          creatorName={testimonialCreator.full_name || testimonialCreator.username || 'Creator'}
-          creatorAvatarUrl={testimonialCreator.avatar_url}
-          onSuccess={() => {
-            setTestimonialCreator(null);
-          }}
-        />
-      )}
+      {testimonialCreator && <LeaveTestimonialDialog open={testimonialDialogOpen} onOpenChange={setTestimonialDialogOpen} brandId={brandId} creatorId={testimonialCreator.id} creatorName={testimonialCreator.full_name || testimonialCreator.username || 'Creator'} creatorAvatarUrl={testimonialCreator.avatar_url} onSuccess={() => {
+      setTestimonialCreator(null);
+    }} />}
     </div>;
 }
