@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowUpRight, Wallet, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AllocateBudgetDialogProps {
@@ -15,6 +14,8 @@ interface AllocateBudgetDialogProps {
   onOpenChange: (open: boolean) => void;
   brandId: string;
   onSuccess?: () => void;
+  preselectedCampaignId?: string;
+  preselectedType?: 'campaign' | 'boost';
 }
 
 interface Campaign {
@@ -29,16 +30,23 @@ interface Boost {
   budget: number | null;
 }
 
+type FundingItem = {
+  id: string;
+  title: string;
+  budget: number;
+  type: 'campaign' | 'boost';
+};
+
 export function AllocateBudgetDialog({
   open,
   onOpenChange,
   brandId,
   onSuccess,
+  preselectedCampaignId,
+  preselectedType = 'campaign',
 }: AllocateBudgetDialogProps) {
   const { user } = useAuth();
-  const [type, setType] = useState<'campaign' | 'boost'>('campaign');
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [boosts, setBoosts] = useState<Boost[]>([]);
+  const [items, setItems] = useState<FundingItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,6 +60,16 @@ export function AllocateBudgetDialog({
       fetchWalletBalance();
     }
   }, [open, brandId, user]);
+
+  // Handle preselection when data is loaded
+  useEffect(() => {
+    if (preselectedCampaignId && items.length > 0) {
+      const exists = items.some(item => item.id === preselectedCampaignId);
+      if (exists) {
+        setSelectedId(preselectedCampaignId);
+      }
+    }
+  }, [preselectedCampaignId, items]);
 
   const fetchWalletBalance = async () => {
     if (!user) return;
@@ -81,8 +99,6 @@ export function AllocateBudgetDialog({
         .eq('brand_id', brandId)
         .eq('status', 'active');
 
-      setCampaigns(campaignsData || []);
-
       // Fetch boosts
       const { data: boostsData } = await supabase
         .from('bounty_campaigns')
@@ -90,7 +106,12 @@ export function AllocateBudgetDialog({
         .eq('brand_id', brandId)
         .eq('status', 'active');
 
-      setBoosts(boostsData || []);
+      const allItems: FundingItem[] = [
+        ...(campaignsData || []).map(c => ({ ...c, type: 'campaign' as const })),
+        ...(boostsData || []).map(b => ({ ...b, budget: b.budget || 0, type: 'boost' as const })),
+      ];
+
+      setItems(allItems);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -108,17 +129,15 @@ export function AllocateBudgetDialog({
   };
 
   const getSelectedItem = () => {
-    if (type === 'campaign') {
-      return campaigns.find(c => c.id === selectedId);
-    }
-    return boosts.find(b => b.id === selectedId);
+    return items.find(item => item.id === selectedId);
   };
 
   const handleAllocate = async () => {
     const parsedAmount = parseFloat(amount);
+    const selectedItem = getSelectedItem();
 
-    if (!selectedId) {
-      toast.error(`Please select a ${type}`);
+    if (!selectedId || !selectedItem) {
+      toast.error('Please select a campaign or boost');
       return;
     }
 
@@ -138,7 +157,7 @@ export function AllocateBudgetDialog({
       const { data, error } = await supabase.functions.invoke('allocate-brand-budget', {
         body: {
           brand_id: brandId,
-          [type === 'campaign' ? 'campaign_id' : 'boost_id']: selectedId,
+          [selectedItem.type === 'campaign' ? 'campaign_id' : 'boost_id']: selectedId,
           amount: parsedAmount,
         },
       });
@@ -160,18 +179,26 @@ export function AllocateBudgetDialog({
     }
   };
 
+  const handleClose = (openState: boolean) => {
+    if (!openState) {
+      setSelectedId("");
+      setAmount("");
+    }
+    onOpenChange(openState);
+  };
+
   const parsedAmount = parseFloat(amount) || 0;
   const selectedItem = getSelectedItem();
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] text-white max-w-md p-0 overflow-hidden max-h-[85vh] flex flex-col">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="bg-background text-foreground max-w-md p-0 overflow-hidden max-h-[85vh] flex flex-col">
         <div className="p-6 pb-0 flex-shrink-0">
           <DialogHeader>
             <DialogTitle className="text-lg font-medium tracking-tight">
               Fund Campaign
             </DialogTitle>
-            <p className="text-sm text-neutral-500 font-inter tracking-[-0.3px] mt-1">
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
               Transfer funds from your Virality wallet
             </p>
           </DialogHeader>
@@ -179,108 +206,95 @@ export function AllocateBudgetDialog({
 
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Wallet Balance */}
-          <div className="bg-white/[0.03] rounded-xl p-5">
-            <p className="text-xs text-neutral-500 uppercase tracking-wider mb-2">Your Wallet Balance</p>
+          <div className="bg-muted/50 rounded-xl p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Your Wallet Balance</p>
             {loadingBalance ? (
               <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin text-neutral-500" />
-                <span className="text-neutral-500">Loading...</span>
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                <span className="text-muted-foreground">Loading...</span>
               </div>
             ) : (
-              <p className="text-3xl font-semibold text-white tracking-tight">{formatCurrency(walletBalance)}</p>
+              <p className="text-3xl font-semibold text-foreground tracking-tight">{formatCurrency(walletBalance)}</p>
             )}
           </div>
 
-          {/* Type Selection */}
-          <Tabs value={type} onValueChange={(v) => { setType(v as 'campaign' | 'boost'); setSelectedId(""); }}>
-            <TabsList className="grid w-full grid-cols-2 bg-white/[0.03] p-1 rounded-lg h-11">
-              <TabsTrigger 
-                value="campaign" 
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-black text-neutral-400 transition-all"
-              >
-                Campaign
-              </TabsTrigger>
-              <TabsTrigger 
-                value="boost" 
-                className="rounded-md data-[state=active]:bg-white data-[state=active]:text-black text-neutral-400 transition-all"
-              >
-                Boost
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="campaign" className="mt-4">
-              <Label className="text-neutral-400 text-sm mb-2 block">Select Campaign</Label>
-              <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger className="bg-white/[0.03] border-0 text-white h-12 rounded-lg">
-                  <SelectValue placeholder="Choose a campaign" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#141414] border-0">
-                  {campaigns.length === 0 ? (
-                    <div className="p-4 text-sm text-neutral-500 text-center">
-                      No active campaigns
-                    </div>
-                  ) : (
-                    campaigns.map((campaign) => (
-                      <SelectItem key={campaign.id} value={campaign.id} className="text-white focus:bg-white/[0.05] focus:text-white">
-                        <div className="flex justify-between items-center w-full gap-4">
-                          <span>{campaign.title}</span>
-                          <span className="text-neutral-500 text-sm">
-                            {formatCurrency(campaign.budget)}
-                          </span>
+          {/* Combined Dropdown */}
+          <div>
+            <Label className="text-muted-foreground text-sm mb-2 block">Select Campaign or Boost</Label>
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 rounded-lg">
+                <SelectValue placeholder="Choose a campaign or boost" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {fetchingData ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading...
+                  </div>
+                ) : items.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    No active campaigns or boosts
+                  </div>
+                ) : (
+                  <>
+                    {items.filter(i => i.type === 'campaign').length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Campaigns
                         </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </TabsContent>
-
-            <TabsContent value="boost" className="mt-4">
-              <Label className="text-neutral-400 text-sm mb-2 block">Select Boost</Label>
-              <Select value={selectedId} onValueChange={setSelectedId}>
-                <SelectTrigger className="bg-white/[0.03] border-0 text-white h-12 rounded-lg">
-                  <SelectValue placeholder="Choose a boost" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#141414] border-0">
-                  {boosts.length === 0 ? (
-                    <div className="p-4 text-sm text-neutral-500 text-center">
-                      No active boosts
-                    </div>
-                  ) : (
-                    boosts.map((boost) => (
-                      <SelectItem key={boost.id} value={boost.id} className="text-white focus:bg-white/[0.05] focus:text-white">
-                        <div className="flex justify-between items-center w-full gap-4">
-                          <span>{boost.title}</span>
-                          <span className="text-neutral-500 text-sm">
-                            {formatCurrency(boost.budget || 0)}
-                          </span>
+                        {items.filter(i => i.type === 'campaign').map((item) => (
+                          <SelectItem key={item.id} value={item.id} className="text-foreground focus:bg-accent focus:text-accent-foreground">
+                            <div className="flex justify-between items-center w-full gap-4">
+                              <span>{item.title}</span>
+                              <span className="text-muted-foreground text-sm">
+                                {formatCurrency(item.budget)}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                    {items.filter(i => i.type === 'boost').length > 0 && (
+                      <>
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider mt-2">
+                          Boosts
                         </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </TabsContent>
-          </Tabs>
+                        {items.filter(i => i.type === 'boost').map((item) => (
+                          <SelectItem key={item.id} value={item.id} className="text-foreground focus:bg-accent focus:text-accent-foreground">
+                            <div className="flex justify-between items-center w-full gap-4">
+                              <span>{item.title}</span>
+                              <span className="text-muted-foreground text-sm">
+                                {formatCurrency(item.budget)}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Amount Input */}
           <div>
-            <Label className="text-neutral-400 text-sm mb-2 block">Amount</Label>
+            <Label className="text-muted-foreground text-sm mb-2 block">Amount</Label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-lg">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
               <Input
                 type="number"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 bg-white/[0.03] border-0 text-white text-xl h-14 rounded-lg font-medium"
+                className="pl-9 bg-muted/50 border-border text-foreground text-xl h-14 rounded-lg font-medium"
               />
             </div>
           </div>
 
           {/* Validation Warning */}
           {parsedAmount > walletBalance && (
-            <div className="flex items-center gap-2.5 text-red-400 text-sm bg-red-500/10 rounded-lg p-3.5">
+            <div className="flex items-center gap-2.5 text-destructive text-sm bg-destructive/10 rounded-lg p-3.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Amount exceeds your wallet balance</span>
             </div>
@@ -288,27 +302,27 @@ export function AllocateBudgetDialog({
 
           {/* Summary */}
           {selectedItem && parsedAmount > 0 && parsedAmount <= walletBalance && (
-            <div className="bg-white/[0.03] rounded-xl p-4 space-y-3">
+            <div className="bg-muted/50 rounded-xl p-4 space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Funding</span>
-                <span className="text-white">{selectedItem.title}</span>
+                <span className="text-muted-foreground">Funding</span>
+                <span className="text-foreground">{selectedItem.title}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Current budget</span>
-                <span className="text-neutral-300">
-                  {formatCurrency('budget' in selectedItem ? selectedItem.budget || 0 : 0)}
+                <span className="text-muted-foreground">Current budget</span>
+                <span className="text-muted-foreground">
+                  {formatCurrency(selectedItem.budget)}
                 </span>
               </div>
-              <div className="h-px bg-white/[0.06] my-2" />
+              <div className="h-px bg-border my-2" />
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">New budget</span>
-                <span className="text-emerald-400 font-medium">
-                  {formatCurrency(('budget' in selectedItem ? selectedItem.budget || 0 : 0) + parsedAmount)}
+                <span className="text-muted-foreground">New budget</span>
+                <span className="text-emerald-500 font-medium">
+                  {formatCurrency(selectedItem.budget + parsedAmount)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-neutral-500">Remaining wallet balance</span>
-                <span className="text-neutral-300">
+                <span className="text-muted-foreground">Remaining wallet balance</span>
+                <span className="text-muted-foreground">
                   {formatCurrency(walletBalance - parsedAmount)}
                 </span>
               </div>
@@ -319,15 +333,15 @@ export function AllocateBudgetDialog({
           <div className="flex gap-3 pt-2">
             <Button
               variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="flex-1 text-neutral-400 hover:text-white hover:bg-white/[0.05] h-12 rounded-lg"
+              onClick={() => handleClose(false)}
+              className="flex-1 text-muted-foreground hover:text-foreground hover:bg-muted h-12 rounded-lg"
             >
               Cancel
             </Button>
             <Button
               onClick={handleAllocate}
               disabled={loading || !selectedId || parsedAmount <= 0 || parsedAmount > walletBalance || loadingBalance}
-              className="flex-1 bg-white text-black hover:bg-neutral-200 h-12 rounded-lg font-medium disabled:opacity-30"
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg font-medium disabled:opacity-30"
             >
               {loading ? 'Funding...' : 'Fund'}
             </Button>

@@ -509,9 +509,16 @@ export function BrandCampaignsTab({
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
 
       {/* Allocate Budget Dialog */}
-      <AllocateBudgetDialog open={allocateBudgetOpen} onOpenChange={open => {
-      setAllocateBudgetOpen(open);
-      if (!open) setSelectedCampaignForFunding(null);
-    }} brandId={brandId} onSuccess={fetchBrandData} />
+      <AllocateBudgetDialog 
+        open={allocateBudgetOpen} 
+        onOpenChange={open => {
+          setAllocateBudgetOpen(open);
+          if (!open) setSelectedCampaignForFunding(null);
+        }} 
+        brandId={brandId} 
+        onSuccess={fetchBrandData}
+        preselectedCampaignId={selectedCampaignForFunding?.id}
+        preselectedType={selectedCampaignForFunding?.type}
+      />
     </div>;
 }
