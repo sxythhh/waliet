@@ -51,7 +51,7 @@ export function ActivityChart({ activityData }: ActivityChartProps) {
   };
 
   return (
-    <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
+    <Card className="p-4 sm:p-5 bg-card/30 border border-[#efefef] dark:border-transparent">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
         <h3 className="text-sm font-medium tracking-[-0.5px]">Activity Over Time</h3>
       </div>
