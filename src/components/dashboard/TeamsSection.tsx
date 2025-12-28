@@ -463,7 +463,7 @@ export function TeamsSection(): JSX.Element {
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Team Invite Link</Label>
               <div className="flex gap-2">
-                <Input readOnly value={`${window.location.origin}/join-team/${myTeam.invite_code}`} className="bg-muted/50 font-mono text-sm" />
+                <Input readOnly value={`${window.location.origin}/join-team/${myTeam.invite_code}`} className="bg-muted/50 text-sm h-9" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px' }} />
                 <button 
                   onClick={copyInviteLink} 
                   className="shrink-0 px-3 h-9 flex items-center justify-center rounded-md bg-transparent hover:bg-muted transition-colors"
