@@ -111,12 +111,9 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
         <PopoverTrigger asChild>
           <button className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full ${variant === "header" ? "h-9" : ""}`}>
             <div className="flex items-center gap-2 flex-1">
-              <span className="text-base font-semibold font-geist tracking-tight">
+              <span className="text-base font-semibold font-inter tracking-[-0.5px]">
                 ${balance.toFixed(2)}
               </span>
-              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                <span className="text-[8px] font-bold text-white">$</span>
-              </div>
             </div>
             {variant === "sidebar" ? (
               <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
@@ -125,7 +122,7 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
             )}
             <Button 
               size="sm" 
-              className="h-7 px-3 text-xs font-medium"
+              className="h-7 px-3 text-xs font-medium font-inter tracking-[-0.5px]"
               onClick={(e) => {
                 e.stopPropagation();
                 handleWithdraw();
