@@ -491,7 +491,7 @@ export function SubmissionsTab() {
         }
       }}>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2 rounded-[9px] border-border bg-background hover:bg-background px-4 py-2 h-auto">
+            <Button variant="outline" className="gap-2 rounded-[9px] border-border bg-background hover:bg-background hover:text-foreground px-4 py-2 h-auto">
               <SlidersHorizontal className="h-4 w-4" />
               <span className="font-medium" style={{
               fontFamily: 'Inter',
