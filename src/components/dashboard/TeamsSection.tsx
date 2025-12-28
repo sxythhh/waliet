@@ -416,16 +416,14 @@ export function TeamsSection(): JSX.Element {
           <CardContent className="p-6">
             <Skeleton className="h-4 w-28 mb-4" />
             <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+              {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-3 w-24" />
                     <Skeleton className="h-2 w-16" />
                   </div>
                   <Skeleton className="h-4 w-12" />
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
@@ -492,7 +490,7 @@ export function TeamsSection(): JSX.Element {
               </div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-base font-inter tracking-[-0.5px]">{myTeam.name}</h3>
-                <button onClick={openEditTeamDialog} className="p-1 rounded-md hover:bg-muted transition-colors">
+                <button onClick={openEditTeamDialog} className="p-1 rounded-md transition-colors bg-[#1f1f1f]/0">
                   <Pencil className="h-3 w-3 text-muted-foreground" />
                 </button>
               </div>
