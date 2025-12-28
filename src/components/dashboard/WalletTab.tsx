@@ -1595,16 +1595,16 @@ export function WalletTab() {
               }).length} payouts
                 </p>
                 <div className="flex gap-1">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50">
-                    Previous
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
+                  <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => prev + 1)} disabled={currentPage * itemsPerPage >= transactions.filter(transaction => {
                 if (typeFilter !== "all" && transaction.type !== typeFilter) return false;
                 if (statusFilter !== "all" && transaction.status !== statusFilter) return false;
                 if (campaignFilter !== "all" && (!transaction.campaign || transaction.campaign.id !== campaignFilter)) return false;
                 return true;
-              }).length} className="h-9 px-4 rounded-lg border-border text-muted-foreground hover:text-foreground disabled:opacity-50">
-                    Next
+              }).length} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50">
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
