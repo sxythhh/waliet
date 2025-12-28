@@ -1078,7 +1078,7 @@ export function CreatorDatabaseTab({
         </div>
       </div>;
   }
-  return <div className="h-full flex flex-col">
+  return <div className="h-full flex flex-col pb-20 md:pb-0">
       {/* Header */}
       <div className="border-b border-border px-[7px] py-[5px]">
         {/* Filters & Actions - Single Row */}
