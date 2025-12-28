@@ -1,0 +1,183 @@
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, Wallet } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePaymentLedger } from "@/hooks/usePaymentLedger";
+
+interface WalletDropdownProps {
+  variant?: "sidebar" | "header";
+  isCollapsed?: boolean;
+}
+
+export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: WalletDropdownProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [balance, setBalance] = useState<number>(0);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState<number>(0);
+  const [pendingBoostEarnings, setPendingBoostEarnings] = useState<number>(0);
+  const { summary: ledgerSummary } = usePaymentLedger(user?.id);
+
+  useEffect(() => {
+    if (user) {
+      fetchWalletData();
+    }
+  }, [user]);
+
+  const fetchWalletData = async () => {
+    if (!user) return;
+
+    // Fetch wallet balance
+    const { data: walletData } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single();
+
+    if (walletData) {
+      setBalance(walletData.balance || 0);
+    }
+
+    // Fetch pending withdrawals (in transit)
+    const { data: payoutRequests } = await supabase
+      .from("payout_requests")
+      .select("amount")
+      .eq("user_id", user.id)
+      .in("status", ["pending", "in_transit"]);
+
+    if (payoutRequests) {
+      const totalPending = payoutRequests.reduce((sum, req) => sum + (req.amount || 0), 0);
+      setPendingWithdrawals(totalPending);
+    }
+
+    // Fetch pending boost earnings
+    const { data: boostSubmissions } = await supabase
+      .from("boost_video_submissions")
+      .select("payout_amount")
+      .eq("user_id", user.id)
+      .eq("status", "approved");
+
+    if (boostSubmissions) {
+      const totalBoost = boostSubmissions.reduce((sum, sub) => sum + (sub.payout_amount || 0), 0);
+      setPendingBoostEarnings(totalBoost);
+    }
+  };
+
+  const handleGoToWallet = () => {
+    setOpen(false);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("tab", "wallet");
+    newParams.delete("workspace");
+    setSearchParams(newParams);
+  };
+
+  const totalPending = (ledgerSummary?.totalPending || 0) + pendingBoostEarnings;
+
+  if (isCollapsed) {
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-muted/50 transition-colors">
+            <Wallet className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-64 p-3 bg-background border border-border rounded-xl shadow-2xl"
+          side="right"
+          align="center"
+          sideOffset={8}
+        >
+          <WalletDropdownContent 
+            balance={balance}
+            totalPending={totalPending}
+            pendingWithdrawals={pendingWithdrawals}
+            onGoToWallet={handleGoToWallet}
+          />
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className={`flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full ${variant === "header" ? "h-9" : ""}`}>
+          <div className="flex items-center gap-2 flex-1">
+            <span className="text-base font-semibold font-geist tracking-tight">
+              ${balance.toFixed(2)}
+            </span>
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+              <span className="text-[8px] font-bold text-white">$</span>
+            </div>
+          </div>
+          {variant === "sidebar" ? (
+            <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          ) : (
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          )}
+          <Button 
+            size="sm" 
+            className="h-7 px-3 text-xs font-medium"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleGoToWallet();
+            }}
+          >
+            Wallet
+          </Button>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-64 p-3 bg-background border border-border rounded-xl shadow-2xl"
+        side={variant === "sidebar" ? "top" : "bottom"}
+        align="start"
+        sideOffset={8}
+      >
+        <WalletDropdownContent 
+          balance={balance}
+          totalPending={totalPending}
+          pendingWithdrawals={pendingWithdrawals}
+          onGoToWallet={handleGoToWallet}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+interface WalletDropdownContentProps {
+  balance: number;
+  totalPending: number;
+  pendingWithdrawals: number;
+  onGoToWallet: () => void;
+}
+
+function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onGoToWallet }: WalletDropdownContentProps) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground font-medium">Current Balance</span>
+          <span className="text-sm font-semibold">${balance.toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
+          <span className="text-sm font-medium text-muted-foreground">${totalPending.toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground font-medium">In Transit</span>
+          <span className="text-sm font-medium text-muted-foreground">${pendingWithdrawals.toFixed(2)}</span>
+        </div>
+      </div>
+      <Button 
+        className="w-full font-inter tracking-[-0.5px]" 
+        size="sm"
+        onClick={onGoToWallet}
+      >
+        View Wallet
+      </Button>
+    </div>
+  );
+}
