@@ -4354,6 +4354,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_is_team_member: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "brand"
