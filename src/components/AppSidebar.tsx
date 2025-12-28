@@ -1,4 +1,5 @@
 import { Dock, Compass, CircleUser, ArrowUpRight, LogOut, Settings, Medal, Gift, MessageSquare, HelpCircle, ChevronDown, Building2, User, Plus, Monitor, Sun, Moon, PanelLeftClose, PanelLeft, Search, Check, UserPlus, LayoutDashboard, Database, FileText, Trophy } from "lucide-react";
+import { WalletDropdown } from "@/components/WalletDropdown";
 import unfoldMoreIcon from "@/assets/unfold-more-icon.svg";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -411,7 +412,9 @@ export function AppSidebar() {
           <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover mr-[2px]" />
           <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Wallet Dropdown - Mobile */}
+          {isCreatorMode && <WalletDropdown variant="header" />}
           {/* Upgrade Plan Button - Mobile */}
           {!isCreatorMode && currentBrandSubscriptionStatus !== "active" && <button onClick={() => setSubscriptionGateOpen(true)} className="py-1.5 px-3 bg-primary border-t border-primary/70 rounded-lg font-['Inter'] text-[13px] font-medium tracking-[-0.5px] text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5">
               <img src={nutFillIcon} alt="" className="h-3.5 w-3.5" />
@@ -761,7 +764,12 @@ export function AppSidebar() {
             </button>
           </div>}
 
-
+        {/* Wallet Dropdown - Desktop Sidebar (Creator Mode Only) */}
+        {isCreatorMode && (
+          <div className={`px-2 pb-1 ${isCollapsed ? 'flex justify-center' : ''}`}>
+            <WalletDropdown variant="sidebar" isCollapsed={isCollapsed} />
+          </div>
+        )}
 
         {/* User Profile Section */}
         <div className={`p-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
