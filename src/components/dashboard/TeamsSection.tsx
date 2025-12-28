@@ -783,9 +783,7 @@ export function TeamsSection(): JSX.Element {
   return <Card className="bg-card">
       <CardContent className="p-6">
         <div className="text-center py-8">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <Users className="h-8 w-8 text-muted-foreground" />
-          </div>
+          
           <h3 className="font-semibold text-lg mb-2">Create Your Team</h3>
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
             Build a team of creators and earn a commission from their campaign earnings.
