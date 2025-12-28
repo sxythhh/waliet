@@ -53,7 +53,10 @@ const getStatusConfig = (status: BlueprintStatus) => {
 export function BlueprintsTab({
   brandId
 }: BlueprintsTabProps) {
-  const { theme, resolvedTheme } = useTheme();
+  const {
+    theme,
+    resolvedTheme
+  } = useTheme();
   const isDark = theme === "dark" || resolvedTheme === "dark";
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -270,23 +273,14 @@ export function BlueprintsTab({
         </Button>
       </div>
 
-      {blueprints.length === 0 ? (
-        isDark ? (
-          <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
+      {blueprints.length === 0 ? isDark ? <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
             <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
-          </div>
-        ) : (
-          <div className="w-full h-[calc(100vh-200px)] min-h-[500px] flex items-center justify-center">
+          </div> : <div className="w-full h-[calc(100vh-200px)] min-h-[500px] flex items-center justify-center">
             <div className="text-center space-y-4">
               <p className="text-muted-foreground">No blueprints yet. Create your first one to get started.</p>
-              <Button onClick={() => setTemplateSelectorOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                New Blueprint
-              </Button>
+              
             </div>
-          </div>
-        )
-      ) : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {blueprints.map(blueprint => {
         const contentPreview = getContentPreview(blueprint.content);
         const status = getBlueprintStatus(blueprint);
