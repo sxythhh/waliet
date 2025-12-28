@@ -192,9 +192,9 @@ export function RecentActivity() {
         </h3>
       </div>
 
-      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden">
+      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal' }}>
         {/* Header */}
-        <div className="grid grid-cols-4 gap-4 px-4 py-2.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border-b border-border/50 bg-muted/20">
+        <div className="grid grid-cols-4 gap-4 px-4 py-2.5 text-[10px] font-medium text-muted-foreground border-b border-border/50 bg-muted/20" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal', textTransform: 'none' }}>
           <span>Creator</span>
           <span>Time</span>
           <span>Campaign</span>
@@ -206,13 +206,13 @@ export function RecentActivity() {
           {activities.map((activity, index) => <div key={activity.id} className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${index % 2 === 0 ? "bg-transparent" : "bg-muted/10"}`}>
               {/* Creator */}
               <div className="flex items-center">
-                <span className="font-medium text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif]">
+                <span className="font-medium text-foreground truncate">
                   {formatUsername(activity.username, activity.is_private)}
                 </span>
               </div>
 
               {/* Time */}
-              <span className="text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
+              <span className="text-muted-foreground">
                 {formatDistanceToNow(new Date(activity.created_at), {
               addSuffix: true
             }).replace(/^about /, '')}
@@ -223,14 +223,14 @@ export function RecentActivity() {
                 {activity.brand_logo_url && <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
                     <OptimizedImage src={activity.brand_logo_url} alt="" className="w-full h-full object-cover" />
                   </div>}
-                <button onClick={() => activity.campaign_slug && navigate(`/c/${activity.campaign_slug}`)} className="text-foreground truncate tracking-[-0.3px] font-['Geist',sans-serif] hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs" title={activity.campaign_name}>
+                <button onClick={() => activity.campaign_slug && navigate(`/c/${activity.campaign_slug}`)} className="text-foreground truncate hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs" title={activity.campaign_name}>
                   {truncateCampaignName(activity.campaign_name || "Campaign")}
                 </button>
               </div>
 
               {/* Earned */}
               <div className="flex items-center justify-end gap-1">
-                <span className="font-semibold text-emerald-500 tracking-[-0.3px] font-['Geist',sans-serif]">
+                <span className="font-semibold text-emerald-500">
                   ${activity.amount?.toFixed(2)}
                 </span>
                 
