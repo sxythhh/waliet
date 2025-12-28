@@ -465,7 +465,12 @@ export function BrandCampaignsTab({
               <p className="text-sm font-inter tracking-[-0.3px] text-muted-foreground text-center max-w-sm mb-4">
                 Start hiring with content campaigns. Find video editors, clippers, and themepage owners to help your brand go viral.
               </p>
-              
+              <div className="flex gap-3">
+                
+                <Button variant="outline" onClick={() => navigate('/resources')} className="bg-[#2a2a2a] border-[#2a2a2a] text-white hover:bg-[#3a3a3a] font-inter text-sm tracking-[-0.5px]">
+                  Learn more
+                </Button>
+              </div>
             </div>}
         </>}
 
@@ -501,9 +506,16 @@ export function BrandCampaignsTab({
       <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
 
       {/* Allocate Budget Dialog */}
-      <AllocateBudgetDialog open={allocateBudgetOpen} onOpenChange={open => {
-      setAllocateBudgetOpen(open);
-      if (!open) setSelectedCampaignForFunding(null);
-    }} brandId={brandId} onSuccess={fetchBrandData} preselectedCampaignId={selectedCampaignForFunding?.id} preselectedType={selectedCampaignForFunding?.type} />
+      <AllocateBudgetDialog 
+        open={allocateBudgetOpen} 
+        onOpenChange={open => {
+          setAllocateBudgetOpen(open);
+          if (!open) setSelectedCampaignForFunding(null);
+        }} 
+        brandId={brandId} 
+        onSuccess={fetchBrandData}
+        preselectedCampaignId={selectedCampaignForFunding?.id}
+        preselectedType={selectedCampaignForFunding?.type}
+      />
     </div>;
 }
