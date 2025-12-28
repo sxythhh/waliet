@@ -9,7 +9,8 @@ import instagramLogo from "@/assets/instagram-logo-black.png";
 import animatedImagesIcon from "@/assets/animated-images-icon.svg";
 import copyIconBlack from "@/assets/copy-icon-black.svg";
 import copyIconWhite from "@/assets/copy-icon-white.svg";
-import clippingIcon from "@/assets/clipping-icon.svg";
+import clippingIconWhite from "@/assets/clipping-icon-white.svg";
+import clippingIconDark from "@/assets/clipping-icon-dark.svg";
 import boostIcon from "@/assets/boost-icon.svg";
 import boostIconDark from "@/assets/boost-icon-dark.svg";
 import { useTheme } from "next-themes";
@@ -124,8 +125,8 @@ export function CampaignRowCard({
               </h3>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs">
                 <img 
-                  key={`boost-icon-${isDark}`}
-                  src={type === "campaign" ? clippingIcon : (isDark ? boostIcon : boostIconDark)} 
+                  key={`icon-${isDark}`}
+                  src={type === "campaign" ? (isDark ? clippingIconWhite : clippingIconDark) : (isDark ? boostIcon : boostIconDark)} 
                   alt="" 
                   className="w-3.5 h-3.5" 
                 />
