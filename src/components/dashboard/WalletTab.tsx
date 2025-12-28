@@ -653,36 +653,42 @@ export function WalletTab() {
     setPendingWithdrawals(pendingAmount);
 
     // Extract recipient IDs for transfer_sent transactions
-    const recipientIds = walletTransactions?.filter(txn => 
-      txn.type === 'transfer_sent' && (txn.metadata as any)?.recipient_id
-    ).map(txn => (txn.metadata as any).recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    const recipientIds = walletTransactions?.filter(txn => txn.type === 'transfer_sent' && (txn.metadata as any)?.recipient_id).map(txn => (txn.metadata as any).recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Extract sender IDs for transfer_received transactions
-    const senderIds = walletTransactions?.filter(txn => 
-      txn.type === 'transfer_received' && (txn.metadata as any)?.sender_id
-    ).map(txn => (txn.metadata as any).sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+    const senderIds = walletTransactions?.filter(txn => txn.type === 'transfer_received' && (txn.metadata as any)?.sender_id).map(txn => (txn.metadata as any).sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
     // Fetch recipient profiles
-    let recipientsMap = new Map<string, { username: string; avatar_url: string | null }>();
+    let recipientsMap = new Map<string, {
+      username: string;
+      avatar_url: string | null;
+    }>();
     if (recipientIds.length > 0) {
-      const { data: recipients } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", recipientIds);
+      const {
+        data: recipients
+      } = await supabase.from("profiles").select("id, username, avatar_url").in("id", recipientIds);
       recipients?.forEach(r => {
-        recipientsMap.set(r.id, { username: r.username || '', avatar_url: r.avatar_url });
+        recipientsMap.set(r.id, {
+          username: r.username || '',
+          avatar_url: r.avatar_url
+        });
       });
     }
 
     // Fetch sender profiles
-    let sendersMap = new Map<string, { username: string; avatar_url: string | null }>();
+    let sendersMap = new Map<string, {
+      username: string;
+      avatar_url: string | null;
+    }>();
     if (senderIds.length > 0) {
-      const { data: senders } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", senderIds);
+      const {
+        data: senders
+      } = await supabase.from("profiles").select("id, username, avatar_url").in("id", senderIds);
       senders?.forEach(s => {
-        sendersMap.set(s.id, { username: s.username || '', avatar_url: s.avatar_url });
+        sendersMap.set(s.id, {
+          username: s.username || '',
+          avatar_url: s.avatar_url
+        });
       });
     }
 
@@ -1538,60 +1544,38 @@ export function WalletTab() {
                 }} className="cursor-pointer hover:bg-[#fafafa] dark:hover:bg-[#0a0a0a] transition-colors border-[#dce1eb] dark:border-[#141414]">
                         {/* Source */}
                         <TableCell className="py-4">
-                          {transaction.boost?.brand_name ? (
-                            <div 
-                              className="flex items-center gap-2 hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (transaction.boost?.brand_slug) {
-                                  navigate(`/b/${transaction.boost.brand_slug}`);
-                                }
-                              }}
-                            >
-                              {transaction.boost?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                          {transaction.boost?.brand_name ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      if (transaction.boost?.brand_slug) {
+                        navigate(`/b/${transaction.boost.brand_slug}`);
+                      }
+                    }}>
+                              {transaction.boost?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
                                   <img src={transaction.boost.brand_logo_url} alt={transaction.boost.brand_name} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.boost.brand_name.charAt(0).toUpperCase()}
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <span className="text-sm font-medium">{transaction.boost.brand_name}</span>
-                            </div>
-                          ) : transaction.campaign?.brand_name ? (
-                            <div 
-                              className="flex items-center gap-2 hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (transaction.campaign?.brand_slug) {
-                                  navigate(`/b/${transaction.campaign.brand_slug}`);
-                                }
-                              }}
-                            >
-                              {transaction.campaign?.brand_logo_url ? (
-                                <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
+                            </div> : transaction.campaign?.brand_name ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      if (transaction.campaign?.brand_slug) {
+                        navigate(`/b/${transaction.campaign.brand_slug}`);
+                      }
+                    }}>
+                              {transaction.campaign?.brand_logo_url ? <div className="w-6 h-6 rounded-[7px] overflow-hidden flex-shrink-0">
                                   <img src={transaction.campaign.brand_logo_url} alt={transaction.campaign.brand_name} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
+                                </div> : <div className="w-6 h-6 rounded-[7px] bg-muted flex items-center justify-center flex-shrink-0">
                                   <span className="text-xs text-foreground font-medium">
                                     {transaction.campaign.brand_name.charAt(0).toUpperCase()}
                                   </span>
-                                </div>
-                              )}
+                                </div>}
                               <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
-                            </div>
-                          ) : transaction.type === 'transfer_received' && (transaction.sender || transaction.metadata?.sender_username) ? (
-                            <div 
-                              className="flex items-center gap-2 hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
-                              }}
-                            >
+                            </div> : transaction.type === 'transfer_received' && (transaction.sender || transaction.metadata?.sender_username) ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
+                    }}>
                               <Avatar className="h-6 w-6">
                                 <AvatarImage src={transaction.sender?.avatar_url || undefined} alt={transaction.sender?.username || transaction.metadata?.sender_username} />
                                 <AvatarFallback className="text-xs">
@@ -1599,24 +1583,15 @@ export function WalletTab() {
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
-                            </div>
-                          ) : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? (
-                            <span className="text-sm text-foreground">Wallet</span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>
-                          )}
+                            </div> : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? <span className="text-sm text-foreground">Wallet</span> : <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>}
                         </TableCell>
                         
                         {/* Destination */}
                         <TableCell className="py-4">
-                          {transaction.type === 'transfer_sent' && transaction.recipient ? (
-                            <div 
-                              className="flex items-center gap-2 hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/@${transaction.recipient?.username}`);
-                              }}
-                            >
+                          {transaction.type === 'transfer_sent' && transaction.recipient ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.recipient?.username}`);
+                    }}>
                               <Avatar className="h-6 w-6">
                                 <AvatarImage src={transaction.recipient.avatar_url || undefined} alt={transaction.recipient.username} />
                                 <AvatarFallback className="text-xs">
@@ -1624,22 +1599,14 @@ export function WalletTab() {
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">@{transaction.recipient.username}</span>
-                            </div>
-                          ) : transaction.type === 'transfer_sent' && transaction.metadata?.recipient_username ? (
-                            <div 
-                              className="flex items-center gap-2 hover:underline cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/@${transaction.metadata.recipient_username}`);
-                              }}
-                            >
+                            </div> : transaction.type === 'transfer_sent' && transaction.metadata?.recipient_username ? <div className="flex items-center gap-2 hover:underline cursor-pointer" onClick={e => {
+                      e.stopPropagation();
+                      navigate(`/@${transaction.metadata.recipient_username}`);
+                    }}>
                               <span className="text-sm font-medium">@{transaction.metadata.recipient_username}</span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-foreground">
+                            </div> : <span className="text-sm text-foreground">
                               {transaction.destination || 'Wallet'}
-                            </span>
-                          )}
+                            </span>}
                         </TableCell>
                         
                         {/* Status */}
@@ -1698,7 +1665,7 @@ export function WalletTab() {
                         
                         {/* Amount */}
                         <TableCell className="py-4 text-right">
-                          <span className={`text-sm font-semibold tabular-nums ${transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? 'text-red-500' : 'text-green-500'}`}>
+                          <span className="">
                             {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                           </span>
                         </TableCell>
