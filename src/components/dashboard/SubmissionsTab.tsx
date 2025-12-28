@@ -482,7 +482,7 @@ export function SubmissionsTab() {
   }
   return <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
       {/* Filter */}
-      <div className="pt-5 pb-4 px-0 flex items-center gap-3">
+      <div className="pt-5 pb-4 px-0 flex items-center gap-3 py-[5px]">
         <DropdownMenu open={filterOpen} onOpenChange={open => {
         setFilterOpen(open);
         if (!open) {
