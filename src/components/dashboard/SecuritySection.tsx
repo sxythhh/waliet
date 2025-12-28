@@ -222,7 +222,7 @@ export function SecuritySection() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSetPassword} disabled={sendingReset} className="border-transparent hover:bg-muted" style={{
+          <Button variant="outline" size="sm" onClick={handleSetPassword} disabled={sendingReset} className="border-transparent hover:bg-muted text-foreground hover:text-foreground" style={{
           fontFamily: "Inter",
           letterSpacing: "-0.3px"
         }}>
