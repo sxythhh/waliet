@@ -730,14 +730,7 @@ export function SubmissionsTab() {
                         {/* Video Thumbnail & Title */}
                         <TableCell className="py-3">
                           <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
-                            <div className="w-10 h-[60px] rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
-                              {submission.video_cover_url ? <img src={submission.video_cover_url} alt={submission.video_title || 'Video'} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center">
-                                  <Video className="w-4 h-4 text-muted-foreground" />
-                                </div>}
-                              {getPlatformIcon(submission.platform) && <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-black/60 flex items-center justify-center">
-                                  <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-2.5 h-2.5" />
-                                </div>}
-                            </div>
+                            
                             <div className="min-w-0 max-w-[200px]">
                               <p className="text-sm font-medium truncate group-hover:underline transition-colors" style={{
                           fontFamily: 'Inter',
