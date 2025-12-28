@@ -1144,6 +1144,7 @@ export function ProfileTab() {
           onSave={() => handleSaveProfile({ preventDefault: () => {} } as React.FormEvent)}
           saving={saving}
           hasChanges={profile.username !== originalUsername}
+          originalUsername={originalUsername}
         />
 
         {/* Email Card */}
