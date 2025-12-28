@@ -137,7 +137,7 @@ export function EditProfileDialog({
           </div>
 
           {/* Visibility Toggles */}
-          <div className="pt-2 space-y-4">
+          <div className="pt-2 space-y-2">
             <Label className="text-sm font-medium text-foreground" style={labelStyle}>
               Profile Visibility
             </Label>
