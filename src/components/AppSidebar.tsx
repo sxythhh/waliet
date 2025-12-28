@@ -522,8 +522,8 @@ export function AppSidebar() {
                   <img src={educationInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                   <img src={educationActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.tab === "analytics" ? <div className="relative h-6 w-6">
-                  <img src={scopeInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
-                  <img src={scopeActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                  <img src={campaignsInactive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                  <img src={campaignsActive} alt="" className={`absolute inset-0 h-6 w-6 transition-opacity duration-0 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                 </div> : item.icon ? <item.icon className={`h-6 w-6 ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
               <span className="text-[12px] font-medium font-geist tracking-[-0.5px]">{item.title}</span>
             </button>;
