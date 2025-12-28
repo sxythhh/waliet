@@ -146,3 +146,6 @@ verify_jwt = true
 
 [functions.migrate-legacy-payouts]
 verify_jwt = false
+
+[functions.p2p-transfer]
+verify_jwt = true

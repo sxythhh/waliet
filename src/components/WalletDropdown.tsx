@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDialog";
+import { TransferDialog } from "@/components/dashboard/TransferDialog";
 
 interface WalletDropdownProps {
   variant?: "sidebar" | "header";
@@ -16,6 +17,7 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
   const [balance, setBalance] = useState<number>(0);
   const [pendingWithdrawals, setPendingWithdrawals] = useState<number>(0);
   const [pendingBoostEarnings, setPendingBoostEarnings] = useState<number>(0);
@@ -93,6 +95,10 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
               totalPending={totalPending}
               pendingWithdrawals={pendingWithdrawals}
               onWithdraw={handleWithdraw}
+              onTransfer={() => {
+                setOpen(false);
+                setTransferDialogOpen(true);
+              }}
             />
           </PopoverContent>
         </Popover>
@@ -100,6 +106,12 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
           open={withdrawDialogOpen} 
           onOpenChange={setWithdrawDialogOpen}
           onSuccess={fetchWalletData}
+        />
+        <TransferDialog
+          open={transferDialogOpen}
+          onOpenChange={setTransferDialogOpen}
+          onSuccess={fetchWalletData}
+          currentBalance={balance}
         />
       </>
     );
@@ -143,6 +155,10 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
             totalPending={totalPending}
             pendingWithdrawals={pendingWithdrawals}
             onWithdraw={handleWithdraw}
+            onTransfer={() => {
+              setOpen(false);
+              setTransferDialogOpen(true);
+            }}
           />
         </PopoverContent>
       </Popover>
@@ -150,6 +166,12 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
         open={withdrawDialogOpen} 
         onOpenChange={setWithdrawDialogOpen}
         onSuccess={fetchWalletData}
+      />
+      <TransferDialog
+        open={transferDialogOpen}
+        onOpenChange={setTransferDialogOpen}
+        onSuccess={fetchWalletData}
+        currentBalance={balance}
       />
     </>
   );
@@ -160,9 +182,10 @@ interface WalletDropdownContentProps {
   totalPending: number;
   pendingWithdrawals: number;
   onWithdraw: () => void;
+  onTransfer: () => void;
 }
 
-function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onWithdraw }: WalletDropdownContentProps) {
+function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onWithdraw, onTransfer }: WalletDropdownContentProps) {
   return (
     <div className="space-y-3">
       <div className="space-y-2">
@@ -179,13 +202,23 @@ function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onWi
           <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${pendingWithdrawals.toFixed(2)}</span>
         </div>
       </div>
-      <Button 
-        className="w-full font-inter tracking-[-0.5px]" 
-        size="sm"
-        onClick={onWithdraw}
-      >
-        Withdraw
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          variant="outline"
+          className="flex-1 font-inter tracking-[-0.5px]" 
+          size="sm"
+          onClick={onTransfer}
+        >
+          Transfer
+        </Button>
+        <Button 
+          className="flex-1 font-inter tracking-[-0.5px]" 
+          size="sm"
+          onClick={onWithdraw}
+        >
+          Withdraw
+        </Button>
+      </div>
     </div>
   );
 }

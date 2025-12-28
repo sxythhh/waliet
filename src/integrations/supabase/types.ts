@@ -2678,6 +2678,39 @@ export type Database = {
           },
         ]
       }
+      p2p_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          fee: number
+          id: string
+          net_amount: number
+          recipient_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fee?: number
+          id?: string
+          net_amount: number
+          recipient_id: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee?: number
+          id?: string
+          net_amount?: number
+          recipient_id?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       payment_ledger: {
         Row: {
           accrued_amount: number
