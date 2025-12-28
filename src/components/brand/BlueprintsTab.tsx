@@ -287,25 +287,27 @@ export function BlueprintsTab({
                       {/* Menu Button */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button 
-                            onClick={(e) => e.stopPropagation()} 
-                            className="absolute top-3 right-3 p-1.5 rounded-md hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                              <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
-                            </svg>
-                          </button>
+                          
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openBlueprint(blueprint.id); }}>
+                          <DropdownMenuItem onClick={e => {
+                  e.stopPropagation();
+                  openBlueprint(blueprint.id);
+                }}>
                             <Pencil className="h-3.5 w-3.5 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleActivateBlueprint(blueprint.id); }}>
+                          <DropdownMenuItem onClick={e => {
+                  e.stopPropagation();
+                  handleActivateBlueprint(blueprint.id);
+                }}>
                             <Plus className="h-3.5 w-3.5 mr-2" />
                             Create Campaign
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); deleteBlueprint(blueprint.id); }}>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={e => {
+                  e.stopPropagation();
+                  deleteBlueprint(blueprint.id);
+                }}>
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             Delete
                           </DropdownMenuItem>
