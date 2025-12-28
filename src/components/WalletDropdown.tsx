@@ -159,16 +159,16 @@ function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onGo
     <div className="space-y-3">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground font-medium">Current Balance</span>
-          <span className="text-sm font-semibold">${balance.toFixed(2)}</span>
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Current Balance</span>
+          <span className="text-sm font-semibold font-inter tracking-[-0.5px]">${balance.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-          <span className="text-sm font-medium text-muted-foreground">${totalPending.toFixed(2)}</span>
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Pending Balance</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${totalPending.toFixed(2)}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground font-medium">In Transit</span>
-          <span className="text-sm font-medium text-muted-foreground">${pendingWithdrawals.toFixed(2)}</span>
+          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">In Transit</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${pendingWithdrawals.toFixed(2)}</span>
         </div>
       </div>
       <Button 
@@ -176,7 +176,7 @@ function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onGo
         size="sm"
         onClick={onGoToWallet}
       >
-        View Wallet
+        Withdraw
       </Button>
     </div>
   );
