@@ -56,7 +56,7 @@ export function SettingsCard({
           className={`px-6 py-4 border-t ${
             isDanger
               ? "border-destructive/30 bg-destructive/5"
-              : "border-border bg-muted/30"
+              : "border-border bg-white dark:bg-muted/30"
           } flex items-center justify-between`}
         >
           <div className="flex-1">
