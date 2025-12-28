@@ -1,8 +1,10 @@
-import { Check, Clock, Lock, AlertCircle, Banknote } from "lucide-react";
+import { Check, Clock, AlertCircle, Banknote, Zap, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClearingCountdown } from "./ClearingCountdown";
-export type PayoutStatus = 'accruing' | 'locked' | 'clearing' | 'paid' | 'clawed_back' | 'pending_approval';
+
+export type PayoutStatus = 'accruing' | 'clearing' | 'paid' | 'clawed_back' | 'pending_approval';
+
 interface PayoutStatusBadgeProps {
   status: PayoutStatus;
   amount: number;
@@ -10,7 +12,9 @@ interface PayoutStatusBadgeProps {
   onRequestPayout?: () => void;
   canRequest?: boolean;
   isRpm?: boolean;
+  isBoost?: boolean;
 }
+
 const statusConfig: Record<PayoutStatus, {
   label: string;
   icon: typeof Check;
@@ -22,12 +26,6 @@ const statusConfig: Record<PayoutStatus, {
     icon: Banknote,
     className: 'text-green-600 dark:text-green-400',
     bgClass: 'bg-green-500/10'
-  },
-  locked: {
-    label: 'Locked',
-    icon: Lock,
-    className: 'text-gray-600 dark:text-gray-400',
-    bgClass: 'bg-gray-500/10'
   },
   clearing: {
     label: 'Clearing',
@@ -60,7 +58,8 @@ export function PayoutStatusBadge({
   clearingEndsAt,
   onRequestPayout,
   canRequest = false,
-  isRpm = false
+  isRpm = false,
+  isBoost = false
 }: PayoutStatusBadgeProps) {
   const config = statusConfig[status];
   const Icon = config.icon;
@@ -84,14 +83,30 @@ export function PayoutStatusBadge({
               </span>
             </TooltipTrigger>
             <TooltipContent side="left" className="max-w-xs">
-              {status === 'accruing' && <p className="text-sm">
-                  {isRpm ? 'Earnings accumulating based on views. Request payout when ready.' : 'Ready to request payout.'}
-                </p>}
-              {status === 'locked' && <p className="text-sm">Payout requested, waiting to enter clearing period.</p>}
-              {status === 'clearing' && <p className="text-sm">In 7-day clearing period. Brands can flag during first 4 days.</p>}
+              {status === 'accruing' && (
+                <div className="text-sm space-y-1">
+                  <p>{isRpm ? 'Earnings accumulating based on views.' : 'Ready to request payout.'}</p>
+                  {isBoost ? (
+                    <p className="text-muted-foreground text-xs">Auto-payouts at boost end, or request now.</p>
+                  ) : (
+                    <p className="text-muted-foreground text-xs">Request payout when ready (min $1.00).</p>
+                  )}
+                </div>
+              )}
+              {status === 'clearing' && (
+                <div className="text-sm space-y-1">
+                  <p>In 7-day clearing period.</p>
+                  <p className="text-muted-foreground text-xs">Brands can flag during first 4 days.</p>
+                </div>
+              )}
               {status === 'paid' && <p className="text-sm">Successfully paid to your wallet.</p>}
               {status === 'clawed_back' && <p className="text-sm">This payment was flagged and revoked by the brand.</p>}
-              {status === 'pending_approval' && <p className="text-sm">Waiting for brand approval. Amount is estimated.</p>}
+              {status === 'pending_approval' && (
+                <div className="text-sm space-y-1">
+                  <p>Waiting for brand approval.</p>
+                  <p className="text-muted-foreground text-xs">Amount is estimated until approved.</p>
+                </div>
+              )}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

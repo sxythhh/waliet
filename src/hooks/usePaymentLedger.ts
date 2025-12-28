@@ -14,7 +14,7 @@ export interface PaymentLedgerEntry {
   milestone_threshold: number | null;
   accrued_amount: number;
   paid_amount: number;
-  status: 'pending' | 'locked' | 'clearing' | 'paid' | 'clawed_back';
+  status: 'pending' | 'clearing' | 'paid' | 'clawed_back';
   payout_request_id: string | null;
   locked_at: string | null;
   clearing_ends_at: string | null;
@@ -26,7 +26,7 @@ export interface PaymentLedgerEntry {
 export interface VideoLedgerEntry {
   videoSubmissionId: string | null;
   boostSubmissionId: string | null;
-  status: 'accruing' | 'locked' | 'clearing' | 'paid' | 'clawed_back';
+  status: 'accruing' | 'clearing' | 'paid' | 'clawed_back';
   accrued: number;
   paid: number;
   pending: number;
@@ -48,7 +48,6 @@ export interface PaymentLedgerSummary {
   totalAccrued: number;
   totalPaid: number;
   totalPending: number;
-  totalLocked: number;
   totalClearing: number;
   // Video-level breakdown
   entriesByVideo: Record<string, VideoLedgerEntry>;
@@ -109,7 +108,6 @@ export function usePaymentLedger(userId?: string) {
         totalAccrued: 0,
         totalPaid: 0,
         totalPending: 0,
-        totalLocked: 0,
         totalClearing: 0,
         entriesByVideo: {},
         clearingRequests: [],
@@ -138,9 +136,6 @@ export function usePaymentLedger(userId?: string) {
           summaryData.totalPending += pending;
           uiStatus = 'accruing';
           summaryData.accruingCount++;
-        } else if (entry.status === 'locked') {
-          summaryData.totalLocked += pending;
-          uiStatus = 'locked';
         } else if (entry.status === 'clearing') {
           summaryData.totalClearing += pending;
           uiStatus = 'clearing';
