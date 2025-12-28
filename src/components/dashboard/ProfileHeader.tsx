@@ -346,13 +346,12 @@ export function ProfileHeader({
               <h2 className="text-xl md:text-2xl font-bold text-foreground truncate font-inter tracking-[-0.5px]">
                 {profile?.full_name || profile?.username || "Username"}
               </h2>
-              {profile && <div className="relative flex items-center gap-1 cursor-pointer group" onMouseEnter={() => setIsRankHovered(true)} onMouseLeave={() => setIsRankHovered(false)} onClick={() => setShowRankInfo(true)}>
-                  <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />
-                  
-                </div>}
               <span className="text-muted-foreground text-sm">
                 @{profile?.username || "username"}
               </span>
+              {profile && <div className="relative flex items-center gap-1 cursor-pointer group" onMouseEnter={() => setIsRankHovered(true)} onMouseLeave={() => setIsRankHovered(false)} onClick={() => setShowRankInfo(true)}>
+                  <RankBadge rank={(profile.current_rank || 'Bronze') as RankType} level={profile.current_level || 1} size="sm" />
+                </div>}
               <div className="flex-1" />
               <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-white hover:opacity-90 border-0 border-t border-t-[#4b85f7]" style={{
               backgroundColor: '#1f60dd'
