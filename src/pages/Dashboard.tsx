@@ -293,8 +293,8 @@ export default function Dashboard() {
         hideTrigger 
       />
 
-      {/* Creator Chat Widget - only show in creator mode */}
-      {isCreatorMode && <CreatorChatWidget />}
+      {/* Creator Chat Widget - hidden for now */}
+      {/* {isCreatorMode && <CreatorChatWidget />} */}
 
     </div>;
 }
