@@ -30,6 +30,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
+import { SettingsCard, UsernameSettingsCard, EmailSettingsCard } from "@/components/dashboard/settings";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -144,6 +145,7 @@ export function ProfileTab() {
   } | null>(null);
   const [newEmail, setNewEmail] = useState('');
   const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [originalUsername, setOriginalUsername] = useState('');
   const [expandedCampaignAccounts, setExpandedCampaignAccounts] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const profileInfoRef = useRef<HTMLDivElement>(null);
@@ -194,6 +196,7 @@ export function ProfileTab() {
     if (profileData) {
       setProfile(profileData);
       setNewEmail(profileData.email || '');
+      setOriginalUsername(profileData.username || '');
     }
     setLoading(false);
   };
@@ -1132,371 +1135,78 @@ export function ProfileTab() {
         
       </Collapsible>
 
-      {/* Personal Info */}
-      <Card ref={profileInfoRef} className="bg-card border-0">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold" style={{
-          fontFamily: 'Inter',
-          letterSpacing: '-0.5px'
-        }}>User Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 px-0">
-          <form onSubmit={handleSaveProfile} className="space-y-4">
-            {/* Profile Picture */}
-            
+      {/* User Settings - Redesigned */}
+      <div ref={profileInfoRef} className="space-y-6">
+        {/* Username Card */}
+        <UsernameSettingsCard
+          username={profile.username}
+          onChange={(username) => setProfile({ ...profile, username })}
+          onSave={() => handleSaveProfile({ preventDefault: () => {} } as React.FormEvent)}
+          saving={saving}
+          hasChanges={profile.username !== originalUsername}
+        />
 
-            {/* Discord Account */}
-            <div>
-              <p className="text-sm text-foreground mb-0.5" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Discord</p>
-              <p className="text-xs mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px',
-              color: '#696969'
-            }}>Connect your Discord account to join our community and receive updates directly</p>
-              {profile.discord_username ? <div className="flex items-center justify-between h-10 px-3 bg-muted/30 rounded-md">
-                  <div className="flex items-center gap-2">
-                    <img src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} alt="Discord" className="w-5 h-5 rounded-full" />
-                    <span className="text-sm" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>
-                      {profile.discord_username}
-                    </span>
-                  </div>
-                  <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
-                </div> : <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />}
-            </div>
+        {/* Email Card */}
+        <EmailSettingsCard
+          email={newEmail}
+          onChange={setNewEmail}
+          onSave={handleUpdateEmail}
+          saving={updatingEmail}
+          hasChanges={newEmail !== profile.email}
+        />
 
-            {/* First name */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>First name</p>
-              <Input value={profile.full_name?.split(' ')[0] || ""} onChange={e => {
-              const lastName = profile.full_name?.split(' ').slice(1).join(' ') || '';
-              setProfile({
-                ...profile,
-                full_name: `${e.target.value}${lastName ? ' ' + lastName : ''}`
-              });
-            }} placeholder="First name" className="w-full h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }} />
-            </div>
-
-            {/* Last name */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Last name</p>
-              <Input value={profile.full_name?.split(' ').slice(1).join(' ') || ""} onChange={e => {
-              const firstName = profile.full_name?.split(' ')[0] || '';
-              setProfile({
-                ...profile,
-                full_name: `${firstName}${e.target.value ? ' ' + e.target.value : ''}`
-              });
-            }} placeholder="Last name" className="w-full h-10 bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }} />
-            </div>
-
-            {/* Username */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Username</p>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 text-sm text-muted-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>virality.gg/</span>
-                <Input value={profile.username} onChange={e => setProfile({
-                ...profile,
-                username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')
-              })} placeholder="username" className="h-10 pl-[85px] bg-muted/30 border-0 focus-visible:ring-0 focus-visible:ring-offset-0" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }} />
-              </div>
-            </div>
-
-            {/* Location */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Location</p>
-              <Select value={profile.country || ""} onValueChange={value => setProfile({
-              ...profile,
-              country: value
-            })}>
-                <SelectTrigger className="h-10 bg-muted/30 border-0 focus:ring-0 focus:ring-offset-0">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Select country" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="bg-popover max-h-[300px]">
-                  {["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"].map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Languages */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Languages you post in</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>
-                    <div className="flex flex-wrap gap-1.5 py-1">
-                      {profile.content_languages?.length ? profile.content_languages.map(lang => <Badge key={lang} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>
-                            {lang}
-                            <X className="ml-1 h-3 w-3 cursor-pointer" onClick={e => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setProfile({
-                          ...profile,
-                          content_languages: profile.content_languages?.filter(l => l !== lang) || []
-                        });
-                      }} />
-                          </Badge>) : <span className="text-muted-foreground text-sm" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>Select languages</span>}
-                    </div>
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-popover" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search languages..." style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }} />
-                    <CommandList>
-                      <CommandEmpty style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>No language found.</CommandEmpty>
-                      <CommandGroup>
-                        {["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Hindi", "Arabic", "Turkish", "Polish", "Vietnamese", "Thai", "Indonesian", "Tagalog", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Hebrew", "Czech", "Romanian", "Hungarian", "Ukrainian"].map(lang => <CommandItem key={lang} onSelect={() => {
-                        const current = profile.content_languages || [];
-                        if (current.includes(lang)) {
-                          setProfile({
-                            ...profile,
-                            content_languages: current.filter(l => l !== lang)
-                          });
-                        } else {
-                          setProfile({
-                            ...profile,
-                            content_languages: [...current, lang]
-                          });
-                        }
-                      }} style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>
-                            <Check className={`mr-2 h-4 w-4 ${profile.content_languages?.includes(lang) ? "opacity-100" : "opacity-0"}`} />
-                            {lang}
-                          </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Content Style */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Preferred content style</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full h-auto min-h-10 justify-between bg-muted/30 border-0 hover:bg-muted/40" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}>
-                    <div className="flex flex-wrap gap-1.5 py-1">
-                      {profile.content_styles?.length ? profile.content_styles.map(style => <Badge key={style} variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>
-                            {style}
-                            <X className="ml-1 h-3 w-3 cursor-pointer" onClick={e => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setProfile({
-                          ...profile,
-                          content_styles: profile.content_styles?.filter(s => s !== style) || []
-                        });
-                      }} />
-                          </Badge>) : <span className="text-muted-foreground text-sm" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>Select content styles</span>}
-                    </div>
-                    <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-popover" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search styles..." style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }} />
-                    <CommandList>
-                      <CommandEmpty style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>No style found.</CommandEmpty>
-                      <CommandGroup>
-                        {["UGC", "Faceless UGC", "Clipping", "Edits", "Music", "Memes", "Slideshows", "AI", "POV"].map(style => <CommandItem key={style} onSelect={() => {
-                        const current = profile.content_styles || [];
-                        if (current.includes(style)) {
-                          setProfile({
-                            ...profile,
-                            content_styles: current.filter(s => s !== style)
-                          });
-                        } else {
-                          setProfile({
-                            ...profile,
-                            content_styles: [...current, style]
-                          });
-                        }
-                      }} style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>
-                            <Check className={`mr-2 h-4 w-4 ${profile.content_styles?.includes(style) ? "opacity-100" : "opacity-0"}`} />
-                            {style}
-                          </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {/* Email */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Email</p>
+        {/* Discord Card */}
+        <SettingsCard
+          title="Discord"
+          description="Connect your Discord account to join our community and receive updates directly"
+          footerHint={profile.discord_username ? "Your Discord account is connected." : "Connect to unlock community features."}
+        >
+          {profile.discord_username ? (
+            <div className="flex items-center justify-between max-w-md h-11 px-3 bg-background border border-border rounded-md">
               <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="Enter email address" className="pl-9" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }} />
-                </div>
-                {newEmail !== profile.email && <Button type="button" size="sm" variant="outline" disabled={updatingEmail || !newEmail} onClick={handleUpdateEmail} style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-                    {updatingEmail ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : 'Update'}
-                  </Button>}
+                <img
+                  src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"}
+                  alt="Discord"
+                  className="w-5 h-5 rounded-full"
+                />
+                <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                  {profile.discord_username}
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-                A confirmation email will be sent to verify the new address
-              </p>
+              <DiscordLinkDialog
+                userId={profile.id}
+                discordUsername={profile.discord_username}
+                discordAvatar={profile.discord_avatar || undefined}
+                onSuccess={fetchProfile}
+              />
             </div>
+          ) : (
+            <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />
+          )}
+        </SettingsCard>
 
-            {/* Phone */}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>Phone number</p>
-              <PhoneInput value={profile.phone_number || ""} onChange={value => setProfile({
-              ...profile,
-              phone_number: value
-            })} placeholder="Enter phone number" />
-            </div>
-
-            {/* Private Profile */}
-            <div className="pt-4 border-t border-border">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>Private Profile</p>
-                  <p className="text-xs text-muted-foreground" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.3px'
-                }}>
-                    When enabled, your public profile page will show "This profile is private" to other users
-                  </p>
-                </div>
-                <Switch checked={profile.is_private} onCheckedChange={checked => setProfile({
-                ...profile,
-                is_private: checked
-              })} />
-              </div>
-              {profile.is_private && <div className="mt-3 p-3 bg-muted/30 rounded-md">
-                  <p className="text-xs text-muted-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-                    When private profile is enabled:
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground" style={{
-                fontFamily: 'Inter',
-                letterSpacing: '-0.3px'
-              }}>
-                    <li className="flex items-start gap-2">
-                      <span className="text-muted-foreground/60">•</span>
-                      Your public profile page will be hidden from other users
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-muted-foreground/60">•</span>
-                      Your username will remain anonymous              
-                    </li>
-                  </ul>
-                </div>}
-            </div>
-
-            {/* Brand Workspace */}
-            
-
-            {/* Save Button */}
-            <div className="pt-2 flex justify-end">
-              <Button type="submit" disabled={saving} className="gap-2" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-                {saving ? <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Saving...
-                  </> : 'Save Changes'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Private Profile Card */}
+        <SettingsCard
+          title="Private Profile"
+          description="When enabled, your public profile page will show 'This profile is private' to other users"
+          footerHint={profile.is_private ? "Your profile is currently hidden from other users." : "Your profile is publicly visible."}
+          saveButton={{
+            disabled: saving,
+            loading: saving,
+            onClick: () => handleSaveProfile({ preventDefault: () => {} } as React.FormEvent),
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={profile.is_private}
+              onCheckedChange={(checked) => setProfile({ ...profile, is_private: checked })}
+            />
+            <span className="text-sm text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              {profile.is_private ? "Private mode enabled" : "Profile is public"}
+            </span>
+          </div>
+        </SettingsCard>
+      </div>
 
       {/* Security Section */}
       <SecuritySection />
