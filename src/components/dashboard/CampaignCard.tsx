@@ -72,11 +72,11 @@ export function CampaignCard({
               style={{ backgroundColor: brand_color || 'hsl(var(--muted))' }}
             >
               {brand_logo_url && (
-                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg bg-background/10 backdrop-blur-sm p-2">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg">
                   <OptimizedImage
                     src={brand_logo_url}
                     alt={brand_name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain rounded-2xl"
                   />
                 </div>
               )}
