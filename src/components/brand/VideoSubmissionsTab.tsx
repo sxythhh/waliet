@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Users } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -316,19 +316,14 @@ export function VideoSubmissionsTab({
           }
 
           // Fetch demographic scores for users
-          const { data: socialAccountsData } = await supabase
-            .from("social_accounts")
-            .select("id, user_id, platform")
-            .in("user_id", userIds);
-
+          const {
+            data: socialAccountsData
+          } = await supabase.from("social_accounts").select("id, user_id, platform").in("user_id", userIds);
           if (socialAccountsData && socialAccountsData.length > 0) {
             const socialAccountIds = socialAccountsData.map(sa => sa.id);
-            const { data: demographicsData } = await supabase
-              .from("demographic_submissions")
-              .select("social_account_id, score")
-              .in("social_account_id", socialAccountIds)
-              .eq("status", "approved");
-
+            const {
+              data: demographicsData
+            } = await supabase.from("demographic_submissions").select("social_account_id, score").in("social_account_id", socialAccountIds).eq("status", "approved");
             if (demographicsData) {
               const demoMap: Record<string, DemographicScore> = {};
               demographicsData.forEach(d => {
@@ -856,7 +851,6 @@ export function VideoSubmissionsTab({
     }
     setSelectedVideos(newSet);
   };
-
   const toggleSelectAllPending = (pendingVideos: UnifiedVideo[]) => {
     const pendingIds = pendingVideos.filter(v => v.status === "pending").map(v => v.id);
     const allSelected = pendingIds.every(id => selectedVideos.has(id));
@@ -866,7 +860,6 @@ export function VideoSubmissionsTab({
       setSelectedVideos(new Set(pendingIds));
     }
   };
-
   const handleBulkApprove = async () => {
     if (selectedVideos.size === 0) return;
     setProcessing(true);
@@ -884,14 +877,16 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
-
   const handleBulkReject = async () => {
     if (selectedVideos.size === 0) return;
     setProcessing(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
       const videosToReject = allVideos.filter(v => selectedVideos.has(v.id) && v.status === "pending");
       for (const video of videosToReject) {
         await supabase.from("video_submissions").update({
@@ -901,11 +896,11 @@ export function VideoSubmissionsTab({
           rejection_reason: "Bulk rejected"
         }).eq("id", video.id);
       }
-      setSubmissions(prev => prev.map(s => 
-        selectedVideos.has(s.id) && s.status === "pending" 
-          ? { ...s, status: "rejected", reviewed_at: new Date().toISOString() } 
-          : s
-      ));
+      setSubmissions(prev => prev.map(s => selectedVideos.has(s.id) && s.status === "pending" ? {
+        ...s,
+        status: "rejected",
+        reviewed_at: new Date().toISOString()
+      } : s));
       setSelectedVideos(new Set());
       toast.success(`Rejected ${videosToReject.length} videos`);
       onSubmissionReviewed?.();
@@ -916,7 +911,6 @@ export function VideoSubmissionsTab({
       setProcessing(false);
     }
   };
-
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -1012,28 +1006,12 @@ export function VideoSubmissionsTab({
 
         {/* Mobile View Toggle */}
         <div className="flex md:hidden items-center gap-1 bg-muted/30 rounded-lg p-1">
-          <button 
-            onClick={() => setMobileView("creators")} 
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors",
-              mobileView === "creators" 
-                ? "bg-background text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Users className="h-3.5 w-3.5" />
+          <button onClick={() => setMobileView("creators")} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors", mobileView === "creators" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            
             Creators
           </button>
-          <button 
-            onClick={() => setMobileView("videos")} 
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors",
-              mobileView === "videos" 
-                ? "bg-background text-foreground shadow-sm" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Video className="h-3.5 w-3.5" />
+          <button onClick={() => setMobileView("videos")} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors", mobileView === "videos" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            
             Videos
           </button>
         </div>
@@ -1043,13 +1021,11 @@ export function VideoSubmissionsTab({
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left: Creator List */}
-        <div className={cn(
-          "md:w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex-col",
-          // Mobile: show/hide based on mobileView
-          mobileView === "creators" ? "flex" : "hidden",
-          // Desktop: always show
-          "md:flex"
-        )}>
+        <div className={cn("md:w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex-col",
+      // Mobile: show/hide based on mobileView
+      mobileView === "creators" ? "flex" : "hidden",
+      // Desktop: always show
+      "md:flex")}>
           {/* Header with title and search */}
           <div className="p-3 border-b space-y-2 border-border/50 py-2">
             <div className="relative">
@@ -1092,11 +1068,9 @@ export function VideoSubmissionsTab({
                             <p className="font-medium text-sm truncate">
                               {creator.profile.full_name || creator.profile.username}
                             </p>
-                            {pendingCount > 0 && (
-                              <span className="text-[10px] text-amber-500 font-medium whitespace-nowrap">
+                            {pendingCount > 0 && <span className="text-[10px] text-amber-500 font-medium whitespace-nowrap">
                                 {pendingCount} Pending
-                              </span>
-                            )}
+                              </span>}
                           </div>
                           <p className="text-xs text-muted-foreground">
                             @{creator.profile.username}
@@ -1123,21 +1097,16 @@ export function VideoSubmissionsTab({
         </div>
 
         {/* Right: Video List */}
-        <div className={cn(
-          "flex-1 overflow-hidden flex-col",
-          // Mobile: show/hide based on mobileView
-          mobileView === "videos" ? "flex" : "hidden",
-          // Desktop: always show
-          "md:flex"
-        )}>
+        <div className={cn("flex-1 overflow-hidden flex-col",
+      // Mobile: show/hide based on mobileView
+      mobileView === "videos" ? "flex" : "hidden",
+      // Desktop: always show
+      "md:flex")}>
           <div className="p-2.5 border-b border-border space-y-2 py-2">
             {/* Header */}
             <div className="flex items-center gap-2.5 h-8">
               {/* Mobile back button */}
-              <button 
-                onClick={() => setMobileView("creators")} 
-                className="flex md:hidden items-center justify-center h-7 w-7 rounded-md bg-muted/50 hover:bg-muted transition-colors"
-              >
+              <button onClick={() => setMobileView("creators")} className="flex md:hidden items-center justify-center h-7 w-7 rounded-md bg-muted/50 hover:bg-muted transition-colors">
                 <ArrowLeft className="h-4 w-4" />
               </button>
               {selectedCreator && profiles[selectedCreator] && <Avatar className="h-7 w-7 ring-2 ring-background shrink-0">
@@ -1208,23 +1177,17 @@ export function VideoSubmissionsTab({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="bg-background border border-border min-w-[120px]">
                   {[{
-                    value: "date",
-                    label: "Upload Date"
-                  }, {
-                    value: "views",
-                    label: "Views"
-                  }, {
-                    value: "payout",
-                    label: "Payout"
-                  }].map(option => (
-                    <DropdownMenuItem 
-                      key={option.value} 
-                      onClick={() => setSortBy(option.value as typeof sortBy)} 
-                      className={`text-xs tracking-[-0.5px] cursor-pointer ${sortBy === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}
-                    >
+                  value: "date",
+                  label: "Upload Date"
+                }, {
+                  value: "views",
+                  label: "Views"
+                }, {
+                  value: "payout",
+                  label: "Payout"
+                }].map(option => <DropdownMenuItem key={option.value} onClick={() => setSortBy(option.value as typeof sortBy)} className={`text-xs tracking-[-0.5px] cursor-pointer ${sortBy === option.value ? "bg-muted/50 text-foreground" : "text-muted-foreground"}`}>
                       {option.label}
-                    </DropdownMenuItem>
-                  ))}
+                    </DropdownMenuItem>)}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -1358,14 +1321,8 @@ export function VideoSubmissionsTab({
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border/40">
                           <TableHead className="w-8 p-0 pl-2">
-                            <div 
-                              className="h-4 w-4 rounded border border-border/60 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => toggleSelectAllPending(filteredVids)}
-                            >
-                              {filteredVids.filter(v => v.status === "pending").length > 0 && 
-                               filteredVids.filter(v => v.status === "pending").every(v => selectedVideos.has(v.id)) && (
-                                <Check className="h-3 w-3 text-primary" />
-                              )}
+                            <div className="h-4 w-4 rounded border border-border/60 flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSelectAllPending(filteredVids)}>
+                              {filteredVids.filter(v => v.status === "pending").length > 0 && filteredVids.filter(v => v.status === "pending").every(v => selectedVideos.has(v.id)) && <Check className="h-3 w-3 text-primary" />}
                             </div>
                           </TableHead>
                           <TableHead className="text-[10px] font-['Inter'] font-medium tracking-[-0.5px] text-muted-foreground">Title</TableHead>
@@ -1387,15 +1344,7 @@ export function VideoSubmissionsTab({
                       const isSelected = selectedVideos.has(video.id);
                       return <TableRow key={video.id} className={cn("border-border/30 group font-['Inter'] hover:bg-[#0e0e0e]", isSelected && "bg-primary/5")}>
                               <TableCell className="w-8 p-0 pl-2">
-                                <div 
-                                  className={cn(
-                                    "h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all",
-                                    isSelected 
-                                      ? "border-primary bg-primary" 
-                                      : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
-                                  )}
-                                  onClick={() => toggleVideoSelection(video.id)}
-                                >
+                                <div className={cn("h-4 w-4 rounded border flex items-center justify-center cursor-pointer transition-all", isSelected ? "border-primary bg-primary" : "border-border/60 opacity-0 group-hover:opacity-100 hover:bg-muted/50")} onClick={() => toggleVideoSelection(video.id)}>
                                   {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
                                 </div>
                               </TableCell>
@@ -1405,22 +1354,16 @@ export function VideoSubmissionsTab({
                                 </a>
                               </TableCell>
                               <TableCell>
-                                {profile ? (
-                                  <div className="flex items-center gap-1.5">
-                                    {profile.avatar_url ? (
-                                      <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" />
-                                    ) : (
-                                      <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
+                                {profile ? <div className="flex items-center gap-1.5">
+                                    {profile.avatar_url ? <img src={profile.avatar_url} alt={profile.full_name || profile.username || "User"} className="h-5 w-5 rounded-md object-cover flex-shrink-0" /> : <div className="h-5 w-5 rounded-md bg-muted/50 flex items-center justify-center flex-shrink-0">
                                         <span className="text-[10px] font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground uppercase">
                                           {(profile.full_name || profile.username || "U").charAt(0)}
                                         </span>
-                                      </div>
-                                    )}
+                                      </div>}
                                     <span className="text-xs font-['Inter'] tracking-[-0.5px] text-foreground">
                                       {profile.full_name || profile.username}
                                     </span>
-                                  </div>
-                                ) : null}
+                                  </div> : null}
                               </TableCell>
                               <TableCell>
                                 <div className="flex flex-col gap-1.5">
@@ -1589,53 +1532,31 @@ export function VideoSubmissionsTab({
 
       {/* Floating Bulk Actions Bar */}
       {selectedVideos.size > 0 && (() => {
-        // Get selected video objects to check their statuses
-        const selectedVideoObjects = allVideos.filter(v => selectedVideos.has(v.id));
-        const hasApprovable = selectedVideoObjects.some(v => v.status !== 'approved' && v.user_id);
-        const hasRejectable = selectedVideoObjects.some(v => v.status !== 'rejected');
-        
-        return (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4 font-inter tracking-[-0.5px]">
+      // Get selected video objects to check their statuses
+      const selectedVideoObjects = allVideos.filter(v => selectedVideos.has(v.id));
+      const hasApprovable = selectedVideoObjects.some(v => v.status !== 'approved' && v.user_id);
+      const hasRejectable = selectedVideoObjects.some(v => v.status !== 'rejected');
+      return <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-background/95 backdrop-blur-md border border-border/60 rounded-xl shadow-xl flex items-center gap-4 font-inter tracking-[-0.5px]">
             <span className="text-sm">
               <span className="font-semibold text-foreground">{selectedVideos.size}</span>
               <span className="text-muted-foreground/70"> video{selectedVideos.size > 1 ? 's' : ''} selected</span>
             </span>
             <div className="h-4 w-px bg-border/50" />
             <div className="flex items-center gap-2">
-              {hasApprovable && (
-                <Button 
-                  size="sm" 
-                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm shadow-none tracking-[-0.3px]"
-                  onClick={handleBulkApprove}
-                  disabled={processing}
-                >
+              {hasApprovable && <Button size="sm" className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#1c823a] hover:bg-[#1c823a]/90 text-white border-t border-t-[#43954d] rounded-sm shadow-none tracking-[-0.3px]" onClick={handleBulkApprove} disabled={processing}>
                   <Check className="h-3.5 w-3.5" />
                   Approve{selectedVideos.size > 1 ? ' All' : ''}
-                </Button>
-              )}
-              {hasRejectable && (
-                <Button 
-                  size="sm" 
-                  className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm shadow-none tracking-[-0.3px]"
-                  onClick={handleBulkReject}
-                  disabled={processing}
-                >
+                </Button>}
+              {hasRejectable && <Button size="sm" className="h-8 px-4 text-xs font-medium gap-1.5 bg-[#b60b0b] hover:bg-[#b60b0b]/90 text-white border-t border-t-[#ed3030] rounded-sm shadow-none tracking-[-0.3px]" onClick={handleBulkReject} disabled={processing}>
                   <X className="h-3.5 w-3.5" />
                   Reject{selectedVideos.size > 1 ? ' All' : ''}
-                </Button>
-              )}
-              <Button 
-                size="sm" 
-                variant="ghost"
-                className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg tracking-[-0.3px]"
-                onClick={() => setSelectedVideos(new Set())}
-              >
+                </Button>}
+              <Button size="sm" variant="ghost" className="h-8 px-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg tracking-[-0.3px]" onClick={() => setSelectedVideos(new Set())}>
                 Clear
               </Button>
             </div>
-          </div>
-        );
-      })()}
+          </div>;
+    })()}
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
