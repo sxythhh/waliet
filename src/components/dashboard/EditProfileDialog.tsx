@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, MapPin, Globe, Palette, Languages } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -163,20 +163,31 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
     }
   };
 
+  const labelStyle = { fontFamily: "Inter", letterSpacing: "-0.5px" };
+  const inputStyle = { fontFamily: "Inter", letterSpacing: "-0.3px" };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-geist tracking-[-0.5px]">Edit Profile</DialogTitle>
-          <DialogDescription className="font-inter tracking-[-0.3px]">
-            Update your profile information
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
+          <DialogTitle 
+            className="text-lg font-semibold text-foreground"
+            style={labelStyle}
+          >
+            Edit Profile
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        {/* Form Content */}
+        <div className="px-6 py-5 space-y-5">
           {/* Display Name */}
           <div className="space-y-2">
-            <Label htmlFor="full_name" className="text-sm font-medium">
+            <Label 
+              htmlFor="full_name" 
+              className="text-sm font-medium text-foreground"
+              style={labelStyle}
+            >
               Display Name
             </Label>
             <Input
@@ -184,13 +195,18 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               placeholder="Your display name"
-              className="h-10"
+              className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
+              style={inputStyle}
             />
           </div>
 
           {/* Bio */}
           <div className="space-y-2">
-            <Label htmlFor="bio" className="text-sm font-medium">
+            <Label 
+              htmlFor="bio" 
+              className="text-sm font-medium text-foreground"
+              style={labelStyle}
+            >
               Bio
             </Label>
             <Textarea
@@ -198,83 +214,115 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               placeholder="Tell us about yourself..."
-              className="min-h-[80px] resize-none"
+              className="min-h-[100px] resize-none bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
+              style={inputStyle}
               maxLength={160}
             />
-            <p className="text-xs text-muted-foreground text-right">
+            <p 
+              className="text-xs text-muted-foreground text-right"
+              style={inputStyle}
+            >
               {formData.bio.length}/160
             </p>
           </div>
 
-          {/* Content Style */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Palette className="h-3.5 w-3.5 text-muted-foreground" />
-              Preferred Content Style
-            </Label>
-            <Select
-              value={formData.content_style}
-              onValueChange={(value) => setFormData({ ...formData, content_style: value })}
-            >
-              <SelectTrigger className="h-10 bg-background">
-                <SelectValue placeholder="Select style" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border z-50">
-                {CONTENT_STYLE_OPTIONS.map((style) => (
-                  <SelectItem key={style} value={style}>
-                    {style}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Two Column Row */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Content Style */}
+            <div className="space-y-2">
+              <Label 
+                className="text-sm font-medium text-foreground"
+                style={labelStyle}
+              >
+                Content Style
+              </Label>
+              <Select
+                value={formData.content_style}
+                onValueChange={(value) => setFormData({ ...formData, content_style: value })}
+              >
+                <SelectTrigger 
+                  className="h-11 bg-muted/30 border-border"
+                  style={inputStyle}
+                >
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border z-50">
+                  {CONTENT_STYLE_OPTIONS.map((style) => (
+                    <SelectItem key={style} value={style} style={inputStyle}>
+                      {style}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Language */}
+            <div className="space-y-2">
+              <Label 
+                className="text-sm font-medium text-foreground"
+                style={labelStyle}
+              >
+                Language
+              </Label>
+              <Select
+                value={formData.content_language}
+                onValueChange={(value) => setFormData({ ...formData, content_language: value })}
+              >
+                <SelectTrigger 
+                  className="h-11 bg-muted/30 border-border"
+                  style={inputStyle}
+                >
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border z-50">
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <SelectItem key={lang} value={lang} style={inputStyle}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* Language */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <Languages className="h-3.5 w-3.5 text-muted-foreground" />
-              Language
-            </Label>
-            <Select
-              value={formData.content_language}
-              onValueChange={(value) => setFormData({ ...formData, content_language: value })}
-            >
-              <SelectTrigger className="h-10 bg-background">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border z-50">
-                {LANGUAGE_OPTIONS.map((lang) => (
-                  <SelectItem key={lang} value={lang}>
-                    {lang}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Location */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-2">
-              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-              Location
-            </Label>
-            <div className="grid grid-cols-2 gap-3">
+          {/* Location Row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label 
+                className="text-sm font-medium text-foreground"
+                style={labelStyle}
+              >
+                City
+              </Label>
               <Input
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                placeholder="City"
-                className="h-10"
+                placeholder="Enter city"
+                className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
+                style={inputStyle}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label 
+                className="text-sm font-medium text-foreground"
+                style={labelStyle}
+              >
+                Country
+              </Label>
               <Select
                 value={formData.country}
                 onValueChange={(value) => setFormData({ ...formData, country: value })}
               >
-                <SelectTrigger className="h-10 bg-background">
-                  <SelectValue placeholder="Country" />
+                <SelectTrigger 
+                  className="h-11 bg-muted/30 border-border"
+                  style={inputStyle}
+                >
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border z-50 max-h-[200px]">
                   {COUNTRY_OPTIONS.map((country) => (
-                    <SelectItem key={country} value={country}>
+                    <SelectItem key={country} value={country} style={inputStyle}>
                       {country}
                     </SelectItem>
                   ))}
@@ -284,27 +332,27 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-2">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => onOpenChange(false)}
             disabled={saving}
+            className="h-10 px-4"
+            style={labelStyle}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="min-w-[100px]"
+            className="h-10 px-5 min-w-[100px]"
+            style={labelStyle}
           >
             {saving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              "Save Changes"
+              "Save"
             )}
           </Button>
         </div>
