@@ -228,12 +228,8 @@ export function CampaignApplicationsView({
 
       // Find next application before updating the list
       const currentIndex = filteredApplications.findIndex(a => a.id === applicationId);
-      const nextPendingApp = applications.find((a, i) => 
-        a.id !== applicationId && a.status === 'pending'
-      );
-      const nextApp = nextPendingApp || 
-        filteredApplications[currentIndex + 1] || 
-        filteredApplications[currentIndex - 1];
+      const nextPendingApp = applications.find((a, i) => a.id !== applicationId && a.status === 'pending');
+      const nextApp = nextPendingApp || filteredApplications[currentIndex + 1] || filteredApplications[currentIndex - 1];
 
       // Update status in list instead of removing
       setApplications(prev => prev.map(a => a.id === applicationId ? {
@@ -291,11 +287,9 @@ export function CampaignApplicationsView({
     setSelectedAppId(appId);
     setMobileShowDetail(true);
   };
-
   const handleMobileBack = () => {
     setMobileShowDetail(false);
   };
-
   if (loading) {
     return <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-48 bg-muted/50 dark:bg-muted-foreground/20" />
@@ -374,10 +368,7 @@ export function CampaignApplicationsView({
             <div className="flex-1 overflow-auto p-4 md:p-6 pb-24">
               <div className="space-y-5">
                 {/* Mobile Back Button */}
-                <button 
-                  onClick={handleMobileBack}
-                  className="flex md:hidden items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2"
-                >
+                <button onClick={handleMobileBack} className="flex md:hidden items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2">
                   <ArrowLeft className="h-4 w-4" />
                   <span className="text-sm font-medium">Back to applications</span>
                 </button>
@@ -420,21 +411,7 @@ export function CampaignApplicationsView({
                       </p>
                     </div>
                     {/* View in Database Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground hidden sm:flex"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const creatorId = selectedApp.creator_id || selectedApp.user_id;
-                        if (creatorId && workspace) {
-                          navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=database&creator=${creatorId}`);
-                        }
-                      }}
-                    >
-                      <Database className="h-3.5 w-3.5" />
-                      <span className="text-xs tracking-[-0.3px]">View</span>
-                    </Button>
+                    
                   </div>
                   {getStatusBadge(selectedApp.status)}
                 </div>
