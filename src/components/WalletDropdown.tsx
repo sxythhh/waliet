@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, Wallet } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDialog";
 import { TransferDialog } from "@/components/dashboard/TransferDialog";
+import walletIconWhite from "@/assets/wallet-icon-white.svg";
 
 interface WalletDropdownProps {
   variant?: "sidebar" | "header";
@@ -80,8 +81,8 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
       <>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-muted/50 transition-colors">
-              <Wallet className="w-5 h-5 text-muted-foreground" />
+            <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary hover:bg-primary/90 transition-colors">
+              <img src={walletIconWhite} alt="Wallet" className="w-5 h-5" />
             </button>
           </PopoverTrigger>
           <PopoverContent 
