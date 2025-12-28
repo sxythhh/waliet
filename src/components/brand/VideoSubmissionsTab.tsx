@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Users } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -169,6 +170,8 @@ export function VideoSubmissionsTab({
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
+  const [mobileView, setMobileView] = useState<"creators" | "videos">("creators");
+  const isMobile = useIsMobile();
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -961,8 +964,8 @@ export function VideoSubmissionsTab({
   }, [allVideos, profiles, monthStart, monthEnd]);
   if (loading) {
     return <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-[340px] flex-shrink-0 border-r border-border p-4 space-y-4">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <div className="hidden md:flex md:w-[340px] flex-shrink-0 border-r border-border p-4 space-y-4 flex-col">
             {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
           </div>
           <div className="flex-1 p-6 space-y-4">
@@ -987,7 +990,7 @@ export function VideoSubmissionsTab({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-foreground tracking-[-0.5px]">Videos</h3>
-              {lastSynced && <span className="text-[11px] text-muted-foreground">
+              {lastSynced && <span className="text-[11px] text-muted-foreground hidden sm:inline">
                   Updated {format(lastSynced, "MMM d, h:mm a")}
                 </span>}
             </div>
@@ -1007,12 +1010,46 @@ export function VideoSubmissionsTab({
             </Button>}
         </div>
 
+        {/* Mobile View Toggle */}
+        <div className="flex md:hidden items-center gap-1 bg-muted/30 rounded-lg p-1">
+          <button 
+            onClick={() => setMobileView("creators")} 
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors",
+              mobileView === "creators" 
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Creators
+          </button>
+          <button 
+            onClick={() => setMobileView("videos")} 
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium transition-colors",
+              mobileView === "videos" 
+                ? "bg-background text-foreground shadow-sm" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Video className="h-3.5 w-3.5" />
+            Videos
+          </button>
+        </div>
+
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left: Creator List */}
-        <div className="w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex flex-col">
+        <div className={cn(
+          "md:w-[340px] flex-shrink-0 border-r border-border overflow-hidden flex-col",
+          // Mobile: show/hide based on mobileView
+          mobileView === "creators" ? "flex" : "hidden",
+          // Desktop: always show
+          "md:flex"
+        )}>
           {/* Header with title and search */}
           <div className="p-3 border-b space-y-2 border-border/50 py-2">
             <div className="relative">
@@ -1036,7 +1073,13 @@ export function VideoSubmissionsTab({
               return filteredCreators.map(creator => {
                 const isSelected = selectedCreator === creator.userId;
                 const pendingCount = creator.submissions.filter(s => s.status === "pending").length;
-                return <button key={creator.userId} onClick={() => setSelectedCreator(isSelected ? null : creator.userId)} className="w-full rounded-xl py-2 px-3 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30 font-inter tracking-[-0.5px]">
+                return <button key={creator.userId} onClick={() => {
+                  setSelectedCreator(isSelected ? null : creator.userId);
+                  // On mobile, switch to videos view when selecting a creator
+                  if (!isSelected && isMobile) {
+                    setMobileView("videos");
+                  }
+                }} className="w-full rounded-xl py-2 px-3 text-left transition-all bg-card/30 hover:bg-card/50 border border-border/30 font-inter tracking-[-0.5px]">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8 border border-border/40">
                           <AvatarImage src={creator.profile.avatar_url || undefined} />
@@ -1080,10 +1123,23 @@ export function VideoSubmissionsTab({
         </div>
 
         {/* Right: Video List */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className={cn(
+          "flex-1 overflow-hidden flex-col",
+          // Mobile: show/hide based on mobileView
+          mobileView === "videos" ? "flex" : "hidden",
+          // Desktop: always show
+          "md:flex"
+        )}>
           <div className="p-2.5 border-b border-border space-y-2 py-2">
             {/* Header */}
             <div className="flex items-center gap-2.5 h-8">
+              {/* Mobile back button */}
+              <button 
+                onClick={() => setMobileView("creators")} 
+                className="flex md:hidden items-center justify-center h-7 w-7 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
               {selectedCreator && profiles[selectedCreator] && <Avatar className="h-7 w-7 ring-2 ring-background shrink-0">
                   <AvatarImage src={profiles[selectedCreator]?.avatar_url || undefined} />
                   <AvatarFallback className="text-xs font-medium bg-muted/60">
@@ -1096,7 +1152,7 @@ export function VideoSubmissionsTab({
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap overflow-x-auto pb-1 -mb-1">
               {/* Source Filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
