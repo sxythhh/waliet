@@ -11,6 +11,7 @@ import viralityLogo from "@/assets/virality-logo.webp";
 import viralityGhostLogo from "@/assets/virality-ghost-logo.png";
 import { DollarSign, TrendingUp, Wallet as WalletIcon, Plus, Trash2, CreditCard, ArrowUpRight, ChevronDown, ArrowDownLeft, Clock, X, Copy, Check, Eye, EyeOff, Hourglass, ArrowRightLeft, ChevronLeft, ChevronRight, Upload, RefreshCw, Gift, Star, Building2, Smartphone, SlidersHorizontal, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import { Separator } from "@/components/ui/separator";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, Bar, BarChart } from "recharts";
@@ -97,6 +98,10 @@ interface Transaction {
     brand_name: string;
     brand_logo_url: string | null;
     brand_slug?: string;
+  } | null;
+  recipient?: {
+    username: string;
+    avatar_url: string | null;
   } | null;
 }
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
@@ -643,6 +648,23 @@ export function WalletTab() {
     const pendingAmount = payoutRequests?.filter(pr => pr.status === 'pending' || pr.status === 'in_transit').reduce((sum, pr) => sum + Number(pr.amount), 0) || 0;
     setPendingWithdrawals(pendingAmount);
 
+    // Extract recipient IDs for transfer_sent transactions
+    const recipientIds = walletTransactions?.filter(txn => 
+      txn.type === 'transfer_sent' && (txn.metadata as any)?.recipient_id
+    ).map(txn => (txn.metadata as any).recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
+    // Fetch recipient profiles
+    let recipientsMap = new Map<string, { username: string; avatar_url: string | null }>();
+    if (recipientIds.length > 0) {
+      const { data: recipients } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", recipientIds);
+      recipients?.forEach(r => {
+        recipientsMap.set(r.id, { username: r.username || '', avatar_url: r.avatar_url });
+      });
+    }
+
     // Extract unique campaigns and boosts for filter dropdown
     const uniqueCampaigns = Array.from(campaignsMap.values()).map(c => ({
       id: c.id,
@@ -762,7 +784,8 @@ export function WalletTab() {
             payoutDetails
           }),
           campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null,
-          boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null
+          boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null,
+          recipient: metadata?.recipient_id ? recipientsMap.get(metadata.recipient_id) || null : null
         });
       });
     }
@@ -1558,9 +1581,37 @@ export function WalletTab() {
                         
                         {/* Destination */}
                         <TableCell className="py-4">
-                          <span className="text-sm text-foreground">
-                            {transaction.destination || 'Wallet'}
-                          </span>
+                          {transaction.type === 'transfer_sent' && transaction.recipient ? (
+                            <div 
+                              className="flex items-center gap-2 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/@${transaction.recipient?.username}`);
+                              }}
+                            >
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={transaction.recipient.avatar_url || undefined} alt={transaction.recipient.username} />
+                                <AvatarFallback className="text-xs">
+                                  {transaction.recipient.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">@{transaction.recipient.username}</span>
+                            </div>
+                          ) : transaction.type === 'transfer_sent' && transaction.metadata?.recipient_username ? (
+                            <div 
+                              className="flex items-center gap-2 hover:underline cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/@${transaction.metadata.recipient_username}`);
+                              }}
+                            >
+                              <span className="text-sm font-medium">@{transaction.metadata.recipient_username}</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-foreground">
+                              {transaction.destination || 'Wallet'}
+                            </span>
+                          )}
                         </TableCell>
                         
                         {/* Status */}
