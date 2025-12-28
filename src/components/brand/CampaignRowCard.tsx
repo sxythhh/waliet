@@ -66,6 +66,7 @@ export function CampaignRowCard({
 }: CampaignRowCardProps) {
   const { toast } = useToast();
   const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const budgetPercentage = budget > 0 ? budgetUsed / budget * 100 : 0;
   const getDaysLeft = () => {
     if (!endDate) return null;
@@ -123,7 +124,8 @@ export function CampaignRowCard({
               </h3>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs">
                 <img 
-                  src={type === "campaign" ? clippingIcon : (resolvedTheme === "dark" ? boostIcon : boostIconDark)} 
+                  key={`boost-icon-${isDark}`}
+                  src={type === "campaign" ? clippingIcon : (isDark ? boostIcon : boostIconDark)} 
                   alt="" 
                   className="w-3.5 h-3.5" 
                 />
