@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import supportAvatar from "@/assets/support-avatar.png";
 
 interface Message {
   role: "user" | "assistant";
@@ -127,9 +128,11 @@ export const SupportChat = () => {
         {messages.map((message, index) => (
           <div key={index} className="flex gap-3">
             {message.role === "assistant" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-foreground flex items-center justify-center">
-                <span className="text-background text-xs font-bold">V</span>
-              </div>
+              <img 
+                src={supportAvatar} 
+                alt="Virality AI" 
+                className="flex-shrink-0 w-8 h-8 rounded-full object-cover"
+              />
             )}
             <div
               className={`flex-1 ${
@@ -150,9 +153,11 @@ export const SupportChat = () => {
         ))}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
           <div className="flex gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-foreground flex items-center justify-center">
-              <span className="text-background text-xs font-bold">V</span>
-            </div>
+            <img 
+              src={supportAvatar} 
+              alt="Virality AI" 
+              className="flex-shrink-0 w-8 h-8 rounded-full object-cover"
+            />
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span className="text-sm">Thinking...</span>
