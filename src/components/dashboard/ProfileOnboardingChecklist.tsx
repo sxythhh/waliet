@@ -104,7 +104,7 @@ export function ProfileOnboardingChecklist({
             </div>
 
             {/* Tasks Grid */}
-            <div className="bg-muted/20 rounded-xl p-4">
+            <div className="bg-white dark:bg-muted/20 rounded-xl p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
                 {/* Left Column */}
                 <div className="space-y-1">
