@@ -553,7 +553,7 @@ export function TeamsSection(): JSX.Element {
 
         {/* Earnings Comparison Chart */}
         <Card className="bg-card">
-          <CardContent className="p-6">
+          <CardContent className="p-6" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px' }}>
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h4 className="font-semibold text-sm">Earnings Comparison</h4>
