@@ -75,30 +75,30 @@ const SidebarMenuButtons = ({ onFeedback, supportIcon, lightbulbIcon, bugIcon }:
     <div className="space-y-0.5 mb-3">
       <button 
         onClick={() => window.open("https://discord.gg/virality", "_blank")} 
-        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
       >
-        <img alt="Discord" className="w-5 h-5 rounded" src={currentDiscordIcon} />
+        <img alt="Discord" className="w-5 h-5 rounded opacity-60" src={currentDiscordIcon} />
         <span className="text-sm font-medium font-inter tracking-[-0.5px]">Discord</span>
       </button>
       <button 
         onClick={() => window.open("mailto:support@virality.gg", "_blank")} 
-        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
       >
-        <img src={currentSupportIcon} alt="Support" className="w-5 h-5" />
+        <img src={currentSupportIcon} alt="Support" className="w-5 h-5 opacity-60" />
         <span className="text-sm font-medium font-inter tracking-[-0.5px]">Support</span>
       </button>
       <button 
         onClick={() => onFeedback("feature")} 
-        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
       >
-        <img src={currentLightbulbIcon} alt="Feature Request" className="w-5 h-5" />
+        <img src={currentLightbulbIcon} alt="Feature Request" className="w-5 h-5 opacity-60" />
         <span className="text-sm font-medium font-inter tracking-[-0.5px]">Feature Request</span>
       </button>
       <button 
         onClick={() => onFeedback("bug")} 
-        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        className="w-full flex items-center gap-3 px-2.5 py-2 rounded-md text-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
       >
-        <img src={currentBugIcon} alt="Report Bug" className="w-5 h-5" />
+        <img src={currentBugIcon} alt="Report Bug" className="w-5 h-5 opacity-60" />
         <span className="text-sm font-medium font-inter tracking-[-0.5px]">Report Bug</span>
       </button>
     </div>
