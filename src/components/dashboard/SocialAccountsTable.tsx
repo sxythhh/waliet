@@ -144,9 +144,7 @@ export function SocialAccountsTable({
                             Verify
                           </button>}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Connected {format(new Date(account.connected_at), "MMM d, yyyy")}
-                      </p>
+                      
                     </div>
                   </div>
                 </TableCell>
