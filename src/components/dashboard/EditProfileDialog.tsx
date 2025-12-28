@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -20,6 +21,9 @@ interface EditProfileDialogProps {
     country: string | null;
     content_styles: string[] | null;
     content_languages: string[] | null;
+    show_total_earned: boolean | null;
+    show_location: boolean | null;
+    show_joined_campaigns: boolean | null;
   } | null;
   onSuccess: () => void;
 }
@@ -111,7 +115,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
     city: "",
     country: "",
     content_style: "",
-    content_language: ""
+    content_language: "",
+    show_total_earned: false,
+    show_location: false,
+    show_joined_campaigns: false
   });
 
   useEffect(() => {
@@ -122,7 +129,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
         city: profile.city || "",
         country: profile.country || "",
         content_style: profile.content_styles?.[0] || "",
-        content_language: profile.content_languages?.[0] || ""
+        content_language: profile.content_languages?.[0] || "",
+        show_total_earned: profile.show_total_earned ?? false,
+        show_location: profile.show_location ?? false,
+        show_joined_campaigns: profile.show_joined_campaigns ?? false
       });
     }
   }, [profile, open]);
@@ -140,7 +150,10 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
           city: formData.city || null,
           country: formData.country || null,
           content_styles: formData.content_style ? [formData.content_style] : null,
-          content_languages: formData.content_language ? [formData.content_language] : null
+          content_languages: formData.content_language ? [formData.content_language] : null,
+          show_total_earned: formData.show_total_earned,
+          show_location: formData.show_location,
+          show_joined_campaigns: formData.show_joined_campaigns
         })
         .eq("id", profile.id);
 
@@ -285,7 +298,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
             </div>
           </div>
 
-          {/* Location Row */}
+            {/* Location Row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label 
@@ -328,6 +341,48 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Visibility Toggles */}
+          <div className="pt-2 space-y-4">
+            <Label 
+              className="text-sm font-medium text-foreground"
+              style={labelStyle}
+            >
+              Profile Visibility
+            </Label>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-foreground" style={inputStyle}>
+                  Total Earned
+                </span>
+                <Switch
+                  checked={formData.show_total_earned}
+                  onCheckedChange={(checked) => setFormData({ ...formData, show_total_earned: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-foreground" style={inputStyle}>
+                  Location
+                </span>
+                <Switch
+                  checked={formData.show_location}
+                  onCheckedChange={(checked) => setFormData({ ...formData, show_location: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-foreground" style={inputStyle}>
+                  Joined Campaigns
+                </span>
+                <Switch
+                  checked={formData.show_joined_campaigns}
+                  onCheckedChange={(checked) => setFormData({ ...formData, show_joined_campaigns: checked })}
+                />
+              </div>
             </div>
           </div>
         </div>

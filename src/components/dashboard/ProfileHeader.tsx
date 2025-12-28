@@ -36,6 +36,9 @@ interface Profile {
   country: string | null;
   content_styles: string[] | null;
   content_languages: string[] | null;
+  show_total_earned: boolean | null;
+  show_location: boolean | null;
+  show_joined_campaigns: boolean | null;
 }
 interface SocialAccount {
   id: string;
@@ -100,13 +103,16 @@ export function ProfileHeader({
     setLoading(true);
     const {
       data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank, city, country, content_styles, content_languages").eq("id", session.user.id).single();
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank, city, country, content_styles, content_languages, show_total_earned, show_location, show_joined_campaigns").eq("id", session.user.id).single();
     if (profileData) {
       setProfile({
         ...profileData,
         current_xp: profileData.current_xp ?? 0,
         current_level: profileData.current_level ?? 1,
-        current_rank: profileData.current_rank ?? 'Bronze'
+        current_rank: profileData.current_rank ?? 'Bronze',
+        show_total_earned: profileData.show_total_earned ?? false,
+        show_location: profileData.show_location ?? false,
+        show_joined_campaigns: profileData.show_joined_campaigns ?? false
       });
     }
     setLoading(false);
@@ -385,7 +391,10 @@ export function ProfileHeader({
           city: profile.city,
           country: profile.country,
           content_styles: profile.content_styles,
-          content_languages: profile.content_languages
+          content_languages: profile.content_languages,
+          show_total_earned: profile.show_total_earned,
+          show_location: profile.show_location,
+          show_joined_campaigns: profile.show_joined_campaigns
         } : null}
         onSuccess={fetchProfile}
       />
