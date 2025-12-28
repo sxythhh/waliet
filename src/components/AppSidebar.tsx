@@ -576,7 +576,7 @@ export function AppSidebar() {
                           <p className="text-[11px] text-muted-foreground">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
-                      <button onClick={() => handleTabClick('settings')} className="p-1.5 rounded-md hover:bg-muted/50 transition-colors">
+                      <button onClick={() => { setWorkspaceOpen(false); handleTabClick('settings'); }} className="p-1.5 rounded-md hover:bg-muted/50 transition-colors">
                         <Settings className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </div>}
