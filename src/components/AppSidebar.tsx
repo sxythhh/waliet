@@ -565,7 +565,7 @@ export function AppSidebar() {
         {!isCollapsed ? <div className="px-2 py-[5px]">
             <Popover open={workspaceOpen} onOpenChange={setWorkspaceOpen}>
               <PopoverTrigger asChild>
-              <button className="w-full flex items-center justify-between px-3 py-2 transition-colors hover:bg-muted/50 rounded-md">
+              <button className="w-full flex items-center justify-between px-3 py-2 transition-colors hover:bg-muted/50 dark:hover:bg-[#0e0e0e] rounded-md">
                   <div className="flex items-center gap-2">
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
                         <img src={theme === 'light' ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-3.5 h-3.5" />
