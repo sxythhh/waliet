@@ -248,7 +248,7 @@ export default function Auth() {
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">
             <img alt="Virality Logo" className="h-10 w-auto" src="/lovable-uploads/05566301-7c21-4e5b-9e22-a097cbaf1442.png" />
-            <span className="font-clash font-bold tracking-tight text-lg">VIRALITY</span>
+            <span className="font-clash font-bold tracking-tight text-lg text-white">VIRALITY</span>
           </div>
         </CardHeader>
         
@@ -280,10 +280,10 @@ export default function Auth() {
                     Continue with Discord
                   </Button>
                   
-                  <Button variant="outline" className="w-full h-12 bg-muted/50 hover:bg-muted border-0 font-semibold font-geist gap-3" style={{
+                  <Button variant="outline" className="w-full h-12 bg-white/10 hover:bg-white/20 text-white hover:text-white border-0 font-semibold font-geist gap-3" style={{
                 letterSpacing: '-0.5px'
               }} onClick={() => setShowEmailForm(true)} disabled={loading}>
-                    <Mail className="h-5 w-5" />
+                    <Mail className="h-5 w-5 text-white" />
                     Continue with Email
                   </Button>
                 </div>
@@ -338,7 +338,7 @@ export default function Auth() {
           <div className="mt-8 text-center" style={{
           letterSpacing: '-0.3px'
         }}>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-gray-400 leading-relaxed">
               By logging in, you agree to our{" "}
               <a href="https://virality.gg/creator-terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                 Creator Terms & Conditions
