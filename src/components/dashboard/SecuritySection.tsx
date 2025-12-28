@@ -182,7 +182,7 @@ export function SecuritySection() {
     return <Card className="border-border bg-card">
         <CardHeader>
           <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-64" />
+          
         </CardHeader>
         <CardContent className="space-y-4">
           <Skeleton className="h-20 w-full" />
