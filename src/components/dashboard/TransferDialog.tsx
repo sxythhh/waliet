@@ -54,12 +54,28 @@ export function TransferDialog({ open, onOpenChange, onSuccess, currentBalance }
 
       if (error) {
         console.error("Transfer error:", error);
-        toast.error(error.message || "Transfer failed");
+        // Parse error message from FunctionsHttpError
+        let errorMessage = "Transfer failed";
+        if (error.message) {
+          try {
+            // Try to extract JSON error from the message
+            const match = error.message.match(/\{.*\}/);
+            if (match) {
+              const parsed = JSON.parse(match[0]);
+              errorMessage = parsed.error || errorMessage;
+            }
+          } catch {
+            errorMessage = error.message;
+          }
+        }
+        toast.error(errorMessage);
+        setStep("input"); // Go back to input step so user can fix
         return;
       }
 
       if (data?.error) {
         toast.error(data.error);
+        setStep("input");
         return;
       }
 
@@ -69,6 +85,7 @@ export function TransferDialog({ open, onOpenChange, onSuccess, currentBalance }
     } catch (err) {
       console.error("Transfer error:", err);
       toast.error("An unexpected error occurred");
+      setStep("input");
     } finally {
       setIsLoading(false);
     }
