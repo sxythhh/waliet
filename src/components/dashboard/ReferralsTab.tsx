@@ -278,7 +278,7 @@ export function ReferralsTab(): JSX.Element {
               <p style={{
                 fontFamily: 'Inter',
                 letterSpacing: '-0.5px'
-              }} className="text-sm font-medium text-primary-foreground">Referral Activity</p>
+              }} className="text-sm font-medium text-foreground dark:text-primary-foreground">Referral Activity</p>
             </div>
             
             {/* Stats inline */}
