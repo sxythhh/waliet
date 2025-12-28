@@ -678,7 +678,7 @@ export function SubmissionsTab() {
             <div className="overflow-x-auto border border-border rounded-xl">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] bg-stone-950">
+                  <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                     <TableHead className="text-foreground font-medium text-sm h-12">Video</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
@@ -706,10 +706,10 @@ export function SubmissionsTab() {
                           <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group">
                             
                             <div className="min-w-0 max-w-[200px]">
-                              <p style={{
+                              <p className="text-sm font-medium truncate group-hover:underline transition-colors" style={{
                           fontFamily: 'Inter',
                           letterSpacing: '-0.3px'
-                        }} className="text-sm truncate group-hover:underline transition-colors font-normal">
+                        }}>
                                 {submission.video_title || 'Untitled Video'}
                               </p>
                               <p className="text-xs text-muted-foreground truncate mt-0.5">
@@ -735,10 +735,10 @@ export function SubmissionsTab() {
                                   {submission.program.title.charAt(0).toUpperCase()}
                                 </span>
                               </div>}
-                            <span style={{
+                            <span className="text-sm font-medium truncate max-w-[120px]" style={{
                         fontFamily: 'Inter',
                         letterSpacing: '-0.3px'
-                      }} className="text-sm truncate max-w-[120px] font-normal">
+                      }}>
                               {submission.program.title}
                             </span>
                           </div>
