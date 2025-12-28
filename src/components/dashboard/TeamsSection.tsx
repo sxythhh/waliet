@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Check, Users, Crown, UserPlus, Settings, Trash2, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
+import { Copy, Check, Users, Crown, UserPlus, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
+import settingsIcon from "@/assets/icons/settings-icon.svg";
+import deleteIcon from "@/assets/icons/delete-icon.svg";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
@@ -645,52 +647,52 @@ export function TeamsSection(): JSX.Element {
                 {teamMembers.map(member => (
                   <div 
                     key={member.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-card hover:border-border transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-9 w-9">
                         <AvatarImage src={member.profile?.avatar_url || undefined} />
-                        <AvatarFallback className="bg-muted text-sm">
+                        <AvatarFallback className="bg-[#8B5CF6] text-white text-xs font-semibold font-inter">
                           {member.profile?.username?.charAt(0).toUpperCase() || "?"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">@{member.profile?.username || "Unknown"}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-medium text-sm font-inter tracking-[-0.5px]">@{member.profile?.username || "Unknown"}</p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                           Joined {new Date(member.joined_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-5">
                       <div className="text-right">
-                        <p className="text-sm font-medium text-green-500">
+                        <p className="text-sm font-semibold text-emerald-500 font-inter tracking-[-0.5px]">
                           ${member.total_contribution?.toFixed(2) || "0.00"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                           {(member.commission_rate * 100).toFixed(0)}% rate
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 hover:bg-muted/50"
                           onClick={() => {
                             setSelectedMember(member);
                             setCommissionRate(member.commission_rate * 100);
                             setEditMemberOpen(true);
                           }}
                         >
-                          <Settings className="h-4 w-4" />
+                          <img src={settingsIcon} alt="Settings" className="h-4 w-4 opacity-60" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          className="h-8 w-8 hover:bg-destructive/10"
                           onClick={() => handleRemoveMember(member.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <img src={deleteIcon} alt="Remove" className="h-4 w-4 opacity-60" />
                         </Button>
                       </div>
                     </div>
