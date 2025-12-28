@@ -31,6 +31,7 @@ import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboar
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { SettingsCard, UsernameSettingsCard, EmailSettingsCard } from "@/components/dashboard/settings";
+import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -920,234 +921,35 @@ export function ProfileTab() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="px-0">
-            {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8">
+        <CardContent className="px-0 pt-3">
+          {socialAccounts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 border border-border rounded-xl">
               <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                 <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
               </div>
               <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
               <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
-            </div> : <div className="space-y-3">
-              {socialAccounts.map(account => {
-            const connectedCampaigns = account.connected_campaigns || [];
-            // Sort demographic submissions by submitted_at descending to ensure latest is first
-            const demographicSubmissions = [...(account.demographic_submissions || [])].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
-            const latestDemographicSubmission = demographicSubmissions[0];
-            const demographicStatus = latestDemographicSubmission?.status;
-            return <div key={account.id} className="group relative p-3 sm:p-4 rounded-xl bg-neutral-100 dark:bg-muted/10 hover:bg-neutral-200 dark:hover:bg-muted/20 transition-all duration-300">
-                    {/* Main Layout */}
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-                      {/* Content - Clickable to open popover */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <div className="flex-1 min-w-0 cursor-pointer">
-                            {/* Account Header */}
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1 min-w-0">
-                                {/* Username Row */}
-                                <div className="flex items-center gap-2">
-                                  <div className="w-4 h-4 flex-shrink-0">
-                                    {getPlatformIcon(account.platform)}
-                                  </div>
-                                  <span className="font-semibold text-base text-foreground truncate" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.5px'
-                            }}>
-                                    {account.username}
-                                  </span>
-                                  {!account.is_verified && <button onClick={e => {
-                              e.stopPropagation();
-                              setSelectedAccountForVerification({
-                                id: account.id,
-                                platform: account.platform,
-                                username: account.username
-                              });
-                              setShowVerifyAccountDialog(true);
-                            }} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/30 transition-colors">
-                                      Verify
-                                    </button>}
-                                </div>
-                                
-                                {/* Stats Row */}
-                                <div className="flex items-center gap-3 mt-0.5">
-                                  <span className="text-xs text-muted-foreground" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
-                                    {connectedCampaigns.length} campaign{connectedCampaigns.length !== 1 ? 's' : ''}
-                                  </span>
-                                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-72 p-4 bg-[#0a0a0a] border-0 rounded-xl" align="start" side="bottom" sideOffset={8}>
-                          <div className="space-y-4">
-                            {/* Account Link */}
-                            {account.account_link && <button onClick={() => window.open(account.account_link, '_blank')} className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
-                        fontFamily: 'Geist',
-                        letterSpacing: '-0.5px'
-                      }}>
-                                <ArrowUpRight className="w-4 h-4 text-white" />
-                                <span>Open profile</span>
-                              </button>}
-                            
-                            {/* Linked Campaigns */}
-                            {(() => {
-                        const INITIAL_DISPLAY_COUNT = 3;
-                        const isExpanded = expandedCampaignAccounts.has(account.id);
-                        const displayedCampaigns = isExpanded ? connectedCampaigns : connectedCampaigns.slice(0, INITIAL_DISPLAY_COUNT);
-                        const hasMore = connectedCampaigns.length > INITIAL_DISPLAY_COUNT;
-                        const toggleExpanded = () => {
-                          setExpandedCampaignAccounts(prev => {
-                            const next = new Set(prev);
-                            if (next.has(account.id)) {
-                              next.delete(account.id);
-                            } else {
-                              next.add(account.id);
-                            }
-                            return next;
-                          });
-                        };
-                        return <div className="space-y-2">
-                                  <span className="text-[11px] text-white/50 tracking-wide" style={{
-                            fontFamily: 'Geist',
-                            letterSpacing: '-0.5px'
-                          }}>
-                                    Linked Campaigns ({connectedCampaigns.length})
-                                  </span>
-                                  {connectedCampaigns.length > 0 ? <div className="space-y-2">
-                                      <div className={`space-y-2 ${isExpanded ? 'max-h-40 overflow-y-auto pr-1' : ''}`}>
-                                        {displayedCampaigns.map(({
-                                connection_id,
-                                campaign
-                              }) => <div key={campaign.id} style={{
-                                fontFamily: 'Geist',
-                                letterSpacing: '-0.5px'
-                              }} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group/campaign">
-                                            {campaign.brand_logo_url && <img src={campaign.brand_logo_url} alt={campaign.brand_name} className="w-6 h-6 rounded-md object-cover" />}
-                                            <span className="text-sm text-white flex-1">{campaign.title}</span>
-                                            <button onClick={e => {
-                                  e.stopPropagation();
-                                  handleUnlinkCampaign(connection_id, campaign.title);
-                                }} className="opacity-0 group-hover/campaign:opacity-100 p-1 rounded hover:bg-white/10 transition-all" title="Unlink from campaign">
-                                              <X className="w-3.5 h-3.5 text-white/60 hover:text-white" />
-                                            </button>
-                                          </div>)}
-                                      </div>
-                                      {hasMore && <button onClick={e => {
-                              e.stopPropagation();
-                              toggleExpanded();
-                            }} className="w-full text-xs text-white/60 hover:text-white py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors" style={{
-                              fontFamily: 'Geist',
-                              letterSpacing: '-0.5px'
-                            }}>
-                                          {isExpanded ? 'Show less' : `Show ${connectedCampaigns.length - INITIAL_DISPLAY_COUNT} more`}
-                                        </button>}
-                                    </div> : <p className="text-sm text-white/40 px-1" style={{
-                            fontFamily: 'Geist',
-                            letterSpacing: '-0.5px'
-                          }}>
-                                      No campaigns linked
-                                    </p>}
-                                </div>;
-                      })()}
-
-                            {/* Hide from public profile toggle */}
-                            <button onClick={async e => {
-                        e.stopPropagation();
-                        const newValue = !account.hidden_from_public;
-                        await supabase.from("social_accounts").update({
-                          hidden_from_public: newValue
-                        }).eq("id", account.id);
-                        setSocialAccounts(prev => prev.map(a => a.id === account.id ? {
-                          ...a,
-                          hidden_from_public: newValue
-                        } : a));
-                      }} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors" style={{
-                        fontFamily: 'Geist',
-                        letterSpacing: '-0.5px'
-                      }}>
-                              <span className="text-white/70">Hide from public profile</span>
-                              <div className={`w-8 h-4 rounded-full transition-colors relative ${account.hidden_from_public ? 'bg-primary' : 'bg-white/20'}`}>
-                                <div className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-all duration-200 ${account.hidden_from_public ? 'left-4' : 'left-0.5'}`} />
-                              </div>
-                            </button>
-
-                            {/* Actions */}
-                            <div className="flex gap-2 pt-1">
-                              <button className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-white transition-colors hover:brightness-110" style={{
-                          fontFamily: 'Geist',
-                          letterSpacing: '-0.5px',
-                          backgroundColor: '#2360de',
-                          borderTop: '1px solid #4b85f7'
-                        }} onClick={e => {
-                          e.stopPropagation();
-                          setSelectedAccountForLinking(account);
-                          setShowLinkCampaignDialog(true);
-                        }}>
-                                <Link2 className="w-3.5 h-3.5 text-white" />
-                                <span>Link</span>
-                              </button>
-                              <button className="flex items-center justify-center px-2 py-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors" style={{
-                          fontFamily: 'Geist',
-                          letterSpacing: '-0.5px'
-                        }} onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteAccount(account.id);
-                        }}>
-                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                              </button>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      
-                      {/* Demographics Section - Right Side */}
-                      <div className="flex-shrink-0 w-full sm:w-40">
-                        {demographicSubmissions.length === 0 ?
-                  // No Submissions - Show Required State
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 cursor-pointer hover:bg-destructive/15 transition-colors" onClick={() => {
-                    setSelectedAccountForDemographics({
-                      id: account.id,
-                      platform: account.platform,
-                      username: account.username
-                    });
-                    setShowDemographicsDialog(true);
-                  }}>
-                            <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center flex-shrink-0">
-                              <img src={demographicsIcon} alt="" className="w-4 h-4 opacity-80" style={{
-                        filter: 'brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2615%) hue-rotate(344deg) brightness(87%) contrast(93%)'
-                      }} />
-                            </div>
-                            <div className="flex-1 min-w-0 flex flex-col">
-                              <span className="text-[11px] font-medium text-destructive truncate leading-none" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.3px'
-                      }}>
-                                Demographics
-                              </span>
-                              <span className="text-[10px] text-destructive/70 leading-none mt-0.5" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>Tap to submit</span>
-                            </div>
-                          </div> :
-                  // Has Submissions - Always Show Status Card with History
-                  <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={account.connected_campaigns?.map(c => c.campaign.id) || []} onSubmitNew={() => {
-                    setSelectedAccountForDemographics({
-                      id: account.id,
-                      platform: account.platform,
-                      username: account.username
-                    });
-                    setShowDemographicsDialog(true);
-                  }} onRefresh={fetchSocialAccounts} />}
-                      </div>
-                    </div>
-                  </div>;
-          })}
-            </div>}
+            </div>
+          ) : (
+            <SocialAccountsTable
+              accounts={socialAccounts}
+              onRefresh={fetchSocialAccounts}
+              onDeleteAccount={handleDeleteAccount}
+              onLinkCampaign={(account) => {
+                setSelectedAccountForLinking(account);
+                setShowLinkCampaignDialog(true);
+              }}
+              onUnlinkCampaign={handleUnlinkCampaign}
+              onVerifyAccount={(account) => {
+                setSelectedAccountForVerification(account);
+                setShowVerifyAccountDialog(true);
+              }}
+              onSubmitDemographics={(account) => {
+                setSelectedAccountForDemographics(account);
+                setShowDemographicsDialog(true);
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
