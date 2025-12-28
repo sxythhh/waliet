@@ -691,7 +691,12 @@ export function WalletTab() {
             if (payoutMethod === 'paypal') {
               destination = 'PayPal';
             } else if (payoutMethod === 'crypto') {
-              destination = `Crypto (${metadata?.network || 'ETH'})`;
+              const walletAddr = metadata?.wallet_address || metadata?.address || '';
+              if (walletAddr && walletAddr.length > 8) {
+                destination = `${walletAddr.slice(0, 4)}..${walletAddr.slice(-3)}`;
+              } else {
+                destination = walletAddr || 'Crypto';
+              }
             } else if (payoutMethod === 'bank') {
               destination = 'Bank Transfer';
             } else if (payoutMethod === 'wise') {
@@ -1504,7 +1509,7 @@ export function WalletTab() {
                         
                         {/* Destination */}
                         <TableCell className="py-4">
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-foreground">
                             {transaction.destination || 'Wallet'}
                           </span>
                         </TableCell>
