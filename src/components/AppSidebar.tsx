@@ -564,7 +564,7 @@ export function AppSidebar() {
               <PopoverContent className="w-[260px] p-0 bg-background border border-border" align="start" sideOffset={4}>
                 <div className="font-inter tracking-[-0.5px]">
                   {/* Current Workspace Details - Only show when in brand mode */}
-                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-border flex items-center justify-start">
+                  {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-border flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
                     backgroundColor: currentBrandColor || '#8B5CF6'
@@ -576,6 +576,12 @@ export function AppSidebar() {
                           <p className="text-[11px] text-muted-foreground">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
+                      <button
+                        onClick={() => handleTabClick('settings')}
+                        className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
+                      >
+                        <Settings className="w-4 h-4 text-muted-foreground" />
+                      </button>
                     </div>}
                   
                   {/* Header */}
