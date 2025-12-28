@@ -703,10 +703,6 @@ export function SubmissionsTab() {
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
                 }}>Payout</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12 w-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
-                }}></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -874,12 +870,6 @@ export function SubmissionsTab() {
                     })} canRequest={canRequestPayout} isRpm={isRpm} />
                         </TableCell>
                         
-                        {/* Link */}
-                        <TableCell className="py-3">
-                          <a href={submission.video_url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-muted transition-colors inline-flex">
-                            <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                          </a>
-                        </TableCell>
                       </TableRow>;
               })}
                 </TableBody>
