@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
-
 interface SearchResult {
   id: string;
   type: 'video' | 'creator' | 'blueprint' | 'campaign';
@@ -13,12 +12,12 @@ interface SearchResult {
   subtitle?: string;
   imageUrl?: string;
 }
-
 interface GlobalBrandSearchProps {
   brandId: string;
 }
-
-export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
+export function GlobalBrandSearch({
+  brandId
+}: GlobalBrandSearchProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -45,7 +44,6 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
         setOpen(false);
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open]);
@@ -66,19 +64,13 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
       setResults([]);
       return;
     }
-
     setLoading(true);
     const searchResults: SearchResult[] = [];
-
     try {
       // Search campaigns/boosts
-      const { data: campaigns } = await supabase
-        .from("bounty_campaigns")
-        .select("id, title, status")
-        .eq("brand_id", brandId)
-        .ilike("title", `%${searchQuery}%`)
-        .limit(5);
-
+      const {
+        data: campaigns
+      } = await supabase.from("bounty_campaigns").select("id, title, status").eq("brand_id", brandId).ilike("title", `%${searchQuery}%`).limit(5);
       if (campaigns) {
         searchResults.push(...campaigns.map(c => ({
           id: c.id,
@@ -89,13 +81,9 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
       }
 
       // Search clipping campaigns
-      const { data: clippingCampaigns } = await supabase
-        .from("campaigns")
-        .select("id, title, status")
-        .eq("brand_id", brandId)
-        .ilike("title", `%${searchQuery}%`)
-        .limit(5);
-
+      const {
+        data: clippingCampaigns
+      } = await supabase.from("campaigns").select("id, title, status").eq("brand_id", brandId).ilike("title", `%${searchQuery}%`).limit(5);
       if (clippingCampaigns) {
         searchResults.push(...clippingCampaigns.map(c => ({
           id: c.id,
@@ -106,13 +94,9 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
       }
 
       // Search blueprints
-      const { data: blueprints } = await supabase
-        .from("blueprints")
-        .select("id, title, status")
-        .eq("brand_id", brandId)
-        .ilike("title", `%${searchQuery}%`)
-        .limit(5);
-
+      const {
+        data: blueprints
+      } = await supabase.from("blueprints").select("id, title, status").eq("brand_id", brandId).ilike("title", `%${searchQuery}%`).limit(5);
       if (blueprints) {
         searchResults.push(...blueprints.map(b => ({
           id: b.id,
@@ -123,9 +107,9 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
       }
 
       // Search creators from relationships
-      const { data: relationships } = await supabase
-        .from("brand_creator_relationships")
-        .select(`
+      const {
+        data: relationships
+      } = await supabase.from("brand_creator_relationships").select(`
           id,
           external_name,
           external_handle,
@@ -136,35 +120,25 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
             full_name,
             avatar_url
           )
-        `)
-        .eq("brand_id", brandId)
-        .limit(10);
-
+        `).eq("brand_id", brandId).limit(10);
       if (relationships) {
-        const creatorResults = relationships
-          .filter(r => {
-            const name = r.profiles?.full_name || r.profiles?.username || r.external_name || r.external_handle || '';
-            return name.toLowerCase().includes(searchQuery.toLowerCase());
-          })
-          .slice(0, 5)
-          .map(r => ({
-            id: r.id,
-            type: 'creator' as const,
-            title: r.profiles?.full_name || r.profiles?.username || r.external_name || 'Unknown Creator',
-            subtitle: r.external_handle || r.profiles?.username,
-            imageUrl: r.profiles?.avatar_url || undefined
-          }));
+        const creatorResults = relationships.filter(r => {
+          const name = r.profiles?.full_name || r.profiles?.username || r.external_name || r.external_handle || '';
+          return name.toLowerCase().includes(searchQuery.toLowerCase());
+        }).slice(0, 5).map(r => ({
+          id: r.id,
+          type: 'creator' as const,
+          title: r.profiles?.full_name || r.profiles?.username || r.external_name || 'Unknown Creator',
+          subtitle: r.external_handle || r.profiles?.username,
+          imageUrl: r.profiles?.avatar_url || undefined
+        }));
         searchResults.push(...creatorResults);
       }
 
       // Search videos
-      const { data: videos } = await supabase
-        .from("cached_campaign_videos")
-        .select("id, title, username, thumbnail_url, views, platform")
-        .eq("brand_id", brandId)
-        .or(`title.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
-        .limit(5);
-
+      const {
+        data: videos
+      } = await supabase.from("cached_campaign_videos").select("id, title, username, thumbnail_url, views, platform").eq("brand_id", brandId).or(`title.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`).limit(5);
       if (videos) {
         searchResults.push(...videos.map(v => ({
           id: v.id,
@@ -174,7 +148,6 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
           imageUrl: v.thumbnail_url || undefined
         })));
       }
-
       setResults(searchResults);
     } catch (error) {
       console.error("Search error:", error);
@@ -188,7 +161,6 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
     const timer = setTimeout(() => {
       performSearch(query);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [query, performSearch]);
 
@@ -208,7 +180,6 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
   // Handle result selection
   const handleSelect = (result: SearchResult) => {
     const newParams = new URLSearchParams(searchParams);
-    
     switch (result.type) {
       case 'campaign':
         newParams.set("tab", "campaigns");
@@ -226,26 +197,31 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
         newParams.set("tab", "campaigns");
         break;
     }
-    
     setSearchParams(newParams);
     setOpen(false);
   };
-
   const getIcon = (type: SearchResult['type']) => {
     switch (type) {
-      case 'video': return Video;
-      case 'creator': return Users;
-      case 'blueprint': return FileText;
-      case 'campaign': return Megaphone;
+      case 'video':
+        return Video;
+      case 'creator':
+        return Users;
+      case 'blueprint':
+        return FileText;
+      case 'campaign':
+        return Megaphone;
     }
   };
-
   const getCategoryLabel = (type: SearchResult['type']) => {
     switch (type) {
-      case 'video': return 'Videos';
-      case 'creator': return 'Creators';
-      case 'blueprint': return 'Blueprints';
-      case 'campaign': return 'Campaigns';
+      case 'video':
+        return 'Videos';
+      case 'creator':
+        return 'Creators';
+      case 'blueprint':
+        return 'Blueprints';
+      case 'campaign':
+        return 'Campaigns';
     }
   };
 
@@ -255,17 +231,12 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
     acc[result.type].push(result);
     return acc;
   }, {} as Record<string, SearchResult[]>);
-
-  return (
-    <>
+  return <>
       {/* Search Trigger Bar */}
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-3 w-full max-w-md h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e]"
-      >
+      <button onClick={() => setOpen(true)} className="flex items-center gap-3 w-full max-w-md h-10 px-4 rounded-lg transition-colors bg-[#f0f0f0] dark:bg-[#0e0e0e]">
         <Search className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
         <span className="flex-1 text-left text-sm font-inter tracking-[-0.5px] text-[#6b6b6b] dark:text-[#616161]">
-          Filter by campaign name, budget
+          Browse workspace   
         </span>
         <div className="flex items-center justify-center h-5 w-5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
           /
@@ -278,20 +249,10 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[#e0e0e0] dark:border-[#1f1f1f]">
             <Search className="h-5 w-5 flex-shrink-0 text-[#6b6b6b] dark:text-[#616161]" />
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search campaigns, creators, blueprints, videos..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-black dark:text-white placeholder:text-[#6b6b6b] dark:placeholder:text-[#616161]"
-            />
-            {query && (
-              <button onClick={() => setQuery("")} className="p-1 hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] rounded">
+            <input ref={inputRef} type="text" placeholder="Search campaigns, creators, blueprints, videos..." value={query} onChange={e => setQuery(e.target.value)} onKeyDown={handleKeyDown} className="flex-1 bg-transparent border-0 outline-none text-sm font-inter tracking-[-0.5px] text-black dark:text-white placeholder:text-[#6b6b6b] dark:placeholder:text-[#616161]" />
+            {query && <button onClick={() => setQuery("")} className="p-1 hover:bg-[#f0f0f0] dark:hover:bg-[#1f1f1f] rounded">
                 <X className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
-              </button>
-            )}
+              </button>}
             <div className="flex items-center justify-center h-6 px-1.5 rounded text-xs font-medium bg-[#e0e0e0] dark:bg-[#1f1f1f] text-[#6b6b6b] dark:text-[#616161]">
               ESC
             </div>
@@ -299,70 +260,44 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
 
           {/* Results */}
           <ScrollArea className="max-h-[400px]">
-            {loading ? (
-              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+            {loading ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Searching...</span>
-              </div>
-            ) : results.length === 0 && query.length >= 2 ? (
-              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+              </div> : results.length === 0 && query.length >= 2 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">No results found for "{query}"</span>
-              </div>
-            ) : results.length === 0 ? (
-              <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
+              </div> : results.length === 0 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Start typing to search...</span>
-              </div>
-            ) : (
-              <div className="py-2">
-                {Object.entries(groupedResults).map(([type, items]) => (
-                  <div key={type}>
+              </div> : <div className="py-2">
+                {Object.entries(groupedResults).map(([type, items]) => <div key={type}>
                     <div className="px-4 py-2">
                       <span className="text-xs font-medium uppercase tracking-wider text-[#6b6b6b] dark:text-[#616161]">
                         {getCategoryLabel(type as SearchResult['type'])}
                       </span>
                     </div>
                     {items.map((result, idx) => {
-                      const Icon = getIcon(result.type);
-                      const globalIndex = results.indexOf(result);
-                      const isSelected = globalIndex === selectedIndex;
-                      
-                      return (
-                        <button
-                          key={result.id}
-                          onClick={() => handleSelect(result)}
-                          onMouseEnter={() => setSelectedIndex(globalIndex)}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                            isSelected ? 'bg-[#f0f0f0] dark:bg-[#1f1f1f]' : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f]/50'
-                          }`}
-                        >
-                          {result.imageUrl ? (
-                            <Avatar className="h-8 w-8">
+                const Icon = getIcon(result.type);
+                const globalIndex = results.indexOf(result);
+                const isSelected = globalIndex === selectedIndex;
+                return <button key={result.id} onClick={() => handleSelect(result)} onMouseEnter={() => setSelectedIndex(globalIndex)} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-[#f0f0f0] dark:bg-[#1f1f1f]' : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f]/50'}`}>
+                          {result.imageUrl ? <Avatar className="h-8 w-8">
                               <AvatarImage src={result.imageUrl} />
                               <AvatarFallback className="bg-[#e0e0e0] dark:bg-[#1f1f1f]">
                                 <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
                               </AvatarFallback>
-                            </Avatar>
-                          ) : (
-                            <div className="h-8 w-8 rounded-full flex items-center justify-center bg-[#e0e0e0] dark:bg-[#1f1f1f]">
+                            </Avatar> : <div className="h-8 w-8 rounded-full flex items-center justify-center bg-[#e0e0e0] dark:bg-[#1f1f1f]">
                               <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
-                            </div>
-                          )}
+                            </div>}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-black dark:text-white truncate font-inter tracking-[-0.5px]">
                               {result.title}
                             </p>
-                            {result.subtitle && (
-                              <p className="text-xs truncate font-inter text-[#6b6b6b] dark:text-[#616161]">
+                            {result.subtitle && <p className="text-xs truncate font-inter text-[#6b6b6b] dark:text-[#616161]">
                                 {result.subtitle}
-                              </p>
-                            )}
+                              </p>}
                           </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
+                        </button>;
+              })}
+                  </div>)}
+              </div>}
           </ScrollArea>
 
           {/* Footer hint */}
@@ -382,6 +317,5 @@ export function GlobalBrandSearch({ brandId }: GlobalBrandSearchProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 }
