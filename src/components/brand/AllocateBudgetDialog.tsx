@@ -206,15 +206,12 @@ export function AllocateBudgetDialog({
 
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Wallet Balance */}
-          <div className="bg-muted/50 rounded-xl p-5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Your Wallet Balance</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Available</span>
             {loadingBalance ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                <span className="text-muted-foreground">Loading...</span>
-              </div>
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             ) : (
-              <p className="text-3xl font-semibold text-foreground tracking-tight">{formatCurrency(walletBalance)}</p>
+              <span className="text-lg font-semibold text-foreground tracking-tight">{formatCurrency(walletBalance)}</span>
             )}
           </div>
 
