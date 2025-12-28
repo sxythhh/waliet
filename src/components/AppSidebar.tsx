@@ -152,25 +152,7 @@ const brandMenuItems: MenuItem[] = [{
 }, {
   title: "Creators",
   tab: "creators",
-  icon: null as any,
-  subItems: [{
-    title: "Messages",
-    subtab: "messages",
-    iconInactive: messagesInactive,
-    iconActive: messagesActive
-  }, {
-    title: "Database",
-    subtab: "database",
-    iconInactive: databaseInactive,
-    iconActive: databaseActive
-  }, {
-    title: "Contracts",
-    subtab: "contracts",
-    iconInactive: contractsInactive,
-    iconActive: contractsActive
-  }
-  // { title: "Leaderboard", subtab: "leaderboard", iconInactive: leaderboardInactive, iconActive: leaderboardActive },
-  ]
+  icon: null as any
 }, {
   title: "Settings",
   tab: "profile",
@@ -720,7 +702,7 @@ export function AppSidebar() {
                     </div>}
                 </div>;
             }
-            return <button key={item.title} onClick={() => handleTabClick(item.tab)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
+            return <button key={item.title} onClick={() => handleTabClick(item.tab, item.tab === "creators" ? "database" : undefined)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -736,6 +718,9 @@ export function AppSidebar() {
                     </div> : item.tab === "blueprints" ? <div className="relative h-[24px] w-[24px]">
                       <img src={blueprintsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={blueprintsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+                    </div> : item.tab === "creators" ? <div className="relative h-[24px] w-[24px]">
+                      <img src={creatorsInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
+                      <img src={creatorsActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
                     </div> : item.tab === "scope" ? <div className="relative h-[24px] w-[24px]">
                       <img src={scopeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={scopeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
