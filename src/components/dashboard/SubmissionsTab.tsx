@@ -503,7 +503,7 @@ export function SubmissionsTab() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-[280px] p-2.5 overflow-hidden bg-white dark:bg-[#0a0a0a] border-[#dce1eb] dark:border-[#141414]" style={{
           fontFamily: 'Inter',
-          letterSpacing: '-0.5px'
+          letterSpacing: 'normal'
         }}>
             <div className="relative">
               {/* Main Menu */}
@@ -516,10 +516,7 @@ export function SubmissionsTab() {
                 <div className="space-y-1">
                   {/* Status Filter */}
                   <button onClick={() => setFilterSubmenu('status')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
-                      <span className="text-sm">Status</span>
-                    </div>
+                    <span className="text-sm">Status</span>
                     <div className="flex items-center gap-2">
                       {statusFilter !== 'all' && <span className="text-xs text-muted-foreground capitalize">{statusFilter}</span>}
                       <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -528,10 +525,7 @@ export function SubmissionsTab() {
 
                   {/* Type Filter */}
                   <button onClick={() => setFilterSubmenu('type')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <img src={resolvedTheme === 'dark' ? dualScreenIconWhite : dualScreenIconBlack} alt="" className="h-5 w-5" />
-                      <span className="text-sm">Type</span>
-                    </div>
+                    <span className="text-sm">Type</span>
                     <div className="flex items-center gap-2">
                       {typeFilter !== 'all' && <span className="text-xs text-muted-foreground capitalize">{typeFilter}</span>}
                       <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -540,15 +534,7 @@ export function SubmissionsTab() {
 
                   {/* Program Filter */}
                   <button onClick={() => setFilterSubmenu('program')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                      </div>
-                      <span className="text-sm">Program</span>
-                    </div>
+                    <span className="text-sm">Program</span>
                     <div className="flex items-center gap-2">
                       {programFilter !== 'all' && <span className="text-xs text-muted-foreground truncate max-w-[80px]">{uniquePrograms.find(p => p.id === programFilter)?.title}</span>}
                       <ChevronDown className="h-4 w-4 -rotate-90" />
