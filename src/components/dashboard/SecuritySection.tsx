@@ -189,10 +189,16 @@ export function SecuritySection() {
   return <div className="rounded-xl border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="p-6 pb-0">
-        <h3 className="text-base font-semibold text-foreground mb-1" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+        <h3 className="text-base font-semibold text-foreground mb-1" style={{
+        fontFamily: "Inter",
+        letterSpacing: "-0.3px"
+      }}>
           Security
         </h3>
-        <p className="text-sm text-muted-foreground mb-4" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+        <p className="text-sm text-muted-foreground mb-4" style={{
+        fontFamily: "Inter",
+        letterSpacing: "-0.3px"
+      }}>
           Manage your password and view devices where you're signed in
         </p>
       </div>
@@ -200,19 +206,26 @@ export function SecuritySection() {
       {/* Content */}
       <div className="px-6 pb-6 space-y-6">
         {/* Password Section */}
-        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+        <div className="flex items-center justify-between p-4 rounded-lg border px-0 py-0 bg-[#1f1f1f]/0 border-[#141414]/0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10">
-              <Lock className="h-4 w-4 text-primary" />
-            </div>
+            
             <div>
-              <p className="font-medium text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>Password</p>
-              <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+              <p className="font-medium text-sm" style={{
+              fontFamily: "Inter",
+              letterSpacing: "-0.3px"
+            }}>Password</p>
+              <p className="text-xs text-muted-foreground" style={{
+              fontFamily: "Inter",
+              letterSpacing: "-0.3px"
+            }}>
                 Set or update your password
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSetPassword} disabled={sendingReset} style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+          <Button variant="outline" size="sm" onClick={handleSetPassword} disabled={sendingReset} style={{
+          fontFamily: "Inter",
+          letterSpacing: "-0.3px"
+        }}>
             {sendingReset ? <>
                 <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                 Sending...
@@ -223,14 +236,23 @@ export function SecuritySection() {
         {/* Active Devices Section */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>Active Devices</h4>
-            {sessions.filter(s => !s.is_current).length > 0 && <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs" onClick={handleSignOutAllOther} style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+            <h4 className="font-medium text-sm" style={{
+            fontFamily: "Inter",
+            letterSpacing: "-0.3px"
+          }}>Active Devices</h4>
+            {sessions.filter(s => !s.is_current).length > 0 && <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 text-xs" onClick={handleSignOutAllOther} style={{
+            fontFamily: "Inter",
+            letterSpacing: "-0.3px"
+          }}>
                 Sign out all other devices
               </Button>}
           </div>
 
           <div className="space-y-2">
-            {sessions.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+            {sessions.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center" style={{
+            fontFamily: "Inter",
+            letterSpacing: "-0.3px"
+          }}>
                 No active sessions found
               </p> : sessions.map(sessionItem => <div key={sessionItem.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                   <div className="flex items-start gap-3">
@@ -239,18 +261,27 @@ export function SecuritySection() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                        <p className="font-medium text-sm" style={{
+                    fontFamily: "Inter",
+                    letterSpacing: "-0.3px"
+                  }}>
                           {getDeviceName(sessionItem)}
                         </p>
                         {sessionItem.is_current && <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
                             This device
                           </span>}
                       </div>
-                      <p className="text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                      <p className="text-xs text-muted-foreground" style={{
+                  fontFamily: "Inter",
+                  letterSpacing: "-0.3px"
+                }}>
                         {sessionItem.browser}
                         {sessionItem.browser_version && ` ${sessionItem.browser_version}`}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground" style={{
+                  fontFamily: "Inter",
+                  letterSpacing: "-0.3px"
+                }}>
                         {getLocationDisplay(sessionItem) && <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {getLocationDisplay(sessionItem)}
