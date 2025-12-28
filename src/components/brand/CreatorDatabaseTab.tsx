@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -1481,11 +1481,29 @@ export function CreatorDatabaseTab({
                   </div>}
                 {selectedCreatorPanel.email && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Email</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.email}</p>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedCreatorPanel.email || '');
+                        toast.success('Email copied to clipboard');
+                      }}
+                      className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer"
+                    >
+                      <span>{selectedCreatorPanel.email}</span>
+                      <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                    </button>
                   </div>}
                 {selectedCreatorPanel.phone_number && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Phone Number</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.phone_number}</p>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedCreatorPanel.phone_number || '');
+                        toast.success('Phone number copied to clipboard');
+                      }}
+                      className="group flex items-center gap-1.5 text-xs font-inter tracking-[-0.5px] hover:text-foreground/80 transition-colors cursor-pointer"
+                    >
+                      <span>{selectedCreatorPanel.phone_number}</span>
+                      <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                    </button>
                   </div>}
                 {selectedCreatorPanel.discord_username && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord Username</p>
