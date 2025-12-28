@@ -467,7 +467,7 @@ export function UserSettingsTab() {
   }
   return <div className="max-w-xl mx-auto">
       {/* Sticky Header & Tabs */}
-      <div className="sticky top-0 z-10 bg-background pt-4 pb-0">
+      <div className="sticky top-0 z-10 bg-white dark:bg-background pt-4 pb-0">
         {/* Header */}
         <div className="flex items-center justify-between px-4">
           <div>
@@ -482,7 +482,7 @@ export function UserSettingsTab() {
           } else if (activeTab === 'integrations') {
             handleSaveIntegrations();
           }
-        }} disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false} className="h-9 px-6 tracking-[-0.5px] bg-white text-black border-0 hover:bg-white/90">
+        }} disabled={activeTab === 'general' ? savingBrand : activeTab === 'integrations' ? savingIntegrations : false} className="h-9 px-6 tracking-[-0.5px] bg-black dark:bg-white text-white dark:text-black border-0 hover:bg-black/90 dark:hover:bg-white/90">
               {activeTab === 'general' && savingBrand || activeTab === 'integrations' && savingIntegrations ? "Saving..." : "Save Changes"}
             </Button>}
         </div>
