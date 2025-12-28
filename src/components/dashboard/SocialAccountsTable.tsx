@@ -221,13 +221,13 @@ export function SocialAccountsTable({
                 {/* Actions */}
                 <TableCell className="py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onLinkCampaign(account)} title="Link to campaign">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => onLinkCampaign(account)} title="Link to campaign">
                       <Link2 className="h-4 w-4 text-muted-foreground" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => handleToggleVisibility(account)} title={account.hidden_from_public ? "Show on public profile" : "Hide from public profile"}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => handleToggleVisibility(account)} title={account.hidden_from_public ? "Show on public profile" : "Hide from public profile"}>
                       {account.hidden_from_public ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                     </Button>
-                    {account.account_link && <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => window.open(account.account_link!, "_blank")} title="Open profile">
+                    {account.account_link && <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted" onClick={() => window.open(account.account_link!, "_blank")} title="Open profile">
                         <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                       </Button>}
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10" onClick={() => onDeleteAccount(account.id)} title="Delete account">
