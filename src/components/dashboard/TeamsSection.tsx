@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Copy, Check, Users, Crown, UserPlus, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
+import { Check, Users, Crown, UserPlus, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
 import settingsIconLight from "@/assets/icons/settings-icon.svg";
 import settingsIconDark from "@/assets/icons/settings-icon-dark.svg";
 import deleteIconLight from "@/assets/icons/delete-icon.svg";
 import deleteIconDark from "@/assets/icons/delete-icon-dark.svg";
+import copyIcon from "@/assets/icons/copy-icon.svg";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
@@ -463,9 +464,12 @@ export function TeamsSection(): JSX.Element {
               <Label className="text-sm text-muted-foreground">Team Invite Link</Label>
               <div className="flex gap-2">
                 <Input readOnly value={`${window.location.origin}/join-team/${myTeam.invite_code}`} className="bg-muted/50 font-mono text-sm" />
-                <Button onClick={copyInviteLink} variant="outline" className="shrink-0 px-3">
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
+                <button 
+                  onClick={copyInviteLink} 
+                  className="shrink-0 px-3 h-9 flex items-center justify-center rounded-md bg-transparent hover:bg-muted transition-colors"
+                >
+                  {copied ? <Check className="h-4 w-4 text-foreground" /> : <img src={copyIcon} alt="Copy" className="h-4 w-4 opacity-60" />}
+                </button>
               </div>
             </div>
           </CardContent>
