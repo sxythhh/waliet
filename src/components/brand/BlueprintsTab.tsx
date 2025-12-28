@@ -274,7 +274,7 @@ export function BlueprintsTab({
         const contentPreview = getContentPreview(blueprint.content);
         const status = getBlueprintStatus(blueprint);
         const statusConfig = getStatusConfig(status);
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full`}>
+        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full dark:border dark:border-[#0e0e0e]`}>
                     {/* Status Label */}
                     <div className="px-4 py-1 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
@@ -283,7 +283,7 @@ export function BlueprintsTab({
                     </div>
 
                     {/* Content Card overlaying the status background */}
-                    <div className="flex-1 rounded-xl border border-dashed border-border/40 bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col relative">
+                    <div className="flex-1 rounded-xl border border-dashed border-border/40 dark:border-[#0e0e0e] bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col relative">
                       {/* Menu Button */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
