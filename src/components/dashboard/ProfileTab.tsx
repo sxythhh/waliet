@@ -181,15 +181,15 @@ export function ProfileTab() {
       setUpdatingEmail(false);
     }
   };
-
   const handleSaveSubscription = async () => {
     if (!profile) return;
     setSavingSubscription(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ subscribed_to_updates: profile.subscribed_to_updates })
-        .eq("id", profile.id);
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        subscribed_to_updates: profile.subscribed_to_updates
+      }).eq("id", profile.id);
       if (error) throw error;
       setOriginalSubscribedToUpdates(profile.subscribed_to_updates);
       toast({
@@ -206,7 +206,6 @@ export function ProfileTab() {
       setSavingSubscription(false);
     }
   };
-
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
@@ -915,45 +914,29 @@ export function ProfileTab() {
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
-            <Button 
-              onClick={() => setShowAddAccountDialog(true)} 
-              size="sm"
-              className="font-inter font-semibold tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7]"
-            >
+            <Button onClick={() => setShowAddAccountDialog(true)} size="sm" className="font-inter font-medium tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7]">
               <Plus className="mr-2 h-4 w-4" />
               Add Account
             </Button>
           </div>
         </CardHeader>
         <CardContent className="px-0 pt-3">
-          {socialAccounts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 border border-border rounded-xl">
+          {socialAccounts.length === 0 ? <div className="flex flex-col items-center justify-center py-8 border border-border rounded-xl">
               <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                 <img alt="" className="w-7 h-7" src={resolvedTheme === 'dark' ? noAccountsIcon : noAccountsIconBlack} />
               </div>
               <p className="font-geist tracking-[-0.5px] text-base font-medium text-foreground mb-1">No connected accounts yet</p>
               <p className="font-inter tracking-[-0.5px] text-sm text-muted-foreground">Manage your connected social media accounts</p>
-            </div>
-          ) : (
-            <SocialAccountsTable
-              accounts={socialAccounts}
-              onRefresh={fetchSocialAccounts}
-              onDeleteAccount={handleDeleteAccount}
-              onLinkCampaign={(account) => {
-                setSelectedAccountForLinking(account);
-                setShowLinkCampaignDialog(true);
-              }}
-              onUnlinkCampaign={handleUnlinkCampaign}
-              onVerifyAccount={(account) => {
-                setSelectedAccountForVerification(account);
-                setShowVerifyAccountDialog(true);
-              }}
-              onSubmitDemographics={(account) => {
-                setSelectedAccountForDemographics(account);
-                setShowDemographicsDialog(true);
-              }}
-            />
-          )}
+            </div> : <SocialAccountsTable accounts={socialAccounts} onRefresh={fetchSocialAccounts} onDeleteAccount={handleDeleteAccount} onLinkCampaign={account => {
+          setSelectedAccountForLinking(account);
+          setShowLinkCampaignDialog(true);
+        }} onUnlinkCampaign={handleUnlinkCampaign} onVerifyAccount={account => {
+          setSelectedAccountForVerification(account);
+          setShowVerifyAccountDialog(true);
+        }} onSubmitDemographics={account => {
+          setSelectedAccountForDemographics(account);
+          setShowDemographicsDialog(true);
+        }} />}
         </CardContent>
       </Card>
 
@@ -971,76 +954,52 @@ export function ProfileTab() {
       {/* User Settings - Redesigned */}
       <div ref={profileInfoRef} className="space-y-6">
         {/* Username Card */}
-        <UsernameSettingsCard
-          username={profile.username}
-          onChange={(username) => setProfile({ ...profile, username })}
-          onSave={() => handleSaveProfile({ preventDefault: () => {} } as React.FormEvent)}
-          saving={saving}
-          hasChanges={profile.username !== originalUsername}
-          originalUsername={originalUsername}
-        />
+        <UsernameSettingsCard username={profile.username} onChange={username => setProfile({
+        ...profile,
+        username
+      })} onSave={() => handleSaveProfile({
+        preventDefault: () => {}
+      } as React.FormEvent)} saving={saving} hasChanges={profile.username !== originalUsername} originalUsername={originalUsername} />
 
         {/* Email Card */}
-        <EmailSettingsCard
-          email={newEmail}
-          onChange={setNewEmail}
-          onSave={handleUpdateEmail}
-          saving={updatingEmail}
-          hasChanges={newEmail !== profile.email}
-          subscribeToUpdates={profile.subscribed_to_updates}
-          onSubscribeChange={(checked) => setProfile({ ...profile, subscribed_to_updates: checked })}
-          subscriptionHasChanges={profile.subscribed_to_updates !== originalSubscribedToUpdates}
-          onSaveSubscription={handleSaveSubscription}
-          savingSubscription={savingSubscription}
-        />
+        <EmailSettingsCard email={newEmail} onChange={setNewEmail} onSave={handleUpdateEmail} saving={updatingEmail} hasChanges={newEmail !== profile.email} subscribeToUpdates={profile.subscribed_to_updates} onSubscribeChange={checked => setProfile({
+        ...profile,
+        subscribed_to_updates: checked
+      })} subscriptionHasChanges={profile.subscribed_to_updates !== originalSubscribedToUpdates} onSaveSubscription={handleSaveSubscription} savingSubscription={savingSubscription} />
 
         {/* Discord Card */}
-        <SettingsCard
-          title="Discord"
-          description="Connect your Discord account to join our community and receive updates directly"
-          footerHint={profile.discord_username ? "Your Discord account is connected." : "Connect to unlock community features."}
-        >
-          {profile.discord_username ? (
-            <div className="flex items-center justify-between max-w-md h-11 px-3 bg-background border border-border rounded-md">
+        <SettingsCard title="Discord" description="Connect your Discord account to join our community and receive updates directly" footerHint={profile.discord_username ? "Your Discord account is connected." : "Connect to unlock community features."}>
+          {profile.discord_username ? <div className="flex items-center justify-between max-w-md h-11 px-3 bg-background border border-border rounded-md">
               <div className="flex items-center gap-2">
-                <img
-                  src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"}
-                  alt="Discord"
-                  className="w-5 h-5 rounded-full"
-                />
-                <span className="text-sm" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+                <img src={profile.discord_avatar || "/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp"} alt="Discord" className="w-5 h-5 rounded-full" />
+                <span className="text-sm" style={{
+              fontFamily: "Inter",
+              letterSpacing: "-0.3px"
+            }}>
                   {profile.discord_username}
                 </span>
               </div>
-              <DiscordLinkDialog
-                userId={profile.id}
-                discordUsername={profile.discord_username}
-                discordAvatar={profile.discord_avatar || undefined}
-                onSuccess={fetchProfile}
-              />
-            </div>
-          ) : (
-            <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />
-          )}
+              <DiscordLinkDialog userId={profile.id} discordUsername={profile.discord_username} discordAvatar={profile.discord_avatar || undefined} onSuccess={fetchProfile} />
+            </div> : <DiscordLinkDialog userId={profile.id} onSuccess={fetchProfile} />}
         </SettingsCard>
 
         {/* Private Profile Card */}
-        <SettingsCard
-          title="Private Profile"
-          description="When enabled, your public profile page will show 'This profile is private' to other users"
-          footerHint={profile.is_private ? "Your profile is currently hidden from other users." : "Your profile is publicly visible."}
-          saveButton={{
-            disabled: saving,
-            loading: saving,
-            onClick: () => handleSaveProfile({ preventDefault: () => {} } as React.FormEvent),
-          }}
-        >
+        <SettingsCard title="Private Profile" description="When enabled, your public profile page will show 'This profile is private' to other users" footerHint={profile.is_private ? "Your profile is currently hidden from other users." : "Your profile is publicly visible."} saveButton={{
+        disabled: saving,
+        loading: saving,
+        onClick: () => handleSaveProfile({
+          preventDefault: () => {}
+        } as React.FormEvent)
+      }}>
           <div className="flex items-center gap-3">
-            <Switch
-              checked={profile.is_private}
-              onCheckedChange={(checked) => setProfile({ ...profile, is_private: checked })}
-            />
-            <span className="text-sm text-muted-foreground" style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}>
+            <Switch checked={profile.is_private} onCheckedChange={checked => setProfile({
+            ...profile,
+            is_private: checked
+          })} />
+            <span className="text-sm text-muted-foreground" style={{
+            fontFamily: "Inter",
+            letterSpacing: "-0.3px"
+          }}>
               {profile.is_private ? "Private mode enabled" : "Profile is public"}
             </span>
           </div>
