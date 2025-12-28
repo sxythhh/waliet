@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle, History, ChevronDown, ChevronUp } from "lucide-react";
+import { ExternalLink, CheckCircle2, Clock, XCircle, AlertTriangle } from "lucide-react";
 import demographicsIcon from "@/assets/demographics-icon.svg";
 
 interface DemographicSubmission {
@@ -41,7 +41,7 @@ export function DemographicStatusCard({
   const [viewingSubmission, setViewingSubmission] = useState<DemographicSubmission | null>(null);
   const [deletingSubmission, setDeletingSubmission] = useState<DemographicSubmission | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  
   const { toast } = useToast();
 
   // Sort submissions by submitted_at descending to ensure latest is always first
@@ -50,7 +50,6 @@ export function DemographicStatusCard({
   );
   const latestSubmission = sortedSubmissions[0];
   const status = latestSubmission?.status;
-  const historicalSubmissions = sortedSubmissions.slice(1);
 
   // Calculate if user can submit - only blocked if pending
   const getSubmissionAvailability = () => {
@@ -182,67 +181,18 @@ export function DemographicStatusCard({
           </div>
         )}
 
-        {/* History Toggle */}
-        {historicalSubmissions.length > 0 && (
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-            style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-          >
-            <History className="h-3 w-3" />
-            <span>{historicalSubmissions.length} previous submission{historicalSubmissions.length !== 1 ? 's' : ''}</span>
-            {showHistory ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          </button>
-        )}
-
-        {/* Historical Submissions */}
-        {showHistory && historicalSubmissions.length > 0 && (
-          <div className="space-y-1 pl-2 border-l border-border/50">
-            {historicalSubmissions.map((submission) => {
-              const subStatus = getStatusConfig(submission.status);
-              return (
-                <div 
-                  key={submission.id} 
-                  className="flex items-center justify-between text-[10px] text-muted-foreground py-0.5"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Badge variant="secondary" className={`text-[9px] px-1 py-0 border-0 ${subStatus.color}`}>
-                      {subStatus.label}
-                    </Badge>
-                    <span>{format(new Date(submission.submitted_at), "MMM d, yyyy")}</span>
-                    {submission.score && submission.status === 'approved' && (
-                      <span className="font-medium">{submission.score}%</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {submission.screenshot_url && (
-                      <button 
-                        onClick={() => setViewingSubmission(submission)}
-                        className="text-primary hover:underline"
-                      >
-                        View
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {/* Action Button */}
         <Button
-          variant={availability.canSubmit ? "default" : "ghost"}
+          variant={availability.canSubmit ? "outline" : "ghost"}
           size="sm"
-          className={`w-full h-8 ${!availability.canSubmit ? 'border-0 hover:bg-transparent cursor-default' : ''}`}
+          className={`h-7 px-2.5 text-xs ${!availability.canSubmit ? 'border-0 hover:bg-transparent cursor-default' : ''}`}
           style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
           disabled={!availability.canSubmit}
           onClick={onSubmitNew}
         >
           {availability.canSubmit ? (
             <>
-              <img src={demographicsIcon} alt="" className="h-4 w-4 mr-1.5" />
+              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-1" />
               {submissions.length > 0 ? 'Update' : 'Submit'}
             </>
           ) : (
