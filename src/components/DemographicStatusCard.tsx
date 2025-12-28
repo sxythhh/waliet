@@ -141,65 +141,24 @@ export function DemographicStatusCard({
 
   return (
     <>
-      <div className="space-y-1.5">
-        {/* Current Status */}
-        <div className="flex items-center justify-between gap-2">
-          <Badge variant="secondary" className={`text-[10px] font-medium px-1.5 py-0 border-0 ${statusConfig.color}`} style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-            <div className={`w-1.5 h-1.5 rounded-full ${statusConfig.dotColor} mr-1 animate-pulse`} />
-            {statusConfig.label}
-          </Badge>
-          {status === 'approved' && latestSubmission?.score && (
-            <span className="text-sm font-bold tracking-tight" style={{ fontFamily: 'Inter', letterSpacing: '-0.5px' }}>
-              Tier 1 {latestSubmission.score}%
-            </span>
-          )}
-        </div>
-
-        {/* Latest Submission Info */}
-        {latestSubmission && (
-          <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
-            <div className="flex items-center gap-1.5">
-              <span className="text-muted-foreground/60">Last:</span>
-              <span>{format(new Date(latestSubmission.submitted_at), "MMM d, yyyy")}</span>
-              {latestSubmission.screenshot_url && (
-                <button 
-                  onClick={() => setViewingSubmission(latestSubmission)}
-                  className="text-primary hover:underline ml-1"
-                >
-                  View
-                </button>
-              )}
-              {latestSubmission.status !== 'approved' && (
-                <button 
-                  onClick={() => setDeletingSubmission(latestSubmission)}
-                  className="text-destructive hover:underline ml-1"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
+      <div>
         {/* Action Button */}
         <Button
-          variant={availability.canSubmit ? "outline" : "ghost"}
           size="sm"
-          className={`h-7 px-2.5 text-xs ${!availability.canSubmit ? 'border-0 hover:bg-transparent cursor-default' : ''}`}
+          className={`h-7 px-2.5 text-xs bg-blue-500 hover:bg-blue-600 text-white border-0 ${!availability.canSubmit ? 'opacity-50 cursor-default' : ''}`}
           style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
           disabled={!availability.canSubmit}
           onClick={onSubmitNew}
         >
           {availability.canSubmit ? (
             <>
-              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-1" />
+              <img src={demographicsIcon} alt="" className="h-3.5 w-3.5 mr-1 brightness-0 invert" />
               {submissions.length > 0 ? 'Update' : 'Submit'}
             </>
           ) : (
-            <span className="text-muted-foreground">{availability.reason}</span>
+            <span>{availability.reason}</span>
           )}
         </Button>
-
       </div>
 
       {/* Video Preview Dialog */}
