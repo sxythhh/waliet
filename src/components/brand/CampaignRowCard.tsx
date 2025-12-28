@@ -123,12 +123,12 @@ export function CampaignRowCard({
               <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
                 {title}
               </h3>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs opacity-60">
                 <img 
                   key={`icon-${isDark}`}
                   src={type === "campaign" ? (isDark ? clippingIconWhite : clippingIconDark) : (isDark ? boostIconWhite : boostIconDark)} 
                   alt="" 
-                  className="w-3.5 h-3.5" 
+                  className="w-3 h-3" 
                 />
                 {type === "campaign" ? "Clipping" : "Boost"}
               </span>
