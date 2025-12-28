@@ -190,7 +190,7 @@ export default function JoinTeam() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '-0.5px' }}>
       <Card className="max-w-md w-full">
         <CardContent className="p-8">
           <div className="text-center">
@@ -213,8 +213,7 @@ export default function JoinTeam() {
               </Avatar>
               <span className="text-sm">@{ownerProfile?.username || "Owner"}</span>
             </div>
-            <p className="text-sm text-muted-foreground mb-6 flex items-center justify-center gap-1">
-              <Users className="h-4 w-4" />
+            <p className="text-sm text-muted-foreground mb-6">
               {memberCount} member{memberCount !== 1 ? 's' : ''}
             </p>
 
@@ -258,7 +257,7 @@ export default function JoinTeam() {
             <div className="space-y-3">
               {canJoin ? (
                 <Button 
-                  className="w-full" 
+                  className="w-full bg-white text-black hover:bg-gray-100" 
                   size="lg"
                   onClick={handleJoinTeam}
                   disabled={joining}
@@ -273,8 +272,8 @@ export default function JoinTeam() {
               ) : null}
 
               <Button 
-                variant="outline" 
-                className="w-full"
+                variant="ghost" 
+                className="w-full hover:bg-muted"
                 onClick={() => navigate("/dashboard")}
               >
                 Go to Dashboard
