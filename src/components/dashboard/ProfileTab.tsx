@@ -1520,7 +1520,7 @@ export function ProfileTab() {
       if (!open) setSelectedAccountForLinking(null);
     }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="py-[10px]">
             <DialogTitle style={{
             fontFamily: 'Geist',
             letterSpacing: '-0.5px'
