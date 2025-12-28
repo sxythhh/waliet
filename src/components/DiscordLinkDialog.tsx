@@ -64,14 +64,13 @@ export function DiscordLinkDialog({
   const handleUnlinkDiscord = async () => {
     setLoading(true);
     try {
-      const {
-        error
-      } = await supabase.functions.invoke('discord-oauth', {
+      const { error } = await supabase.functions.invoke('discord-oauth', {
         body: {
           action: 'disconnect',
           userId
         }
       });
+
       if (error) {
         let msg = error.message || 'Failed to unlink Discord account.';
         const resp = (error as any)?.context?.response;
@@ -110,7 +109,7 @@ export function DiscordLinkDialog({
     }
   };
   if (!isLinked) {
-    return <Button variant="ghost" size="sm" onClick={handleLinkDiscord} className="gap-2 font-inter font-medium bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-md">
+    return <Button variant="ghost" size="sm" onClick={handleLinkDiscord} className="gap-2 font-geist tracking-tight font-semibold bg-[#5765F2] hover:bg-[#5765F2]/90 text-white border-0 rounded-md">
         <img alt="Discord" className="w-4 h-4" src="/lovable-uploads/174e0985-7b27-4c11-ba67-ffb21fb24b3c.webp" />
         Connect Discord
       </Button>;
