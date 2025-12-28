@@ -1195,45 +1195,7 @@ export function WalletTab() {
 
 
 
-      {/* Balance Cards - Side by Side */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Current Balance Card */}
-        <Card className="border-0 bg-neutral-100/0">
-          <CardContent className="pt-4 pb-4 py-0 bg-black/0 px-0">
-            <div className="flex items-center justify-between mb-4">
-              <div className="items-center flex flex-col gap-[5px]">
-                <p className="text-sm font-medium text-muted-foreground font-['Inter']" style={{
-                letterSpacing: '-0.5px'
-              }}>Current Balance</p>
-                <p className="text-3xl font-bold font-geist" style={{
-                letterSpacing: '-0.3px'
-              }}>
-                  {isBalanceVisible ? `$${wallet?.balance?.toFixed(2) || "0.00"}` : "••••••"}
-                </p>
-              </div>
-              <Button onClick={handleRequestPayout} className="w-40 font-geist tracking-tighter-custom" disabled={!wallet || wallet.balance < 20 || !payoutMethods || payoutMethods.length === 0 || pendingWithdrawals > 0}>
-                Withdraw Balance
-              </Button>
-            </div>
-            <Separator className="my-2" />
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-medium">Pending Balance</span>
-                {(ledgerSummary?.totalLocked || 0) > 0 && <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                    ${(ledgerSummary?.totalLocked || 0).toFixed(2)} Locked
-                  </span>}
-              </div>
-              <span className="text-base font-semibold text-muted-foreground">
-                {isBalanceVisible ? `$${((ledgerSummary?.totalPending || 0) + pendingBoostEarnings).toFixed(2)}` : "••••••"}
-              </span>
-            </div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-muted-foreground font-medium">In Transit</span>
-              <span className="text-base font-semibold">{isBalanceVisible ? `$${pendingWithdrawals.toFixed(2)}` : "••••••"}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Balance Cards - Hidden */}
 
       {/* Payout Pipeline Section - Hidden */}
 
