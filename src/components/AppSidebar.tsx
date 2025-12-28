@@ -12,6 +12,11 @@ import discordIcon from "@/assets/discord-icon.png";
 import supportIcon from "@/assets/support-icon.svg";
 import lightbulbIcon from "@/assets/lightbulb-icon.svg";
 import bugIcon from "@/assets/bug-icon.svg";
+// Light mode icons
+import discordIconLight from "@/assets/discord-icon-light.svg";
+import supportIconLight from "@/assets/support-icon-light.svg";
+import lightbulbIconLight from "@/assets/lightbulb-icon-light.svg";
+import bugIconLight from "@/assets/bug-icon-light.svg";
 import homeInactive from "@/assets/home-inactive-new.png";
 import homeActive from "@/assets/home-active-new.png";
 import walletInactive from "@/assets/wallet-inactive.svg";
@@ -201,6 +206,9 @@ export function AppSidebar() {
   const [campaignsExpanded, setCampaignsExpanded] = useState(true);
   const menuItems = isCreatorMode ? creatorMenuItems : brandMenuItems;
   const currentSubtab = searchParams.get("subtab") || "messages";
+  
+  // Determine if we're in light mode
+  const isLightMode = theme === "light" || (theme === "system" && !window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   // Get current brand ID for subscription dialog
   const currentBrandId = !isCreatorMode && workspace ? allBrands.find(b => b.slug === workspace)?.id || brandMemberships.find(m => m.brands.slug === workspace)?.brand_id || '' : '';
@@ -414,11 +422,11 @@ export function AppSidebar() {
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-0 bg-background border border-border rounded-xl shadow-2xl" align="end" sideOffset={8}>
-              <div className="p-3 space-y-1 font-inter tracking-[-0.5px]">
+              <div className="p-3 space-y-1 font-inter">
                 {/* Workspace Section */}
                 {(isAdmin ? allBrands.length > 0 : brandMemberships.length > 0) && <div className="pb-1">
                     <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${isCreatorMode ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
-                      <img src={swapHorizIcon} alt="" className="w-4 h-4" />
+                      <img src={isLightMode ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-4 h-4" />
                       <span className="text-sm">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
@@ -446,13 +454,13 @@ export function AppSidebar() {
                 {/* Quick Links */}
                 <div className="space-y-0.5">
                   <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
-                    <img src={supportIcon} alt="Support" className="w-4 h-4" />
-                    <span className="text-sm font-inter tracking-[-0.5px]">Support</span>
+                    <img src={isLightMode ? supportIconLight : supportIcon} alt="Support" className="w-4 h-4" />
+                    <span className="text-sm font-inter">Support</span>
                   </button>
                   <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
                     <div className="flex items-center gap-3">
-                      <img alt="Discord" className="w-4 h-4 rounded" src="/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp" />
-                      <span className="text-sm font-inter tracking-[-0.5px]">Discord</span>
+                      <img alt="Discord" className="w-4 h-4 rounded" src={isLightMode ? discordIconLight : "/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp"} />
+                      <span className="text-sm font-inter">Discord</span>
                     </div>
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>
@@ -460,15 +468,15 @@ export function AppSidebar() {
                   setFeedbackType("feature");
                   setFeedbackOpen(true);
                 }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
-                    <img src={lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
-                    <span className="text-sm font-inter tracking-[-0.5px]">Feature Request</span>
+                    <img src={isLightMode ? lightbulbIconLight : lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
+                    <span className="text-sm font-inter">Feature Request</span>
                   </button>
                   <button onClick={() => {
                   setFeedbackType("bug");
                   setFeedbackOpen(true);
                 }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
-                    <img src={bugIcon} alt="Report Bug" className="w-4 h-4" />
-                    <span className="text-sm font-inter tracking-[-0.5px]">Report Bug</span>
+                    <img src={isLightMode ? bugIconLight : bugIcon} alt="Report Bug" className="w-4 h-4" />
+                    <span className="text-sm font-inter">Report Bug</span>
                   </button>
                 </div>
 
