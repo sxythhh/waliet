@@ -109,13 +109,6 @@ export function EditProfileDialog({
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="text-lg font-semibold text-foreground" style={labelStyle}>
-            Edit Profile
-          </DialogTitle>
-        </DialogHeader>
-
         {/* Form Content */}
         <div className="py-5 space-y-5 px-[5px]">
           {/* Display Name */}
@@ -141,49 +134,6 @@ export function EditProfileDialog({
             <p className="text-xs text-muted-foreground text-right" style={inputStyle}>
               {formData.bio.length}/160
             </p>
-          </div>
-
-          {/* Two Column Row */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Content Style */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground" style={labelStyle}>
-                Content Style
-              </Label>
-              <Select value={formData.content_style} onValueChange={value => setFormData({
-              ...formData,
-              content_style: value
-            })}>
-                <SelectTrigger className="h-11 bg-muted/30 border-border" style={inputStyle}>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border z-50">
-                  {CONTENT_STYLE_OPTIONS.map(style => <SelectItem key={style} value={style} style={inputStyle}>
-                      {style}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Language */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground" style={labelStyle}>
-                Language
-              </Label>
-              <Select value={formData.content_language} onValueChange={value => setFormData({
-              ...formData,
-              content_language: value
-            })}>
-                <SelectTrigger className="h-11 bg-muted/30 border-border" style={inputStyle}>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border z-50">
-                  {LANGUAGE_OPTIONS.map(lang => <SelectItem key={lang} value={lang} style={inputStyle}>
-                      {lang}
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           {/* Visibility Toggles */}
