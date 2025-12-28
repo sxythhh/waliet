@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-
 interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,87 +26,18 @@ interface EditProfileDialogProps {
   } | null;
   onSuccess: () => void;
 }
-
-const CONTENT_STYLE_OPTIONS = [
-  "Educational",
-  "Entertainment",
-  "Lifestyle",
-  "Comedy",
-  "Tutorial",
-  "Review",
-  "Vlog",
-  "Gaming",
-  "Music",
-  "Dance",
-  "Fashion",
-  "Beauty",
-  "Fitness",
-  "Food",
-  "Travel",
-  "Tech",
-  "Business",
-  "Motivation",
-  "Other"
-];
-
-const LANGUAGE_OPTIONS = [
-  "English",
-  "Spanish",
-  "Portuguese",
-  "French",
-  "German",
-  "Italian",
-  "Dutch",
-  "Russian",
-  "Japanese",
-  "Korean",
-  "Chinese",
-  "Arabic",
-  "Hindi",
-  "Indonesian",
-  "Turkish",
-  "Polish",
-  "Vietnamese",
-  "Thai",
-  "Other"
-];
-
-const COUNTRY_OPTIONS = [
-  "United States",
-  "United Kingdom",
-  "Canada",
-  "Australia",
-  "Germany",
-  "France",
-  "Spain",
-  "Italy",
-  "Netherlands",
-  "Brazil",
-  "Mexico",
-  "India",
-  "Japan",
-  "South Korea",
-  "China",
-  "Indonesia",
-  "Philippines",
-  "Vietnam",
-  "Thailand",
-  "Turkey",
-  "Poland",
-  "Russia",
-  "South Africa",
-  "Nigeria",
-  "Egypt",
-  "United Arab Emirates",
-  "Saudi Arabia",
-  "Argentina",
-  "Colombia",
-  "Chile",
-  "Other"
-];
-
-export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: EditProfileDialogProps) {
-  const { toast } = useToast();
+const CONTENT_STYLE_OPTIONS = ["Educational", "Entertainment", "Lifestyle", "Comedy", "Tutorial", "Review", "Vlog", "Gaming", "Music", "Dance", "Fashion", "Beauty", "Fitness", "Food", "Travel", "Tech", "Business", "Motivation", "Other"];
+const LANGUAGE_OPTIONS = ["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi", "Indonesian", "Turkish", "Polish", "Vietnamese", "Thai", "Other"];
+const COUNTRY_OPTIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Spain", "Italy", "Netherlands", "Brazil", "Mexico", "India", "Japan", "South Korea", "China", "Indonesia", "Philippines", "Vietnam", "Thailand", "Turkey", "Poland", "Russia", "South Africa", "Nigeria", "Egypt", "United Arab Emirates", "Saudi Arabia", "Argentina", "Colombia", "Chile", "Other"];
+export function EditProfileDialog({
+  open,
+  onOpenChange,
+  profile,
+  onSuccess
+}: EditProfileDialogProps) {
+  const {
+    toast
+  } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -120,7 +50,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
     show_location: false,
     show_joined_campaigns: false
   });
-
   useEffect(() => {
     if (profile && open) {
       setFormData({
@@ -136,29 +65,24 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
       });
     }
   }, [profile, open]);
-
   const handleSave = async () => {
     if (!profile) return;
     setSaving(true);
-
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: formData.full_name || null,
-          bio: formData.bio || null,
-          city: formData.city || null,
-          country: formData.country || null,
-          content_styles: formData.content_style ? [formData.content_style] : null,
-          content_languages: formData.content_language ? [formData.content_language] : null,
-          show_total_earned: formData.show_total_earned,
-          show_location: formData.show_location,
-          show_joined_campaigns: formData.show_joined_campaigns
-        })
-        .eq("id", profile.id);
-
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        full_name: formData.full_name || null,
+        bio: formData.bio || null,
+        city: formData.city || null,
+        country: formData.country || null,
+        content_styles: formData.content_style ? [formData.content_style] : null,
+        content_languages: formData.content_language ? [formData.content_language] : null,
+        show_total_earned: formData.show_total_earned,
+        show_location: formData.show_location,
+        show_joined_campaigns: formData.show_joined_campaigns
+      }).eq("id", profile.id);
       if (error) throw error;
-
       toast({
         title: "Profile updated",
         description: "Your profile has been saved successfully."
@@ -175,66 +99,46 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
       setSaving(false);
     }
   };
-
-  const labelStyle = { fontFamily: "Inter", letterSpacing: "-0.5px" };
-  const inputStyle = { fontFamily: "Inter", letterSpacing: "-0.3px" };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  const labelStyle = {
+    fontFamily: "Inter",
+    letterSpacing: "-0.5px"
+  };
+  const inputStyle = {
+    fontFamily: "Inter",
+    letterSpacing: "-0.3px"
+  };
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle 
-            className="text-lg font-semibold text-foreground"
-            style={labelStyle}
-          >
+          <DialogTitle className="text-lg font-semibold text-foreground" style={labelStyle}>
             Edit Profile
           </DialogTitle>
         </DialogHeader>
 
         {/* Form Content */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="py-5 space-y-5 px-[5px]">
           {/* Display Name */}
           <div className="space-y-2">
-            <Label 
-              htmlFor="full_name" 
-              className="text-sm font-medium text-foreground"
-              style={labelStyle}
-            >
+            <Label htmlFor="full_name" className="text-sm font-medium text-foreground" style={labelStyle}>
               Display Name
             </Label>
-            <Input
-              id="full_name"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="Your display name"
-              className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
-              style={inputStyle}
-            />
+            <Input id="full_name" value={formData.full_name} onChange={e => setFormData({
+            ...formData,
+            full_name: e.target.value
+          })} placeholder="Your display name" className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary" style={inputStyle} />
           </div>
 
           {/* Bio */}
           <div className="space-y-2">
-            <Label 
-              htmlFor="bio" 
-              className="text-sm font-medium text-foreground"
-              style={labelStyle}
-            >
+            <Label htmlFor="bio" className="text-sm font-medium text-foreground" style={labelStyle}>
               Bio
             </Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              placeholder="Tell us about yourself..."
-              className="min-h-[100px] resize-none bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
-              style={inputStyle}
-              maxLength={160}
-            />
-            <p 
-              className="text-xs text-muted-foreground text-right"
-              style={inputStyle}
-            >
+            <Textarea id="bio" value={formData.bio} onChange={e => setFormData({
+            ...formData,
+            bio: e.target.value
+          })} placeholder="Tell us about yourself..." className="min-h-[100px] resize-none bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary" style={inputStyle} maxLength={160} />
+            <p className="text-xs text-muted-foreground text-right" style={inputStyle}>
               {formData.bio.length}/160
             </p>
           </div>
@@ -243,56 +147,40 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
           <div className="grid grid-cols-2 gap-4">
             {/* Content Style */}
             <div className="space-y-2">
-              <Label 
-                className="text-sm font-medium text-foreground"
-                style={labelStyle}
-              >
+              <Label className="text-sm font-medium text-foreground" style={labelStyle}>
                 Content Style
               </Label>
-              <Select
-                value={formData.content_style}
-                onValueChange={(value) => setFormData({ ...formData, content_style: value })}
-              >
-                <SelectTrigger 
-                  className="h-11 bg-muted/30 border-border"
-                  style={inputStyle}
-                >
+              <Select value={formData.content_style} onValueChange={value => setFormData({
+              ...formData,
+              content_style: value
+            })}>
+                <SelectTrigger className="h-11 bg-muted/30 border-border" style={inputStyle}>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border z-50">
-                  {CONTENT_STYLE_OPTIONS.map((style) => (
-                    <SelectItem key={style} value={style} style={inputStyle}>
+                  {CONTENT_STYLE_OPTIONS.map(style => <SelectItem key={style} value={style} style={inputStyle}>
                       {style}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
             {/* Language */}
             <div className="space-y-2">
-              <Label 
-                className="text-sm font-medium text-foreground"
-                style={labelStyle}
-              >
+              <Label className="text-sm font-medium text-foreground" style={labelStyle}>
                 Language
               </Label>
-              <Select
-                value={formData.content_language}
-                onValueChange={(value) => setFormData({ ...formData, content_language: value })}
-              >
-                <SelectTrigger 
-                  className="h-11 bg-muted/30 border-border"
-                  style={inputStyle}
-                >
+              <Select value={formData.content_language} onValueChange={value => setFormData({
+              ...formData,
+              content_language: value
+            })}>
+                <SelectTrigger className="h-11 bg-muted/30 border-border" style={inputStyle}>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border z-50">
-                  {LANGUAGE_OPTIONS.map((lang) => (
-                    <SelectItem key={lang} value={lang} style={inputStyle}>
+                  {LANGUAGE_OPTIONS.map(lang => <SelectItem key={lang} value={lang} style={inputStyle}>
                       {lang}
-                    </SelectItem>
-                  ))}
+                    </SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -300,10 +188,7 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
 
           {/* Visibility Toggles */}
           <div className="pt-2 space-y-4">
-            <Label 
-              className="text-sm font-medium text-foreground"
-              style={labelStyle}
-            >
+            <Label className="text-sm font-medium text-foreground" style={labelStyle}>
               Profile Visibility
             </Label>
             
@@ -312,30 +197,30 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
                 <span className="text-sm text-foreground" style={inputStyle}>
                   Total Earned
                 </span>
-                <Switch
-                  checked={formData.show_total_earned}
-                  onCheckedChange={(checked) => setFormData({ ...formData, show_total_earned: checked })}
-                />
+                <Switch checked={formData.show_total_earned} onCheckedChange={checked => setFormData({
+                ...formData,
+                show_total_earned: checked
+              })} />
               </div>
               
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-foreground" style={inputStyle}>
                   Location
                 </span>
-                <Switch
-                  checked={formData.show_location}
-                  onCheckedChange={(checked) => setFormData({ ...formData, show_location: checked })}
-                />
+                <Switch checked={formData.show_location} onCheckedChange={checked => setFormData({
+                ...formData,
+                show_location: checked
+              })} />
               </div>
               
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-foreground" style={inputStyle}>
                   Joined Campaigns
                 </span>
-                <Switch
-                  checked={formData.show_joined_campaigns}
-                  onCheckedChange={(checked) => setFormData({ ...formData, show_joined_campaigns: checked })}
-                />
+                <Switch checked={formData.show_joined_campaigns} onCheckedChange={checked => setFormData({
+                ...formData,
+                show_joined_campaigns: checked
+              })} />
               </div>
             </div>
           </div>
@@ -343,29 +228,13 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={saving}
-            className="h-10 px-4"
-            style={labelStyle}
-          >
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving} className="h-10 px-4" style={labelStyle}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="h-10 px-5 min-w-[100px]"
-            style={labelStyle}
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Save"
-            )}
+          <Button onClick={handleSave} disabled={saving} className="h-10 px-5 min-w-[100px]" style={labelStyle}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
