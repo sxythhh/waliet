@@ -188,20 +188,36 @@ Deno.serve(async (req) => {
     }
 
     // 4. Create wallet transaction records for both parties
+    // Get sender's username for the recipient's transaction record
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', senderId)
+      .single();
+    
     await supabase.from('wallet_transactions').insert([
       {
         user_id: senderId,
         amount: -totalDebit,
-        type: 'transfer_out',
+        type: 'transfer_sent',
+        status: 'completed',
         description: `Transfer to @${recipient.username}`,
-        metadata: { recipient_id: recipient.id, fee: fee }
+        metadata: { 
+          recipient_id: recipient.id, 
+          recipient_username: recipient.username,
+          fee: fee 
+        }
       },
       {
         user_id: recipient.id,
         amount: netAmount,
-        type: 'transfer_in',
-        description: `Transfer from user`,
-        metadata: { sender_id: senderId }
+        type: 'transfer_received',
+        status: 'completed',
+        description: `Transfer from @${senderProfile?.username || 'user'}`,
+        metadata: { 
+          sender_id: senderId,
+          sender_username: senderProfile?.username || 'user'
+        }
       }
     ]);
 
