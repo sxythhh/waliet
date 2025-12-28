@@ -75,7 +75,7 @@ export function SettingsCard({
               size="sm"
               disabled={saveButton.disabled}
               onClick={saveButton.onClick}
-              className={isDanger ? "" : "text-muted-foreground"}
+              className={isDanger ? "" : "text-muted-foreground dark:border-transparent"}
               style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
             >
               {saveButton.loading ? (
