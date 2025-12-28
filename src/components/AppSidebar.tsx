@@ -576,17 +576,14 @@ export function AppSidebar() {
                           <p className="text-[11px] text-muted-foreground">{currentBrandMemberCount} {currentBrandMemberCount === 1 ? 'Member' : 'Members'}</p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleTabClick('settings')}
-                        className="p-1.5 rounded-md hover:bg-muted/50 transition-colors"
-                      >
+                      <button onClick={() => handleTabClick('settings')} className="p-1.5 rounded-md hover:bg-muted/50 transition-colors">
                         <Settings className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </div>}
                   
                   {/* Header */}
                   <div className="flex items-center justify-between px-3 pt-3 pb-2">
-                    <span className="text-[11px] font-medium font-inter tracking-[-0.3px] text-foreground">Workspaces</span>
+                    <span className="text-[11px] font-medium font-inter text-foreground">Workspaces</span>
                     <span className="text-[11px] font-normal text-muted-foreground">{(isAdmin ? allBrands.length : brandMemberships.length) + 1} total</span>
                   </div>
                   
@@ -819,11 +816,9 @@ export function AppSidebar() {
         </div>
 
         {/* Wallet Dropdown - Desktop Sidebar (Creator Mode Only) */}
-        {isCreatorMode && (
-          <div className={`px-2 pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
+        {isCreatorMode && <div className={`px-2 pb-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
             <WalletDropdown variant="sidebar" isCollapsed={isCollapsed} />
-          </div>
-        )}
+          </div>}
       </aside>
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} hideTrigger onSuccess={() => {
       fetchBrandMemberships();
