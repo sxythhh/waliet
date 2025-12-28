@@ -1137,8 +1137,8 @@ export function WalletTab() {
     {/* Team & Affiliate Earnings Charts - Hidden */}
 
       <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
-        {/* Filter Button - Hidden for now */}
-        {false && <div className="pt-5 pb-4 px-0">
+        {/* Filter Button */}
+        <div className="pt-5 pb-4 px-0">
           <DropdownMenu open={filterOpen} onOpenChange={open => {
           setFilterOpen(open);
           if (!open) {
@@ -1447,7 +1447,7 @@ export function WalletTab() {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>}
+        </div>
 
         {/* Transactions Table */}
         <div className="pb-6 px-0">
@@ -1985,10 +1985,7 @@ export function WalletTab() {
       </Sheet>
 
       {/* P2P Transfer Dialog */}
-      <P2PTransferDialog open={p2pTransferDialogOpen} onOpenChange={setP2pTransferDialogOpen} currentBalance={wallet?.balance || 0} onTransferComplete={() => {
-      fetchWallet();
-      fetchTransactions();
-    }} />
+      
 
       {/* Share Transaction Dialog */}
       <TransactionShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} transaction={selectedTransaction} userProfile={userProfile} />
