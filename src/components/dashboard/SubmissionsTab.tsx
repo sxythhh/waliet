@@ -690,10 +690,6 @@ export function SubmissionsTab() {
                     <TableHead className="text-foreground font-medium text-sm h-12" style={{
                   fontFamily: 'Inter',
                   letterSpacing: '-0.5px'
-                }}>Account</TableHead>
-                    <TableHead className="text-foreground font-medium text-sm h-12" style={{
-                  fontFamily: 'Inter',
-                  letterSpacing: '-0.5px'
                 }}>Status</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12 text-right" style={{
                   fontFamily: 'Inter',
@@ -741,6 +737,12 @@ export function SubmissionsTab() {
                               <p className="text-xs text-muted-foreground truncate mt-0.5">
                                 {submission.video_upload_date ? format(new Date(submission.video_upload_date), 'MMM d, yyyy') : format(new Date(submission.created_at), 'MMM d, yyyy')}
                               </p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-3.5 h-3.5" />}
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {submission.video_author_username || '—'}
+                                </span>
+                              </div>
                             </div>
                           </a>
                         </TableCell>
@@ -764,18 +766,6 @@ export function SubmissionsTab() {
                           </div>
                         </TableCell>
                         
-                        {/* Account */}
-                        <TableCell className="py-3">
-                          <div className="flex items-center gap-2">
-                            {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-4 h-4" />}
-                            <span className="text-sm text-foreground" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.3px'
-                      }}>
-                              {submission.video_author_username || '—'}
-                            </span>
-                          </div>
-                        </TableCell>
                         
                         {/* Status */}
                         <TableCell className="py-3">
