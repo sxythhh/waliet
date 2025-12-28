@@ -452,7 +452,7 @@ export function AppSidebar() {
                   </div>}
                 
                 {/* Quick Links */}
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 opacity-60">
                   <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                     <img src={isLightMode ? supportIconLight : supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm font-inter">Support</span>
