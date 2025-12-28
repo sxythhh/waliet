@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { ZoomIn } from "lucide-react";
+
 
 interface BannerCropDialogProps {
   open: boolean;
@@ -74,7 +74,7 @@ export function BannerCropDialog({
       <DialogContent className="sm:max-w-[600px] bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Crop Cover Photo</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogDescription className="text-muted-foreground pb-2">
             Adjust the position and zoom of your cover photo
           </DialogDescription>
         </DialogHeader>
@@ -111,18 +111,14 @@ export function BannerCropDialog({
         </div>
 
         {/* Zoom Control */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <ZoomIn className="h-4 w-4" />
-            <span className="text-sm">Zoom</span>
-          </div>
+        <div className="pt-2">
           <Slider
             value={[zoom]}
             onValueChange={([value]) => setZoom(value)}
             min={1}
             max={3}
             step={0.1}
-            className="w-full"
+            className="w-full [&_[data-radix-slider-thumb]]:bg-white [&_[data-radix-slider-thumb]]:border-white"
           />
         </div>
 
