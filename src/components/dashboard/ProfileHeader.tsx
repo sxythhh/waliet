@@ -19,6 +19,8 @@ import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
 import { BannerCropDialog } from "@/components/dashboard/BannerCropDialog";
 import { RankBadge, XPProgressBar, type RankType } from "@/components/RankBadge";
 import { RankInfoDialog } from "@/components/RankInfoDialog";
+import { EditProfileDialog } from "@/components/dashboard/EditProfileDialog";
+
 interface Profile {
   id: string;
   username: string;
@@ -30,6 +32,10 @@ interface Profile {
   current_xp: number;
   current_level: number;
   current_rank: string;
+  city: string | null;
+  country: string | null;
+  content_styles: string[] | null;
+  content_languages: string[] | null;
 }
 interface SocialAccount {
   id: string;
@@ -64,6 +70,7 @@ export function ProfileHeader({
   const [tempBannerUrl, setTempBannerUrl] = useState<string | null>(null);
   const [showRankInfo, setShowRankInfo] = useState(false);
   const [isRankHovered, setIsRankHovered] = useState(false);
+  const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
   const [bannerCropData, setBannerCropData] = useState<{
     zoom: number;
     positionX: number;
@@ -93,7 +100,7 @@ export function ProfileHeader({
     setLoading(true);
     const {
       data: profileData
-    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank").eq("id", session.user.id).single();
+    } = await supabase.from("profiles").select("id, username, full_name, bio, avatar_url, banner_url, total_earnings, current_xp, current_level, current_rank, city, country, content_styles, content_languages").eq("id", session.user.id).single();
     if (profileData) {
       setProfile({
         ...profileData,
@@ -343,7 +350,7 @@ export function ProfileHeader({
               <div className="flex-1" />
               <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs font-medium text-white hover:opacity-90 border-0 border-t border-t-[#4b85f7]" style={{
               backgroundColor: '#1f60dd'
-            }} onClick={() => navigate('/dashboard?tab=profile')}>
+            }} onClick={() => setShowEditProfileDialog(true)}>
                 Edit Profile
               </Button>
             </div>
@@ -367,6 +374,21 @@ export function ProfileHeader({
       <AddSocialAccountDialog open={showAddAccountDialog} onOpenChange={setShowAddAccountDialog} onSuccess={fetchSocialAccounts} />
       
       <RankInfoDialog open={showRankInfo} onOpenChange={setShowRankInfo} currentRank={profile?.current_rank || 'Bronze'} currentLevel={profile?.current_level || 1} />
+      
+      <EditProfileDialog
+        open={showEditProfileDialog}
+        onOpenChange={setShowEditProfileDialog}
+        profile={profile ? {
+          id: profile.id,
+          full_name: profile.full_name,
+          bio: profile.bio,
+          city: profile.city,
+          country: profile.country,
+          content_styles: profile.content_styles,
+          content_languages: profile.content_languages
+        } : null}
+        onSuccess={fetchProfile}
+      />
       
       {tempBannerUrl && <BannerCropDialog open={showCropDialog} onOpenChange={open => {
       setShowCropDialog(open);
