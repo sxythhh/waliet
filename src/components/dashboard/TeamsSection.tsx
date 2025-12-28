@@ -561,8 +561,10 @@ export function TeamsSection(): JSX.Element {
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
             Build a team of creators and earn a commission from their campaign earnings.
           </p>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
+          <Button 
+            onClick={() => setCreateDialogOpen(true)}
+            className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg"
+          >
             Create Team
           </Button>
         </div>
