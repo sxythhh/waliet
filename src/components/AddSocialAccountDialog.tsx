@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Check, ArrowLeft, Loader2, Link2 } from "lucide-react";
+import { Copy, Check, ArrowLeft, Loader2, Link2, ExternalLink, AlertCircle } from "lucide-react";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -17,13 +18,214 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import xLogo from "@/assets/x-logo.png";
 import xLogoLight from "@/assets/x-logo-light.png";
 
+type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
+
+// Verification Step Component with timer, numbered steps, and warning
+interface VerificationStepProps {
+  username: string;
+  platform: Platform;
+  verificationCode: string;
+  copied: boolean;
+  isChecking: boolean;
+  cooldownRemaining: number;
+  getPlatformIcon: (platform: Platform, size?: string) => JSX.Element | null;
+  getPlatformLabel: (platform: Platform) => string;
+  handleCopyCode: () => void;
+  handleBack: () => void;
+  handleCheckVerification: () => void;
+  handleSwitchToManual: () => void;
+}
+
+function VerificationStep({
+  username,
+  platform,
+  verificationCode,
+  copied,
+  isChecking,
+  cooldownRemaining,
+  getPlatformIcon,
+  getPlatformLabel,
+  handleCopyCode,
+  handleBack,
+  handleCheckVerification,
+  handleSwitchToManual,
+}: VerificationStepProps) {
+  const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
+  const TOTAL_TIME = 600;
+
+  useEffect(() => {
+    if (timeRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const progressPercent = (timeRemaining / TOTAL_TIME) * 100;
+
+  const getSettingsLink = () => {
+    switch (platform) {
+      case "tiktok":
+        return "https://www.tiktok.com/setting";
+      case "instagram":
+        return "https://www.instagram.com/accounts/edit/";
+      case "youtube":
+        return "https://studio.youtube.com/channel/editing/details";
+      default:
+        return "";
+    }
+  };
+
+  const steps = [
+    `Open the ${getPlatformLabel(platform)} app on your phone`,
+    "Go to your profile",
+    'Tap "Edit profile"',
+    "Add the verification code to your Bio field",
+    'Tap "Save" to confirm',
+  ];
+
+  return (
+    <div className="flex flex-col">
+      {/* Header with account info */}
+      <div className="pb-4 flex items-center gap-3">
+        <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
+          {getPlatformIcon(platform, "h-5 w-5")}
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">@{username}</h2>
+          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{getPlatformLabel(platform)}</p>
+        </div>
+      </div>
+
+      {/* Verification Code Box */}
+      <div className="pb-4">
+        <div className="bg-muted/20 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Your verification code</span>
+            <button
+              onClick={handleCopyCode}
+              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+          <div
+            onClick={handleCopyCode}
+            className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors"
+          >
+            <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">{verificationCode}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Time Remaining */}
+      <div className="pb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time remaining</span>
+          <span className="text-sm font-semibold font-inter tracking-[-0.5px]">{formatTime(timeRemaining)}</span>
+        </div>
+        <Progress value={progressPercent} className="h-2 bg-muted/30" />
+      </div>
+
+      {/* How to add the code steps */}
+      <div className="pb-4">
+        <h3 className="text-sm font-semibold font-inter tracking-[-0.5px] mb-3">How to add the code:</h3>
+        <div className="space-y-2.5">
+          {steps.map((step, index) => (
+            <div key={index} className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <span className="text-[11px] font-bold text-primary-foreground">{index + 1}</span>
+              </div>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] leading-5">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Open settings link */}
+      <a
+        href={getSettingsLink()}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px] mb-4"
+      >
+        Open {getPlatformLabel(platform)} settings
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+
+      {/* Warning box */}
+      <div className="bg-muted/30 rounded-xl p-4 mb-4 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+          Make sure your {getPlatformLabel(platform)} account is set to <strong className="text-foreground">public</strong> so we can
+          verify your bio. You can remove the code after verification is complete.
+        </p>
+      </div>
+
+      {/* Manual connection option */}
+      <button
+        onClick={handleSwitchToManual}
+        className="mb-4 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5"
+      >
+        <Link2 className="h-3.5 w-3.5" />
+        Can't verify? Connect manually with URL
+      </button>
+
+      {/* Footer buttons */}
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          onClick={handleBack}
+          className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleCheckVerification}
+          disabled={isChecking || cooldownRemaining > 0 || timeRemaining <= 0}
+          className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-sm"
+        >
+          {isChecking ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
+              Verifying...
+            </>
+          ) : cooldownRemaining > 0 ? (
+            `Wait ${cooldownRemaining}s`
+          ) : (
+            <>
+              <Check className="h-4 w-4 mr-1.5" />
+              I've Added the Code
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
 interface AddSocialAccountDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
-
-type Platform = "tiktok" | "instagram" | "youtube" | "twitter";
 type Step = "input" | "verification" | "manual";
 
 // Generate a random verification code
@@ -515,87 +717,20 @@ export function AddSocialAccountDialog({
             </div>
           </div>
         ) : step === "verification" ? (
-          <div className="flex flex-col">
-            {/* Header */}
-            <div className="pb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-muted/30 flex items-center justify-center">
-                  {getPlatformIcon(selectedPlatform, "h-5 w-5")}
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold font-inter tracking-[-0.5px]">
-                    @{username}
-                  </h2>
-                  <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    {getPlatformLabel(selectedPlatform)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Verification Code */}
-            <div className="pb-4">
-              <div className="bg-muted/20 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                    Add this code to your bio
-                  </span>
-                  <button onClick={handleCopyCode} className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-inter tracking-[-0.5px]">
-                    {copied ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" />
-                        Copy
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div onClick={handleCopyCode} className="bg-background rounded-lg py-4 px-4 text-center cursor-pointer hover:bg-background/80 transition-colors">
-                  <span className="text-xl font-bold font-mono tracking-[0.3em] text-foreground">
-                    {verificationCode}
-                  </span>
-                </div>
-                {selectedPlatform === "instagram" && (
-                  <p className="mt-3 text-[11px] text-muted-foreground/70 font-inter tracking-[-0.5px] text-center">
-                    Instagram may take 1–2 minutes to update your bio
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Manual connection option */}
-            <button 
-              onClick={handleSwitchToManual}
-              className="mb-4 text-xs text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.5px] flex items-center justify-center gap-1.5"
-            >
-              <Link2 className="h-3.5 w-3.5" />
-              Can't verify? Connect manually with URL
-            </button>
-
-            {/* Footer */}
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={handleBack} className="h-10 px-4 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
-                <ArrowLeft className="h-4 w-4 mr-1.5" />
-                Back
-              </Button>
-              <Button onClick={handleCheckVerification} disabled={isChecking || cooldownRemaining > 0} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
-                {isChecking ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                    Verifying...
-                  </>
-                ) : cooldownRemaining > 0 ? (
-                  `Wait ${cooldownRemaining}s`
-                ) : (
-                  "Verify Account"
-                )}
-              </Button>
-            </div>
-          </div>
+          <VerificationStep
+            username={username}
+            platform={selectedPlatform}
+            verificationCode={verificationCode}
+            copied={copied}
+            isChecking={isChecking}
+            cooldownRemaining={cooldownRemaining}
+            getPlatformIcon={getPlatformIcon}
+            getPlatformLabel={getPlatformLabel}
+            handleCopyCode={handleCopyCode}
+            handleBack={handleBack}
+            handleCheckVerification={handleCheckVerification}
+            handleSwitchToManual={handleSwitchToManual}
+          />
         ) : (
           // Manual URL connection step
           <div className="flex flex-col">
