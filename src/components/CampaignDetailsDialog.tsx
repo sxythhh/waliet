@@ -279,12 +279,7 @@ export function CampaignDetailsDialog({
           
           {/* Action Buttons - Top Right */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button onClick={() => window.location.href = `/c/${campaign.slug}`} variant="ghost" className="h-9 px-4 rounded-[10px] font-medium text-sm bg-muted text-foreground border-0" style={{
-            fontFamily: 'Inter',
-            letterSpacing: '-0.5px'
-          }}>
-              View Full Details
-            </Button>
+            
             {hasConnectedAccounts && campaign.payment_model === 'pay_per_post' && <Button onClick={() => setShowSubmitVideoDialog(true)} className="h-9 px-4 rounded-[10px] font-medium text-sm bg-white hover:bg-neutral-100 text-black border border-border" style={{
             fontFamily: 'Inter',
             letterSpacing: '-0.5px'
