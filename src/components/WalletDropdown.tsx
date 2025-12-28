@@ -202,17 +202,17 @@ function WalletDropdownContent({ balance, totalPending, pendingWithdrawals, onWi
           <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${pendingWithdrawals.toFixed(2)}</span>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <Button 
           variant="outline"
-          className="flex-1 font-inter tracking-[-0.5px]" 
+          className="w-full font-inter tracking-[-0.5px] hover:bg-muted hover:text-foreground" 
           size="sm"
           onClick={onTransfer}
         >
           Transfer
         </Button>
         <Button 
-          className="flex-1 font-inter tracking-[-0.5px]" 
+          className="w-full font-inter tracking-[-0.5px]" 
           size="sm"
           onClick={onWithdraw}
         >
