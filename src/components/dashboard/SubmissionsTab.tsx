@@ -15,6 +15,7 @@ import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { PayoutStatusBadge, type PayoutStatus } from "./PayoutStatusBadge";
 import { RequestVideoPayoutDialog } from "./RequestVideoPayoutDialog";
 import { SubmitAnalyticsDialog } from "./SubmitAnalyticsDialog";
+import { PayoutFlowExplainer } from "./PayoutFlowExplainer";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -277,7 +278,7 @@ export function SubmissionsTab() {
       return 'pending_approval';
     }
     if (submission.payout_status === 'locked') {
-      return 'locked';
+      return 'clearing'; // Map legacy 'locked' to 'clearing'
     }
     if (submission.payout_status === 'paid') {
       return 'paid';
@@ -306,7 +307,7 @@ export function SubmissionsTab() {
     if (ledgerSummary) {
       accruing.amount += ledgerSummary.totalPending;
       accruing.videoCount += ledgerSummary.accruingCount;
-      clearing.amount += ledgerSummary.totalClearing + ledgerSummary.totalLocked;
+      clearing.amount += ledgerSummary.totalClearing;
       clearing.videoCount += ledgerSummary.clearingCount;
       clearing.clearingEndsAt = ledgerSummary.earliestClearingEndsAt;
       clearing.canBeFlagged = ledgerSummary.hasActiveFlaggableItems;
@@ -482,6 +483,9 @@ export function SubmissionsTab() {
     return null;
   }
   return <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
+      {/* Payout Flow Explainer */}
+      <PayoutFlowExplainer className="mb-4" />
+      
       {/* Filter */}
       <div className="pt-5 pb-4 px-0 flex items-center gap-3 py-[5px]">
         <DropdownMenu open={filterOpen} onOpenChange={open => {

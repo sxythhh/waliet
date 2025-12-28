@@ -159,7 +159,7 @@ export function WalletTab() {
       videoCount: ledgerSummary?.accruingCount || 0
     },
     clearing: {
-      amount: (ledgerSummary?.totalClearing || 0) + (ledgerSummary?.totalLocked || 0) + clearingPayouts,
+      amount: (ledgerSummary?.totalClearing || 0) + clearingPayouts,
       videoCount: ledgerSummary?.clearingCount || 0,
       clearingEndsAt: ledgerSummary?.earliestClearingEndsAt,
       canBeFlagged: ledgerSummary?.hasActiveFlaggableItems || false
