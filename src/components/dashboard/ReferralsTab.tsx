@@ -45,7 +45,6 @@ interface ReferralChartDataPoint {
   successful: number;
 }
 type ReferralSubTab = 'team' | 'affiliate';
-
 export function ReferralsTab(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ReferralSubTab>('team');
   const [profile, setProfile] = useState<any>(null);
@@ -264,44 +263,32 @@ export function ReferralsTab(): JSX.Element {
   const getMilestoneStatus = (referral: ReferralWithMilestones, milestone: Milestone) => {
     return referral.milestone_rewards?.some(r => r.milestone_id === milestone.id) || false;
   };
-  const tabs = [
-    { id: 'team' as const, label: 'Team' },
-    { id: 'affiliate' as const, label: 'Affiliate' },
-  ];
-
-  return (
-    <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 w-full">
+  const tabs = [{
+    id: 'team' as const,
+    label: 'Team'
+  }, {
+    id: 'affiliate' as const,
+    label: 'Affiliate'
+  }];
+  return <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8 pt-2 sm:pt-3 md:pt-4 w-full">
       {/* Content Wrapper with Border and Rounded Corners */}
       <div className="border border-border rounded-2xl overflow-hidden">
         {/* Tab Navigation inside the border */}
-        <div className="border-b border-border px-[10px] pt-[10px]">
+        <div className="border-b border-border pt-[10px] px-0 py-0">
           <nav className="flex gap-0">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${
-                  activeTab === tab.id 
-                    ? "border-primary text-foreground" 
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
+            {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${activeTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}
-              </button>
-            ))}
+              </button>)}
           </nav>
         </div>
 
         {/* Tab Content */}
         <div className="p-[10px]">
-        {activeTab === 'team' ? (
-          /* Team Tab Content */
-          <div className="space-y-6">
+        {activeTab === 'team' ? (/* Team Tab Content */
+        <div className="space-y-6">
             <TeamsSection />
-          </div>
-        ) : (
-          /* Affiliate Tab Content */
-          <div className="space-y-6">
+          </div>) : (/* Affiliate Tab Content */
+        <div className="space-y-6">
             {/* Chart and Referral Link Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Affiliate Earnings Chart */}
@@ -309,41 +296,41 @@ export function ReferralsTab(): JSX.Element {
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center justify-between mb-2">
                     <p style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }} className="text-sm font-medium text-foreground dark:text-primary-foreground">Referral Activity</p>
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }} className="text-sm font-medium text-foreground dark:text-primary-foreground">Referral Activity</p>
                   </div>
                   
                   {/* Stats inline */}
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex items-baseline gap-1.5">
                       <p className="text-xl font-bold font-geist" style={{
-                        letterSpacing: '-0.3px'
-                      }}>{referrals.length}</p>
+                      letterSpacing: '-0.3px'
+                    }}>{referrals.length}</p>
                       <p className="text-[10px] text-muted-foreground" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>Referrals</p>
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>Referrals</p>
                     </div>
                     <div className="w-px h-4 bg-border" />
                     <div className="flex items-baseline gap-1.5">
                       <p className="text-xl font-bold font-geist" style={{
-                        letterSpacing: '-0.3px'
-                      }}>{profile?.successful_referrals || 0}</p>
+                      letterSpacing: '-0.3px'
+                    }}>{profile?.successful_referrals || 0}</p>
                       <p className="text-[10px] text-muted-foreground" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>Successful</p>
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>Successful</p>
                     </div>
                     <div className="w-px h-4 bg-border" />
                     <div className="flex items-baseline gap-1.5">
                       <p className="text-xl font-bold font-geist" style={{
-                        letterSpacing: '-0.3px'
-                      }}>${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
+                      letterSpacing: '-0.3px'
+                    }}>${profile?.referral_earnings?.toFixed(2) || "0.00"}</p>
                       <p className="text-[10px] text-muted-foreground" style={{
-                        fontFamily: 'Inter',
-                        letterSpacing: '-0.5px'
-                      }}>Earned</p>
+                      fontFamily: 'Inter',
+                      letterSpacing: '-0.5px'
+                    }}>Earned</p>
                     </div>
                   </div>
                   
@@ -361,15 +348,15 @@ export function ReferralsTab(): JSX.Element {
                           </linearGradient>
                         </defs>
                         <RechartsTooltip content={({
-                          active,
-                          payload
-                        }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5" style={{
-                              fontFamily: 'Inter',
-                              letterSpacing: '-0.3px'
-                            }}>
+                        active,
+                        payload
+                      }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5" style={{
+                            fontFamily: 'Inter',
+                            letterSpacing: '-0.3px'
+                          }}>
                                 <p className="text-[10px] text-muted-foreground mb-1">{data.date}</p>
                                 <div className="space-y-0.5">
                                   <p className="text-xs"><span className="text-blue-500">●</span> {data.referrals} referrals</p>
@@ -377,19 +364,19 @@ export function ReferralsTab(): JSX.Element {
                                   <p className="text-xs"><span className="text-violet-500">●</span> ${data.earnings.toFixed(2)} earned</p>
                                 </div>
                               </div>;
-                          }
-                          return null;
-                        }} cursor={false} />
+                        }
+                        return null;
+                      }} cursor={false} />
                         <Area type="monotone" dataKey="referrals" stroke="#3b82f6" strokeWidth={2} fill="url(#referralsGradient)" dot={false} activeDot={{
-                          r: 3,
-                          fill: '#3b82f6',
-                          stroke: 'none'
-                        }} />
+                        r: 3,
+                        fill: '#3b82f6',
+                        stroke: 'none'
+                      }} />
                         <Area type="monotone" dataKey="successful" stroke="#10b981" strokeWidth={2} fill="url(#successfulGradient)" dot={false} activeDot={{
-                          r: 3,
-                          fill: '#10b981',
-                          stroke: 'none'
-                        }} />
+                        r: 3,
+                        fill: '#10b981',
+                        stroke: 'none'
+                      }} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -421,20 +408,20 @@ export function ReferralsTab(): JSX.Element {
                           {saving ? "Saving..." : "Save"}
                         </Button>
                         <Button onClick={() => {
-                        setIsEditing(false);
-                        setNewReferralCode(profile?.referral_code || "");
-                      }} variant="ghost" size="sm">
+                      setIsEditing(false);
+                      setNewReferralCode(profile?.referral_code || "");
+                    }} variant="ghost" size="sm">
                           Cancel
                         </Button>
                       </div>
                     </div> : <div className="flex gap-2 items-stretch">
                       <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
-                      letterSpacing: '-0.5px'
-                    }} />
+                    letterSpacing: '-0.5px'
+                  }} />
                       <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{
-                      fontFamily: 'Inter',
-                      letterSpacing: '-0.5px'
-                    }}>
+                    fontFamily: 'Inter',
+                    letterSpacing: '-0.5px'
+                  }}>
                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                         {copied ? "Copied" : "Copy"}
                       </Button>
@@ -460,10 +447,10 @@ export function ReferralsTab(): JSX.Element {
                   </p>
                 </div> : <div className="space-y-3">
                   {referrals.map(referral => {
-                  const achievedMilestones = referral.milestone_rewards?.length || 0;
-                  const totalMilestones = milestones.length;
-                  const totalEarned = referral.reward_earned || 0;
-                  return <div key={referral.id} className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-3">
+                const achievedMilestones = referral.milestone_rewards?.length || 0;
+                const totalMilestones = milestones.length;
+                const totalEarned = referral.reward_earned || 0;
+                return <div key={referral.id} className="p-4 rounded-xl bg-[#f4f4f4] dark:bg-[#0f0f0f] space-y-3">
                         {/* User Info Row */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -495,23 +482,21 @@ export function ReferralsTab(): JSX.Element {
                         {/* Milestone Progress */}
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {milestones.map(milestone => {
-                        const achieved = getMilestoneStatus(referral, milestone);
-                        return <div key={milestone.id} className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${achieved ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted/50 text-muted-foreground'}`}>
+                      const achieved = getMilestoneStatus(referral, milestone);
+                      return <div key={milestone.id} className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${achieved ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-muted/50 text-muted-foreground'}`}>
                                 {achieved ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
                                 <span>
                                   {milestone.milestone_type === 'signup' ? 'Signup' : `$${milestone.threshold}`}
                                 </span>
                               </div>;
-                      })}
+                    })}
                         </div>
                       </div>;
-                })}
+              })}
                 </div>}
             </div>
-          </div>
-        )}
+          </div>)}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
