@@ -48,6 +48,7 @@ interface Creator {
   phone_number: string | null;
   discord_username: string | null;
   country: string | null;
+  city: string | null;
   is_external: boolean;
   external_name: string | null;
   external_email: string | null;
@@ -544,7 +545,7 @@ export function CreatorDatabaseTab({
       const [profiles, socialAccounts] = platformCreatorIds.length > 0 ? await Promise.all([batchFetch(platformCreatorIds, async batchIds => {
         const {
           data
-        } = await supabase.from('profiles').select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, created_at').in('id', batchIds);
+        } = await supabase.from('profiles').select('id, username, full_name, avatar_url, email, phone_number, discord_username, country, city, created_at').in('id', batchIds);
         return data || [];
       }), batchFetch(platformCreatorIds, async batchIds => {
         const {
@@ -584,6 +585,7 @@ export function CreatorDatabaseTab({
           phone_number: profile?.phone_number || null,
           discord_username: profile?.discord_username || null,
           country: profile?.country || null,
+          city: profile?.city || null,
           is_external: isExternal,
           external_name: rel.external_name,
           external_email: rel.external_email,
@@ -1492,9 +1494,11 @@ export function CreatorDatabaseTab({
                       <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
                     </div>
                   </div>}
-                {selectedCreatorPanel.country && <div>
-                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Country</p>
-                    <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.country}</p>
+                {(selectedCreatorPanel.city || selectedCreatorPanel.country) && <div>
+                    <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Location</p>
+                    <p className="text-xs font-inter tracking-[-0.5px]">
+                      {[selectedCreatorPanel.city, selectedCreatorPanel.country].filter(Boolean).join(', ')}
+                    </p>
                   </div>}
                 {selectedCreatorPanel.date_joined && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Joined Platform</p>
