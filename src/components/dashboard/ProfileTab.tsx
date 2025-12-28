@@ -915,7 +915,11 @@ export function ProfileTab() {
         <CardHeader className="py-0 my-0 px-0">
           <div className="flex items-center justify-between py-[5px]">
             <CardTitle className="text-lg">Connected Accounts</CardTitle>
-            <Button onClick={() => setShowAddAccountDialog(true)} size="sm">
+            <Button 
+              onClick={() => setShowAddAccountDialog(true)} 
+              size="sm"
+              className="font-inter font-semibold tracking-[-0.5px] bg-[#1e60db] hover:bg-[#1e60db]/90 border-t border-t-[#4b85f7]"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Account
             </Button>
