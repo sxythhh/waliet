@@ -675,7 +675,7 @@ export function SubmissionsTab() {
               Submit videos to campaigns to see them here
             </p>
           </div> : <>
-            <div className="overflow-x-auto rounded-xl">
+            <div className="overflow-x-auto border border-border rounded-xl">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
