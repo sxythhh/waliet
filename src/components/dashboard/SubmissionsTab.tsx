@@ -700,9 +700,7 @@ export function SubmissionsTab() {
                         }} className="text-sm truncate group-hover:underline transition-colors font-normal">
                                 {submission.video_title || 'Untitled Video'}
                               </p>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {submission.video_upload_date ? format(new Date(submission.video_upload_date), 'MMM d, yyyy') : format(new Date(submission.created_at), 'MMM d, yyyy')}
-                              </p>
+                              
                               <div className="flex items-center gap-1.5 mt-1">
                                 {getPlatformIcon(submission.platform) && <img src={getPlatformIcon(submission.platform)!} alt={submission.platform} className="w-3.5 h-3.5" />}
                                 <span className="text-xs text-muted-foreground truncate">
