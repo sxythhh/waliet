@@ -121,17 +121,17 @@ export function WalletDropdown({ variant = "sidebar", isCollapsed = false }: Wal
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button className={`flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full ${variant === "header" ? "h-9" : ""}`}>
+          <button className={`flex items-center gap-2 pl-3 pr-1.5 py-2 rounded-lg bg-muted/50 w-full ${variant === "header" ? "h-9" : ""}`}>
             <div className="flex items-center gap-2 flex-1">
+              {variant === "sidebar" ? (
+                <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+              ) : (
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+              )}
               <span className="text-base font-semibold font-inter tracking-[-0.5px]">
                 ${balance.toFixed(2)}
               </span>
             </div>
-            {variant === "sidebar" ? (
-              <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-            ) : (
-              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-            )}
             <Button 
               size="sm" 
               className="h-7 px-3 text-xs font-medium font-inter tracking-[-0.5px]"
