@@ -678,7 +678,7 @@ export function SubmissionsTab() {
             <div className="overflow-x-auto border border-border rounded-xl">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent">
+                  <TableRow className="border-b border-[#dce1eb] dark:border-[#141414] hover:bg-transparent dark:bg-[#0e0e0e]">
                     <TableHead className="text-foreground font-medium text-sm h-12">Video</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12">Program</TableHead>
                     <TableHead className="text-foreground font-medium text-sm h-12">Status</TableHead>
