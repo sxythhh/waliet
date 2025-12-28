@@ -67,7 +67,7 @@ export function BoostDiscoverCard({
         {/* Metadata Row */}
         <div className="flex items-center gap-3 text-[10px] font-medium text-neutral-500 dark:text-neutral-400 tracking-[-0.2px] font-['Geist',sans-serif]">
           <span>{videos_per_month} videos/mo</span>
-          <span className="w-1 h-1 rounded-full bg-neutral-400 dark:bg-neutral-500" />
+          
           <span className={isFull ? "text-neutral-400 dark:text-neutral-500" : ""}>
             {spotsRemaining > 0 ? `${spotsRemaining} spots left` : "Full"}
           </span>
