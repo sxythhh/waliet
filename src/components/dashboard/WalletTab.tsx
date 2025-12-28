@@ -1277,13 +1277,7 @@ export function WalletTab() {
                       <button onClick={e => {
                     e.preventDefault();
                     setFilterSubmenu('type');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                        <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                          <div className="w-1.5 h-1.5 rounded-sm bg-current" />
-                        </div>
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${typeFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal' }}>
                         <span className="font-medium">Type</span>
                         {typeFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{typeFilter.replace('_', ' ')}</span>}
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
@@ -1291,8 +1285,7 @@ export function WalletTab() {
                       <button onClick={e => {
                     e.preventDefault();
                     setFilterSubmenu('status');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                        <div className="w-4 h-4 rounded-full border-2 border-dashed border-current" />
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${statusFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal' }}>
                         <span className="font-medium">Status</span>
                         {statusFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground capitalize">{statusFilter.replace('_', ' ')}</span>}
                         <ChevronRight className="h-4 w-4 ml-auto text-muted-foreground" />
@@ -1300,8 +1293,7 @@ export function WalletTab() {
                       {availableCampaigns.length > 0 && <button onClick={e => {
                     e.preventDefault();
                     setFilterSubmenu('program');
-                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`}>
-                          <Briefcase className="h-4 w-4" />
+                  }} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${campaignFilter !== 'all' ? 'bg-muted' : 'hover:bg-muted/50'}`} style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal' }}>
                           <span className="font-medium">Program</span>
                           {campaignFilter !== 'all' && <span className="ml-auto text-xs text-muted-foreground truncate max-w-[80px]">
                               {availableCampaigns.find(c => c.id === campaignFilter)?.title}
