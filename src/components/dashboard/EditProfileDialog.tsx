@@ -298,52 +298,6 @@ export function EditProfileDialog({ open, onOpenChange, profile, onSuccess }: Ed
             </div>
           </div>
 
-            {/* Location Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label 
-                className="text-sm font-medium text-foreground"
-                style={labelStyle}
-              >
-                City
-              </Label>
-              <Input
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                placeholder="Enter city"
-                className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary"
-                style={inputStyle}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label 
-                className="text-sm font-medium text-foreground"
-                style={labelStyle}
-              >
-                Country
-              </Label>
-              <Select
-                value={formData.country}
-                onValueChange={(value) => setFormData({ ...formData, country: value })}
-              >
-                <SelectTrigger 
-                  className="h-11 bg-muted/30 border-border"
-                  style={inputStyle}
-                >
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border z-50 max-h-[200px]">
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <SelectItem key={country} value={country} style={inputStyle}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           {/* Visibility Toggles */}
           <div className="pt-2 space-y-4">
             <Label 
