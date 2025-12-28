@@ -28,46 +28,40 @@ export function EmailSettingsCard({
   onSaveSubscription,
   savingSubscription,
 }: EmailSettingsCardProps) {
+  const anyChanges = hasChanges || subscriptionHasChanges;
+  const isLoading = saving || savingSubscription;
+
+  const handleSave = () => {
+    if (hasChanges) {
+      onSave();
+    }
+    if (subscriptionHasChanges && onSaveSubscription) {
+      onSaveSubscription();
+    }
+  };
+
   return (
     <SettingsCard
       title="Your Email"
       description="This will be the email you use to log in to Virality and receive notifications. A confirmation is required for changes."
       footerContent={
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={subscribeToUpdates}
-              onCheckedChange={onSubscribeChange}
-            />
-            <span
-              className="text-sm text-muted-foreground"
-              style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
-            >
-              Subscribed to product updates
-            </span>
-          </div>
-          {subscriptionHasChanges && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={savingSubscription}
-              onClick={onSaveSubscription}
-              className="text-muted-foreground"
-              style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
-            >
-              {savingSubscription ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              ) : (
-                "Save"
-              )}
-            </Button>
-          )}
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={subscribeToUpdates}
+            onCheckedChange={onSubscribeChange}
+          />
+          <span
+            className="text-sm text-muted-foreground"
+            style={{ fontFamily: "Inter", letterSpacing: "-0.3px" }}
+          >
+            Subscribed to product updates
+          </span>
         </div>
       }
       saveButton={{
-        disabled: !hasChanges || saving,
-        loading: saving,
-        onClick: onSave,
+        disabled: !anyChanges || isLoading,
+        loading: isLoading,
+        onClick: handleSave,
       }}
     >
       <Input
