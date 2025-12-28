@@ -114,10 +114,18 @@ export function CampaignRowCard({
                 DRAFT
               </span>}
 
-            <div className="flex items-baseline gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
                 {title}
               </h3>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs">
+                <img 
+                  src={type === "campaign" ? clippingIcon : boostIcon} 
+                  alt="" 
+                  className="w-3.5 h-3.5" 
+                />
+                {type === "campaign" ? "Clipping" : "Boost"}
+              </span>
             </div>
 
             {/* Budget Progress */}
@@ -135,15 +143,6 @@ export function CampaignRowCard({
 
             {/* Tags Row */}
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white">
-                <img 
-                  src={type === "campaign" ? clippingIcon : boostIcon} 
-                  alt="" 
-                  className="w-3.5 h-3.5" 
-                />
-                {type === "campaign" ? "Clipping" : "Boost"}
-              </span>
-
               {type === "campaign" && rpmRate !== undefined && <span className="text-muted-foreground">${rpmRate.toFixed(2)} / 1k views</span>}
 
               {type === "boost" && videosPerMonth !== undefined && <span className="text-muted-foreground">{videosPerMonth} videos/mo</span>}
@@ -152,7 +151,7 @@ export function CampaignRowCard({
                   {spotsRemaining}/{maxCreators} spots
                 </span>}
 
-              {allowedPlatforms && allowedPlatforms.length > 0 && <div className="flex items-center gap-1.5 ml-1">
+              {allowedPlatforms && allowedPlatforms.length > 0 && <div className="flex items-center gap-1.5">
                   {allowedPlatforms.map(platform => <span key={platform}>{getPlatformIcon(platform)}</span>)}
                 </div>}
             </div>
