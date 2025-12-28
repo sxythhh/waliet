@@ -444,7 +444,7 @@ export function AppSidebar() {
                         </button>)}
                       <button onClick={() => {
                     setShowCreateBrandDialog(true);
-                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-muted-foreground hover:bg-muted/50 hover:text-foreground">
+                  }} className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors text-foreground hover:bg-muted/50">
                         <Plus className="w-4 h-4" />
                         <span className="text-sm">Create brand</span>
                       </button>
@@ -453,11 +453,11 @@ export function AppSidebar() {
                 
                 {/* Quick Links */}
                 <div className="space-y-0.5">
-                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+                  <button onClick={() => navigate("/support")} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                     <img src={isLightMode ? supportIconLight : supportIcon} alt="Support" className="w-4 h-4" />
                     <span className="text-sm font-inter">Support</span>
                   </button>
-                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+                  <button onClick={() => window.open("https://discord.gg/virality", "_blank")} className="w-full flex items-center justify-between px-2 py-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3">
                       <img alt="Discord" className="w-4 h-4 rounded" src={isLightMode ? discordIconLight : "/lovable-uploads/6c9f19d0-2d91-4b27-98dc-3ce76d39c24c.webp"} />
                       <span className="text-sm font-inter">Discord</span>
@@ -467,14 +467,14 @@ export function AppSidebar() {
                   <button onClick={() => {
                   setFeedbackType("feature");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                     <img src={isLightMode ? lightbulbIconLight : lightbulbIcon} alt="Feature Request" className="w-4 h-4" />
                     <span className="text-sm font-inter">Feature Request</span>
                   </button>
                   <button onClick={() => {
                   setFeedbackType("bug");
                   setFeedbackOpen(true);
-                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+                }} className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-foreground hover:bg-muted/50 transition-colors">
                     <img src={isLightMode ? bugIconLight : bugIcon} alt="Report Bug" className="w-4 h-4" />
                     <span className="text-sm font-inter">Report Bug</span>
                   </button>
@@ -482,11 +482,11 @@ export function AppSidebar() {
 
                 {/* Theme & Logout */}
                 <div className="pt-1 flex items-center gap-2">
-                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-foreground transition-colors">
                     {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                     <span className="text-sm">{theme === 'dark' ? 'Light' : 'Dark'}</span>
                   </button>
-                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-muted-foreground hover:text-red-400 transition-colors">
+                  <button onClick={handleSignOut} className="flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg bg-muted text-foreground hover:text-red-400 transition-colors">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Log out</span>
                   </button>
