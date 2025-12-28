@@ -103,6 +103,10 @@ interface Transaction {
     username: string;
     avatar_url: string | null;
   } | null;
+  sender?: {
+    username: string;
+    avatar_url: string | null;
+  } | null;
 }
 type TimePeriod = '3D' | '1W' | '1M' | '3M' | '1Y' | 'TW';
 export function WalletTab() {
@@ -653,6 +657,11 @@ export function WalletTab() {
       txn.type === 'transfer_sent' && (txn.metadata as any)?.recipient_id
     ).map(txn => (txn.metadata as any).recipient_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
 
+    // Extract sender IDs for transfer_received transactions
+    const senderIds = walletTransactions?.filter(txn => 
+      txn.type === 'transfer_received' && (txn.metadata as any)?.sender_id
+    ).map(txn => (txn.metadata as any).sender_id).filter((id, index, self) => id && self.indexOf(id) === index) || [];
+
     // Fetch recipient profiles
     let recipientsMap = new Map<string, { username: string; avatar_url: string | null }>();
     if (recipientIds.length > 0) {
@@ -662,6 +671,18 @@ export function WalletTab() {
         .in("id", recipientIds);
       recipients?.forEach(r => {
         recipientsMap.set(r.id, { username: r.username || '', avatar_url: r.avatar_url });
+      });
+    }
+
+    // Fetch sender profiles
+    let sendersMap = new Map<string, { username: string; avatar_url: string | null }>();
+    if (senderIds.length > 0) {
+      const { data: senders } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url")
+        .in("id", senderIds);
+      senders?.forEach(s => {
+        sendersMap.set(s.id, { username: s.username || '', avatar_url: s.avatar_url });
       });
     }
 
@@ -785,7 +806,8 @@ export function WalletTab() {
           }),
           campaign: metadata?.campaign_id ? campaignsMap.get(metadata.campaign_id) || null : null,
           boost: metadata?.boost_id ? boostsMap.get(metadata.boost_id) || null : null,
-          recipient: metadata?.recipient_id ? recipientsMap.get(metadata.recipient_id) || null : null
+          recipient: metadata?.recipient_id ? recipientsMap.get(metadata.recipient_id) || null : null,
+          sender: metadata?.sender_id ? sendersMap.get(metadata.sender_id) || null : null
         });
       });
     }
@@ -1562,15 +1584,21 @@ export function WalletTab() {
                               )}
                               <span className="text-sm font-medium">{transaction.campaign.brand_name}</span>
                             </div>
-                          ) : transaction.type === 'transfer_received' && transaction.metadata?.sender_username ? (
+                          ) : transaction.type === 'transfer_received' && (transaction.sender || transaction.metadata?.sender_username) ? (
                             <div 
                               className="flex items-center gap-2 hover:underline cursor-pointer"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/@${transaction.metadata.sender_username}`);
+                                navigate(`/@${transaction.sender?.username || transaction.metadata.sender_username}`);
                               }}
                             >
-                              <span className="text-sm font-medium">@{transaction.metadata.sender_username}</span>
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={transaction.sender?.avatar_url || undefined} alt={transaction.sender?.username || transaction.metadata?.sender_username} />
+                                <AvatarFallback className="text-xs">
+                                  {(transaction.sender?.username || transaction.metadata?.sender_username || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
                             </div>
                           ) : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? (
                             <span className="text-sm text-foreground">Wallet</span>
