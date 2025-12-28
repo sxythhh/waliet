@@ -72,7 +72,7 @@ export function PerformanceChart({
   
   const nextSync = getNextSyncTime(lastSyncedAt);
   
-  return <Card className="p-4 sm:p-5 bg-card/30 border-table-border">
+  return <Card className="p-4 sm:p-5 bg-card/30 border border-[#efefef] dark:border-transparent">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-5">
         <h3 className="text-sm font-medium tracking-[-0.5px]">Performance Over Time</h3>
         <div className="flex items-center gap-3">
