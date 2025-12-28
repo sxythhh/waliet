@@ -4354,7 +4354,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_is_member_of_team: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_is_owner_of_team: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_is_team_member: { Args: { _user_id: string }; Returns: boolean }
+      user_owns_any_team: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "brand"
