@@ -53,7 +53,10 @@ export default function Dashboard() {
   const selectedCampaignId = searchParams.get("campaign");
   const selectedBoostId = searchParams.get("boost");
   const selectedBlueprintId = searchParams.get("blueprint");
-  const currentSubtab = searchParams.get("subtab") || "messages";
+  // On mobile, default to database subtab for creators tab
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const defaultCreatorsSubtab = isMobile ? "database" : "messages";
+  const currentSubtab = searchParams.get("subtab") || (currentTab === "creators" ? defaultCreatorsSubtab : "messages");
 
   const isCreatorMode = workspace === "creator";
   const isBrandMode = !isCreatorMode;
