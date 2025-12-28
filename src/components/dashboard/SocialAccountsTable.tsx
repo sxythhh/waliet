@@ -196,7 +196,7 @@ export function SocialAccountsTable({
                 platform: account.platform,
                 username: account.username
               })} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-destructive text-white hover:bg-destructive/90 transition-colors tracking-tight">
-                      <img alt="" className="h-3 w-3" src="/lovable-uploads/549503b2-3fc7-49f7-b720-d9de61247b1e.png" />
+                      <img alt="" className="h-3 w-3" src="/lovable-uploads/61c20445-de64-41d6-89f3-dafe746716d8.png" />
                       Submit
                     </button> : <DemographicStatusCard accountId={account.id} platform={account.platform} username={account.username} submissions={demographicSubmissions} campaignIds={connectedCampaigns.map(c => c.campaign.id)} onSubmitNew={() => onSubmitDemographics({
                 id: account.id,
