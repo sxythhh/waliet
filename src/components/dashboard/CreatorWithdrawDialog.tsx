@@ -302,26 +302,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
         </DialogHeader>
 
         {loading ? (
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <div className="h-4 w-16 bg-muted rounded animate-pulse" />
-              <div className="h-14 w-full bg-muted rounded animate-pulse" />
-              <div className="flex gap-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="h-8 w-12 bg-muted rounded animate-pulse" />
-                ))}
-              </div>
-              <div className="h-3 w-48 bg-muted rounded animate-pulse" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 w-28 bg-muted rounded animate-pulse" />
-              <div className="h-14 w-full bg-muted rounded animate-pulse" />
-            </div>
-            <div className="p-3 rounded-lg space-y-2">
-              <div className="h-4 w-40 bg-muted rounded animate-pulse" />
-              <div className="h-3 w-32 bg-muted rounded animate-pulse" />
-            </div>
-          </div>
+          <div className="py-8 text-center text-muted-foreground font-inter tracking-[-0.5px]">Loading...</div>
         ) : !wallet || wallet.balance < 20 ? (
           <div className="py-8 text-center">
             <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of $20 required to withdraw.</p>
