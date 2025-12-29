@@ -55,6 +55,7 @@ import leaderboardInactive from "@/assets/leaderboard-inactive.svg";
 import leaderboardActive from "@/assets/leaderboard-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -714,7 +715,7 @@ export function AppSidebar() {
                     </div>}
                 </div>;
             }
-            return <button key={item.title} onClick={() => handleTabClick(item.tab, item.tab === "creators" ? "database" : undefined)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`} title={isCollapsed ? item.title : undefined}>
+            const buttonContent = <button key={item.title} onClick={() => handleTabClick(item.tab, item.tab === "creators" ? "database" : undefined)} className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-2 px-3'} py-2.5 transition-colors rounded-lg hover:bg-muted/50 dark:hover:bg-[#0e0e0e] ${isActive ? 'bg-muted dark:bg-[#0e0e0e] text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                   {item.tab === "campaigns" ? <div className="relative h-[24px] w-[24px]">
                       <img src={homeInactive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-0' : 'opacity-100'}`} />
                       <img src={homeActive} alt="" className={`absolute inset-0 h-[24px] w-[24px] ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -748,6 +749,17 @@ export function AppSidebar() {
                     </div> : item.icon ? <item.icon className={`h-[24px] w-[24px] ${isActive ? 'text-[#2060df]' : ''}`} /> : null}
                   {!isCollapsed && <span className="font-['Inter'] text-[15px] font-medium tracking-[-0.5px]">{item.title}</span>}
                 </button>;
+            
+            return isCollapsed ? (
+              <Tooltip key={item.title} delayDuration={0}>
+                <TooltipTrigger asChild>
+                  {buttonContent}
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-['Inter'] font-medium tracking-[-0.3px] bg-popover border border-border shadow-lg">
+                  {item.title}
+                </TooltipContent>
+              </Tooltip>
+            ) : buttonContent;
           })}
           </div>
         </nav>
