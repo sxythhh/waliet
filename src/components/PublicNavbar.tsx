@@ -112,11 +112,11 @@ export default function PublicNavbar({
                   </NavigationMenuList>
                 </NavigationMenu>
                 
-                <Link to="/resources" className={`px-3 py-2 text-sm font-inter tracking-[-0.5px] ${isActive('/resources') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
+                <Link to="/resources" className={`px-[10px] py-2 text-sm font-geist font-medium tracking-[-0.5px] ${isActive('/resources') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
                   Resources
                 </Link>
                 
-                <Link to="/contact" className={`px-3 py-2 text-sm font-inter tracking-[-0.5px] ${isActive('/contact') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
+                <Link to="/contact" className={`px-[10px] py-2 text-sm font-geist font-medium tracking-[-0.5px] ${isActive('/contact') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
                   Contact
                 </Link>
               </div>
