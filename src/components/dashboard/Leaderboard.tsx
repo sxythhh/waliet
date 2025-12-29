@@ -83,8 +83,8 @@ export function Leaderboard({ className }: LeaderboardProps) {
       const userIds = topEarners.map(([userId]) => userId);
       const { data: profiles } = userIds.length > 0
         ? await supabase
-            .from("profiles")
-            .select("id, username, avatar_url, is_private, current_level")
+            .from("public_profiles")
+            .select("id, username, avatar_url")
             .in("id", userIds)
         : { data: [] };
 
@@ -97,9 +97,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
           const profile = profileMap.get(userId);
           return {
             rank: index + 1,
-            username: profile?.is_private 
-              ? (profile?.username?.slice(0, 3) + "***" || "Creator")
-              : (profile?.username || "Creator"),
+            username: profile?.username || "Creator",
             avatar_url: profile?.avatar_url || undefined,
             value: amount,
             user_id: userId,
