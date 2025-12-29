@@ -654,7 +654,7 @@ export function CampaignHomeTab({
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 pb-[70px] sm:pb-4 space-y-4">
       {/* Date Range Label */}
       <p className="text-sm text-muted-foreground font-['Geist'] tracking-[-0.3px]">
         {formatTimeframeLabel(timeframe)}
