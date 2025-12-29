@@ -65,8 +65,12 @@ export function CampaignRowCard({
   onClick,
   onTopUp
 }: CampaignRowCardProps) {
-  const { toast } = useToast();
-  const { resolvedTheme } = useTheme();
+  const {
+    toast
+  } = useToast();
+  const {
+    resolvedTheme
+  } = useTheme();
   const isDark = resolvedTheme === "dark";
   const budgetPercentage = budget > 0 ? budgetUsed / budget * 100 : 0;
   const getDaysLeft = () => {
@@ -79,7 +83,9 @@ export function CampaignRowCard({
   };
   const daysLeft = getDaysLeft();
   const formatCurrency = (num: number) => {
-    return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return `$${num.toLocaleString('en-US', {
+      maximumFractionDigits: 0
+    })}`;
   };
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -123,27 +129,20 @@ export function CampaignRowCard({
                 {title}
               </h3>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-muted dark:bg-[#2a2a2a] text-foreground dark:text-white text-xs opacity-60">
-                <img 
-                  key={`icon-${isDark}`}
-                  src={type === "campaign" ? (isDark ? clippingIconWhite : clippingIconDark) : (isDark ? boostIconWhite : boostIconDark)} 
-                  alt="" 
-                  className="w-3 h-3" 
-                />
+                <img key={`icon-${isDark}`} src={type === "campaign" ? isDark ? clippingIconWhite : clippingIconDark : isDark ? boostIconWhite : boostIconDark} alt="" className="w-3 h-3" />
                 {type === "campaign" ? "Clipping" : "Boost"}
               </span>
             </div>
 
             {/* Budget Progress */}
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className="text-xs text-muted-foreground whitespace-nowrap font-semibold">
                 {formatCurrency(budgetUsed)}/{formatCurrency(budget)}
               </span>
               <div className="flex-1 max-w-32">
                 <Progress value={budgetPercentage} className="h-1.5" />
               </div>
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {budgetPercentage.toFixed(0)}%
-              </span>
+              
             </div>
 
             {/* Tags Row */}
@@ -184,13 +183,14 @@ export function CampaignRowCard({
 
             <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
               {slug && <Button size="sm" variant="outline" className="h-7 px-2.5 text-xs border-border dark:border-0 bg-muted dark:bg-[#0a0a0a] hover:bg-muted/80 dark:hover:bg-[#151515]" onClick={e => {
-                e.stopPropagation();
-                const url = type === "campaign" 
-                  ? `${window.location.origin}/c/${slug}` 
-                  : `${window.location.origin}/boost/${slug}`;
-                navigator.clipboard.writeText(url);
-                toast({ title: "Link copied", description: "URL copied to clipboard" });
-              }}>
+              e.stopPropagation();
+              const url = type === "campaign" ? `${window.location.origin}/c/${slug}` : `${window.location.origin}/boost/${slug}`;
+              navigator.clipboard.writeText(url);
+              toast({
+                title: "Link copied",
+                description: "URL copied to clipboard"
+              });
+            }}>
                 <img src={copyIconBlack} alt="" className="w-3.5 h-3.5 dark:hidden" />
                 <img src={copyIconWhite} alt="" className="w-3.5 h-3.5 hidden dark:block" />
               </Button>}
