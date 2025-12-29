@@ -843,7 +843,8 @@ export function BlueprintEditor({
                       (e.target as HTMLVideoElement).style.display = 'none';
                     }} />
                           </div>}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 space-y-1.5">
+                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL..." className="h-7 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-xs text-muted-foreground blueprint-input" />
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
