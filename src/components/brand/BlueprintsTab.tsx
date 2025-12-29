@@ -53,11 +53,8 @@ const getStatusConfig = (status: BlueprintStatus) => {
 export function BlueprintsTab({
   brandId
 }: BlueprintsTabProps) {
-  const {
-    theme,
-    resolvedTheme
-  } = useTheme();
-  const isDark = theme === "dark" || resolvedTheme === "dark";
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
