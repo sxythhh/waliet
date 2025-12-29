@@ -173,12 +173,7 @@ export default function PublicNavbar({
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] bg-background border-border p-0">
                   <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between p-4 border-b border-border">
-                      <Link to="/" onClick={handleMobileNavClick} className="flex items-center gap-2">
-                        <img alt="Virality Logo" className="h-6 w-6" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" />
-                        <span className="text-[17px] font-clash font-semibold text-foreground tracking-[-0.4px]">VIRALITY</span>
-                      </Link>
-                    </div>
+                    
 
                     <div className="flex-1 overflow-y-auto py-4">
                       <div className="px-4 space-y-1">
