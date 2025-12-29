@@ -167,6 +167,8 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
         description: `Failed to remove payout method: ${error.message}`
       });
     } else {
+      // Update local state immediately
+      setPayoutMethods(updatedMethods);
       toast({
         title: "Success",
         description: "Payout method removed"
@@ -174,8 +176,9 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       // If the removed method was selected, select the first available one
       if (selectedPayoutMethod === methodId && updatedMethods.length > 0) {
         setSelectedPayoutMethod(updatedMethods[0].id);
+      } else if (updatedMethods.length === 0) {
+        setSelectedPayoutMethod("");
       }
-      fetchData();
     }
   };
 
@@ -422,7 +425,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                   return (
                     <div
                       key={method.id}
-                      className="relative rounded-xl p-3 border border-border bg-muted"
+                      className="relative rounded-xl p-3 border border-border bg-muted dark:bg-muted/50"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
