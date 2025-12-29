@@ -91,7 +91,7 @@ const getPlatforms = (isDark: boolean) => [{
 }];
 
 // Default sections that are shown when creating a new blueprint
-const DEFAULT_SECTIONS: SectionType[] = ["content", "platforms", "brand_voice", "hooks", "talking_points", "dos_and_donts", "call_to_action", "hashtags", "assets", "example_videos", "target_personas"];
+const DEFAULT_SECTIONS: SectionType[] = ["content", "platforms", "brand_voice", "hooks", "talking_points", "dos_and_donts", "call_to_action", "assets", "example_videos"];
 export function BlueprintEditor({
   blueprintId,
   brandId
@@ -593,13 +593,6 @@ export function BlueprintEditor({
         return {
           status: blueprint.call_to_action ? "filled" : "unfilled"
         };
-      case "hashtags":
-        return blueprint.hashtags.length > 0 ? {
-          status: "selected",
-          count: blueprint.hashtags.length
-        } : {
-          status: "unfilled"
-        };
       case "assets":
         return blueprint.assets.length > 0 ? {
           status: "filled"
@@ -609,13 +602,6 @@ export function BlueprintEditor({
       case "example_videos":
         return blueprint.example_videos.length > 0 ? {
           status: "filled"
-        } : {
-          status: "unfilled"
-        };
-      case "target_personas":
-        return blueprint.target_personas.length > 0 ? {
-          status: "selected",
-          count: blueprint.target_personas.length
         } : {
           status: "unfilled"
         };
@@ -632,10 +618,8 @@ export function BlueprintEditor({
       talking_points: <ListChecks className="h-4 w-4" />,
       dos_and_donts: <ThumbsUp className="h-4 w-4" />,
       call_to_action: <MessageSquare className="h-4 w-4" />,
-      hashtags: <Hash className="h-4 w-4" />,
       assets: <Folder className="h-4 w-4" />,
-      example_videos: <Video className="h-4 w-4" />,
-      target_personas: <Users className="h-4 w-4" />
+      example_videos: <Video className="h-4 w-4" />
     };
     return iconMap[sectionId];
   };
@@ -694,19 +678,19 @@ export function BlueprintEditor({
             </div>
           </BlueprintSection>;
       case "talking_points":
-        return <BlueprintSection key="talking_points" id="talking_points" title="Talking Points" icon={<ListChecks className="h-4 w-4" />} status={getSectionStatus("talking_points").status} onRemove={() => toggleSection("talking_points")}>
+        return <BlueprintSection key="talking_points" id="talking_points" title="Requirements" icon={<ListChecks className="h-4 w-4" />} status={getSectionStatus("talking_points").status} onRemove={() => toggleSection("talking_points")}>
             <div className="space-y-1.5">
               {blueprint.talking_points.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
-                  Add key talking points creators should mention
+                  Add requirements that creators must follow
                 </div> : blueprint.talking_points.map((point, index) => <div key={index} className="flex items-center gap-1.5 group">
-                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Key message #${index + 1}`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
+                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
                     <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
               <Button variant="ghost" size="sm" onClick={addTalkingPoint} className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 mt-2">
                 <Plus className="h-3 w-3 mr-1" />
-                Add Point
+                Add Requirement
               </Button>
             </div>
           </BlueprintSection>;
@@ -752,25 +736,6 @@ export function BlueprintEditor({
             <Input value={blueprint.call_to_action || ""} onChange={e => updateBlueprint({
             call_to_action: e.target.value
           })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-          </BlueprintSection>;
-      case "hashtags":
-        return <BlueprintSection key="hashtags" id="hashtags" title="Hashtags" icon={<Hash className="h-4 w-4" />} status={getSectionStatus("hashtags").status} statusCount={getSectionStatus("hashtags").count} onRemove={() => toggleSection("hashtags")}>
-            <div className="space-y-2">
-              <div className="flex gap-1.5">
-                <Input value={newHashtag} onChange={e => setNewHashtag(e.target.value)} onKeyDown={e => e.key === "Enter" && addHashtag()} placeholder="Add hashtag..." className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                <Button variant="ghost" size="sm" onClick={addHashtag} className="h-9 px-3 text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              {blueprint.hashtags.length > 0 && <div className="flex flex-wrap gap-1.5">
-                  {blueprint.hashtags.map((tag, index) => <span key={index} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-muted/30 text-muted-foreground text-xs font-inter tracking-[-0.5px]">
-                      {tag}
-                      <button onClick={() => removeHashtag(index)} className="hover:text-foreground transition-colors">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>)}
-                </div>}
-            </div>
           </BlueprintSection>;
       case "assets":
         return <BlueprintSection key="assets" id="assets" title="Assets & Files" icon={<Folder className="h-4 w-4" />} status={getSectionStatus("assets").status} onRemove={() => toggleSection("assets")}>
@@ -846,13 +811,11 @@ export function BlueprintEditor({
               {blueprint.example_videos.length > 0 && <div className="space-y-2">
                   {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                       <div className="flex items-start gap-3">
-                        {video.url && <div className="w-20 h-12 rounded-lg overflow-hidden bg-background/50 flex-shrink-0">
-                            <video src={video.url} className="w-full h-full object-cover" muted preload="metadata" onError={e => {
-                      (e.target as HTMLVideoElement).style.display = 'none';
-                    }} />
-                          </div>}
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Video className="h-4 w-4 text-primary" />
+                        </div>
                         <div className="flex-1 min-w-0 space-y-1.5">
-                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL..." className="h-7 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-xs text-muted-foreground blueprint-input" />
+                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-7 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-xs text-muted-foreground blueprint-input" />
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
                         </div>
                         <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
@@ -861,27 +824,6 @@ export function BlueprintEditor({
                       </div>
                     </div>)}
                 </div>}
-            </div>
-          </BlueprintSection>;
-      case "target_personas":
-        return <BlueprintSection key="target_personas" id="target_personas" title="Target Personas" icon={<Users className="h-4 w-4" />} status={getSectionStatus("target_personas").status} statusCount={getSectionStatus("target_personas").count} onRemove={() => toggleSection("target_personas")}>
-            <div className="space-y-3">
-              {blueprint.target_personas.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
-                  Define your target audience personas
-                </div> : blueprint.target_personas.map((persona, index) => <div key={index} className="rounded-md bg-muted/20 p-3 space-y-2 group">
-                    <div className="flex items-center justify-between">
-                      <Input value={persona.name} onChange={e => updatePersona(index, "name", e.target.value)} placeholder="Persona name" className="h-8 bg-transparent border-0 focus-visible:ring-0 font-medium font-inter tracking-[-0.5px] text-sm px-0 blueprint-input" />
-                      <Button variant="ghost" size="icon" onClick={() => removePersona(index)} className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Input value={persona.target_audience} onChange={e => updatePersona(index, "target_audience", e.target.value)} placeholder="Target audience (e.g., 'Fitness enthusiasts aged 25-35')" className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                    <Textarea value={persona.description} onChange={e => updatePersona(index, "description", e.target.value)} placeholder="Describe this persona's interests, pain points, and content preferences..." className="min-h-[60px] resize-none bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm" />
-                  </div>)}
-              <Button variant="ghost" size="sm" onClick={addPersona} className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                <Plus className="h-3 w-3 mr-1" />
-                Add Persona
-              </Button>
             </div>
           </BlueprintSection>;
       default:
