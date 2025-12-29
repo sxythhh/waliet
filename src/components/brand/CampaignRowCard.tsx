@@ -161,7 +161,7 @@ export function CampaignRowCard({
           </div>
 
           {/* Members & Actions */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+          <div className="hidden sm:flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
             {visibleMembers.length > 0 && <div className="flex items-center">
                 <div className="flex -space-x-2">
                   {visibleMembers.map((member, index) => <div key={member.id} className="w-7 h-7 rounded-full border-0 bg-muted flex items-center justify-center overflow-hidden" style={{
