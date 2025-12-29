@@ -7,13 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Link2, CheckCircle2, X, Loader2, AlertCircle } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
@@ -21,7 +15,6 @@ import instagramLogo from "@/assets/instagram-logo-white.png";
 import instagramLogoBlack from "@/assets/instagram-logo-black.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
-
 interface SubmissionSource {
   id: string;
   title: string;
@@ -45,7 +38,6 @@ interface Campaign {
   allowed_platforms?: string[];
   guidelines?: string | null;
 }
-
 interface SocialAccount {
   id: string;
   platform: string;
@@ -53,7 +45,6 @@ interface SocialAccount {
   avatar_url: string | null;
   follower_count: number | null;
 }
-
 interface SubmitVideoDialogProps {
   campaign?: Campaign;
   source?: SubmissionSource;
@@ -61,7 +52,6 @@ interface SubmitVideoDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
 const PLATFORM_CONFIG: Record<string, {
   logo: string;
   logoDark: string;
@@ -91,7 +81,6 @@ const PLATFORM_CONFIG: Record<string, {
     color: "#FF0000"
   }
 };
-
 export function SubmitVideoDialog({
   campaign,
   source,
@@ -104,7 +93,6 @@ export function SubmitVideoDialog({
     ...campaign!,
     sourceType: 'campaign'
   };
-  
   const [videoUrl, setVideoUrl] = useState("");
   const [platform, setPlatform] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState("");
@@ -113,8 +101,9 @@ export function SubmitVideoDialog({
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
   const [loadingAccounts, setLoadingAccounts] = useState(true);
-  const { resolvedTheme } = useTheme();
-
+  const {
+    resolvedTheme
+  } = useTheme();
   const allowedPlatforms = submissionSource.allowed_platforms || ["tiktok", "instagram", "youtube"];
   const isPayPerPost = submissionSource.payment_model === "pay_per_post";
   const isBoost = submissionSource.sourceType === 'boost';
@@ -125,15 +114,16 @@ export function SubmitVideoDialog({
     const fetchAccounts = async () => {
       setLoadingAccounts(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (!user) return;
-
-        const { data, error } = await supabase
-          .from("social_accounts")
-          .select("id, platform, username, avatar_url, follower_count")
-          .eq("user_id", user.id)
-          .in("platform", allowedPlatforms);
-
+        const {
+          data,
+          error
+        } = await supabase.from("social_accounts").select("id, platform, username, avatar_url, follower_count").eq("user_id", user.id).in("platform", allowedPlatforms);
         if (error) throw error;
         setSocialAccounts(data || []);
       } catch (error) {
@@ -142,7 +132,6 @@ export function SubmitVideoDialog({
         setLoadingAccounts(false);
       }
     };
-
     if (open) {
       fetchAccounts();
     }
@@ -164,12 +153,10 @@ export function SubmitVideoDialog({
       }
     }
   };
-
   const handleUrlChange = (url: string) => {
     setVideoUrl(url);
     detectPlatform(url);
   };
-
   const validateUrl = (url: string): boolean => {
     try {
       new URL(url);
@@ -184,20 +171,35 @@ export function SubmitVideoDialog({
     setIsFetchingDetails(true);
     try {
       if (url.includes('tiktok.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-tiktok-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-tiktok-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         return data?.data || null;
       } else if (url.includes('instagram.com')) {
-        const { data, error } = await supabase.functions.invoke('fetch-instagram-post', {
-          body: { postUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-instagram-post', {
+          body: {
+            postUrl: url
+          }
         });
         if (error) throw error;
         return data?.data || null;
       } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const { data, error } = await supabase.functions.invoke('fetch-youtube-video', {
-          body: { videoUrl: url }
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('fetch-youtube-video', {
+          body: {
+            videoUrl: url
+          }
         });
         if (error) throw error;
         // Map YouTube response to common format
@@ -211,7 +213,7 @@ export function SubmitVideoDialog({
             views: data.view_count,
             likes: data.like_count,
             comments: 0,
-            shares: 0,
+            shares: 0
           };
         }
         return null;
@@ -224,7 +226,6 @@ export function SubmitVideoDialog({
       setIsFetchingDetails(false);
     }
   };
-
   const handleSubmit = async () => {
     if (!videoUrl.trim()) {
       toast.error("Please enter a video URL");
@@ -246,10 +247,13 @@ export function SubmitVideoDialog({
       toast.error("Please acknowledge the submission requirements");
       return;
     }
-
     setIsSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please sign in to submit videos");
         return;
@@ -270,7 +274,6 @@ export function SubmitVideoDialog({
       if (videoDetails && videoDetails.authorUsername) {
         const videoAuthor = videoDetails.authorUsername.toLowerCase().replace('@', '');
         const accountUsername = selectedAccount.username.toLowerCase().replace('@', '');
-        
         if (videoAuthor !== accountUsername) {
           toast.error(`This video belongs to @${videoDetails.authorUsername}, not your account @${selectedAccount.username}`);
           setIsSubmitting(false);
@@ -279,13 +282,9 @@ export function SubmitVideoDialog({
       }
 
       // Check if video URL already submitted
-      const { data: existing } = await supabase
-        .from("video_submissions")
-        .select("id")
-        .eq("source_id", submissionSource.id)
-        .eq("video_url", videoUrl.trim())
-        .maybeSingle();
-
+      const {
+        data: existing
+      } = await supabase.from("video_submissions").select("id").eq("source_id", submissionSource.id).eq("video_url", videoUrl.trim()).maybeSingle();
       if (existing) {
         toast.error("This video has already been submitted");
         setIsSubmitting(false);
@@ -295,18 +294,14 @@ export function SubmitVideoDialog({
       // Get brand_id based on source type
       let brandId: string | null = null;
       if (isBoost) {
-        const { data: boostData } = await supabase
-          .from("bounty_campaigns")
-          .select("brand_id")
-          .eq("id", submissionSource.id)
-          .single();
+        const {
+          data: boostData
+        } = await supabase.from("bounty_campaigns").select("brand_id").eq("id", submissionSource.id).single();
         brandId = boostData?.brand_id || null;
       } else {
-        const { data: campaignData } = await supabase
-          .from("campaigns")
-          .select("brand_id")
-          .eq("id", submissionSource.id)
-          .single();
+        const {
+          data: campaignData
+        } = await supabase.from("campaigns").select("brand_id").eq("id", submissionSource.id).single();
         brandId = campaignData?.brand_id || null;
       }
 
@@ -314,7 +309,9 @@ export function SubmitVideoDialog({
       const estimatedPayout = isPayPerPost ? submissionSource.post_rate || 0 : null;
 
       // Insert into video_submissions table (unified table)
-      const { error } = await supabase.from("video_submissions").insert({
+      const {
+        error
+      } = await supabase.from("video_submissions").insert({
         source_type: submissionSource.sourceType,
         source_id: submissionSource.id,
         brand_id: brandId,
@@ -337,12 +334,10 @@ export function SubmitVideoDialog({
           video_author_username: videoDetails.authorUsername || null,
           video_author_avatar: videoDetails.authorAvatar || null,
           video_title: videoDetails.title || null,
-          video_upload_date: videoDetails.uploadDate || null,
+          video_upload_date: videoDetails.uploadDate || null
         })
       });
-
       if (error) throw error;
-
       toast.success("Video submitted successfully!");
       setVideoUrl("");
       setPlatform("");
@@ -357,7 +352,6 @@ export function SubmitVideoDialog({
       setIsSubmitting(false);
     }
   };
-
   const getPlatformLogo = (key: string) => {
     const config = PLATFORM_CONFIG[key];
     if (!config) return null;
@@ -365,39 +359,37 @@ export function SubmitVideoDialog({
   };
 
   // Filter accounts by selected platform
-  const filteredAccounts = platform 
-    ? socialAccounts.filter(acc => acc.platform === platform)
-    : socialAccounts;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  const filteredAccounts = platform ? socialAccounts.filter(acc => acc.platform === platform) : socialAccounts;
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl p-0 overflow-hidden gap-0">
         <div className="flex flex-col md:flex-row">
           {/* Left Side - Submission Checklist */}
           <div className="w-full md:w-[320px] bg-[#0a0a0a] p-6 text-white shrink-0">
-            <h2 className="text-lg font-semibold mb-3 tracking-[-0.5px]" style={{ fontFamily: 'Inter' }}>
+            <h2 className="text-lg font-semibold mb-3 tracking-[-0.5px]" style={{
+            fontFamily: 'Inter'
+          }}>
               Submission checklist
             </h2>
-            <p className="text-sm text-white/70 mb-6 leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
+            <p className="text-sm text-white/70 mb-6 leading-relaxed tracking-[-0.3px]" style={{
+            fontFamily: 'Inter'
+          }}>
               Please ensure you adhere to all the rules and requirements before submitting to maximize your chance of approval.
             </p>
 
-            {submissionSource.guidelines && (
-              <>
-                <h3 className="text-sm font-semibold mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
-                  General
-                </h3>
-                <p className="text-sm text-white/90 mb-6 uppercase font-medium tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
-                  {submissionSource.guidelines}
-                </p>
-              </>
-            )}
+            {submissionSource.guidelines && <>
+                
+                
+              </>}
 
             <div className="border-t border-white/10 pt-6 mt-auto">
-              <h3 className="text-sm font-semibold mb-2 tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
+              <h3 className="text-sm font-semibold mb-2 tracking-[-0.3px]" style={{
+              fontFamily: 'Inter'
+            }}>
                 Important
               </h3>
-              <p className="text-sm text-white/70 leading-relaxed tracking-[-0.3px]" style={{ fontFamily: 'Inter' }}>
+              <p className="text-sm text-white/70 leading-relaxed tracking-[-0.3px]" style={{
+              fontFamily: 'Inter'
+            }}>
                 Videos must be posted within <span className="font-semibold text-white">30 minutes</span> of uploading to be eligible. Older videos will be automatically rejected.
               </p>
             </div>
@@ -406,10 +398,7 @@ export function SubmitVideoDialog({
           {/* Right Side - Form */}
           <div className="flex-1 p-6 relative">
             {/* Close Button */}
-            <button
-              onClick={() => onOpenChange(false)}
-              className="absolute right-4 top-4 rounded-full p-1.5 opacity-60 hover:opacity-100 hover:bg-muted transition-all"
-            >
+            <button onClick={() => onOpenChange(false)} className="absolute right-4 top-4 rounded-full p-1.5 opacity-60 hover:opacity-100 hover:bg-muted transition-all">
               <X className="w-4 h-4" />
               <span className="sr-only">Close</span>
             </button>
@@ -417,109 +406,85 @@ export function SubmitVideoDialog({
             <div className="space-y-5">
               {/* Account Selection - First */}
               <div className="space-y-2">
-                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
+                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{
+                fontFamily: 'Inter'
+              }}>
                   Your Account <span className="text-[#2060df]">*</span>
                 </label>
-                {loadingAccounts ? (
-                  <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center justify-center">
+                {loadingAccounts ? <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center justify-center">
                     <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  </div>
-                ) : filteredAccounts.length === 0 ? (
-                  <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center gap-2 px-3">
+                  </div> : filteredAccounts.length === 0 ? <div className="h-12 bg-muted/30 border border-border/50 rounded-xl flex items-center gap-2 px-3">
                     <AlertCircle className="w-4 h-4 text-[#2060df]" />
-                    <span className="text-sm text-muted-foreground" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                    <span className="text-sm text-muted-foreground" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }}>
                       {platform ? `No ${PLATFORM_CONFIG[platform]?.label || platform} accounts connected` : 'Select a platform first by entering a video URL'}
                     </span>
-                  </div>
-                ) : (
-                  <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  </div> : <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                     <SelectTrigger className="h-12 bg-muted/30 border-border/50 rounded-xl focus:border-[#2060df]/50 focus:ring-[#2060df]/20">
                       <SelectValue placeholder="Select your account" />
                     </SelectTrigger>
                     <SelectContent className="bg-background border-border">
-                      {filteredAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
+                      {filteredAccounts.map(account => <SelectItem key={account.id} value={account.id}>
                           <div className="flex items-center gap-2">
-                            <img
-                              src={getPlatformLogo(account.platform) || ''}
-                              alt={account.platform}
-                              className="w-4 h-4"
-                            />
-                            <span className="text-sm" style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}>
+                            <img src={getPlatformLogo(account.platform) || ''} alt={account.platform} className="w-4 h-4" />
+                            <span className="text-sm" style={{
+                        fontFamily: 'Inter',
+                        letterSpacing: '-0.3px'
+                      }}>
                               @{account.username}
                             </span>
                           </div>
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
-                  </Select>
-                )}
+                  </Select>}
               </div>
 
               {/* Video URL Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{ fontFamily: 'Inter' }}>
+                <label className="text-sm font-medium tracking-[-0.3px] flex items-center gap-1" style={{
+                fontFamily: 'Inter'
+              }}>
                   Link <span className="text-[#2060df]">*</span>
                 </label>
                 <div className="relative">
-                  <Input
-                    placeholder="https://tiktok.com/@username/video/..."
-                    value={videoUrl}
-                    onChange={(e) => handleUrlChange(e.target.value)}
-                    className="h-12 bg-muted/30 border-border/50 rounded-xl text-sm focus:border-[#2060df]/50 focus:ring-[#2060df]/20"
-                    style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                  />
-                  {videoUrl && validateUrl(videoUrl) && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Input placeholder="https://tiktok.com/@username/video/..." value={videoUrl} onChange={e => handleUrlChange(e.target.value)} className="h-12 bg-muted/30 border-border/50 rounded-xl text-sm focus:border-[#2060df]/50 focus:ring-[#2060df]/20" style={{
+                  fontFamily: 'Inter',
+                  letterSpacing: '-0.3px'
+                }} />
+                  {videoUrl && validateUrl(videoUrl) && <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
 
               {/* Acknowledgment Checkbox */}
               <div className="flex items-start gap-3 p-4 bg-muted/20 border border-border/50 rounded-xl">
-                <Checkbox
-                  id="acknowledge"
-                  checked={acknowledged}
-                  onCheckedChange={(checked) => setAcknowledged(checked === true)}
-                  className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-[#2060df] data-[state=checked]:border-[#2060df]"
-                />
-                <label
-                  htmlFor="acknowledge"
-                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
-                  style={{ fontFamily: 'Inter', letterSpacing: '-0.3px' }}
-                >
+                <Checkbox id="acknowledge" checked={acknowledged} onCheckedChange={checked => setAcknowledged(checked === true)} className="mt-0.5 border-muted-foreground/50 data-[state=checked]:bg-[#2060df] data-[state=checked]:border-[#2060df]" />
+                <label htmlFor="acknowledge" className="text-sm text-muted-foreground leading-relaxed cursor-pointer" style={{
+                fontFamily: 'Inter',
+                letterSpacing: '-0.3px'
+              }}>
                   I've read the submission requirements and acknowledge my submission(s) may be auto-rejected if they do not adhere to them
                 </label>
               </div>
 
               {/* Submit Button */}
               <div className="flex justify-end pt-2">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged}
-                  className="h-11 px-6 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7] font-['Inter'] tracking-[-0.5px]"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2">
+                <Button onClick={handleSubmit} disabled={isSubmitting || !videoUrl || !platform || !selectedAccountId || !acknowledged} className="h-11 px-6 rounded-xl font-semibold bg-[#2060df] hover:bg-[#1a4db8] text-white border-t border-[#4b85f7] font-['Inter'] tracking-[-0.5px]">
+                  {isSubmitting ? <span className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Submitting...
-                    </span>
-                  ) : isFetchingDetails ? (
-                    <span className="flex items-center gap-2">
+                    </span> : isFetchingDetails ? <span className="flex items-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Fetching details...
-                    </span>
-                  ) : (
-                    "Submit video"
-                  )}
+                    </span> : "Submit video"}
                 </Button>
               </div>
             </div>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
