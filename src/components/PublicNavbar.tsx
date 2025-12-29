@@ -182,28 +182,19 @@ export default function PublicNavbar({
 
                     <div className="flex-1 overflow-y-auto py-4">
                       <div className="px-4 space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">Platform</p>
-                        <Link to="/discover" onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                          <img alt="" className="w-5 h-5 dark:hidden" src={exploreIconDark} />
-                          <img alt="" className="w-5 h-5 hidden dark:block" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
-                          <span>Discover</span>
+                        <Link to="/discover" onClick={handleMobileNavClick} className="block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+                          Discover
                         </Link>
-                        <Link to="/new" onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors">
-                          <img src={forBrandsIconLight} alt="" className="w-5 h-5 dark:hidden" />
-                          <img src={forBrandsIcon} alt="" className="w-5 h-5 hidden dark:block" />
-                          <span>For Brands</span>
+                        <Link to="/new" onClick={handleMobileNavClick} className="block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] text-foreground hover:bg-muted/50 rounded-lg transition-colors">
+                          For Brands
                         </Link>
-                      </div>
-
-                      <div className="px-4 mt-4 space-y-1">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">Pages</p>
-                        <Link to="/resources" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/resources') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
+                        <Link to="/resources" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/resources') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Resources
                         </Link>
-                        <Link to="/contact" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/contact') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
+                        <Link to="/contact" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/contact') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Contact
                         </Link>
-                        <Link to="/support" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/support') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
+                        <Link to="/support" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm font-semibold font-['Inter'] tracking-[-0.3px] rounded-lg transition-colors ${isActive('/support') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Support
                         </Link>
                       </div>
