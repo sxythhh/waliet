@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Building2, Smartphone, CreditCard, Check } from "lucide-react";
+import { Plus, Building2, Smartphone, CreditCard, Check, X } from "lucide-react";
 import PayoutMethodDialog from "@/components/PayoutMethodDialog";
 import paypalLogo from "@/assets/paypal-logo.svg";
 import walletActiveIcon from "@/assets/wallet-active.svg";
@@ -138,6 +138,44 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
       fetchData();
       // Auto-select the newly added method
       setSelectedPayoutMethod(`method-${updatedMethods.length - 1}`);
+    }
+  };
+
+  const handleRemovePayoutMethod = async (methodId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !wallet) return;
+
+    const updatedMethods = payoutMethods.filter(m => m.id !== methodId);
+
+    const payoutDetailsPayload = updatedMethods.map(m => ({
+      method: m.method,
+      details: m.details
+    }));
+
+    const { error } = await supabase
+      .from("wallets")
+      .update({
+        payout_method: updatedMethods.length > 0 ? updatedMethods[0].method : null,
+        payout_details: payoutDetailsPayload.length > 0 ? payoutDetailsPayload : null
+      })
+      .eq("id", wallet.id);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to remove payout method: ${error.message}`
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Payout method removed"
+      });
+      // If the removed method was selected, select the first available one
+      if (selectedPayoutMethod === methodId && updatedMethods.length > 0) {
+        setSelectedPayoutMethod(updatedMethods[0].id);
+      }
+      fetchData();
     }
   };
 
@@ -367,9 +405,76 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
         {loading ? (
           <div className="py-8 text-center text-muted-foreground font-inter tracking-[-0.5px]">Loading...</div>
         ) : !wallet || wallet.balance < 20 ? (
-          <div className="py-8 text-center">
-            <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of $20 required to withdraw.</p>
-            <p className="text-sm text-muted-foreground mt-2 font-inter tracking-[-0.5px]">Current balance: ${wallet?.balance?.toFixed(2) || '0.00'}</p>
+          <div className="space-y-4 py-4">
+            <div className="py-4 text-center">
+              <p className="text-muted-foreground font-inter tracking-[-0.5px]">Minimum balance of $20 required to withdraw.</p>
+              <p className="text-sm text-muted-foreground mt-2 font-inter tracking-[-0.5px]">Current balance: ${wallet?.balance?.toFixed(2) || '0.00'}</p>
+            </div>
+            
+            {/* Payment Methods Section - Always visible */}
+            <div className="space-y-2">
+              <Label className="font-inter tracking-[-0.5px]">Payment Methods</Label>
+              <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                {payoutMethods.map((method) => {
+                  const methodIcon = getMethodIcon(method);
+                  const networkLogo = getNetworkLogo(method);
+                  
+                  return (
+                    <div
+                      key={method.id}
+                      className="relative rounded-xl p-3 border border-border bg-muted"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shrink-0">
+                          {networkLogo ? (
+                            <img src={networkLogo} alt="Network" className="w-5 h-5" />
+                          ) : methodIcon ? (
+                            <img src={methodIcon} alt={getMethodLabel(method)} className="w-5 h-5" />
+                          ) : method.method === 'bank' ? (
+                            <Building2 className="w-4 h-4 text-muted-foreground" />
+                          ) : method.method === 'upi' ? (
+                            <Smartphone className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <CreditCard className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">
+                            {getMethodLabel(method)}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.4px]">
+                            {getMethodDetails(method)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePayoutMethod(method.id)}
+                          className="w-7 h-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center shrink-0 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {/* Add Method Button */}
+                {payoutMethods.length < 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setAddMethodDialogOpen(true)}
+                    className="rounded-xl p-3 border border-dashed border-border bg-muted/50 hover:bg-muted hover:border-primary/50 transition-all"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <Plus className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.4px]">
+                        Add Payment Method
+                      </span>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         ) : payoutMethods.length === 0 ? (
           <div className="py-8 text-center">
@@ -456,10 +561,21 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                             {getMethodDetails(method)}
                           </p>
                         </div>
-                        {isSelected && (
+                        {isSelected ? (
                           <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center shrink-0">
                             <Check className="w-3 h-3 text-primary-foreground" />
                           </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemovePayoutMethod(method.id);
+                            }}
+                            className="w-7 h-7 rounded-full bg-destructive/10 hover:bg-destructive/20 flex items-center justify-center shrink-0 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </button>
                         )}
                       </div>
                     </button>
