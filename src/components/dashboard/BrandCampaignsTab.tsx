@@ -390,7 +390,7 @@ export function BrandCampaignsTab({
             <div className="flex-1 min-w-0">
               <GlobalBrandSearch brandId={brandId} />
             </div>
-            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
+            <Button onClick={() => setCampaignTypeDialogOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-semibold text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8] shrink-0">
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Create Campaign</span>
               <span className="sm:hidden">Create</span>
