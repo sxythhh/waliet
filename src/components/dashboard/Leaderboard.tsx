@@ -38,22 +38,38 @@ export function Leaderboard({ className }: LeaderboardProps) {
         dateFilter = monthAgo.toISOString();
       }
 
-      // Fetch earnings leaderboard
-      let earningsQuery = supabase
-        .from("wallet_transactions")
-        .select("user_id, amount")
-        .eq("type", "earning")
-        .gt("amount", 0);
+      // Fetch earnings leaderboard - need to fetch all records to aggregate properly
+      let allEarnings: { user_id: string; amount: number }[] = [];
+      let offset = 0;
+      const pageSize = 1000;
+      let hasMore = true;
 
-      if (dateFilter) {
-        earningsQuery = earningsQuery.gte("created_at", dateFilter);
+      while (hasMore) {
+        let earningsQuery = supabase
+          .from("wallet_transactions")
+          .select("user_id, amount")
+          .eq("type", "earning")
+          .gt("amount", 0)
+          .range(offset, offset + pageSize - 1);
+
+        if (dateFilter) {
+          earningsQuery = earningsQuery.gte("created_at", dateFilter);
+        }
+
+        const { data: earnings } = await earningsQuery;
+        
+        if (earnings && earnings.length > 0) {
+          allEarnings = [...allEarnings, ...earnings];
+          offset += pageSize;
+          hasMore = earnings.length === pageSize;
+        } else {
+          hasMore = false;
+        }
       }
-
-      const { data: earnings } = await earningsQuery;
 
       // Aggregate earnings by user
       const earningsByUser = new Map<string, number>();
-      (earnings || []).forEach((e) => {
+      allEarnings.forEach((e) => {
         const current = earningsByUser.get(e.user_id) || 0;
         earningsByUser.set(e.user_id, current + e.amount);
       });
