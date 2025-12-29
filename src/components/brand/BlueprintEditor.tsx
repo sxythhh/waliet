@@ -764,49 +764,34 @@ export function BlueprintEditor({
         return <BlueprintSection key="example_videos" id="example_videos" title="Example Videos" icon={<Video className="h-4 w-4" />} status={getSectionStatus("example_videos").status} onRemove={() => toggleSection("example_videos")}>
             <div className="space-y-3">
               <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
-              <div onClick={() => !uploadingVideo && videoInputRef.current?.click()} className={`relative rounded-xl bg-muted/10 p-6 cursor-pointer transition-all hover:bg-muted/20 ${uploadingVideo ? 'pointer-events-none' : ''}`}>
-                {!uploadingVideo ? <div className="flex flex-col items-center gap-2">
-                    <div className="h-10 w-10 rounded-full bg-muted/30 flex items-center justify-center">
-                      <Upload className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-inter tracking-[-0.5px] text-foreground">
-                        Upload a video
-                      </p>
-                      <p className="text-xs font-inter tracking-[-0.5px] text-muted-foreground mt-0.5">
-                        or <span className="text-primary hover:underline">click to browse</span> (max 100MB)
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={e => {
-                  e.stopPropagation();
-                  addExampleVideo();
-                }} className="h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/30 mt-1">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add URL
-                    </Button>
-                  </div> : <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Video className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
-                            {uploadingFileName}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs text-muted-foreground ml-2">
-                        {Math.round(uploadProgress)}%
+              {!uploadingVideo ? <div className="flex gap-2">
+                  <div onClick={() => videoInputRef.current?.click()} className="flex-1 rounded-xl border border-dashed border-border/50 bg-muted/5 p-3 cursor-pointer transition-all hover:bg-muted/10 hover:border-border">
+                    <div className="flex items-center gap-3">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-inter tracking-[-0.5px] text-muted-foreground">
+                        Upload video <span className="text-muted-foreground/50">(max 100MB)</span>
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all duration-300 ease-out" style={{
-                    width: `${uploadProgress}%`
-                  }} />
-                    </div>
-                  </div>}
-              </div>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-auto px-4 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-xl border border-dashed border-border/50">
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add URL
+                  </Button>
+                </div> : <div className="rounded-xl bg-muted/10 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
+                      {uploadingFileName}
+                    </p>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                  <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all duration-300 ease-out" style={{
+                  width: `${uploadProgress}%`
+                }} />
+                  </div>
+                </div>}
               {/* Manual Example Videos */}
               {blueprint.example_videos.length > 0 && <div className="space-y-2">
                   {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
