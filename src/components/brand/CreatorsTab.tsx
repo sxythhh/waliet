@@ -637,9 +637,14 @@ export function CreatorsTab({
     return creators.find(c => c.id === conv.creator_id);
   };
   const exportToCSV = () => {
+    // Use filtered creators if any filter is applied, otherwise export all
+    const creatorsToExport = (searchQuery || campaignFilter !== 'all' || membershipFilter !== 'all') 
+      ? filteredCreators 
+      : creators;
+    
     const rows: string[][] = [];
     rows.push(["Creator Name", "Username", "Email", "Platform", "Account Username", "Account URL", "Date Joined", "Total Earnings"]);
-    for (const creator of creators) {
+    for (const creator of creatorsToExport) {
       if (creator.social_accounts.length === 0) {
         rows.push([creator.full_name || "", creator.username, creator.email || "", "", "", "", creator.date_joined ? new Date(creator.date_joined).toLocaleDateString() : "", creator.total_earnings.toFixed(2)]);
       } else {
