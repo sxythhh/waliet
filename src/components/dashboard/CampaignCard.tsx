@@ -54,7 +54,7 @@ export const CampaignCard = memo(function CampaignCard({
       <Card className="group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-xl border-0" onClick={onClick}>
         {/* Banner Background */}
         <div className="relative aspect-[3/4]">
-          {banner_url ? <OptimizedImage src={banner_url} alt={title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{
+          {banner_url ? <OptimizedImage src={banner_url} alt={title} className="absolute inset-0 w-full h-full object-cover rounded-[3px]" /> : <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{
           backgroundColor: brand_color || undefined
         }}>
             {brand_logo_url && <div className="w-14 h-14 rounded-xl overflow-hidden shadow-lg">
