@@ -166,6 +166,13 @@ export default function PublicNavbar({
                   </>}
               </div>
 
+              {/* Mobile Create Account Button */}
+              {isAuthenticated === false && (
+                <Button size="sm" onClick={() => setShowAuthDialog(true)} className="md:hidden font-geist font-medium tracking-[-0.5px] px-4 bg-gradient-to-b from-primary via-primary to-primary/70 border-t shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_2px_4px_0_rgba(0,0,0,0.3),0_4px_8px_-2px_rgba(0,0,0,0.2)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_1px_2px_0_rgba(0,0,0,0.3)] hover:translate-y-[1px] active:translate-y-[2px] transition-all duration-150 border-[#a11010]/[0.26] rounded-2xl text-sm">
+                  Create Account
+                </Button>
+              )}
+
               {/* Mobile Hamburger Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild className="md:hidden">
