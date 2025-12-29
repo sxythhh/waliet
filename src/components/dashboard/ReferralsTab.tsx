@@ -414,14 +414,14 @@ export function ReferralsTab(): JSX.Element {
                           Cancel
                         </Button>
                       </div>
-                    </div> : <div className="flex gap-2 items-stretch">
+                    </div> : <div className="flex gap-2 items-center">
                       <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
                     letterSpacing: '-0.5px'
                   }} />
-                      <Button onClick={copyReferralLink} variant="ghost" size="icon" className="shrink-0 h-8 w-8 hover:bg-muted">
+                      <Button onClick={copyReferralLink} variant="ghost" size="icon" className="shrink-0 h-8 w-8 dark:hover:bg-muted">
                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       </Button>
-                      <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-8 w-8 hover:bg-muted">
+                      <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-8 w-8 dark:hover:bg-muted">
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>}
