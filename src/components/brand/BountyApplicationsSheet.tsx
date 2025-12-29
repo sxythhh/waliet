@@ -107,10 +107,10 @@ export function BountyApplicationsSheet({
       // If accepted, try to add user to Discord server
       if (newStatus === 'accepted') {
         try {
-          // Get bounty campaign details including discord_guild_id
+          // Get bounty campaign details including discord_guild_id and discord_role_id
           const { data: bounty, error: bountyError } = await supabase
             .from('bounty_campaigns')
-            .select('discord_guild_id')
+            .select('discord_guild_id, discord_role_id')
             .eq('id', bountyId)
             .single();
 
@@ -120,7 +120,8 @@ export function BountyApplicationsSheet({
             const { data, error: discordError } = await supabase.functions.invoke('add-to-discord-server', {
               body: {
                 userId: application.user_id,
-                guildId: bounty.discord_guild_id
+                guildId: bounty.discord_guild_id,
+                roleId: bounty.discord_role_id || undefined
               }
             });
 
@@ -128,7 +129,8 @@ export function BountyApplicationsSheet({
               console.error('Failed to add user to Discord server:', discordError);
               toast.error('Application accepted, but failed to add user to Discord server. They may need to join manually.');
             } else if (data?.success) {
-              toast.success(`Application accepted! ${data.alreadyMember ? 'User was already in Discord server.' : 'User added to Discord server.'}`);
+              const roleMsg = data.roleAssigned ? ' with role assigned' : '';
+              toast.success(`Application accepted! ${data.alreadyMember ? 'User was already in Discord server.' : `User added to Discord server${roleMsg}.`}`);
             }
           } else {
             toast.success('Application accepted');

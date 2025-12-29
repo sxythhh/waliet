@@ -9,6 +9,7 @@ const corsHeaders = {
 interface AddToServerRequest {
   userId: string;
   guildId: string;
+  roleId?: string;
 }
 
 serve(async (req) => {
@@ -17,11 +18,13 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, guildId } = await req.json() as AddToServerRequest;
+    const { userId, guildId, roleId } = await req.json() as AddToServerRequest;
 
     if (!userId || !guildId) {
       throw new Error('userId and guildId are required');
     }
+
+    console.log(`Adding user ${userId} to guild ${guildId}${roleId ? ` with role ${roleId}` : ''}`);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -92,6 +95,16 @@ serve(async (req) => {
 
     const DISCORD_BOT_TOKEN = Deno.env.get('DISCORD_BOT_TOKEN');
 
+    // Build the request body - include roles if roleId is provided
+    const memberBody: { access_token: string; roles?: string[] } = {
+      access_token: accessToken,
+    };
+    
+    if (roleId) {
+      memberBody.roles = [roleId];
+      console.log(`Will assign role ${roleId} to user`);
+    }
+
     // Add user to Discord server using Discord API
     const addMemberResponse = await fetch(
       `https://discord.com/api/v10/guilds/${guildId}/members/${tokens.discord_id}`,
@@ -101,9 +114,7 @@ serve(async (req) => {
           'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          access_token: accessToken,
-        }),
+        body: JSON.stringify(memberBody),
       }
     );
 
@@ -134,13 +145,14 @@ serve(async (req) => {
       throw new Error(`Failed to add user to Discord server: ${errorText}`);
     }
 
-    console.log(`Successfully added user ${profile?.discord_username} to guild ${guildId}`);
+    console.log(`Successfully added user ${profile?.discord_username} to guild ${guildId}${roleId ? ` with role ${roleId}` : ''}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'User added to Discord server successfully',
-        discordUsername: profile?.discord_username
+        message: roleId ? 'User added to Discord server with role' : 'User added to Discord server successfully',
+        discordUsername: profile?.discord_username,
+        roleAssigned: !!roleId
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
