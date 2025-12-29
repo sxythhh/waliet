@@ -4,6 +4,8 @@ import { formatDistanceToNow } from "date-fns";
 import { DollarSign } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useNavigate } from "react-router-dom";
+import { Leaderboard } from "./Leaderboard";
+
 interface ActivityItem {
   id: string;
   amount: number;
@@ -16,10 +18,13 @@ interface ActivityItem {
   brand_logo_url?: string;
   is_private?: boolean;
 }
+
 export function RecentActivity() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"leaderboard" | "activity">("leaderboard");
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchActivities = async () => {
       const {
@@ -152,91 +157,139 @@ export function RecentActivity() {
       supabase.removeChannel(channel);
     };
   }, []);
+
   const formatUsername = (username?: string, isPrivate?: boolean) => {
     if (!username) return "Creator";
     if (!isPrivate) return username;
     if (username.length <= 4) return username.charAt(0) + "***";
     return username.slice(0, 3) + "***" + username.slice(-2);
   };
-  const getPlatformColor = (platform?: string) => {
-    switch (platform) {
-      case "tiktok":
-        return "bg-pink-500";
-      case "instagram":
-        return "bg-gradient-to-br from-purple-500 to-orange-400";
-      case "youtube":
-        return "bg-red-500";
-      default:
-        return "bg-primary";
-    }
-  };
+
   const truncateCampaignName = (name: string, maxLength = 18) => {
     if (name.length <= maxLength) return name;
     return name.slice(0, maxLength) + "...";
   };
-  if (loading) {
-    return <div className="mt-8 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-          Recent Transactions
-        </h3>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />)}
-        </div>
-      </div>;
-  }
-  if (activities.length === 0) return null;
-  return <div className="mt-8 space-y-3">
-      <div className="flex items-center gap-2">
-        <h3 className="font-semibold text-foreground tracking-[-0.3px] font-['Geist',sans-serif] text-lg">
+
+  return (
+    <div className="mt-8 space-y-3">
+      {/* Tab Header */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => setActiveTab("leaderboard")}
+          className={`text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif] transition-colors ${
+            activeTab === "leaderboard"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground/70"
+          }`}
+        >
+          Leaderboard
+        </button>
+        <button
+          onClick={() => setActiveTab("activity")}
+          className={`text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif] transition-colors ${
+            activeTab === "activity"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground/70"
+          }`}
+        >
           Activity
-        </h3>
+        </button>
       </div>
 
-      <div className="bg-card/50 rounded-xl border border-border/50 overflow-hidden" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal' }}>
-        {/* Header */}
-        <div className="grid grid-cols-4 gap-4 px-4 py-2.5 text-[10px] font-medium text-muted-foreground border-b border-border/50 bg-muted/20" style={{ fontFamily: 'Inter, sans-serif', letterSpacing: 'normal', textTransform: 'none' }}>
-          <span>Creator</span>
-          <span>Time</span>
-          <span>Campaign</span>
-          <span className="text-right">Earned</span>
-        </div>
-
-        {/* Rows */}
-        <div className="divide-y divide-border/30">
-          {activities.map((activity, index) => <div key={activity.id} className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${index % 2 === 0 ? "bg-transparent" : "bg-muted/10"}`}>
-              {/* Creator */}
-              <div className="flex items-center">
-                <span className="font-medium text-foreground truncate">
-                  {formatUsername(activity.username, activity.is_private)}
-                </span>
+      {/* Tab Content */}
+      {activeTab === "leaderboard" ? (
+        <Leaderboard />
+      ) : (
+        <>
+          {loading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : activities.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              No recent activity
+            </p>
+          ) : (
+            <div
+              className="bg-card/50 rounded-xl border border-border/50 overflow-hidden"
+              style={{ fontFamily: "Inter, sans-serif", letterSpacing: "normal" }}
+            >
+              {/* Header */}
+              <div
+                className="grid grid-cols-4 gap-4 px-4 py-2.5 text-[10px] font-medium text-muted-foreground border-b border-border/50 bg-muted/20"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  letterSpacing: "normal",
+                  textTransform: "none",
+                }}
+              >
+                <span>Creator</span>
+                <span>Time</span>
+                <span>Campaign</span>
+                <span className="text-right">Earned</span>
               </div>
 
-              {/* Time */}
-              <span className="text-muted-foreground">
-                {formatDistanceToNow(new Date(activity.created_at), {
-              addSuffix: true
-            }).replace(/^about /, '')}
-              </span>
+              {/* Rows */}
+              <div className="divide-y divide-border/30">
+                {activities.map((activity, index) => (
+                  <div
+                    key={activity.id}
+                    className={`grid grid-cols-4 gap-4 px-4 py-3 text-xs items-center transition-colors hover:bg-muted/20 ${
+                      index % 2 === 0 ? "bg-transparent" : "bg-muted/10"
+                    }`}
+                  >
+                    {/* Creator */}
+                    <div className="flex items-center">
+                      <span className="font-medium text-foreground truncate">
+                        {formatUsername(activity.username, activity.is_private)}
+                      </span>
+                    </div>
 
-              {/* Campaign with brand logo */}
-              <div className="flex items-center gap-1.5 min-w-0">
-                {activity.brand_logo_url && <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
-                    <OptimizedImage src={activity.brand_logo_url} alt="" className="w-full h-full object-cover" />
-                  </div>}
-                <button onClick={() => activity.campaign_slug && navigate(`/c/${activity.campaign_slug}`)} className="text-foreground truncate hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs" title={activity.campaign_name}>
-                  {truncateCampaignName(activity.campaign_name || "Campaign")}
-                </button>
-              </div>
+                    {/* Time */}
+                    <span className="text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.created_at), {
+                        addSuffix: true,
+                      }).replace(/^about /, "")}
+                    </span>
 
-              {/* Earned */}
-              <div className="flex items-center justify-end gap-1">
-                <span className="font-semibold text-emerald-500">
-                  ${activity.amount?.toFixed(2)}
-                </span>
-                
+                    {/* Campaign with brand logo */}
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {activity.brand_logo_url && (
+                        <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                          <OptimizedImage
+                            src={activity.brand_logo_url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <button
+                        onClick={() =>
+                          activity.campaign_slug &&
+                          navigate(`/c/${activity.campaign_slug}`)
+                        }
+                        className="text-foreground truncate hover:underline cursor-pointer bg-transparent border-none p-0 text-left text-xs"
+                        title={activity.campaign_name}
+                      >
+                        {truncateCampaignName(activity.campaign_name || "Campaign")}
+                      </button>
+                    </div>
+
+                    {/* Earned */}
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="font-semibold text-emerald-500">
+                        ${activity.amount?.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>)}
-        </div>
-      </div>
-    </div>;
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
