@@ -16,6 +16,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight } from "lucide-react";
+import { ExampleVideosCarousel } from "@/components/ExampleVideosCarousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -843,6 +844,11 @@ export default function CampaignApply() {
                 <h2 className="text-lg font-semibold mb-3">Brand Voice</h2>
                 <p className="text-muted-foreground font-['Inter'] tracking-[-0.5px]">{blueprint.brand_voice}</p>
               </div>}
+
+            {/* Example Videos Carousel */}
+            {blueprint?.example_videos && blueprint.example_videos.length > 0 && (
+              <ExampleVideosCarousel videos={blueprint.example_videos} />
+            )}
             </div>
           </div>
         </div>
