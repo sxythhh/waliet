@@ -131,7 +131,7 @@ export default function PublicNavbar({
             </div>
             
             {/* Search Input - Desktop only */}
-            <button onClick={handleSearchClick} className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-[#f3f5f7] dark:bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-[#787f8c] dark:text-muted-foreground/50 hover:bg-[#787f8c] hover:text-white dark:hover:bg-muted/30 dark:hover:text-muted-foreground/50 transition-colors min-w-[280px]">
+            <button onClick={handleSearchClick} className="hidden md:flex items-center justify-between gap-3 px-3 h-8 bg-[#f3f5f7] dark:bg-muted/20 rounded-md text-sm font-inter tracking-[-0.5px] text-[#787f8c] dark:text-muted-foreground/50 hover:bg-[#e5e7e9] dark:hover:bg-muted/30 transition-colors min-w-[280px]">
               <div className="flex items-center gap-2">
                 <img src={searchIcon} alt="" className="h-4 w-4 opacity-100 dark:opacity-60" />
                 <span>{searchQuery || 'Search opportunities'}</span>
