@@ -267,7 +267,7 @@ export function BlueprintsTab({
             </Tooltip>
           </TooltipProvider>
         </div>
-        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-inter font-semibold text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
+        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
@@ -277,7 +277,7 @@ export function BlueprintsTab({
             <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
           </div> : <div className="w-full h-[calc(100vh-200px)] min-h-[500px] flex items-center justify-center">
             <div className="text-center space-y-4">
-              
+              <p className="text-muted-foreground">No blueprints yet. Create your first one to get started.</p>
               
             </div>
           </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
