@@ -28,6 +28,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
+import discordIconDark from "@/assets/tiktok-icon-dark.svg";
 import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
 import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
@@ -1639,7 +1640,8 @@ export function CreatorDatabaseTab({
                 {selectedCreatorPanel.discord_username && <div>
                     <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.03em] mb-1">Discord Username</p>
                     <div className="flex items-center gap-1.5">
-                      <img alt="Discord" className="h-3.5 w-3.5" src="/lovable-uploads/de420cc8-50b3-487b-acbf-885797de1c29.webp" />
+                      <img alt="Discord" className="h-3.5 w-3.5 dark:hidden" src={discordIconDark} />
+                      <img alt="Discord" className="h-3.5 w-3.5 hidden dark:block" src="/lovable-uploads/de420cc8-50b3-487b-acbf-885797de1c29.webp" />
                       <p className="text-xs font-inter tracking-[-0.5px]">{selectedCreatorPanel.discord_username}</p>
                     </div>
                   </div>}
