@@ -51,7 +51,7 @@ export const CampaignCard = memo(function CampaignCard({
 }: CampaignCardProps) {
   const navigate = useNavigate();
   return <div className="flex flex-col gap-1.5">
-      <Card className="group relative overflow-hidden rounded-xl cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-xl border-0" onClick={onClick}>
+      <Card className="group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-200 ease-out hover:-translate-y-1.5 hover:shadow-xl border-0" onClick={onClick}>
         {/* Banner Background */}
         <div className="relative aspect-[3/4]">
           {banner_url ? <OptimizedImage src={banner_url} alt={title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 w-full h-full flex items-center justify-center" style={{
