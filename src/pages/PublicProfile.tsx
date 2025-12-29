@@ -59,6 +59,9 @@ interface CampaignParticipation {
     banner_url: string | null;
     rpm_rate: number;
     status: string;
+    budget: number;
+    budget_used: number | null;
+    is_infinite_budget: boolean | null;
     brands?: {
       logo_url: string;
       is_verified?: boolean;
@@ -212,6 +215,9 @@ export default function PublicProfile() {
           banner_url,
           rpm_rate,
           status,
+          budget,
+          budget_used,
+          is_infinite_budget,
           brands (
             logo_url,
             is_verified
@@ -479,7 +485,7 @@ export default function PublicProfile() {
                 const logoUrl = campaign?.brands?.logo_url || campaign?.brand_logo_url;
                 const isVerified = campaign?.brands?.is_verified;
                 return <div key={participation.id} className="flex-shrink-0 w-[160px]">
-                        <CampaignCard id={campaign?.id || participation.campaign_id} title={campaign?.title || 'Campaign'} brand_name={campaign?.brand_name || ''} brand_logo_url={logoUrl || null} brand_is_verified={isVerified} banner_url={campaign?.banner_url || null} budget={0} budget_used={0} is_infinite_budget={true} onClick={() => handleCampaignClick(participation.campaign_id)} showBookmark={false} showFullscreen={false} />
+                        <CampaignCard id={campaign?.id || participation.campaign_id} title={campaign?.title || 'Campaign'} brand_name={campaign?.brand_name || ''} brand_logo_url={logoUrl || null} brand_is_verified={isVerified} banner_url={campaign?.banner_url || null} budget={campaign?.budget || 0} budget_used={campaign?.budget_used || 0} is_infinite_budget={campaign?.is_infinite_budget || false} onClick={() => handleCampaignClick(participation.campaign_id)} showBookmark={false} showFullscreen={false} />
                       </div>;
               })}
                 </div>
