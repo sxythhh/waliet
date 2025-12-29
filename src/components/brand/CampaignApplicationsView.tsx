@@ -273,11 +273,11 @@ export function CampaignApplicationsView({
     switch (status) {
       case 'approved':
       case 'accepted':
-        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-0 bg-emerald-500/10">Approved</Badge>;
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-0 bg-emerald-500/10 w-[70px] justify-center">Approved</Badge>;
       case 'rejected':
-        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-0 bg-red-500/10">Rejected</Badge>;
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-0 bg-red-500/10 w-[70px] justify-center">Rejected</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs font-inter font-medium tracking-[-0.5px] text-amber-500 border-0 bg-amber-500/10">Pending</Badge>;
+        return <Badge variant="outline" className="text-xs font-inter font-medium tracking-[-0.5px] text-amber-500 border-0 bg-amber-500/10 w-[70px] justify-center">Pending</Badge>;
     }
   };
   const getAppUrl = (app: Application) => app.content_url || app.video_url;
@@ -367,11 +367,6 @@ export function CampaignApplicationsView({
         {selectedApp ? <>
             <div className="flex-1 overflow-auto p-4 md:p-6 pb-24">
               <div className="space-y-5">
-                {/* Mobile Back Button */}
-                <button onClick={handleMobileBack} className="flex md:hidden items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="text-sm font-medium">Back to applications</span>
-                </button>
 
                 {/* Creator Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -402,9 +397,12 @@ export function CampaignApplicationsView({
                       </AvatarFallback>
                     </Avatar>
                     <div className="space-y-0.5 flex-1 min-w-0">
-                      <h2 className="text-base font-semibold tracking-[-0.5px] truncate">
-                        {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
-                      </h2>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base font-semibold tracking-[-0.5px] truncate">
+                          {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
+                        </h2>
+                        {getStatusBadge(selectedApp.status)}
+                      </div>
                       <p className="text-sm text-muted-foreground tracking-[-0.3px] truncate">
                         @{selectedApp.profile?.username}
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
@@ -413,7 +411,6 @@ export function CampaignApplicationsView({
                     {/* View in Database Button */}
                     
                   </div>
-                  {getStatusBadge(selectedApp.status)}
                 </div>
 
                 {/* Connected Account */}
