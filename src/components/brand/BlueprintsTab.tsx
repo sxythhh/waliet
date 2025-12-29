@@ -270,14 +270,11 @@ export function BlueprintsTab({
         </Button>
       </div>
 
-      {blueprints.length === 0 ? isDark ? <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
-            <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
-          </div> : <div className="w-full h-[calc(100vh-200px)] min-h-[500px] flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <p className="text-muted-foreground">No blueprints yet. Create your first one to get started.</p>
-              
-            </div>
-          </div> : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+      {blueprints.length === 0 ? (
+        <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
+          <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
+        </div>
+      ) : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
           {blueprints.map(blueprint => {
         const contentPreview = getContentPreview(blueprint.content);
         const status = getBlueprintStatus(blueprint);
