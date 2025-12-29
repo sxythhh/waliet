@@ -89,7 +89,7 @@ export default function PublicNavbar({
                 <NavigationMenu>
                   <NavigationMenuList>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent text-foreground/80 hover:text-foreground hover:bg-transparent font-inter tracking-[-0.5px] text-sm data-[state=open]:bg-transparent focus:bg-transparent focus:text-foreground data-[active]:bg-transparent">
+                      <NavigationMenuTrigger className="bg-transparent text-[#191919] dark:text-foreground/80 hover:text-[#191919] dark:hover:text-foreground hover:bg-transparent font-inter font-semibold tracking-[-0.4px] text-sm data-[state=open]:bg-transparent focus:bg-transparent focus:text-[#191919] dark:focus:text-foreground data-[active]:bg-transparent">
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
@@ -120,11 +120,11 @@ export default function PublicNavbar({
                   </NavigationMenuList>
                 </NavigationMenu>
                 
-                <Link to="/resources" className={`px-3 py-2 text-sm font-inter tracking-[-0.5px] ${isActive('/resources') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
+                <Link to="/resources" className={`px-3 py-2 text-sm font-inter font-semibold tracking-[-0.4px] ${isActive('/resources') ? 'text-[#191919] dark:text-foreground' : 'text-[#191919] dark:text-foreground/80 hover:text-[#191919] dark:hover:text-foreground'}`}>
                   Resources
                 </Link>
                 
-                <Link to="/contact" className={`px-3 py-2 text-sm font-inter tracking-[-0.5px] ${isActive('/contact') ? 'text-foreground' : 'text-foreground/80 hover:text-foreground'}`}>
+                <Link to="/contact" className={`px-3 py-2 text-sm font-inter font-semibold tracking-[-0.4px] ${isActive('/contact') ? 'text-[#191919] dark:text-foreground' : 'text-[#191919] dark:text-foreground/80 hover:text-[#191919] dark:hover:text-foreground'}`}>
                   Contact
                 </Link>
               </div>
