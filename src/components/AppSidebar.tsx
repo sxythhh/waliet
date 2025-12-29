@@ -550,8 +550,7 @@ export function AppSidebar() {
               </span>}
           </Link>
           {!isCollapsed && <button onClick={() => setIsCollapsed(true)} className="h-7 w-7 flex items-center justify-center rounded-[5px] hover:bg-muted transition-colors group">
-              <img src="/src/assets/left-panel-close.svg" alt="Collapse" className="h-4 w-4 group-hover:hidden" />
-              <img src="/src/assets/left-panel-close-hover.svg" alt="Collapse" className="h-4 w-4 hidden group-hover:block" />
+              <PanelLeftClose className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>}
         </div>
 
