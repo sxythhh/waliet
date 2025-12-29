@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,6 +17,7 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ className }: LeaderboardProps) {
+  const navigate = useNavigate();
   const [timeframe, setTimeframe] = useState<"weekly" | "monthly" | "all">("weekly");
   const [earningsLeaderboard, setEarningsLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [rankLeaderboard, setRankLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -162,7 +164,8 @@ export function Leaderboard({ className }: LeaderboardProps) {
           data.map((entry) => (
             <div
               key={entry.user_id}
-              className="flex items-center gap-3 py-2 px-1"
+              onClick={() => navigate(`/u/${entry.username}`)}
+              className="flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
             >
               <span
                 className={`w-6 text-xs font-semibold ${getRankColor(entry.rank)}`}
