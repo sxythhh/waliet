@@ -40,6 +40,7 @@ export function DiscordLinkDialog({
     const handleMessage = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       if (event.data.type === 'discord-oauth-success') {
+        window.removeEventListener('message', handleMessage);
         popup?.close();
         toast({
           title: "Success!",
@@ -51,11 +52,14 @@ export function DiscordLinkDialog({
         setOpen(false);
         onSuccess?.();
       } else if (event.data.type === 'discord-oauth-error') {
+        window.removeEventListener('message', handleMessage);
         popup?.close();
+        const errorMessage = event.data.error || "Failed to link Discord account.";
+        const isAlreadyLinked = errorMessage.toLowerCase().includes('already linked');
         toast({
           variant: "destructive",
-          title: "Error",
-          description: event.data.error || "Failed to link Discord account."
+          title: isAlreadyLinked ? "Discord Already Linked" : "Error",
+          description: errorMessage
         });
       }
     };
