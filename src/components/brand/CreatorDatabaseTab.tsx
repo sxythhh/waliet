@@ -1215,71 +1215,140 @@ export function CreatorDatabaseTab({
 
       {/* Table */}
       <div className="flex flex-col flex-1 h-full overflow-hidden">
-          <ScrollArea className="flex-1 p-0">
-            <div className="overflow-x-auto min-w-full">
+        {/* Native scrolling container (supports horizontal swipe on mobile) */}
+        <div className="flex-1 overflow-auto overscroll-x-contain touch-pan-x [-webkit-overflow-scrolling:touch]">
+          <div className="min-w-full">
             <TooltipProvider delayDuration={100}>
               <Table className="min-w-[800px]">
                 <TableHeader className="sticky top-0 bg-background/95 backdrop-blur-sm z-10">
                   <TableRow className="hover:bg-transparent border-0">
                     <TableHead className="w-[32px] h-11">
-                      <Checkbox checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0} onCheckedChange={toggleSelectAll} className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]" />
+                      <Checkbox
+                        checked={selectedCreators.size === filteredCreators.length && filteredCreators.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+                      />
                     </TableHead>
                     {orderedVisibleColumns.map(colId => {
-                  if (colId === 'views') {
-                    return <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('views')}>
+                      if (colId === 'views') {
+                        return (
+                          <TableHead
+                            key={colId}
+                            className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
+                            onClick={() => handleSort('views')}
+                          >
                             <div className="flex items-center justify-end gap-1">
                               Views
-                              <span className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                                {sortBy === 'views' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              <span
+                                className={`transition-opacity ${sortBy === 'views' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}
+                              >
+                                {sortBy === 'views' && sortOrder === 'asc' ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
                               </span>
                             </div>
-                          </TableHead>;
-                  }
-                  if (colId === 'earnings') {
-                    return <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('earnings')}>
+                          </TableHead>
+                        );
+                      }
+                      if (colId === 'earnings') {
+                        return (
+                          <TableHead
+                            key={colId}
+                            className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium text-right h-11 cursor-pointer select-none group/sort"
+                            onClick={() => handleSort('earnings')}
+                          >
                             <div className="flex items-center justify-end gap-1">
                               Earnings
-                              <span className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                                {sortBy === 'earnings' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              <span
+                                className={`transition-opacity ${sortBy === 'earnings' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}
+                              >
+                                {sortBy === 'earnings' && sortOrder === 'asc' ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
                               </span>
                             </div>
-                          </TableHead>;
-                  }
-                  if (colId === 'joined') {
-                    return <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11 cursor-pointer select-none group/sort" onClick={() => handleSort('joined')}>
+                          </TableHead>
+                        );
+                      }
+                      if (colId === 'joined') {
+                        return (
+                          <TableHead
+                            key={colId}
+                            className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11 cursor-pointer select-none group/sort"
+                            onClick={() => handleSort('joined')}
+                          >
                             <div className="flex items-center gap-1">
                               Joined
-                              <span className={`transition-opacity ${sortBy === 'joined' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}>
-                                {sortBy === 'joined' && sortOrder === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                              <span
+                                className={`transition-opacity ${sortBy === 'joined' ? 'opacity-100' : 'opacity-0 group-hover/sort:opacity-50'}`}
+                              >
+                                {sortBy === 'joined' && sortOrder === 'asc' ? (
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                )}
                               </span>
                             </div>
-                          </TableHead>;
-                  }
-                  const col = ALL_COLUMNS.find(c => c.id === colId);
-                  return <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">
+                          </TableHead>
+                        );
+                      }
+                      const col = ALL_COLUMNS.find(c => c.id === colId);
+                      return (
+                        <TableHead key={colId} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground font-medium h-11">
                           {col?.label}
-                        </TableHead>;
-                })}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCreators.length === 0 ? <TableRow>
-                      <TableCell colSpan={orderedVisibleColumns.length + 1} className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]">
-                        {searchQuery || selectedCampaignFilter !== 'all' ? 'No creators match your filters' : 'No creators in your database yet'}
+                  {filteredCreators.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={orderedVisibleColumns.length + 1}
+                        className="text-center py-12 text-muted-foreground font-inter tracking-[-0.5px]"
+                      >
+                        {searchQuery || selectedCampaignFilter !== 'all'
+                          ? 'No creators match your filters'
+                          : 'No creators in your database yet'}
                       </TableCell>
-                    </TableRow> : filteredCreators.map(creator => <TableRow key={creator.id} className={`hover:bg-muted/20 border-0 group cursor-pointer ${selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''}`} onClick={() => setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)}>
+                    </TableRow>
+                  ) : (
+                    filteredCreators.map(creator => (
+                      <TableRow
+                        key={creator.id}
+                        className={`hover:bg-muted/20 border-0 group cursor-pointer ${
+                          selectedCreatorPanel?.id === creator.id ? 'bg-muted/30' : ''
+                        }`}
+                        onClick={() =>
+                          setSelectedCreatorPanel(selectedCreatorPanel?.id === creator.id ? null : creator)
+                        }
+                      >
                         <TableCell className="py-3 w-[32px]" onClick={e => e.stopPropagation()}>
-                          <Checkbox checked={selectedCreators.has(creator.id)} onCheckedChange={() => toggleCreatorSelection(creator.id)} className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+                          <Checkbox
+                            checked={selectedCreators.has(creator.id)}
+                            onCheckedChange={() => toggleCreatorSelection(creator.id)}
+                            className={`h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] transition-opacity ${
+                              selectedCreators.has(creator.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                          />
                         </TableCell>
                         {orderedVisibleColumns.map(colId => {
-                  switch (colId) {
-                    case 'creator':
-                      return <TableCell key={colId} className="py-3">
+                          switch (colId) {
+                            case 'creator':
+                              return (
+                                <TableCell key={colId} className="py-3">
                                   <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                       <AvatarImage src={creator.avatar_url || undefined} />
                                       <AvatarFallback className="bg-muted/60 text-[11px] font-medium">
-                                        {(creator.full_name || creator.username || creator.external_name)?.charAt(0).toUpperCase() || 'C'}
+                                        {(creator.full_name || creator.username || creator.external_name)
+                                          ?.charAt(0)
+                                          .toUpperCase() || 'C'}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0">
@@ -1287,84 +1356,154 @@ export function CreatorDatabaseTab({
                                         <p className="font-medium text-[13px] font-inter tracking-[-0.5px] truncate group-hover:underline">
                                           {creator.full_name || creator.username || creator.external_name}
                                         </p>
-                                        {creator.is_external && <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                                        {creator.is_external && (
+                                          <span className="text-[9px] font-inter tracking-[-0.5px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded">
                                             External
-                                          </span>}
+                                          </span>
+                                        )}
                                       </div>
                                       <p className="text-[11px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                        {creator.is_external ? creator.external_handle ? `@${creator.external_handle}` : creator.external_email || 'No handle' : `@${creator.username}`}
+                                        {creator.is_external
+                                          ? creator.external_handle
+                                            ? `@${creator.external_handle}`
+                                            : creator.external_email || 'No handle'
+                                          : `@${creator.username}`}
                                       </p>
                                     </div>
                                   </div>
-                                </TableCell>;
-                    case 'source':
-                      return <TableCell key={colId} className="py-3">
+                                </TableCell>
+                              );
+                            case 'source':
+                              return (
+                                <TableCell key={colId} className="py-3">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(creator.source_type, creator.campaigns.length > 0)}`}>
+                                      <span
+                                        className={`text-[11px] font-['Geist'] tracking-[-0.02em] px-2 py-0.5 rounded ${getSourceColor(
+                                          creator.source_type,
+                                          creator.campaigns.length > 0,
+                                        )}`}
+                                      >
                                         {getSourceLabel(creator.source_type, creator.campaigns.length > 0)}
                                       </span>
                                     </TooltipTrigger>
-                                    {creator.source_campaign_title && <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
+                                    {creator.source_campaign_title && (
+                                      <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
                                         <p>From: {creator.source_campaign_title}</p>
-                                      </TooltipContent>}
+                                      </TooltipContent>
+                                    )}
                                   </Tooltip>
-                                </TableCell>;
-                    case 'socials':
-                      return <TableCell key={colId} className="py-3">
+                                </TableCell>
+                              );
+                            case 'socials':
+                              return (
+                                <TableCell key={colId} className="py-3">
                                   <div className="flex items-center gap-1">
-                                    {creator.social_accounts.slice(0, 4).map((account, idx) => <Tooltip key={idx}>
+                                    {creator.social_accounts.slice(0, 4).map((account, idx) => (
+                                      <Tooltip key={idx}>
                                         <TooltipTrigger asChild>
-                                          <a href={account.account_link || `https://${account.platform}.com/@${account.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors">
-                                            <img src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok} alt={account.platform} className="h-4 w-4" />
+                                          <a
+                                            href={
+                                              account.account_link || `https://${account.platform}.com/@${account.username}`
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center h-7 w-7 rounded-md bg-muted/40 hover:bg-muted/70 transition-colors"
+                                          >
+                                            <img
+                                              src={PLATFORM_LOGOS[account.platform] || PLATFORM_LOGOS.tiktok}
+                                              alt={account.platform}
+                                              className="h-4 w-4"
+                                            />
                                           </a>
                                         </TooltipTrigger>
                                         <TooltipContent side="top" className="font-inter tracking-[-0.5px] text-xs">
                                           <p className="font-medium">@{account.username}</p>
-                                          {account.follower_count && <p className="text-muted-foreground">{formatNumber(account.follower_count)} followers</p>}
+                                          {account.follower_count && (
+                                            <p className="text-muted-foreground">
+                                              {formatNumber(account.follower_count)} followers
+                                            </p>
+                                          )}
                                         </TooltipContent>
-                                      </Tooltip>)}
-                                    {creator.social_accounts.length > 4 && <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
+                                      </Tooltip>
+                                    ))}
+                                    {creator.social_accounts.length > 4 && (
+                                      <span className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] ml-0.5">
                                         +{creator.social_accounts.length - 4}
-                                      </span>}
+                                      </span>
+                                    )}
                                   </div>
-                                </TableCell>;
-                    case 'views':
-                      return <TableCell key={colId} className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3">
+                                </TableCell>
+                              );
+                            case 'views':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3"
+                                >
                                   {formatNumber(creator.total_views)}
-                                </TableCell>;
-                    case 'earnings':
-                      return <TableCell key={colId} className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3 text-emerald-500">
+                                </TableCell>
+                              );
+                            case 'earnings':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-right text-[13px] font-medium font-inter tracking-[-0.5px] py-3 text-emerald-500"
+                                >
                                   ${creator.total_earnings.toFixed(2)}
-                                </TableCell>;
-                    case 'joined':
-                      return <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
-                                  {creator.date_joined ? format(new Date(creator.date_joined), 'MMM d, yyyy') : '-'}
-                                </TableCell>;
-                    case 'email':
-                      return <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                </TableCell>
+                              );
+                            case 'joined':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3"
+                                >
+                                  {creator.date_joined
+                                    ? format(new Date(creator.date_joined), 'MMM d, yyyy')
+                                    : '-'}
+                                </TableCell>
+                              );
+                            case 'email':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3"
+                                >
                                   {creator.email || creator.external_email || '-'}
-                                </TableCell>;
-                    case 'phone':
-                      return <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                </TableCell>
+                              );
+                            case 'phone':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3"
+                                >
                                   {creator.phone_number || '-'}
-                                </TableCell>;
-                    case 'country':
-                      return <TableCell key={colId} className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3">
+                                </TableCell>
+                              );
+                            case 'country':
+                              return (
+                                <TableCell
+                                  key={colId}
+                                  className="text-[12px] text-muted-foreground font-inter tracking-[-0.5px] py-3"
+                                >
                                   {creator.country || '-'}
-                                </TableCell>;
-                    default:
-                      return null;
-                  }
-                })}
-                      </TableRow>)}
+                                </TableCell>
+                              );
+                            default:
+                              return null;
+                          }
+                        })}
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TooltipProvider>
-            </div>
-          </ScrollArea>
+          </div>
+        </div>
 
-          {/* Pagination */}
           {totalCreators > 0 && <div className="border-t border-border/40 bg-background/80 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                 <span>Show</span>
