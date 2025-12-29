@@ -574,9 +574,7 @@ export default function PublicProfile() {
 
       {/* Footer */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 mt-12">
-        <div className="text-center pt-8 border-t border-border">
-          <img src={wordmarkLogo} alt="Virality" className="h-8 mx-auto opacity-40" />
-        </div>
+        
       </div>
 
       {/* Campaign Sheet */}
