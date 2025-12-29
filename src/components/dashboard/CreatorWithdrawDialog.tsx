@@ -463,7 +463,7 @@ export function CreatorWithdrawDialog({ open, onOpenChange, onSuccess }: Creator
                   <button
                     type="button"
                     onClick={() => setAddMethodDialogOpen(true)}
-                    className="rounded-xl p-3 border border-dashed border-border bg-muted/50 hover:bg-muted hover:border-primary/50 transition-all"
+                    className="rounded-xl p-3 border border-dashed border-border bg-muted/50 hover:bg-muted transition-all"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <Plus className="h-4 w-4 text-muted-foreground" />
