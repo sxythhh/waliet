@@ -129,10 +129,11 @@ export function Leaderboard({ className }: LeaderboardProps) {
     return "Lvl " + value;
   };
 
-  const getRankColor = (rank: number) => {
-    if (rank <= 3) return "text-emerald-500";
-    if (rank <= 10) return "text-emerald-500/70";
-    return "text-muted-foreground";
+  const getRankStyle = (rank: number) => {
+    if (rank === 1) return "w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center";
+    if (rank === 2) return "w-6 h-6 rounded-full bg-slate-400/20 text-slate-400 flex items-center justify-center";
+    if (rank === 3) return "w-6 h-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center";
+    return "w-6 text-muted-foreground";
   };
 
   const LeaderboardColumn = ({
@@ -168,7 +169,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
               className="flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
             >
               <span
-                className={`w-6 text-xs font-semibold ${getRankColor(entry.rank)}`}
+                className={`text-xs font-semibold ${getRankStyle(entry.rank)}`}
               >
                 {entry.rank}
               </span>
