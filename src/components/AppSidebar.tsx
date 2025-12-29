@@ -130,7 +130,7 @@ const creatorMenuItems: MenuItem[] = [{
   tab: "wallet",
   icon: Dock
 }, {
-  title: "Marketplace",
+  title: "Discover",
   tab: "discover",
   icon: Compass
 }, {
