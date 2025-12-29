@@ -360,94 +360,127 @@ export function CreateBountyDialog({
                 
 
                 {/* Left Column - Compensation */}
-                <div className="space-y-5">
-                  
-
-                  {/* Payment Schedule - First */}
-                  <div className="space-y-1.5 pt-[10px]">
-                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Schedule</Label>
-                    <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({
-                  ...formData,
-                  payment_schedule: value
-                })}>
-                      <SelectTrigger className="h-11 bg-muted/30 border-0 font-inter tracking-[-0.5px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly" className="font-inter tracking-[-0.5px]">Weekly</SelectItem>
-                        <SelectItem value="biweekly" className="font-inter tracking-[-0.5px]">Bi-weekly</SelectItem>
-                        <SelectItem value="monthly" className="font-inter tracking-[-0.5px]">Monthly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Payment Amount with Slider */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Payment Amount</Label>
-                      <div className="relative w-24">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
-                        <Input type="number" min="10" max="10000" value={formData.monthly_retainer} onChange={e => setFormData({
-                      ...formData,
-                      monthly_retainer: e.target.value
-                    })} placeholder="500" className="pl-7 h-9 bg-muted/30 border-0 text-right pr-3 font-geist tracking-[-0.5px] text-sm" />
-                      </div>
+                <div className="space-y-6">
+                  {/* Compensation Card */}
+                  <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
+                      <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Compensation</h3>
                     </div>
                     
-                  </div>
-
-                  {/* Videos and Max Creators */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Videos per {formData.payment_schedule === 'weekly' ? 'Week' : formData.payment_schedule === 'biweekly' ? '2 Weeks' : 'Month'}</Label>
-                      <Input type="number" min="1" value={formData.videos_per_month} onChange={e => setFormData({
-                    ...formData,
-                    videos_per_month: e.target.value
-                  })} placeholder="4" className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Max Creators</Label>
-                      <Input type="number" min="1" value={formData.max_accepted_creators} onChange={e => setFormData({
-                    ...formData,
-                    max_accepted_creators: e.target.value
-                  })} placeholder="5" className="h-11 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px]" />
-                    </div>
-                  </div>
-
-                  {/* Per Video Payout Display */}
-                  <div className="p-4 rounded-xl bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video payout</span>
-                      </div>
-                      <span className="text-lg font-semibold text-foreground font-geist tracking-[-0.5px]">
-                        ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) : '0.00'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Total Budget Needed */}
-                  {(() => {
-                const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
-                const maxCreators = parseInt(formData.max_accepted_creators) || 0;
-                const totalBudget = monthlyRetainer * maxCreators;
-                const exceedsBalance = totalBudget > availableBalance;
-                return <div className={`p-4 rounded-xl ${exceedsBalance ? 'bg-destructive/10 border border-destructive/20' : 'bg-muted/30'}`}>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Total budget needed</span>
-                          <div className="text-right">
-                            <span className={`text-lg font-semibold font-geist tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
-                              ${totalBudget.toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}
-                            </span>
-                            {exceedsBalance && <p className="text-xs text-destructive mt-0.5">Exceeds available balance</p>}
-                          </div>
+                    <div className="p-4 space-y-4">
+                      {/* Payment Amount - Primary Input */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                          Payment per {formData.payment_schedule === 'weekly' ? 'week' : formData.payment_schedule === 'biweekly' ? '2 weeks' : 'month'}
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg font-medium font-geist">$</span>
+                          <Input 
+                            type="number" 
+                            min="10" 
+                            max="10000" 
+                            value={formData.monthly_retainer} 
+                            onChange={e => setFormData({...formData, monthly_retainer: e.target.value})} 
+                            placeholder="500" 
+                            className="pl-9 h-12 bg-background border border-border/50 text-xl font-semibold font-geist tracking-[-0.5px] focus:ring-2 focus:ring-primary/20 focus:border-primary/50" 
+                          />
                         </div>
-                      </div>;
-              })()}
+                      </div>
+
+                      {/* Schedule Selector */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Pay frequency</Label>
+                        <Select value={formData.payment_schedule} onValueChange={(value: any) => setFormData({...formData, payment_schedule: value})}>
+                          <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly" className="font-inter tracking-[-0.3px]">Weekly</SelectItem>
+                            <SelectItem value="biweekly" className="font-inter tracking-[-0.3px]">Bi-weekly</SelectItem>
+                            <SelectItem value="monthly" className="font-inter tracking-[-0.3px]">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Videos & Creators Row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                            Videos required
+                          </Label>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            value={formData.videos_per_month} 
+                            onChange={e => setFormData({...formData, videos_per_month: e.target.value})} 
+                            placeholder="4" 
+                            className="h-10 bg-background border border-border/50 font-geist tracking-[-0.3px] focus:ring-2 focus:ring-primary/20 focus:border-primary/50" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                            Max creators
+                          </Label>
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            value={formData.max_accepted_creators} 
+                            onChange={e => setFormData({...formData, max_accepted_creators: e.target.value})} 
+                            placeholder="5" 
+                            className="h-10 bg-background border border-border/50 font-geist tracking-[-0.3px] focus:ring-2 focus:ring-primary/20 focus:border-primary/50" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Budget Summary Card */}
+                  <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                    <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
+                      <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Budget Summary</h3>
+                    </div>
+                    
+                    <div className="p-4 space-y-3">
+                      {/* Per Video Rate */}
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Per video rate</span>
+                        <span className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">
+                          ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 
+                            ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) 
+                            : '0.00'}
+                        </span>
+                      </div>
+                      
+                      <div className="h-px bg-border/50" />
+                      
+                      {/* Total Budget */}
+                      {(() => {
+                        const monthlyRetainer = parseFloat(formData.monthly_retainer) || 0;
+                        const maxCreators = parseInt(formData.max_accepted_creators) || 0;
+                        const totalBudget = monthlyRetainer * maxCreators;
+                        const exceedsBalance = totalBudget > availableBalance;
+                        
+                        return (
+                          <div className={`flex items-center justify-between py-2 px-3 -mx-3 rounded-lg ${exceedsBalance ? 'bg-destructive/10' : 'bg-primary/5'}`}>
+                            <div>
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Total budget</span>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                ${monthlyRetainer.toFixed(0)} × {maxCreators} creator{maxCreators !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-xl font-bold font-geist tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
+                                ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              {exceedsBalance && (
+                                <p className="text-xs text-destructive font-medium mt-0.5">Exceeds balance</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Column - Settings & Dates */}
