@@ -109,8 +109,8 @@ export function Leaderboard({ className }: LeaderboardProps) {
 
       // Fetch rank leaderboard - top users by level
       const { data: topLevelUsers } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, is_private, current_level")
+        .from("public_profiles")
+        .select("id, username, avatar_url, current_level")
         .not("current_level", "is", null)
         .order("current_level", { ascending: false })
         .limit(10);
@@ -118,9 +118,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
       const formattedRanks: LeaderboardEntry[] = (topLevelUsers || []).map(
         (profile, index) => ({
           rank: index + 1,
-          username: profile.is_private 
-            ? (profile.username?.slice(0, 3) + "***" || "Creator")
-            : (profile.username || "Creator"),
+          username: profile.username || "Creator",
           avatar_url: profile.avatar_url || undefined,
           value: profile.current_level || 0,
           user_id: profile.id,
