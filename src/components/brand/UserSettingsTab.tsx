@@ -489,8 +489,8 @@ export function UserSettingsTab() {
 
         {/* Tabs Navigation */}
         <div className="flex items-center gap-6 border-b border-border mt-6 px-4">
-          {["wallet", "general", "integrations", "team"].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          {[{ key: "wallet", label: "Billing" }, { key: "general", label: "General" }, { key: "integrations", label: "Integrations" }, { key: "team", label: "Team" }].map(tab => <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab.key ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              {tab.label}
             </button>)}
         </div>
       </div>
