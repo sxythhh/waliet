@@ -1,11 +1,9 @@
-import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
-
 export interface CampaignCardProps {
   id: string;
   title: string;
@@ -28,7 +26,7 @@ export interface CampaignCardProps {
   showBookmark?: boolean;
   showFullscreen?: boolean;
 }
-export const CampaignCard = memo(function CampaignCard({
+export function CampaignCard({
   id,
   title,
   brand_name,
@@ -105,4 +103,4 @@ export const CampaignCard = memo(function CampaignCard({
         </div>
       </div>
     </div>;
-});
+}
