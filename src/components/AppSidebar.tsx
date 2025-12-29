@@ -666,9 +666,8 @@ export function AppSidebar() {
               </PopoverContent>
             </Popover>
           </div> : <div className="px-2 py-2 flex justify-center">
-            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors group">
-              <img src="/src/assets/dock-to-right.svg" alt="Expand" className="h-4 w-4 group-hover:hidden" />
-              <img src="/src/assets/dock-to-right-hover.svg" alt="Expand" className="h-4 w-4 hidden group-hover:block" />
+            <button onClick={() => setIsCollapsed(false)} className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-muted transition-colors">
+              <PanelLeft className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>}
 
