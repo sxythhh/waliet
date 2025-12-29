@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DollarSign, BarChart3, Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -19,7 +18,7 @@ interface LeaderboardProps {
 export function Leaderboard({ className }: LeaderboardProps) {
   const [timeframe, setTimeframe] = useState<"weekly" | "monthly" | "all">("weekly");
   const [earningsLeaderboard, setEarningsLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [viewsLeaderboard, setViewsLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [rankLeaderboard, setRankLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,7 +66,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
       const { data: profiles } = userIds.length > 0
         ? await supabase
             .from("profiles")
-            .select("id, username, avatar_url, is_private")
+            .select("id, username, avatar_url, is_private, current_level")
             .in("id", userIds)
         : { data: [] };
 
@@ -92,73 +91,40 @@ export function Leaderboard({ className }: LeaderboardProps) {
 
       setEarningsLeaderboard(formattedEarnings);
 
-      // Fetch views leaderboard from video submissions
-      let viewsQuery = supabase
-        .from("video_submissions")
-        .select("creator_id, views")
-        .not("views", "is", null);
+      // Fetch rank leaderboard - top users by level
+      const { data: topLevelUsers } = await supabase
+        .from("profiles")
+        .select("id, username, avatar_url, is_private, current_level")
+        .not("current_level", "is", null)
+        .order("current_level", { ascending: false })
+        .limit(10);
 
-      if (dateFilter) {
-        viewsQuery = viewsQuery.gte("created_at", dateFilter);
-      }
-
-      const { data: videos } = await viewsQuery;
-
-      // Aggregate views by user
-      const viewsByUser = new Map<string, number>();
-      (videos || []).forEach((v) => {
-        const current = viewsByUser.get(v.creator_id) || 0;
-        viewsByUser.set(v.creator_id, current + (v.views || 0));
-      });
-
-      // Get top 10 by views
-      const topViewers = Array.from(viewsByUser.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-
-      // Fetch additional profiles if needed
-      const viewerUserIds = topViewers.map(([userId]) => userId);
-      const newUserIds = viewerUserIds.filter((id) => !profileMap.has(id));
-      
-      if (newUserIds.length > 0) {
-        const { data: newProfiles } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url, is_private")
-          .in("id", newUserIds);
-        (newProfiles || []).forEach((p) => profileMap.set(p.id, p));
-      }
-
-      const formattedViews: LeaderboardEntry[] = topViewers.map(
-        ([userId, views], index) => {
-          const profile = profileMap.get(userId);
-          return {
-            rank: index + 1,
-            username: profile?.is_private 
-              ? (profile?.username?.slice(0, 3) + "***" || "Creator")
-              : (profile?.username || "Creator"),
-            avatar_url: profile?.avatar_url || undefined,
-            value: views,
-            user_id: userId,
-          };
-        }
+      const formattedRanks: LeaderboardEntry[] = (topLevelUsers || []).map(
+        (profile, index) => ({
+          rank: index + 1,
+          username: profile.is_private 
+            ? (profile.username?.slice(0, 3) + "***" || "Creator")
+            : (profile.username || "Creator"),
+          avatar_url: profile.avatar_url || undefined,
+          value: profile.current_level || 0,
+          user_id: profile.id,
+        })
       );
 
-      setViewsLeaderboard(formattedViews);
+      setRankLeaderboard(formattedRanks);
       setLoading(false);
     };
 
     fetchLeaderboards();
   }, [timeframe]);
 
-  const formatValue = (value: number, type: "currency" | "number") => {
+  const formatValue = (value: number, type: "currency" | "level") => {
     if (type === "currency") {
       if (value >= 1000000) return "$" + (value / 1000000).toFixed(1) + "M";
       if (value >= 1000) return "$" + (value / 1000).toFixed(1) + "K";
       return "$" + value.toFixed(0);
     }
-    if (value >= 1000000) return (value / 1000000).toFixed(1) + "M";
-    if (value >= 1000) return (value / 1000).toFixed(0) + "K";
-    return value.toLocaleString();
+    return "Lvl " + value;
   };
 
   const getRankColor = (rank: number) => {
@@ -169,23 +135,18 @@ export function Leaderboard({ className }: LeaderboardProps) {
 
   const LeaderboardColumn = ({
     title,
-    icon: Icon,
     data,
     valueType,
   }: {
     title: string;
-    icon: typeof DollarSign;
     data: LeaderboardEntry[];
-    valueType: "currency" | "number";
+    valueType: "currency" | "level";
   }) => (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-muted-foreground" />
-          <h4 className="font-semibold text-foreground text-sm font-inter tracking-[-0.3px]">
-            {title}
-          </h4>
-        </div>
+        <h4 className="font-semibold text-foreground text-sm font-inter tracking-[-0.3px]">
+          {title}
+        </h4>
       </div>
 
       <div className="space-y-2">
@@ -247,15 +208,13 @@ export function Leaderboard({ className }: LeaderboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-card/50 rounded-xl border border-border/50 p-5">
         <LeaderboardColumn
           title="Earnings"
-          icon={DollarSign}
           data={earningsLeaderboard}
           valueType="currency"
         />
         <LeaderboardColumn
-          title="Views"
-          icon={Eye}
-          data={viewsLeaderboard}
-          valueType="number"
+          title="Rank"
+          data={rankLeaderboard}
+          valueType="level"
         />
       </div>
     </div>
