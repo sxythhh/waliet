@@ -5,12 +5,16 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, CheckCircle2, Clock, XCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black.png";
 
 interface DemographicSubmission {
   id: string;
@@ -42,9 +46,8 @@ export function SubmitDemographicsDialog({
   const [previousSubmissions, setPreviousSubmissions] = useState<DemographicSubmission[]>([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const { resolvedTheme } = useTheme();
 
   // Fetch previous submissions when dialog opens
   useEffect(() => {
@@ -74,13 +77,14 @@ export function SubmitDemographicsDialog({
 
   const getPlatformIcon = (platform: string) => {
     const iconClass = "h-5 w-5";
+    const isDark = resolvedTheme === 'dark';
     switch (platform.toLowerCase()) {
       case "tiktok":
-        return <img src={tiktokLogo} alt="TikTok" className={iconClass} />;
+        return <img src={isDark ? tiktokLogoWhite : tiktokLogoBlack} alt="TikTok" className={iconClass} />;
       case "instagram":
-        return <img src={instagramLogo} alt="Instagram" className={iconClass} />;
+        return <img src={isDark ? instagramLogoWhite : instagramLogoBlack} alt="Instagram" className={iconClass} />;
       case "youtube":
-        return <img src={youtubeLogo} alt="YouTube" className={iconClass} />;
+        return <img src={isDark ? youtubeLogoWhite : youtubeLogoBlack} alt="YouTube" className={iconClass} />;
       default:
         return null;
     }
@@ -262,7 +266,7 @@ export function SubmitDemographicsDialog({
     setVideoFile(file);
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-neutral-950" style={{
+      <DialogContent className="sm:max-w-[480px]" style={{
       fontFamily: 'Inter',
       letterSpacing: '-0.5px'
     }}>
