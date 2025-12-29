@@ -101,7 +101,7 @@ export function CreateBountyDialog({
           } = await supabase.auth.getSession();
           if (!session) return;
 
-          // Fetch balance
+          // Fetch balance - use total balance (whop + virality)
           const {
             data,
             error
@@ -111,7 +111,8 @@ export function CreateBountyDialog({
             }
           });
           if (error) throw error;
-          setAvailableBalance(data?.virality_balance || 0);
+          // Use total balance (balance) instead of just virality_balance
+          setAvailableBalance(data?.balance || 0);
 
           // Fetch subscription status
           const {
@@ -437,14 +438,14 @@ export function CreateBountyDialog({
                   {/* Budget Summary Card */}
                   <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
                     <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
-                      <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Budget Summary</h3>
+                      <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Budget Summary</h3>
                     </div>
                     
                     <div className="p-4 space-y-3">
                       {/* Per Video Rate */}
                       <div className="flex items-center justify-between py-2">
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Per video rate</span>
-                        <span className="text-base font-semibold text-foreground font-geist tracking-[-0.5px]">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Per video rate</span>
+                        <span className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
                           ${formData.monthly_retainer && formData.videos_per_month && parseInt(formData.videos_per_month) > 0 
                             ? (parseFloat(formData.monthly_retainer) / parseInt(formData.videos_per_month)).toFixed(2) 
                             : '0.00'}
@@ -461,19 +462,19 @@ export function CreateBountyDialog({
                         const exceedsBalance = totalBudget > availableBalance;
                         
                         return (
-                          <div className={`flex items-center justify-between py-2 px-3 -mx-3 rounded-lg ${exceedsBalance ? 'bg-destructive/10' : 'bg-primary/5'}`}>
+                          <div className={`flex items-center justify-between py-2 px-3 -mx-3 rounded-lg ${exceedsBalance ? 'bg-destructive/10' : ''}`}>
                             <div>
-                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Total budget</span>
-                              <p className="text-xs text-muted-foreground mt-0.5">
+                              <span className="text-sm font-medium text-foreground font-inter tracking-[-0.5px]">Total budget</span>
+                              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mt-0.5">
                                 ${monthlyRetainer.toFixed(0)} × {maxCreators} creator{maxCreators !== 1 ? 's' : ''}
                               </p>
                             </div>
                             <div className="text-right">
-                              <span className={`text-xl font-bold font-geist tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
+                              <span className={`text-xl font-bold font-inter tracking-[-0.5px] ${exceedsBalance ? 'text-destructive' : 'text-foreground'}`}>
                                 ${totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                               {exceedsBalance && (
-                                <p className="text-xs text-destructive font-medium mt-0.5">Exceeds balance</p>
+                                <p className="text-xs text-destructive font-medium font-inter tracking-[-0.5px] mt-0.5">Exceeds balance</p>
                               )}
                             </div>
                           </div>
@@ -485,7 +486,37 @@ export function CreateBountyDialog({
 
                 {/* Right Column - Settings & Dates */}
                 <div className="space-y-5">
-                  
+                  {/* Content Distribution - Moved to top with redesign */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Distribution</Label>
+                    <div className="flex rounded-lg border border-border/50 overflow-hidden bg-muted/30">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, content_distribution: "creators_own_page"})}
+                        className={cn(
+                          "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                          formData.content_distribution === "creators_own_page"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        Creator's Page
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({...formData, content_distribution: "branded_accounts"})}
+                        className={cn(
+                          "flex-1 py-2.5 px-3 text-sm font-medium font-inter tracking-[-0.5px] transition-all",
+                          formData.content_distribution === "branded_accounts"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        Branded Accounts
+                      </button>
+                    </div>
+                  </div>
+
 
                   {/* Blueprint Selection */}
                   <div className="space-y-1.5">
@@ -624,26 +655,6 @@ export function CreateBountyDialog({
                     </div>
                   </div>
 
-                  {/* Content Distribution */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-foreground font-inter tracking-[-0.5px]">Content Distribution</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div onClick={() => setFormData({
-                    ...formData,
-                    content_distribution: "creators_own_page"
-                  })} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.content_distribution === "creators_own_page" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
-                        <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Creator's Own Page</p>
-                        <p className="text-xs text-muted-foreground mt-1">Creators post on their existing accounts</p>
-                      </div>
-                      <div onClick={() => setFormData({
-                    ...formData,
-                    content_distribution: "branded_accounts"
-                  })} className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.content_distribution === "branded_accounts" ? "border-primary bg-primary/5" : "border-transparent bg-muted/50 hover:bg-muted/70"}`}>
-                        <p className="text-sm font-semibold text-foreground font-inter tracking-[-0.5px]">Branded Accounts</p>
-                        <p className="text-xs text-muted-foreground mt-1">Creators create new branded accounts</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>}
