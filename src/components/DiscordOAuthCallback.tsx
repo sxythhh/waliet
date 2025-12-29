@@ -72,20 +72,22 @@ export function DiscordOAuthCallback() {
             body: { code, userId: stateData.userId, redirectUri }
           });
 
+          // Check for error in the response data (edge function returns error in body for 4xx/5xx)
+          if (data?.error) {
+            throw new Error(data.error);
+          }
+
           if (functionError) {
             let msg = functionError.message || 'Failed to link Discord account';
-            const resp = (functionError as any)?.context?.response;
-            if (resp) {
+            // Try to extract error message from FunctionsHttpError
+            if (functionError.name === 'FunctionsHttpError') {
               try {
-                const json = await resp.json();
-                if (json?.error) msg = json.error;
+                const errorBody = await (functionError as any).context?.json?.();
+                if (errorBody?.error) msg = errorBody.error;
               } catch {
-                try {
-                  const text = await resp.text();
-                  if (text) msg = text;
-                } catch {
-                  // ignore
-                }
+                // If json parsing fails, try to get the message from context
+                const context = (functionError as any).context;
+                if (context?.error) msg = context.error;
               }
             }
             throw new Error(msg);
