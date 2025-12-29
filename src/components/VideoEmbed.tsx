@@ -1,43 +1,11 @@
 import { useEffect, useRef } from "react";
-import DOMPurify from "dompurify";
 
 interface VideoEmbedProps {
   embedCode: string;
 }
 
-// Whitelist of allowed script domains for video embeds
-const ALLOWED_SCRIPT_DOMAINS = [
-  'fast.wistia.com',
-  'wistia.com',
-  'fast.wistia.net',
-  'player.vimeo.com',
-  'vimeo.com',
-  'youtube.com',
-  'www.youtube.com',
-  'youtube-nocookie.com',
-  'www.youtube-nocookie.com',
-  'instagram.com',
-  'www.instagram.com',
-  'tiktok.com',
-  'www.tiktok.com',
-];
-
-function isAllowedScriptDomain(scriptSrc: string): boolean {
-  try {
-    const url = new URL(scriptSrc);
-    return ALLOWED_SCRIPT_DOMAINS.some(domain => 
-      url.hostname === domain || url.hostname.endsWith(`.${domain}`)
-    );
-  } catch {
-    // Invalid URL - block it
-    return false;
-  }
-}
-
 export function VideoEmbed({ embedCode }: VideoEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const addedScriptsRef = useRef<HTMLScriptElement[]>([]);
-  const addedStylesRef = useRef<HTMLStyleElement[]>([]);
 
   useEffect(() => {
     if (!containerRef.current || !embedCode.includes('<')) return;
@@ -48,29 +16,18 @@ export function VideoEmbed({ embedCode }: VideoEmbedProps) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = embedCode;
     
-    // Extract and execute script tags - only from whitelisted domains
+    // Extract and execute script tags
     const scripts = tempDiv.querySelectorAll('script');
     scripts.forEach((script) => {
       const newScript = document.createElement('script');
-      
       if (script.src) {
-        // Validate external script sources against whitelist
-        if (!isAllowedScriptDomain(script.src)) {
-          console.warn('Blocked unauthorized script source:', script.src);
-          return;
-        }
         newScript.src = script.src;
       } else {
-        // For inline scripts, we need to be more careful
-        // Only allow if the embed code appears to be from a trusted source
-        // This is a fallback - prefer external scripts from whitelisted domains
         newScript.textContent = script.textContent;
       }
-      
       if (script.async) newScript.async = true;
       if (script.type) newScript.type = script.type;
       document.head.appendChild(newScript);
-      addedScriptsRef.current.push(newScript);
     });
 
     // Extract style tags
@@ -79,7 +36,6 @@ export function VideoEmbed({ embedCode }: VideoEmbedProps) {
       const newStyle = document.createElement('style');
       newStyle.textContent = style.textContent;
       document.head.appendChild(newStyle);
-      addedStylesRef.current.push(newStyle);
     });
 
     // Get the remaining HTML (non-script/style elements)
@@ -88,32 +44,15 @@ export function VideoEmbed({ embedCode }: VideoEmbedProps) {
     scriptTags.forEach(s => s.remove());
     styleTags.forEach(s => s.remove());
     
-    // Sanitize HTML content before injecting (allow iframes for video embeds)
-    const sanitizedHtml = DOMPurify.sanitize(tempDiv.innerHTML, {
-      ADD_TAGS: ['iframe'],
-      ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'title', 'loading'],
-    });
-    container.innerHTML = sanitizedHtml;
+    container.innerHTML = tempDiv.innerHTML;
 
-    // Cleanup function - properly remove all added elements
+    // Cleanup function
     return () => {
-      addedScriptsRef.current.forEach(script => {
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
+      // Remove added scripts and styles on unmount
+      scripts.forEach((script) => {
+        const addedScripts = document.head.querySelectorAll(`script[src="${script.src}"]`);
+        addedScripts.forEach(s => s.remove());
       });
-      addedScriptsRef.current = [];
-      
-      addedStylesRef.current.forEach(style => {
-        if (style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      });
-      addedStylesRef.current = [];
-      
-      if (container) {
-        container.innerHTML = '';
-      }
     };
   }, [embedCode]);
 

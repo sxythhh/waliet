@@ -123,7 +123,6 @@ export function ProfileTab() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([]);
   const [joinedCampaigns, setJoinedCampaigns] = useState<Campaign[]>([]);
-  const [hasWalletEarnings, setHasWalletEarnings] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -211,23 +210,7 @@ export function ProfileTab() {
     fetchProfile();
     fetchSocialAccounts();
     fetchJoinedCampaigns();
-    fetchWalletEarnings();
   }, []);
-
-  const fetchWalletEarnings = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
-    
-    const { data } = await supabase
-      .from("wallet_transactions")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .eq("type", "earning")
-      .gt("amount", 0)
-      .limit(1);
-    
-    setHasWalletEarnings((data && data.length > 0) || false);
-  };
   const fetchProfile = async () => {
     const {
       data: {
@@ -861,9 +844,9 @@ export function ProfileTab() {
       block: 'center'
     })
   }, {
-    id: 'connect_discord',
-    label: 'Connect your Discord',
-    completed: !!profile?.discord_username,
+    id: 'content_preferences',
+    label: 'Choose content preferences',
+    completed: !!(profile?.content_styles && profile.content_styles.length > 0),
     onClick: () => profileInfoRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'center'
@@ -914,7 +897,7 @@ export function ProfileTab() {
   }, {
     id: 'earn_first',
     label: 'Earn your first payout',
-    completed: hasWalletEarnings,
+    completed: (profile?.total_earnings || 0) > 0,
     onClick: () => navigate('/dashboard?tab=discover')
   }];
   return <div className="pt-6 space-y-2 sm:space-y-4 max-w-4xl mx-auto pb-8">
