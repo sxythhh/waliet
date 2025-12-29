@@ -266,7 +266,7 @@ export function BlueprintEditor({
     } = useDroppable({
       id: "trash-zone"
     });
-    return <div ref={setNodeRef} className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-200 ${isOver ? "bg-destructive/20 scale-110" : "bg-neutral-200 dark:bg-neutral-800 backdrop-blur-sm"}`}>
+    return <div ref={setNodeRef} className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-200 ${isOver ? "bg-destructive/20 scale-110" : "bg-neutral-200 dark:bg-neutral-900 backdrop-blur-sm"}`}>
         <span className={`text-sm font-inter tracking-[-0.5px] ${isOver ? "text-destructive font-medium" : "text-muted-foreground"}`}>
           Drop here to remove
         </span>
