@@ -11,13 +11,11 @@ import forBrandsIcon from "@/assets/for-brands-icon.png";
 import forBrandsIconLight from "@/assets/for-brands-icon-light.svg";
 import exploreIconDark from "@/assets/explore-icon-dark.svg";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
 interface PublicNavbarProps {
   searchQuery?: string;
   onSearchClick?: () => void;
   scrollContainerRef?: React.RefObject<HTMLElement>;
 }
-
 export default function PublicNavbar({
   searchQuery,
   onSearchClick,
@@ -28,7 +26,6 @@ export default function PublicNavbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
   const handleSearchClick = useCallback(() => {
     if (onSearchClick) {
       onSearchClick();
@@ -36,7 +33,6 @@ export default function PublicNavbar({
       navigate('/discover');
     }
   }, [onSearchClick, navigate]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement)?.isContentEditable) {
@@ -50,7 +46,6 @@ export default function PublicNavbar({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSearchClick]);
-
   useEffect(() => {
     supabase.auth.getSession().then(({
       data: {
@@ -68,13 +63,10 @@ export default function PublicNavbar({
     });
     return () => subscription.unsubscribe();
   }, []);
-
   const isActive = (path: string) => location.pathname === path;
-
   const handleMobileNavClick = () => {
     setMobileMenuOpen(false);
   };
-
   return <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-border">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
@@ -93,7 +85,7 @@ export default function PublicNavbar({
                         Platform
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
-                        <div className="w-64 p-3 bg-white dark:bg-[#0a0a0a] border border-border rounded-xl shadow-2xl py-[7px] px-[7px]">
+                        <div className="w-64 p-3 rounded-xl py-[7px] px-[7px] shadow-none border-[#dadce2]/0 bg-white/0 border-0">
                           <NavigationMenuLink asChild>
                             <Link to="/discover" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
                               <img alt="" className="w-5 h-5 dark:hidden" src={exploreIconDark} />
@@ -186,20 +178,12 @@ export default function PublicNavbar({
                     <div className="flex-1 overflow-y-auto py-4">
                       <div className="px-4 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">Platform</p>
-                        <Link
-                          to="/discover"
-                          onClick={handleMobileNavClick}
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-                        >
+                        <Link to="/discover" onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                           <img alt="" className="w-5 h-5 dark:hidden" src={exploreIconDark} />
                           <img alt="" className="w-5 h-5 hidden dark:block" src="/lovable-uploads/1bb8553e-31bf-4d20-8651-40cdd3afde83.png" />
                           <span>Discover</span>
                         </Link>
-                        <Link
-                          to="/new"
-                          onClick={handleMobileNavClick}
-                          className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-                        >
+                        <Link to="/new" onClick={handleMobileNavClick} className="flex items-center gap-3 px-3 py-2.5 text-sm text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                           <img src={forBrandsIconLight} alt="" className="w-5 h-5 dark:hidden" />
                           <img src={forBrandsIcon} alt="" className="w-5 h-5 hidden dark:block" />
                           <span>For Brands</span>
@@ -208,76 +192,46 @@ export default function PublicNavbar({
 
                       <div className="px-4 mt-4 space-y-1">
                         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">Pages</p>
-                        <Link
-                          to="/resources"
-                          onClick={handleMobileNavClick}
-                          className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/resources') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}
-                        >
+                        <Link to="/resources" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/resources') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Resources
                         </Link>
-                        <Link
-                          to="/contact"
-                          onClick={handleMobileNavClick}
-                          className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/contact') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}
-                        >
+                        <Link to="/contact" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/contact') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Contact
                         </Link>
-                        <Link
-                          to="/support"
-                          onClick={handleMobileNavClick}
-                          className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/support') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}
-                        >
+                        <Link to="/support" onClick={handleMobileNavClick} className={`block px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive('/support') ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
                           Support
                         </Link>
                       </div>
                     </div>
 
                     <div className="p-4 border-t border-border space-y-2">
-                      {isAuthenticated === null ? null : isAuthenticated ? (
-                        <>
+                      {isAuthenticated === null ? null : isAuthenticated ? <>
                           <Link to="/dashboard" onClick={handleMobileNavClick} className="block">
                             <Button size="sm" className="w-full font-geist font-medium tracking-[-0.5px] bg-[#2061de] hover:bg-[#2061de]/90 border-t border-[#3d75f0] rounded-lg">
                               Dashboard
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={async () => {
-                              await supabase.auth.signOut();
-                              setMobileMenuOpen(false);
-                            }}
-                            className="w-full font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
-                          >
+                          <Button variant="ghost" size="sm" onClick={async () => {
+                        await supabase.auth.signOut();
+                        setMobileMenuOpen(false);
+                      }} className="w-full font-inter tracking-[-0.3px] font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5">
                             <LogOut className="h-4 w-4" />
                             Sign Out
                           </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full font-geist font-medium tracking-[-0.5px]"
-                            onClick={() => {
-                              setShowAuthDialog(true);
-                              setMobileMenuOpen(false);
-                            }}
-                          >
+                        </> : <>
+                          <Button variant="outline" size="sm" className="w-full font-geist font-medium tracking-[-0.5px]" onClick={() => {
+                        setShowAuthDialog(true);
+                        setMobileMenuOpen(false);
+                      }}>
                             Sign In
                           </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setShowAuthDialog(true);
-                              setMobileMenuOpen(false);
-                            }}
-                            className="w-full font-geist font-medium tracking-[-0.5px] bg-gradient-to-b from-primary via-primary to-primary/70 border-t border-[#a11010]/[0.26] rounded-lg"
-                          >
+                          <Button size="sm" onClick={() => {
+                        setShowAuthDialog(true);
+                        setMobileMenuOpen(false);
+                      }} className="w-full font-geist font-medium tracking-[-0.5px] bg-gradient-to-b from-primary via-primary to-primary/70 border-t border-[#a11010]/[0.26] rounded-lg">
                             Create Account
                           </Button>
-                        </>
-                      )}
+                        </>}
                     </div>
                   </div>
                 </SheetContent>
