@@ -73,7 +73,7 @@ export default function PublicNavbar({
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-0">
               <Link to="/" className="flex items-center gap-2" aria-label="Virality Home">
-                <img alt="Virality Logo" src="/lovable-uploads/10d106e1-70c4-4d3f-ac13-dc683efa23b9.png" width="24" height="24" className="h-8 w-8" />
+                <img alt="Virality Logo" width="24" height="24" src="/lovable-uploads/d8ade424-509a-4062-b99a-f1de8dfa9d24.png" className="h-8 w-8 rounded-xl" />
                 
               </Link>
               
