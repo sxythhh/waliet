@@ -1,59 +1,90 @@
 import { useEffect, useRef } from "react";
+import DOMPurify from "dompurify";
 
 interface VideoEmbedProps {
   embedCode: string;
+}
+
+// Allowed video embed domains
+const ALLOWED_DOMAINS = [
+  "youtube.com",
+  "www.youtube.com",
+  "youtu.be",
+  "vimeo.com",
+  "player.vimeo.com",
+  "wistia.com",
+  "fast.wistia.com",
+  "loom.com",
+  "www.loom.com",
+  "streamable.com",
+  "dailymotion.com",
+  "www.dailymotion.com",
+];
+
+function isAllowedEmbedSource(embedCode: string): boolean {
+  // Extract src attribute from iframe
+  const srcMatch = embedCode.match(/src=["']([^"']+)["']/i);
+  if (!srcMatch) return false;
+
+  try {
+    const url = new URL(srcMatch[1]);
+    return ALLOWED_DOMAINS.some(
+      (domain) => url.hostname === domain || url.hostname.endsWith("." + domain)
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function VideoEmbed({ embedCode }: VideoEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !embedCode.includes('<')) return;
+    if (!containerRef.current || !embedCode.trim()) return;
 
     const container = containerRef.current;
-    
-    // Parse the embed code to extract scripts and content
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = embedCode;
-    
-    // Extract and execute script tags
-    const scripts = tempDiv.querySelectorAll('script');
-    scripts.forEach((script) => {
-      const newScript = document.createElement('script');
-      if (script.src) {
-        newScript.src = script.src;
-      } else {
-        newScript.textContent = script.textContent;
-      }
-      if (script.async) newScript.async = true;
-      if (script.type) newScript.type = script.type;
-      document.head.appendChild(newScript);
+
+    // Validate embed source before processing
+    if (!isAllowedEmbedSource(embedCode)) {
+      container.innerHTML = `
+        <div class="flex items-center justify-center p-4 text-sm text-muted-foreground bg-muted rounded-lg">
+          <span>Video embed not supported. Only YouTube, Vimeo, Wistia, Loom, Streamable, and Dailymotion embeds are allowed.</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Sanitize embed code - only allow safe iframe attributes
+    // NO scripts, NO styles, NO event handlers
+    const sanitizedEmbed = DOMPurify.sanitize(embedCode, {
+      ALLOWED_TAGS: ["iframe"],
+      ALLOWED_ATTR: [
+        "src",
+        "width",
+        "height",
+        "frameborder",
+        "allowfullscreen",
+        "allow",
+        "title",
+        "class",
+        "style",
+        "loading",
+      ],
+      // Only allow HTTPS URLs from approved domains
+      ALLOWED_URI_REGEXP:
+        /^https:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com|player\.vimeo\.com|wistia\.com|fast\.wistia\.com|loom\.com|streamable\.com|dailymotion\.com)\//i,
     });
 
-    // Extract style tags
-    const styles = tempDiv.querySelectorAll('style');
-    styles.forEach((style) => {
-      const newStyle = document.createElement('style');
-      newStyle.textContent = style.textContent;
-      document.head.appendChild(newStyle);
-    });
+    if (!sanitizedEmbed.trim()) {
+      container.innerHTML = `
+        <div class="flex items-center justify-center p-4 text-sm text-muted-foreground bg-muted rounded-lg">
+          <span>Invalid video embed code.</span>
+        </div>
+      `;
+      return;
+    }
 
-    // Get the remaining HTML (non-script/style elements)
-    const scriptTags = Array.from(scripts);
-    const styleTags = Array.from(styles);
-    scriptTags.forEach(s => s.remove());
-    styleTags.forEach(s => s.remove());
-    
-    container.innerHTML = tempDiv.innerHTML;
-
-    // Cleanup function
-    return () => {
-      // Remove added scripts and styles on unmount
-      scripts.forEach((script) => {
-        const addedScripts = document.head.querySelectorAll(`script[src="${script.src}"]`);
-        addedScripts.forEach(s => s.remove());
-      });
-    };
+    container.innerHTML = sanitizedEmbed;
   }, [embedCode]);
 
   return <div ref={containerRef} className="w-full flex justify-center" />;
