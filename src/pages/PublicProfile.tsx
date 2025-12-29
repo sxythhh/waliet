@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Calendar, ArrowRight, TrendingUp, Briefcase, Star, Shield, Users, Quote } from "lucide-react";
+import { Calendar, ArrowRight, TrendingUp, Briefcase, Star, Shield, Users, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -463,50 +464,67 @@ export default function PublicProfile() {
 
           {/* Campaigns Tab */}
           <TabsContent value="campaigns" className="mt-6 space-y-4">
-            {campaignParticipations.length === 0 ? <div className="text-center py-16 text-muted-foreground">
+            {campaignParticipations.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
                 <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-30" />
                 <p className="font-['Inter'] tracking-[-0.5px]">No campaign history yet</p>
-              </div> : <div className="grid gap-4">
-                {campaignParticipations.map(participation => {
-              const campaign = participation.campaign;
-              const logoUrl = campaign?.brands?.logo_url || campaign?.brand_logo_url;
-              const isVerified = campaign?.brands?.is_verified;
-              return <div key={participation.id} onClick={() => handleCampaignClick(participation.campaign_id)} className="bg-card/50 border border-border/50 rounded-2xl p-4 hover:bg-card/80 transition-all cursor-pointer group">
-                      <div className="flex items-center gap-4">
-                        {/* Brand Logo */}
-                        <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
-                        </div>
-                        
-                        {/* Campaign Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                              {campaign?.brand_name}
-                            </span>
-                            {isVerified && <VerifiedBadge size="sm" />}
-                          </div>
-                          <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] line-clamp-1 group-hover:text-primary transition-colors">
-                            {campaign?.title}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-                            <span>{participation.videos_count} videos</span>
-                            <span className="text-foreground/30">•</span>
-                            <span>{participation.total_views?.toLocaleString() || 0} views</span>
-                          </div>
-                        </div>
-                        
-                        {/* Earnings */}
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-lg font-bold text-emerald-500 font-['Inter'] tracking-[-0.5px]">
-                            ${participation.total_earnings?.toLocaleString() || 0}
-                          </p>
-                          <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">earned</p>
-                        </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-end">
+                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('profile-campaigns-scroll');
+                        if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <div className="w-px h-5 bg-border/50" />
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('profile-campaigns-scroll');
+                        if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="profile-campaigns-scroll"
+                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {campaignParticipations.map(participation => {
+                    const campaign = participation.campaign;
+                    const logoUrl = campaign?.brands?.logo_url || campaign?.brand_logo_url;
+                    const isVerified = campaign?.brands?.is_verified;
+                    return (
+                      <div key={participation.id} className="flex-shrink-0 w-[160px]">
+                        <CampaignCard
+                          id={campaign?.id || participation.campaign_id}
+                          title={campaign?.title || 'Campaign'}
+                          brand_name={campaign?.brand_name || ''}
+                          brand_logo_url={logoUrl || null}
+                          brand_is_verified={isVerified}
+                          banner_url={campaign?.banner_url || null}
+                          budget={0}
+                          budget_used={0}
+                          is_infinite_budget={true}
+                          onClick={() => handleCampaignClick(participation.campaign_id)}
+                          showBookmark={false}
+                          showFullscreen={false}
+                        />
                       </div>
-                    </div>;
-            })}
-              </div>}
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Boosts Tab */}
