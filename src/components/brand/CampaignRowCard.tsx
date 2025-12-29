@@ -146,7 +146,7 @@ export function CampaignRowCard({
             </div>
 
             {/* Tags Row */}
-            <div className="flex items-center gap-2 flex-wrap text-xs">
+            <div className="flex items-center gap-3 flex-wrap text-xs">
               {type === "campaign" && rpmRate !== undefined && <span className="text-muted-foreground">${rpmRate.toFixed(2)} / 1k views</span>}
 
               {type === "boost" && videosPerMonth !== undefined && <span className="text-muted-foreground">{videosPerMonth} videos/mo</span>}
@@ -155,23 +155,24 @@ export function CampaignRowCard({
                   {spotsRemaining}/{maxCreators} spots
                 </span>}
 
+              {/* Members inline */}
+              {visibleMembers.length > 0 && <div className="flex items-center">
+                  <div className="flex -space-x-1.5">
+                    {visibleMembers.map((member, index) => <div key={member.id} className="w-5 h-5 rounded-full border-0 bg-muted flex items-center justify-center overflow-hidden" style={{
+                  zIndex: 3 - index
+                }}>
+                        {member.avatar_url ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" /> : <span className="text-[10px] font-medium text-muted-foreground uppercase">
+                            {member.display_name?.charAt(0) || "?"}
+                          </span>}
+                      </div>)}
+                  </div>
+                  {remainingCount > 0 && <span className="ml-1.5 text-xs text-muted-foreground">+{remainingCount} more</span>}
+                </div>}
             </div>
           </div>
 
-          {/* Members & Actions */}
+          {/* Actions */}
           <div className="hidden sm:flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 sm:gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-            {visibleMembers.length > 0 && <div className="flex items-center">
-                <div className="flex -space-x-2">
-                  {visibleMembers.map((member, index) => <div key={member.id} className="w-7 h-7 rounded-full border-0 bg-muted flex items-center justify-center overflow-hidden" style={{
-                zIndex: 3 - index
-              }}>
-                      {member.avatar_url ? <img src={member.avatar_url} alt="" className="w-full h-full object-cover" /> : <span className="text-xs font-medium text-muted-foreground uppercase">
-                          {member.display_name?.charAt(0) || "?"}
-                        </span>}
-                    </div>)}
-                </div>
-                {remainingCount > 0 && <span className="ml-2 text-xs text-muted-foreground">+{remainingCount} more</span>}
-              </div>}
 
             {pendingReviewCount > 0 && <button onClick={e => {
             e.stopPropagation();
