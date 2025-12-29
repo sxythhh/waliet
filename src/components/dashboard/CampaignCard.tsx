@@ -5,7 +5,6 @@ import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
-
 export interface CampaignCardProps {
   id: string;
   title: string;
@@ -81,7 +80,7 @@ export const CampaignCard = memo(function CampaignCard({
           <span className="text-[10px] text-foreground font-semibold tracking-[-0.3px] font-['Inter',sans-serif]">
             {is_infinite_budget ? '∞ unlimited' : `$${budget.toLocaleString()}`}
           </span>
-          {!is_infinite_budget && <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Inter',sans-serif]">
+          {!is_infinite_budget && <span className="text-[10px] text-muted-foreground font-semibold tracking-[-0.5px] font-['Inter',sans-serif]">
               {Math.round(budget_used / budget * 100)}% used
             </span>}
         </div>
