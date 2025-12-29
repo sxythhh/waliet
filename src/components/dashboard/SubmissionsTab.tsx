@@ -25,6 +25,7 @@ import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 import dualScreenIconWhite from "@/assets/dual-screen-icon-white.svg";
 import dualScreenIconBlack from "@/assets/dual-screen-icon-black.svg";
 import emptySubmissionsGhost from "@/assets/empty-submissions-ghost.png";
+import emptySubmissionsGhostLight from "@/assets/empty-state-light.png";
 interface Submission {
   id: string;
   video_url: string;
@@ -651,7 +652,7 @@ export function SubmissionsTab() {
       <div className="pb-6 px-0">
         {submissions.length === 0 ? <div className="text-center py-12">
             <img 
-              src={emptySubmissionsGhost} 
+              src={resolvedTheme === 'dark' ? emptySubmissionsGhost : emptySubmissionsGhostLight} 
               alt="No submissions" 
               className="w-40 h-auto mx-auto mb-4"
             />
