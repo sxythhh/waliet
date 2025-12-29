@@ -196,10 +196,10 @@ export function Leaderboard({ className }: LeaderboardProps) {
       {/* Filters */}
       <div className="flex items-center gap-3 mb-6">
         <Select value={timeframe} onValueChange={(v) => setTimeframe(v as typeof timeframe)}>
-          <SelectTrigger className="w-[120px] h-9 text-sm">
+          <SelectTrigger className="w-[120px] h-9 text-sm border-border/50 dark:border-transparent dark:bg-muted/30 dark:data-[state=open]:bg-muted/50">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="dark:bg-[#1a1a1a] dark:border-transparent">
             <SelectItem value="weekly">Weekly</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
             <SelectItem value="all">All time</SelectItem>
