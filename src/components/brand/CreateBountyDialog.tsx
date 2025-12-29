@@ -383,7 +383,7 @@ export function CreateBountyDialog({
                             value={formData.monthly_retainer} 
                             onChange={e => setFormData({...formData, monthly_retainer: e.target.value})} 
                             placeholder="500" 
-                            className="pl-9 h-12 bg-background border border-border/50 text-xl font-semibold font-geist tracking-[-0.5px] focus:ring-2 focus:ring-primary/20 focus:border-primary/50" 
+                            className="pl-9 h-12 border border-border/50 text-xl font-semibold font-geist tracking-[-0.5px] focus:ring-2 focus:ring-primary/20 focus:border-primary/50" 
                           />
                         </div>
                       </div>
