@@ -18,7 +18,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable } from "@dnd-kit/core";
+import { DndContext, pointerWithin, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 // Light mode logos (dark logos for light backgrounds)
@@ -117,13 +117,22 @@ export function BlueprintEditor({
   const isDark = resolvedTheme === "dark";
   const PLATFORMS = getPlatforms(isDark);
   const isMobile = useIsMobile();
-  const sensors = useSensors(useSensor(PointerSensor, {
-    activationConstraint: {
-      distance: 8
-    }
-  }), useSensor(KeyboardSensor, {
-    coordinateGetter: sortableKeyboardCoordinates
-  }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5
+      }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5
+      }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  );
   useEffect(() => {
     fetchBlueprintAndBrand();
   }, [blueprintId, brandId]);
@@ -257,7 +266,7 @@ export function BlueprintEditor({
     } = useDroppable({
       id: "trash-zone"
     });
-    return <div ref={setNodeRef} className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-200 ${isOver ? "bg-destructive/20 scale-110" : "bg-muted/80 backdrop-blur-sm"}`}>
+    return <div ref={setNodeRef} className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 rounded-full transition-all duration-200 ${isOver ? "bg-destructive/20 scale-110" : "bg-neutral-200 dark:bg-neutral-800 backdrop-blur-sm"}`}>
         <span className={`text-sm font-inter tracking-[-0.5px] ${isOver ? "text-destructive font-medium" : "text-muted-foreground"}`}>
           Drop here to remove
         </span>
@@ -929,7 +938,7 @@ export function BlueprintEditor({
               
 
               {/* Modular Sections */}
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <SortableContext items={enabledSections} strategy={verticalListSortingStrategy}>
                   <div className="space-y-3">
                     {enabledSections.map(sectionId => renderSection(sectionId))}
