@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -24,7 +25,7 @@ export interface BoostDiscoverCardProps {
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
 }
-export function BoostDiscoverCard({
+export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   id,
   title,
   description,
@@ -106,4 +107,4 @@ export function BoostDiscoverCard({
         </div>
       </CardContent>
     </Card>;
-}
+});
