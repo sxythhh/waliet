@@ -1,10 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { HelmetProvider } from "react-helmet-async";
@@ -13,60 +12,62 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useUtmTracking } from "@/hooks/useUtmTracking";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Discover from "./pages/Discover";
-import CampaignDetail from "./pages/CampaignDetail";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import BrandAuth from "./pages/BrandAuth";
-import Dashboard from "./pages/Dashboard";
-import CampaignJoin from "./pages/CampaignJoin";
-import BrandDashboard from "./pages/BrandDashboard";
-import BrandManagement from "./pages/BrandManagement";
-import BrandAccount from "./pages/BrandAccount";
-import BrandLibrary from "./pages/BrandLibrary";
-import BrandAssets from "./pages/BrandAssets";
-import BrandInvite from "./pages/BrandInvite";
-import Training from "./pages/Training";
-
-import PublicProfile from "./pages/PublicProfile";
-import Apply from "./pages/Apply";
-import AdminOverview from "./pages/admin/Overview";
-import AdminPayouts from "./pages/admin/Payouts";
-import AdminTransactions from "./pages/admin/Transactions";
-import AdminUsers from "./pages/admin/Users";
-import AdminBrands from "./pages/admin/Brands";
-import AdminWallets from "./pages/admin/Wallets";
-import AdminResources from "./pages/admin/Resources";
-import AdminFeedback from "./pages/admin/Feedback";
-import { DiscordOAuthCallback } from "./components/DiscordOAuthCallback";
-import { XOAuthCallback } from "./components/XOAuthCallback";
-import Leaderboard from "./pages/Leaderboard";
-import Referrals from "./pages/Referrals";
-import ResetPassword from "./pages/ResetPassword";
-import Support from "./pages/Support";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import CreatorTerms from "./pages/CreatorTerms";
-import BoostCampaignDetail from "./pages/BoostCampaignDetail";
-import CampaignApply from "./pages/CampaignApply";
-import New from "./pages/New";
-import Contact from "./pages/Contact";
-import CaseStudies from "./pages/CaseStudies";
-import BlueprintDetail from "./pages/BlueprintDetail";
-import BlueprintPreview from "./pages/BlueprintPreview";
-import Resources from "./pages/Resources";
-import BlogPost from "./pages/BlogPost";
-import BrandPublicPage from "./pages/BrandPublicPage";
-import Install from "./pages/Install";
-import BrandPortal from "./pages/BrandPortal";
-import JoinTeam from "./pages/JoinTeam";
-
-import PublicCourseDetail from "./pages/PublicCourseDetail";
+import { queryClient } from "@/lib/queryClient";
+import { PageLoader, DashboardLoader } from "@/components/PageLoader";
 import { getSubdomainSlug } from "./utils/subdomain";
 
-const queryClient = new QueryClient();
+// Eagerly loaded routes (critical path)
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+
+// Lazily loaded routes (secondary pages)
+const Discover = lazy(() => import("./pages/Discover"));
+const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const BrandAuth = lazy(() => import("./pages/BrandAuth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CampaignJoin = lazy(() => import("./pages/CampaignJoin"));
+const BrandDashboard = lazy(() => import("./pages/BrandDashboard"));
+const BrandManagement = lazy(() => import("./pages/BrandManagement"));
+const BrandAccount = lazy(() => import("./pages/BrandAccount"));
+const BrandLibrary = lazy(() => import("./pages/BrandLibrary"));
+const BrandAssets = lazy(() => import("./pages/BrandAssets"));
+const BrandInvite = lazy(() => import("./pages/BrandInvite"));
+const Training = lazy(() => import("./pages/Training"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
+const Apply = lazy(() => import("./pages/Apply"));
+const AdminOverview = lazy(() => import("./pages/admin/Overview"));
+const AdminPayouts = lazy(() => import("./pages/admin/Payouts"));
+const AdminTransactions = lazy(() => import("./pages/admin/Transactions"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminBrands = lazy(() => import("./pages/admin/Brands"));
+const AdminWallets = lazy(() => import("./pages/admin/Wallets"));
+const AdminResources = lazy(() => import("./pages/admin/Resources"));
+const AdminFeedback = lazy(() => import("./pages/admin/Feedback"));
+const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
+const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Referrals = lazy(() => import("./pages/Referrals"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Support = lazy(() => import("./pages/Support"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const CreatorTerms = lazy(() => import("./pages/CreatorTerms"));
+const BoostCampaignDetail = lazy(() => import("./pages/BoostCampaignDetail"));
+const CampaignApply = lazy(() => import("./pages/CampaignApply"));
+const New = lazy(() => import("./pages/New"));
+const Contact = lazy(() => import("./pages/Contact"));
+const CaseStudies = lazy(() => import("./pages/CaseStudies"));
+const BlueprintDetail = lazy(() => import("./pages/BlueprintDetail"));
+const BlueprintPreview = lazy(() => import("./pages/BlueprintPreview"));
+const Resources = lazy(() => import("./pages/Resources"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const BrandPublicPage = lazy(() => import("./pages/BrandPublicPage"));
+const Install = lazy(() => import("./pages/Install"));
+const BrandPortal = lazy(() => import("./pages/BrandPortal"));
+const JoinTeam = lazy(() => import("./pages/JoinTeam"));
+const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -99,7 +100,7 @@ function BoostRedirect() {
     fetchBoostSlug();
   }, [id, navigate]);
   
-  return <div className="min-h-screen flex items-center justify-center"><p>Redirecting...</p></div>;
+  return <PageLoader />;
 }
 
 // Handle subdomain routing for brand portal
@@ -109,62 +110,58 @@ function SubdomainHandler({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (subdomainSlug) {
-      // Redirect to brand portal for authenticated users
       navigate(`/portal/${subdomainSlug}`, { replace: true });
     }
   }, [subdomainSlug, navigate]);
 
   return <>{children}</>;
 }
-function DashboardLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  return <div className="flex min-h-screen w-full bg-background">
+
+function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen w-full bg-background">
       <AppSidebar />
       <main className="flex-1 pt-14 pb-20 md:pt-0 md:pb-0">{children}</main>
-    </div>;
+    </div>
+  );
 }
-function BrandLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  return <SidebarProvider>
+
+function BrandLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <main className="flex-1">{children}</main>
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 }
-function AdminLayout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
+
+function AdminLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const {
-    isAdmin,
-    loading
-  } = useAdminCheck();
+  const { isAdmin, loading } = useAdminCheck();
+  
   useEffect(() => {
     if (!loading && !isAdmin) {
       navigate("/dashboard");
     }
   }, [isAdmin, loading, navigate]);
+  
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
-      </div>;
+    return <PageLoader />;
   }
+  
   if (!isAdmin) {
     return null;
   }
-  return <div className="flex h-screen w-full overflow-hidden">
+  
+  return (
+    <div className="flex h-screen w-full overflow-hidden">
       <AdminSidebar />
       <main className="flex-1 overflow-auto">{children}</main>
-    </div>;
+    </div>
+  );
 }
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -175,62 +172,139 @@ const App = () => (
           <BrowserRouter>
             <UtmTracker />
             <SubdomainHandler>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/b/:slug" element={<BrandPublicPage />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/auth/callback" element={<AuthCallback />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
-                <Route path="/x/callback" element={<XOAuthCallback />} />
-                <Route path="/brand-auth" element={<BrandAuth />} />
-                <Route path="/apply" element={<Apply />} />
-              <Route path="/discover" element={<Discover />} />
-              <Route path="/creator-terms" element={<CreatorTerms />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/new" element={<New />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/case-studies" element={<CaseStudies />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/blog" element={<Resources />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/course/:id" element={<PublicCourseDetail />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/install" element={<Install />} />
-              <Route path="/referrals" element={<DashboardLayout><Referrals /></DashboardLayout>} />
-              <Route path="/leaderboard" element={<DashboardLayout><Leaderboard /></DashboardLayout>} />
-              <Route path="/boost/:id" element={<BoostRedirect />} />
-              <Route path="/blueprint/:id" element={<BlueprintDetail />} />
-              <Route path="/blueprint/:blueprintId/preview" element={<BlueprintPreview />} />
-              {/* Boost dashboard is now part of /dashboard?boost=:id */}
-              <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
-              <Route path="/join/:slug" element={<JoinRedirect />} />
-              <Route path="/c/:slug" element={<CampaignApply />} />
-              <Route path="/dashboard" element={<WorkspaceProvider><Dashboard /></WorkspaceProvider>} />
-              <Route path="/campaign/:id" element={<DashboardLayout><CampaignDetail /></DashboardLayout>} />
-              <Route path="/campaign/join/:id" element={<DashboardLayout><CampaignJoin /></DashboardLayout>} />
-              <Route path="/admin" element={<AdminLayout><AdminOverview /></AdminLayout>} />
-              <Route path="/admin/brands" element={<AdminLayout><AdminBrands /></AdminLayout>} />
-              <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-              <Route path="/admin/feedback" element={<AdminLayout><AdminFeedback /></AdminLayout>} />
-              <Route path="/admin/resources" element={<AdminLayout><AdminResources /></AdminLayout>} />
-              <Route path="/admin/payouts" element={<AdminLayout><AdminPayouts /></AdminLayout>} />
-              <Route path="/admin/wallets" element={<AdminLayout><AdminWallets /></AdminLayout>} />
-              <Route path="/admin/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
-              <Route path="/manage" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-              <Route path="/manage/:campaignSlug" element={<BrandLayout><BrandManagement /></BrandLayout>} />
-              <Route path="/brand/:slug/assets" element={<BrandLayout><BrandAssets /></BrandLayout>} />
-              <Route path="/brand/:slug/library" element={<BrandLayout><BrandLibrary /></BrandLayout>} />
-              <Route path="/brand/:slug/account" element={<BrandLayout><BrandAccount /></BrandLayout>} />
-              <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
-              <Route path="/brand/:slug/training" element={<BrandLayout><Training /></BrandLayout>} />
-              <Route path="/portal/:slug" element={<BrandPortal />} />
-              <Route path="/join-team/:inviteCode" element={<JoinTeam />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path=":username" element={<PublicProfile />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/b/:slug" element={<BrandPublicPage />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
+                  <Route path="/x/callback" element={<XOAuthCallback />} />
+                  <Route path="/brand-auth" element={<BrandAuth />} />
+                  <Route path="/apply" element={<Apply />} />
+                  <Route path="/discover" element={<Discover />} />
+                  <Route path="/creator-terms" element={<CreatorTerms />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/new" element={<New />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/case-studies" element={<CaseStudies />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/blog" element={<Resources />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/course/:id" element={<PublicCourseDetail />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/install" element={<Install />} />
+                  <Route path="/referrals" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <DashboardLayout><Referrals /></DashboardLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/leaderboard" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <DashboardLayout><Leaderboard /></DashboardLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/boost/:id" element={<BoostRedirect />} />
+                  <Route path="/blueprint/:id" element={<BlueprintDetail />} />
+                  <Route path="/blueprint/:blueprintId/preview" element={<BlueprintPreview />} />
+                  <Route path="/join" element={<Navigate to="/dashboard?tab=discover&joinPrivate=true" replace />} />
+                  <Route path="/join/:slug" element={<JoinRedirect />} />
+                  <Route path="/c/:slug" element={<CampaignApply />} />
+                  <Route path="/dashboard" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <WorkspaceProvider><Dashboard /></WorkspaceProvider>
+                    </Suspense>
+                  } />
+                  <Route path="/campaign/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <DashboardLayout><CampaignDetail /></DashboardLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/campaign/join/:id" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <DashboardLayout><CampaignJoin /></DashboardLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminOverview /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/brands" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminBrands /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/users" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminUsers /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/feedback" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminFeedback /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/resources" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminResources /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/payouts" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminPayouts /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/wallets" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminWallets /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/transactions" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminTransactions /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/manage" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><BrandManagement /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/manage/:campaignSlug" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><BrandManagement /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/brand/:slug/assets" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><BrandAssets /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/brand/:slug/library" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><BrandLibrary /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/brand/:slug/account" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><BrandAccount /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
+                  <Route path="/brand/:slug/training" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <BrandLayout><Training /></BrandLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/portal/:slug" element={<BrandPortal />} />
+                  <Route path="/join-team/:inviteCode" element={<JoinTeam />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path=":username" element={<PublicProfile />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </SubdomainHandler>
           </BrowserRouter>
         </TooltipProvider>
