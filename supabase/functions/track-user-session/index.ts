@@ -171,60 +171,28 @@ Deno.serve(async (req) => {
       .update({ is_current: false })
       .eq("user_id", userId);
 
-    // Check for existing session with same device fingerprint (ip + browser + os)
-    // to avoid duplicates when session_id changes
-    const { data: existingSession } = await supabase
+    // Use upsert to handle race conditions and duplicates gracefully
+    // The unique constraint is on (user_id, session_id)
+    const { data: session, error: sessionError } = await supabase
       .from("user_sessions")
-      .select("id, session_id")
-      .eq("user_id", userId)
-      .eq("ip_address", hashedIp)
-      .eq("browser", browser)
-      .eq("os", os)
-      .eq("device_type", device)
-      .maybeSingle();
-
-    let session;
-    let sessionError;
-
-    if (existingSession) {
-      // Update existing session with new session_id
-      const result = await supabase
-        .from("user_sessions")
-        .update({
-          session_id: sessionId,
-          browser_version: browserVersion,
-          country: country,
-          city: city,
-          is_current: true,
-          last_active_at: new Date().toISOString(),
-        })
-        .eq("id", existingSession.id)
-        .select()
-        .single();
-      session = result.data;
-      sessionError = result.error;
-    } else {
-      // Insert new session
-      const result = await supabase
-        .from("user_sessions")
-        .insert({
-          user_id: userId,
-          session_id: sessionId,
-          device_type: device,
-          os: os,
-          browser: browser,
-          browser_version: browserVersion,
-          ip_address: hashedIp,
-          country: country,
-          city: city,
-          is_current: true,
-          last_active_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-      session = result.data;
-      sessionError = result.error;
-    }
+      .upsert({
+        user_id: userId,
+        session_id: sessionId,
+        device_type: device,
+        os: os,
+        browser: browser,
+        browser_version: browserVersion,
+        ip_address: hashedIp,
+        country: country,
+        city: city,
+        is_current: true,
+        last_active_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,session_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
 
     if (sessionError) {
       console.error("Error upserting session:", sessionError);
