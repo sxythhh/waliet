@@ -811,9 +811,6 @@ export function BlueprintEditor({
               {blueprint.example_videos.length > 0 && <div className="space-y-2">
                   {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Video className="h-4 w-4 text-primary" />
-                        </div>
                         <div className="flex-1 min-w-0 space-y-1.5">
                           <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-7 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-xs text-muted-foreground blueprint-input" />
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />

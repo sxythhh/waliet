@@ -130,14 +130,11 @@ export function BlueprintSectionMenu({
 
       {/* Dropdown Menu - opens above */}
       {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-80 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card/95 backdrop-blur-sm shadow-2xl">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 w-64 max-h-80 overflow-y-auto rounded-xl border border-border bg-card/95 backdrop-blur-sm shadow-xl">
           {/* Available sections to add */}
           {availableSections.length > 0 && (
-            <div className="p-3">
-              <p className="px-2 py-2 text-[11px] font-medium uppercase text-muted-foreground/50 tracking-wider font-inter">
-                Add Section
-              </p>
-              <div className="space-y-1">
+            <div className="p-2">
+              <div className="space-y-0.5">
                 {availableSections.map((section) => (
                   <button
                     key={section.id}
@@ -145,20 +142,12 @@ export function BlueprintSectionMenu({
                       onToggleSection(section.id);
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition-all text-left group"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/60 transition-all text-left group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-foreground group-hover:bg-muted transition-all">
-                      {section.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
-                        {section.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground/70 font-inter tracking-[-0.5px]">
-                        {section.description}
-                      </p>
-                    </div>
-                    <Plus className="h-4 w-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                    <span className="text-sm font-inter tracking-[-0.5px] text-foreground">
+                      {section.title}
+                    </span>
+                    <Plus className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
                   </button>
                 ))}
               </div>
@@ -167,16 +156,13 @@ export function BlueprintSectionMenu({
 
           {/* Divider */}
           {availableSections.length > 0 && addedSections.length > 0 && (
-            <div className="mx-3 border-t border-border/30" />
+            <div className="mx-2 border-t border-border/30" />
           )}
 
           {/* Already added sections */}
           {addedSections.length > 0 && (
-            <div className="p-3">
-              <p className="px-2 py-2 text-[11px] font-medium uppercase text-muted-foreground/50 tracking-wider font-inter">
-                Active Sections
-              </p>
-              <div className="space-y-1">
+            <div className="p-2">
+              <div className="space-y-0.5">
                 {addedSections.map((section) => (
                   <button
                     key={section.id}
@@ -184,17 +170,12 @@ export function BlueprintSectionMenu({
                       onToggleSection(section.id);
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-destructive/10 transition-all text-left group"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-destructive/10 transition-all text-left group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                      {section.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium font-inter tracking-[-0.5px] text-foreground">
-                        {section.title}
-                      </p>
-                    </div>
-                    <MinusCircle className="h-5 w-5 text-destructive/60 group-hover:text-destructive transition-colors" />
+                    <span className="text-sm font-inter tracking-[-0.5px] text-foreground">
+                      {section.title}
+                    </span>
+                    <MinusCircle className="h-4 w-4 text-destructive/60 group-hover:text-destructive transition-colors" />
                   </button>
                 ))}
               </div>
@@ -202,7 +183,7 @@ export function BlueprintSectionMenu({
           )}
 
           {availableSections.length === 0 && addedSections.length === 0 && (
-            <div className="p-6 text-center text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+            <div className="p-4 text-center text-sm text-muted-foreground font-inter tracking-[-0.5px]">
               No sections available
             </div>
           )}
