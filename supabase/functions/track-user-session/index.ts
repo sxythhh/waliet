@@ -28,26 +28,31 @@ function parseUserAgent(ua: string): {
   let browserVersion = "";
   let os = "Unknown";
 
-  // Detect OS
-  if (ua.includes("Windows")) {
+  // Detect OS - check mobile platforms FIRST before desktop
+  if (ua.includes("iPhone")) {
+    os = "iOS";
+    device = "Mobile";
+  } else if (ua.includes("iPad")) {
+    os = "iOS";
+    device = "Tablet";
+  } else if (ua.includes("Android")) {
+    os = "Android";
+    // Check device type for Android
+    if (ua.includes("Mobile")) {
+      device = "Mobile";
+    } else if (ua.includes("Tablet")) {
+      device = "Tablet";
+    } else {
+      device = "Mobile"; // Default Android to mobile
+    }
+  } else if (ua.includes("Windows")) {
     os = "Windows";
   } else if (ua.includes("Mac OS X") || ua.includes("Macintosh")) {
     os = "macOS";
-  } else if (ua.includes("Linux")) {
-    os = "Linux";
-  } else if (ua.includes("Android")) {
-    os = "Android";
-  } else if (ua.includes("iPhone") || ua.includes("iPad")) {
-    os = "iOS";
   } else if (ua.includes("CrOS")) {
     os = "Chrome OS";
-  }
-
-  // Detect device type
-  if (ua.includes("Mobile") || ua.includes("Android") || ua.includes("iPhone")) {
-    device = "Mobile";
-  } else if (ua.includes("iPad") || ua.includes("Tablet")) {
-    device = "Tablet";
+  } else if (ua.includes("Linux")) {
+    os = "Linux";
   }
 
   // Detect browser and version
@@ -166,11 +171,43 @@ Deno.serve(async (req) => {
       .update({ is_current: false })
       .eq("user_id", userId);
 
-    // Upsert the session record
-    const { data: session, error: sessionError } = await supabase
+    // Check for existing session with same device fingerprint (ip + browser + os)
+    // to avoid duplicates when session_id changes
+    const { data: existingSession } = await supabase
       .from("user_sessions")
-      .upsert(
-        {
+      .select("id, session_id")
+      .eq("user_id", userId)
+      .eq("ip_address", hashedIp)
+      .eq("browser", browser)
+      .eq("os", os)
+      .eq("device_type", device)
+      .maybeSingle();
+
+    let session;
+    let sessionError;
+
+    if (existingSession) {
+      // Update existing session with new session_id
+      const result = await supabase
+        .from("user_sessions")
+        .update({
+          session_id: sessionId,
+          browser_version: browserVersion,
+          country: country,
+          city: city,
+          is_current: true,
+          last_active_at: new Date().toISOString(),
+        })
+        .eq("id", existingSession.id)
+        .select()
+        .single();
+      session = result.data;
+      sessionError = result.error;
+    } else {
+      // Insert new session
+      const result = await supabase
+        .from("user_sessions")
+        .insert({
           user_id: userId,
           session_id: sessionId,
           device_type: device,
@@ -182,13 +219,12 @@ Deno.serve(async (req) => {
           city: city,
           is_current: true,
           last_active_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "user_id,session_id",
-        }
-      )
-      .select()
-      .single();
+        })
+        .select()
+        .single();
+      session = result.data;
+      sessionError = result.error;
+    }
 
     if (sessionError) {
       console.error("Error upserting session:", sessionError);
