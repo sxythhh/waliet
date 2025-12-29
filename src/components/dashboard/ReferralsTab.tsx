@@ -418,14 +418,10 @@ export function ReferralsTab(): JSX.Element {
                       <Input value={referralLink} readOnly className="font-['Geist'] text-sm bg-background/50 border-0 h-10" style={{
                     letterSpacing: '-0.5px'
                   }} />
-                      <Button onClick={copyReferralLink} variant="ghost" className="gap-2 shrink-0 h-10 bg-foreground text-background" style={{
-                    fontFamily: 'Inter',
-                    letterSpacing: '-0.5px'
-                  }}>
+                      <Button onClick={copyReferralLink} variant="ghost" size="icon" className="shrink-0 h-8 w-8 hover:bg-muted">
                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        {copied ? "Copied" : "Copy"}
                       </Button>
-                      <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-10 w-10">
+                      <Button onClick={() => setIsEditing(true)} variant="ghost" size="icon" className="shrink-0 h-8 w-8 hover:bg-muted">
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>}
