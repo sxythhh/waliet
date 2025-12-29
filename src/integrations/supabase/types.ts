@@ -448,6 +448,7 @@ export type Database = {
           created_at: string
           description: string | null
           discord_guild_id: string | null
+          discord_role_id: string | null
           end_date: string | null
           id: string
           is_private: boolean
@@ -480,6 +481,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discord_guild_id?: string | null
+          discord_role_id?: string | null
           end_date?: string | null
           id?: string
           is_private?: boolean
@@ -512,6 +514,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           discord_guild_id?: string | null
+          discord_role_id?: string | null
           end_date?: string | null
           id?: string
           is_private?: boolean
@@ -1829,6 +1832,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           discord_guild_id: string | null
+          discord_role_id: string | null
           embed_url: string | null
           end_date: string | null
           guidelines: string | null
@@ -1874,6 +1878,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discord_guild_id?: string | null
+          discord_role_id?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
@@ -1919,6 +1924,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           discord_guild_id?: string | null
+          discord_role_id?: string | null
           embed_url?: string | null
           end_date?: string | null
           guidelines?: string | null
