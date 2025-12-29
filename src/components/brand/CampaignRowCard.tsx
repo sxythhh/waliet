@@ -147,7 +147,7 @@ export function CampaignRowCard({
 
             {/* Tags Row */}
             <div className="flex items-center gap-3 flex-wrap text-xs">
-              {type === "campaign" && rpmRate !== undefined && <span className="text-muted-foreground">${rpmRate.toFixed(2)} / 1k views</span>}
+              {type === "campaign" && rpmRate !== undefined}
 
               {type === "boost" && videosPerMonth !== undefined && <span className="text-muted-foreground">{videosPerMonth} videos/mo</span>}
 
