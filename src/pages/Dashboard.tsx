@@ -96,15 +96,32 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Restore last workspace from localStorage if no workspace is set in URL
-    const urlWorkspace = searchParams.get("workspace");
-    const lastWorkspace = localStorage.getItem("lastWorkspace");
+    // But validate that the workspace actually exists first
+    const validateAndRestoreWorkspace = async () => {
+      const urlWorkspace = searchParams.get("workspace");
+      const lastWorkspace = localStorage.getItem("lastWorkspace");
 
-    if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("workspace", lastWorkspace);
-      newParams.set("tab", searchParams.get("tab") || "campaigns");
-      setSearchParams(newParams, { replace: true });
-    }
+      if (!urlWorkspace && lastWorkspace && lastWorkspace !== "creator") {
+        // Validate that the brand slug exists before restoring
+        const { data: brandExists } = await supabase
+          .from("brands")
+          .select("slug")
+          .eq("slug", lastWorkspace)
+          .maybeSingle();
+
+        if (brandExists) {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.set("workspace", lastWorkspace);
+          newParams.set("tab", searchParams.get("tab") || "campaigns");
+          setSearchParams(newParams, { replace: true });
+        } else {
+          // Clear invalid workspace from localStorage
+          localStorage.removeItem("lastWorkspace");
+        }
+      }
+    };
+
+    validateAndRestoreWorkspace();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
