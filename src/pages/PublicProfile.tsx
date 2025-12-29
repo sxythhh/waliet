@@ -423,28 +423,7 @@ export default function PublicProfile() {
 
       {/* Stats Overview - Cleaner design without icons */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
-            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalCampaigns}</p>
-            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Campaigns</p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
-            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">{stats.totalBoosts}</p>
-            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Boosts</p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
-            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px]">
-              {stats.totalViews >= 1000000 ? `${(stats.totalViews / 1000000).toFixed(1)}M` : stats.totalViews >= 1000 ? `${(stats.totalViews / 1000).toFixed(1)}K` : stats.totalViews}
-            </p>
-            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Total Views</p>
-          </div>
-          <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
-            <p className="text-3xl font-bold font-['Inter'] tracking-[-0.5px] text-emerald-500">
-              ${stats.totalEarnings.toLocaleString()}
-            </p>
-            <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.5px] mt-1">Earned</p>
-          </div>
-        </div>
+        
       </div>
 
       {/* Tabs Section */}
