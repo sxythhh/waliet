@@ -210,7 +210,7 @@ export default function PublicNavbar({
                             Sign Out
                           </Button>
                         </> : <>
-                          <Button variant="outline" size="sm" className="w-full font-geist font-medium tracking-[-0.5px]" onClick={() => {
+                          <Button variant="ghost" size="sm" className="w-full font-geist font-medium tracking-[-0.5px]" onClick={() => {
                         setShowAuthDialog(true);
                         setMobileMenuOpen(false);
                       }}>
