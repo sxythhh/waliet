@@ -4341,6 +4341,10 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      is_member_of_active_brand: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       match_analytics_to_users: {
         Args: { p_campaign_id: string }
         Returns: {
