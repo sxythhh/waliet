@@ -130,10 +130,10 @@ export function Leaderboard({ className }: LeaderboardProps) {
   };
 
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return "w-6 h-6 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center";
-    if (rank === 2) return "w-6 h-6 rounded-full bg-slate-400/20 text-slate-400 flex items-center justify-center";
-    if (rank === 3) return "w-6 h-6 rounded-full bg-blue-500/20 text-blue-500 flex items-center justify-center";
-    return "w-6 text-muted-foreground";
+    if (rank === 1) return "w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center";
+    if (rank === 2) return "w-6 h-6 rounded-full bg-slate-400 text-white flex items-center justify-center";
+    if (rank === 3) return "w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center";
+    return "w-6 text-muted-foreground text-center";
   };
 
   const LeaderboardColumn = ({
