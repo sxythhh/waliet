@@ -164,7 +164,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
           data.map((entry) => (
             <div
               key={entry.user_id}
-              onClick={() => navigate(`/u/${entry.username}`)}
+              onClick={() => navigate(`/@${entry.username}`)}
               className="flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/50"
             >
               <span
