@@ -10,10 +10,8 @@ export type SectionType =
   | "talking_points"
   | "dos_and_donts"
   | "call_to_action"
-  | "hashtags"
   | "assets"
-  | "example_videos"
-  | "target_personas";
+  | "example_videos";
 
 interface SectionDefinition {
   id: SectionType;
@@ -49,8 +47,8 @@ const ALL_SECTIONS: SectionDefinition[] = [
   },
   {
     id: "talking_points",
-    title: "Talking Points",
-    description: "Key messages to cover",
+    title: "Requirements",
+    description: "What creators must include",
     icon: <ListChecks className="h-4 w-4" />,
   },
   {
@@ -66,12 +64,6 @@ const ALL_SECTIONS: SectionDefinition[] = [
     icon: <MessageSquare className="h-4 w-4" />,
   },
   {
-    id: "hashtags",
-    title: "Hashtags",
-    description: "Required hashtags",
-    icon: <Hash className="h-4 w-4" />,
-  },
-  {
     id: "assets",
     title: "Assets & Files",
     description: "Links to brand assets",
@@ -82,12 +74,6 @@ const ALL_SECTIONS: SectionDefinition[] = [
     title: "Example Videos",
     description: "Reference content",
     icon: <Video className="h-4 w-4" />,
-  },
-  {
-    id: "target_personas",
-    title: "Target Personas",
-    description: "Audience profiles",
-    icon: <Users className="h-4 w-4" />,
   },
 ];
 
