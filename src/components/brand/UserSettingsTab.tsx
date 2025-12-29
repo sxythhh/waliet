@@ -504,10 +504,6 @@ export function UserSettingsTab() {
           {isBrandMode && brand && <>
               {/* Icon Section */}
               <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                  Workspace Logo & Colour
-                </Label>
-                
                 <div className="flex items-center gap-2.5">
                   {/* Logo Preview or Initials with Color */}
                   <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" style={{
