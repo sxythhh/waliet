@@ -5,7 +5,7 @@ import { ExternalLink, Mail, MessageCircle } from "lucide-react";
 
 const Support = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-y-auto">
       <SEOHead
         title="Support"
         description="Get help with Virality. Chat with our AI assistant about product support, billing questions, or provide feedback."
@@ -19,16 +19,6 @@ const Support = () => {
       <PublicNavbar />
 
       <main className="pt-24 pb-16 px-4">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Support
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Chat with us about product support, resolve billing questions, or provide feedback.
-          </p>
-        </div>
-
         {/* Chat Interface */}
         <div className="mb-16">
           <SupportChat />
