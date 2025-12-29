@@ -79,8 +79,7 @@ export function CampaignRowCard({
   };
   const daysLeft = getDaysLeft();
   const formatCurrency = (num: number) => {
-    if (num >= 1000) return `$${(num / 1000).toFixed(1)}k`;
-    return `$${num.toFixed(0)}`;
+    return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   };
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -137,7 +136,7 @@ export function CampaignRowCard({
             {/* Budget Progress */}
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground whitespace-nowrap">
-                {formatCurrency(budgetUsed)} / {formatCurrency(budget)}
+                {formatCurrency(budgetUsed)}/{formatCurrency(budget)}
               </span>
               <div className="flex-1 max-w-32">
                 <Progress value={budgetPercentage} className="h-1.5" />
