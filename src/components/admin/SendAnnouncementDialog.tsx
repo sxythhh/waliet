@@ -14,16 +14,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Megaphone, Lock } from "lucide-react";
-
-const ADMIN_PASSWORD = "Ivelin2474.";
+import { Megaphone } from "lucide-react";
 
 export function SendAnnouncementDialog() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [sending, setSending] = useState(false);
 
   const handlePrepareSubmit = (e: React.FormEvent) => {
@@ -32,15 +29,10 @@ export function SendAnnouncementDialog() {
       toast.error("Please fill in all fields");
       return;
     }
-    setShowPasswordConfirm(true);
+    setShowConfirm(true);
   };
 
   const handleConfirmSend = async () => {
-    if (password !== ADMIN_PASSWORD) {
-      toast.error("Incorrect password");
-      return;
-    }
-
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +43,14 @@ export function SendAnnouncementDialog() {
         created_by: user?.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42501' || error.message?.includes('policy')) {
+          toast.error("You don't have permission to send announcements");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("Announcement sent successfully!");
       setOpen(false);
@@ -67,8 +66,7 @@ export function SendAnnouncementDialog() {
   const resetForm = () => {
     setTitle("");
     setContent("");
-    setPassword("");
-    setShowPasswordConfirm(false);
+    setShowConfirm(false);
   };
 
   return (
@@ -85,17 +83,17 @@ export function SendAnnouncementDialog() {
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle className="font-inter tracking-[-0.5px]">
-            {showPasswordConfirm ? "Confirm Announcement" : "Send Global Announcement"}
+            {showConfirm ? "Confirm Announcement" : "Send Global Announcement"}
           </DialogTitle>
           <DialogDescription className="font-inter tracking-[-0.5px]">
-            {showPasswordConfirm 
-              ? "Enter your admin password to confirm sending this announcement to all creators."
+            {showConfirm 
+              ? "Are you sure you want to send this announcement to all creators?"
               : "This announcement will appear in all creators' message widgets."
             }
           </DialogDescription>
         </DialogHeader>
 
-        {!showPasswordConfirm ? (
+        {!showConfirm ? (
           <form onSubmit={handlePrepareSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title" className="font-inter tracking-[-0.5px]">Title</Label>
@@ -132,25 +130,11 @@ export function SendAnnouncementDialog() {
               <p className="text-sm font-medium font-inter tracking-[-0.5px]">{title}</p>
               <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] whitespace-pre-wrap">{content}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="font-inter tracking-[-0.5px] flex items-center gap-2">
-                <Lock className="h-3.5 w-3.5" />
-                Admin Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password..."
-                className="font-inter tracking-[-0.5px]"
-              />
-            </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setShowPasswordConfirm(false)}>
+              <Button type="button" variant="outline" onClick={() => setShowConfirm(false)}>
                 Back
               </Button>
-              <Button onClick={handleConfirmSend} disabled={sending || !password}>
+              <Button onClick={handleConfirmSend} disabled={sending}>
                 {sending ? "Sending..." : "Confirm & Send"}
               </Button>
             </DialogFooter>
