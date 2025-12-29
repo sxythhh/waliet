@@ -712,19 +712,22 @@ export function CreatorDatabaseTab({
     setCurrentPage(1);
   }, [searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, sortBy, sortOrder, itemsPerPage]);
   const handleExportCSV = () => {
+    // Export ALL rows that match the current filters/sort (not just the current page)
+    const exportCreators = filteredAndSortedCreators;
+
     const headers = ['Username', 'Full Name', 'Email', 'Country', 'Total Views', 'Total Earnings', 'Social Accounts', 'Account URLs', 'Campaigns'];
-    const rows = filteredCreators.map(c => [
-      c.username, 
-      c.full_name || '', 
-      c.email || '', 
-      c.country || '', 
-      c.total_views, 
-      c.total_earnings.toFixed(2), 
-      c.social_accounts.map(s => `${s.platform}:@${s.username}`).join('; '), 
+    const rows = exportCreators.map(c => [
+      c.username,
+      c.full_name || '',
+      c.email || '',
+      c.country || '',
+      c.total_views,
+      c.total_earnings.toFixed(2),
+      c.social_accounts.map(s => `${s.platform}:@${s.username}`).join('; '),
       c.social_accounts.map(s => s.account_link || '').filter(Boolean).join('; '),
       c.campaigns.map(camp => camp.title).join('; ')
     ]);
-    const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], {
       type: 'text/csv'
     });
