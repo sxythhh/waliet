@@ -101,13 +101,24 @@ serve(async (req) => {
     console.log(`Creating Slash virtual account for brand: ${brand.name}`);
 
     // Step 1: Create virtual account
+    // Note: accountId is required - this should be the main Slash account ID
+    const slashAccountId = Deno.env.get('SLASH_ACCOUNT_ID');
+    if (!slashAccountId) {
+      console.error('SLASH_ACCOUNT_ID not configured');
+      return new Response(JSON.stringify({ error: 'Slash account not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const createAccountResponse = await fetch(`${SLASH_API_URL}/virtual-account`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${slashApiKey}`,
+        'X-API-Key': slashApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        accountId: slashAccountId,
         name: `Virality - ${brand.name}`
       }),
     });
@@ -132,7 +143,7 @@ serve(async (req) => {
       const cryptoResponse = await fetch(`${SLASH_API_URL}/crypto/offramp`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${slashApiKey}`,
+          'X-API-Key': slashApiKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
