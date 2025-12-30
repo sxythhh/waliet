@@ -719,9 +719,6 @@ export function CampaignsTab({
           </div>
         </div>}
 
-      {/* Submissions Section */}
-      <SubmissionsTab />
-
       {/* Your Campaigns Section */}
       {campaigns.length > 0 && (
         <div className="space-y-3">
@@ -753,6 +750,9 @@ export function CampaignsTab({
           </div>
         </div>
       )}
+
+      {/* Submissions Section */}
+      <SubmissionsTab />
       
       {/* Campaigns Content */}
       <>
