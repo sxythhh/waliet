@@ -613,9 +613,10 @@ export function AppSidebar() {
                     {/* Creator Dashboard */}
                     {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${isCreatorMode ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                            <span className="text-xs font-semibold text-primary">C</span>
-                          </div>
+                          <Avatar className="w-8 h-8">
+                            {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" /> : null}
+                            <AvatarFallback className="text-xs font-semibold uppercase">{displayName?.charAt(0) || 'C'}</AvatarFallback>
+                          </Avatar>
                           <div className="flex flex-col items-start">
                             <span className="text-[13px] font-medium text-foreground">Creator Dashboard</span>
                             <span className="text-[11px] text-muted-foreground">Personal workspace</span>
