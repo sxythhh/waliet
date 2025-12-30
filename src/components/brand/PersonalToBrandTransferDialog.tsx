@@ -122,10 +122,7 @@ export function PersonalToBrandTransferDialog({
         <div className="px-6 pb-6 space-y-5">
           {/* Personal Wallet Balance */}
           <div className="p-4 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Wallet className="w-5 h-5 text-emerald-500" />
-              </div>
+          <div>
               <div>
                 <p 
                   className="text-xs text-muted-foreground tracking-[-0.3px]"
