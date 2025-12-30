@@ -278,6 +278,12 @@ export function BrandWalletTab({
         return 'Boost Funding';
       case 'refund':
         return 'Refund';
+      case 'deposit':
+        return 'Deposit';
+      case 'transfer_in':
+        return 'Transfer In';
+      case 'transfer_out':
+        return 'Transfer Out';
       default:
         return type;
     }
@@ -376,12 +382,32 @@ export function BrandWalletTab({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button onClick={() => setAddFundsOpen(true)} className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
-        fontFamily: 'Inter, sans-serif'
-      }}>
-          <Plus className="w-4 h-4 mr-1.5" />
-          Add Funds
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Add Funds
+              <ChevronDown className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setAddFundsOpen(true)}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Pay with Card
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setPersonalTransferOpen(true)}>
+              <UserCircle className="w-4 h-4 mr-2" />
+              From Personal Wallet
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setDepositInfoOpen(true)}>
+              <Building2 className="w-4 h-4 mr-2" />
+              Wire / Crypto Deposit
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Transaction History */}
@@ -427,5 +453,23 @@ export function BrandWalletTab({
       fetchWalletData();
       fetchTransactions();
     }} />}
+
+      <PersonalToBrandTransferDialog 
+        open={personalTransferOpen} 
+        onOpenChange={setPersonalTransferOpen} 
+        brandId={brandId} 
+        brandName={brandName}
+        onSuccess={() => {
+          fetchWalletData();
+          fetchTransactions();
+        }} 
+      />
+
+      <BrandDepositInfoDialog 
+        open={depositInfoOpen} 
+        onOpenChange={setDepositInfoOpen} 
+        brandId={brandId} 
+        brandName={brandName}
+      />
     </div>;
 }
