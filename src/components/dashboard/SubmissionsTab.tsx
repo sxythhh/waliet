@@ -651,18 +651,7 @@ export function SubmissionsTab() {
       {/* Submissions Table */}
       <div className="pb-6 px-0">
         {submissions.length === 0 ? <div className="text-center py-12">
-            <img 
-              src={resolvedTheme === 'dark' ? emptySubmissionsGhost : emptySubmissionsGhostLight} 
-              alt="No submissions" 
-              className="w-40 h-auto mx-auto mb-4"
-            />
-            <p className="text-sm text-muted-foreground" style={{
-              fontFamily: 'Inter',
-              letterSpacing: '-0.3px'
-            }}>
-              No submissions yet
-            </p>
-            <p className="text-xs text-muted-foreground/60 mt-1" style={{
+            <p className="text-xs text-muted-foreground/60" style={{
               fontFamily: 'Inter',
               letterSpacing: '-0.3px'
             }}>
