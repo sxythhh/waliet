@@ -158,7 +158,11 @@ serve(async (req) => {
           pending_balance: 0,
           currency: 'usd',
           has_whop_company: true,
-          onboarding_complete: brand.whop_onboarding_complete
+          onboarding_complete: brand.whop_onboarding_complete,
+          has_slash_wallet: hasSlashWallet,
+          slash_account_number: brand.slash_account_number,
+          slash_routing_number: brand.slash_routing_number,
+          slash_crypto_addresses: brand.slash_crypto_addresses || []
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
