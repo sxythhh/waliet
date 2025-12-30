@@ -74,27 +74,27 @@ serve(async (req) => {
       });
     }
 
-    // Get user's personal wallet balance
-    const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
+    // Get brand wallet balance
+    const { data: brandWallet, error: walletError } = await supabase
+      .from('brand_wallets')
       .select('id, balance')
-      .eq('user_id', user.id)
+      .eq('brand_id', brand_id)
       .single();
 
-    if (walletError || !wallet) {
-      return new Response(JSON.stringify({ error: 'Wallet not found' }), {
+    if (walletError || !brandWallet) {
+      return new Response(JSON.stringify({ error: 'Brand wallet not found' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const userBalance = wallet.balance || 0;
-    console.log(`User ${user.id} wallet balance: $${userBalance}`);
+    const walletBalance = brandWallet.balance || 0;
+    console.log(`Brand ${brand_id} wallet balance: $${walletBalance}`);
 
-    if (userBalance < amount) {
+    if (walletBalance < amount) {
       return new Response(JSON.stringify({ 
-        error: 'Insufficient wallet balance',
-        current_balance: userBalance,
+        error: 'Insufficient brand wallet balance',
+        current_balance: walletBalance,
         requested_amount: amount
       }), {
         status: 400,
@@ -132,43 +132,38 @@ serve(async (req) => {
         });
       }
 
-      // Deduct from user's personal wallet
+      // Deduct from brand wallet
       const { error: walletUpdateError } = await supabase
-        .from('wallets')
-        .update({ balance: userBalance - amount })
-        .eq('user_id', user.id);
+        .from('brand_wallets')
+        .update({ balance: walletBalance - amount })
+        .eq('brand_id', brand_id);
 
       if (walletUpdateError) {
-        console.error('Error updating wallet:', walletUpdateError);
+        console.error('Error updating brand wallet:', walletUpdateError);
         // Rollback campaign budget update
         await supabase
           .from('campaigns')
           .update({ budget: campaign.budget || 0 })
           .eq('id', campaign_id);
-        return new Response(JSON.stringify({ error: 'Failed to update wallet' }), {
+        return new Response(JSON.stringify({ error: 'Failed to update brand wallet' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Log transaction in wallet_transactions
+      // Log transaction in brand_wallet_transactions
       await supabase
-        .from('wallet_transactions')
+        .from('brand_wallet_transactions')
         .insert({
-          wallet_id: wallet.id,
-          user_id: user.id,
+          brand_id: brand_id,
+          campaign_id: campaign_id,
           type: 'campaign_funding',
           amount: -amount,
-          balance_before: userBalance,
-          balance_after: userBalance - amount,
           description: `Funded campaign: ${campaign.title}`,
-          metadata: {
-            campaign_id: campaign_id,
-            brand_id: brand_id
-          }
+          created_by: user.id
         });
 
-      console.log(`User ${user.id} funded campaign ${campaign_id} with $${amount}`);
+      console.log(`Brand ${brand_id} funded campaign ${campaign_id} with $${amount}`);
 
     } else if (boost_id) {
       // Verify boost belongs to this brand
@@ -199,49 +194,44 @@ serve(async (req) => {
         });
       }
 
-      // Deduct from user's personal wallet
+      // Deduct from brand wallet
       const { error: walletUpdateError } = await supabase
-        .from('wallets')
-        .update({ balance: userBalance - amount })
-        .eq('user_id', user.id);
+        .from('brand_wallets')
+        .update({ balance: walletBalance - amount })
+        .eq('brand_id', brand_id);
 
       if (walletUpdateError) {
-        console.error('Error updating wallet:', walletUpdateError);
+        console.error('Error updating brand wallet:', walletUpdateError);
         // Rollback boost budget update
         await supabase
           .from('bounty_campaigns')
           .update({ budget: boost.budget || 0 })
           .eq('id', boost_id);
-        return new Response(JSON.stringify({ error: 'Failed to update wallet' }), {
+        return new Response(JSON.stringify({ error: 'Failed to update brand wallet' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Log transaction in wallet_transactions
+      // Log transaction in brand_wallet_transactions
       await supabase
-        .from('wallet_transactions')
+        .from('brand_wallet_transactions')
         .insert({
-          wallet_id: wallet.id,
-          user_id: user.id,
+          brand_id: brand_id,
+          boost_id: boost_id,
           type: 'boost_funding',
           amount: -amount,
-          balance_before: userBalance,
-          balance_after: userBalance - amount,
           description: `Funded boost: ${boost.title}`,
-          metadata: {
-            boost_id: boost_id,
-            brand_id: brand_id
-          }
+          created_by: user.id
         });
 
-      console.log(`User ${user.id} funded boost ${boost_id} with $${amount}`);
+      console.log(`Brand ${brand_id} funded boost ${boost_id} with $${amount}`);
     }
 
     return new Response(JSON.stringify({ 
       success: true,
       allocated_amount: amount,
-      remaining_balance: userBalance - amount
+      remaining_balance: walletBalance - amount
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
