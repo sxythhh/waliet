@@ -267,30 +267,31 @@ export function GlobalBrandSearch({
               </div> : results.length === 0 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Start typing to search...</span>
               </div> : <div className="py-2">
-                {Object.entries(groupedResults).map(([type, items]) => <div key={type}>
-                    <div className="px-4 py-2">
-                      <span className="text-xs font-medium uppercase tracking-wider text-[#6b6b6b] dark:text-[#616161]">
+                {Object.entries(groupedResults).map(([type, items]) => <div key={type} className="mb-2">
+                    <div className="px-4 py-1.5">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                         {getCategoryLabel(type as SearchResult['type'])}
                       </span>
                     </div>
-                    {items.map((result, idx) => {
-                const Icon = getIcon(result.type);
+                    {items.map((result) => {
                 const globalIndex = results.indexOf(result);
                 const isSelected = globalIndex === selectedIndex;
-                return <button key={result.id} onClick={() => handleSelect(result)} onMouseEnter={() => setSelectedIndex(globalIndex)} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-[#f0f0f0] dark:bg-[#1f1f1f]' : 'hover:bg-[#f5f5f5] dark:hover:bg-[#1f1f1f]/50'}`}>
-                          {result.imageUrl ? <Avatar className="h-8 w-8">
-                              <AvatarImage src={result.imageUrl} />
-                              <AvatarFallback className="bg-[#e0e0e0] dark:bg-[#1f1f1f]">
-                                <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
+                return <button key={result.id} onClick={() => handleSelect(result)} onMouseEnter={() => setSelectedIndex(globalIndex)} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-muted/60' : 'hover:bg-muted/40'}`}>
+                          {result.imageUrl ? <Avatar className="h-9 w-9">
+                              <AvatarImage src={result.imageUrl} className="object-cover" />
+                              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                                {result.title.charAt(0).toUpperCase()}
                               </AvatarFallback>
-                            </Avatar> : <div className="h-8 w-8 rounded-full flex items-center justify-center bg-[#e0e0e0] dark:bg-[#1f1f1f]">
-                              <Icon className="h-4 w-4 text-[#6b6b6b] dark:text-[#616161]" />
-                            </div>}
+                            </Avatar> : <Avatar className="h-9 w-9">
+                              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                                {result.title.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-black dark:text-white truncate font-inter tracking-[-0.5px]">
+                            <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.3px]">
                               {result.title}
                             </p>
-                            {result.subtitle && <p className="text-xs truncate font-inter text-[#6b6b6b] dark:text-[#616161]">
+                            {result.subtitle && <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.2px]">
                                 {result.subtitle}
                               </p>}
                           </div>
