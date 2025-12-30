@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -57,9 +58,32 @@ export default function Transactions() {
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
+  const [slashAccountsDialogOpen, setSlashAccountsDialogOpen] = useState(false);
+  const [slashAccounts, setSlashAccounts] = useState<any>(null);
+  const [loadingSlashAccounts, setLoadingSlashAccounts] = useState(false);
   const {
     toast
   } = useToast();
+
+  const fetchSlashAccounts = async () => {
+    setLoadingSlashAccounts(true);
+    setSlashAccountsDialogOpen(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-slash-accounts');
+      if (error) throw error;
+      setSlashAccounts(data);
+    } catch (error: any) {
+      console.error('Error fetching Slash accounts:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch Slash accounts",
+        variant: "destructive"
+      });
+      setSlashAccounts({ error: error.message });
+    } finally {
+      setLoadingSlashAccounts(false);
+    }
+  };
   useEffect(() => {
     fetchTransactions();
     fetchCampaigns();
@@ -355,8 +379,13 @@ export default function Transactions() {
   return <div className="w-full px-3 py-4 md:container md:mx-auto md:p-6 space-y-4 md:space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
         <h1 className="text-2xl md:text-3xl font-bold">All Transactions</h1>
-        <div className="text-sm text-muted-foreground">
-          Total: {filteredTransactions.length} transactions
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={fetchSlashAccounts}>
+            Slash Accounts
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            Total: {filteredTransactions.length} transactions
+          </div>
         </div>
       </div>
 
@@ -640,5 +669,25 @@ export default function Transactions() {
         fetchUserTransactions(selectedUser.id);
       }
     }} />}
+
+      {/* Slash Accounts Dialog */}
+      <Dialog open={slashAccountsDialogOpen} onOpenChange={setSlashAccountsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Slash Accounts</DialogTitle>
+          </DialogHeader>
+          {loadingSlashAccounts ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : slashAccounts ? (
+            <pre className="bg-muted/50 p-4 rounded-lg text-xs overflow-auto whitespace-pre-wrap">
+              {JSON.stringify(slashAccounts, null, 2)}
+            </pre>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No data</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>;
 }
