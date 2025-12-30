@@ -158,3 +158,6 @@ verify_jwt = true
 
 [functions.get-slash-accounts]
 verify_jwt = false
+
+[functions.undo-transaction]
+verify_jwt = true

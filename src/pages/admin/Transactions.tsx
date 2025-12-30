@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Search, Calendar as CalendarIcon, Loader2, Undo2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -61,9 +61,42 @@ export default function Transactions() {
   const [slashAccountsDialogOpen, setSlashAccountsDialogOpen] = useState(false);
   const [slashAccounts, setSlashAccounts] = useState<any>(null);
   const [loadingSlashAccounts, setLoadingSlashAccounts] = useState(false);
+  const [undoingTransaction, setUndoingTransaction] = useState<string | null>(null);
   const {
     toast
   } = useToast();
+
+  const handleUndoTransaction = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to undo this transaction? This will reverse all related changes including wallet balance and campaign budgets.')) {
+      return;
+    }
+
+    setUndoingTransaction(transactionId);
+    try {
+      const { data, error } = await supabase.functions.invoke('undo-transaction', {
+        body: { transaction_id: transactionId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Transaction Undone",
+        description: data.message || `Successfully reversed transaction. ${data.actions_taken?.length || 0} actions taken.`,
+      });
+
+      // Refresh transactions
+      fetchTransactions();
+    } catch (error: any) {
+      console.error('Error undoing transaction:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to undo transaction",
+        variant: "destructive"
+      });
+    } finally {
+      setUndoingTransaction(null);
+    }
+  };
 
   const fetchSlashAccounts = async () => {
     setLoadingSlashAccounts(true);
@@ -509,6 +542,24 @@ export default function Transactions() {
                   : tx.type.replace("_", " ")}
               </Badge>
               {getStatusBadge(tx.status)}
+              {!tx.metadata?.reversed && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 hover:bg-destructive/10 hover:text-destructive ml-auto"
+                  onClick={() => handleUndoTransaction(tx.id)}
+                  disabled={undoingTransaction === tx.id}
+                >
+                  {undoingTransaction === tx.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Undo2 className="h-3 w-3" />
+                  )}
+                </Button>
+              )}
+              {tx.metadata?.reversed && (
+                <span className="text-xs text-muted-foreground ml-auto">Reversed</span>
+              )}
             </div>
 
             {tx.metadata?.campaign_budget_before !== undefined && tx.metadata?.campaign_budget_after !== undefined ? (
@@ -532,7 +583,8 @@ export default function Transactions() {
               <TableHead className="w-[120px] font-medium text-white font-inter tracking-[-0.5px]">Amount</TableHead>
               <TableHead className="w-[140px] font-medium text-white font-inter tracking-[-0.5px]">Type</TableHead>
               <TableHead className="font-medium text-white font-inter tracking-[-0.5px]">Details</TableHead>
-              <TableHead className="w-[100px] text-right font-medium text-white font-inter tracking-[-0.5px]">Status</TableHead>
+              <TableHead className="w-[100px] font-medium text-white font-inter tracking-[-0.5px]">Status</TableHead>
+              <TableHead className="w-[80px] text-right font-medium text-white font-inter tracking-[-0.5px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -550,12 +602,13 @@ export default function Transactions() {
                     <TableCell className="py-3"><Skeleton className="h-4 w-16" /></TableCell>
                     <TableCell className="py-3"><Skeleton className="h-5 w-20" /></TableCell>
                     <TableCell className="py-3"><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell className="py-3 text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
+                    <TableCell className="py-3"><Skeleton className="h-5 w-16" /></TableCell>
+                    <TableCell className="py-3 text-right"><Skeleton className="h-7 w-7 ml-auto" /></TableCell>
                   </TableRow>
                 ))}
               </>
             ) : filteredTransactions.length === 0 ? <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
                   No transactions found
                 </TableCell>
               </TableRow> : filteredTransactions.map(tx => {
@@ -652,8 +705,28 @@ export default function Transactions() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-3 text-right">
+                    <TableCell className="py-3">
                       {getStatusBadge(tx.status)}
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      {tx.metadata?.reversed ? (
+                        <span className="text-xs text-muted-foreground">Reversed</span>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => handleUndoTransaction(tx.id)}
+                          disabled={undoingTransaction === tx.id}
+                          title="Undo transaction"
+                        >
+                          {undoingTransaction === tx.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Undo2 className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );
