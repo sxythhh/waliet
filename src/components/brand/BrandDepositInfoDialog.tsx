@@ -128,7 +128,7 @@ export function BrandDepositInfoDialog({
           ) : !depositInfo?.has_slash_wallet ? (
             <div className="text-center py-8">
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-6 h-6 text-muted-foreground" />
+                <span className="text-xl">🏦</span>
               </div>
               <h3 
                 className="text-base font-semibold tracking-[-0.5px] mb-2"

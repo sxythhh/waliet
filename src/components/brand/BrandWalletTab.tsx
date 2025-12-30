@@ -355,7 +355,6 @@ export function BrandWalletTab({
               <Button variant="ghost" onClick={handleOpenBrandToPersonal} disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
                 fontFamily: 'Inter, sans-serif'
               }}>
-                <UserCircle className="w-4 h-4 mr-1.5" />
                 To Personal Wallet
               </Button>
 
