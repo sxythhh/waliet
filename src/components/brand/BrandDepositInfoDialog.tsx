@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Check, Loader2, Building2, Bitcoin, QrCode } from "lucide-react";
+import { Copy, Check, Loader2, QrCode } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface BrandDepositInfoDialogProps {
@@ -160,21 +160,19 @@ export function BrandDepositInfoDialog({
             </div>
           ) : (
             <Tabs defaultValue="wire" className="w-full">
-              <TabsList className="w-full bg-muted p-1 mb-4">
+              <TabsList className="w-full bg-transparent p-0 h-auto border-b border-border rounded-none mb-4">
                 <TabsTrigger 
                   value="wire" 
-                  className="flex-1 data-[state=active]:bg-background data-[state=active]:text-foreground font-medium tracking-[-0.3px]"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
-                  <Building2 className="w-4 h-4 mr-2" />
                   Wire Transfer
                 </TabsTrigger>
                 <TabsTrigger 
                   value="crypto" 
-                  className="flex-1 data-[state=active]:bg-background data-[state=active]:text-foreground font-medium tracking-[-0.3px]"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
-                  <Bitcoin className="w-4 h-4 mr-2" />
                   Crypto
                 </TabsTrigger>
               </TabsList>
