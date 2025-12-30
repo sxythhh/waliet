@@ -135,7 +135,7 @@ serve(async (req) => {
     }
 
     // Record personal wallet transaction
-    await supabase
+    const { error: personalTxError } = await supabase
       .from('wallet_transactions')
       .insert({
         user_id: user.id,
@@ -149,6 +149,10 @@ serve(async (req) => {
           brand_name: brand.name
         }
       });
+    
+    if (personalTxError) {
+      console.error('Error recording personal wallet transaction:', personalTxError);
+    }
 
     // Credit brand wallet
     const { data: brandWallet } = await supabase
@@ -178,7 +182,7 @@ serve(async (req) => {
     }
 
     // Record brand wallet transaction
-    await supabase
+    const { error: brandTxError } = await supabase
       .from('brand_wallet_transactions')
       .insert({
         brand_id: brand_id,
@@ -192,6 +196,10 @@ serve(async (req) => {
           source_user_id: user.id
         }
       });
+
+    if (brandTxError) {
+      console.error('Error recording brand wallet transaction:', brandTxError);
+    }
 
     console.log(`Successfully transferred $${transferAmount} to brand ${brand.name}`);
 
