@@ -116,15 +116,14 @@ serve(async (req) => {
     // Include Slash wallet info in response
     const hasSlashWallet = !!brand.slash_virtual_account_id;
 
+    // If brand doesn't have a Whop company, return local balance only
     if (!brand.whop_company_id) {
-      // Brand hasn't set up their Whop company yet - return local balance only
       return new Response(JSON.stringify({ 
         balance: localBalance,
         virality_balance: localBalance,
         withdraw_balance: 0,
         pending_balance: 0,
         currency: 'usd',
-        has_whop_company: false,
         has_slash_wallet: hasSlashWallet,
         slash_account_number: brand.slash_account_number,
         slash_routing_number: brand.slash_routing_number,
@@ -208,12 +207,10 @@ serve(async (req) => {
       withdraw_balance: whopBalance,
       pending_balance: pendingBalance,
       currency: currency,
-      has_whop_company: true,
       has_slash_wallet: hasSlashWallet,
       slash_account_number: brand.slash_account_number,
       slash_routing_number: brand.slash_routing_number,
-      slash_crypto_addresses: brand.slash_crypto_addresses || [],
-      onboarding_complete: brand.whop_onboarding_complete
+      slash_crypto_addresses: brand.slash_crypto_addresses || []
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
