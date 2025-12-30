@@ -29,7 +29,7 @@ export function BudgetProgressCard({
       {/* Header */}
       <div className="mb-6 flex items-end justify-between">
         
-        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 hover:bg-muted/50" onClick={onTopUp}>
+        <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] border-border/50 dark:hover:bg-muted/50 hover:bg-transparent" onClick={onTopUp}>
           <Plus className="h-3.5 w-3.5" />
           Add Funds
         </Button>
@@ -50,7 +50,7 @@ export function BudgetProgressCard({
           }}>
               <svg width="180" height="100" viewBox="0 0 180 100" className="overflow-visible">
                 {/* Background arc */}
-                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="14" strokeLinecap="round" />
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" className="stroke-border dark:stroke-muted/30" strokeWidth="14" strokeLinecap="round" />
                 
                 {/* Progress arc */}
                 <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="url(#budgetGradient)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${budgetPercentage / 100 * (Math.PI * 75)} ${Math.PI * 75}`} className="transition-all duration-700" />
@@ -105,7 +105,7 @@ export function BudgetProgressCard({
           }}>
               <svg width="180" height="100" viewBox="0 0 180 100" className="overflow-visible">
                 {/* Background arc */}
-                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="hsl(var(--muted) / 0.3)" strokeWidth="14" strokeLinecap="round" />
+                <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" className="stroke-border dark:stroke-muted/30" strokeWidth="14" strokeLinecap="round" />
                 
                 {/* Progress arc */}
                 <path d="M 15 90 A 75 75 0 0 1 165 90" fill="none" stroke="url(#creatorGradient)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${creatorPercentage / 100 * (Math.PI * 75)} ${Math.PI * 75}`} className="transition-all duration-700" />
