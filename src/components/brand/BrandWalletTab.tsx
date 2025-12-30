@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ChevronDown } from "lucide-react";
+import { Plus, ChevronDown, CreditCard } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
@@ -14,6 +14,7 @@ import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
 import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
 import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+
 interface BrandWalletTabProps {
   brandId: string;
   brandSlug: string;
@@ -32,6 +33,10 @@ interface Transaction {
   status: string;
   description: string | null;
   created_at: string;
+  metadata?: {
+    checkout_url?: string;
+    whop_checkout_id?: string;
+  } | null;
 }
 export function BrandWalletTab({
   brandId,
@@ -215,6 +220,8 @@ export function BrandWalletTab({
         return 'Refund';
       case 'deposit':
         return 'Deposit';
+      case 'deposit_intent':
+        return 'Deposit Intent';
       case 'transfer_in':
         return 'Transfer In';
       case 'transfer_out':
@@ -233,6 +240,37 @@ export function BrandWalletTab({
         return 'text-red-400';
       default:
         return 'text-neutral-400';
+    }
+  };
+
+  const handleCompletePayment = async (tx: Transaction) => {
+    // Try to resume the checkout
+    const returnUrl = `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile`;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-brand-wallet-topup', {
+        body: {
+          brand_id: brandId,
+          amount: tx.amount,
+          return_url: returnUrl,
+          transaction_id: tx.id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.checkout_url) {
+        sessionStorage.setItem(
+          `pending_topup_${brandId}`,
+          JSON.stringify({ amount: tx.amount, transactionId: tx.id })
+        );
+        window.location.href = data.checkout_url;
+      } else {
+        toast.error('Could not create checkout. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error resuming payment:', err);
+      toast.error('Failed to resume payment');
     }
   };
   if (loading) {
@@ -295,16 +333,54 @@ export function BrandWalletTab({
         </CardContent>
       </Card>
 
+      {/* Pending Payments */}
+      {transactions.filter(tx => tx.status === 'pending' && tx.type === 'deposit_intent').length > 0 && (
+        <Card className="border-border bg-black/0">
+          <CardHeader className="px-0">
+            <CardTitle className="text-lg text-foreground">Pending Payments</CardTitle>
+          </CardHeader>
+          <CardContent className="py-0 px-0">
+            <div className="space-y-0">
+              {transactions.filter(tx => tx.status === 'pending' && tx.type === 'deposit_intent').map(tx => (
+                <div key={tx.id} className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
+                      {tx.description || 'Deposit Intent'}
+                    </p>
+                    <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
+                      {formatDate(tx.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <p className="font-['Inter'] text-sm font-medium tracking-[-0.5px] text-yellow-500">
+                      {formatCurrency(tx.amount)}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => handleCompletePayment(tx)}
+                      className="h-8 px-3 text-xs bg-[#2060df] hover:bg-[#1850b8] text-white border-t border-[#4b85f7]"
+                    >
+                      <CreditCard className="w-3.5 h-3.5 mr-1.5" />
+                      Complete Payment
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Transaction History */}
       <Card className="border-border bg-black/0">
         <CardHeader className="px-0">
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent className="py-0 px-0">
-          {transactions.filter(tx => tx.status !== 'pending').length === 0 ? <div className="text-center py-8">
+          {transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent')).length === 0 ? <div className="text-center py-8">
               <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
             </div> : <div className="space-y-0">
-              {transactions.filter(tx => tx.status !== 'pending').map(tx => <div key={tx.id} className="flex items-center justify-between py-3">
+              {transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent')).map(tx => <div key={tx.id} className="flex items-center justify-between py-3">
                     <div>
                       <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
                         {tx.description || getTransactionTypeLabel(tx.type)}

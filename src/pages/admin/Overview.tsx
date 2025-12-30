@@ -2,6 +2,7 @@ import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { ApiActivityTab } from "@/components/admin/ApiActivityTab";
 import { SendAnnouncementDialog } from "@/components/admin/SendAnnouncementDialog";
 import { ScheduledFunctionsTab } from "@/components/admin/ScheduledFunctionsTab";
+import { PlatformIncomeChart } from "@/components/admin/PlatformIncomeChart";
 
 export default function AdminOverview() {
   return (
@@ -11,6 +12,7 @@ export default function AdminOverview() {
           <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Overview</h1>
           <SendAnnouncementDialog />
         </div>
+        <PlatformIncomeChart />
         <AnalyticsTab />
         <ScheduledFunctionsTab />
         <ApiActivityTab />
