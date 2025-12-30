@@ -907,6 +907,47 @@ export type Database = {
           },
         ]
       }
+      brand_wallets: {
+        Row: {
+          balance: number
+          brand_id: string
+          created_at: string
+          currency: string
+          id: string
+          total_deposited: number
+          total_spent: number
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          brand_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          total_deposited?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          brand_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          total_deposited?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_wallets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brands: {
         Row: {
           account_url: string | null
@@ -936,6 +977,12 @@ export type Database = {
           shortimize_api_key: string | null
           show_account_tab: boolean
           slack_webhook_url: string | null
+          slash_account_number: string | null
+          slash_balance_cents: number | null
+          slash_crypto_addresses: Json | null
+          slash_routing_number: string | null
+          slash_virtual_account_id: string | null
+          slash_webhook_id: string | null
           slug: string
           stripe_account_id: string | null
           stripe_charges_enabled: boolean | null
@@ -983,6 +1030,12 @@ export type Database = {
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slack_webhook_url?: string | null
+          slash_account_number?: string | null
+          slash_balance_cents?: number | null
+          slash_crypto_addresses?: Json | null
+          slash_routing_number?: string | null
+          slash_virtual_account_id?: string | null
+          slash_webhook_id?: string | null
           slug: string
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null
@@ -1030,6 +1083,12 @@ export type Database = {
           shortimize_api_key?: string | null
           show_account_tab?: boolean
           slack_webhook_url?: string | null
+          slash_account_number?: string | null
+          slash_balance_cents?: number | null
+          slash_crypto_addresses?: Json | null
+          slash_routing_number?: string | null
+          slash_virtual_account_id?: string | null
+          slash_webhook_id?: string | null
           slug?: string
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean | null

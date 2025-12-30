@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight, ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight, ChevronDown, CreditCard, Building2, UserCircle } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
 import { WithdrawDialog } from "./WithdrawDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
+import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
+import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 interface BrandWalletTabProps {
@@ -48,9 +50,20 @@ export function BrandWalletTab({
   const [settingUp, setSettingUp] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
+  const [depositInfoOpen, setDepositInfoOpen] = useState(false);
+  const [brandName, setBrandName] = useState("");
   const {
     isAdmin
   } = useAdminCheck();
+
+  useEffect(() => {
+    const fetchBrandName = async () => {
+      const { data } = await supabase.from('brands').select('name').eq('id', brandId).single();
+      if (data) setBrandName(data.name);
+    };
+    fetchBrandName();
+  }, [brandId]);
   const fetchWalletData = async () => {
     try {
       const {

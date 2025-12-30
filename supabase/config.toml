@@ -146,3 +146,12 @@ verify_jwt = false
 
 [functions.support-chat]
 verify_jwt = false
+
+[functions.setup-slash-wallet]
+verify_jwt = true
+
+[functions.slash-webhook]
+verify_jwt = false
+
+[functions.personal-to-brand-transfer]
+verify_jwt = true

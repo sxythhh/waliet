@@ -61,10 +61,10 @@ serve(async (req) => {
       });
     }
 
-    // Get brand with Whop company ID
+    // Get brand with Whop company ID and Slash info
     const { data: brand, error: brandError } = await supabase
       .from('brands')
-      .select('id, whop_company_id, whop_onboarding_complete')
+      .select('id, whop_company_id, whop_onboarding_complete, slash_virtual_account_id, slash_account_number, slash_routing_number, slash_crypto_addresses')
       .eq('id', brand_id)
       .single();
 
@@ -75,7 +75,16 @@ serve(async (req) => {
       });
     }
 
-    // Calculate local wallet balance from brand_wallet_transactions
+    // Get brand_wallets balance (primary source of truth for brand balance)
+    const { data: brandWallet } = await supabase
+      .from('brand_wallets')
+      .select('balance, total_deposited, total_spent')
+      .eq('brand_id', brand_id)
+      .single();
+
+    const brandWalletBalance = Number(brandWallet?.balance) || 0;
+
+    // Calculate local wallet balance from brand_wallet_transactions as fallback/verification
     const { data: transactions, error: txError } = await supabase
       .from('brand_wallet_transactions')
       .select('type, amount, status')
@@ -85,21 +94,27 @@ serve(async (req) => {
       console.error('Error fetching transactions:', txError);
     }
 
-    const localBalance = (transactions || []).reduce((acc, tx) => {
+    const calculatedBalance = (transactions || []).reduce((acc, tx) => {
       if (tx.status !== 'completed') return acc;
       const txAmount = Number(tx.amount) || 0;
       // Credit types add to balance
-      if (['topup', 'refund', 'admin_credit'].includes(tx.type)) {
+      if (['topup', 'refund', 'admin_credit', 'deposit', 'transfer_in'].includes(tx.type)) {
         return acc + txAmount;
       }
       // Debit types subtract from balance
-      if (['withdrawal', 'campaign_allocation', 'boost_allocation', 'admin_debit'].includes(tx.type)) {
+      if (['withdrawal', 'campaign_allocation', 'boost_allocation', 'admin_debit', 'transfer_out'].includes(tx.type)) {
         return acc - txAmount;
       }
       return acc;
     }, 0);
 
-    console.log(`Local wallet balance for brand ${brand_id}: $${localBalance}`);
+    // Use brand_wallets balance if available, otherwise use calculated
+    const localBalance = brandWalletBalance > 0 ? brandWalletBalance : calculatedBalance;
+
+    console.log(`Brand wallet balance for ${brand_id}: $${brandWalletBalance}, calculated: $${calculatedBalance}`);
+
+    // Include Slash wallet info in response
+    const hasSlashWallet = !!brand.slash_virtual_account_id;
 
     if (!brand.whop_company_id) {
       // Brand hasn't set up their Whop company yet - return local balance only
@@ -109,7 +124,11 @@ serve(async (req) => {
         withdraw_balance: 0,
         pending_balance: 0,
         currency: 'usd',
-        has_whop_company: false
+        has_whop_company: false,
+        has_slash_wallet: hasSlashWallet,
+        slash_account_number: brand.slash_account_number,
+        slash_routing_number: brand.slash_routing_number,
+        slash_crypto_addresses: brand.slash_crypto_addresses || []
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -186,6 +205,10 @@ serve(async (req) => {
       pending_balance: pendingBalance,
       currency: currency,
       has_whop_company: true,
+      has_slash_wallet: hasSlashWallet,
+      slash_account_number: brand.slash_account_number,
+      slash_routing_number: brand.slash_routing_number,
+      slash_crypto_addresses: brand.slash_crypto_addresses || [],
       onboarding_complete: brand.whop_onboarding_complete
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
