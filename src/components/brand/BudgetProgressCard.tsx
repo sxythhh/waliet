@@ -25,9 +25,7 @@ export function BudgetProgressCard({
   const budgetRemaining = Math.max(0, budgetTotal - budgetUsed);
   const budgetPercentage = budgetTotal > 0 ? budgetUsed / budgetTotal * 100 : 0;
   const creatorPercentage = maxCreators > 0 ? acceptedCreators / maxCreators * 100 : 0;
-  return <div className="rounded-xl p-6" style={{
-    backgroundColor: '#0a0a0a'
-  }}>
+  return <div className="rounded-xl p-6 bg-muted/30 dark:bg-[#0a0a0a]">
       {/* Header */}
       <div className="mb-6 flex items-end justify-between">
         
