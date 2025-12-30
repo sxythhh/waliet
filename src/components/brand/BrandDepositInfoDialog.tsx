@@ -17,11 +17,16 @@ interface DepositInfo {
   has_slash_wallet: boolean;
   slash_account_number: string | null;
   slash_routing_number: string | null;
-  slash_crypto_addresses: Array<{
-    chain: string;
-    address: string;
-  }>;
 }
+
+// Hardcoded USDC deposit addresses
+const CRYPTO_ADDRESSES = [
+  { chain: 'arbitrum', address: '0x499a5919f33722ad03576Dd1630E5923f1001D0D' },
+  { chain: 'base', address: '0xb1106dcD5D2aE6708754Ba7703802B617597b084' },
+  { chain: 'ethereum', address: '0x165b9343797B527AE3B232d9942721c6C8ad75A0' },
+  { chain: 'polygon', address: '0xFB9Cd89e26864716e04Eb63154a1BE42e24C9516' },
+  { chain: 'solana', address: '75Axj8d1mVRKFBKZtG9sZq9wpjNNmHseHivDHooYucJh' },
+];
 
 export function BrandDepositInfoDialog({
   open,
@@ -52,7 +57,6 @@ export function BrandDepositInfoDialog({
         has_slash_wallet: data?.has_slash_wallet || false,
         slash_account_number: data?.slash_account_number || null,
         slash_routing_number: data?.slash_routing_number || null,
-        slash_crypto_addresses: data?.slash_crypto_addresses || [],
       });
     } catch (error) {
       console.error('Error fetching deposit info:', error);
@@ -128,7 +132,7 @@ export function BrandDepositInfoDialog({
           ) : !depositInfo?.has_slash_wallet ? (
             <div className="text-center py-8">
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <span className="text-xl">🏦</span>
+                <QrCode className="w-6 h-6 text-muted-foreground" />
               </div>
               <h3 
                 className="text-base font-semibold tracking-[-0.5px] mb-2"
@@ -163,14 +167,14 @@ export function BrandDepositInfoDialog({
               <TabsList className="w-full bg-transparent p-0 h-auto border-b border-border rounded-none mb-4">
                 <TabsTrigger 
                   value="wire" 
-                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-foreground data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Wire Transfer
                 </TabsTrigger>
                 <TabsTrigger 
                   value="crypto" 
-                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary text-foreground data-[state=active]:bg-transparent bg-transparent font-medium tracking-[-0.3px] pb-3"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Crypto
@@ -243,47 +247,35 @@ export function BrandDepositInfoDialog({
               </TabsContent>
 
               <TabsContent value="crypto" className="space-y-4">
-                {depositInfo.slash_crypto_addresses.length > 0 ? (
-                  <div className="space-y-3">
-                    {depositInfo.slash_crypto_addresses.map((addr, index) => (
-                      <div key={index} className="p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-3">
+                  {CRYPTO_ADDRESSES.map((addr, index) => (
+                    <div key={index} className="p-4 bg-muted/50 rounded-lg">
+                      <p 
+                        className="text-xs text-muted-foreground mb-1 tracking-[-0.3px]"
+                        style={{ fontFamily: 'Inter, sans-serif' }}
+                      >
+                        {getChainDisplayName(addr.chain)} (USDC)
+                      </p>
+                      <div className="flex items-center justify-between gap-2">
                         <p 
-                          className="text-xs text-muted-foreground mb-1 tracking-[-0.3px]"
-                          style={{ fontFamily: 'Inter, sans-serif' }}
+                          className="text-sm font-mono text-foreground truncate"
                         >
-                          {getChainDisplayName(addr.chain)} (USDC)
+                          {addr.address}
                         </p>
-                        <div className="flex items-center justify-between gap-2">
-                          <p 
-                            className="text-sm font-mono text-foreground truncate"
-                          >
-                            {addr.address}
-                          </p>
-                          <button
-                            onClick={() => copyToClipboard(addr.address, `crypto-${index}`)}
-                            className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
-                          >
-                            {copiedField === `crypto-${index}` ? (
-                              <Check className="w-4 h-4 text-green-500" />
-                            ) : (
-                              <Copy className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => copyToClipboard(addr.address, `crypto-${index}`)}
+                          className="p-2 hover:bg-muted rounded-lg transition-colors flex-shrink-0"
+                        >
+                          {copiedField === `crypto-${index}` ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <QrCode className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                    <p 
-                      className="text-sm text-muted-foreground tracking-[-0.3px]"
-                      style={{ fontFamily: 'Inter, sans-serif' }}
-                    >
-                      No crypto addresses available yet.
-                    </p>
-                  </div>
-                )}
+                    </div>
+                  ))}
+                </div>
                 <p 
                   className="text-xs text-muted-foreground tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
