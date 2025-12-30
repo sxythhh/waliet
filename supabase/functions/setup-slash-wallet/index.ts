@@ -137,32 +137,44 @@ serve(async (req) => {
 
     const virtualAccount = accountData.virtualAccount;
 
-    // Step 2: Get crypto deposit addresses
+    // Step 2: Get crypto deposit addresses for multiple currencies
     let cryptoAddresses: any[] = [];
-    try {
-      const cryptoResponse = await fetch(`${SLASH_API_URL}/crypto/offramp`, {
-        method: 'POST',
-        headers: {
-          'X-API-Key': slashApiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          virtualAccountId: virtualAccount.id,
-          paymentRail: 'ach',
-          currency: 'usdc'
-        }),
-      });
+    const currencies = ['usdc', 'usdt'];
+    
+    for (const currency of currencies) {
+      try {
+        console.log(`Requesting ${currency} offramp addresses for virtual account: ${virtualAccount.id}`);
+        const cryptoResponse = await fetch(`${SLASH_API_URL}/crypto/offramp`, {
+          method: 'POST',
+          headers: {
+            'X-API-Key': slashApiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            virtualAccountId: virtualAccount.id,
+            paymentRail: 'ach',
+            currency: currency
+          }),
+        });
 
-      if (cryptoResponse.ok) {
-        const cryptoData = await cryptoResponse.json();
-        cryptoAddresses = cryptoData.addresses || [];
-        console.log('Crypto addresses retrieved:', JSON.stringify(cryptoAddresses, null, 2));
-      } else {
-        console.warn('Failed to get crypto addresses:', await cryptoResponse.text());
+        if (cryptoResponse.ok) {
+          const cryptoData = await cryptoResponse.json();
+          console.log(`Crypto response for ${currency}:`, JSON.stringify(cryptoData, null, 2));
+          
+          // The API returns { wallet: {...}, addresses: [...] }
+          if (cryptoData.addresses && Array.isArray(cryptoData.addresses)) {
+            cryptoAddresses = [...cryptoAddresses, ...cryptoData.addresses];
+          }
+        } else {
+          const errorText = await cryptoResponse.text();
+          console.warn(`Failed to get ${currency} addresses:`, cryptoResponse.status, errorText);
+        }
+      } catch (cryptoError) {
+        console.warn(`Error getting ${currency} addresses:`, cryptoError);
       }
-    } catch (cryptoError) {
-      console.warn('Error getting crypto addresses:', cryptoError);
     }
+    
+    console.log('Total crypto addresses retrieved:', cryptoAddresses.length);
 
     // Step 3: Update brand with Slash info
     const { error: updateError } = await supabase
