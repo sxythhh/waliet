@@ -193,7 +193,7 @@ export function CampaignApplicationsView({
       setLoading(false);
     }
   };
-  const handleUpdateStatus = async (applicationId: string, newStatus: 'approved' | 'rejected' | 'accepted') => {
+  const handleUpdateStatus = async (applicationId: string, newStatus: 'approved' | 'rejected' | 'accepted' | 'pending') => {
     setProcessing(applicationId);
     try {
       const application = applications.find(a => a.id === applicationId);
@@ -346,7 +346,13 @@ export function CampaignApplicationsView({
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium tracking-[-0.5px] truncate">
+                          <p 
+                            className="font-medium tracking-[-0.5px] truncate hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/@${app.profile?.username}`);
+                            }}
+                          >
                             {app.profile?.full_name || app.profile?.username || "Unknown"}
                           </p>
                           {app.status !== 'pending' && getStatusBadge(app.status)}
@@ -398,9 +404,16 @@ export function CampaignApplicationsView({
                     </Avatar>
                     <div className="space-y-0.5 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-base font-semibold tracking-[-0.5px] truncate">
+                        <a 
+                          href={`/@${selectedApp.profile?.username}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/@${selectedApp.profile?.username}`);
+                          }}
+                          className="text-base font-semibold tracking-[-0.5px] truncate hover:underline cursor-pointer"
+                        >
                           {selectedApp.profile?.full_name || selectedApp.profile?.username || "Unknown Creator"}
-                        </h2>
+                        </a>
                         {getStatusBadge(selectedApp.status)}
                       </div>
                       <p className="text-sm text-muted-foreground tracking-[-0.3px] truncate">
@@ -454,18 +467,25 @@ export function CampaignApplicationsView({
               </div>
             </div>
 
-            {/* Action Buttons - Fixed at bottom (only show for pending applications) */}
-            {selectedApp.status === 'pending' && <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
+            {/* Action Buttons - Fixed at bottom */}
+            {(selectedApp.status === 'pending' || selectedApp.status === 'rejected') && <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
                 <div className="flex flex-col sm:flex-row gap-2">
-                  
-                  <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
-                    <X className="h-4 w-4 mr-2" />
-                    Reject
-                  </Button>
-                  <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-1 sm:order-3">
-                    <Check className="h-4 w-4 mr-2" />
-                    Accept
-                  </Button>
+                  {selectedApp.status === 'pending' ? (
+                    <>
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
+                        <X className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-1 sm:order-3">
+                        <Check className="h-4 w-4 mr-2" />
+                        Accept
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => handleUpdateStatus(selectedApp.id, 'pending')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px]">
+                      Undo Rejection
+                    </Button>
+                  )}
                 </div>
               </div>}
           </> : <div className="flex items-center justify-center h-full text-muted-foreground">
