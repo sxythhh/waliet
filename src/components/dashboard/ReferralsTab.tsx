@@ -274,7 +274,7 @@ export function ReferralsTab(): JSX.Element {
       {/* Content Wrapper with Border and Rounded Corners */}
       <div className="border border-border rounded-2xl overflow-hidden">
         {/* Tab Navigation inside the border */}
-        <div className="border-b border-border pt-[10px] px-0 py-0">
+        <div className="border-b border-border px-0 py-0">
           <nav className="flex gap-0">
             {tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-4 py-2 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 -mb-[1px] ${activeTab === tab.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
                 {tab.label}

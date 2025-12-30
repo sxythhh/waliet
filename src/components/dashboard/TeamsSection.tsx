@@ -585,7 +585,6 @@ export function TeamsSection(): JSX.Element {
             </h4>
 
             {teamMembers.length === 0 ? <div className="text-center py-8">
-                <UserPlus className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">No members yet</p>
                 <p className="text-sm text-muted-foreground/70">Share your invite link to grow your team</p>
               </div> : <div className="space-y-3">
