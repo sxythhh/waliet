@@ -136,6 +136,18 @@ export function CreateBrandDialog({
       if (memberError) {
         console.error("Error adding brand member:", memberError);
       }
+
+      // Create brand_wallets record for the new brand
+      const { error: walletError } = await supabase.from("brand_wallets").insert({
+        brand_id: brandData.id,
+        balance: 0,
+        total_deposited: 0,
+        total_spent: 0,
+        currency: "usd"
+      });
+      if (walletError) {
+        console.error("Error creating brand wallet:", walletError);
+      }
       toast.success("Brand created successfully!");
       setOpen(false);
       form.reset();

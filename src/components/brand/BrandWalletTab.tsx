@@ -5,17 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ArrowUpRight, Wallet as WalletIcon, ArrowRight, ChevronDown, CreditCard, Building2, UserCircle } from "lucide-react";
+import { Plus, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
-import { BrandOnboardingCard } from "./BrandOnboardingCard";
 import { BrandToPersonalTransferDialog } from "./BrandToPersonalTransferDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
 import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
 import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import creditCardIcon from "@/assets/credit-card-filled-icon.svg";
 interface BrandWalletTabProps {
   brandId: string;
   brandSlug: string;
@@ -26,8 +24,6 @@ interface WalletData {
   withdraw_balance: number;
   pending_balance: number;
   currency: string;
-  has_whop_company: boolean;
-  onboarding_complete: boolean;
 }
 interface Transaction {
   id: string;
@@ -47,7 +43,6 @@ export function BrandWalletTab({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
-  const [settingUp, setSettingUp] = useState(false);
   const [brandToPersonalOpen, setBrandToPersonalOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
@@ -101,36 +96,6 @@ export function BrandWalletTab({
       console.error('Error fetching transactions:', error);
     }
   };
-
-  // Check for onboarding completion from URL params
-  useEffect(() => {
-    const onboardingStatus = searchParams.get('onboarding');
-    const status = searchParams.get('status');
-    if (onboardingStatus === 'complete' && (status === 'submitted' || status === 'success')) {
-      // Update the brand's onboarding status
-      const updateOnboardingStatus = async () => {
-        try {
-          await supabase.from('brands').update({
-            whop_onboarding_complete: true
-          }).eq('id', brandId);
-          toast.success('Verification completed successfully!');
-
-          // Clean up URL params
-          searchParams.delete('onboarding');
-          searchParams.delete('status');
-          setSearchParams(searchParams, {
-            replace: true
-          });
-
-          // Refresh wallet data
-          await fetchWalletData();
-        } catch (error) {
-          console.error('Error updating onboarding status:', error);
-        }
-      };
-      updateOnboardingStatus();
-    }
-  }, [searchParams, brandId]);
 
   // Handle returning from checkout
   useEffect(() => {
@@ -218,36 +183,6 @@ export function BrandWalletTab({
     };
     loadData();
   }, [brandId]);
-  const handleSetupWallet = async () => {
-    setSettingUp(true);
-    try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-brand-company', {
-        body: {
-          brand_id: brandId,
-          return_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=complete`,
-          refresh_url: `${window.location.origin}/dashboard?workspace=${brandSlug}&tab=profile&onboarding=refresh`
-        }
-      });
-      if (error) throw error;
-
-      // If we get an onboarding URL, redirect the user there
-      if (data?.onboarding_url) {
-        window.open(data.onboarding_url, '_blank');
-        toast.success('Opening wallet setup...');
-      } else if (data?.company_id) {
-        toast.success('Wallet set up successfully!');
-      }
-      await fetchWalletData();
-    } catch (error) {
-      console.error('Error setting up wallet:', error);
-      toast.error('Failed to set up wallet');
-    } finally {
-      setSettingUp(false);
-    }
-  };
   const handleOpenBrandToPersonal = () => {
     setBrandToPersonalOpen(true);
   };
@@ -307,33 +242,7 @@ export function BrandWalletTab({
       </div>;
   }
 
-  // Show setup prompt if no Whop company
-  if (!walletData?.has_whop_company) {
-    return <div className="space-y-6">
-        <div className="pt-6">
-          <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-full bg-[#1f60dd]/10 flex items-center justify-center mx-auto mb-4">
-              <img src={creditCardIcon} alt="" className="w-6 h-6 invert-0 brightness-0 opacity-60" style={{
-              filter: 'invert(36%) sepia(85%) saturate(1500%) hue-rotate(210deg) brightness(95%)'
-            }} />
-            </div>
-            <h3 className="text-lg font-semibold tracking-[-0.5px] mb-1.5">Set Up Your Brand Wallet</h3>
-            <p className="text-sm text-muted-foreground tracking-[-0.5px] mb-6 max-w-sm mx-auto">
-              Create a dedicated wallet for your brand to manage campaign budgets, 
-              receive funds, and process withdrawals.
-            </p>
-            <button onClick={handleSetupWallet} disabled={settingUp} className="px-5 py-2.5 bg-[#1f60dd] border-t border-[#4b85f7] rounded-lg font-['Inter'] text-sm font-medium tracking-[-0.5px] text-white hover:bg-[#1a50c8] transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none">
-              <img src={creditCardIcon} alt="" className="w-4 h-4" />
-              {settingUp ? 'Setting up...' : 'Set Up Wallet'}
-            </button>
-          </div>
-        </div>
-      </div>;
-  }
   return <div className="space-y-6">
-      {/* Onboarding Card - Show if not complete */}
-      {!walletData.onboarding_complete && <BrandOnboardingCard brandId={brandId} brandSlug={brandSlug} onComplete={fetchWalletData} />}
-
       {/* Balance Card */}
       <Card className="border-border overflow-hidden bg-black/0">
         <CardHeader className="pb-2 px-0">
