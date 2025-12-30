@@ -99,7 +99,8 @@ export function UserSettingsTab() {
   const [savingBrand, setSavingBrand] = useState(false);
   const [profile, setProfile] = useState({
     billing_address: "",
-    legal_business_name: ""
+    legal_business_name: "",
+    vat_number: ""
   });
 
   // Integration states
@@ -339,7 +340,8 @@ export function UserSettingsTab() {
       if (profileData) {
         setProfile({
           billing_address: (profileData as any).billing_address || "",
-          legal_business_name: (profileData as any).legal_business_name || ""
+          legal_business_name: (profileData as any).legal_business_name || "",
+          vat_number: (profileData as any).vat_number || ""
         });
       }
     } catch (error) {
@@ -387,7 +389,8 @@ export function UserSettingsTab() {
         error
       } = await supabase.from("profiles").update({
         billing_address: profile.billing_address,
-        legal_business_name: profile.legal_business_name
+        legal_business_name: profile.legal_business_name,
+        vat_number: profile.vat_number
       } as any).eq("id", user.id);
       if (error) throw error;
       toast.success("Settings updated successfully");
@@ -624,10 +627,6 @@ export function UserSettingsTab() {
 
               {/* Social Media Section */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Social Media
-                </Label>
-                
                 {/* Instagram */}
                 <div className="space-y-2">
                   <Label className="text-xs text-foreground tracking-[-0.5px]">Instagram</Label>
@@ -920,6 +919,16 @@ export function UserSettingsTab() {
             })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
           </div>
 
+          {/* VAT Number */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
+              VAT Number
+            </Label>
+            <Input value={profile.vat_number} onChange={e => setProfile({
+              ...profile,
+              vat_number: e.target.value
+            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
+          </div>
 
           
 

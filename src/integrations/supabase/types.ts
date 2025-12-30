@@ -2942,6 +2942,50 @@ export type Database = {
           },
         ]
       }
+      platform_income: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          source_brand_id: string | null
+          source_transaction_id: string | null
+          source_user_id: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          source_brand_id?: string | null
+          source_transaction_id?: string | null
+          source_user_id?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          source_brand_id?: string | null
+          source_transaction_id?: string | null
+          source_user_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_income_source_brand_id_fkey"
+            columns: ["source_brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_type: string
@@ -3003,6 +3047,7 @@ export type Database = {
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
+          vat_number: string | null
           views_score: number | null
         }
         Insert: {
@@ -3065,6 +3110,7 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          vat_number?: string | null
           views_score?: number | null
         }
         Update: {
@@ -3127,6 +3173,7 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          vat_number?: string | null
           views_score?: number | null
         }
         Relationships: []
