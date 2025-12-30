@@ -196,35 +196,6 @@ export function SearchOverlay({
               })}
             </div>
           </div>
-
-          {/* Niches/Topics */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold text-muted-foreground font-['Inter'] tracking-[-0.5px]">
-              Topics
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {NICHES.map((niche) => {
-                const Icon = niche.icon;
-                const isActive = activeNicheFilter === niche.id;
-                return (
-                  <button
-                    key={niche.id}
-                    onClick={() => onNicheFilter(isActive ? null : niche.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                      isActive
-                        ? 'bg-foreground text-background'
-                        : 'bg-muted/30 hover:bg-muted/50'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isActive ? 'bg-background/20' : niche.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-sm font-medium">{niche.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

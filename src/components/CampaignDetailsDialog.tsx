@@ -654,6 +654,18 @@ export function CampaignDetailsDialog({
         {onJoin && <Button onClick={onJoin} className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold rounded-full" size="lg">
             Join campaign
           </Button>}
+
+        {/* Leave Campaign Button - show when already joined and callback provided */}
+        {!onJoin && onLeaveCampaign && (
+          <Button 
+            onClick={onLeaveCampaign} 
+            variant="ghost"
+            className="w-full h-10 text-sm font-medium text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl mt-2"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Leave Campaign
+          </Button>
+        )}
       </DialogContent>
     </Dialog>;
 }
