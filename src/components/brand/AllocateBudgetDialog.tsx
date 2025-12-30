@@ -250,22 +250,7 @@ export function AllocateBudgetDialog({
                     </span>
                   ) : selectedItem ? (
                     <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center",
-                        selectedItem.type === 'campaign' ? "bg-blue-500/20" : "bg-orange-500/20"
-                      )}>
-                        {selectedItem.type === 'campaign' ? (
-                          <Megaphone className="w-4 h-4 text-blue-500" />
-                        ) : (
-                          <Zap className="w-4 h-4 text-orange-500" />
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">{selectedItem.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {selectedItem.type === 'campaign' ? 'Campaign' : 'Boost'} • {formatCurrency(selectedItem.budget)}
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium text-foreground">{selectedItem.title}</span>
                     </div>
                   ) : (
                     <span>Choose a campaign or boost</span>
@@ -283,65 +268,24 @@ export function AllocateBudgetDialog({
                   </div>
                 ) : (
                   <>
-                    {campaigns.length > 0 && (
-                      <>
-                        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1.5">
-                          Campaigns
-                        </DropdownMenuLabel>
-                        {campaigns.map((item) => (
-                          <DropdownMenuItem
-                            key={item.id}
-                            onClick={() => {
-                              setSelectedId(item.id);
-                              setDropdownOpen(false);
-                            }}
-                            className="flex items-center gap-3 p-2 rounded-lg cursor-pointer"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                              <Megaphone className="w-4 h-4 text-blue-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                              <p className="text-xs text-muted-foreground">Budget: {formatCurrency(item.budget)}</p>
-                            </div>
-                            {selectedId === item.id && (
-                              <Check className="w-4 h-4 text-emerald-500" />
-                            )}
-                          </DropdownMenuItem>
-                        ))}
-                      </>
-                    )}
-                    {campaigns.length > 0 && boosts.length > 0 && (
-                      <DropdownMenuSeparator className="my-1" />
-                    )}
-                    {boosts.length > 0 && (
-                      <>
-                        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 py-1.5">
-                          Boosts
-                        </DropdownMenuLabel>
-                        {boosts.map((item) => (
-                          <DropdownMenuItem
-                            key={item.id}
-                            onClick={() => {
-                              setSelectedId(item.id);
-                              setDropdownOpen(false);
-                            }}
-                            className="flex items-center gap-3 p-2 rounded-lg cursor-pointer"
-                          >
-                            <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                              <Zap className="w-4 h-4 text-orange-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                              <p className="text-xs text-muted-foreground">Budget: {formatCurrency(item.budget)}</p>
-                            </div>
-                            {selectedId === item.id && (
-                              <Check className="w-4 h-4 text-emerald-500" />
-                            )}
-                          </DropdownMenuItem>
-                        ))}
-                      </>
-                    )}
+                    {items.map((item) => (
+                      <DropdownMenuItem
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedId(item.id);
+                          setDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">Budget: {formatCurrency(item.budget)}</p>
+                        </div>
+                        {selectedId === item.id && (
+                          <Check className="w-4 h-4 text-emerald-500" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
                   </>
                 )}
               </DropdownMenuContent>
@@ -367,12 +311,12 @@ export function AllocateBudgetDialog({
                 <Button
                   key={value}
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => handleQuickAmount(value)}
                   className={cn(
-                    "flex-1 h-9 text-sm font-medium rounded-lg border-border hover:bg-muted/50 transition-colors",
-                    parseFloat(amount) === value && "bg-muted border-foreground/20"
+                    "flex-1 h-9 text-sm font-medium rounded-lg bg-muted/50 transition-colors",
+                    parseFloat(amount) === value && "bg-muted ring-1 ring-foreground/10"
                   )}
                 >
                   ${value}
@@ -425,7 +369,7 @@ export function AllocateBudgetDialog({
             type="button" 
             variant="ghost" 
             onClick={() => handleClose(false)} 
-            className="h-10 px-5 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-muted/50"
+            className="h-10 px-5 text-sm font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-muted-foreground hover:bg-muted/50"
           >
             Cancel
           </Button>

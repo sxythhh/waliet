@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, ChevronDown, CreditCard } from "lucide-react";
+import { Plus, ChevronDown, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
@@ -53,6 +53,8 @@ export function BrandWalletTab({
   const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
   const [depositInfoOpen, setDepositInfoOpen] = useState(false);
   const [brandName, setBrandName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const {
     isAdmin
   } = useAdminCheck();
@@ -94,7 +96,7 @@ export function BrandWalletTab({
         error
       } = await supabase.from('brand_wallet_transactions').select('*').eq('brand_id', brandId).order('created_at', {
         ascending: false
-      }).limit(20);
+      });
       if (error) throw error;
       setTransactions((data || []) as Transaction[]);
     } catch (error) {
@@ -377,23 +379,70 @@ export function BrandWalletTab({
           <CardTitle className="text-lg text-foreground">Transaction History</CardTitle>
         </CardHeader>
         <CardContent className="py-0 px-0">
-          {transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent')).length === 0 ? <div className="text-center py-8">
-              <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
-            </div> : <div className="space-y-0">
-              {transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent')).map(tx => <div key={tx.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
-                        {tx.description || getTransactionTypeLabel(tx.type)}
-                      </p>
-                      <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
-                        {formatDate(tx.created_at)}
+          {(() => {
+            const filteredTx = transactions.filter(tx => tx.status === 'completed' || (tx.status === 'pending' && tx.type !== 'deposit_intent'));
+            const totalPages = Math.ceil(filteredTx.length / itemsPerPage);
+            const paginatedTx = filteredTx.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            
+            if (filteredTx.length === 0) {
+              return (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground font-['Inter'] text-sm tracking-[-0.5px]">No transactions yet</p>
+                </div>
+              );
+            }
+            
+            return (
+              <>
+                <div className="space-y-0">
+                  {paginatedTx.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="text-foreground font-['Inter'] text-sm font-medium tracking-[-0.5px]">
+                          {tx.description || getTransactionTypeLabel(tx.type)}
+                        </p>
+                        <p className="font-['Inter'] text-xs text-muted-foreground tracking-[-0.5px] mt-0.5">
+                          {formatDate(tx.created_at)}
+                        </p>
+                      </div>
+                      <p className={`font-['Inter'] text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
+                        {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
                       </p>
                     </div>
-                    <p className={`font-['Inter'] text-sm font-medium tracking-[-0.5px] ${tx.amount > 0 ? 'text-emerald-500' : 'text-foreground'}`}>
-                      {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                  ))}
+                </div>
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                      Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTx.length)}-{Math.min(currentPage * itemsPerPage, filteredTx.length)} of {filteredTx.length}
                     </p>
-                  </div>)}
-            </div>}
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage >= totalPages}
+                        className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-50"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
 
