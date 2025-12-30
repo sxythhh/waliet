@@ -160,10 +160,6 @@ const brandMenuItems: MenuItem[] = [{
   tab: "creators",
   icon: null as any
 }, {
-  title: "Wallet",
-  tab: "wallet",
-  icon: null as any
-}, {
   title: "Settings",
   tab: "profile",
   icon: CircleUser

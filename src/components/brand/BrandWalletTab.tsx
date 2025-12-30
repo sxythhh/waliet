@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AddBrandFundsDialog } from "./AddBrandFundsDialog";
 import { AllocateBudgetDialog } from "./AllocateBudgetDialog";
 import { BrandOnboardingCard } from "./BrandOnboardingCard";
-import { WithdrawDialog } from "./WithdrawDialog";
+import { BrandToPersonalTransferDialog } from "./BrandToPersonalTransferDialog";
 import { TransferToWithdrawDialog } from "./TransferToWithdrawDialog";
 import { PersonalToBrandTransferDialog } from "./PersonalToBrandTransferDialog";
 import { BrandDepositInfoDialog } from "./BrandDepositInfoDialog";
@@ -48,7 +48,7 @@ export function BrandWalletTab({
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [settingUp, setSettingUp] = useState(false);
-  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [brandToPersonalOpen, setBrandToPersonalOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [personalTransferOpen, setPersonalTransferOpen] = useState(false);
   const [depositInfoOpen, setDepositInfoOpen] = useState(false);
@@ -248,8 +248,8 @@ export function BrandWalletTab({
       setSettingUp(false);
     }
   };
-  const handleOpenWithdraw = () => {
-    setWithdrawOpen(true);
+  const handleOpenBrandToPersonal = () => {
+    setBrandToPersonalOpen(true);
   };
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -353,11 +353,11 @@ export function BrandWalletTab({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="ghost" onClick={handleOpenWithdraw} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+        <Button variant="ghost" onClick={handleOpenBrandToPersonal} disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
         fontFamily: 'Inter, sans-serif'
       }}>
-          <WalletIcon className="w-4 h-4 mr-1.5" />
-          Withdraw
+          <UserCircle className="w-4 h-4 mr-1.5" />
+          To Personal Wallet
         </Button>
         
         <DropdownMenu>
@@ -447,7 +447,7 @@ export function BrandWalletTab({
       fetchTransactions();
     }} />
 
-      <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} brandId={brandId} brandSlug={brandSlug} />
+      <BrandToPersonalTransferDialog open={brandToPersonalOpen} onOpenChange={setBrandToPersonalOpen} brandId={brandId} brandName={brandName} viralityBalance={walletData?.virality_balance || 0} onSuccess={() => { fetchWalletData(); fetchTransactions(); }} />
 
       {isAdmin && <TransferToWithdrawDialog open={transferOpen} onOpenChange={setTransferOpen} brandId={brandId} viralityBalance={walletData?.virality_balance || 0} onSuccess={() => {
       fetchWalletData();
