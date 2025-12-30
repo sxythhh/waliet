@@ -24,7 +24,6 @@ import { CreatorContractsTab } from "@/components/brand/CreatorContractsTab";
 import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
-import { BrandWalletTab } from "@/components/brand/BrandWalletTab";
 
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -265,8 +264,6 @@ export default function Dashboard() {
           }
         case "education":
           return <EducationTab brandId={currentBrand.id} />;
-        case "wallet":
-          return <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />;
         case "profile":
           return <UserSettingsTab />;
         default:

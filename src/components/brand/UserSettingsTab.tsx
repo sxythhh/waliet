@@ -16,6 +16,7 @@ import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
+import { BrandWalletTab } from "./BrandWalletTab";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -836,8 +837,13 @@ export function UserSettingsTab() {
 
         {/* Wallet Tab */}
         <TabsContent value="wallet" className="mt-6 space-y-6">
+          {/* Brand Wallet Component */}
+          {isBrandMode && currentBrand && (
+            <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />
+          )}
+
           {/* Subscription Info */}
-          {isBrandMode && brand && <div className="space-y-4">
+          {isBrandMode && brand && <div className="space-y-4 pt-6 border-t border-border/50">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
                 {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
