@@ -256,9 +256,9 @@ export function BrandDepositInfoDialog({
                       >
                         {getChainDisplayName(addr.chain)} (USDC)
                       </p>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 min-w-0">
                         <p 
-                          className="text-sm font-mono text-foreground truncate"
+                          className="text-xs font-mono text-foreground truncate min-w-0 flex-1"
                         >
                           {addr.address}
                         </p>
