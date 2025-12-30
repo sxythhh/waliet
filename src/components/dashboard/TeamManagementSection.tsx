@@ -500,7 +500,6 @@ export function TeamManagementSection({ profileName }: TeamManagementSectionProp
 
       {members.length === 0 && invitations.length === 0 && (
         <div className="text-center py-8 rounded-xl bg-muted/20">
-          <Users className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
             No team members yet. Invite teammates to start earning!
           </p>
