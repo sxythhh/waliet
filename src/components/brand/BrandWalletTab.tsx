@@ -342,73 +342,50 @@ export function BrandWalletTab({
           </CardTitle>
         </CardHeader>
         <CardContent className="px-0">
-          <p className="text-3xl font-semibold text-foreground tracking-tight">
-            {formatCurrency(walletData?.virality_balance || 0)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Available for campaigns
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-3xl font-semibold text-foreground tracking-tight">
+                {formatCurrency(walletData?.virality_balance || 0)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Available for campaigns
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={handleOpenBrandToPersonal} disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
+                fontFamily: 'Inter, sans-serif'
+              }}>
+                <UserCircle className="w-4 h-4 mr-1.5" />
+                To Personal Wallet
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Add Funds
+                    <ChevronDown className="w-3.5 h-3.5 ml-1.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-popover border-border">
+                  <DropdownMenuItem onClick={() => setAddFundsOpen(true)}>
+                    Pay with Card
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setPersonalTransferOpen(true)}>
+                    From Personal Wallet
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setDepositInfoOpen(true)}>
+                    Wire / Crypto Deposit
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </CardContent>
       </Card>
-
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Button variant="ghost" onClick={handleOpenBrandToPersonal} disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-        fontFamily: 'Inter, sans-serif'
-      }}>
-          <UserCircle className="w-4 h-4 mr-1.5" />
-          To Personal Wallet
-        </Button>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" disabled={(walletData?.virality_balance || 0) <= 0} className="justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 font-normal tracking-[-0.5px]" style={{
-            fontFamily: 'Inter, sans-serif'
-          }}>
-              <ArrowUpRight className="w-4 h-4 mr-1.5" />
-              Transfer
-              <ChevronDown className="w-3.5 h-3.5 ml-1" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setAllocateOpen(true)}>
-              <ArrowUpRight className="w-4 h-4 mr-2" />
-              Fund Campaign
-            </DropdownMenuItem>
-            {isAdmin && <DropdownMenuItem onClick={() => setTransferOpen(true)}>
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Transfer to Withdraw
-              </DropdownMenuItem>}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="justify-center bg-[#2060df] hover:bg-[#1850b8] text-white font-medium px-5 tracking-[-0.5px] border-t border-[#4b85f7]" style={{
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              <Plus className="w-4 h-4 mr-1.5" />
-              Add Funds
-              <ChevronDown className="w-3.5 h-3.5 ml-1.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setAddFundsOpen(true)}>
-              <CreditCard className="w-4 h-4 mr-2" />
-              Pay with Card
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setPersonalTransferOpen(true)}>
-              <UserCircle className="w-4 h-4 mr-2" />
-              From Personal Wallet
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setDepositInfoOpen(true)}>
-              <Building2 className="w-4 h-4 mr-2" />
-              Wire / Crypto Deposit
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
 
       {/* Transaction History */}
       <Card className="border-border bg-black/0">
