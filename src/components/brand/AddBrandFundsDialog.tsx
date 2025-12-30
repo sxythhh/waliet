@@ -117,7 +117,7 @@ export function AddBrandFundsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0a0a0a] border-0 text-white max-w-sm p-0 gap-0 overflow-hidden">
+      <DialogContent className="bg-background border-border text-foreground max-w-sm p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle 
             className="text-lg font-semibold tracking-[-0.5px]"
@@ -131,13 +131,13 @@ export function AddBrandFundsDialog({
           {/* Current Balance */}
           <div>
             <p 
-              className="text-xs text-neutral-500 mb-1 tracking-[-0.3px]"
+              className="text-xs text-muted-foreground mb-1 tracking-[-0.3px]"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Current Balance
             </p>
             <p 
-              className="text-3xl font-semibold text-white tracking-[-0.5px]"
+              className="text-3xl font-semibold text-foreground tracking-[-0.5px]"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               {formatCurrency(currentBalance)}
@@ -152,8 +152,8 @@ export function AddBrandFundsDialog({
                 onClick={() => handlePresetClick(amount)}
                 className={`px-4 py-2 rounded-full text-sm font-medium tracking-[-0.3px] transition-colors ${
                   selectedAmount === amount
-                    ? 'bg-white text-black'
-                    : 'bg-[#1a1a1a] text-neutral-400 hover:text-white'
+                    ? 'bg-foreground text-background'
+                    : 'bg-muted text-muted-foreground hover:text-foreground'
                 }`}
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
@@ -165,7 +165,7 @@ export function AddBrandFundsDialog({
           {/* Custom Amount */}
           <div className="relative">
             <span 
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 text-sm"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               $
@@ -175,7 +175,7 @@ export function AddBrandFundsDialog({
               placeholder="Enter amount"
               value={customAmount}
               onChange={(e) => handleCustomAmountChange(e.target.value)}
-              className="pl-8 h-12 bg-[#111] border-0 text-white text-sm tracking-[-0.3px] placeholder:text-neutral-600 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="pl-8 h-12 bg-muted/50 border-border text-foreground text-sm tracking-[-0.3px] placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{ fontFamily: 'Inter, sans-serif' }}
             />
           </div>
@@ -185,13 +185,13 @@ export function AddBrandFundsDialog({
             <div className="pt-2 space-y-3">
               <div className="flex justify-between items-center">
                 <span 
-                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  className="text-sm text-muted-foreground tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Deposit Amount
                 </span>
                 <span 
-                  className="text-sm text-white font-medium tracking-[-0.3px]"
+                  className="text-sm text-foreground font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   {formatCurrency(finalAmount)}
@@ -199,27 +199,27 @@ export function AddBrandFundsDialog({
               </div>
               <div className="flex justify-between items-center">
                 <span 
-                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  className="text-sm text-muted-foreground tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Payment Processor
                 </span>
                 <span 
-                  className="text-sm text-neutral-400 font-medium tracking-[-0.3px]"
+                  className="text-sm text-muted-foreground font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   {formatCurrency(processingFee)}
                 </span>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-neutral-800">
+              <div className="flex justify-between items-center pt-2 border-t border-border">
                 <span 
-                  className="text-sm text-neutral-500 tracking-[-0.3px]"
+                  className="text-sm text-muted-foreground tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Total Charged
                 </span>
                 <span 
-                  className="text-sm text-white font-medium tracking-[-0.3px]"
+                  className="text-sm text-foreground font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   {formatCurrency(totalCharged)}
@@ -227,7 +227,7 @@ export function AddBrandFundsDialog({
               </div>
               <div className="flex justify-between items-center pt-2">
                 <span 
-                  className="text-sm text-emerald-400 tracking-[-0.3px] flex items-center gap-1.5"
+                  className="text-sm text-emerald-500 tracking-[-0.3px] flex items-center gap-1.5"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -236,7 +236,7 @@ export function AddBrandFundsDialog({
                   You will receive
                 </span>
                 <span 
-                  className="text-sm text-emerald-400 font-medium tracking-[-0.3px]"
+                  className="text-sm text-emerald-500 font-medium tracking-[-0.3px]"
                   style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   {formatCurrency(finalAmount)}
@@ -250,7 +250,7 @@ export function AddBrandFundsDialog({
             <Button
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="flex-1 h-11 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] font-medium tracking-[-0.5px]"
+              className="flex-1 h-11 text-muted-foreground hover:text-foreground hover:bg-muted font-medium tracking-[-0.5px]"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               Cancel
@@ -258,7 +258,7 @@ export function AddBrandFundsDialog({
             <Button
               onClick={handleAddFunds}
               disabled={loading || finalAmount <= 0}
-              className="flex-1 h-11 bg-white text-black hover:bg-neutral-200 font-medium tracking-[-0.5px]"
+              className="flex-1 h-11 bg-foreground text-background hover:bg-foreground/90 font-medium tracking-[-0.5px]"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               {loading ? 'Processing...' : `Add ${formatCurrency(finalAmount)}`}
