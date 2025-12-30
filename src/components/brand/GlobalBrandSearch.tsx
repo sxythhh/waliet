@@ -267,22 +267,19 @@ export function GlobalBrandSearch({
               </div> : results.length === 0 ? <div className="p-8 text-center text-[#6b6b6b] dark:text-[#616161]">
                 <span className="text-sm font-inter">Start typing to search...</span>
               </div> : <div className="py-2">
-                {Object.entries(groupedResults).map(([type, items]) => <div key={type} className="mb-2">
+                {Object.entries(groupedResults).map(([type, items]) => <div key={type}>
                     <div className="px-4 py-1.5">
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      <span className="text-[11px] font-medium text-muted-foreground">
                         {getCategoryLabel(type as SearchResult['type'])}
                       </span>
                     </div>
                     {items.map((result) => {
                 const globalIndex = results.indexOf(result);
                 const isSelected = globalIndex === selectedIndex;
-                return <button key={result.id} onClick={() => handleSelect(result)} onMouseEnter={() => setSelectedIndex(globalIndex)} className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-muted/60' : 'hover:bg-muted/40'}`}>
-                          {result.imageUrl ? <Avatar className="h-9 w-9">
+                const showAvatar = result.type === 'creator' || result.type === 'video';
+                return <button key={result.id} onClick={() => handleSelect(result)} onMouseEnter={() => setSelectedIndex(globalIndex)} className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors ${isSelected ? 'bg-muted/60' : 'hover:bg-muted/40'}`}>
+                          {showAvatar && <Avatar className="h-8 w-8">
                               <AvatarImage src={result.imageUrl} className="object-cover" />
-                              <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-                                {result.title.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar> : <Avatar className="h-9 w-9">
                               <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
                                 {result.title.charAt(0).toUpperCase()}
                               </AvatarFallback>
@@ -291,7 +288,7 @@ export function GlobalBrandSearch({
                             <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.3px]">
                               {result.title}
                             </p>
-                            {result.subtitle && <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.2px]">
+                            {result.subtitle && result.type !== 'campaign' && <p className="text-xs text-muted-foreground truncate font-inter tracking-[-0.2px]">
                                 {result.subtitle}
                               </p>}
                           </div>
