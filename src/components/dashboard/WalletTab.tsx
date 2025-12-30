@@ -77,7 +77,7 @@ interface WithdrawalDataPoint {
 }
 interface Transaction {
   id: string;
-  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning';
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out';
   amount: number;
   date: Date;
   destination?: string;
@@ -781,6 +781,10 @@ export function WalletTab() {
             source = `@${metadata?.sender_username || 'User'}`;
             destination = 'Wallet';
             break;
+          case 'transfer_out':
+            source = 'Wallet';
+            destination = metadata?.brand_name ? `${metadata.brand_name} Wallet` : 'Brand Wallet';
+            break;
         }
 
         // Determine transaction type
@@ -791,6 +795,8 @@ export function WalletTab() {
           transactionType = 'transfer_sent';
         } else if (txn.type === 'transfer_received') {
           transactionType = 'transfer_received';
+        } else if (txn.type === 'transfer_out') {
+          transactionType = 'transfer_out';
         } else if (isBoostEarning) {
           transactionType = 'boost_earning';
         } else if (txn.type === 'admin_adjustment' || txn.type === 'earning' || txn.type === 'bonus' || txn.type === 'refund') {
@@ -1583,7 +1589,7 @@ export function WalletTab() {
                                 </AvatarFallback>
                               </Avatar>
                               <span className="text-sm font-medium">@{transaction.sender?.username || transaction.metadata.sender_username}</span>
-                            </div> : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? <span className="text-sm text-foreground">Wallet</span> : <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>}
+                            </div> : transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? <span className="text-sm text-foreground">Wallet</span> : <span className="text-sm text-muted-foreground">{transaction.source || '-'}</span>}
                         </TableCell>
                         
                         {/* Destination */}
@@ -1666,7 +1672,7 @@ export function WalletTab() {
                         {/* Amount */}
                         <TableCell className="py-4 text-right">
                           <span className="">
-                            {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
+                            {transaction.type === 'withdrawal' || transaction.type === 'transfer_sent' || transaction.type === 'transfer_out' ? '-' : '+'}${Math.abs(transaction.amount).toFixed(2)}
                           </span>
                         </TableCell>
                       </TableRow>)}

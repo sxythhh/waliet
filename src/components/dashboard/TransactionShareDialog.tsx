@@ -11,7 +11,7 @@ import sharePattern from "@/assets/share-pattern.png";
 import { cn } from "@/lib/utils";
 interface Transaction {
   id: string;
-  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning';
+  type: 'earning' | 'withdrawal' | 'referral' | 'balance_correction' | 'transfer_sent' | 'transfer_received' | 'boost_earning' | 'transfer_out';
   amount: number;
   date: Date;
   destination?: string;

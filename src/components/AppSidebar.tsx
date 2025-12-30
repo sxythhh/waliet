@@ -611,40 +611,49 @@ export function AppSidebar() {
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[5px]">
                     {/* Creator Dashboard */}
-                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${isCreatorMode ? 'bg-muted dark:bg-[#0e0e0e]' : 'hover:bg-muted/50'}`}>
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
-                            <img src={theme === 'light' ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-4 h-4" />
+                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${isCreatorMode ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-primary">C</span>
                           </div>
-                          <span className="text-[13px] font-medium text-foreground">{isCreatorMode ? 'Switch to workspace' : 'Switch to creator'}</span>
+                          <div className="flex flex-col items-start">
+                            <span className="text-[13px] font-medium text-foreground">Creator Dashboard</span>
+                            <span className="text-[11px] text-muted-foreground">Personal workspace</span>
+                          </div>
                         </div>
-                        {isCreatorMode && <Check className="w-4 h-4 text-muted-foreground" />}
+                        {isCreatorMode && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center"><Check className="w-3 h-3 text-primary-foreground" /></div>}
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors hover:bg-transparent ${workspace === brand.slug ? 'bg-[#f2f2f2] dark:bg-[#0e0e0e]' : ''}`}>
-                          <div className="flex items-center gap-2.5">
-                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                          <div className="flex items-center gap-3">
+                            {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover" /> : <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>
-                                <span className="text-[11px] font-medium text-white uppercase">{brand.name.charAt(0)}</span>
+                                <span className="text-xs font-semibold text-white uppercase">{brand.name.charAt(0)}</span>
                               </div>}
-                            <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{brand.name}</span>
+                            <div className="flex flex-col items-start">
+                              <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{brand.name}</span>
+                              <span className="text-[11px] text-muted-foreground">Brand workspace</span>
+                            </div>
                           </div>
-                          {workspace === brand.slug && <Check className="w-4 h-4 text-muted-foreground" />}
+                          {workspace === brand.slug && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center"><Check className="w-3 h-3 text-primary-foreground" /></div>}
                         </button>)}
                     
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors ${workspace === membership.brands.slug ? 'bg-[#f2f2f2] dark:bg-muted' : 'hover:bg-muted/50'}`}>
-                          <div className="flex items-center gap-2.5">
-                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" /> : <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{
+                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                          <div className="flex items-center gap-3">
+                            {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover" /> : <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>
-                                <span className="text-[11px] font-medium text-white uppercase">{membership.brands.name.charAt(0)}</span>
+                                <span className="text-xs font-semibold text-white uppercase">{membership.brands.name.charAt(0)}</span>
                               </div>}
-                            <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{membership.brands.name}</span>
+                            <div className="flex flex-col items-start">
+                              <span className="text-[13px] font-medium text-foreground truncate max-w-[140px]">{membership.brands.name}</span>
+                              <span className="text-[11px] text-muted-foreground">Brand workspace</span>
+                            </div>
                           </div>
-                          {workspace === membership.brands.slug && <Check className="w-4 h-4 text-muted-foreground" />}
+                          {workspace === membership.brands.slug && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center"><Check className="w-3 h-3 text-primary-foreground" /></div>}
                         </button>)}
                   </div>
                   
