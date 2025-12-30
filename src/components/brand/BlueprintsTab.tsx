@@ -279,7 +279,7 @@ export function BlueprintsTab({
         const contentPreview = getContentPreview(blueprint.content);
         const status = getBlueprintStatus(blueprint);
         const statusConfig = getStatusConfig(status);
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full overflow-hidden`}>
+        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full overflow-hidden border border-border`}>
                     {/* Status Label */}
                     <div className="px-4 py-1 text-center">
                       <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
@@ -338,16 +338,16 @@ export function BlueprintsTab({
 
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-3 border-t border-border/20">
-                        <div className="flex items-center gap-2">
-                          {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-5 w-5 rounded-full object-cover" /> : <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-4 w-4 rounded object-cover" /> : <div className="h-4 w-4 rounded bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
                               {(userInfo?.name || "U").charAt(0).toUpperCase()}
                             </div>}
-                          <span className="text-sm font-inter tracking-[-0.5px] text-foreground">
+                          <span className="text-xs font-inter tracking-[-0.3px] text-muted-foreground">
                             {userInfo?.name || "You"}
                           </span>
                         </div>
-                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-                          {format(new Date(blueprint.updated_at), 'dd/MM/yyyy')}
+                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                          Last edited {format(new Date(blueprint.updated_at), 'd MMMM, HH:mm')}
                         </span>
                       </div>
                     </div>
