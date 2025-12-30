@@ -154,6 +154,46 @@ Deno.serve(async (req) => {
           undoActions.push(`Reversed campaign budget_used: $${campaign.budget_used?.toFixed(2)} → $${newBudgetUsed.toFixed(2)}`);
         }
       }
+
+      // Also check if this was an account-based payout and update campaign_account_analytics
+      if (metadata?.social_account_id) {
+        const { data: accountAnalytics } = await adminClient
+          .from('campaign_account_analytics')
+          .select('paid_views, last_payment_amount, last_payment_date')
+          .eq('campaign_id', campaignId)
+          .eq('shortimize_account_id', metadata.shortimize_account_id || '')
+          .maybeSingle();
+
+        if (accountAnalytics) {
+          // Reverse the paid_views if we know how many were paid
+          const viewsPaid = metadata?.views_paid || 0;
+          const newPaidViews = Math.max(0, (accountAnalytics.paid_views || 0) - viewsPaid);
+          
+          await adminClient
+            .from('campaign_account_analytics')
+            .update({ 
+              paid_views: newPaidViews,
+              last_payment_amount: null,
+              last_payment_date: null 
+            })
+            .eq('campaign_id', campaignId)
+            .eq('shortimize_account_id', metadata.shortimize_account_id || '');
+
+          undoActions.push(`Reversed account paid_views: ${accountAnalytics.paid_views} → ${newPaidViews}`);
+        }
+      }
+
+      // Check for campaign_cpm_payouts record and delete it
+      if (metadata?.cpm_payout_id) {
+        const { error: cpmPayoutError } = await adminClient
+          .from('campaign_cpm_payouts')
+          .delete()
+          .eq('id', metadata.cpm_payout_id);
+
+        if (!cpmPayoutError) {
+          undoActions.push('Deleted campaign_cpm_payouts record');
+        }
+      }
     }
 
     // 3. Handle boost/bounty campaign budget reversal

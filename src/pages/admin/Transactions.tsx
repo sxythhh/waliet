@@ -11,8 +11,7 @@ import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Calendar as CalendarIcon, Loader2, Undo2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Calendar as CalendarIcon, Loader2, Undo2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -34,6 +33,8 @@ interface Transaction {
   campaign_name?: string;
   campaign_logo_url?: string;
 }
+const ITEMS_PER_PAGE = 50;
+
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,10 +59,8 @@ export default function Transactions() {
   const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
-  const [slashAccountsDialogOpen, setSlashAccountsDialogOpen] = useState(false);
-  const [slashAccounts, setSlashAccounts] = useState<any>(null);
-  const [loadingSlashAccounts, setLoadingSlashAccounts] = useState(false);
   const [undoingTransaction, setUndoingTransaction] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     toast
   } = useToast();
@@ -98,25 +97,6 @@ export default function Transactions() {
     }
   };
 
-  const fetchSlashAccounts = async () => {
-    setLoadingSlashAccounts(true);
-    setSlashAccountsDialogOpen(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('get-slash-accounts');
-      if (error) throw error;
-      setSlashAccounts(data);
-    } catch (error: any) {
-      console.error('Error fetching Slash accounts:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch Slash accounts",
-        variant: "destructive"
-      });
-      setSlashAccounts({ error: error.message });
-    } finally {
-      setLoadingSlashAccounts(false);
-    }
-  };
   useEffect(() => {
     fetchTransactions();
     fetchCampaigns();
@@ -409,16 +389,23 @@ export default function Transactions() {
         {isCredit ? "+" : "-"}${Math.abs(Number(type))}
       </Badge>;
   };
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCampaign, selectedType, amountFilter, dateFrom, dateTo]);
+
   return <div className="w-full px-3 py-4 md:container md:mx-auto md:p-6 space-y-4 md:space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
         <h1 className="text-2xl md:text-3xl font-bold">All Transactions</h1>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={fetchSlashAccounts}>
-            Slash Accounts
-          </Button>
-          <div className="text-sm text-muted-foreground">
-            Total: {filteredTransactions.length} transactions
-          </div>
+        <div className="text-sm text-muted-foreground">
+          Total: {filteredTransactions.length} transactions
         </div>
       </div>
 
@@ -520,7 +507,7 @@ export default function Transactions() {
           </div>
         ) : filteredTransactions.length === 0 ? <Card className="p-6 text-center text-muted-foreground border border-border">
             No transactions found
-          </Card> : filteredTransactions.map(tx => <Card key={tx.id} className="p-3 border border-border">
+          </Card> : paginatedTransactions.map(tx => <Card key={tx.id} className="p-3 border border-border">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-sm cursor-pointer hover:text-primary transition-colors" onClick={() => tx.user_id && openUserDetailsDialog(tx.user_id)}>
@@ -611,7 +598,7 @@ export default function Transactions() {
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground font-inter tracking-[-0.5px]">
                   No transactions found
                 </TableCell>
-              </TableRow> : filteredTransactions.map(tx => {
+              </TableRow> : paginatedTransactions.map(tx => {
                 const getPlatformIcon = (platform: string) => {
                   switch (platform?.toLowerCase()) {
                     case 'tiktok':
@@ -735,6 +722,57 @@ export default function Transactions() {
         </Table>
       </div>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="h-8 px-3"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNum)}
+                  className="h-8 w-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="h-8 px-3"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* User Details Dialog */}
       {selectedUser && <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} loadingSocialAccounts={loadingSocialAccounts} transactions={userTransactions} loadingTransactions={loadingTransactions} paymentMethods={userPaymentMethods} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onBalanceUpdated={() => {
       fetchTransactions();
@@ -743,24 +781,5 @@ export default function Transactions() {
       }
     }} />}
 
-      {/* Slash Accounts Dialog */}
-      <Dialog open={slashAccountsDialogOpen} onOpenChange={setSlashAccountsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>Slash Accounts</DialogTitle>
-          </DialogHeader>
-          {loadingSlashAccounts ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : slashAccounts ? (
-            <pre className="bg-muted/50 p-4 rounded-lg text-xs overflow-auto whitespace-pre-wrap">
-              {JSON.stringify(slashAccounts, null, 2)}
-            </pre>
-          ) : (
-            <p className="text-muted-foreground text-center py-4">No data</p>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>;
 }
