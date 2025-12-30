@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface AllocateBudgetDialogProps {
   open: boolean;
@@ -45,7 +44,6 @@ export function AllocateBudgetDialog({
   preselectedCampaignId,
   preselectedType = 'campaign',
 }: AllocateBudgetDialogProps) {
-  const { user } = useAuth();
   const [items, setItems] = useState<FundingItem[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [amount, setAmount] = useState("");
@@ -59,7 +57,7 @@ export function AllocateBudgetDialog({
       fetchData();
       fetchWalletBalance();
     }
-  }, [open, brandId, user]);
+  }, [open, brandId]);
 
   // Handle preselection when data is loaded
   useEffect(() => {
@@ -72,18 +70,17 @@ export function AllocateBudgetDialog({
   }, [preselectedCampaignId, items]);
 
   const fetchWalletBalance = async () => {
-    if (!user) return;
     setLoadingBalance(true);
     try {
       const { data: walletData } = await supabase
-        .from("wallets")
+        .from("brand_wallets")
         .select("balance")
-        .eq("user_id", user.id)
+        .eq("brand_id", brandId)
         .single();
 
       setWalletBalance(walletData?.balance || 0);
     } catch (error) {
-      console.error("Error fetching wallet balance:", error);
+      console.error("Error fetching brand wallet balance:", error);
     } finally {
       setLoadingBalance(false);
     }
@@ -147,7 +144,7 @@ export function AllocateBudgetDialog({
     }
 
     if (parsedAmount > walletBalance) {
-      toast.error('Insufficient wallet balance');
+      toast.error('Insufficient brand wallet balance');
       return;
     }
 
@@ -192,34 +189,36 @@ export function AllocateBudgetDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-background text-foreground max-w-md p-0 overflow-hidden max-h-[85vh] flex flex-col">
-        <div className="p-6 pb-0 flex-shrink-0">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-medium tracking-tight">
+      <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+        {/* Header */}
+        <div className="px-6 pt-6">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="text-lg font-semibold tracking-tight font-inter">
               Fund Campaign
             </DialogTitle>
-            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1">
-              Transfer funds from your Virality wallet
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] text-left">
+              Transfer funds from your brand wallet to a campaign or boost.
             </p>
           </DialogHeader>
         </div>
 
-        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+        {/* Content */}
+        <div className="px-6 py-5 space-y-5">
           {/* Wallet Balance */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Available</span>
+            <span className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">Brand Wallet Balance</span>
             {loadingBalance ? (
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
             ) : (
-              <span className="text-lg font-semibold text-foreground tracking-tight">{formatCurrency(walletBalance)}</span>
+              <span className="text-lg font-semibold text-foreground tracking-tight font-inter">{formatCurrency(walletBalance)}</span>
             )}
           </div>
 
           {/* Combined Dropdown */}
-          <div>
-            <Label className="text-muted-foreground text-sm mb-2 block">Select Campaign or Boost</Label>
+          <div className="space-y-2">
+            <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">Select Campaign or Boost</Label>
             <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger className="bg-muted/50 border-border text-foreground h-12 rounded-lg">
+              <SelectTrigger className="h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] focus:ring-0 focus:ring-offset-0 focus:border-[#3672ea] rounded-lg transition-colors">
                 <SelectValue placeholder="Choose a campaign or boost" />
               </SelectTrigger>
               <SelectContent className="bg-popover border-border">
@@ -275,49 +274,49 @@ export function AllocateBudgetDialog({
           </div>
 
           {/* Amount Input */}
-          <div>
-            <Label className="text-muted-foreground text-sm mb-2 block">Amount</Label>
+          <div className="space-y-2">
+            <Label className="text-sm text-foreground font-inter tracking-[-0.5px]">Amount</Label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-inter">$</span>
               <Input
                 type="number"
                 placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="pl-9 bg-muted/50 border-border text-foreground text-xl h-14 rounded-lg font-medium"
+                className="pl-8 h-10 bg-transparent border-border text-sm font-inter tracking-[-0.3px] placeholder:text-muted-foreground/60 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-[#3672ea] rounded-lg transition-colors"
               />
             </div>
           </div>
 
           {/* Validation Warning */}
           {parsedAmount > walletBalance && (
-            <div className="flex items-center gap-2.5 text-destructive text-sm bg-destructive/10 rounded-lg p-3.5">
+            <div className="flex items-center gap-2.5 text-destructive text-sm bg-destructive/10 rounded-lg p-3.5 font-inter tracking-[-0.3px]">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>Amount exceeds your wallet balance</span>
+              <span>Amount exceeds your brand wallet balance</span>
             </div>
           )}
 
           {/* Summary */}
           {selectedItem && parsedAmount > 0 && parsedAmount <= walletBalance && (
             <div className="bg-muted/50 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm font-inter tracking-[-0.3px]">
                 <span className="text-muted-foreground">Funding</span>
                 <span className="text-foreground">{selectedItem.title}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm font-inter tracking-[-0.3px]">
                 <span className="text-muted-foreground">Current budget</span>
                 <span className="text-muted-foreground">
                   {formatCurrency(selectedItem.budget)}
                 </span>
               </div>
               <div className="h-px bg-border my-2" />
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm font-inter tracking-[-0.3px]">
                 <span className="text-muted-foreground">New budget</span>
                 <span className="text-emerald-500 font-medium">
                   {formatCurrency(selectedItem.budget + parsedAmount)}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm font-inter tracking-[-0.3px]">
                 <span className="text-muted-foreground">Remaining wallet balance</span>
                 <span className="text-muted-foreground">
                   {formatCurrency(walletBalance - parsedAmount)}
@@ -325,24 +324,33 @@ export function AllocateBudgetDialog({
               </div>
             </div>
           )}
+        </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="ghost"
-              onClick={() => handleClose(false)}
-              className="flex-1 text-muted-foreground hover:text-foreground hover:bg-muted h-12 rounded-lg"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAllocate}
-              disabled={loading || !selectedId || parsedAmount <= 0 || parsedAmount > walletBalance || loadingBalance}
-              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg font-medium disabled:opacity-30"
-            >
-              {loading ? 'Funding...' : 'Fund'}
-            </Button>
-          </div>
+        {/* Footer */}
+        <div className="px-6 pb-6 flex items-center justify-end gap-3">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            onClick={() => handleClose(false)} 
+            className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.3px] hover:bg-transparent"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAllocate}
+            disabled={loading || !selectedId || parsedAmount <= 0 || parsedAmount > walletBalance || loadingBalance}
+            className="h-9 px-4 text-sm font-medium font-inter tracking-[-0.5px] bg-[#1f60dd] text-white hover:bg-[#1a52c2] border-t border-[#3672ea] rounded-lg disabled:opacity-30"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Funding...
+              </span>
+            ) : 'Fund'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
