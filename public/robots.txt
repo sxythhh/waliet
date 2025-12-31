@@ -34,7 +34,6 @@ Disallow: /auth/callback
 Disallow: /reset-password
 Disallow: /discord/callback
 Disallow: /x/callback
-Disallow: /brand-auth
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /manage

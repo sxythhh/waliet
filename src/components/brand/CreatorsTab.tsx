@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database } from "lucide-react";
+import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Megaphone } from "lucide-react";
+import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -126,6 +127,7 @@ export function CreatorsTab({
   } | null>(null);
   const [recruitDialogOpen, setRecruitDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'messages' | 'broadcasts'>('messages');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -734,16 +736,49 @@ export function CreatorsTab({
       </div>;
   }
 
-  // Mobile Navigation Tabs
-  const MobileNav = () => <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
+  // View Tabs (Messages vs Broadcasts)
+  const ViewTabs = () => <div className="border-b border-border bg-background shrink-0">
+      <div className="flex px-4 gap-0">
+        <button
+          onClick={() => setActiveView('messages')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeView === 'messages' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Messages
+        </button>
+        <button
+          onClick={() => setActiveView('broadcasts')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeView === 'broadcasts' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+        >
+          <Megaphone className="h-4 w-4" />
+          Broadcasts
+        </button>
+      </div>
+    </div>;
+
+  // Mobile Navigation Tabs (only shown in messages view)
+  const MobileNav = () => activeView === 'messages' ? <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
       <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'messages' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Messages
       </button>
       <button onClick={() => setMobileView('creators')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'creators' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Creators ({creators.length})
       </button>
+    </div> : null;
+
+  // Show broadcasts view
+  if (activeView === 'broadcasts') {
+    return <div className="h-full flex flex-col bg-background font-inter tracking-[-0.5px]">
+      <ViewTabs />
+      <div className="flex-1 overflow-auto">
+        <BrandBroadcastsTab brandId={brandId} />
+      </div>
     </div>;
-  return <div className="h-full flex flex-col lg:flex-row bg-background font-inter tracking-[-0.5px]">
+  }
+
+  return <div className="h-full flex flex-col bg-background font-inter tracking-[-0.5px]">
+      <ViewTabs />
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <MobileNav />
       
       {/* Left Column - Conversations List */}
@@ -1077,5 +1112,6 @@ export function CreatorsTab({
 
       {/* Subscription Gate Dialog */}
       <SubscriptionGateDialog brandId={brandId} open={planDialogOpen} onOpenChange={setPlanDialogOpen} />
+      </div>
     </div>;
 }

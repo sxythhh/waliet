@@ -35,7 +35,6 @@ export const noIndexRoutes = [
   '/reset-password',
   '/discord/callback',
   '/x/callback',
-  '/brand-auth',
   '/dashboard',
   '/admin',
   '/manage',

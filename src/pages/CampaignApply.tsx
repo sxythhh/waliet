@@ -136,6 +136,8 @@ export default function CampaignApply() {
   const [showMobileApplySheet, setShowMobileApplySheet] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isCampaignMember, setIsCampaignMember] = useState(false);
+  const [connectedAccounts, setConnectedAccounts] = useState<any[]>([]);
+  const [availableToConnect, setAvailableToConnect] = useState<any[]>([]);
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
@@ -300,14 +302,29 @@ export default function CampaignApply() {
     } = await supabase.from("social_accounts").select("*").eq("user_id", session.user.id).in("platform", platforms.map((p: string) => p.toLowerCase()));
     const {
       data: activeSubmissions
-    } = await supabase.from("campaign_submissions").select("platform").eq("campaign_id", campaignData.id).eq("creator_id", session.user.id).neq("status", "withdrawn");
-    
+    } = await supabase.from("campaign_submissions").select("platform, social_accounts(id, platform, username, follower_count)").eq("campaign_id", campaignData.id).eq("creator_id", session.user.id).neq("status", "withdrawn");
+
     // Check if user is already a campaign member
-    setIsCampaignMember((activeSubmissions?.length ?? 0) > 0);
-    
+    const isMember = (activeSubmissions?.length ?? 0) > 0;
+    setIsCampaignMember(isMember);
+
     const activePlatforms = new Set(activeSubmissions?.map(s => s.platform) || []);
     const availableAccounts = accounts?.filter(acc => !activePlatforms.has(acc.platform)) || [];
     setSocialAccounts(availableAccounts);
+
+    // For members, also track which accounts are connected and which can still be connected
+    if (isMember) {
+      const connected = accounts?.filter(acc => activePlatforms.has(acc.platform)) || [];
+      setConnectedAccounts(connected);
+      // Available to connect = accounts for allowed platforms that aren't already connected
+      const allUserAccounts = await supabase.from("social_accounts").select("*").eq("user_id", session.user.id);
+      const canConnect = (allUserAccounts.data || []).filter(acc =>
+        platforms.map((p: string) => p.toLowerCase()).includes(acc.platform.toLowerCase()) &&
+        !activePlatforms.has(acc.platform)
+      );
+      setAvailableToConnect(canConnect);
+    }
+
     setLoadingAccounts(false);
   };
   const getPlatformIcon = (platform: string) => {
@@ -674,14 +691,14 @@ export default function CampaignApply() {
                 {brandSlug ? (
                   <Link to={`/b/${brandSlug}`} className="hover:text-white transition-colors flex items-center gap-1.5">
                     {brandLogo && (
-                      <img src={brandLogo} alt="" className="h-4 w-4 rounded object-cover" />
+                      <img src={brandLogo} alt={brandName || "Brand"} className="h-4 w-4 rounded object-cover" />
                     )}
                     {brandName}
                   </Link>
                 ) : (
                   <span className="flex items-center gap-1.5">
                     {brandLogo && (
-                      <img src={brandLogo} alt="" className="h-4 w-4 rounded object-cover" />
+                      <img src={brandLogo} alt={brandName || "Brand"} className="h-4 w-4 rounded object-cover" />
                     )}
                     {brandName}
                   </span>
@@ -853,8 +870,109 @@ export default function CampaignApply() {
           </div>
         </div>
 
-        {/* Right Column - Fixed Application Sidebar (Desktop Only) */}
-        {!isCampaignMember && (
+        {/* Right Column - Fixed Sidebar (Desktop Only) */}
+        {isCampaignMember ? (
+        <div className="hidden lg:flex fixed top-14 right-0 w-[380px] h-[calc(100vh-56px)] border-l border-border bg-background">
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="space-y-6">
+              {/* Member Status Header */}
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Check className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <h3 className="font-semibold font-['Inter'] tracking-[-0.5px] text-emerald-600 dark:text-emerald-400">You're a Member</h3>
+                  <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Connected to this campaign</p>
+                </div>
+              </div>
+
+              {/* Connected Accounts */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground">Connected Accounts</h4>
+                <div className="space-y-2">
+                  {connectedAccounts.map(account => {
+                    const platformIcon = getPlatformIcon(account.platform);
+                    return (
+                      <div key={account.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border">
+                        {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px] truncate">{account.username}</p>
+                          {account.follower_count && (
+                            <p className="text-xs text-muted-foreground">{account.follower_count.toLocaleString()} followers</p>
+                          )}
+                        </div>
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Available to Connect */}
+              {(availableToConnect.length > 0 || campaign?.allowed_platforms) && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium font-['Inter'] tracking-[-0.5px] text-muted-foreground">Add More Accounts</h4>
+                  </div>
+                  {availableToConnect.length > 0 ? (
+                    <div className="space-y-2">
+                      {availableToConnect.map(account => {
+                        const platformIcon = getPlatformIcon(account.platform);
+                        const isSelected = selectedAccounts.includes(account.id);
+                        return (
+                          <button
+                            key={account.id}
+                            onClick={() => toggleAccountSelection(account.id)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-colors ${isSelected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/50 bg-card"}`}
+                          >
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? "border-primary bg-primary" : "border-muted-foreground/50"}`}>
+                              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                            </div>
+                            {platformIcon && <img src={platformIcon} alt={account.platform} className="w-5 h-5 object-contain" />}
+                            <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] truncate">{account.username}</span>
+                          </button>
+                        );
+                      })}
+                      {selectedAccounts.length > 0 && (
+                        <Button
+                          onClick={handleSubmit}
+                          disabled={submitting}
+                          className="w-full mt-3 font-['Inter'] tracking-[-0.5px]"
+                          style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+                        >
+                          {submitting ? "Connecting..." : `Connect ${selectedAccounts.length} Account${selectedAccounts.length > 1 ? 's' : ''}`}
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 px-4 rounded-xl bg-muted/20 border border-dashed border-border">
+                      <p className="text-sm text-muted-foreground mb-3 font-['Inter'] tracking-[-0.5px]">
+                        Connect another {campaign?.allowed_platforms?.join(' or ')} account
+                      </p>
+                      <Button size="sm" variant="outline" onClick={() => setShowAddAccountDialog(true)} className="font-['Inter'] tracking-[-0.5px]">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Account
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="pt-4 border-t border-border space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start font-['Inter'] tracking-[-0.5px]"
+                  onClick={() => navigate('/dashboard?tab=campaigns')}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  View in Dashboard
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        ) : (
         <div className="hidden lg:flex fixed top-14 right-0 w-[380px] h-[calc(100vh-56px)] border-l border-border bg-background">
           <div className="flex-1 overflow-y-auto p-6" id="desktop-apply">
             <div className="space-y-6">

@@ -159,6 +159,30 @@ Deno.serve(async (req) => {
       clearingEndsAt: clearingEndsAt.toISOString(),
     });
 
+    // 6. Run fraud check on the payout request
+    let fraudCheckResult = null;
+    try {
+      const fraudCheckResponse = await fetch(`${supabaseUrl}/functions/v1/check-payout-fraud`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({ payoutRequestId: payoutRequest.id }),
+      });
+
+      if (fraudCheckResponse.ok) {
+        const fraudCheckData = await fraudCheckResponse.json();
+        fraudCheckResult = fraudCheckData.result;
+        console.log('Fraud check completed', fraudCheckResult);
+      } else {
+        console.error('Fraud check failed:', await fraudCheckResponse.text());
+      }
+    } catch (fraudError) {
+      console.error('Error running fraud check:', fraudError);
+      // Continue even if fraud check fails - will default to manual review
+    }
+
     return new Response(JSON.stringify({
       success: true,
       payoutRequest: {
@@ -167,6 +191,7 @@ Deno.serve(async (req) => {
         entriesCount: entryIds.length,
         clearingEndsAt: clearingEndsAt.toISOString(),
         status: 'pending',
+        fraudCheck: fraudCheckResult,
       },
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

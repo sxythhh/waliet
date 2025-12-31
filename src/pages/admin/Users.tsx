@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1436,21 +1436,39 @@ export default function AdminUsers() {
     });
   };
   
-  const pendingSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "pending")));
-  const approvedSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "approved")));
-  const rejectedSubmissions = sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "rejected")));
-  const avgTier1 = submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0;
-  const stats = {
-    totalUsers: totalUserCount,
-    totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
-    totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
-  };
+  // Memoize submission filtering and sorting
+  const pendingSubmissions = useMemo(() =>
+    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "pending"))),
+    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
+  );
+  const approvedSubmissions = useMemo(() =>
+    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "approved"))),
+    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
+  );
+  const rejectedSubmissions = useMemo(() =>
+    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "rejected"))),
+    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
+  );
 
-  // Pagination logic
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  // Memoize stats calculations
+  const { avgTier1, stats } = useMemo(() => ({
+    avgTier1: submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0,
+    stats: {
+      totalUsers: totalUserCount,
+      totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
+      totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
+    }
+  }), [submissions, totalUserCount, users]);
+
+  // Pagination logic - memoized to avoid recalculation on every render
+  const { currentUsers, totalPages } = useMemo(() => {
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    return {
+      currentUsers: filteredUsers.slice(indexOfFirstUser, indexOfLastUser),
+      totalPages: Math.ceil(filteredUsers.length / usersPerPage)
+    };
+  }, [filteredUsers, currentPage, usersPerPage]);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);

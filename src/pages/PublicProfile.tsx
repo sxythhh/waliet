@@ -114,7 +114,7 @@ export default function PublicProfile() {
     totalViews: 0,
     totalEarnings: 0
   });
-  useEffect(() => {
+    useEffect(() => {
     fetchProfile();
   }, [username, user]);
   const fetchProfile = async () => {
@@ -233,7 +233,15 @@ export default function PublicProfile() {
     });
     let participationsWithStats: any[] = [];
     if (submissions) {
-      participationsWithStats = await Promise.all((submissions as any[]).map(async sub => {
+      // Deduplicate by campaign_id - group submissions by campaign
+      const uniqueCampaignIds = [...new Set((submissions as any[]).map(s => s.campaign_id))];
+      const submissionsByCampaign = uniqueCampaignIds.map(campaignId => {
+        const campaignSubmissions = (submissions as any[]).filter(s => s.campaign_id === campaignId);
+        // Use the most recent submission for metadata
+        return campaignSubmissions[0];
+      });
+
+      participationsWithStats = await Promise.all(submissionsByCampaign.map(async sub => {
         // videos_count comes from video_submissions; view totals come from cached campaign videos (platform usernames)
         const [{
           data: videos
@@ -427,11 +435,6 @@ export default function PublicProfile() {
         </div>
       </div>
 
-      {/* Stats Overview - Cleaner design without icons */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-6">
-        
-      </div>
-
       {/* Tabs Section */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -506,7 +509,7 @@ export default function PublicProfile() {
                       <div className="flex items-center gap-4">
                         {/* Brand Logo */}
                         <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                          {logoUrl ? <img src={logoUrl} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
+                          {logoUrl ? <img src={logoUrl} alt={boost?.brands?.name || "Brand"} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
                         </div>
                         
                         {/* Boost Info */}
@@ -560,7 +563,7 @@ export default function PublicProfile() {
                     {/* Brand Attribution */}
                     {testimonial.brand && <div className="flex items-center gap-3 pt-3 border-t border-border/50">
                         <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                          {testimonial.brand.logo_url ? <img src={testimonial.brand.logo_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
+                          {testimonial.brand.logo_url ? <img src={testimonial.brand.logo_url} alt={testimonial.brand.name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />}
                         </div>
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">

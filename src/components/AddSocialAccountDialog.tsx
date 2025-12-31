@@ -583,71 +583,91 @@ export function AddSocialAccountDialog({
     }
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[380px] p-6 overflow-hidden bg-card border-none [&>button]:hidden">
+      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden bg-background border-border [&>button]:hidden">
         {step === "input" ? <div className="flex flex-col">
-            {/* Header */}
-            <div className="pb-0">
-              <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">
-                Connect Account
-              </h2>
-              
-            </div>
-
             {/* Content */}
-            <div className="space-y-4">
-              {/* Platform Selection */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-                  Platform
+            <div className="px-6 pt-6 pb-5 space-y-5">
+              {/* Platform Selection as Cards */}
+              <div className="space-y-3">
+                <Label className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
+                  Select Platform
                 </Label>
-                <Select value={selectedPlatform} onValueChange={value => setSelectedPlatform(value as Platform)}>
-                  <SelectTrigger className="w-full h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px]">
-                    <SelectValue>
-                      <div className="flex items-center gap-2.5">
-                        {getPlatformIcon(selectedPlatform, "h-4 w-4")}
-                        <span className="text-sm">{getPlatformLabel(selectedPlatform)}</span>
+                <div className="grid grid-cols-4 gap-2">
+                  {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => (
+                    <button
+                      key={platform}
+                      onClick={() => setSelectedPlatform(platform)}
+                      className={`flex items-center justify-center p-3 rounded-xl transition-all ${
+                        selectedPlatform === platform
+                          ? 'ring-2'
+                          : 'bg-muted/30 hover:bg-muted/50'
+                      }`}
+                      style={selectedPlatform === platform ? {
+                        backgroundColor: 'rgba(32, 97, 222, 0.1)',
+                        ringColor: '#2061de',
+                        '--tw-ring-color': '#2061de'
+                      } as React.CSSProperties : undefined}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                        selectedPlatform === platform ? '' : 'bg-muted/50'
+                      }`}
+                      style={selectedPlatform === platform ? {
+                        backgroundColor: 'rgba(32, 97, 222, 0.15)'
+                      } : undefined}
+                      >
+                        {getPlatformIcon(platform, "h-5 w-5")}
                       </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border-border/50">
-                    {(["tiktok", "instagram", "youtube", "twitter"] as Platform[]).map(platform => <SelectItem key={platform} value={platform} className="font-inter tracking-[-0.5px]">
-                        <div className="flex items-center gap-2.5">
-                          {getPlatformIcon(platform, "h-4 w-4")}
-                          <span className="text-sm">{getPlatformLabel(platform)}</span>
-                        </div>
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Username Input */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Username"}
+              <div className="space-y-3">
+                <Label htmlFor="username" className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
+                  {selectedPlatform === "youtube" ? "Channel ID or Handle" : "Your Username"}
                 </Label>
                 <div className="relative flex items-center">
-                  {showAtSymbol && <div className="absolute left-0 h-11 w-11 rounded-l-xl bg-muted/50 flex items-center justify-center border-r border-border/30">
-                      <span className="text-muted-foreground text-sm font-medium">@</span>
-                    </div>}
-                  <Input id="username" placeholder={getPlaceholderText(selectedPlatform)} value={username} onChange={e => {
-                const value = e.target.value;
-                // Remove @ symbol and trim whitespace
-                const sanitized = value.replace(/@/g, "").trim();
-                setUsername(sanitized);
-              }} className={`h-11 bg-muted/30 border-0 rounded-xl font-inter tracking-[-0.5px] text-sm ${showAtSymbol ? 'pl-12' : 'pl-4'}`} />
+                  {showAtSymbol && (
+                    <div className="absolute left-0 h-12 w-12 rounded-l-xl bg-muted/50 flex items-center justify-center border-r border-border/30">
+                      <span className="text-muted-foreground text-base font-medium">@</span>
+                    </div>
+                  )}
+                  <Input
+                    id="username"
+                    placeholder={getPlaceholderText(selectedPlatform)}
+                    value={username}
+                    onChange={e => {
+                      const value = e.target.value;
+                      const sanitized = value.replace(/@/g, "").trim();
+                      setUsername(sanitized);
+                    }}
+                    className={`h-12 bg-muted/30 border-border/50 rounded-xl font-inter tracking-[-0.3px] text-base focus-visible:ring-1 focus-visible:ring-primary/50 ${showAtSymbol ? 'pl-14' : 'pl-4'}`}
+                  />
                 </div>
-                {username.includes('@') && <p className="text-[11px] text-amber-500 font-inter tracking-[-0.5px]">
+                {username.includes('@') && (
+                  <p className="text-[11px] text-amber-500 font-inter tracking-[-0.5px]">
                     The @ symbol will be removed automatically
-                  </p>}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex gap-2 mt-6">
-              <Button variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm bg-muted/30 hover:bg-muted hover:text-foreground">
+            <div className="px-6 py-4 border-t border-border bg-muted/20 flex gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="h-10 px-5 rounded-xl font-inter tracking-[-0.3px] text-sm hover:bg-muted"
+              >
                 Cancel
               </Button>
-              <Button onClick={handleContinueClick} disabled={isContinuing} className="flex-1 h-10 rounded-xl font-inter tracking-[-0.5px] text-sm">
+              <Button
+                onClick={handleContinueClick}
+                disabled={isContinuing || !username.trim()}
+                className="flex-1 h-10 rounded-xl font-inter tracking-[-0.3px] text-sm"
+                style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+              >
                 {isContinuing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continue"}
               </Button>
             </div>

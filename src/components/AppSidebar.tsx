@@ -53,6 +53,8 @@ import contractsInactive from "@/assets/contracts-inactive.svg";
 import contractsActive from "@/assets/contracts-active.svg";
 import leaderboardInactive from "@/assets/leaderboard-inactive.svg";
 import leaderboardActive from "@/assets/leaderboard-active.svg";
+import calendarInactive from "@/assets/campaigns-inactive.svg";
+import calendarActive from "@/assets/campaigns-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -158,7 +160,13 @@ const brandMenuItems: MenuItem[] = [{
 }, {
   title: "Creators",
   tab: "creators",
-  icon: null as any
+  icon: null as any,
+  subItems: [
+    { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
+    { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },
+    { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive },
+    { title: "Calendar", subtab: "calendar", iconInactive: calendarInactive, iconActive: calendarActive }
+  ]
 }, {
   title: "Settings",
   tab: "profile",
@@ -388,7 +396,7 @@ export function AppSidebar() {
         </div>;
     }
     if (currentBrandLogo) {
-      return <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" />;
+      return <img src={currentBrandLogo} alt={currentBrandName || "Brand logo"} className="w-6 h-6 rounded object-cover" />;
     }
     return <div className="w-6 h-6 rounded flex items-center justify-center" style={{
       backgroundColor: currentBrandColor || 'hsl(var(--muted))'
@@ -432,13 +440,13 @@ export function AppSidebar() {
                     </button>
                     <div className="max-h-[120px] overflow-y-auto">
                       {isAdmin && allBrands.slice(0, 5).map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === brand.slug ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
-                          {brand.logo_url ? <img src={brand.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
+                          {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: brand.brand_color || '#8B5CF6'
                     }}>{brand.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm font-semibold tracking-[-0.5px] truncate">{brand.name}</span>
                         </button>)}
                       {!isAdmin && brandMemberships.map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-left transition-colors ${workspace === membership.brands.slug ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted/50'}`}>
-                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt="" className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
+                          {membership.brands.logo_url ? <img src={membership.brands.logo_url} alt={membership.brands.name} className="w-4 h-4 rounded object-cover" /> : <div className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-semibold text-white" style={{
                       backgroundColor: membership.brands.brand_color || '#8B5CF6'
                     }}>{membership.brands.name.charAt(0).toUpperCase()}</div>}
                           <span className="text-sm font-semibold tracking-[-0.5px] truncate">{membership.brands.name}</span>
@@ -562,7 +570,7 @@ export function AppSidebar() {
                   <div className="flex items-center gap-2">
                     {isCreatorMode ? <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
                         <img src={theme === 'light' ? swapHorizLightIcon : swapHorizIcon} alt="" className="w-3.5 h-3.5" />
-                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{
+                      </div> : currentBrandLogo ? <img src={currentBrandLogo} alt={currentBrandName || "Brand logo"} className="w-6 h-6 rounded object-cover" /> : <div className="w-6 h-6 rounded flex items-center justify-center" style={{
                   backgroundColor: currentBrandColor || '#8B5CF6'
                 }}>
                           <span className="text-[10px] font-semibold text-white">{currentBrandName?.charAt(0).toUpperCase()}</span>
@@ -577,7 +585,7 @@ export function AppSidebar() {
                   {/* Current Workspace Details - Only show when in brand mode */}
                   {!isCreatorMode && currentBrandId && <div className="p-3 border-b border-border flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {currentBrandLogo ? <img src={currentBrandLogo} alt="" className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
+                        {currentBrandLogo ? <img src={currentBrandLogo} alt={currentBrandName || "Brand logo"} className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{
                     backgroundColor: currentBrandColor || '#8B5CF6'
                   }}>
                             <span className="text-sm font-medium text-white uppercase">{currentBrandName?.charAt(0)}</span>
@@ -611,50 +619,41 @@ export function AppSidebar() {
                   
                   <div className="px-1.5 pb-1.5 max-h-[320px] overflow-y-auto space-y-0.5 py-[5px]">
                     {/* Creator Dashboard */}
-                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${isCreatorMode ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-8 h-8">
+                    {(isCreatorMode ? "switch to workspace" : "switch to creator").includes(workspaceSearch.toLowerCase()) || workspaceSearch === "" ? <button onClick={() => handleWorkspaceChange("creator")} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${isCreatorMode ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                        <div className="flex items-center gap-2.5">
+                          <Avatar className="w-6 h-6">
                             {avatarUrl ? <AvatarImage src={avatarUrl} alt={displayName} className="object-cover" /> : null}
-                            <AvatarFallback className="text-xs font-semibold uppercase">{displayName?.charAt(0) || 'C'}</AvatarFallback>
+                            <AvatarFallback className="text-[10px] font-semibold uppercase">{displayName?.charAt(0) || 'C'}</AvatarFallback>
                           </Avatar>
-                          <div className="flex flex-col items-start">
-                            <span className="text-[13px] font-medium text-foreground">Creator Dashboard</span>
-                            <span className="text-[11px] text-muted-foreground">Personal workspace</span>
-                          </div>
+                          <span className="text-[13px] font-medium text-foreground">Creator Dashboard</span>
                         </div>
-                        {isCreatorMode && <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center"><Check className="w-3 h-3 text-primary-foreground" /></div>}
+                        {isCreatorMode && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
                       </button> : null}
                     
                     {/* Admin brands */}
-                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
-                          <div className="flex items-center gap-3">
-                            {brand.logo_url ? <Avatar className="w-9 h-9">
+                    {isAdmin && allBrands.filter(brand => brand.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(brand => <button key={brand.id} onClick={() => handleWorkspaceChange(brand.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === brand.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                          <div className="flex items-center gap-2.5">
+                            {brand.logo_url ? <Avatar className="w-6 h-6">
                                 <AvatarImage src={brand.logo_url} alt={brand.name} className="object-cover" />
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-xs font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
-                              </Avatar> : <Avatar className="w-9 h-9">
-                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-xs font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
+                              </Avatar> : <Avatar className="w-6 h-6">
+                                <AvatarFallback style={{ backgroundColor: brand.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{brand.name.charAt(0)}</AvatarFallback>
                               </Avatar>}
-                            <div className="flex flex-col items-start">
-                              <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brand.name}</span>
-                              <span className="text-[11px] text-muted-foreground">Brand workspace</span>
-                            </div>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{brand.name}</span>
                           </div>
                           {workspace === brand.slug && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
                         </button>)}
                     
                     {/* Non-admin brand memberships */}
-                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
-                          <div className="flex items-center gap-3">
-                            {membership.brands.logo_url ? <Avatar className="w-9 h-9">
+                    {!isAdmin && brandMemberships.filter(membership => membership.brands.name.toLowerCase().includes(workspaceSearch.toLowerCase()) || workspaceSearch === "").map(membership => <button key={membership.brand_id} onClick={() => handleWorkspaceChange(membership.brands.slug)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${workspace === membership.brands.slug ? 'bg-primary/10' : 'hover:bg-muted/50'}`}>
+                          <div className="flex items-center gap-2.5">
+                            {membership.brands.logo_url ? <Avatar className="w-6 h-6">
                                 <AvatarImage src={membership.brands.logo_url} alt={membership.brands.name} className="object-cover" />
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-xs font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
-                              </Avatar> : <Avatar className="w-9 h-9">
-                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-xs font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
+                              </Avatar> : <Avatar className="w-6 h-6">
+                                <AvatarFallback style={{ backgroundColor: membership.brands.brand_color || '#8B5CF6' }} className="text-white text-[10px] font-semibold uppercase">{membership.brands.name.charAt(0)}</AvatarFallback>
                               </Avatar>}
-                            <div className="flex flex-col items-start">
-                              <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{membership.brands.name}</span>
-                              <span className="text-[11px] text-muted-foreground">Brand workspace</span>
-                            </div>
+                            <span className="text-[13px] font-medium text-foreground truncate max-w-[160px]">{membership.brands.name}</span>
                           </div>
                           {workspace === membership.brands.slug && <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center"><Check className="w-2.5 h-2.5 text-primary-foreground" /></div>}
                         </button>)}

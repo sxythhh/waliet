@@ -44,7 +44,6 @@ export function SubscriptionCheckoutDialog({
   }, [open]);
 
   const handleComplete = (planId: string, receiptId: string) => {
-    console.log("Checkout complete:", { planId, receiptId });
     onComplete?.();
     onOpenChange(false);
   };

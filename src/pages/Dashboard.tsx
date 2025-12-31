@@ -22,6 +22,7 @@ import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { CreatorDatabaseTab } from "@/components/brand/CreatorDatabaseTab";
 import { CreatorContractsTab } from "@/components/brand/CreatorContractsTab";
 import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab";
+import { ContentCalendar } from "@/components/brand/ContentCalendar";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 
@@ -257,6 +258,8 @@ export default function Dashboard() {
               return <CreatorDatabaseTab brandId={currentBrand.id} />;
             case "contracts":
               return <CreatorContractsTab brandId={currentBrand.id} />;
+            case "calendar":
+              return <ContentCalendar brandId={currentBrand.id} />;
             case "leaderboard":
               return <CreatorLeaderboardTab brandId={currentBrand.id} />;
             default:

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, User, FileText, Eye, MapPin, Trophy, Users } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+
 interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,18 +26,14 @@ interface EditProfileDialogProps {
   } | null;
   onSuccess: () => void;
 }
-const CONTENT_STYLE_OPTIONS = ["Educational", "Entertainment", "Lifestyle", "Comedy", "Tutorial", "Review", "Vlog", "Gaming", "Music", "Dance", "Fashion", "Beauty", "Fitness", "Food", "Travel", "Tech", "Business", "Motivation", "Other"];
-const LANGUAGE_OPTIONS = ["English", "Spanish", "Portuguese", "French", "German", "Italian", "Dutch", "Russian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi", "Indonesian", "Turkish", "Polish", "Vietnamese", "Thai", "Other"];
-const COUNTRY_OPTIONS = ["United States", "United Kingdom", "Canada", "Australia", "Germany", "France", "Spain", "Italy", "Netherlands", "Brazil", "Mexico", "India", "Japan", "South Korea", "China", "Indonesia", "Philippines", "Vietnam", "Thailand", "Turkey", "Poland", "Russia", "South Africa", "Nigeria", "Egypt", "United Arab Emirates", "Saudi Arabia", "Argentina", "Colombia", "Chile", "Other"];
+
 export function EditProfileDialog({
   open,
   onOpenChange,
   profile,
   onSuccess
 }: EditProfileDialogProps) {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -50,6 +46,7 @@ export function EditProfileDialog({
     show_location: false,
     show_joined_campaigns: false
   });
+
   useEffect(() => {
     if (profile && open) {
       setFormData({
@@ -65,13 +62,12 @@ export function EditProfileDialog({
       });
     }
   }, [profile, open]);
+
   const handleSave = async () => {
     if (!profile) return;
     setSaving(true);
     try {
-      const {
-        error
-      } = await supabase.from("profiles").update({
+      const { error } = await supabase.from("profiles").update({
         full_name: formData.full_name || null,
         bio: formData.bio || null,
         city: formData.city || null,
@@ -82,6 +78,7 @@ export function EditProfileDialog({
         show_location: formData.show_location,
         show_joined_campaigns: formData.show_joined_campaigns
       }).eq("id", profile.id);
+
       if (error) throw error;
       toast({
         title: "Profile updated",
@@ -99,92 +96,144 @@ export function EditProfileDialog({
       setSaving(false);
     }
   };
-  const labelStyle = {
-    fontFamily: "Inter",
-    letterSpacing: "-0.5px"
-  };
-  const inputStyle = {
-    fontFamily: "Inter",
-    letterSpacing: "-0.3px"
-  };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden">
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-hidden bg-background">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-border">
+          <h2 className="text-lg font-semibold tracking-[-0.5px]">Edit Profile</h2>
+          <p className="text-sm text-muted-foreground mt-0.5 tracking-[-0.3px]">Update your public profile information</p>
+        </div>
+
         {/* Form Content */}
-        <div className="space-y-5 py-[4px] px-[13px]">
-          {/* Display Name */}
-          <div className="space-y-2">
-            <Label htmlFor="full_name" className="text-sm font-medium text-foreground" style={labelStyle}>
-              Display Name
-            </Label>
-            <Input id="full_name" value={formData.full_name} onChange={e => setFormData({
-            ...formData,
-            full_name: e.target.value
-          })} placeholder="Your display name" className="h-11 bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary" style={inputStyle} />
+        <div className="px-6 py-5 space-y-6 max-h-[60vh] overflow-y-auto">
+          {/* Basic Info Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span className="tracking-[-0.3px]">Basic Info</span>
+            </div>
+
+            <div className="space-y-4 pl-6">
+              {/* Display Name */}
+              <div className="space-y-2">
+                <Label htmlFor="full_name" className="text-sm font-medium tracking-[-0.3px]">
+                  Display Name
+                </Label>
+                <Input
+                  id="full_name"
+                  value={formData.full_name}
+                  onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                  placeholder="Your display name"
+                  className="h-10 bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/50 tracking-[-0.3px]"
+                />
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="bio" className="text-sm font-medium tracking-[-0.3px]">
+                    Bio
+                  </Label>
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {formData.bio.length}/160
+                  </span>
+                </div>
+                <Textarea
+                  id="bio"
+                  value={formData.bio}
+                  onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                  placeholder="Tell us about yourself..."
+                  className="min-h-[80px] resize-none bg-muted/30 border-border/50 focus-visible:ring-1 focus-visible:ring-primary/50 tracking-[-0.3px]"
+                  maxLength={160}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Bio */}
-          <div className="space-y-2">
-            <Label htmlFor="bio" className="text-sm font-medium text-foreground" style={labelStyle}>
-              Bio
-            </Label>
-            <Textarea id="bio" value={formData.bio} onChange={e => setFormData({
-            ...formData,
-            bio: e.target.value
-          })} placeholder="Tell us about yourself..." className="min-h-[100px] resize-none bg-muted/30 border-border focus-visible:ring-1 focus-visible:ring-primary" style={inputStyle} maxLength={160} />
-            <p className="text-xs text-muted-foreground text-right" style={inputStyle}>
-              {formData.bio.length}/160
-            </p>
-          </div>
+          {/* Visibility Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Eye className="h-4 w-4" />
+              <span className="tracking-[-0.3px]">Profile Visibility</span>
+            </div>
 
-          {/* Visibility Toggles */}
-          <div className="pt-2 space-y-2">
-            <Label className="text-sm font-medium text-foreground" style={labelStyle}>
-              Profile Visibility
-            </Label>
-            
-            <div className="space-y-3">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-foreground" style={inputStyle}>
-                  Total Earned
-                </span>
-                <Switch checked={formData.show_total_earned} onCheckedChange={checked => setFormData({
-                ...formData,
-                show_total_earned: checked
-              })} />
+            <div className="space-y-1 pl-6">
+              {/* Total Earned Toggle */}
+              <div className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <Trophy className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium tracking-[-0.3px]">Total Earned</p>
+                    <p className="text-xs text-muted-foreground tracking-[-0.2px]">Show earnings on your profile</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.show_total_earned}
+                  onCheckedChange={checked => setFormData({ ...formData, show_total_earned: checked })}
+                />
               </div>
-              
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-foreground" style={inputStyle}>
-                  Location
-                </span>
-                <Switch checked={formData.show_location} onCheckedChange={checked => setFormData({
-                ...formData,
-                show_location: checked
-              })} />
+
+              {/* Location Toggle */}
+              <div className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <MapPin className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium tracking-[-0.3px]">Location</p>
+                    <p className="text-xs text-muted-foreground tracking-[-0.2px]">Display your city and country</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.show_location}
+                  onCheckedChange={checked => setFormData({ ...formData, show_location: checked })}
+                />
               </div>
-              
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-foreground" style={inputStyle}>
-                  Joined Campaigns
-                </span>
-                <Switch checked={formData.show_joined_campaigns} onCheckedChange={checked => setFormData({
-                ...formData,
-                show_joined_campaigns: checked
-              })} />
+
+              {/* Joined Campaigns Toggle */}
+              <div className="flex items-center justify-between py-3 px-3 -mx-3 rounded-lg hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <Users className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium tracking-[-0.3px]">Joined Campaigns</p>
+                    <p className="text-xs text-muted-foreground tracking-[-0.2px]">Show campaigns you've joined</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.show_joined_campaigns}
+                  onCheckedChange={checked => setFormData({ ...formData, show_joined_campaigns: checked })}
+                />
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving} className="h-10 px-4" style={labelStyle}>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+            className="h-9 px-4 tracking-[-0.3px]"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="h-10 px-5 min-w-[100px]" style={labelStyle}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-9 px-5 min-w-[90px] tracking-[-0.3px]"
+            style={{ backgroundColor: '#2061de', borderTop: '1px solid #4b85f7' }}
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
           </Button>
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }

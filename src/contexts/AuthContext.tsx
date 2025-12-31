@@ -56,8 +56,6 @@ const trackUserSession = async (userId: string) => {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Failed to track session:', errorData);
-    } else {
-      console.log('Session tracked successfully');
     }
   } catch (error) {
     console.error('Error tracking session:', error);

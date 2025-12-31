@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -28,12 +28,8 @@ export function WalletDropdown({
   const {
     summary: ledgerSummary
   } = usePaymentLedger(user?.id);
-  useEffect(() => {
-    if (user) {
-      fetchWalletData();
-    }
-  }, [user]);
-  const fetchWalletData = async () => {
+
+  const fetchWalletData = useCallback(async () => {
     if (!user) return;
 
     // Fetch wallet balance
@@ -61,7 +57,13 @@ export function WalletDropdown({
       const totalBoost = boostSubmissions.reduce((sum, sub) => sum + (sub.payout_amount || 0), 0);
       setPendingBoostEarnings(totalBoost);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchWalletData();
+    }
+  }, [user, fetchWalletData]);
   const handleWithdraw = () => {
     setOpen(false);
     setWithdrawDialogOpen(true);

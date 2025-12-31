@@ -39,6 +39,7 @@ import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { PayoutStatusCards } from "./PayoutStatusCards";
 import { ProfileHeader } from "./ProfileHeader";
 import { TransactionShareDialog } from "./TransactionShareDialog";
+import { EarningsChart } from "./EarningsChart";
 import { addDays } from "date-fns";
 interface UserProfile {
   username?: string;
@@ -1192,12 +1193,31 @@ export function WalletTab() {
     '1Y': '1 Year',
     'TW': 'This Week'
   };
-  return <div className="space-y-6 max-w-[650px] mx-auto pt-6 font-inter tracking-[-0.5px]">
+  return <div className="space-y-6 pt-6 font-inter tracking-[-0.5px]">
 
-      {/* Profile Header Section */}
-      <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
+      {/* Profile Header Section - Keep max-width */}
+      <div className="max-w-[650px] mx-auto">
+        <ProfileHeader totalViews={0} totalPosts={transactions.filter(t => t.type === 'earning' || t.type === 'boost_earning').length} />
+      </div>
 
-
+      {/* Earnings Chart */}
+      <div className="max-w-[650px] mx-auto">
+        <div className="bg-card/50 border border-border/50 rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Last 12 weeks</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-emerald-500 font-inter tracking-[-0.5px]">
+                ${(wallet?.total_earned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
+            </div>
+          </div>
+          <EarningsChart transactions={transactions} totalEarned={wallet?.total_earned || 0} />
+        </div>
+      </div>
 
       {/* Balance Cards - Hidden */}
 
@@ -1205,6 +1225,8 @@ export function WalletTab() {
 
     {/* Team & Affiliate Earnings Charts - Hidden */}
 
+      {/* Transactions Table - Full width with max-w-[900px] */}
+      <div className="max-w-[900px] mx-auto">
       <Card className="border rounded-xl overflow-hidden border-[#141414]/0 bg-neutral-100/0">
         {/* Filter Button */}
         <div className="pt-5 pb-4 px-0">
@@ -1717,6 +1739,7 @@ export function WalletTab() {
             </>}
         </div>
       </Card>
+      </div>
 
       {/* Balance Cards - Removed duplicate */}
 
@@ -1932,7 +1955,7 @@ export function WalletTab() {
                   <div>
                     <span className="text-[11px] tracking-[-0.5px] text-muted-foreground/60 font-medium font-inter">Source</span>
                     <div className="flex items-center gap-3 mt-2">
-                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt="" className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
+                      {selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url ? <img src={selectedTransaction.campaign?.brand_logo_url || selectedTransaction.boost?.brand_logo_url} alt={selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || "Brand"} className="w-10 h-10 rounded-[7px] object-cover" /> : <div className="w-10 h-10 rounded-[7px] bg-muted flex items-center justify-center">
                           <span className="text-base font-semibold text-muted-foreground">
                             {(selectedTransaction.campaign?.brand_name || selectedTransaction.boost?.brand_name || 'N')?.charAt(0).toUpperCase()}
                           </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft } from "lucide-react";
+import { Check, X, DollarSign, ChevronRight, Search, CalendarDays, Clock, RotateCcw, LayoutGrid, TableIcon, ChevronDown, RefreshCw, Heart, MessageCircle, Share2, Video, Upload, Radar, User, Loader, Eye, ArrowLeft, Grid3X3, Keyboard } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -166,12 +166,17 @@ export function VideoSubmissionsTab({
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved" | "rejected" | "flagged">("all");
   const [filterSource, setFilterSource] = useState<"all" | "submitted" | "tracked">("all");
   const [userSearchQuery, setUserSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "table" | "grid">("cards");
   const [selectedDateFilter, setSelectedDateFilter] = useState<Date | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [mobileView, setMobileView] = useState<"creators" | "videos">("creators");
   const isMobile = useIsMobile();
+
+  // Grid view state for keyboard navigation
+  const [focusedVideoIndex, setFocusedVideoIndex] = useState<number>(-1);
+  const [showKeyboardHints, setShowKeyboardHints] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   // Sync state
   const [syncing, setSyncing] = useState(false);
@@ -976,6 +981,128 @@ export function VideoSubmissionsTab({
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
+
+  // Keyboard navigation for grid view
+  const getFilteredVideos = useCallback(() => {
+    let filteredVids = selectedCreator ? allVideos.filter(v => v.user_id === selectedCreator) : allVideos;
+    if (filterSource !== "all") {
+      filteredVids = filteredVids.filter(v => v.source === filterSource);
+    }
+    if (filterStatus === "flagged") {
+      filteredVids = filteredVids.filter(v => v.is_flagged === true);
+    } else if (filterStatus !== "all") {
+      filteredVids = filteredVids.filter(v => v.status === filterStatus);
+    }
+    if (selectedDateFilter) {
+      filteredVids = filteredVids.filter(v => isSameDay(new Date(v.submitted_at), selectedDateFilter));
+    } else if (dateRange?.from) {
+      filteredVids = filteredVids.filter(v => {
+        const videoDate = new Date(v.submitted_at);
+        if (dateRange.to) {
+          return isWithinInterval(videoDate, {
+            start: startOfDay(dateRange.from!),
+            end: endOfDay(dateRange.to)
+          });
+        }
+        return isSameDay(videoDate, dateRange.from!);
+      });
+    }
+    return [...filteredVids].sort((a, b) => {
+      if (sortBy === "date") {
+        return new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime();
+      } else if (sortBy === "views") {
+        return (b.views || 0) - (a.views || 0);
+      } else if (sortBy === "payout") {
+        const payoutA = a.payout_amount || (a.views ? a.views / 1000 * rpmRate : 0);
+        const payoutB = b.payout_amount || (b.views ? b.views / 1000 * rpmRate : 0);
+        return payoutB - payoutA;
+      }
+      return 0;
+    });
+  }, [allVideos, selectedCreator, filterSource, filterStatus, selectedDateFilter, dateRange, sortBy, rpmRate]);
+
+  // Handle keyboard navigation in grid view
+  useEffect(() => {
+    if (viewMode !== "grid") return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const filteredVids = getFilteredVideos();
+      const gridColumns = 4; // Approximate columns in grid
+
+      switch (e.key) {
+        case "ArrowRight":
+          e.preventDefault();
+          setFocusedVideoIndex(prev => Math.min(prev + 1, filteredVids.length - 1));
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          setFocusedVideoIndex(prev => Math.max(prev - 1, 0));
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusedVideoIndex(prev => Math.min(prev + gridColumns, filteredVids.length - 1));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusedVideoIndex(prev => Math.max(prev - gridColumns, 0));
+          break;
+        case "a":
+        case "A":
+          // Approve focused video
+          if (focusedVideoIndex >= 0 && focusedVideoIndex < filteredVids.length) {
+            const video = filteredVids[focusedVideoIndex];
+            if (video.status === "pending" && !processing) {
+              handleApprove(video);
+            }
+          }
+          break;
+        case "r":
+        case "R":
+          // Reject focused video
+          if (focusedVideoIndex >= 0 && focusedVideoIndex < filteredVids.length) {
+            const video = filteredVids[focusedVideoIndex];
+            if (video.status === "pending" && !processing) {
+              setSelectedSubmission(video);
+              setRejectDialogOpen(true);
+            }
+          }
+          break;
+        case "o":
+        case "O":
+          // Open video in new tab
+          if (focusedVideoIndex >= 0 && focusedVideoIndex < filteredVids.length) {
+            const video = filteredVids[focusedVideoIndex];
+            window.open(video.video_url, "_blank");
+          }
+          break;
+        case "?":
+          // Toggle keyboard hints
+          setShowKeyboardHints(prev => !prev);
+          break;
+        case "Escape":
+          setFocusedVideoIndex(-1);
+          setShowKeyboardHints(false);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [viewMode, focusedVideoIndex, processing, getFilteredVideos]);
+
+  // Scroll focused item into view
+  useEffect(() => {
+    if (viewMode === "grid" && focusedVideoIndex >= 0 && gridRef.current) {
+      const focusedElement = gridRef.current.querySelector(`[data-grid-index="${focusedVideoIndex}"]`);
+      if (focusedElement) {
+        focusedElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [focusedVideoIndex, viewMode]);
+
   return <div className="h-full flex flex-col overflow-hidden">
       {/* Stats Header */}
       <div className="flex-shrink-0 p-4 border-b border-border space-y-3">
@@ -1199,7 +1326,25 @@ export function VideoSubmissionsTab({
                 <button onClick={() => setViewMode("table")} className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Table view">
                   <TableIcon className="h-3.5 w-3.5" />
                 </button>
+                <button onClick={() => { setViewMode("grid"); setFocusedVideoIndex(0); }} className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`} title="Grid view (with keyboard shortcuts)">
+                  <Grid3X3 className="h-3.5 w-3.5" />
+                </button>
               </div>
+
+              {/* Keyboard shortcuts hint for grid view */}
+              {viewMode === "grid" && (
+                <button
+                  onClick={() => setShowKeyboardHints(prev => !prev)}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors",
+                    showKeyboardHints ? "bg-primary/10 text-primary" : "bg-muted/30 text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Press ? for keyboard shortcuts"
+                >
+                  <Keyboard className="h-3 w-3" />
+                  <span className="hidden sm:inline">Shortcuts</span>
+                </button>
+              )}
 
               {/* Date Range Picker */}
               <div className="flex items-center gap-2 ml-auto">
@@ -1419,6 +1564,180 @@ export function VideoSubmissionsTab({
                     })}
                       </TableBody>
                     </Table>;
+              }
+
+              // Grid View - Visual thumbnails with keyboard navigation
+              if (viewMode === "grid") {
+                return (
+                  <div ref={gridRef} className="relative">
+                    {/* Keyboard shortcuts overlay */}
+                    {showKeyboardHints && (
+                      <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center" onClick={() => setShowKeyboardHints(false)}>
+                        <div className="bg-background border border-border rounded-xl p-6 max-w-md mx-4 shadow-2xl">
+                          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Keyboard className="h-5 w-5" />
+                            Keyboard Shortcuts
+                          </h3>
+                          <div className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Navigate</span>
+                              <div className="flex items-center gap-1">
+                                <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">←</kbd>
+                                <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">→</kbd>
+                                <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">↑</kbd>
+                                <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">↓</kbd>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Approve video</span>
+                              <kbd className="px-2 py-0.5 bg-green-500/20 text-green-500 rounded text-xs font-mono">A</kbd>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Reject video</span>
+                              <kbd className="px-2 py-0.5 bg-red-500/20 text-red-500 rounded text-xs font-mono">R</kbd>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Open video</span>
+                              <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">O</kbd>
+                            </div>
+                            <div className="flex items-center justify-between py-1.5">
+                              <span className="text-muted-foreground">Close / Deselect</span>
+                              <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono">Esc</kbd>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-4 text-center">Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">?</kbd> to toggle this menu</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Grid of videos */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                      {filteredVids.map((video, index) => {
+                        const isFocused = index === focusedVideoIndex;
+                        const thumbnailUrl = video.source === "tracked" ? getTrackedThumbnailUrl(video) || video.video_thumbnail_url : video.video_thumbnail_url;
+
+                        return (
+                          <div
+                            key={video.id}
+                            data-grid-index={index}
+                            onClick={() => setFocusedVideoIndex(index)}
+                            className={cn(
+                              "relative aspect-[9/16] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 group",
+                              isFocused ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]" : "hover:ring-1 hover:ring-border",
+                              video.status === "approved" && "opacity-60"
+                            )}
+                          >
+                            {/* Thumbnail */}
+                            {thumbnailUrl ? (
+                              <img
+                                src={thumbnailUrl}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                                <Video className="h-8 w-8 text-muted-foreground/30" />
+                              </div>
+                            )}
+
+                            {/* Gradient overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                            {/* Status indicator */}
+                            <div className={cn(
+                              "absolute top-2 left-2 h-2 w-2 rounded-full",
+                              video.status === "pending" && "bg-yellow-500",
+                              video.status === "approved" && "bg-green-500",
+                              video.status === "rejected" && "bg-red-500",
+                              video.status === "tracked" && "bg-purple-500"
+                            )} />
+
+                            {/* Platform badge */}
+                            <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                              <img src={getPlatformLogo(video.platform)} alt="" className="h-3 w-3" />
+                            </div>
+
+                            {/* Views */}
+                            <div className="absolute bottom-12 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-sm">
+                              <span className="text-[10px] font-medium text-white">{formatNumber(video.views)} views</span>
+                            </div>
+
+                            {/* Payout */}
+                            <div className="absolute bottom-12 right-2 px-1.5 py-0.5 rounded bg-green-500/80 backdrop-blur-sm">
+                              <span className="text-[10px] font-bold text-white">${getPayoutForSubmission(video).toFixed(0)}</span>
+                            </div>
+
+                            {/* Bottom info */}
+                            <div className="absolute bottom-0 left-0 right-0 p-2">
+                              <p className="text-[11px] font-medium text-white truncate">
+                                @{video.video_author_username || "Unknown"}
+                              </p>
+                            </div>
+
+                            {/* Focus indicator with action buttons */}
+                            {isFocused && video.status === "pending" && (
+                              <div className="absolute inset-x-0 bottom-8 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                <Button
+                                  size="sm"
+                                  className="h-8 px-3 text-xs gap-1 bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                                  onClick={(e) => { e.stopPropagation(); handleApprove(video); }}
+                                  disabled={processing}
+                                >
+                                  <Check className="h-3 w-3" />
+                                  <span className="font-mono text-[10px] opacity-70">A</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-8 px-3 text-xs gap-1 bg-red-600 hover:bg-red-700 text-white shadow-lg"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedSubmission(video);
+                                    setRejectDialogOpen(true);
+                                  }}
+                                  disabled={processing}
+                                >
+                                  <X className="h-3 w-3" />
+                                  <span className="font-mono text-[10px] opacity-70">R</span>
+                                </Button>
+                              </div>
+                            )}
+
+                            {/* Approved/Rejected overlay */}
+                            {video.status === "approved" && (
+                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                                <Check className="h-8 w-8 text-green-500" />
+                              </div>
+                            )}
+                            {video.status === "rejected" && (
+                              <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                <X className="h-8 w-8 text-red-500" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quick stats bar */}
+                    <div className="sticky bottom-0 mt-4 p-3 bg-background/95 backdrop-blur-sm border-t border-border flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-4">
+                        <span className="text-muted-foreground">
+                          {focusedVideoIndex >= 0 ? `${focusedVideoIndex + 1} / ${filteredVids.length}` : `${filteredVids.length} videos`}
+                        </span>
+                        <span className="text-yellow-500">{filteredVids.filter(v => v.status === "pending").length} pending</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <span>Use arrow keys to navigate</span>
+                        <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">?</kbd>
+                        <span>for shortcuts</span>
+                      </div>
+                    </div>
+                  </div>
+                );
               }
 
               // Card View - Redesigned for cleaner aesthetics

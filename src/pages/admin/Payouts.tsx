@@ -10,12 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy, Filter, ArrowUpDown, Flag } from "lucide-react";
+import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy, Filter, ArrowUpDown, Flag, Shield } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { FlaggedReviewsTab } from "@/components/admin/FlaggedReviewsTab";
+import { FraudReviewQueue } from "@/components/admin/FraudReviewQueue";
+import { FraudAnalyticsCard } from "@/components/admin/FraudAnalyticsCard";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -610,7 +612,10 @@ export default function AdminPayouts() {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-6 space-y-6">
+        {/* Fraud Analytics Overview */}
+        <FraudAnalyticsCard />
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Filter and Sort Controls */}
           <div className="mb-6 space-y-4">
@@ -705,8 +710,15 @@ export default function AdminPayouts() {
 
             {/* Status Tabs */}
             <TabsList className="bg-muted/30 border-0 p-1 h-auto w-auto inline-flex">
-              <TabsTrigger 
-                value="flagged" 
+              <TabsTrigger
+                value="fraud"
+                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-red-500/20 data-[state=active]:text-red-500 px-4 py-2 gap-1.5"
+              >
+                <Shield className="h-3.5 w-3.5" />
+                Fraud Review
+              </TabsTrigger>
+              <TabsTrigger
+                value="flagged"
                 className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5"
               >
                 <Flag className="h-3.5 w-3.5" />
@@ -742,13 +754,18 @@ export default function AdminPayouts() {
             </TabsList>
           </div>
 
+          {/* Fraud Review Tab */}
+          <TabsContent value="fraud">
+            <FraudReviewQueue />
+          </TabsContent>
+
           {/* Flagged Reviews Tab */}
           <TabsContent value="flagged">
             <FlaggedReviewsTab />
           </TabsContent>
 
           <TabsContent value={activeTab}>
-            {activeTab === "flagged" ? null : loading ? <div className="flex items-center justify-center py-12">
+            {(activeTab === "flagged" || activeTab === "fraud") ? null : loading ? <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                   <p className="text-muted-foreground">Loading payout requests...</p>

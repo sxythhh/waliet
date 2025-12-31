@@ -14,6 +14,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useUtmTracking } from "@/hooks/useUtmTracking";
 import { queryClient } from "@/lib/queryClient";
 import { PageLoader, DashboardLoader } from "@/components/PageLoader";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { getSubdomainSlug } from "./utils/subdomain";
 
 // Eagerly loaded routes (critical path)
@@ -25,7 +26,6 @@ import NotFound from "./pages/NotFound";
 const Discover = lazy(() => import("./pages/Discover"));
 const CampaignDetail = lazy(() => import("./pages/CampaignDetail"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const BrandAuth = lazy(() => import("./pages/BrandAuth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CampaignJoin = lazy(() => import("./pages/CampaignJoin"));
 const BrandDashboard = lazy(() => import("./pages/BrandDashboard"));
@@ -163,15 +163,16 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <UtmTracker />
-            <SubdomainHandler>
+  <ErrorBoundary>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <UtmTracker />
+              <SubdomainHandler>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -181,7 +182,6 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/discord/callback" element={<DiscordOAuthCallback />} />
                   <Route path="/x/callback" element={<XOAuthCallback />} />
-                  <Route path="/brand-auth" element={<BrandAuth />} />
                   <Route path="/apply" element={<Apply />} />
                   <Route path="/discover" element={<Discover />} />
                   <Route path="/creator-terms" element={<CreatorTerms />} />
@@ -306,11 +306,12 @@ const App = () => (
                 </Routes>
               </Suspense>
             </SubdomainHandler>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </ErrorBoundary>
 );
 
 export default App;
