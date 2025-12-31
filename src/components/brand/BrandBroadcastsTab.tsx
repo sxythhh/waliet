@@ -23,14 +23,14 @@ interface Broadcast {
   brand_id: string;
   title: string;
   content: string;
+  broadcast_type: string | null;
+  status: string | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
   created_by: string | null;
   created_at: string;
-  scheduled_for: string | null;
-  sent_at: string | null;
-  status: "draft" | "scheduled" | "sent";
-  target_type: "all" | "campaigns" | "boosts";
+  updated_at: string;
   read_count?: number;
-  total_recipients?: number;
 }
 
 interface Campaign {
@@ -151,8 +151,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
     setIsSending(true);
     try {
       // Determine status and scheduled time
-      let status: "draft" | "scheduled" | "sent" = asDraft ? "draft" : "sent";
-      let scheduledFor: string | null = null;
+      let status = asDraft ? "draft" : "sent";
+      let scheduledAt: string | null = null;
       let sentAt: string | null = null;
 
       if (scheduledDate && !asDraft) {
@@ -162,7 +162,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
         if (scheduled > new Date()) {
           status = "scheduled";
-          scheduledFor = scheduled.toISOString();
+          scheduledAt = scheduled.toISOString();
         } else {
           sentAt = new Date().toISOString();
         }
@@ -179,8 +179,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
           content: content.trim(),
           created_by: user?.id,
           status,
-          target_type: targetType,
-          scheduled_for: scheduledFor,
+          broadcast_type: targetType,
+          scheduled_at: scheduledAt,
           sent_at: sentAt
         })
         .select()
@@ -258,7 +258,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
         .update({
           status: "sent",
           sent_at: new Date().toISOString(),
-          scheduled_for: null
+          scheduled_at: null
         })
         .eq("id", broadcast.id);
 
@@ -272,7 +272,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "draft":
         return <Badge variant="outline" className="bg-muted/50">Draft</Badge>;
@@ -285,8 +285,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
     }
   };
 
-  const getTargetLabel = (broadcast: Broadcast) => {
-    switch (broadcast.target_type) {
+  const getTargetLabel = (broadcastType: string | null) => {
+    switch (broadcastType) {
       case "all":
         return "All creators";
       case "campaigns":
@@ -294,7 +294,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
       case "boosts":
         return "Selected boosts";
       default:
-        return "Unknown";
+        return "All creators";
     }
   };
 
@@ -498,74 +498,60 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
       {broadcasts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Megaphone className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground">No broadcasts yet</p>
-          <p className="text-sm text-muted-foreground/70 mt-1">
-            Create your first broadcast to reach creators
+          <h3 className="font-medium text-lg mb-1">No broadcasts yet</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Create broadcasts to send announcements and updates to creators in your campaigns.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
           {broadcasts.map((broadcast) => (
-            <Card key={broadcast.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{broadcast.title}</h3>
-                      {getStatusBadge(broadcast.status)}
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                      {broadcast.content}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {getTargetLabel(broadcast)}
-                      </span>
-                      {broadcast.status === "sent" && (
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          {broadcast.read_count || 0} read
-                        </span>
-                      )}
-                      {broadcast.scheduled_for && broadcast.status === "scheduled" && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Scheduled for {format(new Date(broadcast.scheduled_for), "PPP 'at' p")}
-                        </span>
-                      )}
-                      {broadcast.sent_at && (
-                        <span>
-                          Sent {format(new Date(broadcast.sent_at), "PPP 'at' p")}
-                        </span>
-                      )}
-                    </div>
+            <Card key={broadcast.id} className="p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-medium text-sm truncate">{broadcast.title}</h3>
+                    {getStatusBadge(broadcast.status)}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {(broadcast.status === "draft" || broadcast.status === "scheduled") && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSendNow(broadcast)}
-                        className="gap-1"
-                      >
-                        <Send className="h-3 w-3" />
-                        Send Now
-                      </Button>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{broadcast.content}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" />
+                      {getTargetLabel(broadcast.broadcast_type)}
+                    </span>
+                    {broadcast.sent_at && (
+                      <span>Sent {format(new Date(broadcast.sent_at), "PPp")}</span>
                     )}
-                    {broadcast.status !== "sent" && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDeleteBroadcast(broadcast.id)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    {broadcast.scheduled_at && broadcast.status === "scheduled" && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        Scheduled for {format(new Date(broadcast.scheduled_at), "PPp")}
+                      </span>
+                    )}
+                    {broadcast.read_count !== undefined && broadcast.read_count > 0 && (
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" />
+                        {broadcast.read_count} read
+                      </span>
                     )}
                   </div>
                 </div>
-              </CardContent>
+                <div className="flex items-center gap-2">
+                  {(broadcast.status === "draft" || broadcast.status === "scheduled") && (
+                    <Button size="sm" variant="outline" onClick={() => handleSendNow(broadcast)}>
+                      <Send className="h-3.5 w-3.5 mr-1" />
+                      Send Now
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDeleteBroadcast(broadcast.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
