@@ -117,8 +117,17 @@ export default function ReportsPage() {
       const dateRange = getDateRange();
       const allData: Record<string, any[]> = {};
 
+      // Map of valid tables to query
+      const validTables = ["profiles", "payout_requests", "wallet_transactions", "payment_ledger", "fraud_flags"];
+
       for (const table of config.tables) {
-        let query = supabase.from(table).select("*");
+        // Skip tables that don't exist yet
+        if (!validTables.includes(table)) {
+          allData[table] = [];
+          continue;
+        }
+
+        let query = (supabase.from(table as any) as any).select("*");
 
         // Add date filtering if table has created_at
         if (dateRange.from && dateRange.to) {

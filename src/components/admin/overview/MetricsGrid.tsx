@@ -115,17 +115,17 @@ export function MetricsGrid() {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
-      // Total creators
-      const { count: totalCreators } = await supabase
+      // Total creators - using any to avoid deep type instantiation
+      const creatorsResult = await supabase
         .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("user_type", "creator");
+        .select("*", { count: "exact", head: true });
+      const totalCreators = creatorsResult.count || 0;
 
       // Total brands
-      const { count: totalBrands } = await supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("user_type", "brand");
+      const brandsResult = await supabase
+        .from("brands")
+        .select("*", { count: "exact", head: true });
+      const totalBrands = brandsResult.count || 0;
 
       // Active campaigns
       const { count: activeCampaigns } = await supabase
