@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { Plus, Trash2, Pencil, Info } from "lucide-react";
+import { Plus, MoreHorizontal, FileText, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,9 +9,10 @@ import { CampaignCreationWizard } from "./CampaignCreationWizard";
 import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "./CreateBountyDialog";
 import { TemplateSelector } from "./TemplateSelector";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
 interface Blueprint {
   id: string;
   title: string;
@@ -23,38 +23,38 @@ interface Blueprint {
   updated_at: string;
   campaign_id?: string | null;
 }
+
 interface BlueprintsTabProps {
   brandId: string;
 }
+
 type BlueprintStatus = 'empty' | 'draft' | 'assigned';
+
 const getStatusConfig = (status: BlueprintStatus) => {
   switch (status) {
     case 'assigned':
       return {
-        label: 'Assigned',
-        bgColor: 'bg-emerald-500',
-        textColor: 'text-white'
+        label: 'Active',
+        dotColor: 'bg-emerald-500',
+        textColor: 'text-emerald-600 dark:text-emerald-400',
       };
     case 'draft':
       return {
         label: 'Draft',
-        bgColor: 'bg-amber-500',
-        textColor: 'text-white'
+        dotColor: 'bg-amber-500',
+        textColor: 'text-amber-600 dark:text-amber-400',
       };
     case 'empty':
     default:
       return {
         label: 'Empty',
-        bgColor: 'bg-muted-foreground/30',
-        textColor: 'text-muted-foreground'
+        dotColor: 'bg-muted-foreground/40',
+        textColor: 'text-muted-foreground',
       };
   }
 };
-export function BlueprintsTab({
-  brandId
-}: BlueprintsTabProps) {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+
+export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSearchParams] = useSearchParams();
@@ -64,74 +64,50 @@ export function BlueprintsTab({
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string | null>(null);
   const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [brandInfo, setBrandInfo] = useState<{
-    name: string;
-    logoUrl?: string;
-  } | null>(null);
-  const [userInfo, setUserInfo] = useState<{
-    name: string;
-    avatarUrl?: string;
-  } | null>(null);
+  const [brandInfo, setBrandInfo] = useState<{ name: string; logoUrl?: string } | null>(null);
   const [campaignLinks, setCampaignLinks] = useState<Record<string, string>>({});
+
   useEffect(() => {
     fetchBlueprints();
     fetchBrandInfo();
-    fetchUserInfo();
   }, [brandId]);
-  const fetchUserInfo = async () => {
-    const {
-      data: {
-        user
-      }
-    } = await supabase.auth.getUser();
-    if (user) {
-      const {
-        data
-      } = await supabase.from("profiles").select("full_name, username, avatar_url").eq("id", user.id).single();
-      if (data) {
-        setUserInfo({
-          name: data.full_name || data.username || "You",
-          avatarUrl: data.avatar_url || undefined
-        });
-      }
-    }
-  };
+
   const fetchBrandInfo = async () => {
-    const {
-      data
-    } = await supabase.from("brands").select("name, logo_url, subscription_status").eq("id", brandId).single();
+    const { data } = await supabase
+      .from("brands")
+      .select("name, logo_url, subscription_status")
+      .eq("id", brandId)
+      .single();
     if (data) {
       setBrandInfo({
         name: data.name,
-        logoUrl: data.logo_url || undefined
+        logoUrl: data.logo_url || undefined,
       });
-      setSubscriptionStatus(data.subscription_status);
     }
   };
+
   const fetchBlueprints = async () => {
     setLoading(true);
-    const {
-      data,
-      error
-    } = await supabase.from("blueprints").select("id, title, status, content, platforms, created_at, updated_at").eq("brand_id", brandId).order("updated_at", {
-      ascending: false
-    });
+    const { data, error } = await supabase
+      .from("blueprints")
+      .select("id, title, status, content, platforms, created_at, updated_at")
+      .eq("brand_id", brandId)
+      .order("updated_at", { ascending: false });
+
     if (error) {
       console.error("Error fetching blueprints:", error);
       toast.error("Failed to load blueprints");
     } else {
       setBlueprints(data || []);
-
-      // Fetch campaign links for blueprints
       if (data && data.length > 0) {
-        const blueprintIds = data.map(b => b.id);
-        const {
-          data: campaigns
-        } = await supabase.from("campaigns").select("id, blueprint_id").in("blueprint_id", blueprintIds);
+        const blueprintIds = data.map((b) => b.id);
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id, blueprint_id")
+          .in("blueprint_id", blueprintIds);
         if (campaigns) {
           const links: Record<string, string> = {};
-          campaigns.forEach(c => {
+          campaigns.forEach((c) => {
             if (c.blueprint_id) links[c.blueprint_id] = c.id;
           });
           setCampaignLinks(links);
@@ -140,29 +116,28 @@ export function BlueprintsTab({
     }
     setLoading(false);
   };
+
   const createBlueprint = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("blueprints").insert({
-      brand_id: brandId,
-      title: "Untitled"
-    }).select().single();
+    const { data, error } = await supabase
+      .from("blueprints")
+      .insert({ brand_id: brandId, title: "Untitled" })
+      .select()
+      .single();
+
     if (error) {
       console.error("Error creating blueprint:", error);
       toast.error("Failed to create blueprint");
       return;
     }
     setTemplateSelectorOpen(false);
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       prev.set("blueprint", data.id);
       return prev;
     });
   };
+
   const deleteBlueprint = async (id: string) => {
-    const {
-      error
-    } = await supabase.from("blueprints").delete().eq("id", id);
+    const { error } = await supabase.from("blueprints").delete().eq("id", id);
     if (error) {
       console.error("Error deleting blueprint:", error);
       toast.error("Failed to delete blueprint");
@@ -171,198 +146,290 @@ export function BlueprintsTab({
     toast.success("Blueprint deleted");
     fetchBlueprints();
   };
+
   const openBlueprint = (id: string) => {
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       prev.set("blueprint", id);
       return prev;
     });
   };
+
   const handleActivateBlueprint = (blueprintId: string) => {
     setSelectedBlueprintId(blueprintId);
     setTypeDialogOpen(true);
   };
+
   const handleSelectClipping = (blueprintId?: string) => {
     setTypeDialogOpen(false);
-    if (blueprintId) {
-      setSelectedBlueprintId(blueprintId);
-    }
+    if (blueprintId) setSelectedBlueprintId(blueprintId);
     setCreateCampaignOpen(true);
   };
+
   const handleSelectBoost = () => {
     setTypeDialogOpen(false);
     setCreateBoostOpen(true);
   };
+
   const handleSelectTemplate = async (template: any) => {
-    const {
-      data,
-      error
-    } = await supabase.from("blueprints").insert({
-      brand_id: brandId,
-      title: template.title || "Untitled",
-      content: template.content,
-      platforms: template.platforms,
-      hooks: template.hooks,
-      talking_points: template.talking_points,
-      dos_and_donts: template.dos_and_donts,
-      call_to_action: template.call_to_action,
-      hashtags: template.hashtags,
-      brand_voice: template.brand_voice,
-      target_personas: template.target_personas,
-      assets: template.assets,
-      example_videos: template.example_videos,
-      content_guidelines: template.content_guidelines
-    }).select().single();
+    const { data, error } = await supabase
+      .from("blueprints")
+      .insert({
+        brand_id: brandId,
+        title: template.title || "Untitled",
+        content: template.content,
+        platforms: template.platforms,
+        hooks: template.hooks,
+        talking_points: template.talking_points,
+        dos_and_donts: template.dos_and_donts,
+        call_to_action: template.call_to_action,
+        hashtags: template.hashtags,
+        brand_voice: template.brand_voice,
+        target_personas: template.target_personas,
+        assets: template.assets,
+        example_videos: template.example_videos,
+        content_guidelines: template.content_guidelines,
+      })
+      .select()
+      .single();
+
     if (error) {
       console.error("Error creating blueprint from template:", error);
       toast.error("Failed to create blueprint");
       return;
     }
     setTemplateSelectorOpen(false);
-    setSearchParams(prev => {
+    setSearchParams((prev) => {
       prev.set("blueprint", data.id);
       return prev;
     });
   };
+
   const getBlueprintStatus = (blueprint: Blueprint): BlueprintStatus => {
-    // Check if assigned to a campaign
-    if (campaignLinks[blueprint.id]) {
-      return 'assigned';
-    }
-    // Check if has content (draft)
-    const hasContent = blueprint.content && blueprint.content.replace(/<[^>]*>/g, '').trim().length > 0;
-    if (hasContent || blueprint.platforms && blueprint.platforms.length > 0) {
-      return 'draft';
-    }
-    // Otherwise empty
-    return 'empty';
+    if (campaignLinks[blueprint.id]) return "assigned";
+    const hasContent =
+      blueprint.content && blueprint.content.replace(/<[^>]*>/g, "").trim().length > 0;
+    if (hasContent || (blueprint.platforms && blueprint.platforms.length > 0))
+      return "draft";
+    return "empty";
   };
+
   const getContentPreview = (content: string | null) => {
-    if (!content) return null;
-    const stripped = content.replace(/<[^>]*>/g, '').trim();
-    return stripped.length > 0 ? stripped.slice(0, 120) : null;
+    if (!content) return "No content yet";
+    const stripped = content.replace(/<[^>]*>/g, "").trim();
+    if (stripped.length > 100) return stripped.slice(0, 100) + "...";
+    return stripped || "No content yet";
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const isThisYear = date.getFullYear() === now.getFullYear();
+    return format(date, isThisYear ? "MMM d" : "MMM d, yyyy");
+  };
+
   if (loading) {
-    return null;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
   }
-  return <div className="p-6 space-y-6">
+
+  return (
+    <div className="p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Blueprints</h2>
-          <TooltipProvider>
-            <Tooltip delayDuration={200}>
-              <TooltipTrigger asChild>
-                <div className="p-1 rounded-full transition-colors cursor-help bg-[#1f1f1f]/0">
-                  <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-[280px] p-3">
-                <p className="text-sm leading-relaxed">
-                  Blueprints are content briefs that outline what creators should produce. Assign them to campaigns to guide creators with talking points, brand voice, and example videos.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight">Blueprints</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Content guidelines for your campaigns
+          </p>
         </div>
-        <Button onClick={() => setTemplateSelectorOpen(true)} size="sm" className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df] py-1.5 hover:bg-[#1a50c8]">
+        <Button
+          onClick={() => setTemplateSelectorOpen(true)}
+          size="sm"
+          className="gap-2 rounded-full px-4"
+        >
           <Plus className="h-4 w-4" />
           New Blueprint
         </Button>
       </div>
 
       {blueprints.length === 0 ? (
-        <div className="w-full h-[calc(100vh-200px)] min-h-[500px]">
-          <iframe src="https://join.virality.gg/blueprint-card" className="w-full h-full border-0 rounded-lg" title="Blueprint Introduction" />
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center py-20 px-6",
+            "rounded-2xl border border-dashed border-border/50",
+            "bg-muted/20"
+          )}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-4">
+            <FileText className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-medium mb-1">No blueprints yet</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-sm mb-5">
+            Create your first blueprint to define content guidelines for creators
+          </p>
+          <Button
+            onClick={() => setTemplateSelectorOpen(true)}
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-full"
+          >
+            <Plus className="w-4 h-4" />
+            Create Blueprint
+          </Button>
         </div>
-      ) : <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-          {blueprints.map(blueprint => {
-        const contentPreview = getContentPreview(blueprint.content);
-        const status = getBlueprintStatus(blueprint);
-        const statusConfig = getStatusConfig(status);
-        return <div key={blueprint.id} onClick={() => openBlueprint(blueprint.id)} className={`group cursor-pointer rounded-xl ${statusConfig.bgColor} flex flex-col h-full overflow-hidden border border-border`}>
-                    {/* Status Label */}
-                    <div className="px-4 py-1 text-center">
-                      <span className={`text-xs font-medium font-inter tracking-[-0.5px] ${statusConfig.textColor}`}>
-                        {statusConfig.label}
-                      </span>
-                    </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {blueprints.map((blueprint) => {
+            const status = getBlueprintStatus(blueprint);
+            const statusConfig = getStatusConfig(status);
+            const contentPreview = getContentPreview(blueprint.content);
 
-                    {/* Content Card overlaying the status background */}
-                    <div className="flex-1 rounded-b-xl bg-card group-hover:bg-[#e5e5e5] dark:group-hover:bg-[#0e0e0e] transition-colors duration-200 p-4 flex flex-col relative">
-                      {/* Menu Button */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={e => {
-                  e.stopPropagation();
-                  openBlueprint(blueprint.id);
-                }}>
-                            <Pencil className="h-3.5 w-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={e => {
-                  e.stopPropagation();
-                  handleActivateBlueprint(blueprint.id);
-                }}>
-                            <Plus className="h-3.5 w-3.5 mr-2" />
-                            Create Campaign
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={e => {
-                  e.stopPropagation();
-                  deleteBlueprint(blueprint.id);
-                }}>
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Title */}
-                      <h3 className="font-semibold text-base mb-2 truncate font-inter tracking-[-0.3px] pr-8">
-                        {blueprint.title}
-                      </h3>
-
-                      {/* Description Preview */}
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4 min-h-[40px] font-inter tracking-[-0.2px]">
-                        {contentPreview || "No content yet..."}
-                      </p>
-
-                      {/* Status Badge Row */}
-                      <div className="flex items-center justify-end mb-4 flex-1">
-                        {status === 'assigned' && <span className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
-                            Active
-                          </span>}
+            return (
+              <div
+                key={blueprint.id}
+                onClick={() => openBlueprint(blueprint.id)}
+                className={cn(
+                  "group relative cursor-pointer",
+                  "rounded-2xl border border-border/60",
+                  "bg-card/60 backdrop-blur-sm",
+                  "hover:bg-card hover:border-border hover:shadow-sm",
+                  "transition-all duration-200 ease-out"
+                )}
+              >
+                <div className="p-5">
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-muted-foreground" />
                       </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-3 border-t border-border/20">
-                        <div className="flex items-center gap-1.5">
-                          {userInfo?.avatarUrl ? <img src={userInfo.avatarUrl} alt={userInfo.name} className="h-4 w-4 rounded object-cover" /> : <div className="h-4 w-4 rounded bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground">
-                              {(userInfo?.name || "U").charAt(0).toUpperCase()}
-                            </div>}
-                          <span className="text-xs font-inter tracking-[-0.3px] text-muted-foreground">
-                            {userInfo?.name || "You"}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-medium text-[15px] leading-tight truncate">
+                          {blueprint.title || "Untitled"}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span
+                            className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              statusConfig.dotColor
+                            )}
+                          />
+                          <span className={cn("text-xs", statusConfig.textColor)}>
+                            {statusConfig.label}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
-                          Last edited {format(new Date(blueprint.updated_at), 'd MMMM, HH:mm')}
-                        </span>
                       </div>
                     </div>
-                  </div>;
-      })}
-        </div>}
 
-      <CreateCampaignTypeDialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen} brandId={brandId} defaultBlueprintId={selectedBlueprintId || undefined} onSelectClipping={handleSelectClipping} onSelectManaged={handleSelectClipping} onSelectBoost={handleSelectBoost} />
+                    {/* Actions menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 -mr-1",
+                            "opacity-0 group-hover:opacity-100",
+                            "transition-opacity duration-150"
+                          )}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openBlueprint(blueprint.id);
+                          }}
+                        >
+                          Edit blueprint
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivateBlueprint(blueprint.id);
+                          }}
+                        >
+                          Create campaign
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteBlueprint(blueprint.id);
+                          }}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
 
-      {brandInfo && <CampaignCreationWizard brandId={brandId} brandName={brandInfo.name} brandLogoUrl={brandInfo.logoUrl} initialBlueprintId={selectedBlueprintId || undefined} onSuccess={() => {}} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />}
+                  {/* Content preview */}
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+                    {contentPreview}
+                  </p>
 
-      {brandInfo && <CreateBountyDialog brandId={brandId} open={createBoostOpen} onOpenChange={setCreateBoostOpen} onSuccess={() => setCreateBoostOpen(false)} />}
+                  {/* Footer */}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDate(blueprint.updated_at)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      <TemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelectTemplate={handleSelectTemplate} onStartBlank={createBlueprint} />
+      {/* Dialogs */}
+      <CreateCampaignTypeDialog
+        open={typeDialogOpen}
+        onOpenChange={setTypeDialogOpen}
+        brandId={brandId}
+        defaultBlueprintId={selectedBlueprintId || undefined}
+        onSelectClipping={handleSelectClipping}
+        onSelectManaged={handleSelectClipping}
+        onSelectBoost={handleSelectBoost}
+      />
 
-      <SubscriptionGateDialog brandId={brandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
-    </div>;
+      {brandInfo && (
+        <CampaignCreationWizard
+          brandId={brandId}
+          brandName={brandInfo.name}
+          brandLogoUrl={brandInfo.logoUrl}
+          initialBlueprintId={selectedBlueprintId || undefined}
+          onSuccess={() => {}}
+          open={createCampaignOpen}
+          onOpenChange={setCreateCampaignOpen}
+        />
+      )}
+
+      {brandInfo && (
+        <CreateBountyDialog
+          brandId={brandId}
+          open={createBoostOpen}
+          onOpenChange={setCreateBoostOpen}
+          onSuccess={() => setCreateBoostOpen(false)}
+        />
+      )}
+
+      <TemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelectTemplate={handleSelectTemplate}
+        onStartBlank={createBlueprint}
+      />
+
+      <SubscriptionGateDialog
+        brandId={brandId}
+        open={subscriptionGateOpen}
+        onOpenChange={setSubscriptionGateOpen}
+      />
+    </div>
+  );
 }
