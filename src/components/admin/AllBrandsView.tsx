@@ -1,9 +1,28 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import { 
+  ChevronRight, 
+  Calendar, 
+  Globe, 
+  CheckCircle2, 
+  XCircle,
+  Building2,
+  ExternalLink,
+  MoreHorizontal
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface Brand {
   id: string;
@@ -25,6 +44,8 @@ interface Brand {
 export function AllBrandsView() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBrands();
@@ -46,89 +67,199 @@ export function AllBrandsView() {
     }
   };
 
+  const handleBrandClick = (brand: Brand) => {
+    navigate(`/brand/${brand.slug}`);
+  };
+
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="grid gap-3">
         {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-14 w-full rounded-lg" />
+          <div key={i} className="p-4 rounded-xl bg-card/50 border border-border/50">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          </div>
         ))}
       </div>
     );
   }
 
-  return (
-    <div className="space-y-1">
-      {/* Header */}
-      <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-        <div className="col-span-4">Brand</div>
-        <div className="col-span-2">Type</div>
-        <div className="col-span-2">Status</div>
-        <div className="col-span-2">Created</div>
-        <div className="col-span-2">Renewal</div>
+  if (brands.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+          <Building2 className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-semibold mb-1">No brands yet</h3>
+        <p className="text-sm text-muted-foreground">
+          Create your first brand to get started
+        </p>
       </div>
+    );
+  }
 
-      {/* Rows */}
-      {brands.map((brand) => (
+  return (
+    <div className="space-y-2">
+      {brands.map((brand, index) => (
         <div
           key={brand.id}
-          className="grid grid-cols-12 gap-4 px-4 py-3 bg-card/50 rounded-lg hover:bg-card/80 cursor-pointer transition-colors items-center"
+          onClick={() => handleBrandClick(brand)}
+          onMouseEnter={() => setHoveredId(brand.id)}
+          onMouseLeave={() => setHoveredId(null)}
+          className={cn(
+            "group relative p-4 rounded-xl border cursor-pointer transition-all duration-300",
+            "bg-card/50 hover:bg-card border-border/50 hover:border-border",
+            "hover:shadow-lg hover:shadow-primary/5",
+            hoveredId === brand.id && "scale-[1.01]"
+          )}
+          style={{
+            animationDelay: `${index * 50}ms`,
+            animation: 'fadeInUp 0.4s ease-out forwards',
+          }}
         >
-          <div className="col-span-4 flex items-center gap-3 min-w-0">
-            <Avatar className="h-8 w-8 shrink-0">
-              <AvatarImage src={brand.logo_url || ''} alt={brand.name} />
-              <AvatarFallback className="text-xs bg-muted font-inter tracking-[-0.5px]">
-                {brand.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-sm font-inter tracking-[-0.5px] truncate">
-              {brand.name}
-            </span>
-          </div>
+          {/* Gradient accent line */}
+          <div className={cn(
+            "absolute left-0 top-4 bottom-4 w-1 rounded-full transition-all duration-300",
+            brand.is_active 
+              ? "bg-gradient-to-b from-emerald-500 to-emerald-500/50" 
+              : "bg-gradient-to-b from-muted-foreground/30 to-muted-foreground/10"
+          )} />
 
-          <div className="col-span-2">
-            {brand.brand_type ? (
-              <span className="text-xs font-inter tracking-[-0.5px] text-muted-foreground capitalize">
-                {brand.brand_type}
-              </span>
-            ) : (
-              <span className="text-xs text-muted-foreground/50">—</span>
-            )}
-          </div>
+          <div className="flex items-center gap-4 pl-4">
+            {/* Logo */}
+            <div className="relative">
+              <Avatar className={cn(
+                "h-12 w-12 rounded-xl border-2 transition-all duration-300",
+                brand.is_active ? "border-emerald-500/20" : "border-border"
+              )}>
+                <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
+                <AvatarFallback className="rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-sm font-semibold">
+                  {brand.name.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {brand.is_verified && (
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                </div>
+              )}
+            </div>
 
-          <div className="col-span-2">
-            <Badge 
-              variant="outline" 
-              className={`text-xs font-inter tracking-[-0.5px] border-0 ${
-                brand.is_active 
-                  ? "bg-emerald-500/10 text-emerald-500" 
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {brand.is_active ? "Active" : "Inactive"}
-            </Badge>
-          </div>
+            {/* Brand Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-sm truncate">{brand.name}</h3>
+                {brand.brand_type && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium capitalize">
+                    {brand.brand_type}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {format(new Date(brand.created_at), 'MMM dd, yyyy')}
+                </span>
+                {brand.home_url && (
+                  <span className="flex items-center gap-1 truncate max-w-[150px]">
+                    <Globe className="w-3 h-3 shrink-0" />
+                    {new URL(brand.home_url).hostname.replace('www.', '')}
+                  </span>
+                )}
+              </div>
+            </div>
 
-          <div className="col-span-2">
-            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-              {format(new Date(brand.created_at), 'MMM dd, yyyy')}
-            </span>
-          </div>
+            {/* Status & Actions */}
+            <div className="flex items-center gap-3">
+              {/* Renewal Badge */}
+              {brand.renewal_date && (
+                <div className="hidden sm:flex flex-col items-end text-xs">
+                  <span className="text-muted-foreground">Renews</span>
+                  <span className="font-medium">{format(new Date(brand.renewal_date), 'MMM dd')}</span>
+                </div>
+              )}
 
-          <div className="col-span-2">
-            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-              {brand.renewal_date
-                ? format(new Date(brand.renewal_date), 'MMM dd, yyyy')
-                : "—"}
-            </span>
+              {/* Status */}
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-xs font-medium border-0 gap-1",
+                  brand.is_active 
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                {brand.is_active ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Active
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-3 h-3" />
+                    Inactive
+                  </>
+                )}
+              </Badge>
+
+              {/* Actions Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/brand/${brand.slug}`);
+                  }}>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    View Dashboard
+                  </DropdownMenuItem>
+                  {brand.home_url && (
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(brand.home_url!, '_blank');
+                    }}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Visit Website
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Arrow */}
+              <ChevronRight className={cn(
+                "w-4 h-4 text-muted-foreground transition-all duration-300",
+                hoveredId === brand.id && "translate-x-1 text-foreground"
+              )} />
+            </div>
           </div>
         </div>
       ))}
 
-      {brands.length === 0 && (
-        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground font-inter tracking-[-0.5px]">
-          No brands found
-        </div>
-      )}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
