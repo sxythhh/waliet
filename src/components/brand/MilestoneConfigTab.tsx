@@ -64,12 +64,12 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
     setIsLoading(true);
     try {
       const [milestonesResult, campaignsResult, boostsResult] = await Promise.all([
-        supabase
-          .from("milestone_configs")
+        (supabase
+          .from("milestone_configs" as any)
           .select("*")
           .eq("brand_id", brandId)
           .order("milestone_type")
-          .order("threshold"),
+          .order("threshold") as any),
         supabase
           .from("campaigns")
           .select("id, title")
@@ -83,7 +83,7 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
       ]);
 
       if (milestonesResult.error) throw milestonesResult.error;
-      setMilestones(milestonesResult.data || []);
+      setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
       setCampaigns(campaignsResult.data || []);
       setBoosts(boostsResult.data || []);
     } catch (error) {
@@ -149,17 +149,17 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
       };
 
       if (editingMilestone) {
-        const { error } = await supabase
-          .from("milestone_configs")
+        const { error } = await (supabase
+          .from("milestone_configs" as any)
           .update(data)
-          .eq("id", editingMilestone.id);
+          .eq("id", editingMilestone.id) as any);
 
         if (error) throw error;
         toast.success("Milestone updated");
       } else {
-        const { error } = await supabase
-          .from("milestone_configs")
-          .insert(data);
+        const { error } = await (supabase
+          .from("milestone_configs" as any)
+          .insert(data) as any);
 
         if (error) throw error;
         toast.success("Milestone created");
@@ -178,10 +178,10 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
 
   const handleToggleActive = async (milestone: MilestoneConfig) => {
     try {
-      const { error } = await supabase
-        .from("milestone_configs")
+      const { error } = await (supabase
+        .from("milestone_configs" as any)
         .update({ is_active: !milestone.is_active })
-        .eq("id", milestone.id);
+        .eq("id", milestone.id) as any);
 
       if (error) throw error;
 
@@ -198,10 +198,10 @@ export function MilestoneConfigTab({ brandId }: MilestoneConfigTabProps) {
 
   const handleDelete = async (milestoneId: string) => {
     try {
-      const { error } = await supabase
-        .from("milestone_configs")
+      const { error } = await (supabase
+        .from("milestone_configs" as any)
         .delete()
-        .eq("id", milestoneId);
+        .eq("id", milestoneId) as any);
 
       if (error) throw error;
       toast.success("Milestone deleted");

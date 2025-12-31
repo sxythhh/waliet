@@ -96,48 +96,48 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
     setIsLoading(true);
     try {
       // Fetch strikes with creator info
-      const { data: strikesData } = await supabase
-        .from("creator_strikes")
+      const { data: strikesData } = await (supabase
+        .from("creator_strikes" as any)
         .select(`
           *,
           creator:creator_id(username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(50) as any);
 
       setStrikes((strikesData || []) as Strike[]);
 
       // Fetch reliability scores
-      const { data: scoresData } = await supabase
-        .from("creator_reliability_scores")
+      const { data: scoresData } = await (supabase
+        .from("creator_reliability_scores" as any)
         .select(`
           *,
           creator:creator_id(username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
-        .order("reliability_score", { ascending: true });
+        .order("reliability_score", { ascending: true }) as any);
 
       setReliabilityScores((scoresData || []) as ReliabilityScore[]);
 
       // Fetch thresholds
-      const { data: thresholdsData } = await supabase
-        .from("strike_thresholds")
+      const { data: thresholdsData } = await (supabase
+        .from("strike_thresholds" as any)
         .select("*")
         .eq("brand_id", brandId)
-        .order("strike_count");
+        .order("strike_count") as any);
 
-      setThresholds(thresholdsData || []);
+      setThresholds((thresholdsData || []) as StrikeThreshold[]);
 
       // Fetch creators for the dropdown
-      const { data: creatorsData } = await supabase
-        .from("campaign_participants")
+      const { data: creatorsData } = await (supabase
+        .from("campaign_participants" as any)
         .select(`
           user_id,
           profiles:user_id(id, username, full_name, avatar_url)
         `)
         .eq("brand_id", brandId)
-        .eq("status", "accepted");
+        .eq("status", "accepted") as any);
 
       const uniqueCreators = new Map();
       creatorsData?.forEach((p: any) => {
@@ -161,8 +161,8 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
     }
 
     try {
-      const { error } = await supabase
-        .from("creator_strikes")
+      const { error } = await (supabase
+        .from("creator_strikes" as any)
         .insert({
           brand_id: brandId,
           creator_id: selectedCreatorId,
@@ -170,7 +170,7 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
           severity,
           reason: reason || null,
           scheduled_date: scheduledDate || null,
-        });
+        }) as any);
 
       if (error) throw error;
 
@@ -186,10 +186,10 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
 
   const handleRemoveStrike = async (strikeId: string) => {
     try {
-      const { error } = await supabase
-        .from("creator_strikes")
+      const { error } = await (supabase
+        .from("creator_strikes" as any)
         .delete()
-        .eq("id", strikeId);
+        .eq("id", strikeId) as any);
 
       if (error) throw error;
 
@@ -203,13 +203,13 @@ export function CreatorStrikesTab({ brandId }: CreatorStrikesTabProps) {
 
   const handleAppealDecision = async (strikeId: string, decision: "approved" | "rejected") => {
     try {
-      const { error } = await supabase
-        .from("creator_strikes")
+      const { error } = await (supabase
+        .from("creator_strikes" as any)
         .update({
           appeal_status: decision,
           appeal_reviewed_at: new Date().toISOString(),
         })
-        .eq("id", strikeId);
+        .eq("id", strikeId) as any);
 
       if (error) throw error;
 

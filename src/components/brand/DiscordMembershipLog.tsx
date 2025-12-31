@@ -56,15 +56,15 @@ export function DiscordMembershipLog({ brandId }: DiscordMembershipLogProps) {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
-        .from("discord_membership_log")
+      let query = (supabase
+        .from("discord_membership_log" as any)
         .select(`
           *,
           profiles:user_id(username, avatar_url)
         `)
         .eq("brand_id", brandId)
         .order("event_timestamp", { ascending: false })
-        .limit(50);
+        .limit(50) as any);
 
       if (filterType !== "all") {
         query = query.eq("event_type", filterType);
@@ -80,16 +80,16 @@ export function DiscordMembershipLog({ brandId }: DiscordMembershipLogProps) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { data: statsData } = await supabase
-        .from("discord_membership_log")
+      const { data: statsData } = await (supabase
+        .from("discord_membership_log" as any)
         .select("event_type")
         .eq("brand_id", brandId)
-        .gte("event_timestamp", thirtyDaysAgo.toISOString());
+        .gte("event_timestamp", thirtyDaysAgo.toISOString()) as any);
 
       if (statsData) {
-        const joins = statsData.filter(e => e.event_type === "member_join").length;
-        const leaves = statsData.filter(e => e.event_type === "member_leave").length;
-        const roleChanges = statsData.filter(e =>
+        const joins = statsData.filter((e: any) => e.event_type === "member_join").length;
+        const leaves = statsData.filter((e: any) => e.event_type === "member_leave").length;
+        const roleChanges = statsData.filter((e: any) =>
           e.event_type === "role_add" || e.event_type === "role_remove"
         ).length;
 

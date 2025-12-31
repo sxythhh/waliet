@@ -572,16 +572,16 @@ export function CreatorDatabaseTab({
       });
 
       // Fetch demographic scores
-      const { data: demographicScores } = await supabase
-        .from('demographic_scores')
+      const { data: demographicScores } = await (supabase
+        .from('demographic_scores' as any)
         .select('user_id, score')
-        .in('user_id', platformCreatorIds);
+        .in('user_id', platformCreatorIds) as any);
 
       // Fetch reliability scores
-      const { data: reliabilityScores } = await supabase
-        .from('creator_reliability_scores')
+      const { data: reliabilityScores } = await (supabase
+        .from('creator_reliability_scores' as any)
         .select('creator_id, reliability_score')
-        .eq('brand_id', brandId);
+        .eq('brand_id', brandId) as any);
 
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();

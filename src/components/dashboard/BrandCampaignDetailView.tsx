@@ -93,7 +93,7 @@ interface BrandCampaignDetailViewProps {
   boostId?: string;
   onBack?: () => void;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "management";
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "management" | "messages" | "broadcasts";
 type EntitySelection = "all" | {
   type: "campaign";
   id: string;
