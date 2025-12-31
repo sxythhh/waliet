@@ -25,6 +25,7 @@ import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab"
 import { ContentCalendar } from "@/components/brand/ContentCalendar";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
+import { SEOHead } from "@/components/SEOHead";
 
 import { CreatorChatWidget } from "@/components/dashboard/CreatorChatWidget";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -293,6 +294,7 @@ export default function Dashboard() {
     }
   };
   return <div className="flex h-screen w-full bg-white dark:bg-background">
+      <SEOHead title="Dashboard | Virality" description="Your Virality creator dashboard" noIndex={true} />
       <AppSidebar />
       
       {/* Main Content */}

@@ -39,13 +39,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [currentWorkspace, isBrandMode, refreshTrigger]);
 
   const fetchBrandBySlug = async (slug: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("brands")
       .select("id, name, slug, logo_url")
       .eq("slug", slug)
-      .single();
-    
-    if (data) {
+      .maybeSingle();
+
+    if (!error && data) {
       setCurrentBrand(data);
     }
   };

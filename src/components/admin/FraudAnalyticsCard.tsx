@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Shield, AlertTriangle, CheckCircle2, XCircle, TrendingUp, Users, Ban } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FraudStats {
   pendingReviews: number;
@@ -97,18 +96,14 @@ export function FraudAnalyticsCard() {
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-20" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl border border-white/[0.06] p-6">
+        <Skeleton className="h-5 w-48 mb-6 bg-white/5" />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-xl bg-white/5" />
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -118,83 +113,121 @@ export function FraudAnalyticsCard() {
     {
       label: "Pending Review",
       value: stats.pendingReviews,
-      icon: AlertTriangle,
-      color: "text-amber-500",
-      bgColor: "bg-amber-500/10",
+      color: "amber" as const,
+      hasDot: stats.pendingReviews > 0,
     },
     {
-      label: "Auto-Approved (7d)",
+      label: "Auto-Approved",
+      sublabel: "7d",
       value: stats.autoApprovedThisWeek,
-      icon: CheckCircle2,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-500/10",
+      color: "emerald" as const,
     },
     {
-      label: "Manual Approved (7d)",
+      label: "Manual Approved",
+      sublabel: "7d",
       value: stats.approvedThisWeek,
-      icon: Shield,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      color: "blue" as const,
     },
     {
-      label: "Rejected (7d)",
+      label: "Rejected",
+      sublabel: "7d",
       value: stats.rejectedThisWeek,
-      icon: XCircle,
-      color: "text-red-500",
-      bgColor: "bg-red-500/10",
+      color: "red" as const,
     },
     {
       label: "Total Flagged",
       value: stats.totalFlagged,
-      icon: TrendingUp,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
+      color: "orange" as const,
     },
     {
-      label: "Creators Banned",
+      label: "Banned",
       value: stats.creatorsBanned,
-      icon: Ban,
-      color: "text-red-600",
-      bgColor: "bg-red-600/10",
+      color: "red" as const,
     },
     {
       label: "Clawback Total",
       value: `$${stats.totalClawbackAmount.toFixed(0)}`,
-      icon: Users,
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10",
-      isAmount: true,
+      color: "purple" as const,
     },
   ];
 
+  const colorStyles = {
+    amber: {
+      bg: "from-amber-500/10 to-amber-500/5",
+      text: "text-amber-400",
+      dot: "bg-amber-400",
+    },
+    emerald: {
+      bg: "from-emerald-500/10 to-emerald-500/5",
+      text: "text-emerald-400",
+      dot: "bg-emerald-400",
+    },
+    blue: {
+      bg: "from-blue-500/10 to-blue-500/5",
+      text: "text-blue-400",
+      dot: "bg-blue-400",
+    },
+    red: {
+      bg: "from-red-500/10 to-red-500/5",
+      text: "text-red-400",
+      dot: "bg-red-400",
+    },
+    orange: {
+      bg: "from-orange-500/10 to-orange-500/5",
+      text: "text-orange-400",
+      dot: "bg-orange-400",
+    },
+    purple: {
+      bg: "from-purple-500/10 to-purple-500/5",
+      text: "text-purple-400",
+      dot: "bg-purple-400",
+    },
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium tracking-[-0.5px] flex items-center gap-2">
-          <Shield className="h-4 w-4" />
+    <div className="rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-white/[0.04]">
+        <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.3px]">
           Fraud Detection Overview
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          {statItems.map((item) => (
-            <div
-              key={item.label}
-              className={`${item.bgColor} rounded-lg p-3`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <item.icon className={`h-4 w-4 ${item.color}`} />
-                <span className="text-xs text-muted-foreground tracking-[-0.5px]">
-                  {item.label}
-                </span>
+          {statItems.map((item) => {
+            const styles = colorStyles[item.color];
+            return (
+              <div
+                key={item.label}
+                className={cn(
+                  "rounded-xl p-4 transition-all duration-300",
+                  "bg-gradient-to-br backdrop-blur-xl",
+                  styles.bg,
+                  "border border-white/[0.04]",
+                  "hover:border-white/[0.08]"
+                )}
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  {item.hasDot && (
+                    <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", styles.dot)} />
+                  )}
+                  <span className="text-[10px] text-white/50 font-inter font-medium tracking-[-0.2px] leading-tight">
+                    {item.label}
+                    {item.sublabel && (
+                      <span className="text-white/30 ml-1">({item.sublabel})</span>
+                    )}
+                  </span>
+                </div>
+                <p className={cn("text-xl font-semibold font-inter tracking-[-0.5px]", styles.text)}>
+                  {item.value}
+                </p>
               </div>
-              <p className={`text-xl font-bold tracking-[-0.5px] ${item.color}`}>
-                {item.value}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

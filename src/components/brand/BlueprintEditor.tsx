@@ -633,7 +633,7 @@ export function BlueprintEditor({
     switch (sectionId) {
       case "content":
         return <BlueprintSection key="content" id="content" title="Brief Content" icon={<FileText className="h-4 w-4" />} status={getSectionStatus("content").status} onRemove={() => toggleSection("content")}>
-            <div className="rounded-md bg-muted/20 overflow-hidden">
+            <div className="rounded-xl bg-muted/30 overflow-hidden">
               <RichTextEditor content={blueprint.content || ""} onChange={content => updateBlueprint({
               content
             })} placeholder="Write your campaign brief content here..." />
@@ -645,8 +645,10 @@ export function BlueprintEditor({
               {PLATFORMS.map(platform => {
               const isSelected = blueprint.platforms.includes(platform.id);
               return <button key={platform.id} onClick={() => togglePlatform(platform.id)} className={`
-                      flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-150 font-inter tracking-[-0.5px] text-sm border
-                      ${isSelected ? "bg-primary border-primary text-primary-foreground" : "bg-transparent border-border/50 text-foreground hover:border-border hover:bg-muted/30"}
+                      flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all duration-200 font-inter tracking-[-0.3px] text-sm
+                      ${isSelected
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground"}
                     `}>
                     <img src={platform.logo} alt={platform.label} className={`h-4 w-4 object-contain ${isSelected ? "brightness-0 invert" : ""}`} />
                     <span className="font-medium">{platform.label}</span>
@@ -658,38 +660,38 @@ export function BlueprintEditor({
         return <BlueprintSection key="brand_voice" id="brand_voice" title="Brand Voice" icon={<Mic className="h-4 w-4" />} status={getSectionStatus("brand_voice").status} onRemove={() => toggleSection("brand_voice")}>
             <Textarea value={blueprint.brand_voice || ""} onChange={e => updateBlueprint({
             brand_voice: e.target.value
-          })} placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)" className="min-h-[80px] resize-none bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm" />
+          })} placeholder="Describe the brand's tone and voice (e.g., casual, professional, witty, educational...)" className="min-h-[100px] resize-none rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
           </BlueprintSection>;
       case "hooks":
         return <BlueprintSection key="hooks" id="hooks" title="Hooks" icon={<MessageSquare className="h-4 w-4" />} status={getSectionStatus("hooks").status} onRemove={() => toggleSection("hooks")}>
-            <div className="space-y-1.5">
-              {blueprint.hooks.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
-                  Add attention-grabbing hooks for creators to use
-                </div> : blueprint.hooks.map((hook, index) => <div key={index} className="flex items-center gap-1.5 group">
-                    <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1} - e.g., "Wait until you see this..."`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                    <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+            <div className="space-y-2">
+              {blueprint.hooks.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
+                  <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add attention-grabbing hooks for creators to use</p>
+                </div> : blueprint.hooks.map((hook, index) => <div key={`hook-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
+                    <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                    <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
-              <Button variant="ghost" size="sm" onClick={addHook} className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 mt-2">
-                <Plus className="h-3 w-3 mr-1" />
+              <Button variant="ghost" size="sm" onClick={addHook} className="h-9 px-4 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 mt-1 transition-colors">
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
                 Add Hook
               </Button>
             </div>
           </BlueprintSection>;
       case "talking_points":
         return <BlueprintSection key="talking_points" id="talking_points" title="Requirements" icon={<ListChecks className="h-4 w-4" />} status={getSectionStatus("talking_points").status} onRemove={() => toggleSection("talking_points")}>
-            <div className="space-y-1.5">
-              {blueprint.talking_points.length === 0 ? <div className="rounded-md bg-muted/20 py-6 text-center text-muted-foreground text-sm font-inter tracking-[-0.5px]">
-                  Add requirements that creators must follow
-                </div> : blueprint.talking_points.map((point, index) => <div key={index} className="flex items-center gap-1.5 group">
-                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                    <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+            <div className="space-y-2">
+              {blueprint.talking_points.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
+                  <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add requirements that creators must follow</p>
+                </div> : blueprint.talking_points.map((point, index) => <div key={`point-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
+                    <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                    <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
-              <Button variant="ghost" size="sm" onClick={addTalkingPoint} className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30 mt-2">
-                <Plus className="h-3 w-3 mr-1" />
+              <Button variant="ghost" size="sm" onClick={addTalkingPoint} className="h-9 px-4 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 mt-1 transition-colors">
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
                 Add Requirement
               </Button>
             </div>
@@ -697,36 +699,38 @@ export function BlueprintEditor({
       case "dos_and_donts":
         return <BlueprintSection key="dos_and_donts" id="dos_and_donts" title="Do's & Don'ts" icon={<ThumbsUp className="h-4 w-4" />} status={getSectionStatus("dos_and_donts").status} onRemove={() => toggleSection("dos_and_donts")}>
             <div className="grid md:grid-cols-2 gap-3">
-              <div className="rounded-md bg-muted/20 p-3 space-y-2">
+              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-foreground/80">Do's</span>
-                  <Button variant="ghost" size="sm" onClick={addDo} className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                    <Plus className="h-3 w-3" />
-                  </Button>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Do's</span>
                 </div>
-                <div className="space-y-1.5">
-                  {blueprint.dos_and_donts.dos.map((item, index) => <div key={index} className="flex items-center gap-1.5 group">
-                      <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                      <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                <div className="space-y-2">
+                  {blueprint.dos_and_donts.dos.map((item, index) => <div key={`do-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
+                      <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-emerald-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                      <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>)}
+                  <Button variant="ghost" size="sm" onClick={addDo} className="h-8 w-full rounded-lg text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors">
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Add Do
+                  </Button>
                 </div>
               </div>
-              <div className="rounded-md bg-muted/20 p-3 space-y-2">
+              <div className="rounded-xl bg-red-500/5 border border-red-500/10 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-foreground/80">Don'ts</span>
-                  <Button variant="ghost" size="sm" onClick={addDont} className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                    <Plus className="h-3 w-3" />
-                  </Button>
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400">Don'ts</span>
                 </div>
-                <div className="space-y-1.5">
-                  {blueprint.dos_and_donts.donts.map((item, index) => <div key={index} className="flex items-center gap-1.5 group">
-                      <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
-                      <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                <div className="space-y-2">
+                  {blueprint.dos_and_donts.donts.map((item, index) => <div key={`dont-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
+                      <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-red-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                      <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>)}
+                  <Button variant="ghost" size="sm" onClick={addDont} className="h-8 w-full rounded-lg text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    Add Don't
+                  </Button>
                 </div>
               </div>
             </div>
@@ -735,27 +739,27 @@ export function BlueprintEditor({
         return <BlueprintSection key="call_to_action" id="call_to_action" title="Call to Action" icon={<MessageSquare className="h-4 w-4" />} status={getSectionStatus("call_to_action").status} onRemove={() => toggleSection("call_to_action")}>
             <Input value={blueprint.call_to_action || ""} onChange={e => updateBlueprint({
             call_to_action: e.target.value
-          })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-9 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
+          })} placeholder="What should viewers do? (e.g., 'Click the link in bio', 'Use code SAVE20')" className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
           </BlueprintSection>;
       case "assets":
         return <BlueprintSection key="assets" id="assets" title="Assets & Files" icon={<Folder className="h-4 w-4" />} status={getSectionStatus("assets").status} onRemove={() => toggleSection("assets")}>
             <div className="space-y-2">
-              {blueprint.assets.length === 0 ? <p className="text-muted-foreground text-sm text-center py-4 font-inter tracking-[-0.5px]">
-                  No assets added yet
-                </p> : blueprint.assets.map((asset, index) => <div key={index} className="flex items-center gap-2 group">
+              {blueprint.assets.length === 0 ? <div className="rounded-xl bg-muted/20 py-8 text-center">
+                  <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">No assets added yet</p>
+                </div> : blueprint.assets.map((asset, index) => <div key={`asset-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
                     <div className="flex-1 grid grid-cols-2 gap-2">
                       <div className="relative">
-                        <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input value={asset.link} onChange={e => updateAsset(index, "link", e.target.value)} placeholder="https://drive.google.com/..." className="pl-8 h-8 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
+                        <Input value={asset.link} onChange={e => updateAsset(index, "link", e.target.value)} placeholder="https://drive.google.com/..." className="pl-9 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                       </div>
-                      <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-8 bg-muted/20 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
+                      <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-muted/30">
+                    <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
-              <Button variant="ghost" size="sm" onClick={addAsset} className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/30">
-                <Plus className="h-3 w-3 mr-1" />
+              <Button variant="ghost" size="sm" onClick={addAsset} className="h-9 px-4 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 mt-1 transition-colors">
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
                 Add Asset
               </Button>
             </div>
@@ -765,28 +769,28 @@ export function BlueprintEditor({
             <div className="space-y-3">
               <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoUpload} className="hidden" />
               {!uploadingVideo ? <div className="flex gap-2">
-                  <div onClick={() => videoInputRef.current?.click()} className="flex-1 rounded-xl border border-dashed border-border/50 bg-muted/5 p-3 cursor-pointer transition-all hover:bg-muted/10 hover:border-border">
-                    <div className="flex items-center gap-3">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-inter tracking-[-0.5px] text-muted-foreground">
-                        Upload video <span className="text-muted-foreground/50">(max 100MB)</span>
+                  <div onClick={() => videoInputRef.current?.click()} className="flex-1 rounded-xl border border-dashed border-border/30 bg-muted/10 p-4 cursor-pointer transition-all hover:bg-muted/20 hover:border-border/50">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4 text-muted-foreground/60" />
+                      <span className="text-sm font-inter tracking-[-0.3px] text-muted-foreground/80">
+                        Upload video <span className="text-muted-foreground/40">(max 100MB)</span>
                       </span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-auto px-4 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-xl border border-dashed border-border/50">
-                    <Plus className="h-3 w-3 mr-1" />
+                  <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-auto px-4 text-xs font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-xl border border-dashed border-border/30">
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
                     Add URL
                   </Button>
-                </div> : <div className="rounded-xl bg-muted/10 p-4 space-y-2">
+                </div> : <div className="rounded-xl bg-muted/20 p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-inter tracking-[-0.5px] text-foreground truncate">
+                    <p className="text-sm font-inter tracking-[-0.3px] text-foreground truncate">
                       {uploadingFileName}
                     </p>
                     <span className="text-xs text-muted-foreground ml-2">
                       {Math.round(uploadProgress)}%
                     </span>
                   </div>
-                  <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                     <div className="h-full bg-primary rounded-full transition-all duration-300 ease-out" style={{
                   width: `${uploadProgress}%`
                 }} />
@@ -794,13 +798,13 @@ export function BlueprintEditor({
                 </div>}
               {/* Manual Example Videos */}
               {blueprint.example_videos.length > 0 && <div className="space-y-2">
-                  {blueprint.example_videos.map((video, index) => <div key={index} className="group rounded-xl bg-muted/10 p-3 transition-colors hover:bg-muted/15">
+                  {blueprint.example_videos.map((video, index) => <div key={`video-${index}-${blueprint.id}`} className="group rounded-xl bg-muted/20 p-3 transition-colors hover:bg-muted/30">
                       <div className="flex items-start gap-3">
-                        <div className="flex-1 min-w-0 space-y-1.5">
-                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-7 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-xs text-muted-foreground blueprint-input" />
-                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-8 bg-background/50 border-0 focus-visible:ring-0 focus-visible:outline-none font-inter tracking-[-0.5px] text-sm blueprint-input" />
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
+                          <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>

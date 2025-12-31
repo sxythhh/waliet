@@ -23,7 +23,6 @@ import { ViewBonusesTab } from "@/components/brand/ViewBonusesTab";
 import { BrandMessagesTab } from "@/components/brand/BrandMessagesTab";
 import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
 import { BrandSettingsTab } from "@/components/brand/BrandSettingsTab";
-import { AutoRejectionRulesTab } from "@/components/brand/AutoRejectionRulesTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -338,13 +337,6 @@ export function BrandCampaignDetailView({
     });
   }
 
-  // Auto-Rejection Rules tab (only for boosts)
-  if (isBoost && boostId) {
-    detailTabs.push({
-      id: "rules",
-      label: "Rules"
-    });
-  }
 
   // Settings tab (only in all mode - contains Discord, Balance, Milestones, Tiers)
   if (isAllMode && brandId) {
@@ -483,7 +475,7 @@ export function BrandCampaignDetailView({
           {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
           ...campaign,
           hashtags: campaign.hashtags || []
-        }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : activeDetailTab === "rules" ? isBoost && boostId && boost?.brand_id ? <AutoRejectionRulesTab brandId={boost.brand_id} boostId={boostId} /> : null : activeDetailTab === "settings" ? isAllMode && brandId ? <BrandSettingsTab brandId={brandId} /> : null : null}
+        }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : activeDetailTab === "settings" ? isAllMode && brandId ? <BrandSettingsTab brandId={brandId} /> : null : null}
         </div>
       </div>
     </div>;

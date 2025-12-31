@@ -17,6 +17,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
 import { BrandWalletTab } from "./BrandWalletTab";
+import { LowBalanceSettingsTab } from "./LowBalanceSettingsTab";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -910,6 +911,13 @@ export function UserSettingsTab() {
           {/* Brand Wallet Component */}
           {isBrandMode && currentBrand && (
             <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />
+          )}
+
+          {/* Low Balance Protection */}
+          {isBrandMode && currentBrand && (
+            <div className="border-t border-border/50 pt-6">
+              <LowBalanceSettingsTab brandId={currentBrand.id} />
+            </div>
           )}
 
           {/* Subscription Info */}

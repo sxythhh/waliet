@@ -4,8 +4,8 @@ import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
-import videosIcon from "@/assets/videos-icon-new.svg";
-import personIcon from "@/assets/person-icon-new.svg";
+import { cn } from "@/lib/utils";
+
 export interface BoostDiscoverCardProps {
   id: string;
   title: string;
@@ -25,6 +25,7 @@ export interface BoostDiscoverCardProps {
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
 }
+
 export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   id,
   title,
@@ -41,70 +42,144 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   isBookmarked,
   onClick,
   onBookmarkClick,
-  onFullscreenClick
+  onFullscreenClick,
 }: BoostDiscoverCardProps) {
   const navigate = useNavigate();
   const spotsRemaining = max_accepted_creators - accepted_creators_count;
   const isFull = spotsRemaining <= 0;
-  return <Card className={`group bg-card border border-border/50 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-lg flex flex-col overflow-hidden relative rounded-xl ${isEnded ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`} onClick={onClick}>
-      {isEnded && <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent z-10 pointer-events-none" />}
+  const perVideoRate = videos_per_month > 0 ? monthly_retainer / videos_per_month : 0;
+
+  return (
+    <Card
+      className={cn(
+        "group relative overflow-hidden rounded-xl border border-border/40 transition-all duration-200",
+        "bg-card hover:border-border hover:shadow-md",
+        isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
+      {/* Ended Overlay */}
+      {isEnded && (
+        <div className="absolute top-3 left-3 z-[5]">
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+            Ended
+          </span>
+        </div>
+      )}
+
+      {/* Full Badge */}
+      {isFull && !isEnded && (
+        <div className="absolute top-3 left-3 z-[5]">
+          <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded">
+            Full
+          </span>
+        </div>
+      )}
 
       {/* Bookmark & Fullscreen Buttons */}
-      <div className="absolute top-2 right-2 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        {onFullscreenClick && <button onClick={onFullscreenClick} className="md:hidden p-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-all">
+      <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onFullscreenClick && (
+          <button
+            onClick={onFullscreenClick}
+            className="md:hidden p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+          >
             <Maximize2 className="h-3.5 w-3.5" />
-          </button>}
-        {onBookmarkClick && <button onClick={onBookmarkClick} className={`p-1.5 rounded-lg backdrop-blur-sm transition-all ${isBookmarked ? "bg-primary text-primary-foreground" : "bg-black/40 text-white hover:bg-black/60"}`}>
-            <Bookmark className={`h-3.5 w-3.5 ${isBookmarked ? "fill-current" : ""}`} />
-          </button>}
+          </button>
+        )}
+        {onBookmarkClick && (
+          <button
+            onClick={onBookmarkClick}
+            className={cn(
+              "p-1.5 rounded-md backdrop-blur-sm border transition-colors",
+              isBookmarked
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background/80 border-border/50 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Bookmark className={cn("h-3.5 w-3.5", isBookmarked && "fill-current")} />
+          </button>
+        )}
       </div>
 
-      <CardContent className="p-4 flex-1 flex flex-col gap-2 shadow-none">
+      <CardContent className="p-4 flex flex-col gap-3">
+        {/* Brand */}
+        <div className="flex items-center gap-2">
+          {brand_logo_url ? (
+            <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 border border-border/50">
+              <OptimizedImage
+                src={brand_logo_url}
+                alt={brand_name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-[10px] font-semibold text-muted-foreground">
+                {brand_name?.charAt(0) || "B"}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center gap-1 min-w-0">
+            <span
+              className="text-xs font-medium text-muted-foreground truncate hover:text-foreground hover:underline cursor-pointer transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (brand_slug) navigate(`/b/${brand_slug}`);
+              }}
+            >
+              {brand_name}
+            </span>
+            {brand_is_verified && <VerifiedBadge size="sm" />}
+          </div>
+        </div>
+
         {/* Title */}
-        <h3 className="text-sm font-semibold line-clamp-2 leading-snug group-hover:underline tracking-[-0.3px] font-['Geist',sans-serif]">
+        <h3 className="text-sm font-semibold leading-snug line-clamp-2 text-foreground tracking-[-0.2px]">
           {title}
         </h3>
 
-        {/* Metadata Row */}
-        <div className="items-center gap-3 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 tracking-[-0.3px] font-['Inter',sans-serif] opacity-100 flex flex-row">
-          <span className="flex items-center gap-1 text-neutral-500">
-            <img src={videosIcon} alt="" className="w-3 h-3" />
-            {videos_per_month} {videos_per_month === 1 ? 'video' : 'videos'}
+        {/* Description */}
+        {description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {description}
+          </p>
+        )}
+
+        {/* Stats Row */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+          <span>
+            <span className="text-foreground font-semibold">${monthly_retainer.toLocaleString()}</span>
+            <span className="text-muted-foreground/70">/mo</span>
           </span>
-          <span className="flex items-center gap-1 text-neutral-500">
-            <img src={personIcon} alt="" className="w-3 h-3" />
-            {spotsRemaining > 0 ? `${spotsRemaining} spots remaining` : "Full"}
+          <span className="text-border">·</span>
+          <span>
+            <span className="text-foreground font-semibold">{videos_per_month}</span>
+            <span className="text-muted-foreground/70"> videos</span>
+          </span>
+          <span className="text-border">·</span>
+          <span>
+            <span className="text-foreground font-semibold">${perVideoRate.toFixed(0)}</span>
+            <span className="text-muted-foreground/70">/video</span>
           </span>
         </div>
 
-        {/* Retainer Amount */}
-        <div className="flex items-baseline gap-1 mt-auto pt-2">
-          <span className="text-base font-bold tracking-[-0.3px] font-['Geist',sans-serif] text-foreground dark:text-primary-foreground">
-            ${monthly_retainer.toLocaleString()}
+        {/* Spots */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/30">
+          <span className="text-xs text-muted-foreground">
+            {isFull ? (
+              <span className="text-amber-600 dark:text-amber-400">No spots available</span>
+            ) : (
+              <>
+                <span className="text-foreground font-medium">{spotsRemaining}</span>
+                {" "}spots left
+              </>
+            )}
           </span>
-          <span className="text-[10px] text-muted-foreground tracking-[-0.3px] font-['Geist',sans-serif]">
-            /month
-          </span>
-        </div>
-
-        {/* Brand Info */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-          {brand_logo_url ? <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-border/50">
-              <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />
-            </div> : <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-[8px] font-semibold text-muted-foreground">
-                {brand_name?.charAt(0) || "B"}
-              </span>
-            </div>}
-          <span className="text-[10px] tracking-[-0.3px] font-['Geist',sans-serif] flex items-center gap-1">
-            <span className="text-muted-foreground">Created by</span>
-            <span className="text-foreground font-medium hover:underline cursor-pointer" onClick={e => {
-            e.stopPropagation();
-            if (brand_slug) navigate(`/b/${brand_slug}`);
-          }}>{brand_name}</span>
-            {brand_is_verified && <VerifiedBadge size="sm" />}
+          <span className="text-[10px] text-muted-foreground/70">
+            {accepted_creators_count}/{max_accepted_creators} joined
           </span>
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 });

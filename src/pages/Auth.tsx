@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SEOHead } from "@/components/SEOHead";
 import discordIcon from "@/assets/discord-icon-new.png";
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -214,6 +215,7 @@ export default function Auth() {
   };
   if (isRecoveryMode) {
     return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
+        <SEOHead title="Reset Password" description="Reset your Virality account password" noIndex={true} />
         <Card className="w-full max-w-md border-0 bg-card/50 backdrop-blur-sm shadow-xl">
           <CardHeader className="text-center space-y-4 pb-2">
             <div className="flex justify-center">
@@ -244,6 +246,7 @@ export default function Auth() {
       </div>;
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
+      <SEOHead title="Sign In | Virality" description="Sign in to your Virality account" noIndex={true} />
       <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">

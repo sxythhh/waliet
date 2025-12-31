@@ -497,15 +497,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                 <Badge variant="secondary" className="text-[10px] ml-1">{templates.length}</Badge>
               </button>
             </CollapsibleTrigger>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => { resetTemplateForm(); setTemplateDialogOpen(true); }}
-              className="h-7 text-xs gap-1"
-            >
-              <Plus className="h-3 w-3" />
-              New Template
-            </Button>
           </div>
 
           <CollapsibleContent>
@@ -594,7 +585,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           <h2 className="text-lg font-semibold">Contracts</h2>
           <div className="flex items-center gap-2 w-full md:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[160px] bg-muted/30 h-8 text-xs">
+              <SelectTrigger className="w-full md:w-[140px] h-8 text-xs border-0 bg-muted/40 hover:bg-muted/60 transition-colors rounded-lg shadow-none focus:ring-1 focus:ring-primary/20">
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -605,6 +596,14 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                 <SelectItem value="expired">Expired</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { resetTemplateForm(); setTemplateDialogOpen(true); }}
+              className="h-8 px-3 text-xs font-medium"
+            >
+              New Template
+            </Button>
             <Button
               onClick={() => setCreateDialogOpen(true)}
               size="sm"

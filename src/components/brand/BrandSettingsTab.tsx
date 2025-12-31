@@ -1,56 +1,634 @@
-import { useState } from "react";
-import { DiscordIntegrationTab } from "./DiscordIntegrationTab";
-import { LowBalanceSettingsTab } from "./LowBalanceSettingsTab";
-import { MilestoneConfigTab } from "./MilestoneConfigTab";
-import { TierPromotionTab } from "./TierPromotionTab";
-import { CreatorStrikesTab } from "./CreatorStrikesTab";
-
-type SettingsSection = "discord" | "balance" | "milestones" | "tiers" | "strikes";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Send, ExternalLink, CheckCircle2, AlertCircle,
+  Plus, Trash2
+} from "lucide-react";
+import { toast } from "sonner";
+import { format, formatDistanceToNow } from "date-fns";
+import discordLogo from "@/assets/discord-logo.png";
 
 interface BrandSettingsTabProps {
   brandId: string;
 }
 
-export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>("discord");
+// Types
+interface MilestoneConfig {
+  id: string;
+  brand_id: string;
+  milestone_type: "views" | "earnings" | "submissions";
+  threshold: number;
+  message_template: string;
+  is_active: boolean;
+}
 
-  const sections: { id: SettingsSection; label: string }[] = [
-    { id: "discord", label: "Discord" },
-    { id: "balance", label: "Balance" },
-    { id: "milestones", label: "Milestones" },
-    { id: "tiers", label: "Creator Tiers" },
-    { id: "strikes", label: "Strikes" },
-  ];
+interface CreatorTier {
+  id: string;
+  name: string;
+  description: string | null;
+  tier_order: number;
+  rpm_multiplier: number;
+  color: string | null;
+  is_default: boolean;
+}
+
+interface Strike {
+  id: string;
+  creator_id: string;
+  strike_type: string;
+  reason: string | null;
+  severity: number;
+  is_appealed: boolean;
+  appeal_status: string | null;
+  created_at: string;
+  creator?: {
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+const STRIKE_TYPES = [
+  { value: "missed_deadline", label: "Missed Deadline" },
+  { value: "late_submission", label: "Late Submission" },
+  { value: "content_violation", label: "Content Violation" },
+  { value: "no_show", label: "No Show" },
+  { value: "other", label: "Other" },
+];
+
+const SEVERITY_LEVELS = [
+  { value: 1, label: "Minor", color: "text-yellow-500 bg-yellow-500/10" },
+  { value: 2, label: "Moderate", color: "text-orange-500 bg-orange-500/10" },
+  { value: 3, label: "Severe", color: "text-red-500 bg-red-500/10" },
+];
+
+export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Discord state
+  const [webhookUrl, setWebhookUrl] = useState("");
+  const [notifyApplication, setNotifyApplication] = useState(true);
+  const [notifySale, setNotifySale] = useState(true);
+  const [notifyMessage, setNotifyMessage] = useState(true);
+  const [brandName, setBrandName] = useState("");
+  const [isSavingDiscord, setIsSavingDiscord] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+
+  // Milestones state
+  const [milestones, setMilestones] = useState<MilestoneConfig[]>([]);
+  const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
+  const [milestoneType, setMilestoneType] = useState<"views" | "earnings" | "submissions">("views");
+  const [milestoneThreshold, setMilestoneThreshold] = useState("");
+  const [milestoneMessage, setMilestoneMessage] = useState("");
+
+  // Tiers state
+  const [tiers, setTiers] = useState<CreatorTier[]>([]);
+  const [tierDialogOpen, setTierDialogOpen] = useState(false);
+  const [tierName, setTierName] = useState("");
+  const [tierRpm, setTierRpm] = useState("1.0");
+  const [tierColor, setTierColor] = useState("#8B5CF6");
+
+  // Strikes state
+  const [strikes, setStrikes] = useState<Strike[]>([]);
+  const [strikeDialogOpen, setStrikeDialogOpen] = useState(false);
+  const [creators, setCreators] = useState<{ id: string; username: string; full_name: string | null }[]>([]);
+  const [selectedCreatorId, setSelectedCreatorId] = useState("");
+  const [strikeType, setStrikeType] = useState("missed_deadline");
+  const [strikeSeverity, setStrikeSeverity] = useState(1);
+  const [strikeReason, setStrikeReason] = useState("");
+
+  useEffect(() => {
+    fetchAllData();
+  }, [brandId]);
+
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    try {
+      const [brandResult, milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
+        supabase.from("brands").select("name, discord_webhook_url, notify_new_application, notify_new_sale, notify_new_message").eq("id", brandId).single(),
+        (supabase.from("milestone_configs" as any).select("*").eq("brand_id", brandId).order("threshold") as any),
+        (supabase.from("creator_tiers" as any).select("*").eq("brand_id", brandId).order("tier_order") as any),
+        (supabase.from("creator_strikes" as any).select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10) as any),
+        (supabase.from("campaign_participants" as any).select("user_id, profiles:user_id(id, username, full_name)").eq("brand_id", brandId).eq("status", "accepted") as any)
+      ]);
+
+      if (brandResult.data) {
+        setBrandName(brandResult.data.name || "");
+        setWebhookUrl(brandResult.data.discord_webhook_url || "");
+        setNotifyApplication(brandResult.data.notify_new_application ?? true);
+        setNotifySale(brandResult.data.notify_new_sale ?? true);
+        setNotifyMessage(brandResult.data.notify_new_message ?? true);
+      }
+
+      setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
+      setTiers((tiersResult.data || []) as CreatorTier[]);
+      setStrikes((strikesResult.data || []) as Strike[]);
+
+      const uniqueCreators = new Map();
+      creatorsResult.data?.forEach((p: any) => {
+        if (p.profiles && !uniqueCreators.has(p.profiles.id)) {
+          uniqueCreators.set(p.profiles.id, p.profiles);
+        }
+      });
+      setCreators(Array.from(uniqueCreators.values()));
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Discord handlers
+  const handleSaveDiscord = async () => {
+    setIsSavingDiscord(true);
+    try {
+      const { error } = await supabase.from("brands").update({
+        discord_webhook_url: webhookUrl || null,
+        notify_new_application: notifyApplication,
+        notify_new_sale: notifySale,
+        notify_new_message: notifyMessage
+      }).eq("id", brandId);
+      if (error) throw error;
+      toast.success("Discord settings saved");
+    } catch (error) {
+      toast.error("Failed to save settings");
+    } finally {
+      setIsSavingDiscord(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) return;
+    setIsTesting(true);
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          embeds: [{
+            title: "Test Notification",
+            description: `This is a test from **${brandName}** on Virality.`,
+            color: 5793266
+          }]
+        })
+      });
+      toast.success("Test notification sent!");
+    } catch {
+      toast.error("Failed to send test notification");
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  // Milestone handlers
+  const handleAddMilestone = async () => {
+    if (!milestoneThreshold || !milestoneMessage) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    try {
+      const { error } = await (supabase.from("milestone_configs" as any).insert({
+        brand_id: brandId,
+        milestone_type: milestoneType,
+        threshold: parseFloat(milestoneThreshold),
+        message_template: milestoneMessage
+      }) as any);
+      if (error) throw error;
+      toast.success("Milestone created");
+      setMilestoneDialogOpen(false);
+      setMilestoneThreshold("");
+      setMilestoneMessage("");
+      fetchAllData();
+    } catch {
+      toast.error("Failed to create milestone");
+    }
+  };
+
+  const handleDeleteMilestone = async (id: string) => {
+    try {
+      await (supabase.from("milestone_configs" as any).delete().eq("id", id) as any);
+      setMilestones(milestones.filter(m => m.id !== id));
+      toast.success("Milestone deleted");
+    } catch {
+      toast.error("Failed to delete milestone");
+    }
+  };
+
+  // Tier handlers
+  const handleCreateDefaultTiers = async () => {
+    try {
+      await (supabase.rpc as any)("create_default_creator_tiers", { p_brand_id: brandId });
+      toast.success("Default tiers created");
+      fetchAllData();
+    } catch {
+      toast.error("Failed to create tiers");
+    }
+  };
+
+  const handleAddTier = async () => {
+    if (!tierName) {
+      toast.error("Please enter a tier name");
+      return;
+    }
+    try {
+      const { error } = await (supabase.from("creator_tiers" as any).insert({
+        brand_id: brandId,
+        name: tierName,
+        tier_order: tiers.length + 1,
+        rpm_multiplier: parseFloat(tierRpm) || 1.0,
+        color: tierColor
+      }) as any);
+      if (error) throw error;
+      toast.success("Tier created");
+      setTierDialogOpen(false);
+      setTierName("");
+      setTierRpm("1.0");
+      fetchAllData();
+    } catch {
+      toast.error("Failed to create tier");
+    }
+  };
+
+  const handleDeleteTier = async (id: string) => {
+    try {
+      await (supabase.from("creator_tiers" as any).delete().eq("id", id) as any);
+      setTiers(tiers.filter(t => t.id !== id));
+      toast.success("Tier deleted");
+    } catch {
+      toast.error("Failed to delete tier");
+    }
+  };
+
+  // Strike handlers
+  const handleAddStrike = async () => {
+    if (!selectedCreatorId) {
+      toast.error("Please select a creator");
+      return;
+    }
+    try {
+      const { error } = await (supabase.from("creator_strikes" as any).insert({
+        brand_id: brandId,
+        creator_id: selectedCreatorId,
+        strike_type: strikeType,
+        severity: strikeSeverity,
+        reason: strikeReason || null
+      }) as any);
+      if (error) throw error;
+      toast.success("Strike recorded");
+      setStrikeDialogOpen(false);
+      setSelectedCreatorId("");
+      setStrikeReason("");
+      fetchAllData();
+    } catch {
+      toast.error("Failed to add strike");
+    }
+  };
+
+  const handleRemoveStrike = async (id: string) => {
+    try {
+      await (supabase.from("creator_strikes" as any).delete().eq("id", id) as any);
+      setStrikes(strikes.filter(s => s.id !== id));
+      toast.success("Strike removed");
+    } catch {
+      toast.error("Failed to remove strike");
+    }
+  };
+
+  const isWebhookConfigured = !!webhookUrl && webhookUrl.startsWith("https://discord.com/api/webhooks/");
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-8">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+        <Skeleton className="h-48" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <div className="w-48 border-r border-border bg-muted/30 flex-shrink-0">
-        <nav className="p-2 space-y-1">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                activeSection === section.id
-                  ? "bg-background text-foreground font-medium shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-              }`}
-            >
-              {section.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+    <div className="p-6 space-y-10 max-w-4xl mx-auto">
+      {/* Discord Integration */}
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <img src={discordLogo} alt="Discord" className="w-8 h-8 rounded" />
+          <div>
+            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Discord Notifications</h2>
+            <p className="text-xs text-muted-foreground">Get notified about applications, submissions, and payouts</p>
+          </div>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto">
-        {activeSection === "discord" && <DiscordIntegrationTab brandId={brandId} />}
-        {activeSection === "balance" && <LowBalanceSettingsTab brandId={brandId} />}
-        {activeSection === "milestones" && <MilestoneConfigTab brandId={brandId} />}
-        {activeSection === "tiers" && <TierPromotionTab brandId={brandId} />}
-        {activeSection === "strikes" && <CreatorStrikesTab brandId={brandId} />}
-      </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-xs">Webhook URL</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://discord.com/api/webhooks/..."
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                className="text-sm"
+              />
+              <Button variant="ghost" size="sm" className="font-inter tracking-[-0.5px]" onClick={handleTestWebhook} disabled={!isWebhookConfigured || isTesting}>
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                Test
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              {isWebhookConfigured ? (
+                <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-600 border-green-500/20">
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> Configured
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px]">
+                  <AlertCircle className="h-3 w-3 mr-1" /> Not configured
+                </Badge>
+              )}
+              <a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
+                How to create a webhook <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">New Applications</span>
+              <Switch checked={notifyApplication} onCheckedChange={setNotifyApplication} disabled={!isWebhookConfigured} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Video Submissions</span>
+              <Switch checked={notifySale} onCheckedChange={setNotifySale} disabled={!isWebhookConfigured} />
+            </div>
+          </div>
+
+          <Button size="sm" className="font-inter tracking-[-0.5px]" onClick={handleSaveDiscord} disabled={isSavingDiscord}>
+            {isSavingDiscord ? "Saving..." : "Save Discord Settings"}
+          </Button>
+        </div>
+      </section>
+
+      <hr className="border-border/50" />
+
+      {/* Milestones */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Milestone Notifications</h2>
+            <p className="text-xs text-muted-foreground">Auto-notify creators when they hit performance milestones</p>
+          </div>
+          <Dialog open={milestoneDialogOpen} onOpenChange={setMilestoneDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Milestone</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <Select value={milestoneType} onValueChange={(v) => setMilestoneType(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="views">Views</SelectItem>
+                      <SelectItem value="earnings">Earnings ($)</SelectItem>
+                      <SelectItem value="submissions">Submissions</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Threshold</Label>
+                  <Input type="number" placeholder={milestoneType === "earnings" ? "100" : "10000"} value={milestoneThreshold} onChange={(e) => setMilestoneThreshold(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Message</Label>
+                  <Textarea placeholder="Congratulations on reaching this milestone!" value={milestoneMessage} onChange={(e) => setMilestoneMessage(e.target.value)} rows={2} />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setMilestoneDialogOpen(false)}>Cancel</Button>
+                  <Button className="font-inter tracking-[-0.5px]" onClick={handleAddMilestone}>Create</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {milestones.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No milestones configured yet</p>
+        ) : (
+          <div className="space-y-2">
+            {milestones.map((m) => (
+              <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  <Switch checked={m.is_active} onCheckedChange={async (checked) => {
+                    await (supabase.from("milestone_configs" as any).update({ is_active: checked }).eq("id", m.id) as any);
+                    setMilestones(milestones.map(x => x.id === m.id ? { ...x, is_active: checked } : x));
+                  }} />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {m.milestone_type === "earnings" ? `$${m.threshold.toLocaleString()}` : m.threshold >= 1000 ? `${(m.threshold / 1000).toFixed(0)}K` : m.threshold} {m.milestone_type}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{m.message_template}</p>
+                  </div>
+                </div>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteMilestone(m.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <hr className="border-border/50" />
+
+      {/* Creator Tiers */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Creator Tiers</h2>
+            <p className="text-xs text-muted-foreground">Reward top performers with tier-based RPM multipliers</p>
+          </div>
+          {tiers.length === 0 ? (
+            <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]" onClick={handleCreateDefaultTiers}>
+              Create Default Tiers
+            </Button>
+          ) : (
+            <Dialog open={tierDialogOpen} onOpenChange={setTierDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Tier</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label>Name</Label>
+                    <Input placeholder="e.g., Gold" value={tierName} onChange={(e) => setTierName(e.target.value)} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>RPM Multiplier</Label>
+                      <Input type="number" step="0.1" value={tierRpm} onChange={(e) => setTierRpm(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Color</Label>
+                      <Input type="color" value={tierColor} onChange={(e) => setTierColor(e.target.value)} className="h-10 w-20" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setTierDialogOpen(false)}>Cancel</Button>
+                    <Button className="font-inter tracking-[-0.5px]" onClick={handleAddTier}>Create</Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+
+        {tiers.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No tiers configured yet</p>
+        ) : (
+          <div className="space-y-2">
+            {tiers.map((t) => (
+              <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || "#8B5CF6" }} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{t.name}</span>
+                      {t.is_default && <Badge variant="outline" className="text-[10px]">Default</Badge>}
+                      <Badge variant="outline" className="text-[10px]">{t.rpm_multiplier}x RPM</Badge>
+                    </div>
+                    {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
+                  </div>
+                </div>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTier(t.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <hr className="border-border/50" />
+
+      {/* Creator Strikes */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Creator Strikes</h2>
+            <p className="text-xs text-muted-foreground">Track missed deadlines and content issues</p>
+          </div>
+          <Dialog open={strikeDialogOpen} onOpenChange={setStrikeDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Record Strike</DialogTitle>
+                <DialogDescription>Add a strike to a creator's record</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Creator</Label>
+                  <Select value={selectedCreatorId} onValueChange={setSelectedCreatorId}>
+                    <SelectTrigger><SelectValue placeholder="Select creator" /></SelectTrigger>
+                    <SelectContent>
+                      {creators.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.full_name || c.username}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select value={strikeType} onValueChange={setStrikeType}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {STRIKE_TYPES.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Severity</Label>
+                    <Select value={strikeSeverity.toString()} onValueChange={(v) => setStrikeSeverity(parseInt(v))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SEVERITY_LEVELS.map((l) => (
+                          <SelectItem key={l.value} value={l.value.toString()}>{l.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason (Optional)</Label>
+                  <Textarea placeholder="Describe the issue..." value={strikeReason} onChange={(e) => setStrikeReason(e.target.value)} rows={2} />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setStrikeDialogOpen(false)}>Cancel</Button>
+                  <Button className="font-inter tracking-[-0.5px]" onClick={handleAddStrike}>Record Strike</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {strikes.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No strikes recorded - all creators meeting commitments</p>
+        ) : (
+          <div className="space-y-2">
+            {strikes.map((s) => {
+              const severityInfo = SEVERITY_LEVELS.find(l => l.value === s.severity);
+              return (
+                <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-7 w-7">
+                      <AvatarImage src={s.creator?.avatar_url || undefined} />
+                      <AvatarFallback className="text-[10px]">{s.creator?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{s.creator?.full_name || s.creator?.username}</span>
+                        <Badge variant="outline" className={`text-[10px] ${severityInfo?.color}`}>{severityInfo?.label}</Badge>
+                        {s.is_appealed && <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-500">{s.appeal_status || "Appeal Pending"}</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {STRIKE_TYPES.find(t => t.value === s.strike_type)?.label} · {formatDistanceToNow(new Date(s.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveStrike(s.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

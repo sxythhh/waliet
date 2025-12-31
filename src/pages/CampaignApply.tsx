@@ -21,6 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import DOMPurify from "dompurify";
+import { SEOHead } from "@/components/SEOHead";
+import { generateCampaignSchema, getCanonicalUrl, truncateDescription } from "@/lib/seo";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -558,6 +560,22 @@ export default function CampaignApply() {
   const bannerUrl = isBoost ? boostCampaign?.banner_url : campaign?.banner_url;
   const description = isBoost ? boostCampaign?.description : campaign?.description;
   const status = isBoost ? boostCampaign?.status : campaign?.status;
+  const createdAt = isBoost ? boostCampaign?.created_at : campaign?.created_at;
+
+  // SEO data
+  const seoTitle = title ? `${title} - ${brandName} | Creator Opportunity` : 'Campaign';
+  const seoDescription = description
+    ? truncateDescription(`${title} by ${brandName}. ${description}`)
+    : `Join ${title} campaign by ${brandName}. Apply now to earn as a content creator.`;
+  const seoImage = bannerUrl || brandLogo || undefined;
+  const campaignSchema = title && brandName && createdAt ? generateCampaignSchema({
+    title,
+    description: seoDescription,
+    brandName,
+    brandLogo: brandLogo || undefined,
+    datePosted: createdAt,
+    url: `/c/${slug}`,
+  }) : null;
 
   // Handle boost with embed URL
   if (isBoost && boostCampaign?.blueprint_embed_url) {
@@ -572,6 +590,15 @@ export default function CampaignApply() {
       setShowApplySheet(true);
     };
     return <div className="relative h-screen w-screen overflow-hidden">
+        <SEOHead
+          title={seoTitle}
+          description={seoDescription}
+          canonical={getCanonicalUrl(`/c/${slug}`)}
+          ogImage={seoImage}
+          ogType="website"
+          keywords={['boost campaign', 'creator program', 'content creator', brandName || '', title || ''].filter(Boolean)}
+          structuredData={campaignSchema || undefined}
+        />
         <iframe src={boostCampaign.blueprint_embed_url.startsWith('http') ? boostCampaign.blueprint_embed_url : `https://${boostCampaign.blueprint_embed_url}`} className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Campaign Blueprint" />
 
         {!isFull && showFloatingMenu && <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
@@ -669,6 +696,28 @@ export default function CampaignApply() {
   const isFull = isBoost && boostCampaign ? boostCampaign.accepted_creators_count >= boostCampaign.max_accepted_creators : false;
   const isEnded = status === "ended";
   return <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonical={getCanonicalUrl(`/c/${slug}`)}
+        ogImage={seoImage}
+        ogType="website"
+        keywords={[
+          'creator campaign',
+          'content creator opportunity',
+          'influencer marketing',
+          brandName || '',
+          title || '',
+          campaign?.category || '',
+        ].filter(Boolean)}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Discover', url: '/discover' },
+          ...(brandSlug ? [{ name: brandName || 'Brand', url: `/b/${brandSlug}` }] : []),
+          { name: title || 'Campaign', url: `/c/${slug}` },
+        ]}
+        structuredData={campaignSchema || undefined}
+      />
       <PublicNavbar />
       
       <div className="flex-1 flex pt-14 overflow-hidden">

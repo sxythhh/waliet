@@ -137,64 +137,60 @@ export function ContentCalendar({ brandId }: ContentCalendarProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 font-inter tracking-[-0.3px]">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <CalendarDays className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold tracking-[-0.5px]">Content Calendar</h2>
-            <p className="text-sm text-muted-foreground">
-              View scheduled broadcasts and events
-            </p>
-          </div>
+        <div>
+          <h2 className="text-xl font-semibold tracking-[-0.5px]">Content Calendar</h2>
+          <p className="text-sm text-muted-foreground">
+            View and manage scheduled broadcasts
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Calendar Grid */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">
-                {format(currentMonth, "MMMM yyyy")}
-              </CardTitle>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-3 text-xs"
-                  onClick={() => setCurrentMonth(new Date())}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+        <div className="lg:col-span-3 rounded-2xl border border-border/50 bg-background overflow-hidden shadow-sm">
+          {/* Month Navigation */}
+          <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between bg-muted/20">
+            <h3 className="text-lg font-semibold tracking-[-0.3px]">
+              {format(currentMonth, "MMMM yyyy")}
+            </h3>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full hover:bg-muted"
+                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-4 text-xs font-medium rounded-full"
+                onClick={() => setCurrentMonth(new Date())}
+              >
+                Today
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full hover:bg-muted"
+                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+
+          <div className="p-4">
             {/* Day Headers */}
-            <div className="grid grid-cols-7 mb-2">
+            <div className="grid grid-cols-7 mb-3">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                 <div
                   key={day}
-                  className="text-center text-xs font-medium text-muted-foreground py-2"
+                  className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider py-2"
                 >
                   {day}
                 </div>
@@ -202,48 +198,50 @@ export function ContentCalendar({ brandId }: ContentCalendarProps) {
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
+            <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, index) => {
                 const dayEvents = getEventsForDate(day);
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isSelected = selectedDate && isSameDay(day, selectedDate);
+                const today = isToday(day);
 
                 return (
                   <div
-                    key={index}
+                    key={day.toISOString()}
                     className={cn(
-                      "min-h-[80px] p-1.5 bg-background cursor-pointer transition-colors hover:bg-muted/30",
-                      !isCurrentMonth && "bg-muted/20",
-                      isSelected && "ring-2 ring-primary ring-inset",
-                      isToday(day) && "bg-primary/5"
+                      "min-h-[90px] p-2 rounded-xl cursor-pointer transition-all duration-200",
+                      !isCurrentMonth && "opacity-40",
+                      isSelected && "bg-primary/10 ring-2 ring-primary/30",
+                      !isSelected && "hover:bg-muted/50",
+                      today && !isSelected && "bg-primary/5"
                     )}
                     onClick={() => setSelectedDate(day)}
                   >
                     <div className="flex flex-col h-full">
                       <span
                         className={cn(
-                          "text-xs font-medium mb-1",
-                          !isCurrentMonth && "text-muted-foreground",
-                          isToday(day) && "text-primary font-semibold"
+                          "text-sm font-medium mb-1.5 w-7 h-7 flex items-center justify-center rounded-full",
+                          today && "bg-primary text-primary-foreground",
+                          !today && !isCurrentMonth && "text-muted-foreground"
                         )}
                       >
                         {format(day, "d")}
                       </span>
-                      <div className="flex-1 space-y-0.5 overflow-hidden">
+                      <div className="flex-1 space-y-1 overflow-hidden">
                         {dayEvents.slice(0, 2).map((event) => (
                           <div
                             key={event.id}
                             className={cn(
-                              "text-[10px] px-1.5 py-0.5 rounded text-white truncate flex items-center gap-1",
+                              "text-[10px] px-2 py-1 rounded-md text-white truncate flex items-center gap-1.5 shadow-sm",
                               getEventColor(event.type, event.status)
                             )}
                           >
                             {getEventIcon(event.type)}
-                            <span className="truncate">{event.title}</span>
+                            <span className="truncate font-medium">{event.title}</span>
                           </div>
                         ))}
                         {dayEvents.length > 2 && (
-                          <div className="text-[10px] text-muted-foreground px-1">
+                          <div className="text-[10px] text-muted-foreground font-medium px-2">
                             +{dayEvents.length - 2} more
                           </div>
                         )}
@@ -253,49 +251,54 @@ export function ContentCalendar({ brandId }: ContentCalendarProps) {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Sidebar - Selected Date Events */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              {selectedDate ? format(selectedDate, "EEEE, MMMM d") : "Select a date"}
-            </CardTitle>
-            <CardDescription>
-              {selectedDateEvents.length} event{selectedDateEvents.length !== 1 ? "s" : ""}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[350px]">
+        <div className="rounded-2xl border border-border/50 bg-background overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-border/50 bg-muted/20">
+            <h3 className="font-semibold text-base">
+              {selectedDate ? format(selectedDate, "EEE, MMM d") : "Select a date"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {selectedDateEvents.length} event{selectedDateEvents.length !== 1 ? "s" : ""} scheduled
+            </p>
+          </div>
+          <ScrollArea className="h-[400px]">
+            <div className="p-4">
               {selectedDateEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <Calendar className="h-10 w-10 text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    No events scheduled
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
+                    <Calendar className="h-7 w-7 text-muted-foreground/40" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    No events
+                  </p>
+                  <p className="text-xs text-muted-foreground/70">
+                    Select a date to view events
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {selectedDateEvents.map((event) => (
                     <div
                       key={event.id}
-                      className="p-3 rounded-lg bg-muted/30 border border-border/50"
+                      className="p-3 rounded-xl bg-muted/30 border border-border/30 hover:border-border/60 transition-colors"
                     >
-                      <div className="flex items-start gap-2">
+                      <div className="flex items-start gap-3">
                         <div className={cn(
-                          "p-1.5 rounded",
+                          "p-2 rounded-lg text-white shadow-sm",
                           getEventColor(event.type, event.status)
                         )}>
                           {getEventIcon(event.type)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{event.title}</p>
-                          <p className="text-xs text-muted-foreground capitalize">
+                          <p className="text-[11px] text-muted-foreground capitalize mt-0.5">
                             {event.type.replace("_", " ")}
                           </p>
                           {event.status && (
-                            <Badge variant="outline" className="mt-1 text-[10px]">
+                            <Badge variant="outline" className="mt-2 text-[10px] rounded-full">
                               {event.status}
                             </Badge>
                           )}
@@ -305,9 +308,9 @@ export function ContentCalendar({ brandId }: ContentCalendarProps) {
                   ))}
                 </div>
               )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Upload, X, ArrowLeft, ArrowRight } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
+import { getCanonicalUrl } from "@/lib/seo";
 const applicationSchema = z.object({
   business_name: z.string().min(2, "Business name is required"),
   business_description: z.string().min(10, "Please provide at least 10 characters"),
@@ -185,8 +187,18 @@ export default function Apply() {
       </div>;
   }
   return <div className="min-h-screen bg-background py-8 sm:py-16 px-4">
+      <SEOHead
+        title="Apply as a Brand | Launch Creator Campaigns"
+        description="Apply to launch your creator marketing campaign on Virality. Connect with top content creators and grow your brand."
+        canonical={getCanonicalUrl('/apply')}
+        keywords={['brand application', 'creator marketing', 'influencer campaign', 'content marketing', 'brand partnership']}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Apply', url: '/apply' },
+        ]}
+      />
       <div className="max-w-2xl mx-auto">
-        
+
 
         {/* Progress Bar */}
         <div className="mb-8">

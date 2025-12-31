@@ -10,9 +10,13 @@ export default function Privacy() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setIsAuthenticated(!!session);
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+      });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setIsAuthenticated(!!session);
     });

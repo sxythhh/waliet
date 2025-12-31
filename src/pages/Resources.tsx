@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { BookOpen, Folder } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
 import PublicNavbar from "@/components/PublicNavbar";
+import { SEOHead } from "@/components/SEOHead";
+import { getCanonicalUrl } from "@/lib/seo";
 
 const ImageWithSkeleton = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -144,31 +145,19 @@ export default function Resources() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="title" content={pageTitle} />
-        <meta name="description" content={pageDescription} />
-        <meta name="keywords" content="creator resources, content creator guides, social media monetization, TikTok tips, YouTube growth, Instagram marketing, influencer marketing" />
-        <meta name="author" content="Virality" />
-        <link rel="canonical" href="https://app.virality.gg/resources" />
-        
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://app.virality.gg/resources" />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content={pageImage} />
-        <meta property="og:site_name" content="Virality" />
-        
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://app.virality.gg/resources" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content={pageImage} />
-        
-        <script type="application/ld+json">
-          {JSON.stringify(resourcesStructuredData)}
-        </script>
-      </Helmet>
+      <SEOHead
+        title={pageTitle}
+        description={pageDescription}
+        canonical={getCanonicalUrl('/resources')}
+        ogImage={pageImage}
+        keywords={['creator resources', 'content creator guides', 'social media monetization', 'TikTok tips', 'YouTube growth', 'Instagram marketing', 'influencer marketing']}
+        author="Virality"
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Resources', url: '/resources' },
+        ]}
+        structuredData={resourcesStructuredData}
+      />
 
       <PublicNavbar />
 

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Helmet } from "react-helmet-async";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import PublicNavbar from "@/components/PublicNavbar";
 import { Globe, Instagram, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { SEOHead } from "@/components/SEOHead";
+import { getCanonicalUrl, truncateDescription } from "@/lib/seo";
 interface Brand {
   id: string;
   name: string;
@@ -86,7 +87,7 @@ export default function BrandPublicPage() {
         const {
           data: brandData,
           error: brandError
-        } = await supabase.from("brands").select("id, name, slug, logo_url, description, home_url, website_url, instagram_handle, tiktok_handle, linkedin_handle, brand_color, is_verified").eq("slug", slug).eq("is_active", true).single();
+        } = await supabase.from("brands").select("id, name, slug, logo_url, description, home_url, website_url, instagram_handle, tiktok_handle, linkedin_handle, brand_color, is_verified").eq("slug", slug).eq("is_active", true).maybeSingle();
         if (brandError || !brandData) {
           navigate("/404");
           return;
@@ -240,11 +241,41 @@ export default function BrandPublicPage() {
       navigate(`/c/${item.data.id}`);
     }
   };
+  // SEO data
+  const seoDescription = brand.description
+    ? truncateDescription(`${brand.name} - ${brand.description}`)
+    : `Join ${brand.name} creator campaigns on Virality. ${activeItems.length} active opportunities available.`;
+
+  const brandSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: brand.name,
+    url: getCanonicalUrl(`/b/${brand.slug}`),
+    logo: brand.logo_url || undefined,
+    description: brand.description || undefined,
+    sameAs: [
+      brand.website_url,
+      brand.instagram_handle ? `https://instagram.com/${brand.instagram_handle}` : null,
+      brand.tiktok_handle ? `https://tiktok.com/@${brand.tiktok_handle}` : null,
+      brand.linkedin_handle ? `https://linkedin.com/company/${brand.linkedin_handle}` : null,
+    ].filter(Boolean),
+  };
+
   return <>
-      <Helmet>
-        <title>{brand.name} | Virality</title>
-        <meta name="description" content={brand.description || `Join ${brand.name} creator campaigns on Virality`} />
-      </Helmet>
+      <SEOHead
+        title={`${brand.name} | Creator Campaigns & Opportunities`}
+        description={seoDescription}
+        canonical={getCanonicalUrl(`/b/${brand.slug}`)}
+        ogImage={brand.logo_url || undefined}
+        ogType="website"
+        keywords={['creator campaigns', brand.name, 'influencer marketing', 'content creator', 'brand partnership'].filter(Boolean)}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Discover', url: '/discover' },
+          { name: brand.name, url: `/b/${brand.slug}` },
+        ]}
+        structuredData={brandSchema}
+      />
 
       <PublicNavbar />
       <div className="min-h-screen bg-background">

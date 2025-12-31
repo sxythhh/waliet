@@ -12,6 +12,8 @@ import { Calendar, ArrowRight, Briefcase, Star, Shield, Users, Quote, ChevronLef
 import { CampaignCard } from "@/components/dashboard/CampaignCard";
 import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
+import { SEOHead } from "@/components/SEOHead";
+import { generateProfileSchema, getCanonicalUrl, truncateDescription } from "@/lib/seo";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -373,9 +375,38 @@ export default function PublicProfile() {
     return null;
   }
   const showBanner = !user;
+
+  // SEO data
+  const displayName = profile.full_name || profile.username;
+  const seoTitle = `${displayName} (@${profile.username}) | Creator Profile`;
+  const seoDescription = profile.bio
+    ? truncateDescription(`${displayName} - ${profile.bio}`)
+    : `View ${displayName}'s creator profile on Virality. ${stats.totalCampaigns} campaigns, ${stats.totalViews.toLocaleString()} total views.`;
+  const profileSchema = generateProfileSchema({
+    name: displayName,
+    username: profile.username,
+    description: profile.bio || undefined,
+    image: profile.avatar_url || undefined,
+    url: `/@${profile.username}`,
+  });
+
   return <div className="h-[100dvh] bg-background overflow-y-auto" style={{
     paddingBottom: showBanner ? '100px' : '24px'
   }}>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonical={getCanonicalUrl(`/@${profile.username}`)}
+        ogImage={profile.avatar_url || undefined}
+        ogType="profile"
+        keywords={['content creator', 'influencer', displayName, profile.username, 'creator profile'].filter(Boolean)}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Creators', url: '/discover' },
+          { name: displayName, url: `/@${profile.username}` },
+        ]}
+        structuredData={profileSchema}
+      />
       {/* Header Section */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 pb-8">
         <div className="flex flex-col sm:flex-row items-start gap-6">

@@ -127,7 +127,7 @@ export function CreatorsTab({
   } | null>(null);
   const [recruitDialogOpen, setRecruitDialogOpen] = useState(false);
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
-  const [activeView, setActiveView] = useState<'messages' | 'broadcasts'>('messages');
+  const [showBroadcasts, setShowBroadcasts] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     fetchCurrentUser();
@@ -232,17 +232,24 @@ export function CreatorsTab({
       }
       setBookmarkedConversations(bookmarked);
 
-      // Fetch unread counts for each conversation
+      // Fetch unread counts for all conversations in a single query
+      const conversationIds = data.map(conv => conv.id);
       const counts = new Map<string, number>();
-      for (const conv of data) {
-        const {
-          count
-        } = await supabase.from("messages").select("*", {
-          count: "exact",
-          head: true
-        }).eq("conversation_id", conv.id).eq("sender_type", "creator").eq("is_read", false);
-        if (count && count > 0) {
-          counts.set(conv.id, count);
+
+      if (conversationIds.length > 0) {
+        const { data: unreadMessages } = await supabase
+          .from("messages")
+          .select("conversation_id")
+          .in("conversation_id", conversationIds)
+          .eq("sender_type", "creator")
+          .eq("is_read", false);
+
+        // Count messages per conversation
+        if (unreadMessages) {
+          for (const msg of unreadMessages) {
+            const currentCount = counts.get(msg.conversation_id) || 0;
+            counts.set(msg.conversation_id, currentCount + 1);
+          }
         }
       }
       setUnreadCounts(counts);
@@ -736,48 +743,17 @@ export function CreatorsTab({
       </div>;
   }
 
-  // View Tabs (Messages vs Broadcasts)
-  const ViewTabs = () => <div className="border-b border-border bg-background shrink-0">
-      <div className="flex px-4 gap-0">
-        <button
-          onClick={() => setActiveView('messages')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeView === 'messages' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-        >
-          <MessageSquare className="h-4 w-4" />
-          Messages
-        </button>
-        <button
-          onClick={() => setActiveView('broadcasts')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium tracking-[-0.5px] transition-colors border-b-2 ${activeView === 'broadcasts' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
-        >
-          <Megaphone className="h-4 w-4" />
-          Broadcasts
-        </button>
-      </div>
-    </div>;
-
-  // Mobile Navigation Tabs (only shown in messages view)
-  const MobileNav = () => activeView === 'messages' ? <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
+  // Mobile Navigation Tabs
+  const MobileNav = () => <div className="lg:hidden flex border-b border-border bg-background/50 backdrop-blur-sm">
       <button onClick={() => setMobileView('messages')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'messages' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Messages
       </button>
       <button onClick={() => setMobileView('creators')} className={`flex-1 py-3 text-sm font-medium text-center transition-colors font-inter tracking-[-0.5px] ${mobileView === 'creators' ? 'text-foreground border-b-2 border-foreground' : 'text-muted-foreground'}`}>
         Creators ({creators.length})
       </button>
-    </div> : null;
-
-  // Show broadcasts view
-  if (activeView === 'broadcasts') {
-    return <div className="h-full flex flex-col bg-background font-inter tracking-[-0.5px]">
-      <ViewTabs />
-      <div className="flex-1 overflow-auto">
-        <BrandBroadcastsTab brandId={brandId} />
-      </div>
     </div>;
-  }
 
   return <div className="h-full flex flex-col bg-background font-inter tracking-[-0.5px]">
-      <ViewTabs />
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <MobileNav />
       
@@ -785,21 +761,37 @@ export function CreatorsTab({
       <div className={`w-full lg:w-80 border-r border-border flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
         <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <h2 className="font-medium text-sm">Messages</h2>
+            <h2 className="font-semibold text-sm">Messages</h2>
           </div>
-          
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-8 px-3 text-xs gap-1.5 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setShowBroadcasts(!showBroadcasts)}
+          >
+            <Megaphone className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Broadcasts</span>
+          </Button>
         </div>
 
         {/* Message Filters */}
-        <div className="p-3 border-b border-border flex items-center gap-2 flex-wrap">
-          <button className={`h-7 px-3 text-xs rounded-md transition-all ${messageFilter === 'all' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('all')}>
+        <div className="p-2 border-b border-border/50 flex items-center gap-1.5">
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-all font-medium ${messageFilter === 'all' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            onClick={() => setMessageFilter('all')}
+          >
             All
           </button>
-          <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('unread')}>
-            
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            onClick={() => setMessageFilter('unread')}
+          >
             Unread
           </button>
-          <button className={`h-7 px-3 text-xs rounded-md transition-all flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('bookmarked')}>
+          <button
+            className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
+            onClick={() => setMessageFilter('bookmarked')}
+          >
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
@@ -839,116 +831,188 @@ export function CreatorsTab({
             const creator = getConversationCreator(conv);
             const unreadCount = unreadCounts.get(conv.id) || 0;
             const isBookmarked = bookmarkedConversations.has(conv.id);
-            return <div key={conv.id} className={`group p-4 cursor-pointer transition-all hover:bg-muted/30 ${activeConversation?.id === conv.id ? "bg-muted/40" : ""}`} onClick={() => {
-              setActiveConversation({
-                ...conv,
-                creator
-              });
-              setMobileView('conversation');
-            }}>
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <Avatar className="h-10 w-10 ring-1 ring-border">
-                          <AvatarImage src={creator?.avatar_url || undefined} />
-                          <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-                            {creator?.username.slice(0, 2).toUpperCase() || "??"}
-                          </AvatarFallback>
-                        </Avatar>
-                        {unreadCount > 0 && <div className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-emerald-500 text-white text-[9px] font-medium flex items-center justify-center">
-                            {unreadCount > 9 ? '9+' : unreadCount}
-                          </div>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate ${unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
-                          {creator?.full_name || creator?.username || "Unknown"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), {
+            const isActive = activeConversation?.id === conv.id;
+            return <div
+              key={conv.id}
+              className={`group px-3 py-2.5 mx-2 rounded-xl cursor-pointer transition-all ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-muted/40"}`}
+              onClick={() => {
+                setActiveConversation({
+                  ...conv,
+                  creator
+                });
+                setMobileView('conversation');
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Avatar className={`h-10 w-10 ${isActive ? 'ring-2 ring-primary/30' : ''}`}>
+                    <AvatarImage src={creator?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-xs font-medium">
+                      {creator?.username.slice(0, 2).toUpperCase() || "??"}
+                    </AvatarFallback>
+                  </Avatar>
+                  {unreadCount > 0 && (
+                    <div className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className={`text-sm truncate ${unreadCount > 0 ? 'font-semibold' : 'font-medium'}`}>
+                      {creator?.full_name || creator?.username || "Unknown"}
+                    </p>
+                    {isBookmarked && <Bookmark className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), {
                       addSuffix: true
                     }) : "No messages"}
-                        </p>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-foreground shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50">
-                            <MoreHorizontal className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-36">
-                          <DropdownMenuItem onClick={e => {
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50 hover:text-foreground">
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuItem onClick={e => {
                       e.stopPropagation();
                       toggleBookmark(conv.id);
                     }} className="text-xs">
-                            <Bookmark className={`h-3.5 w-3.5 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
-                            {isBookmarked ? 'Unbookmark' : 'Bookmark'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={e => {
+                      <Bookmark className={`h-3.5 w-3.5 mr-2 ${isBookmarked ? 'fill-current text-amber-400' : ''}`} />
+                      {isBookmarked ? 'Unbookmark' : 'Bookmark'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={e => {
                       e.stopPropagation();
                       setDeleteConfirmId(conv.id);
                     }} className="text-xs text-destructive focus:text-destructive">
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>;
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>;
           })}
             </div>}
         </ScrollArea>
       </div>
 
-      {/* Middle Column - Active Conversation */}
-      <div className={`flex-1 flex flex-col min-w-0 border-r border-border ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
+      {/* Middle Column - Active Conversation + Broadcasts Panel */}
+      <div className={`flex-1 flex min-w-0 ${mobileView === 'conversation' ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Chat Area */}
+        <div className={`flex-1 flex flex-col min-w-0 border-r border-border transition-all duration-300 ${showBroadcasts ? 'lg:w-1/2' : 'w-full'}`}>
         {activeConversation ? <>
             {/* Conversation Header */}
-            <div className="h-14 px-4 border-b border-border flex items-center gap-3 shrink-0">
+            <div className="h-16 px-4 border-b border-border/50 flex items-center gap-3 shrink-0 bg-background/80 backdrop-blur-sm">
               <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden hover:bg-muted/50" onClick={() => setMobileView('messages')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <Avatar className="h-9 w-9 ring-1 ring-border">
+              <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
                 <AvatarImage src={activeConversation.creator?.avatar_url || undefined} />
-                <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-medium">
                   {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-inter tracking-[-0.5px] font-medium text-sm flex-1 hover:underline cursor-pointer" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
-                {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
-              </span>
-              
+              <div className="flex-1 min-w-0">
+                <span
+                  className="font-inter tracking-[-0.3px] font-semibold text-sm hover:text-primary cursor-pointer transition-colors block truncate"
+                  onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}
+                >
+                  {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
+                </span>
+                <span className="text-[11px] text-muted-foreground">@{activeConversation.creator?.username}</span>
+              </div>
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-3">
-                {messages.map(msg => <div key={msg.id} className={`flex ${msg.sender_type === "brand" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${msg.sender_type === "brand" ? "bg-foreground text-background" : "bg-muted/60"}`}>
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                      <p className={`text-[10px] mt-1.5 ${msg.sender_type === "brand" ? "text-background/60" : "text-muted-foreground"}`}>
-                        {format(new Date(msg.created_at), "h:mm a")}
-                      </p>
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-1">
+                {messages.map((msg, index) => {
+                  const isFromBrand = msg.sender_type === "brand";
+                  const prevMsg = messages[index - 1];
+                  const nextMsg = messages[index + 1];
+                  const isFirstInGroup = !prevMsg || prevMsg.sender_type !== msg.sender_type;
+                  const isLastInGroup = !nextMsg || nextMsg.sender_type !== msg.sender_type;
+
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex ${isFromBrand ? "justify-end" : "justify-start"} ${isFirstInGroup ? "mt-3" : ""}`}
+                    >
+                      <div className={`
+                        max-w-[70%] px-4 py-2.5
+                        ${isFromBrand
+                          ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
+                          : "bg-muted/80 dark:bg-muted/50"
+                        }
+                        ${isFirstInGroup && isLastInGroup
+                          ? "rounded-2xl"
+                          : isFirstInGroup
+                            ? isFromBrand ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-bl-md"
+                            : isLastInGroup
+                              ? isFromBrand ? "rounded-2xl rounded-tr-md" : "rounded-2xl rounded-tl-md"
+                              : isFromBrand ? "rounded-xl rounded-r-md" : "rounded-xl rounded-l-md"
+                        }
+                      `}>
+                        <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                        {isLastInGroup && (
+                          <p className={`text-[10px] mt-1.5 ${isFromBrand ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                            {format(new Date(msg.created_at), "h:mm a")}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>)}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border/50 bg-background/80 backdrop-blur-sm">
               <MessageInput value={messageInput} onChange={setMessageInput} onSend={sendMessage} disabled={sendingMessage} />
             </div>
-          </> : <div className="flex-1 flex flex-col">
-            {/* Empty state header with toggle */}
-            <div className="h-14 px-4 border-b border-border flex items-center justify-end shrink-0">
-              
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                
-                <p className="text-sm">Select a conversation to view messages</p>
+          </> : <div className="flex-1 flex flex-col bg-gradient-to-b from-muted/20 to-background">
+            {/* Empty state */}
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-[280px]">
+                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+                <h3 className="font-semibold text-sm mb-1">No conversation selected</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Select a conversation from the list or start messaging a creator from the right panel.
+                </p>
               </div>
             </div>
           </div>}
+        </div>
+
+        {/* Broadcasts Panel */}
+        {showBroadcasts && (
+          <div className="hidden lg:flex flex-col w-1/2 border-r border-border bg-background overflow-hidden">
+            <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <Megaphone className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-semibold text-sm">Broadcasts</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowBroadcasts(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <BrandBroadcastsTab brandId={brandId} />
+            </div>
+          </div>
+        )}
       </div>
 
 

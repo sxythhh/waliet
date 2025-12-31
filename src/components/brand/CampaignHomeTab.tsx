@@ -541,8 +541,12 @@ export function CampaignHomeTab({
               // Fetch usernames for the creators as fallback
               const userIds = [...new Set(submissions.map(s => s.creator_id))];
               const { data: profiles } = await supabase.from('profiles').select('id, username').in('id', userIds);
+
+              // Check again after await to prevent state updates on unmounted component
+              if (isCancelled) return;
+
               const profileMap = new Map(profiles?.map(p => [p.id, p.username]) || []);
-              
+
               const mappedVideos: VideoData[] = submissions.map(v => ({
                 ad_id: v.id,
                 username: v.video_author_username || profileMap.get(v.creator_id) || 'Unknown',
@@ -559,8 +563,10 @@ export function CampaignHomeTab({
               setTotalVideos(count || 0);
             } else {
               // No videos found for this timeframe
-              setTopVideos([]);
-              setTotalVideos(0);
+              if (!isCancelled) {
+                setTopVideos([]);
+                setTotalVideos(0);
+              }
             }
           });
       } catch (error) {

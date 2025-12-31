@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Search, Trophy, Medal, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RankBadge, formatXP, type RankType } from "@/components/RankBadge";
+import { SEOHead } from "@/components/SEOHead";
+import { getCanonicalUrl } from "@/lib/seo";
 
 interface LeaderboardUser {
   id: string;
@@ -238,6 +240,16 @@ export default function Leaderboard() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
+      <SEOHead
+        title="Creator Leaderboard | Top Creators by XP"
+        description="See the top content creators ranked by XP on Virality. Track your progress and compete with other creators."
+        canonical={getCanonicalUrl('/leaderboard')}
+        keywords={['creator leaderboard', 'top creators', 'XP ranking', 'content creators', 'influencer ranking']}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Leaderboard', url: '/leaderboard' },
+        ]}
+      />
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>

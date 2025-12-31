@@ -148,17 +148,12 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-lg bg-yellow-500/10">
-          <AlertTriangle className="h-6 w-6 text-yellow-500" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Low Balance Protection</h2>
-          <p className="text-sm text-muted-foreground">
-            Configure automatic actions when your brand wallet runs low
-          </p>
-        </div>
+    <div className="space-y-6 max-w-3xl">
+      <div>
+        <h2 className="text-lg font-semibold">Low Balance Protection</h2>
+        <p className="text-sm text-muted-foreground">
+          Configure automatic actions when your brand wallet runs low
+        </p>
       </div>
 
       {/* Current Balance Status */}
@@ -168,21 +163,11 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <DollarSign className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                <p className="text-sm text-muted-foreground">Current balance</p>
-              </div>
+            <div>
+              <p className="text-2xl font-bold">${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-sm text-muted-foreground">Current balance</p>
             </div>
-            <Badge variant={balanceStatus.color as any} className="gap-1">
-              {balanceStatus.status === "healthy" ? (
-                <CheckCircle2 className="h-3 w-3" />
-              ) : (
-                <AlertTriangle className="h-3 w-3" />
-              )}
+            <Badge variant={balanceStatus.color as any}>
               {balanceStatus.message}
             </Badge>
           </div>
@@ -199,80 +184,59 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Notify Threshold */}
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-blue-500/10 mt-1">
-              <Bell className="h-4 w-4 text-blue-500" />
+          <div className="space-y-2">
+            <div>
+              <Label className="font-medium">Notification Alert</Label>
+              <p className="text-xs text-muted-foreground">
+                Send email notification when balance drops below this amount
+              </p>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="font-medium">Notification Alert</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Send email notification when balance drops below this amount
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  value={notifyThreshold}
-                  onChange={(e) => setNotifyThreshold(e.target.value)}
-                  className="w-32"
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">$</span>
+              <Input
+                type="number"
+                value={notifyThreshold}
+                onChange={(e) => setNotifyThreshold(e.target.value)}
+                className="w-32"
+              />
             </div>
           </div>
 
           {/* Pause Payouts Threshold */}
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-yellow-500/10 mt-1">
-              <Pause className="h-4 w-4 text-yellow-500" />
+          <div className="space-y-2">
+            <div>
+              <Label className="font-medium">Pause Payouts</Label>
+              <p className="text-xs text-muted-foreground">
+                Queue payouts instead of processing when balance is below this
+              </p>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="font-medium">Pause Payouts</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Queue payouts instead of processing when balance is below this
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  value={pausePayoutsThreshold}
-                  onChange={(e) => setPausePayoutsThreshold(e.target.value)}
-                  className="w-32"
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">$</span>
+              <Input
+                type="number"
+                value={pausePayoutsThreshold}
+                onChange={(e) => setPausePayoutsThreshold(e.target.value)}
+                className="w-32"
+              />
             </div>
           </div>
 
           {/* Pause Campaign Threshold */}
-          <div className="flex items-start gap-4">
-            <div className="p-2 rounded-lg bg-red-500/10 mt-1">
-              <Ban className="h-4 w-4 text-red-500" />
+          <div className="space-y-2">
+            <div>
+              <Label className="font-medium">Pause Campaigns</Label>
+              <p className="text-xs text-muted-foreground">
+                Stop accepting new submissions when balance is critically low
+              </p>
             </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="font-medium">Pause Campaigns</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Stop accepting new submissions when balance is critically low
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
-                <Input
-                  type="number"
-                  value={pauseCampaignThreshold}
-                  onChange={(e) => setPauseCampaignThreshold(e.target.value)}
-                  className="w-32"
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">$</span>
+              <Input
+                type="number"
+                value={pauseCampaignThreshold}
+                onChange={(e) => setPauseCampaignThreshold(e.target.value)}
+                className="w-32"
+              />
             </div>
           </div>
         </CardContent>
@@ -281,10 +245,7 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
       {/* Auto Top-up Settings */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Auto Top-up
-          </CardTitle>
+          <CardTitle className="text-base">Auto Top-up</CardTitle>
           <CardDescription>
             Automatically add funds when balance gets low
           </CardDescription>
@@ -336,18 +297,13 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
                   key={alert.id}
                   className="flex items-center justify-between p-3 rounded-lg border"
                 >
-                  <div className="flex items-center gap-3">
-                    {alert.alert_type === "notify" && <Bell className="h-4 w-4 text-blue-500" />}
-                    {alert.alert_type === "pause_payouts" && <Pause className="h-4 w-4 text-yellow-500" />}
-                    {alert.alert_type === "pause_campaign" && <Ban className="h-4 w-4 text-red-500" />}
-                    <div>
-                      <p className="font-medium text-sm capitalize">
-                        {alert.alert_type.replace("_", " ")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Balance: ${alert.balance_at_alert.toFixed(2)} (threshold: ${alert.threshold_value})
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-sm capitalize">
+                      {alert.alert_type.replace("_", " ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Balance: ${alert.balance_at_alert.toFixed(2)} (threshold: ${alert.threshold_value})
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">

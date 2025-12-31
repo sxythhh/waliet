@@ -21,8 +21,12 @@ export function AdminCard({
   return (
     <div
       className={cn(
-        "bg-white/[0.03] rounded-xl border border-white/[0.06]",
-        "hover:border-white/[0.1] transition-all duration-200",
+        "rounded-2xl overflow-hidden",
+        "bg-gradient-to-br from-white/[0.06] to-white/[0.02]",
+        "backdrop-blur-xl",
+        "border border-white/[0.06]",
+        "transition-all duration-300",
+        "hover:border-white/[0.1]",
         className
       )}
     >
@@ -30,12 +34,12 @@ export function AdminCard({
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
           <div>
             {title && (
-              <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.5px]">
+              <h3 className="text-sm font-semibold text-white font-inter tracking-[-0.3px]">
                 {title}
               </h3>
             )}
             {subtitle && (
-              <p className="text-[11px] text-white/40 font-inter tracking-[-0.5px] mt-0.5">
+              <p className="text-[11px] text-white/40 font-inter tracking-[-0.2px] mt-0.5">
                 {subtitle}
               </p>
             )}
@@ -64,12 +68,22 @@ interface AdminStatCardProps {
 
 const colorClasses = {
   default: "text-white",
-  green: "text-green-400",
+  green: "text-emerald-400",
   red: "text-red-400",
-  orange: "text-orange-400",
+  orange: "text-amber-400",
   blue: "text-blue-400",
   purple: "text-purple-400",
   cyan: "text-cyan-400",
+};
+
+const colorBgClasses = {
+  default: "from-white/[0.06] to-white/[0.02]",
+  green: "from-emerald-500/10 to-emerald-500/5",
+  red: "from-red-500/10 to-red-500/5",
+  orange: "from-amber-500/10 to-amber-500/5",
+  blue: "from-blue-500/10 to-blue-500/5",
+  purple: "from-purple-500/10 to-purple-500/5",
+  cyan: "from-cyan-500/10 to-cyan-500/5",
 };
 
 export function AdminStatCard({
@@ -85,29 +99,35 @@ export function AdminStatCard({
     <div
       onClick={onClick}
       className={cn(
-        "bg-white/[0.03] rounded-xl p-5",
-        "border border-white/[0.04] hover:border-white/[0.08]",
-        "transition-all duration-200",
-        onClick && "cursor-pointer hover:bg-white/[0.04]",
+        "rounded-2xl p-5 overflow-hidden",
+        "bg-gradient-to-br backdrop-blur-xl",
+        colorBgClasses[color],
+        "border border-white/[0.06]",
+        "transition-all duration-300",
+        "hover:border-white/[0.1]",
+        "hover:shadow-lg hover:shadow-black/10",
+        onClick && "cursor-pointer",
         className
       )}
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-white/40 font-inter tracking-[-0.5px]">{label}</p>
+        <p className="text-xs text-white/50 font-inter font-medium tracking-[-0.2px]">{label}</p>
         {change && (
           <div
             className={cn(
-              "flex items-center gap-1 text-[10px] font-semibold font-inter",
-              change.isPositive ? "text-green-400" : "text-red-400"
+              "flex items-center gap-1 text-[10px] font-semibold font-inter px-1.5 py-0.5 rounded-full",
+              change.isPositive
+                ? "text-emerald-400 bg-emerald-500/15"
+                : "text-red-400 bg-red-500/15"
             )}
           >
             <svg
-              width="12"
-              height="12"
+              width={10}
+              height={10}
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
               className={cn(!change.isPositive && "rotate-180")}
@@ -119,14 +139,14 @@ export function AdminStatCard({
         )}
         {icon && !change && <div className="text-white/30">{icon}</div>}
       </div>
-      <div className={cn("text-2xl font-bold font-inter tracking-[-0.5px]", colorClasses[color])}>
+      <div className={cn("text-2xl font-semibold font-inter tracking-[-0.5px]", colorClasses[color])}>
         {value}
       </div>
     </div>
   );
 }
 
-// Compact secondary stat card
+// Mini stat card - more compact
 export function AdminMiniStatCard({
   label,
   value,
@@ -136,15 +156,19 @@ export function AdminMiniStatCard({
   return (
     <div
       className={cn(
-        "bg-white/[0.02] rounded-xl p-4",
-        "border border-white/[0.03]",
+        "rounded-xl p-4 overflow-hidden",
+        "bg-gradient-to-br backdrop-blur-xl",
+        "from-white/[0.04] to-white/[0.01]",
+        "border border-white/[0.04]",
+        "transition-all duration-300",
+        "hover:border-white/[0.08]",
         className
       )}
     >
-      <div className={cn("text-lg font-bold font-inter tracking-[-0.5px]", colorClasses[color])}>
+      <div className={cn("text-lg font-semibold font-inter tracking-[-0.5px] mb-0.5", colorClasses[color])}>
         {value}
       </div>
-      <p className="text-[10px] text-white/40 font-inter tracking-[-0.5px]">{label}</p>
+      <p className="text-[10px] text-white/40 font-inter tracking-[-0.2px]">{label}</p>
     </div>
   );
 }

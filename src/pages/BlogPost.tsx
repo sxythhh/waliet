@@ -61,7 +61,7 @@ export default function BlogPostPage() {
       const {
         data,
         error
-      } = await supabase.from('blog_posts').select('*').eq('slug', slug).eq('is_published', true).single();
+      } = await supabase.from('blog_posts').select('*').eq('slug', slug).eq('is_published', true).maybeSingle();
       if (error || !data) {
         setNotFound(true);
       } else {

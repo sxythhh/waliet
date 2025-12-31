@@ -67,8 +67,8 @@ export default function CourseDetail() {
       const {
         data: courseData,
         error: courseError
-      } = await supabase.from("courses").select("*").eq("id", courseId).single();
-      if (courseError) throw courseError;
+      } = await supabase.from("courses").select("*").eq("id", courseId).maybeSingle();
+      if (courseError || !courseData) throw courseError || new Error("Course not found");
       setCourse(courseData);
 
       // Fetch modules

@@ -16,7 +16,7 @@ import copyIcon from "@/assets/icons/copy-icon.svg";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { Slider } from "@/components/ui/slider";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from "recharts";
 interface Team {
   id: string;
   owner_id: string;
@@ -512,68 +512,133 @@ export function TeamsSection(): JSX.Element {
           </CardContent>
         </Card>
 
-        {/* Earnings Comparison Chart */}
-        <Card className="bg-card">
-          <CardContent className="p-6" style={{
-          fontFamily: 'Inter, sans-serif',
-          letterSpacing: '-0.5px'
-        }}>
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h4 className="font-semibold text-sm">Team Earnings </h4>
-                
+        {/* Earnings Overview Card */}
+        <Card className="bg-card border-0 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            {/* Stats Summary Row */}
+            <div className="grid grid-cols-3 divide-x divide-border/50">
+              <div className="p-5">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium mb-1">Total Earned</p>
+                <p className="text-2xl font-bold font-inter tracking-tight text-foreground">${totalTeamEarnings.toFixed(2)}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">All time</p>
               </div>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
-                  <span className="text-muted-foreground">Team</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-blue-500" />
-                  <span className="text-muted-foreground">Personal</span>
-                </div>
+              <div className="p-5">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium mb-1">This Month</p>
+                <p className="text-2xl font-bold font-inter tracking-tight text-emerald-500">
+                  ${earningsChartData.length > 0 ? earningsChartData[earningsChartData.length - 1]?.team.toFixed(2) : '0.00'}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Team earnings</p>
+              </div>
+              <div className="p-5">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground/70 font-medium mb-1">Personal</p>
+                <p className="text-2xl font-bold font-inter tracking-tight text-blue-500">
+                  ${earningsChartData.length > 0 ? earningsChartData[earningsChartData.length - 1]?.personal.toFixed(2) : '0.00'}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">This month</p>
               </div>
             </div>
-            
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={earningsChartData} barGap={4}>
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{
-                  fontSize: 11,
-                  fill: 'hsl(var(--muted-foreground))'
-                }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{
-                  fontSize: 11,
-                  fill: 'hsl(var(--muted-foreground))'
-                }} tickFormatter={value => `$${value}`} width={45} />
-                  <RechartsTooltip content={({
-                  active,
-                  payload,
-                  label
-                }) => {
-                  if (active && payload && payload.length) {
-                    return <div className="bg-popover text-popover-foreground border border-border rounded-xl shadow-xl px-4 py-2.5">
-                            <p className="text-xs font-medium mb-1.5">{label}</p>
-                            <div className="space-y-1">
-                              <p className="text-xs flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-sm bg-emerald-500" />
-                                Team: ${Number(payload[0]?.value || 0).toFixed(2)}
-                              </p>
-                              <p className="text-xs flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-sm bg-blue-500" />
-                                Personal: ${Number(payload[1]?.value || 0).toFixed(2)}
-                              </p>
+
+            {/* Chart Section */}
+            <div className="px-5 pb-5 pt-2">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold text-foreground font-inter tracking-tight">Earnings Trend</h4>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-muted-foreground font-medium">Team</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-muted-foreground font-medium">Personal</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-52 -mx-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={earningsChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="teamGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="personalGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter' }}
+                      dy={8}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter' }}
+                      tickFormatter={value => `$${value}`}
+                      width={50}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const teamValue = Number(payload[0]?.value || 0);
+                          const personalValue = Number(payload[1]?.value || 0);
+                          const total = teamValue + personalValue;
+                          return (
+                            <div className="bg-popover/95 backdrop-blur-xl text-popover-foreground border border-border/50 rounded-xl shadow-2xl px-4 py-3 min-w-[160px]">
+                              <p className="text-xs font-semibold text-foreground mb-2">{label}</p>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                    <span className="text-xs text-muted-foreground">Team</span>
+                                  </div>
+                                  <span className="text-xs font-semibold text-emerald-500">${teamValue.toFixed(2)}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                    <span className="text-xs text-muted-foreground">Personal</span>
+                                  </div>
+                                  <span className="text-xs font-semibold text-blue-500">${personalValue.toFixed(2)}</span>
+                                </div>
+                                <div className="pt-2 mt-2 border-t border-border/50 flex items-center justify-between">
+                                  <span className="text-xs text-muted-foreground">Total</span>
+                                  <span className="text-xs font-bold text-foreground">${total.toFixed(2)}</span>
+                                </div>
+                              </div>
                             </div>
-                          </div>;
-                  }
-                  return null;
-                }} cursor={{
-                  fill: 'hsl(var(--muted) / 0.3)'
-                }} />
-                  <Bar dataKey="team" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                  <Bar dataKey="personal" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                </BarChart>
-              </ResponsiveContainer>
+                          );
+                        }
+                        return null;
+                      }}
+                      cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="team"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fill="url(#teamGradient)"
+                      dot={false}
+                      activeDot={{ r: 4, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="personal"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      fill="url(#personalGradient)"
+                      dot={false}
+                      activeDot={{ r: 4, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </CardContent>
         </Card>
