@@ -41,6 +41,76 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_rejection_log: {
+        Row: {
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          rule_id: string | null
+          submission_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          rule_id?: string | null
+          submission_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          rule_id?: string | null
+          submission_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_rejection_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "auto_rejection_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_rejection_rules: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          rule_config: Json | null
+          rule_type: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          rule_config?: Json | null
+          rule_type: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          rule_config?: Json | null
+          rule_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_rejection_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author: string
@@ -608,6 +678,138 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      brand_broadcast_reads: {
+        Row: {
+          broadcast_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          broadcast_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          broadcast_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_broadcast_reads_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "brand_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_broadcast_targets: {
+        Row: {
+          boost_id: string | null
+          broadcast_id: string
+          campaign_id: string | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          boost_id?: string | null
+          broadcast_id: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          boost_id?: string | null
+          broadcast_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_broadcast_targets_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_broadcast_targets_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "brand_broadcasts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_broadcast_targets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_broadcast_targets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_broadcasts: {
+        Row: {
+          brand_id: string
+          broadcast_type: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          broadcast_type?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          broadcast_type?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_broadcasts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       brand_course_access: {
         Row: {
@@ -2276,6 +2478,36 @@ export type Database = {
           },
         ]
       }
+      creator_fraud_history: {
+        Row: {
+          created_at: string
+          fraud_amount: number | null
+          fraud_count: number | null
+          id: string
+          last_fraud_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fraud_amount?: number | null
+          fraud_count?: number | null
+          id?: string
+          last_fraud_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fraud_amount?: number | null
+          fraud_count?: number | null
+          id?: string
+          last_fraud_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       creator_notes: {
         Row: {
           content: string
@@ -2525,6 +2757,80 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      fraud_evidence: {
+        Row: {
+          created_at: string
+          evidence_data: Json | null
+          evidence_type: string
+          fraud_flag_id: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence_data?: Json | null
+          evidence_type: string
+          fraud_flag_id?: string | null
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          evidence_data?: Json | null
+          evidence_type?: string
+          fraud_flag_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_evidence_fraud_flag_id_fkey"
+            columns: ["fraud_flag_id"]
+            isOneToOne: false
+            referencedRelation: "fraud_flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fraud_flags: {
+        Row: {
+          created_at: string
+          flag_reason: string | null
+          flag_type: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          status: string | null
+          submission_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          flag_reason?: string | null
+          flag_type: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          submission_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          flag_reason?: string | null
+          flag_type?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          status?: string | null
+          submission_id?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3665,6 +3971,7 @@ export type Database = {
       }
       submission_payout_requests: {
         Row: {
+          auto_approval_status: string | null
           clearing_ends_at: string
           completed_at: string | null
           created_at: string
@@ -3675,6 +3982,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          auto_approval_status?: string | null
           clearing_ends_at: string
           completed_at?: string | null
           created_at?: string
@@ -3685,6 +3993,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          auto_approval_status?: string | null
           clearing_ends_at?: string
           completed_at?: string | null
           created_at?: string
