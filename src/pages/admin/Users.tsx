@@ -1957,7 +1957,7 @@ export default function AdminUsers() {
           {filteredUsers.length > usersPerPage && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                {indexOfFirstUser + 1}-{Math.min(indexOfLastUser, filteredUsers.length)} of {filteredUsers.length}
+                {(currentPage - 1) * usersPerPage + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length}
               </p>
               <div className="flex gap-1">
                 <Button

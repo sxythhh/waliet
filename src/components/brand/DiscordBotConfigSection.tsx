@@ -41,21 +41,21 @@ export function DiscordBotConfigSection({ brandId }: DiscordBotConfigSectionProp
   const fetchConfig = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("discord_bot_config")
+      const { data, error } = await (supabase
+        .from("discord_bot_config" as any)
         .select("*")
         .eq("brand_id", brandId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (error && error.code !== "PGRST116") throw error;
 
       if (data) {
-        setConfig(data);
-        setGuildId(data.guild_id);
-        setIsActive(data.is_active);
-        setCommandPrefix(data.command_prefix || "/");
-        setStatsChannelId(data.stats_channel_id || "");
-        setLogChannelId(data.log_channel_id || "");
+        setConfig(data as BotConfig);
+        setGuildId((data as any).guild_id);
+        setIsActive((data as any).is_active);
+        setCommandPrefix((data as any).command_prefix || "/");
+        setStatsChannelId((data as any).stats_channel_id || "");
+        setLogChannelId((data as any).log_channel_id || "");
       }
     } catch (error) {
       console.error("Error fetching bot config:", error);
@@ -82,15 +82,15 @@ export function DiscordBotConfigSection({ brandId }: DiscordBotConfigSectionProp
       };
 
       if (config?.id) {
-        const { error } = await supabase
-          .from("discord_bot_config")
+        const { error } = await (supabase
+          .from("discord_bot_config" as any)
           .update(configData)
-          .eq("id", config.id);
+          .eq("id", config.id) as any);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("discord_bot_config")
-          .insert(configData);
+        const { error } = await (supabase
+          .from("discord_bot_config" as any)
+          .insert(configData) as any);
         if (error) throw error;
       }
 

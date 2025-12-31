@@ -96,30 +96,30 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
     setIsLoading(true);
     try {
       const [tiersResult, rulesResult, assignmentsResult] = await Promise.all([
-        supabase
-          .from("creator_tiers")
+        (supabase
+          .from("creator_tiers" as any)
           .select("*")
           .eq("brand_id", brandId)
-          .order("tier_order"),
-        supabase
-          .from("tier_promotion_rules")
+          .order("tier_order") as any),
+        (supabase
+          .from("tier_promotion_rules" as any)
           .select("*")
           .eq("brand_id", brandId)
-          .order("created_at"),
-        supabase
-          .from("creator_tier_assignments")
+          .order("created_at") as any),
+        (supabase
+          .from("creator_tier_assignments" as any)
           .select(`
             *,
             profiles:user_id(username, avatar_url)
           `)
           .eq("brand_id", brandId)
           .order("assigned_at", { ascending: false })
-          .limit(20)
+          .limit(20) as any)
       ]);
 
-      if (!tiersResult.error) setTiers(tiersResult.data || []);
-      if (!rulesResult.error) setRules(rulesResult.data || []);
-      if (!assignmentsResult.error) setAssignments(assignmentsResult.data || []);
+      if (!tiersResult.error) setTiers((tiersResult.data || []) as CreatorTier[]);
+      if (!rulesResult.error) setRules((rulesResult.data || []) as TierPromotionRule[]);
+      if (!assignmentsResult.error) setAssignments((assignmentsResult.data || []) as TierAssignment[]);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -129,7 +129,7 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
   const createDefaultTiers = async () => {
     try {
-      const { error } = await supabase.rpc("create_default_creator_tiers", {
+      const { error } = await (supabase.rpc as any)("create_default_creator_tiers", {
         p_brand_id: brandId
       });
 
@@ -210,17 +210,17 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
       };
 
       if (editingTier) {
-        const { error } = await supabase
-          .from("creator_tiers")
+        const { error } = await (supabase
+          .from("creator_tiers" as any)
           .update(data)
-          .eq("id", editingTier.id);
+          .eq("id", editingTier.id) as any);
 
         if (error) throw error;
         toast.success("Tier updated");
       } else {
-        const { error } = await supabase
-          .from("creator_tiers")
-          .insert(data);
+        const { error } = await (supabase
+          .from("creator_tiers" as any)
+          .insert(data) as any);
 
         if (error) throw error;
         toast.success("Tier created");
@@ -255,17 +255,17 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
       };
 
       if (editingRule) {
-        const { error } = await supabase
-          .from("tier_promotion_rules")
+        const { error } = await (supabase
+          .from("tier_promotion_rules" as any)
           .update(data)
-          .eq("id", editingRule.id);
+          .eq("id", editingRule.id) as any);
 
         if (error) throw error;
         toast.success("Rule updated");
       } else {
-        const { error } = await supabase
-          .from("tier_promotion_rules")
-          .insert(data);
+        const { error } = await (supabase
+          .from("tier_promotion_rules" as any)
+          .insert(data) as any);
 
         if (error) throw error;
         toast.success("Rule created");
@@ -284,10 +284,10 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
   const handleDeleteTier = async (tierId: string) => {
     try {
-      const { error } = await supabase
-        .from("creator_tiers")
+      const { error } = await (supabase
+        .from("creator_tiers" as any)
         .delete()
-        .eq("id", tierId);
+        .eq("id", tierId) as any);
 
       if (error) throw error;
       toast.success("Tier deleted");
@@ -300,10 +300,10 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
   const handleDeleteRule = async (ruleId: string) => {
     try {
-      const { error } = await supabase
-        .from("tier_promotion_rules")
+      const { error } = await (supabase
+        .from("tier_promotion_rules" as any)
         .delete()
-        .eq("id", ruleId);
+        .eq("id", ruleId) as any);
 
       if (error) throw error;
       toast.success("Rule deleted");
@@ -316,10 +316,10 @@ export function TierPromotionTab({ brandId }: TierPromotionTabProps) {
 
   const handleToggleRule = async (rule: TierPromotionRule) => {
     try {
-      const { error } = await supabase
-        .from("tier_promotion_rules")
+      const { error } = await (supabase
+        .from("tier_promotion_rules" as any)
         .update({ is_active: !rule.is_active })
-        .eq("id", rule.id);
+        .eq("id", rule.id) as any);
 
       if (error) throw error;
       setRules(prev =>

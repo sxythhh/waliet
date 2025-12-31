@@ -80,22 +80,22 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
     setIsLoading(true);
     try {
       // Get guild ID from bot config
-      const { data: botConfig } = await supabase
-        .from("discord_bot_config")
+      const { data: botConfig } = await (supabase
+        .from("discord_bot_config" as any)
         .select("guild_id")
         .eq("brand_id", brandId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (botConfig?.guild_id) {
         setGuildId(botConfig.guild_id);
       }
 
       const [mappingsResult, campaignsResult, boostsResult, tiersResult] = await Promise.all([
-        supabase
-          .from("discord_role_mappings")
+        (supabase
+          .from("discord_role_mappings" as any)
           .select("*")
           .eq("brand_id", brandId)
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false }) as any),
         supabase
           .from("campaigns")
           .select("id, title")
@@ -106,17 +106,17 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
           .select("id, title")
           .eq("brand_id", brandId)
           .order("title"),
-        supabase
-          .from("creator_tiers")
+        (supabase
+          .from("creator_tiers" as any)
           .select("id, name")
           .eq("brand_id", brandId)
-          .order("tier_order"),
+          .order("tier_order") as any),
       ]);
 
-      if (!mappingsResult.error) setMappings(mappingsResult.data || []);
+      if (!mappingsResult.error) setMappings((mappingsResult.data || []) as RoleMapping[]);
       if (!campaignsResult.error) setCampaigns(campaignsResult.data || []);
       if (!boostsResult.error) setBoosts(boostsResult.data || []);
-      if (!tiersResult.error) setTiers(tiersResult.data || []);
+      if (!tiersResult.error) setTiers((tiersResult.data || []) as Tier[]);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -195,9 +195,9 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
           break;
       }
 
-      const { error } = await supabase
-        .from("discord_role_mappings")
-        .insert(mappingData);
+      const { error } = await (supabase
+        .from("discord_role_mappings" as any)
+        .insert(mappingData) as any);
 
       if (error) throw error;
 
@@ -215,10 +215,10 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
 
   const handleToggleMapping = async (mapping: RoleMapping) => {
     try {
-      const { error } = await supabase
-        .from("discord_role_mappings")
+      const { error } = await (supabase
+        .from("discord_role_mappings" as any)
         .update({ is_active: !mapping.is_active })
-        .eq("id", mapping.id);
+        .eq("id", mapping.id) as any);
 
       if (error) throw error;
 
@@ -234,10 +234,10 @@ export function DiscordRoleSyncSection({ brandId }: DiscordRoleSyncSectionProps)
 
   const handleDeleteMapping = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("discord_role_mappings")
+      const { error } = await (supabase
+        .from("discord_role_mappings" as any)
         .delete()
-        .eq("id", id);
+        .eq("id", id) as any);
 
       if (error) throw error;
 

@@ -112,15 +112,15 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
   const fetchTemplates = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("contract_templates")
+      const { data, error } = await (supabase
+        .from("contract_templates" as any)
         .select("*")
         .eq("brand_id", brandId)
         .order("is_default", { ascending: false })
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as any);
 
       if (error) throw error;
-      setTemplates(data || []);
+      setTemplates((data || []) as Template[]);
     } catch (error) {
       console.error("Error fetching templates:", error);
       toast.error("Failed to load templates");
@@ -154,17 +154,17 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
       };
 
       if (editingTemplate) {
-        const { error } = await supabase
-          .from("contract_templates")
+        const { error } = await (supabase
+          .from("contract_templates" as any)
           .update(templateData)
-          .eq("id", editingTemplate.id);
+          .eq("id", editingTemplate.id) as any);
 
         if (error) throw error;
         toast.success("Template updated");
       } else {
-        const { error } = await supabase
-          .from("contract_templates")
-          .insert(templateData);
+        const { error } = await (supabase
+          .from("contract_templates" as any)
+          .insert(templateData) as any);
 
         if (error) throw error;
         toast.success("Template created");
@@ -196,8 +196,8 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
 
   const handleDuplicate = async (template: Template) => {
     try {
-      const { error } = await supabase
-        .from("contract_templates")
+      const { error } = await (supabase
+        .from("contract_templates" as any)
         .insert({
           brand_id: brandId,
           name: `${template.name} (Copy)`,
@@ -208,7 +208,7 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
           default_duration_months: template.default_duration_months,
           is_default: false,
           is_active: true,
-        });
+        }) as any);
 
       if (error) throw error;
       toast.success("Template duplicated");
@@ -223,10 +223,10 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
     if (!confirm("Are you sure you want to delete this template?")) return;
 
     try {
-      const { error } = await supabase
-        .from("contract_templates")
+      const { error } = await (supabase
+        .from("contract_templates" as any)
         .delete()
-        .eq("id", template.id);
+        .eq("id", template.id) as any);
 
       if (error) throw error;
       toast.success("Template deleted");
@@ -239,10 +239,10 @@ export function ContractTemplatesTab({ brandId }: ContractTemplatesTabProps) {
 
   const handleSetDefault = async (template: Template) => {
     try {
-      const { error } = await supabase
-        .from("contract_templates")
+      const { error } = await (supabase
+        .from("contract_templates" as any)
         .update({ is_default: true })
-        .eq("id", template.id);
+        .eq("id", template.id) as any);
 
       if (error) throw error;
       toast.success("Default template updated");

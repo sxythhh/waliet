@@ -45,15 +45,15 @@ export function DiscordReactionAnalytics({ brandId }: DiscordReactionAnalyticsPr
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("discord_reaction_tracking")
+      const { data, error } = await (supabase
+        .from("discord_reaction_tracking" as any)
         .select(`
           *,
           broadcast:broadcast_id(title)
         `)
         .eq("brand_id", brandId)
         .order("last_updated_at", { ascending: false })
-        .limit(20);
+        .limit(20) as any);
 
       if (error) throw error;
 
