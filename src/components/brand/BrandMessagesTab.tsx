@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageInput } from "./MessageInput";
-import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { Search, MessageSquare, Send, ArrowLeft, Users, Check, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ interface Message {
   id: string;
   conversation_id: string;
   sender_id: string;
-  sender_type: "brand" | "creator";
+  sender_type: string;
   content: string;
   is_read: boolean;
   created_at: string;
@@ -214,16 +214,6 @@ export function BrandMessagesTab({ brandId }: BrandMessagesTabProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const formatMessageTime = (dateString: string) => {
-    const date = new Date(dateString);
-    if (isToday(date)) {
-      return format(date, 'h:mm a');
-    } else if (isYesterday(date)) {
-      return 'Yesterday ' + format(date, 'h:mm a');
-    }
-    return format(date, 'MMM d, h:mm a');
-  };
 
   const formatConversationTime = (dateString: string) => {
     const date = new Date(dateString);

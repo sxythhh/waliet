@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
 
 interface CreatorROI {
-  userId: string;
+  oduserId: string;
   username: string;
   avatarUrl: string | null;
   totalViews: number;
@@ -112,13 +112,12 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         return;
       }
 
-      // Fetch video submissions with creator info
-      const { data: videoSubmissions } = await supabase
-        .from('video_submissions')
+      // Fetch cached campaign videos
+      const { data: cachedVideos } = await supabase
+        .from('cached_campaign_videos')
         .select(`
-          id, status, views, likes, comments, shares, bookmarks,
-          user_id, campaign_id, boost_id, created_at,
-          profiles:user_id (username, avatar_url)
+          id, views, likes, shares, bookmarks,
+          user_id, campaign_id, created_at, username
         `)
         .eq('brand_id', brandId)
         .gte('created_at', startDate.toISOString())
@@ -153,14 +152,13 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       const allTransactions = transactionResults.flatMap(r => r.data || []);
 
       // Calculate stats
-      const submissions = videoSubmissions || [];
-      const totalViews = submissions.reduce((sum, v) => sum + (v.views || 0), 0);
+      const videos = cachedVideos || [];
+      const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
       const totalPayouts = allTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
       const effectiveCPM = totalViews > 0 ? (totalPayouts / totalViews) * 1000 : 0;
-      const approvedSubmissions = submissions.filter(s => s.status === 'approved').length;
 
       // Count unique creators
-      const uniqueCreators = new Set(submissions.map(s => s.user_id));
+      const uniqueCreators = new Set(videos.map(v => v.user_id).filter(Boolean));
       const activeCreators = uniqueCreators.size;
       const avgViewsPerCreator = activeCreators > 0 ? totalViews / activeCreators : 0;
 
@@ -168,8 +166,8 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
         totalViews,
         totalPayouts,
         effectiveCPM,
-        totalSubmissions: submissions.length,
-        approvedSubmissions,
+        totalSubmissions: videos.length,
+        approvedSubmissions: videos.length,
         activeCreators,
         avgViewsPerCreator
       });
@@ -177,11 +175,12 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       // Calculate Creator ROI
       const creatorMap = new Map<string, CreatorROI>();
 
-      submissions.forEach(sub => {
-        const existing = creatorMap.get(sub.user_id) || {
-          userId: sub.user_id,
-          username: (sub.profiles as any)?.username || 'Unknown',
-          avatarUrl: (sub.profiles as any)?.avatar_url || null,
+      videos.forEach(video => {
+        if (!video.user_id) return;
+        const existing = creatorMap.get(video.user_id) || {
+          oduserId: video.user_id,
+          username: video.username || 'Unknown',
+          avatarUrl: null,
           totalViews: 0,
           totalPaid: 0,
           costPerView: 0,
@@ -189,9 +188,9 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           avgViewsPerVideo: 0
         };
 
-        existing.totalViews += sub.views || 0;
+        existing.totalViews += video.views || 0;
         existing.videoCount += 1;
-        creatorMap.set(sub.user_id, existing);
+        creatorMap.set(video.user_id, existing);
       });
 
       allTransactions.forEach(tx => {
@@ -219,11 +218,11 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       // Build metrics data for chart (aggregate by date)
       const metricsByDate = new Map<string, MetricsData>();
 
-      submissions.forEach(sub => {
-        const dateKey = format(new Date(sub.created_at), 'yyyy-MM-dd');
+      videos.forEach(video => {
+        const dateKey = format(new Date(video.created_at), 'yyyy-MM-dd');
         const existing = metricsByDate.get(dateKey) || {
-          date: format(new Date(sub.created_at), 'MMM d'),
-          datetime: format(new Date(sub.created_at), 'MMM d, yyyy'),
+          date: format(new Date(video.created_at), 'MMM d'),
+          datetime: format(new Date(video.created_at), 'MMM d, yyyy'),
           views: 0,
           likes: 0,
           shares: 0,
@@ -236,10 +235,10 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
           dailyVideos: 0
         };
 
-        existing.views += sub.views || 0;
-        existing.likes += sub.likes || 0;
-        existing.shares += sub.shares || 0;
-        existing.bookmarks += sub.bookmarks || 0;
+        existing.views += video.views || 0;
+        existing.likes += video.likes || 0;
+        existing.shares += video.shares || 0;
+        existing.bookmarks += video.bookmarks || 0;
         existing.videos += 1;
         existing.dailyViews = existing.views;
         existing.dailyLikes = existing.likes;
@@ -413,7 +412,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
               </thead>
               <tbody>
                 {creatorROI.slice(0, 10).map((creator, index) => (
-                  <tr key={creator.userId} className="border-b border-border/50 hover:bg-muted/30">
+                  <tr key={creator.oduserId} className="border-b border-border/50 hover:bg-muted/30">
                     <td className="py-3 px-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground w-4">{index + 1}</span>
