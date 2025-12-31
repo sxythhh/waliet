@@ -68,7 +68,7 @@ TERMS AND CONDITIONS
 Creator agrees to produce and deliver {{videos_per_month}} videos per month for the duration of this agreement.
 
 2. COMPENSATION
-Brand agrees to pay Creator ${{monthly_rate}} per month for the content deliverables specified above.
+Brand agrees to pay Creator \${{monthly_rate}} per month for the content deliverables specified above.
 
 3. TERM
 This Agreement shall commence on {{start_date}} and continue for {{duration_months}} months, unless terminated earlier in accordance with the terms herein.
