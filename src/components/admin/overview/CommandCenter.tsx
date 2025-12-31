@@ -1,12 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { MetricsGrid } from "./MetricsGrid";
 import { LiveActivityFeed } from "./LiveActivityFeed";
 import { QuickActions } from "./QuickActions";
 import { SendAnnouncementDialog } from "../SendAnnouncementDialog";
 import { AdminSearchCommand } from "../AdminSearchCommand";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 
 export function CommandCenter() {
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
     <div className="w-full h-full p-4 md:p-6 pt-16 md:pt-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -21,7 +26,16 @@ export function CommandCenter() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <AdminSearchCommand />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="gap-2 bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+            <AdminSearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
             <SendAnnouncementDialog />
           </div>
         </div>

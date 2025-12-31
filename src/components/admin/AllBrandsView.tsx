@@ -165,12 +165,18 @@ export function AllBrandsView() {
                   <Calendar className="w-3 h-3" />
                   {format(new Date(brand.created_at), 'MMM dd, yyyy')}
                 </span>
-                {brand.home_url && (
-                  <span className="flex items-center gap-1 truncate max-w-[150px]">
-                    <Globe className="w-3 h-3 shrink-0" />
-                    {new URL(brand.home_url).hostname.replace('www.', '')}
-                  </span>
-                )}
+                {brand.home_url && (() => {
+                  try {
+                    return (
+                      <span className="flex items-center gap-1 truncate max-w-[150px]">
+                        <Globe className="w-3 h-3 shrink-0" />
+                        {new URL(brand.home_url).hostname.replace('www.', '')}
+                      </span>
+                    );
+                  } catch {
+                    return null;
+                  }
+                })()}
               </div>
             </div>
 

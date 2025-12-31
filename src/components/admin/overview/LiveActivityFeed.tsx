@@ -188,7 +188,7 @@ export function LiveActivityFeed() {
     // Load recent signups
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name, username, created_at")
+      .select("id, full_name, username, created_at")
       .gte("created_at", oneDayAgo.toISOString())
       .order("created_at", { ascending: false })
       .limit(5);
@@ -211,11 +211,11 @@ export function LiveActivityFeed() {
 
     const initialEvents: ActivityEvent[] = [];
 
-    profiles?.forEach((p) => {
+    profiles?.forEach((p: any) => {
       initialEvents.push({
         id: `signup-${p.id}`,
         type: "signup",
-        title: p.display_name || p.username || "New user",
+        title: p.full_name || p.username || "New user",
         detail: `@${p.username || "user"}`,
         timestamp: new Date(p.created_at),
         userId: p.id,

@@ -91,11 +91,14 @@ export function AuditLog() {
   const fetchAuditLog = async () => {
     setLoading(true);
     try {
+      // Note: security_audit_log table may not exist yet - using mock data for now
+      // When the table is created, uncomment the query below
+      /*
       let query = supabase
         .from("security_audit_log")
         .select(`
           *,
-          actor_profile:profiles!security_audit_log_actor_id_fkey(username, display_name)
+          actor_profile:profiles!security_audit_log_actor_id_fkey(username, full_name)
         `)
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -108,10 +111,12 @@ export function AuditLog() {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
-
       setEntries(data || []);
+      */
+      
+      // For now, return empty array until table is created
+      setEntries([]);
     } catch (error) {
       console.error("Error fetching audit log:", error);
     } finally {
