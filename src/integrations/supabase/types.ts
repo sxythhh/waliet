@@ -48,6 +48,8 @@ export type Database = {
           rejection_reason: string | null
           rule_id: string | null
           submission_id: string | null
+          submission_type: string | null
+          video_url: string | null
         }
         Insert: {
           created_at?: string
@@ -55,6 +57,8 @@ export type Database = {
           rejection_reason?: string | null
           rule_id?: string | null
           submission_id?: string | null
+          submission_type?: string | null
+          video_url?: string | null
         }
         Update: {
           created_at?: string
@@ -62,6 +66,8 @@ export type Database = {
           rejection_reason?: string | null
           rule_id?: string | null
           submission_id?: string | null
+          submission_type?: string | null
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -76,29 +82,38 @@ export type Database = {
       auto_rejection_rules: {
         Row: {
           brand_id: string
+          campaign_id: string | null
           created_at: string
           id: string
           is_active: boolean | null
+          rejection_message: string | null
           rule_config: Json | null
           rule_type: string
+          rule_value: string | null
           updated_at: string
         }
         Insert: {
           brand_id: string
+          campaign_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
+          rejection_message?: string | null
           rule_config?: Json | null
           rule_type: string
+          rule_value?: string | null
           updated_at?: string
         }
         Update: {
           brand_id?: string
+          campaign_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean | null
+          rejection_message?: string | null
           rule_config?: Json | null
           rule_type?: string
+          rule_value?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -107,6 +122,65 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_rejection_rules_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_rejection_rules_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banned_devices: {
+        Row: {
+          ban_reason: string | null
+          created_at: string
+          creator_id: string | null
+          expires_at: string | null
+          fingerprint_id: string
+          id: string
+          ip_address: unknown
+        }
+        Insert: {
+          ban_reason?: string | null
+          created_at?: string
+          creator_id?: string | null
+          expires_at?: string | null
+          fingerprint_id: string
+          id?: string
+          ip_address?: unknown
+        }
+        Update: {
+          ban_reason?: string | null
+          created_at?: string
+          creator_id?: string | null
+          expires_at?: string | null
+          fingerprint_id?: string
+          id?: string
+          ip_address?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banned_devices_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banned_devices_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -770,8 +844,10 @@ export type Database = {
           created_by: string | null
           id: string
           scheduled_at: string | null
+          scheduled_for: string | null
           sent_at: string | null
           status: string | null
+          target_type: string | null
           title: string
           updated_at: string
         }
@@ -783,8 +859,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: string | null
+          target_type?: string | null
           title: string
           updated_at?: string
         }
@@ -796,8 +874,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: string | null
+          target_type?: string | null
           title?: string
           updated_at?: string
         }
@@ -1164,6 +1244,7 @@ export type Database = {
           description: string | null
           discord_webhook_url: string | null
           dub_api_key: string | null
+          fraud_sensitivity: string | null
           home_url: string | null
           id: string
           instagram_handle: string | null
@@ -1171,7 +1252,14 @@ export type Database = {
           is_verified: boolean
           linkedin_handle: string | null
           logo_url: string | null
+          low_balance_auto_topup_amount: number | null
+          low_balance_auto_topup_enabled: boolean | null
+          low_balance_last_notified_at: string | null
+          low_balance_notify_threshold: number | null
+          low_balance_pause_campaign_threshold: number | null
+          low_balance_pause_payouts_threshold: number | null
           name: string
+          notify_creator_fraud: boolean | null
           notify_new_application: boolean | null
           notify_new_message: boolean | null
           notify_new_sale: boolean | null
@@ -1217,6 +1305,7 @@ export type Database = {
           description?: string | null
           discord_webhook_url?: string | null
           dub_api_key?: string | null
+          fraud_sensitivity?: string | null
           home_url?: string | null
           id?: string
           instagram_handle?: string | null
@@ -1224,7 +1313,14 @@ export type Database = {
           is_verified?: boolean
           linkedin_handle?: string | null
           logo_url?: string | null
+          low_balance_auto_topup_amount?: number | null
+          low_balance_auto_topup_enabled?: boolean | null
+          low_balance_last_notified_at?: string | null
+          low_balance_notify_threshold?: number | null
+          low_balance_pause_campaign_threshold?: number | null
+          low_balance_pause_payouts_threshold?: number | null
           name: string
+          notify_creator_fraud?: boolean | null
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
@@ -1270,6 +1366,7 @@ export type Database = {
           description?: string | null
           discord_webhook_url?: string | null
           dub_api_key?: string | null
+          fraud_sensitivity?: string | null
           home_url?: string | null
           id?: string
           instagram_handle?: string | null
@@ -1277,7 +1374,14 @@ export type Database = {
           is_verified?: boolean
           linkedin_handle?: string | null
           logo_url?: string | null
+          low_balance_auto_topup_amount?: number | null
+          low_balance_auto_topup_enabled?: boolean | null
+          low_balance_last_notified_at?: string | null
+          low_balance_notify_threshold?: number | null
+          low_balance_pause_campaign_threshold?: number | null
+          low_balance_pause_payouts_threshold?: number | null
           name?: string
+          notify_creator_fraud?: boolean | null
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
@@ -1782,6 +1886,45 @@ export type Database = {
           },
         ]
       }
+      campaign_participants: {
+        Row: {
+          campaign_id: string
+          id: string
+          joined_at: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          id?: string
+          joined_at?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_participants_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_participants_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_submissions: {
         Row: {
           application_answers: Json | null
@@ -2227,6 +2370,169 @@ export type Database = {
           },
         ]
       }
+      content_slot_history: {
+        Row: {
+          change_type: string
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_date: string | null
+          new_status: string | null
+          notes: string | null
+          old_date: string | null
+          old_status: string | null
+          slot_id: string
+        }
+        Insert: {
+          change_type: string
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_date?: string | null
+          new_status?: string | null
+          notes?: string | null
+          old_date?: string | null
+          old_status?: string | null
+          slot_id: string
+        }
+        Update: {
+          change_type?: string
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_date?: string | null
+          new_status?: string | null
+          notes?: string | null
+          old_date?: string | null
+          old_status?: string | null
+          slot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_slot_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slot_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slot_history_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "content_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_slots: {
+        Row: {
+          boost_id: string | null
+          brand_id: string
+          completed_at: string | null
+          confirmed_at: string | null
+          contract_id: string | null
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          id: string
+          notes: string | null
+          platform: string | null
+          proposed_by: string | null
+          reminder_sent: boolean | null
+          scheduled_date: string
+          scheduled_time: string | null
+          status: string | null
+          submission_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          boost_id?: string | null
+          brand_id: string
+          completed_at?: string | null
+          confirmed_at?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string | null
+          proposed_by?: string | null
+          reminder_sent?: boolean | null
+          scheduled_date: string
+          scheduled_time?: string | null
+          status?: string | null
+          submission_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          boost_id?: string | null
+          brand_id?: string
+          completed_at?: string | null
+          confirmed_at?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string | null
+          proposed_by?: string | null
+          reminder_sent?: boolean | null
+          scheduled_date?: string
+          scheduled_time?: string | null
+          status?: string | null
+          submission_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_slots_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slots_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slots_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "creator_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slots_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_slots_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_styles: {
         Row: {
           brand_id: string
@@ -2265,6 +2571,164 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      contract_template_sections: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_required: boolean | null
+          sort_order: number | null
+          template_id: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          sort_order?: number | null
+          template_id: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          sort_order?: number | null
+          template_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_sections_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_template_variables: {
+        Row: {
+          created_at: string | null
+          default_value: string | null
+          id: string
+          is_required: boolean | null
+          options: string[] | null
+          sort_order: number | null
+          template_id: string
+          variable_key: string
+          variable_label: string
+          variable_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_value?: string | null
+          id?: string
+          is_required?: boolean | null
+          options?: string[] | null
+          sort_order?: number | null
+          template_id: string
+          variable_key: string
+          variable_label: string
+          variable_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_value?: string | null
+          id?: string
+          is_required?: boolean | null
+          options?: string[] | null
+          sort_order?: number | null
+          template_id?: string
+          variable_key?: string
+          variable_label?: string
+          variable_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_template_variables_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_templates: {
+        Row: {
+          brand_id: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          default_duration_months: number | null
+          default_monthly_rate: number | null
+          default_videos_per_month: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          brand_id: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          default_duration_months?: number | null
+          default_monthly_rate?: number | null
+          default_videos_per_month?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          brand_id?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          default_duration_months?: number | null
+          default_monthly_rate?: number | null
+          default_videos_per_month?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_templates_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
@@ -2405,6 +2869,7 @@ export type Database = {
           signed_at: string | null
           start_date: string
           status: string
+          template_id: string | null
           title: string
           updated_at: string
           videos_per_month: number
@@ -2424,6 +2889,7 @@ export type Database = {
           signed_at?: string | null
           start_date: string
           status?: string
+          template_id?: string | null
           title: string
           updated_at?: string
           videos_per_month?: number
@@ -2443,6 +2909,7 @@ export type Database = {
           signed_at?: string | null
           start_date?: string
           status?: string
+          template_id?: string | null
           title?: string
           updated_at?: string
           videos_per_month?: number
@@ -2474,6 +2941,13 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_contracts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -2550,6 +3024,211 @@ export type Database = {
             columns: ["relationship_id"]
             isOneToOne: false
             referencedRelation: "brand_creator_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_reliability_scores: {
+        Row: {
+          active_strikes: number | null
+          brand_id: string
+          creator_id: string
+          id: string
+          last_calculated_at: string | null
+          last_strike_at: string | null
+          on_time_rate: number | null
+          reliability_score: number | null
+          total_delivered: number | null
+          total_scheduled: number | null
+          total_strikes: number | null
+        }
+        Insert: {
+          active_strikes?: number | null
+          brand_id: string
+          creator_id: string
+          id?: string
+          last_calculated_at?: string | null
+          last_strike_at?: string | null
+          on_time_rate?: number | null
+          reliability_score?: number | null
+          total_delivered?: number | null
+          total_scheduled?: number | null
+          total_strikes?: number | null
+        }
+        Update: {
+          active_strikes?: number | null
+          brand_id?: string
+          creator_id?: string
+          id?: string
+          last_calculated_at?: string | null
+          last_strike_at?: string | null
+          on_time_rate?: number | null
+          reliability_score?: number | null
+          total_delivered?: number | null
+          total_scheduled?: number | null
+          total_strikes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_reliability_scores_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_reliability_scores_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_reliability_scores_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_strikes: {
+        Row: {
+          appeal_reason: string | null
+          appeal_reviewed_at: string | null
+          appeal_reviewed_by: string | null
+          appeal_status: string | null
+          boost_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          contract_id: string | null
+          created_at: string | null
+          created_by: string | null
+          creator_id: string
+          expires_at: string | null
+          id: string
+          is_appealed: boolean | null
+          reason: string | null
+          scheduled_date: string | null
+          severity: number | null
+          strike_type: string
+        }
+        Insert: {
+          appeal_reason?: string | null
+          appeal_reviewed_at?: string | null
+          appeal_reviewed_by?: string | null
+          appeal_status?: string | null
+          boost_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          is_appealed?: boolean | null
+          reason?: string | null
+          scheduled_date?: string | null
+          severity?: number | null
+          strike_type: string
+        }
+        Update: {
+          appeal_reason?: string | null
+          appeal_reviewed_at?: string | null
+          appeal_reviewed_by?: string | null
+          appeal_status?: string | null
+          boost_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          contract_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          is_appealed?: boolean | null
+          reason?: string | null
+          scheduled_date?: string | null
+          severity?: number | null
+          strike_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_strikes_appeal_reviewed_by_fkey"
+            columns: ["appeal_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_appeal_reviewed_by_fkey"
+            columns: ["appeal_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "creator_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_strikes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2644,6 +3323,141 @@ export type Database = {
           },
         ]
       }
+      creator_tier_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          brand_id: string
+          id: string
+          previous_tier_id: string | null
+          tier_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          brand_id: string
+          id?: string
+          previous_tier_id?: string | null
+          tier_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          brand_id?: string
+          id?: string
+          previous_tier_id?: string | null
+          tier_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tier_assignments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_tier_assignments_previous_tier_id_fkey"
+            columns: ["previous_tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_tier_assignments_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_tiers: {
+        Row: {
+          brand_id: string
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_default: boolean
+          name: string
+          rpm_multiplier: number
+          tier_order: number
+        }
+        Insert: {
+          brand_id: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          rpm_multiplier?: number
+          tier_order: number
+        }
+        Update: {
+          brand_id?: string
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          rpm_multiplier?: number
+          tier_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tiers_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demographic_scores: {
+        Row: {
+          calculated_at: string | null
+          id: string
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          calculated_at?: string | null
+          id?: string
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          calculated_at?: string | null
+          id?: string
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demographic_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demographic_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demographic_submissions: {
         Row: {
           admin_notes: string | null
@@ -2697,6 +3511,389 @@ export type Database = {
           },
         ]
       }
+      discord_bot_config: {
+        Row: {
+          bot_token: string | null
+          brand_id: string
+          command_prefix: string | null
+          created_at: string
+          guild_id: string
+          id: string
+          is_active: boolean
+          log_channel_id: string | null
+          stats_channel_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bot_token?: string | null
+          brand_id: string
+          command_prefix?: string | null
+          created_at?: string
+          guild_id: string
+          id?: string
+          is_active?: boolean
+          log_channel_id?: string | null
+          stats_channel_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bot_token?: string | null
+          brand_id?: string
+          command_prefix?: string | null
+          created_at?: string
+          guild_id?: string
+          id?: string
+          is_active?: boolean
+          log_channel_id?: string | null
+          stats_channel_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_bot_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_command_log: {
+        Row: {
+          args: string | null
+          brand_id: string
+          channel_id: string
+          command: string
+          created_at: string
+          discord_user_id: string
+          error_message: string | null
+          execution_time_ms: number | null
+          guild_id: string
+          id: string
+          response_status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          args?: string | null
+          brand_id: string
+          channel_id: string
+          command: string
+          created_at?: string
+          discord_user_id: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          guild_id: string
+          id?: string
+          response_status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          args?: string | null
+          brand_id?: string
+          channel_id?: string
+          command?: string
+          created_at?: string
+          discord_user_id?: string
+          error_message?: string | null
+          execution_time_ms?: number | null
+          guild_id?: string
+          id?: string
+          response_status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_command_log_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_emoji_sentiments: {
+        Row: {
+          created_at: string
+          emoji: string
+          emoji_name: string | null
+          id: string
+          is_default: boolean
+          sentiment: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          emoji_name?: string | null
+          id?: string
+          is_default?: boolean
+          sentiment: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          emoji_name?: string | null
+          id?: string
+          is_default?: boolean
+          sentiment?: string
+        }
+        Relationships: []
+      }
+      discord_membership_log: {
+        Row: {
+          brand_id: string
+          created_at: string
+          discord_discriminator: string | null
+          discord_user_id: string
+          discord_username: string | null
+          event_timestamp: string
+          event_type: string
+          guild_id: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          role_id: string | null
+          role_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          discord_discriminator?: string | null
+          discord_user_id: string
+          discord_username?: string | null
+          event_timestamp?: string
+          event_type: string
+          guild_id: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          role_id?: string | null
+          role_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          discord_discriminator?: string | null
+          discord_user_id?: string
+          discord_username?: string | null
+          event_timestamp?: string
+          event_type?: string
+          guild_id?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          role_id?: string | null
+          role_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_membership_log_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_reaction_tracking: {
+        Row: {
+          brand_id: string
+          broadcast_id: string | null
+          channel_id: string
+          first_tracked_at: string
+          guild_id: string
+          id: string
+          last_updated_at: string
+          message_id: string
+          message_preview: string | null
+          negative_count: number
+          neutral_count: number
+          positive_count: number
+          reactions: Json
+          sentiment_score: number | null
+          total_reactions: number
+        }
+        Insert: {
+          brand_id: string
+          broadcast_id?: string | null
+          channel_id: string
+          first_tracked_at?: string
+          guild_id: string
+          id?: string
+          last_updated_at?: string
+          message_id: string
+          message_preview?: string | null
+          negative_count?: number
+          neutral_count?: number
+          positive_count?: number
+          reactions?: Json
+          sentiment_score?: number | null
+          total_reactions?: number
+        }
+        Update: {
+          brand_id?: string
+          broadcast_id?: string | null
+          channel_id?: string
+          first_tracked_at?: string
+          guild_id?: string
+          id?: string
+          last_updated_at?: string
+          message_id?: string
+          message_preview?: string | null
+          negative_count?: number
+          neutral_count?: number
+          positive_count?: number
+          reactions?: Json
+          sentiment_score?: number | null
+          total_reactions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_reaction_tracking_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_reaction_tracking_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "brand_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_reactions: {
+        Row: {
+          added_at: string
+          discord_user_id: string
+          emoji: string
+          emoji_name: string | null
+          id: string
+          is_custom: boolean
+          removed_at: string | null
+          sentiment: string | null
+          tracking_id: string
+        }
+        Insert: {
+          added_at?: string
+          discord_user_id: string
+          emoji: string
+          emoji_name?: string | null
+          id?: string
+          is_custom?: boolean
+          removed_at?: string | null
+          sentiment?: string | null
+          tracking_id: string
+        }
+        Update: {
+          added_at?: string
+          discord_user_id?: string
+          emoji?: string
+          emoji_name?: string | null
+          id?: string
+          is_custom?: boolean
+          removed_at?: string | null
+          sentiment?: string | null
+          tracking_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_reactions_tracking_id_fkey"
+            columns: ["tracking_id"]
+            isOneToOne: false
+            referencedRelation: "discord_reaction_tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_role_mappings: {
+        Row: {
+          active_days: number | null
+          boost_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          created_at: string
+          guild_id: string
+          id: string
+          is_active: boolean
+          mapping_type: string
+          min_earnings: number | null
+          role_id: string
+          role_name: string
+          tier_id: string | null
+        }
+        Insert: {
+          active_days?: number | null
+          boost_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          created_at?: string
+          guild_id: string
+          id?: string
+          is_active?: boolean
+          mapping_type: string
+          min_earnings?: number | null
+          role_id: string
+          role_name: string
+          tier_id?: string | null
+        }
+        Update: {
+          active_days?: number | null
+          boost_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          guild_id?: string
+          id?: string
+          is_active?: boolean
+          mapping_type?: string
+          min_earnings?: number | null
+          role_id?: string
+          role_name?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_role_mappings_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_role_mappings_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_role_mappings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_role_mappings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_role_mappings_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discord_tokens: {
         Row: {
           access_token_encrypted: string
@@ -2729,6 +3926,83 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      discord_user_links: {
+        Row: {
+          discord_avatar: string | null
+          discord_discriminator: string | null
+          discord_user_id: string
+          discord_username: string
+          id: string
+          linked_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          discord_avatar?: string | null
+          discord_discriminator?: string | null
+          discord_user_id: string
+          discord_username: string
+          id?: string
+          linked_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          discord_avatar?: string | null
+          discord_discriminator?: string | null
+          discord_user_id?: string
+          discord_username?: string
+          id?: string
+          linked_at?: string
+          user_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      discord_user_roles: {
+        Row: {
+          brand_id: string
+          discord_user_id: string
+          error_message: string | null
+          guild_id: string
+          id: string
+          role_id: string
+          sync_status: string
+          synced_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          discord_user_id: string
+          error_message?: string | null
+          guild_id: string
+          id?: string
+          role_id: string
+          sync_status?: string
+          synced_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string
+          discord_user_id?: string
+          error_message?: string | null
+          guild_id?: string
+          id?: string
+          role_id?: string
+          sync_status?: string
+          synced_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_user_roles_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       feedback_submissions: {
         Row: {
@@ -2979,6 +4253,47 @@ export type Database = {
           },
         ]
       }
+      low_balance_alerts: {
+        Row: {
+          alert_type: string
+          balance_at_alert: number
+          brand_id: string
+          created_at: string
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          threshold_value: number
+        }
+        Insert: {
+          alert_type: string
+          balance_at_alert: number
+          brand_id: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          threshold_value: number
+        }
+        Update: {
+          alert_type?: string
+          balance_at_alert?: number
+          brand_id?: string
+          created_at?: string
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          threshold_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "low_balance_alerts_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -3013,6 +4328,133 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_achievements: {
+        Row: {
+          achieved_at: string
+          achieved_value: number
+          boost_id: string | null
+          campaign_id: string | null
+          id: string
+          milestone_config_id: string
+          notification_sent: boolean
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          achieved_value: number
+          boost_id?: string | null
+          campaign_id?: string | null
+          id?: string
+          milestone_config_id: string
+          notification_sent?: boolean
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          achieved_value?: number
+          boost_id?: string | null
+          campaign_id?: string | null
+          id?: string
+          milestone_config_id?: string
+          notification_sent?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_achievements_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_achievements_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_achievements_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_achievements_milestone_config_id_fkey"
+            columns: ["milestone_config_id"]
+            isOneToOne: false
+            referencedRelation: "milestone_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestone_configs: {
+        Row: {
+          boost_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          message_template: string
+          milestone_type: string
+          threshold: number
+        }
+        Insert: {
+          boost_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_template: string
+          milestone_type: string
+          threshold: number
+        }
+        Update: {
+          boost_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message_template?: string
+          milestone_type?: string
+          threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestone_configs_boost_id_fkey"
+            columns: ["boost_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_configs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_configs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "milestone_configs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "public_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -3297,6 +4739,8 @@ export type Database = {
           account_type: string
           audience_quality_score: number | null
           avatar_url: string | null
+          ban_reason: string | null
+          banned_at: string | null
           banner_url: string | null
           billing_address: string | null
           bio: string | null
@@ -3310,6 +4754,7 @@ export type Database = {
           current_rank: string | null
           current_xp: number | null
           demographics_score: number | null
+          device_fingerprint: string | null
           discord_access_token: string | null
           discord_avatar: string | null
           discord_connected_at: string | null
@@ -3320,10 +4765,13 @@ export type Database = {
           discord_token_expires_at: string | null
           discord_username: string | null
           email: string | null
+          fraud_flag_count: number | null
+          fraud_flag_permanent: boolean | null
           full_name: string | null
           hide_from_leaderboard: boolean
           id: string
           is_private: boolean
+          last_fraud_at: string | null
           legal_business_name: string | null
           onboarding_completed: boolean
           phone_number: string | null
@@ -3360,6 +4808,8 @@ export type Database = {
           account_type?: string
           audience_quality_score?: number | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
           banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
@@ -3373,6 +4823,7 @@ export type Database = {
           current_rank?: string | null
           current_xp?: number | null
           demographics_score?: number | null
+          device_fingerprint?: string | null
           discord_access_token?: string | null
           discord_avatar?: string | null
           discord_connected_at?: string | null
@@ -3383,10 +4834,13 @@ export type Database = {
           discord_token_expires_at?: string | null
           discord_username?: string | null
           email?: string | null
+          fraud_flag_count?: number | null
+          fraud_flag_permanent?: boolean | null
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id: string
           is_private?: boolean
+          last_fraud_at?: string | null
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
@@ -3423,6 +4877,8 @@ export type Database = {
           account_type?: string
           audience_quality_score?: number | null
           avatar_url?: string | null
+          ban_reason?: string | null
+          banned_at?: string | null
           banner_url?: string | null
           billing_address?: string | null
           bio?: string | null
@@ -3436,6 +4892,7 @@ export type Database = {
           current_rank?: string | null
           current_xp?: number | null
           demographics_score?: number | null
+          device_fingerprint?: string | null
           discord_access_token?: string | null
           discord_avatar?: string | null
           discord_connected_at?: string | null
@@ -3446,10 +4903,13 @@ export type Database = {
           discord_token_expires_at?: string | null
           discord_username?: string | null
           email?: string | null
+          fraud_flag_count?: number | null
+          fraud_flag_permanent?: boolean | null
           full_name?: string | null
           hide_from_leaderboard?: boolean
           id?: string
           is_private?: boolean
+          last_fraud_at?: string | null
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
@@ -3880,6 +5340,47 @@ export type Database = {
           },
         ]
       }
+      strike_thresholds: {
+        Row: {
+          action_type: string
+          brand_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          notification_template: string | null
+          strike_count: number
+          threshold_name: string
+        }
+        Insert: {
+          action_type: string
+          brand_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_template?: string | null
+          strike_count: number
+          threshold_name: string
+        }
+        Update: {
+          action_type?: string
+          brand_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notification_template?: string | null
+          strike_count?: number
+          threshold_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strike_thresholds_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       submission_payout_items: {
         Row: {
           amount: number
@@ -3971,37 +5472,70 @@ export type Database = {
       }
       submission_payout_requests: {
         Row: {
+          appeal_evidence_id: string | null
+          appeal_resolved_at: string | null
+          appeal_resolved_by: string | null
+          appeal_status: string | null
+          appeal_submitted_at: string | null
           auto_approval_status: string | null
           clearing_ends_at: string
           completed_at: string | null
           created_at: string
+          evidence_deadline: string | null
+          evidence_requested_at: string | null
+          fraud_check_result: Json | null
           id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           total_amount: number
           updated_at: string
           user_id: string
+          views_snapshot: Json | null
         }
         Insert: {
+          appeal_evidence_id?: string | null
+          appeal_resolved_at?: string | null
+          appeal_resolved_by?: string | null
+          appeal_status?: string | null
+          appeal_submitted_at?: string | null
           auto_approval_status?: string | null
           clearing_ends_at: string
           completed_at?: string | null
           created_at?: string
+          evidence_deadline?: string | null
+          evidence_requested_at?: string | null
+          fraud_check_result?: Json | null
           id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
           user_id: string
+          views_snapshot?: Json | null
         }
         Update: {
+          appeal_evidence_id?: string | null
+          appeal_resolved_at?: string | null
+          appeal_resolved_by?: string | null
+          appeal_status?: string | null
+          appeal_submitted_at?: string | null
           auto_approval_status?: string | null
           clearing_ends_at?: string
           completed_at?: string | null
           created_at?: string
+          evidence_deadline?: string | null
+          evidence_requested_at?: string | null
+          fraud_check_result?: Json | null
           id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           total_amount?: number
           updated_at?: string
           user_id?: string
+          views_snapshot?: Json | null
         }
         Relationships: []
       }
@@ -4127,6 +5661,129 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      tier_change_log: {
+        Row: {
+          brand_id: string
+          change_type: string
+          created_at: string
+          from_tier_id: string | null
+          id: string
+          metrics_snapshot: Json | null
+          rule_id: string | null
+          to_tier_id: string
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          change_type: string
+          created_at?: string
+          from_tier_id?: string | null
+          id?: string
+          metrics_snapshot?: Json | null
+          rule_id?: string | null
+          to_tier_id: string
+          user_id: string
+        }
+        Update: {
+          brand_id?: string
+          change_type?: string
+          created_at?: string
+          from_tier_id?: string | null
+          id?: string
+          metrics_snapshot?: Json | null
+          rule_id?: string | null
+          to_tier_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tier_change_log_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_change_log_from_tier_id_fkey"
+            columns: ["from_tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_change_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "tier_promotion_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_change_log_to_tier_id_fkey"
+            columns: ["to_tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tier_promotion_rules: {
+        Row: {
+          brand_id: string
+          created_at: string
+          evaluation_period_days: number | null
+          from_tier_id: string | null
+          id: string
+          is_active: boolean
+          rule_type: string
+          threshold_value: number
+          to_tier_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          evaluation_period_days?: number | null
+          from_tier_id?: string | null
+          id?: string
+          is_active?: boolean
+          rule_type: string
+          threshold_value: number
+          to_tier_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          evaluation_period_days?: number | null
+          from_tier_id?: string | null
+          id?: string
+          is_active?: boolean
+          rule_type?: string
+          threshold_value?: number
+          to_tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tier_promotion_rules_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_promotion_rules_from_tier_id_fkey"
+            columns: ["from_tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tier_promotion_rules_to_tier_id_fkey"
+            columns: ["to_tier_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -4750,6 +6407,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_template_usage: {
+        Args: { template_id_param: string }
+        Returns: undefined
       }
       is_brand_admin: {
         Args: { _brand_id: string; _user_id: string }
