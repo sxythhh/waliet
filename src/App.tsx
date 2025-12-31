@@ -45,6 +45,8 @@ const AdminBrands = lazy(() => import("./pages/admin/Brands"));
 const AdminWallets = lazy(() => import("./pages/admin/Wallets"));
 const AdminResources = lazy(() => import("./pages/admin/Resources"));
 const AdminFeedback = lazy(() => import("./pages/admin/Feedback"));
+const AdminSecurity = lazy(() => import("./pages/admin/Security"));
+const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -242,6 +244,11 @@ const App = () => (
                       <AdminLayout><AdminUsers /></AdminLayout>
                     </Suspense>
                   } />
+                  <Route path="/admin/security" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminSecurity /></AdminLayout>
+                    </Suspense>
+                  } />
                   <Route path="/admin/feedback" element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminLayout><AdminFeedback /></AdminLayout>
@@ -265,6 +272,11 @@ const App = () => (
                   <Route path="/admin/transactions" element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminLayout><AdminTransactions /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/reports" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminReports /></AdminLayout>
                     </Suspense>
                   } />
                   <Route path="/manage" element={

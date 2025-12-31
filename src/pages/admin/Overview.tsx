@@ -1,22 +1,35 @@
+import { CommandCenter } from "@/components/admin/overview/CommandCenter";
 import { AnalyticsTab } from "@/components/admin/AnalyticsTab";
 import { ApiActivityTab } from "@/components/admin/ApiActivityTab";
-import { SendAnnouncementDialog } from "@/components/admin/SendAnnouncementDialog";
 import { ScheduledFunctionsTab } from "@/components/admin/ScheduledFunctionsTab";
 import { PlatformIncomeChart } from "@/components/admin/PlatformIncomeChart";
+import { FraudAnalyticsCard } from "@/components/admin/FraudAnalyticsCard";
 
 export default function AdminOverview() {
   return (
-    <div className="w-full h-full p-4 md:p-6 pt-16 md:pt-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Overview</h1>
-          <SendAnnouncementDialog />
+    <>
+      {/* New Command Center */}
+      <CommandCenter />
+
+      {/* Additional Analytics Sections */}
+      <div className="w-full p-4 md:p-6 pt-0">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Fraud Analytics Overview */}
+          <FraudAnalyticsCard />
+
+          {/* Platform Income Chart */}
+          <PlatformIncomeChart />
+
+          {/* Detailed Analytics */}
+          <AnalyticsTab />
+
+          {/* Scheduled Functions */}
+          <ScheduledFunctionsTab />
+
+          {/* API Activity */}
+          <ApiActivityTab />
         </div>
-        <PlatformIncomeChart />
-        <AnalyticsTab />
-        <ScheduledFunctionsTab />
-        <ApiActivityTab />
       </div>
-    </div>
+    </>
   );
 }
