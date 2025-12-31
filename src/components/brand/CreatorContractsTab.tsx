@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText } from "lucide-react";
+import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText, Settings2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { ContractTemplatesTab } from "./ContractTemplatesTab";
 interface Contract {
   id: string;
   title: string;
@@ -39,6 +40,17 @@ interface Boost {
   monthly_retainer: number;
   videos_per_month: number;
 }
+
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+  default_monthly_rate: number | null;
+  default_videos_per_month: number | null;
+  default_duration_months: number;
+  is_default: boolean;
+}
+
 interface CreatorContractsTabProps {
   brandId: string;
 }
@@ -79,15 +91,18 @@ export function CreatorContractsTab({
 }: CreatorContractsTabProps) {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [boosts, setBoosts] = useState<Boost[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'contracts' | 'templates'>('contracts');
 
   // New contract form state
   const [newContract, setNewContract] = useState({
+    template_id: '',
     boost_id: '',
     creator_email: '',
     monthly_rate: '',
@@ -107,6 +122,15 @@ export function CreatorContractsTab({
         data: boostsData
       } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month').eq('brand_id', brandId).eq('status', 'active');
       setBoosts(boostsData || []);
+
+      // Fetch templates
+      const { data: templatesData } = await supabase
+        .from('contract_templates')
+        .select('id, name, content, default_monthly_rate, default_videos_per_month, default_duration_months, is_default')
+        .eq('brand_id', brandId)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false });
+      setTemplates(templatesData || []);
 
       // Fetch contracts from database
       const {
@@ -161,8 +185,8 @@ export function CreatorContractsTab({
           boost_id: contract.boost_id,
           boost_title: boostTitle,
           status: contract.status as Contract['status'],
-          monthly_rate: Number(contract.monthly_rate),
-          videos_per_month: contract.videos_per_month,
+          monthly_rate: Number(contract.monthly_rate) || 0,
+          videos_per_month: contract.videos_per_month || 1,
           start_date: contract.start_date,
           end_date: contract.end_date,
           created_at: contract.created_at,
@@ -190,11 +214,12 @@ export function CreatorContractsTab({
     draft: contracts.filter(c => c.status === 'draft').length
   };
   const handleCreateContract = async () => {
-    if (!newContract.boost_id || !newContract.creator_email) {
-      toast.error('Please fill in all required fields');
+    if (!newContract.creator_email) {
+      toast.error('Please enter a creator email');
       return;
     }
-    const boost = boosts.find(b => b.id === newContract.boost_id);
+    const boost = newContract.boost_id ? boosts.find(b => b.id === newContract.boost_id) : null;
+    const template = newContract.template_id ? templates.find(t => t.id === newContract.template_id) : null;
     const startDate = new Date(newContract.start_date);
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months));
@@ -203,11 +228,12 @@ export function CreatorContractsTab({
         error
       } = await supabase.from('creator_contracts').insert({
         brand_id: brandId,
-        boost_id: newContract.boost_id,
+        template_id: newContract.template_id || null,
+        boost_id: newContract.boost_id || null,
         creator_email: newContract.creator_email,
-        title: `${boost?.title || 'Content'} - Creator Agreement`,
-        monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || 0,
-        videos_per_month: parseInt(newContract.videos_per_month) || boost?.videos_per_month || 1,
+        title: boost ? `${boost.title} - Creator Agreement` : (template ? template.name : 'Creator Agreement'),
+        monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || template?.default_monthly_rate || 0,
+        videos_per_month: parseInt(newContract.videos_per_month) || boost?.videos_per_month || template?.default_videos_per_month || 1,
         start_date: newContract.start_date,
         end_date: endDate.toISOString().split('T')[0],
         duration_months: parseInt(newContract.duration_months),
@@ -215,9 +241,16 @@ export function CreatorContractsTab({
         status: 'sent'
       });
       if (error) throw error;
+
+      // Increment template usage count
+      if (newContract.template_id) {
+        await supabase.rpc('increment_template_usage', { template_id_param: newContract.template_id });
+      }
+
       toast.success('Contract created and sent for signature');
       setCreateDialogOpen(false);
       setNewContract({
+        template_id: '',
         boost_id: '',
         creator_email: '',
         monthly_rate: '',
@@ -239,6 +272,22 @@ export function CreatorContractsTab({
     setSelectedContract(contract);
     setViewDialogOpen(true);
   };
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setNewContract({
+        ...newContract,
+        template_id: templateId,
+        monthly_rate: template.default_monthly_rate?.toString() || newContract.monthly_rate,
+        videos_per_month: template.default_videos_per_month?.toString() || newContract.videos_per_month,
+        duration_months: template.default_duration_months.toString(),
+      });
+    } else {
+      setNewContract({ ...newContract, template_id: '' });
+    }
+  };
+
   if (loading) {
     return <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
@@ -253,7 +302,57 @@ export function CreatorContractsTab({
         </div>
       </div>;
   }
+
+  // Show templates view
+  if (activeView === 'templates') {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="border-b border-border bg-background shrink-0">
+          <div className="flex px-4 gap-0">
+            <button
+              onClick={() => setActiveView('contracts')}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative text-muted-foreground hover:text-foreground"
+            >
+              <FileText className="h-4 w-4" />
+              Contracts
+            </button>
+            <button
+              onClick={() => setActiveView('templates')}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+            >
+              <Settings2 className="h-4 w-4" />
+              Templates
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-auto">
+          <ContractTemplatesTab brandId={brandId} />
+        </div>
+      </div>
+    );
+  }
+
   return <div className="h-full flex flex-col">
+      {/* View Tabs */}
+      <div className="border-b border-border bg-background shrink-0">
+        <div className="flex px-4 gap-0">
+          <button
+            onClick={() => setActiveView('contracts')}
+            className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+          >
+            <FileText className="h-4 w-4" />
+            Contracts
+          </button>
+          <button
+            onClick={() => setActiveView('templates')}
+            className="flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative text-muted-foreground hover:text-foreground"
+          >
+            <Settings2 className="h-4 w-4" />
+            Templates
+          </button>
+        </div>
+      </div>
+
       {/* Contracts List */}
       <ScrollArea className="flex-1 p-4 md:p-6">
         <div className="flex flex-col gap-3 items-start justify-end md:flex-row mb-4">
@@ -383,15 +482,32 @@ export function CreatorContractsTab({
           </div>
           
           <div className="px-6 pb-6 space-y-5">
+            {templates.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Template</Label>
+                <Select value={newContract.template_id} onValueChange={handleTemplateSelect}>
+                  <SelectTrigger className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]">
+                    <SelectValue placeholder="Select a template (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map(template => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name} {template.is_default && '(Default)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-1.5">
-              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Job Post / Boost</Label>
+              <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Job Post / Boost (Optional)</Label>
               <Select value={newContract.boost_id} onValueChange={v => {
               const boost = boosts.find(b => b.id === v);
               setNewContract({
                 ...newContract,
                 boost_id: v,
-                monthly_rate: boost?.monthly_retainer.toString() || '',
-                videos_per_month: boost?.videos_per_month.toString() || ''
+                monthly_rate: boost?.monthly_retainer?.toString() || newContract.monthly_rate,
+                videos_per_month: boost?.videos_per_month?.toString() || newContract.videos_per_month
               });
             }}>
                 <SelectTrigger className="h-10 bg-muted/40 border-0 font-inter tracking-[-0.5px]">

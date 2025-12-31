@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow, differenceInDays, differenceInHours } from "date-fns";
 import { Clock, CheckCircle, AlertTriangle, Flag, DollarSign, ChevronDown, ChevronUp, User, Search } from "lucide-react";
@@ -125,6 +126,10 @@ export function PayoutRequestsTable({
   const [clawbackAmount, setClawbackAmount] = useState<number>(0);
   const [clawbackUserId, setClawbackUserId] = useState<string | null>(null);
   const [isClawingBack, setIsClawingBack] = useState(false);
+
+  // Batch selection state
+  const [selectedRequests, setSelectedRequests] = useState<Set<string>>(new Set());
+  const [batchApproving, setBatchApproving] = useState(false);
 
   // Admin check
   const { isAdmin } = useAdminCheck();
@@ -770,6 +775,87 @@ export function PayoutRequestsTable({
       setApprovingRequest(null);
     }
   };
+
+  // Batch approval handler
+  const handleBatchApprove = async () => {
+    if (selectedRequests.size === 0) return;
+
+    setBatchApproving(true);
+    let successCount = 0;
+    let totalAmount = 0;
+
+    try {
+      // Process each selected request
+      for (const requestId of selectedRequests) {
+        const request = requests.find(r => r.id === requestId);
+        if (!request || request.status === 'completed' || request.status === 'cancelled') continue;
+
+        const { items: filteredItems, total: filteredTotal } = getFilteredItemsForRequest(request);
+        const hasPendingItems = filteredItems.some(i => i.status !== 'approved');
+
+        if (!hasPendingItems || filteredItems.length === 0) continue;
+
+        try {
+          await handleApprovePayout(request);
+          successCount++;
+          totalAmount += filteredTotal;
+        } catch (e) {
+          console.error(`Failed to approve request ${requestId}:`, e);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`Approved ${successCount} payouts totaling $${totalAmount.toFixed(2)}`);
+      }
+      setSelectedRequests(new Set());
+    } catch (error) {
+      console.error('Error in batch approval:', error);
+      toast.error('Failed to complete batch approval');
+    } finally {
+      setBatchApproving(false);
+    }
+  };
+
+  // Toggle request selection
+  const toggleRequestSelection = (requestId: string) => {
+    const newSelection = new Set(selectedRequests);
+    if (newSelection.has(requestId)) {
+      newSelection.delete(requestId);
+    } else {
+      newSelection.add(requestId);
+    }
+    setSelectedRequests(newSelection);
+  };
+
+  // Select all pending requests
+  const selectAllPending = () => {
+    const pendingIds = filteredRequests
+      .filter(r => {
+        const { items } = getFilteredItemsForRequest(r);
+        return r.status !== 'completed' && r.status !== 'cancelled' && items.some(i => i.status !== 'approved');
+      })
+      .map(r => r.id);
+    setSelectedRequests(new Set(pendingIds));
+  };
+
+  // Clear selection
+  const clearSelection = () => {
+    setSelectedRequests(new Set());
+  };
+
+  // Get selected total amount
+  const getSelectedTotalAmount = () => {
+    let total = 0;
+    for (const requestId of selectedRequests) {
+      const request = requests.find(r => r.id === requestId);
+      if (request) {
+        const { total: filteredTotal } = getFilteredItemsForRequest(request);
+        total += filteredTotal;
+      }
+    }
+    return total;
+  };
+
   // Calculate summary stats for status cards - MUST be before early returns
   const summaryStats = useMemo(() => {
     let inReviewAmount = 0, inReviewCount = 0, approvedAmount = 0, approvedCount = 0, flaggedAmount = 0, flaggedCount = 0;
@@ -884,11 +970,67 @@ export function PayoutRequestsTable({
 
           {filteredRequests.length === 0 ? <div className="text-center py-8 text-muted-foreground text-sm">
               No payouts match your search criteria
-            </div> : <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
+            </div> : <>
+          {/* Batch Action Bar */}
+          {selectedRequests.size > 0 && (
+            <div className="flex items-center justify-between p-3 mb-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  checked={selectedRequests.size === filteredRequests.filter(r => {
+                    const { items } = getFilteredItemsForRequest(r);
+                    return r.status !== 'completed' && r.status !== 'cancelled' && items.some(i => i.status !== 'approved');
+                  }).length && selectedRequests.size > 0}
+                  onCheckedChange={(checked) => {
+                    if (checked) selectAllPending();
+                    else clearSelection();
+                  }}
+                />
+                <span className="text-sm font-medium">
+                  {selectedRequests.size} selected
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  (${getSelectedTotalAmount().toFixed(2)} total)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={clearSelection}
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  disabled={batchApproving}
+                  onClick={handleBatchApprove}
+                >
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  {batchApproving ? 'Approving...' : `Approve ${selectedRequests.size} payouts`}
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="rounded-lg overflow-hidden border border-border/40 bg-background">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border/40 hover:bg-transparent">
-                <TableHead className="text-muted-foreground font-medium text-xs py-2.5 pl-4">Creator</TableHead>
+                <TableHead className="w-10 py-2.5 pl-4">
+                  <Checkbox
+                    checked={selectedRequests.size > 0 && selectedRequests.size === filteredRequests.filter(r => {
+                      const { items } = getFilteredItemsForRequest(r);
+                      return r.status !== 'completed' && r.status !== 'cancelled' && items.some(i => i.status !== 'approved');
+                    }).length}
+                    onCheckedChange={(checked) => {
+                      if (checked) selectAllPending();
+                      else clearSelection();
+                    }}
+                  />
+                </TableHead>
+                <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Creator</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Date</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Amount</TableHead>
                 <TableHead className="text-muted-foreground font-medium text-xs py-2.5">Items</TableHead>
@@ -909,9 +1051,21 @@ export function PayoutRequestsTable({
                 const flaggedItems = displayItems.filter(i => i.flagged_at) || [];
                 const approvedItems = displayItems.filter(i => i.status === 'approved') || [];
                 const hasPendingItems = displayItems.some(i => i.status !== 'approved');
+                const canSelect = request.status !== 'completed' && request.status !== 'cancelled' && hasPendingItems;
                 return <>
                     <TableRow key={request.id} className={`hover:bg-muted/20 transition-colors cursor-pointer ${!isLast && !isExpanded ? 'border-b border-border/50' : 'border-0'}`} onClick={() => setExpandedRequest(isExpanded ? null : request.id)}>
-                      <TableCell className="py-3 pl-4">
+                      <TableCell className="py-3 pl-4 w-10">
+                        {canSelect ? (
+                          <Checkbox
+                            checked={selectedRequests.has(request.id)}
+                            onCheckedChange={() => toggleRequestSelection(request.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <div className="w-4" />
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3">
                         <div className="flex items-center gap-2.5">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={request.profiles?.avatar_url || undefined} />
@@ -981,7 +1135,7 @@ export function PayoutRequestsTable({
                     
                     {/* Expanded Items */}
                     {isExpanded && <TableRow className={`bg-muted/10 ${!isLast ? 'border-b border-border/50' : ''}`}>
-                        <TableCell colSpan={6} className="p-0">
+                        <TableCell colSpan={7} className="p-0">
                           <div className="p-4 space-y-3">
                             <div className="flex items-center justify-between mb-3">
                               <div className="text-xs font-medium text-muted-foreground">
@@ -1119,7 +1273,8 @@ export function PayoutRequestsTable({
               })}
             </TableBody>
           </Table>
-          </div>}
+          </div>
+          </>}
         </div>}
 
         {/* Mobile Cards */}

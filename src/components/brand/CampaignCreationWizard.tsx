@@ -99,6 +99,77 @@ const PAYOUT_DAYS = [{
   value: 6,
   label: 'Saturday'
 }];
+
+// Campaign Quick Start Templates
+export interface CampaignTemplate {
+  id: string;
+  name: string;
+  description: string;
+  defaults: {
+    budget: string;
+    rpm_rate: string;
+    payment_model: 'pay_per_view' | 'pay_per_post';
+    allowed_platforms: string[];
+    requires_application: boolean;
+    is_private: boolean;
+  };
+}
+
+export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
+  {
+    id: 'standard',
+    name: 'Standard Campaign',
+    description: 'Balanced CPM for TikTok & Instagram',
+    defaults: {
+      budget: '1000',
+      rpm_rate: '5',
+      payment_model: 'pay_per_view',
+      allowed_platforms: ['tiktok', 'instagram'],
+      requires_application: true,
+      is_private: false
+    }
+  },
+  {
+    id: 'premium',
+    name: 'Premium Performance',
+    description: 'Higher CPM across all platforms',
+    defaults: {
+      budget: '5000',
+      rpm_rate: '10',
+      payment_model: 'pay_per_view',
+      allowed_platforms: ['tiktok', 'instagram', 'youtube'],
+      requires_application: true,
+      is_private: false
+    }
+  },
+  {
+    id: 'budget',
+    name: 'Budget Awareness',
+    description: 'Cost-effective TikTok-only campaign',
+    defaults: {
+      budget: '500',
+      rpm_rate: '2',
+      payment_model: 'pay_per_view',
+      allowed_platforms: ['tiktok'],
+      requires_application: false,
+      is_private: false
+    }
+  },
+  {
+    id: 'exclusive',
+    name: 'Exclusive Partnership',
+    description: 'Private high-value creator program',
+    defaults: {
+      budget: '10000',
+      rpm_rate: '15',
+      payment_model: 'pay_per_view',
+      allowed_platforms: ['tiktok', 'instagram', 'youtube'],
+      requires_application: true,
+      is_private: true
+    }
+  }
+];
+
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   goal: z.enum(["attention", "leads", "conversions"]).optional(),
@@ -216,6 +287,8 @@ interface CampaignCreationWizardProps {
   campaign?: Campaign;
   onDelete?: () => void;
   initialBlueprintId?: string;
+  cloneMode?: boolean; // When true, creates a new campaign with the provided campaign's data
+  template?: CampaignTemplate; // Quick start template with preset values
 }
 const STEPS = [{
   id: 1,
@@ -233,9 +306,13 @@ export function CampaignCreationWizard({
   onOpenChange,
   campaign,
   onDelete,
-  initialBlueprintId
+  initialBlueprintId,
+  cloneMode = false,
+  template
 }: CampaignCreationWizardProps) {
-  const isEditMode = !!campaign;
+  const isEditMode = !!campaign && !cloneMode;
+  const isCloneMode = !!campaign && cloneMode;
+  const isFromTemplate = !!template && !campaign;
   const [currentStep, setCurrentStep] = useState(isEditMode ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -405,25 +482,34 @@ export function CampaignCreationWizard({
     const currentQuestions = form.getValues("application_questions") || [];
     form.setValue("application_questions", currentQuestions.filter((_, i) => i !== index));
   };
-  // Reset form when campaign changes
+  // Reset form when campaign changes or template is applied
   useEffect(() => {
     if (open) {
+      // For clone mode, append "(Copy)" to the title
+      const title = isCloneMode && campaign?.title
+        ? `${campaign.title} (Copy)`
+        : campaign?.title || "";
+
+      // Apply template defaults if starting from template
+      const templateDefaults = template?.defaults;
+
       form.reset({
-        title: campaign?.title || "",
+        title,
         goal: campaign?.category as "attention" | "leads" | "conversions" || "attention",
         description: campaign?.description || "",
         campaign_type: campaign?.campaign_type || "clipping",
         category: campaign?.category || "",
         content_distribution: campaign?.content_distribution as "creators_own_page" | "branded_accounts" || "creators_own_page",
         is_infinite_budget: campaign?.is_infinite_budget || false,
-        budget: campaign?.budget?.toString() || "",
-        rpm_rate: campaign?.rpm_rate?.toString() || "5",
+        budget: templateDefaults?.budget || campaign?.budget?.toString() || "",
+        payment_model: templateDefaults?.payment_model || campaign?.payment_model as "pay_per_view" | "pay_per_post" || "pay_per_view",
+        rpm_rate: templateDefaults?.rpm_rate || campaign?.rpm_rate?.toString() || "5",
         embed_url: campaign?.embed_url || "",
         preview_url: campaign?.preview_url || "",
-        allowed_platforms: campaign?.allowed_platforms || ["tiktok", "instagram"],
-        is_private: campaign?.is_private || false,
+        allowed_platforms: templateDefaults?.allowed_platforms || campaign?.allowed_platforms || ["tiktok", "instagram"],
+        is_private: templateDefaults?.is_private ?? campaign?.is_private ?? false,
         access_code: campaign?.access_code || "",
-        requires_application: campaign?.requires_application !== false,
+        requires_application: templateDefaults?.requires_application ?? campaign?.requires_application !== false,
         hashtags: campaign?.hashtags || [],
         tags: campaign?.tags || [],
         application_questions: campaign?.application_questions || [],
@@ -433,7 +519,7 @@ export function CampaignCreationWizard({
       setCurrentStep(isEditMode ? 2 : 1);
       setNewQuestion("");
     }
-  }, [open, campaign]);
+  }, [open, campaign, isCloneMode, template]);
 
   // Load brand's blueprints
   useEffect(() => {
@@ -609,7 +695,6 @@ export function CampaignCreationWizard({
     }
   };
   const onSubmit = async (values: CampaignFormValues) => {
-    console.log('Form submitted with values:', values);
     setIsSubmitting(true);
     try {
       const bannerUrl = await uploadBanner();
@@ -648,16 +733,12 @@ export function CampaignCreationWizard({
             banner_url: bannerUrl
           } : {})
         } as any;
-        console.log('Updating campaign with data:', updateData);
         const {
-          data,
           error
         } = await supabase.from("campaigns").update(updateData).eq("id", campaign.id).select();
         if (error) {
-          console.error('Supabase update error:', error);
           throw error;
         }
-        console.log('Campaign updated successfully:', data);
         toast.success("Campaign updated successfully!");
       } else {
         // Create new campaign
@@ -724,7 +805,9 @@ export function CampaignCreationWizard({
             toast.warning("Campaign created but budget allocation failed. Please add budget manually.");
           }
         }
-        toast.success("Campaign created as draft. An admin will review and activate it.");
+        toast.success(isCloneMode
+          ? "Campaign cloned successfully! Created as draft for admin review."
+          : "Campaign created as draft. An admin will review and activate it.");
       }
       onOpenChange(false);
       form.reset();
@@ -734,7 +817,7 @@ export function CampaignCreationWizard({
       onSuccess?.();
     } catch (error) {
       console.error("Error saving campaign:", error);
-      toast.error(`Failed to ${isEditMode ? "update" : "create"} campaign. Please try again.`);
+      toast.error(`Failed to ${isEditMode ? "update" : isCloneMode ? "clone" : "create"} campaign. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -772,7 +855,7 @@ export function CampaignCreationWizard({
               </div>}
             <div>
               <h2 className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
-                {isEditMode ? "Edit Campaign" : "New Campaign"}
+                {isEditMode ? "Edit Campaign" : isCloneMode ? "Clone Campaign" : isFromTemplate ? `New Campaign: ${template.name}` : "New Campaign"}
               </h2>
               <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{brandName}</p>
             </div>
@@ -1366,7 +1449,7 @@ export function CampaignCreationWizard({
               }
               form.handleSubmit(onSubmit)();
             }} disabled={isSubmitting} className="min-w-[100px]">
-                  {isSubmitting ? "Saving..." : isEditMode ? "Save Changes" : "Create Campaign"}
+                  {isSubmitting ? "Saving..." : isEditMode ? "Save Changes" : isCloneMode ? "Clone Campaign" : "Create Campaign"}
                 </Button>}
             </div>
           </div>

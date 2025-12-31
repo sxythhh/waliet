@@ -15,11 +15,15 @@ import { VideoSubmissionsTab } from "@/components/brand/VideoSubmissionsTab";
 import { CampaignVideosPanel } from "@/components/brand/CampaignVideosPanel";
 import { EditBountyDialog } from "@/components/brand/EditBountyDialog";
 import { TopUpBalanceDialog } from "@/components/brand/TopUpBalanceDialog";
-import { AllProgramsAnalytics } from "@/components/brand/AllProgramsAnalytics";
+import { BrandPerformanceDashboard } from "@/components/brand/BrandPerformanceDashboard";
 import { AllPayoutsView } from "@/components/brand/AllPayoutsView";
 import { PayoutRequestsTable } from "@/components/brand/PayoutRequestsTable";
 import { CampaignLinksTab } from "@/components/brand/CampaignLinksTab";
 import { ViewBonusesTab } from "@/components/brand/ViewBonusesTab";
+import { BrandMessagesTab } from "@/components/brand/BrandMessagesTab";
+import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
+import { BrandSettingsTab } from "@/components/brand/BrandSettingsTab";
+import { AutoRejectionRulesTab } from "@/components/brand/AutoRejectionRulesTab";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -89,7 +93,7 @@ interface BrandCampaignDetailViewProps {
   boostId?: string;
   onBack?: () => void;
 }
-type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "management";
+type DetailTab = "home" | "applications" | "videos" | "creators" | "payouts" | "links" | "settings" | "rules" | "management";
 type EntitySelection = "all" | {
   type: "campaign";
   id: string;
@@ -111,13 +115,14 @@ export function BrandCampaignDetailView({
   const [loading, setLoading] = useState(true);
   const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>("home");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [topUpDialogOpen, setTopUpDialogOpen] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeOption>("all_time");
   const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
   const [hasDubIntegration, setHasDubIntegration] = useState(false);
   useEffect(() => {
     const subtab = searchParams.get("subtab");
-    if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts") {
+    if (subtab === "home" || subtab === "applications" || subtab === "videos" || subtab === "creators" || subtab === "payouts" || subtab === "links" || subtab === "messages" || subtab === "broadcasts" || subtab === "settings" || subtab === "rules") {
       setActiveDetailTab(subtab);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,20 +291,17 @@ export function BrandCampaignDetailView({
   const detailTabs: {
     id: DetailTab;
     label: string;
-    icon: any;
     count?: number;
   }[] = [{
     id: "home",
-    label: "Home",
-    icon: Home
+    label: "Home"
   }];
 
   // Videos tab (not in all mode)
   if (!isAllMode) {
     detailTabs.push({
       id: "videos",
-      label: "Videos",
-      icon: Video
+      label: "Videos"
     });
   }
 
@@ -308,7 +310,6 @@ export function BrandCampaignDetailView({
     detailTabs.push({
       id: "applications",
       label: "Applications",
-      icon: UserCheck,
       count: pendingApplicationsCount
     });
   }
@@ -317,8 +318,7 @@ export function BrandCampaignDetailView({
   if (isAdmin && !isBoost && !isAllMode) {
     detailTabs.push({
       id: "creators",
-      label: "Creators",
-      icon: Users
+      label: "Creators"
     });
   }
 
@@ -326,8 +326,7 @@ export function BrandCampaignDetailView({
   if (!isAllMode) {
     detailTabs.push({
       id: "payouts",
-      label: "Payouts",
-      icon: DollarSign
+      label: "Payouts"
     });
   }
 
@@ -335,8 +334,23 @@ export function BrandCampaignDetailView({
   if (!isAllMode && hasDubIntegration) {
     detailTabs.push({
       id: "links",
-      label: "Links",
-      icon: Link2
+      label: "Links"
+    });
+  }
+
+  // Auto-Rejection Rules tab (only for boosts)
+  if (isBoost && boostId) {
+    detailTabs.push({
+      id: "rules",
+      label: "Rules"
+    });
+  }
+
+  // Settings tab (only in all mode - contains Discord, Balance, Milestones, Tiers)
+  if (isAllMode && brandId) {
+    detailTabs.push({
+      id: "settings",
+      label: "Settings"
     });
   }
 
@@ -418,6 +432,12 @@ export function BrandCampaignDetailView({
                 <Pencil className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Edit {isBoost ? "Boost" : "Campaign"}</span>
               </Button>}
+
+            {/* Clone button - only for campaigns, not boosts */}
+            {!isAllMode && !isBoost && campaign && <Button variant="ghost" size="sm" className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-[#efefef] dark:border-transparent" onClick={() => setCloneDialogOpen(true)}>
+                <Copy className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Clone</span>
+              </Button>}
           </div>
         </div>
 
@@ -425,6 +445,11 @@ export function BrandCampaignDetailView({
         {campaign?.brand_id && !isBoost && <CampaignCreationWizard brandId={campaign.brand_id} brandName={campaign.brand_name || ""} brandLogoUrl={campaign.brand_logo_url || undefined} campaign={campaign} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSuccess={() => {
         fetchCampaign();
         setEditDialogOpen(false);
+      }} />}
+
+        {/* Campaign Clone Dialog */}
+        {campaign?.brand_id && !isBoost && <CampaignCreationWizard brandId={campaign.brand_id} brandName={campaign.brand_name || ""} brandLogoUrl={campaign.brand_logo_url || undefined} campaign={campaign} cloneMode={true} open={cloneDialogOpen} onOpenChange={setCloneDialogOpen} onSuccess={() => {
+        setCloneDialogOpen(false);
       }} />}
 
       {/* Boost Edit Dialog */}
@@ -455,10 +480,10 @@ export function BrandCampaignDetailView({
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} campaigns={campaigns} boosts={boosts} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
+          {activeDetailTab === "home" ? isAllMode && brandId ? <AllProgramsHomeContent brandId={brandId} timeframe={timeframe} /> : isBoost && boost ? <BoostHomeTab boost={boost} timeframe={timeframe} onTopUp={() => setTopUpDialogOpen(true)} /> : campaign?.brand_id ? <CampaignHomeTab campaignId={campaignId!} brandId={campaign.brand_id} timeframe={timeframe} /> : null : activeDetailTab === "applications" ? isAllMode && brandId ? <CampaignApplicationsView brandId={brandId} onApplicationReviewed={fetchPendingApplicationsCount} /> : isBoost ? <CampaignApplicationsView boostId={boostId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : <CampaignApplicationsView campaignId={campaignId!} onApplicationReviewed={fetchPendingApplicationsCount} /> : activeDetailTab === "videos" ? isBoost && boost ? <VideoSubmissionsTab boostId={boostId} monthlyRetainer={boost.monthly_retainer} videosPerMonth={boost.videos_per_month} onSubmissionReviewed={fetchPendingApplicationsCount} /> : campaign && campaign.brand_id ? <VideoSubmissionsTab campaign={{
           ...campaign,
           hashtags: campaign.hashtags || []
-        }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : null}
+        }} onSubmissionReviewed={fetchPendingApplicationsCount} /> : null : activeDetailTab === "creators" ? <CampaignAnalyticsTable campaignId={campaignId!} view="analytics" className="px-[10px] py-0 pb-[10px]" /> : activeDetailTab === "payouts" ? isBoost && boostId ? <div className="px-[10px] py-0"><PayoutRequestsTable boostId={boostId} /></div> : campaignId ? <CampaignAnalyticsTable campaignId={campaignId} view="transactions" className="px-[10px] py-0" /> : null : activeDetailTab === "links" ? entityBrandId ? <CampaignLinksTab brandId={entityBrandId} campaignId={campaignId} boostId={boostId} /> : null : activeDetailTab === "rules" ? isBoost && boostId && boost?.brand_id ? <AutoRejectionRulesTab brandId={boost.brand_id} boostId={boostId} /> : null : activeDetailTab === "settings" ? isAllMode && brandId ? <BrandSettingsTab brandId={brandId} /> : null : null}
         </div>
       </div>
     </div>;
@@ -467,14 +492,10 @@ export function BrandCampaignDetailView({
 // All Programs Home Content - shows aggregated analytics
 function AllProgramsHomeContent({
   brandId,
-  campaigns,
-  boosts,
   timeframe
 }: {
   brandId: string;
-  campaigns: Campaign[];
-  boosts: Boost[];
   timeframe: TimeframeOption;
 }) {
-  return <AllProgramsAnalytics brandId={brandId} timeframe={timeframe} />;
+  return <BrandPerformanceDashboard brandId={brandId} timeframe={timeframe} />;
 }

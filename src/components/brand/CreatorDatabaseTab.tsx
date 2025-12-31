@@ -72,6 +72,8 @@ interface Creator {
     title: string;
     type: 'campaign' | 'boost';
   }[];
+  demographic_score: number | null;
+  reliability_score: number | null;
 }
 interface DiscoverableCreator {
   id: string;
@@ -294,6 +296,8 @@ export function CreatorDatabaseTab({
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [demographicScoreFilter, setDemographicScoreFilter] = useState<string>('all');
+  const [reliabilityScoreFilter, setReliabilityScoreFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
   const [subscriptionGateOpen, setSubscriptionGateOpen] = useState(false);
@@ -567,12 +571,26 @@ export function CreatorDatabaseTab({
         p_brand_id: brandId
       });
 
+      // Fetch demographic scores
+      const { data: demographicScores } = await supabase
+        .from('demographic_scores')
+        .select('user_id, score')
+        .in('user_id', platformCreatorIds);
+
+      // Fetch reliability scores
+      const { data: reliabilityScores } = await supabase
+        .from('creator_reliability_scores')
+        .select('creator_id, reliability_score')
+        .eq('brand_id', brandId);
+
       // Build creator objects from relationships
       const creatorsMap = new Map<string, Creator>();
       relationships.forEach(rel => {
         const profile = profiles?.find(p => p.id === rel.user_id);
         const isExternal = !rel.user_id;
         const sourceCampaign = allCampaigns.find(c => c.id === rel.source_id);
+        const demoScore = demographicScores?.find(d => d.user_id === rel.user_id);
+        const relScore = reliabilityScores?.find(r => r.creator_id === rel.user_id);
 
         // Use relationship id as key for external creators, user_id for platform creators
         const key = rel.user_id || rel.id;
@@ -599,7 +617,9 @@ export function CreatorDatabaseTab({
           total_views: 0,
           total_earnings: 0,
           date_joined: profile?.created_at || rel.created_at,
-          campaigns: []
+          campaigns: [],
+          demographic_score: demoScore?.score ?? null,
+          reliability_score: relScore?.reliability_score ?? null
         });
       });
 
@@ -684,6 +704,28 @@ export function CreatorDatabaseTab({
         return true;
       });
     }
+    // Demographic score filter
+    if (demographicScoreFilter !== 'all') {
+      filtered = filtered.filter(c => {
+        const score = c.demographic_score;
+        if (demographicScoreFilter === 'high') return score !== null && score >= 70;
+        if (demographicScoreFilter === 'medium') return score !== null && score >= 40 && score < 70;
+        if (demographicScoreFilter === 'low') return score !== null && score < 40;
+        if (demographicScoreFilter === 'unrated') return score === null;
+        return true;
+      });
+    }
+    // Reliability score filter
+    if (reliabilityScoreFilter !== 'all') {
+      filtered = filtered.filter(c => {
+        const score = c.reliability_score;
+        if (reliabilityScoreFilter === 'high') return score !== null && score >= 80;
+        if (reliabilityScoreFilter === 'medium') return score !== null && score >= 50 && score < 80;
+        if (reliabilityScoreFilter === 'low') return score !== null && score < 50;
+        if (reliabilityScoreFilter === 'new') return score === null;
+        return true;
+      });
+    }
     // Apply sorting
     if (sortBy) {
       filtered = [...filtered].sort((a, b) => {
@@ -698,7 +740,7 @@ export function CreatorDatabaseTab({
       });
     }
     return filtered;
-  }, [creators, searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, sortBy, sortOrder]);
+  }, [creators, searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, demographicScoreFilter, reliabilityScoreFilter, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedCreators.length / itemsPerPage);
@@ -1095,11 +1137,11 @@ export function CreatorDatabaseTab({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' ? 'text-foreground' : 'text-muted-foreground'}`}>
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
-                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all'].filter(Boolean).length}
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all') && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
+                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all', demographicScoreFilter !== 'all', reliabilityScoreFilter !== 'all'].filter(Boolean).length}
                   </span>}
               </Button>
             </PopoverTrigger>
@@ -1107,11 +1149,13 @@ export function CreatorDatabaseTab({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Filters</span>
-                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all') && <button onClick={() => {
+                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all') && <button onClick={() => {
                   setSelectedCampaignFilter('all');
                   setPlatformFilter('all');
                   setStatusFilter('all');
                   setSourceFilter('all');
+                  setDemographicScoreFilter('all');
+                  setReliabilityScoreFilter('all');
                 }} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
                       Clear all
                     </button>}
@@ -1171,6 +1215,38 @@ export function CreatorDatabaseTab({
                       <SelectItem value="boost">Boost</SelectItem>
                       <SelectItem value="manual">Manual</SelectItem>
                       <SelectItem value="import">Import</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Audience Quality</Label>
+                  <Select value={demographicScoreFilter} onValueChange={setDemographicScoreFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All scores" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All scores</SelectItem>
+                      <SelectItem value="high">High (70+)</SelectItem>
+                      <SelectItem value="medium">Medium (40-69)</SelectItem>
+                      <SelectItem value="low">Low (&lt;40)</SelectItem>
+                      <SelectItem value="unrated">Unrated</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground">Reliability</Label>
+                  <Select value={reliabilityScoreFilter} onValueChange={setReliabilityScoreFilter}>
+                    <SelectTrigger className="h-8 bg-muted/30 border-0 rounded-lg font-inter tracking-[-0.5px] text-xs w-full">
+                      <SelectValue placeholder="All scores" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border border-border z-50">
+                      <SelectItem value="all">All scores</SelectItem>
+                      <SelectItem value="high">Reliable (80+)</SelectItem>
+                      <SelectItem value="medium">Average (50-79)</SelectItem>
+                      <SelectItem value="low">At Risk (&lt;50)</SelectItem>
+                      <SelectItem value="new">New (No data)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

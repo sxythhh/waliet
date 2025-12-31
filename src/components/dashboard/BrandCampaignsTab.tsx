@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateBountyDialog } from "@/components/brand/CreateBountyDialog";
 import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeDialog";
-import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
+import { CampaignCreationWizard, CampaignTemplate } from "@/components/brand/CampaignCreationWizard";
 import { BountyCampaignsView } from "@/components/brand/BountyCampaignsView";
 import { BrandCampaignDetailView } from "@/components/dashboard/BrandCampaignDetailView";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
@@ -83,6 +83,7 @@ export function BrandCampaignsTab({
   const [bountyToDelete, setBountyToDelete] = useState<BountyCampaign | null>(null);
   const [createBountyOpen, setCreateBountyOpen] = useState(false);
   const [createCampaignOpen, setCreateCampaignOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<CampaignTemplate | undefined>(undefined);
   const [brandLogoUrl, setBrandLogoUrl] = useState<string | undefined>(undefined);
   const [brandColor, setBrandColor] = useState<string | undefined>(undefined);
   const [selectedBoostId, setSelectedBoostId] = useState<string | null>(null);
@@ -395,7 +396,8 @@ export function BrandCampaignsTab({
               <span className="hidden sm:inline">Create Campaign</span>
               <span className="sm:hidden">Create</span>
             </Button>
-            <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={() => {
+            <CreateCampaignTypeDialog brandId={brandId} open={campaignTypeDialogOpen} onOpenChange={setCampaignTypeDialogOpen} onSelectClipping={(blueprintId, template) => {
+          setSelectedTemplate(template);
           setCreateCampaignOpen(true);
         }} onSelectManaged={() => {
           setCreateBountyOpen(true);
@@ -471,7 +473,10 @@ export function BrandCampaignsTab({
 
 
       {/* Create Campaign Wizard (Clipping) */}
-      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={setCreateCampaignOpen} />
+      <CampaignCreationWizard brandId={brandId} brandName={brandName} brandLogoUrl={brandLogoUrl} onSuccess={fetchBrandData} open={createCampaignOpen} onOpenChange={(open) => {
+        setCreateCampaignOpen(open);
+        if (!open) setSelectedTemplate(undefined);
+      }} template={selectedTemplate} />
 
       {/* Create Bounty Dialog (Managed) */}
       <CreateBountyDialog open={createBountyOpen} onOpenChange={setCreateBountyOpen} brandId={brandId} onSuccess={fetchBrandData} />
