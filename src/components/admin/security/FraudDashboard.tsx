@@ -153,15 +153,15 @@ export function FraudDashboard() {
       <div className="space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white/[0.03] rounded-xl p-5">
-              <Skeleton className="h-4 w-20 mb-3 bg-white/5" />
-              <Skeleton className="h-8 w-24 bg-white/5" />
+            <div key={i} className="bg-muted/30 rounded-xl p-5 border border-border">
+              <Skeleton className="h-4 w-20 mb-3" />
+              <Skeleton className="h-8 w-24" />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-[300px] rounded-xl bg-white/5" />
-          <Skeleton className="h-[300px] rounded-xl bg-white/5" />
+          <Skeleton className="h-[300px] rounded-xl" />
+          <Skeleton className="h-[300px] rounded-xl" />
         </div>
       </div>
     );
@@ -174,9 +174,9 @@ export function FraudDashboard() {
     const data = payload[0].payload;
 
     return (
-      <div className="bg-[#0C0C0C] rounded-xl px-4 py-3 shadow-xl border border-white/5">
-        <p className="text-xs text-white font-inter font-semibold">{data.type || data.range}</p>
-        <p className="text-sm text-white/70 font-inter">{payload[0].value} items</p>
+      <div className="bg-card rounded-xl px-4 py-3 shadow-xl border border-border">
+        <p className="text-xs text-foreground font-inter font-semibold">{data.type || data.range}</p>
+        <p className="text-sm text-muted-foreground font-inter">{payload[0].value} items</p>
       </div>
     );
   };
@@ -188,22 +188,18 @@ export function FraudDashboard() {
         <AdminStatCard
           label="Pending Review"
           value={stats.pendingReviews}
-          color={stats.pendingReviews > 5 ? "orange" : "default"}
         />
         <AdminStatCard
           label="Approved (7d)"
           value={stats.approvedThisWeek}
-          color="green"
         />
         <AdminStatCard
           label="Rejected (7d)"
           value={stats.rejectedThisWeek}
-          color="red"
         />
         <AdminStatCard
           label="Total Clawback"
           value={`$${stats.totalClawbackAmount.toLocaleString()}`}
-          color="purple"
         />
       </div>
 
@@ -212,12 +208,10 @@ export function FraudDashboard() {
         <AdminStatCard
           label="Total Flags (All Time)"
           value={stats.totalFlagged}
-          color="orange"
         />
         <AdminStatCard
           label="Banned Creators"
           value={stats.creatorsBanned}
-          color="red"
         />
         <AdminStatCard
           label="Unique Flag Types"
@@ -258,7 +252,7 @@ export function FraudDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-white/30 text-sm font-inter">
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm font-inter">
                 No flag data available
               </div>
             )}
@@ -294,7 +288,7 @@ export function FraudDashboard() {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: RISK_COLORS[index] }}
                   />
-                  <span className="text-xs text-white/60 font-inter tracking-[-0.5px]">
+                  <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                     {entry.range}: {entry.count}
                   </span>
                 </div>

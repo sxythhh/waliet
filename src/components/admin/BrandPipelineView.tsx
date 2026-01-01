@@ -43,10 +43,6 @@ interface PipelineStage {
   id: string;
   label: string;
   icon: React.ReactNode;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  glowColor: string;
 }
 
 const PIPELINE_STAGES: PipelineStage[] = [
@@ -54,46 +50,26 @@ const PIPELINE_STAGES: PipelineStage[] = [
     id: "new",
     label: "New",
     icon: <Sparkles className="w-4 h-4" />,
-    color: "text-violet-500",
-    bgColor: "bg-violet-500/10",
-    borderColor: "border-violet-500/20",
-    glowColor: "shadow-violet-500/20"
   },
   {
     id: "active",
     label: "Active",
     icon: <CheckCircle2 className="w-4 h-4" />,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10",
-    borderColor: "border-emerald-500/20",
-    glowColor: "shadow-emerald-500/20"
   },
   {
     id: "past_due",
     label: "Past Due",
     icon: <AlertTriangle className="w-4 h-4" />,
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
-    borderColor: "border-amber-500/20",
-    glowColor: "shadow-amber-500/20"
   },
   {
     id: "cancelled",
     label: "Cancelled",
     icon: <XCircle className="w-4 h-4" />,
-    color: "text-rose-500",
-    bgColor: "bg-rose-500/10",
-    borderColor: "border-rose-500/20",
-    glowColor: "shadow-rose-500/20"
   },
   {
     id: "inactive",
     label: "Inactive",
     icon: <Clock className="w-4 h-4" />,
-    color: "text-slate-400",
-    bgColor: "bg-slate-500/10",
-    borderColor: "border-slate-500/20",
-    glowColor: "shadow-slate-500/20"
   },
 ];
 
@@ -180,10 +156,10 @@ export function BrandPipelineView() {
     <>
       {/* Pipeline Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-card/50 border border-border/50 rounded-xl p-4">
+        <div className="bg-muted/30 border border-border rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{brands.length}</p>
@@ -191,10 +167,10 @@ export function BrandPipelineView() {
             </div>
           </div>
         </div>
-        <div className="bg-card/50 border border-border/50 rounded-xl p-4">
+        <div className="bg-muted/30 border border-border rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-emerald-500" />
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{getBrandsByStage("active").length}</p>
@@ -202,10 +178,10 @@ export function BrandPipelineView() {
             </div>
           </div>
         </div>
-        <div className="bg-card/50 border border-border/50 rounded-xl p-4">
+        <div className="bg-muted/30 border border-border rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-violet-500" />
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{getBrandsByStage("new").length}</p>
@@ -213,10 +189,10 @@ export function BrandPipelineView() {
             </div>
           </div>
         </div>
-        <div className="bg-card/50 border border-border/50 rounded-xl p-4">
+        <div className="bg-muted/30 border border-border rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{getBrandsByStage("past_due").length}</p>
@@ -233,13 +209,9 @@ export function BrandPipelineView() {
           return (
             <div key={stage.id} className="flex flex-col">
               {/* Column Header */}
-              <div className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-xl mb-3 border",
-                stage.bgColor,
-                stage.borderColor
-              )}>
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-xl mb-3 border border-border bg-muted/30">
                 <div className="flex items-center gap-2">
-                  <span className={stage.color}>{stage.icon}</span>
+                  <span className="text-muted-foreground">{stage.icon}</span>
                   <span className="font-medium text-sm">{stage.label}</span>
                 </div>
                 <Badge variant="secondary" className="h-5 px-1.5 text-xs font-medium">
@@ -248,11 +220,7 @@ export function BrandPipelineView() {
               </div>
 
               {/* Column Content */}
-              <div className={cn(
-                "flex-1 rounded-xl border-2 border-dashed p-2 space-y-2 transition-colors",
-                stage.borderColor,
-                "hover:border-opacity-50"
-              )}>
+              <div className="flex-1 rounded-xl border-2 border-dashed border-border p-2 space-y-2 transition-colors hover:border-muted-foreground/30">
                 {stageBrands.length === 0 ? (
                   <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                     No brands
@@ -262,7 +230,6 @@ export function BrandPipelineView() {
                     <BrandCard
                       key={brand.id}
                       brand={brand}
-                      stage={stage}
                       index={index}
                       onClick={() => handleBrandClick(brand)}
                     />
@@ -300,45 +267,25 @@ export function BrandPipelineView() {
 
 interface BrandCardProps {
   brand: Brand;
-  stage: PipelineStage;
   index: number;
   onClick: () => void;
 }
 
-function BrandCard({ brand, stage, index, onClick }: BrandCardProps) {
+function BrandCard({ brand, index, onClick }: BrandCardProps) {
   return (
     <div
       onClick={onClick}
-      className={cn(
-        "group relative p-3 rounded-xl border cursor-pointer transition-all duration-200",
-        "bg-card hover:bg-card/80 border-border/50 hover:border-border",
-        "hover:shadow-lg",
-        stage.glowColor
-      )}
+      className="group relative p-3 rounded-xl border cursor-pointer transition-all duration-200 bg-card hover:bg-muted/50 border-border"
       style={{
         animationDelay: `${index * 50}ms`,
         animation: 'fadeInUp 0.3s ease-out forwards',
       }}
     >
-      {/* Accent dot */}
-      <div className={cn(
-        "absolute top-3 right-3 w-2 h-2 rounded-full",
-        stage.id === "active" && "bg-emerald-500 animate-pulse",
-        stage.id === "new" && "bg-violet-500",
-        stage.id === "past_due" && "bg-amber-500",
-        stage.id === "cancelled" && "bg-rose-500",
-        stage.id === "inactive" && "bg-slate-400"
-      )} />
-
       <div className="flex items-start gap-3">
         {/* Logo */}
-        <Avatar className={cn(
-          "h-10 w-10 rounded-lg border transition-all duration-200",
-          stage.borderColor,
-          "group-hover:scale-105"
-        )}>
+        <Avatar className="h-10 w-10 rounded-lg border border-border transition-all duration-200 group-hover:scale-105">
           <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
-          <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 text-xs font-semibold">
+          <AvatarFallback className="rounded-lg bg-muted text-xs font-semibold">
             {brand.name.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -348,7 +295,7 @@ function BrandCard({ brand, stage, index, onClick }: BrandCardProps) {
           <div className="flex items-center gap-1.5 mb-0.5">
             <h4 className="font-medium text-sm truncate">{brand.name}</h4>
             {brand.is_verified && (
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">
@@ -359,7 +306,7 @@ function BrandCard({ brand, stage, index, onClick }: BrandCardProps) {
 
       {/* Quick Stats */}
       {brand.subscription_plan && (
-        <div className="mt-2 pt-2 border-t border-border/50">
+        <div className="mt-2 pt-2 border-t border-border">
           <Badge variant="outline" className="text-[10px] h-5 capitalize">
             {brand.subscription_plan}
           </Badge>

@@ -10,8 +10,6 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { HelmetProvider } from "react-helmet-async";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { AdminSidebar } from "@/components/AdminSidebar";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useUtmTracking } from "@/hooks/useUtmTracking";
 import { queryClient } from "@/lib/queryClient";
 import { PageLoader, DashboardLoader } from "@/components/PageLoader";
@@ -38,22 +36,7 @@ const BrandInvite = lazy(() => import("./pages/BrandInvite"));
 const Training = lazy(() => import("./pages/Training"));
 const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const Apply = lazy(() => import("./pages/Apply"));
-const AdminOverview = lazy(() => import("./pages/admin/Overview"));
-const AdminPayouts = lazy(() => import("./pages/admin/Payouts"));
-const AdminTransactions = lazy(() => import("./pages/admin/Transactions"));
-const AdminUsers = lazy(() => import("./pages/admin/Users"));
-const AdminBrands = lazy(() => import("./pages/admin/Brands"));
-const AdminWallets = lazy(() => import("./pages/admin/Wallets"));
-const AdminResources = lazy(() => import("./pages/admin/Resources"));
-const AdminFeedback = lazy(() => import("./pages/admin/Feedback"));
-const AdminSecurity = lazy(() => import("./pages/admin/Security"));
-const AdminReports = lazy(() => import("./pages/admin/Reports"));
-const AdminPermissions = lazy(() => import("./pages/admin/Permissions"));
-const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth"));
-const AdminCampaignReview = lazy(() => import("./pages/admin/CampaignReview"));
-const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
-const AdminCreatorInsights = lazy(() => import("./pages/admin/CreatorInsights"));
-const AdminOperationsCenter = lazy(() => import("./pages/admin/OperationsCenter"));
+const Admin = lazy(() => import("./pages/Admin"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -148,31 +131,6 @@ function BrandLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminLayout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const { isAdmin, loading } = useAdminCheck();
-  
-  useEffect(() => {
-    if (!loading && !isAdmin) {
-      navigate("/dashboard");
-    }
-  }, [isAdmin, loading, navigate]);
-  
-  if (loading) {
-    return <PageLoader />;
-  }
-  
-  if (!isAdmin) {
-    return null;
-  }
-  
-  return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <AdminSidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
-    </div>
-  );
-}
 
 const App = () => (
   <ErrorBoundary>
@@ -248,82 +206,7 @@ const App = () => (
                   } />
                   <Route path="/admin" element={
                     <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminOverview /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/brands" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminBrands /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/users" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminUsers /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/security" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminSecurity /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/feedback" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminFeedback /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/resources" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminResources /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/payouts" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminPayouts /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/wallets" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminWallets /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/transactions" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminTransactions /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/reports" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminReports /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/permissions" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminPermissions /></AdminLayout>
-                    </Suspense>
-                  } />
-<Route path="/admin/health" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminSystemHealth /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/campaign-review" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminCampaignReview /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/analytics" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminAnalytics /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/creator-insights" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminCreatorInsights /></AdminLayout>
-                    </Suspense>
-                  } />
-                  <Route path="/admin/operations" element={
-                    <Suspense fallback={<PageLoader />}>
-                      <AdminLayout><AdminOperationsCenter /></AdminLayout>
+                      <Admin />
                     </Suspense>
                   } />
                   <Route path="/manage" element={

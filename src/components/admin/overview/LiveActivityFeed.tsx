@@ -16,43 +16,13 @@ interface ActivityEvent {
   amount?: number;
 }
 
-const eventStyles = {
-  signup: {
-    icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z",
-    color: "text-green-400",
-    bg: "bg-green-500/10",
-    label: "New User",
-  },
-  payout: {
-    icon: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    label: "Payout",
-  },
-  submission: {
-    icon: "M15 10l-4 4l6 6l4-16l-18 7l4 2l2 6l3-4",
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
-    label: "Submission",
-  },
-  fraud: {
-    icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    label: "Alert",
-  },
-  campaign: {
-    icon: "M9 12l2 2l4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806a3.42 3.42 0 0 1 4.438 0a3.42 3.42 0 0 0 1.946.806a3.42 3.42 0 0 1 3.138 3.138a3.42 3.42 0 0 0 .806 1.946a3.42 3.42 0 0 1 0 4.438a3.42 3.42 0 0 0-.806 1.946a3.42 3.42 0 0 1-3.138 3.138a3.42 3.42 0 0 0-1.946.806a3.42 3.42 0 0 1-4.438 0a3.42 3.42 0 0 0-1.946-.806a3.42 3.42 0 0 1-3.138-3.138a3.42 3.42 0 0 0-.806-1.946a3.42 3.42 0 0 1 0-4.438a3.42 3.42 0 0 0 .806-1.946a3.42 3.42 0 0 1 3.138-3.138z",
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-    label: "Campaign",
-  },
-  withdrawal: {
-    icon: "M3 3v18h18M18.7 8l-5.1 5.2l-2.8-2.7L7 14.3",
-    color: "text-orange-400",
-    bg: "bg-orange-500/10",
-    label: "Withdrawal",
-  },
+const eventLabels = {
+  signup: "New User",
+  payout: "Payout",
+  submission: "Submission",
+  fraud: "Alert",
+  campaign: "Campaign",
+  withdrawal: "Withdrawal",
 };
 
 export function LiveActivityFeed() {
@@ -266,15 +236,13 @@ export function LiveActivityFeed() {
           onClick={() => setIsLive(!isLive)}
           className={cn(
             "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
-            isLive
-              ? "bg-green-500/10 text-green-400 border border-green-500/20"
-              : "bg-white/5 text-white/50 border border-white/10"
+            "bg-muted border border-border text-muted-foreground hover:text-foreground"
           )}
         >
           <div
             className={cn(
               "w-1.5 h-1.5 rounded-full",
-              isLive ? "bg-green-400 animate-pulse" : "bg-white/30"
+              isLive ? "bg-foreground animate-pulse" : "bg-muted-foreground"
             )}
           />
           {isLive ? "Live" : "Paused"}
@@ -285,51 +253,38 @@ export function LiveActivityFeed() {
       <div className="max-h-[400px] overflow-y-auto">
         {events.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-white/30 text-sm font-inter">No recent activity</p>
+            <p className="text-muted-foreground text-sm font-inter">No recent activity</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-border">
             {events.map((event, index) => {
-              const style = eventStyles[event.type];
               return (
                 <div
                   key={event.id}
                   className={cn(
-                    "flex items-center gap-4 px-5 py-3 hover:bg-white/[0.02] transition-colors",
-                    index === 0 && "bg-white/[0.01]"
+                    "flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors",
+                    index === 0 && "bg-muted/20"
                   )}
                 >
-                  {/* Icon */}
-                  <div className={cn("p-2 rounded-lg", style.bg)}>
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={style.color}
-                    >
-                      <path d={style.icon} />
-                    </svg>
-                  </div>
+                  {/* Label badge */}
+                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-muted text-muted-foreground min-w-[70px] justify-center">
+                    {eventLabels[event.type]}
+                  </span>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-inter tracking-[-0.5px] truncate">
+                    <p className="text-sm text-foreground font-inter tracking-[-0.5px] truncate">
                       {event.title}
                     </p>
                     {event.detail && (
-                      <p className="text-xs text-white/40 font-inter tracking-[-0.5px] truncate">
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate">
                         {event.detail}
                       </p>
                     )}
                   </div>
 
                   {/* Timestamp */}
-                  <div className="text-[10px] text-white/30 font-inter tracking-[-0.5px] whitespace-nowrap">
+                  <div className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
                     {formatDistanceToNow(event.timestamp, { addSuffix: false })}
                   </div>
                 </div>

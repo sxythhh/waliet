@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminMetric, AdminAlertMetric } from "../design-system/AdminMetric";
 import { AdminMiniStatCard } from "../design-system/AdminCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Users, Clock, Shield } from "lucide-react";
 import { subDays } from "date-fns";
 
 interface MetricsData {
@@ -29,10 +28,6 @@ interface MetricsData {
   conversionRate: number;
   newUsersToday: number;
   submissionsToday: number;
-
-  // Sparkline data
-  revenueSparkline: { value: number }[];
-  usersSparkline: { value: number }[];
 }
 
 export function MetricsGrid() {
@@ -115,7 +110,7 @@ export function MetricsGrid() {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
-      // Total creators - using any to avoid deep type instantiation
+      // Total creators
       const creatorsResult = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true });
@@ -174,40 +169,6 @@ export function MetricsGrid() {
         .select("*", { count: "exact", head: true })
         .gte("created_at", today.toISOString());
 
-      // Build sparkline data (last 7 days revenue)
-      const revenueSparkline: { value: number }[] = [];
-      const usersSparkline: { value: number }[] = [];
-
-      for (let i = 6; i >= 0; i--) {
-        const dayStart = subDays(today, i);
-        const dayEnd = subDays(today, i - 1);
-
-        const dayRevenue = recentEarnings?.filter(e => {
-          const date = new Date(e.created_at);
-          return date >= dayStart && date < dayEnd;
-        }).reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
-
-        revenueSparkline.push({ value: dayRevenue });
-      }
-
-      // Users sparkline (new users per day)
-      const { data: recentUsers } = await supabase
-        .from("profiles")
-        .select("created_at")
-        .gte("created_at", sevenDaysAgo.toISOString());
-
-      for (let i = 6; i >= 0; i--) {
-        const dayStart = subDays(today, i);
-        const dayEnd = subDays(today, i - 1);
-
-        const dayUsers = recentUsers?.filter(u => {
-          const date = new Date(u.created_at);
-          return date >= dayStart && date < dayEnd;
-        }).length || 0;
-
-        usersSparkline.push({ value: dayUsers });
-      }
-
       setMetrics({
         totalRevenue,
         revenueChange,
@@ -224,8 +185,6 @@ export function MetricsGrid() {
         conversionRate,
         newUsersToday: newUsersToday || 0,
         submissionsToday: submissionsToday || 0,
-        revenueSparkline,
-        usersSparkline,
       });
     } catch (error) {
       console.error("Error fetching metrics:", error);
@@ -239,18 +198,18 @@ export function MetricsGrid() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white/[0.03] rounded-xl p-5">
-              <Skeleton className="h-4 w-20 mb-3 bg-white/5" />
-              <Skeleton className="h-8 w-24 mb-1 bg-white/5" />
-              <Skeleton className="h-3 w-16 bg-white/5" />
+            <div key={i} className="bg-muted/30 rounded-xl p-5 border border-border">
+              <Skeleton className="h-4 w-20 mb-3" />
+              <Skeleton className="h-8 w-24 mb-1" />
+              <Skeleton className="h-3 w-16" />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white/[0.02] rounded-xl p-4">
-              <Skeleton className="h-6 w-12 mb-1 bg-white/5" />
-              <Skeleton className="h-3 w-20 bg-white/5" />
+            <div key={i} className="bg-muted/20 rounded-xl p-4 border border-border">
+              <Skeleton className="h-6 w-12 mb-1" />
+              <Skeleton className="h-3 w-20" />
             </div>
           ))}
         </div>
@@ -262,7 +221,7 @@ export function MetricsGrid() {
 
   return (
     <div className="space-y-4">
-      {/* Primary metrics with sparklines */}
+      {/* Primary metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminMetric
           label="Total Revenue"
@@ -272,9 +231,6 @@ export function MetricsGrid() {
             isPositive: metrics.revenueChange >= 0,
             label: "vs last 7 days",
           }}
-          sparkline={metrics.revenueSparkline}
-          color="green"
-          icon={<DollarSign className="h-4 w-4" />}
         />
 
         <AdminMetric
@@ -285,9 +241,6 @@ export function MetricsGrid() {
             isPositive: metrics.activeUsersChange >= 0,
             label: "vs previous 30 days",
           }}
-          sparkline={metrics.usersSparkline}
-          color="blue"
-          icon={<Users className="h-4 w-4" />}
         />
 
         <AdminAlertMetric
@@ -308,12 +261,10 @@ export function MetricsGrid() {
         <AdminMiniStatCard
           label="Total Creators"
           value={metrics.totalCreators.toLocaleString()}
-          color="purple"
         />
         <AdminMiniStatCard
           label="Total Brands"
           value={metrics.totalBrands.toLocaleString()}
-          color="cyan"
         />
         <AdminMiniStatCard
           label="Active Campaigns"
@@ -322,7 +273,6 @@ export function MetricsGrid() {
         <AdminMiniStatCard
           label="Payouts Today"
           value={metrics.completedPayoutsToday.toLocaleString()}
-          color="green"
         />
       </div>
 
@@ -335,17 +285,14 @@ export function MetricsGrid() {
         <AdminMiniStatCard
           label="Conversion Rate"
           value={`${metrics.conversionRate.toFixed(1)}%`}
-          color="blue"
         />
         <AdminMiniStatCard
           label="New Users Today"
           value={metrics.newUsersToday.toLocaleString()}
-          color="green"
         />
         <AdminMiniStatCard
           label="Submissions Today"
           value={metrics.submissionsToday.toLocaleString()}
-          color="purple"
         />
       </div>
     </div>
