@@ -307,8 +307,8 @@ export function AllocateBudgetDialog({
                   size="sm"
                   onClick={() => handleQuickAmount(value)}
                   className={cn(
-                    "flex-1 h-9 text-sm font-medium rounded-lg bg-muted/50 transition-colors",
-                    parseFloat(amount) === value && "bg-muted ring-1 ring-foreground/10"
+                    "flex-1 h-9 text-sm font-medium rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors",
+                    parseFloat(amount) === value && "bg-[#1f60dd] text-white hover:bg-[#1a52c2]"
                   )}
                 >
                   ${value}
