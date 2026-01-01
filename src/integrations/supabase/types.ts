@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      admin_incidents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string | null
+          updates: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          updates?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          updates?: Json | null
+        }
+        Relationships: []
+      }
       admin_permissions: {
         Row: {
           can_delete: boolean | null
@@ -43,6 +127,27 @@ export type Database = {
           id?: string
           resource?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
           user_id?: string
         }
         Relationships: []
@@ -227,6 +332,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           excerpt: string | null
+          hidden_from_listing: boolean | null
           id: string
           image_url: string | null
           is_published: boolean
@@ -245,6 +351,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          hidden_from_listing?: boolean | null
           id?: string
           image_url?: string | null
           is_published?: boolean
@@ -263,6 +370,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          hidden_from_listing?: boolean | null
           id?: string
           image_url?: string | null
           is_published?: boolean
@@ -344,6 +452,44 @@ export type Database = {
         }
         Relationships: []
       }
+      blueprint_training_completions: {
+        Row: {
+          blueprint_id: string
+          completed_at: string
+          created_at: string
+          id: string
+          module_id: string
+          quiz_score: number | null
+          user_id: string
+        }
+        Insert: {
+          blueprint_id: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id: string
+          quiz_score?: number | null
+          user_id: string
+        }
+        Update: {
+          blueprint_id?: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          quiz_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blueprint_training_completions_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blueprints: {
         Row: {
           assets: Json | null
@@ -364,6 +510,7 @@ export type Database = {
           talking_points: Json | null
           target_personas: Json | null
           title: string
+          training_modules: Json | null
           updated_at: string
         }
         Insert: {
@@ -385,6 +532,7 @@ export type Database = {
           talking_points?: Json | null
           target_personas?: Json | null
           title?: string
+          training_modules?: Json | null
           updated_at?: string
         }
         Update: {
@@ -406,6 +554,7 @@ export type Database = {
           talking_points?: Json | null
           target_personas?: Json | null
           title?: string
+          training_modules?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -632,6 +781,9 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type: string | null
+          review_notes: string | null
+          review_status: string | null
+          reward_amount: number | null
           shortimize_collection_name: string | null
           slug: string | null
           start_date: string | null
@@ -665,6 +817,9 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type?: string | null
+          review_notes?: string | null
+          review_status?: string | null
+          reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
@@ -698,6 +853,9 @@ export type Database = {
           max_accepted_creators?: number
           monthly_retainer?: number
           position_type?: string | null
+          review_notes?: string | null
+          review_status?: string | null
+          reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
@@ -1131,7 +1289,9 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          invite_token: string | null
           invited_by: string
+          is_link_invite: boolean | null
           role: string
           status: string
           updated_at: string
@@ -1142,7 +1302,9 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
+          invite_token?: string | null
           invited_by: string
+          is_link_invite?: boolean | null
           role?: string
           status?: string
           updated_at?: string
@@ -1153,7 +1315,9 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          invite_token?: string | null
           invited_by?: string
+          is_link_invite?: boolean | null
           role?: string
           status?: string
           updated_at?: string
@@ -1197,6 +1361,63 @@ export type Database = {
           {
             foreignKeyName: "brand_members_brand_id_fkey"
             columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_referrals: {
+        Row: {
+          brand_id: string
+          commission_rate: number | null
+          created_at: string
+          id: string
+          referral_code: string
+          referrer_brand_id: string | null
+          referrer_id: string | null
+          reward_earned: number | null
+          status: string
+          total_earned: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referrer_brand_id?: string | null
+          referrer_id?: string | null
+          reward_earned?: number | null
+          status?: string
+          total_earned?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referrer_brand_id?: string | null
+          referrer_id?: string | null
+          reward_earned?: number | null
+          status?: string
+          total_earned?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_referrals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_referrals_referrer_brand_id_fkey"
+            columns: ["referrer_brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
@@ -1407,6 +1628,8 @@ export type Database = {
           notify_new_application: boolean | null
           notify_new_message: boolean | null
           notify_new_sale: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           renewal_date: string | null
           shortimize_api_key: string | null
           show_account_tab: boolean
@@ -1428,6 +1651,7 @@ export type Database = {
           subscription_status: string | null
           tiktok_handle: string | null
           updated_at: string
+          website: string | null
           website_url: string | null
           whop_company_id: string | null
           whop_manage_url: string | null
@@ -1468,6 +1692,8 @@ export type Database = {
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
@@ -1489,6 +1715,7 @@ export type Database = {
           subscription_status?: string | null
           tiktok_handle?: string | null
           updated_at?: string
+          website?: string | null
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
@@ -1529,6 +1756,8 @@ export type Database = {
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
@@ -1550,6 +1779,7 @@ export type Database = {
           subscription_status?: string | null
           tiktok_handle?: string | null
           updated_at?: string
+          website?: string | null
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
@@ -4919,10 +5149,12 @@ export type Database = {
           legal_business_name: string | null
           onboarding_completed: boolean
           phone_number: string | null
+          portfolio_items: Json | null
           referral_code: string | null
           referral_earnings: number | null
           referral_tier: Database["public"]["Enums"]["referral_tier"] | null
           referred_by: string | null
+          resume_url: string | null
           show_joined_campaigns: boolean | null
           show_location: boolean | null
           show_total_earned: boolean | null
@@ -4988,10 +5220,12 @@ export type Database = {
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
+          portfolio_items?: Json | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          resume_url?: string | null
           show_joined_campaigns?: boolean | null
           show_location?: boolean | null
           show_total_earned?: boolean | null
@@ -5057,10 +5291,12 @@ export type Database = {
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
+          portfolio_items?: Json | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          resume_url?: string | null
           show_joined_campaigns?: boolean | null
           show_location?: boolean | null
           show_total_earned?: boolean | null

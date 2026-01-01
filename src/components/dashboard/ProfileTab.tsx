@@ -226,7 +226,7 @@ export function ProfileTab() {
       data: profileData
     } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
     if (profileData) {
-      setProfile(profileData);
+      setProfile(profileData as unknown as Profile);
       setNewEmail(profileData.email || '');
       setOriginalUsername(profileData.username || '');
       setOriginalSubscribedToUpdates(profileData.subscribed_to_updates ?? true);

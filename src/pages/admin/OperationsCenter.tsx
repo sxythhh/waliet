@@ -760,7 +760,7 @@ export default function AdminOperationsCenter() {
   };
 
   return (
-    <AdminPermissionGuard requiredPermission="view_dashboard">
+    <AdminPermissionGuard resource="dashboard">
       <div className="flex flex-col h-full">
         <div className="border-b p-6">
           <div className="flex items-center justify-between">

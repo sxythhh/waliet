@@ -145,7 +145,8 @@ export function InviteMemberDialog({
           invited_by: user.id,
           invite_token: token,
           is_link_invite: true,
-        })
+          email: `invite-${token}@placeholder.local`, // Required field placeholder for link invites
+        } as any)
         .select()
         .single();
 

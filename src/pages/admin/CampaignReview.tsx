@@ -73,7 +73,7 @@ export default function AdminCampaignReview() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCampaigns(data || []);
+      setCampaigns((data || []) as unknown as Campaign[]);
     } catch (error) {
       console.error("Error fetching campaigns:", error);
       toast({
@@ -143,7 +143,7 @@ export default function AdminCampaignReview() {
   };
 
   return (
-    <AdminPermissionGuard requiredPermission="manage_brands">
+    <AdminPermissionGuard resource="brands">
       <div className="flex flex-col h-full">
         <div className="border-b p-6">
           <h1 className="text-2xl font-bold tracking-tight">Campaign Review</h1>

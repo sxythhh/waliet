@@ -317,7 +317,7 @@ export default function AdminCreatorInsights() {
   };
 
   return (
-    <AdminPermissionGuard requiredPermission="view_users">
+    <AdminPermissionGuard resource="users">
       <div className="flex flex-col h-full">
         <div className="border-b p-6">
           <h1 className="text-2xl font-bold tracking-tight">Creator Insights</h1>

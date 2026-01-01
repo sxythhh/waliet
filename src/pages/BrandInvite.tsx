@@ -47,7 +47,7 @@ export default function BrandInvite() {
       // Fetch invitation by token or ID
       let query = supabase
         .from("brand_invitations")
-        .select("*");
+        .select("*") as any;
 
       if (isLinkInvite) {
         query = query.eq("invite_token", lookupId);

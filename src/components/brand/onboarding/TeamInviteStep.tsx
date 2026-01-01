@@ -56,7 +56,8 @@ export function TeamInviteStep({ brandId, onNext, onSkip }: TeamInviteStepProps)
           brand_id: brandId,
           email: invite.email.toLowerCase().trim(),
           role: invite.role,
-        });
+          invited_by: (await supabase.auth.getUser()).data.user?.id || '',
+        } as any);
 
         if (error) {
           if (error.code === "23505") {

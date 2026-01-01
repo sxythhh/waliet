@@ -69,7 +69,7 @@ export default function AdminAnalytics() {
 
   if (analytics.loading) {
     return (
-      <AdminPermissionGuard requiredPermission="view_dashboard">
+      <AdminPermissionGuard resource="dashboard">
         <div className="flex flex-col h-full">
           <div className="border-b p-6">
             <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
@@ -86,7 +86,7 @@ export default function AdminAnalytics() {
   }
 
   return (
-    <AdminPermissionGuard requiredPermission="view_dashboard">
+    <AdminPermissionGuard resource="dashboard">
       <div className="flex flex-col h-full">
         <div className="border-b p-6">
           <div className="flex items-center justify-between">
