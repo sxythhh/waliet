@@ -638,47 +638,15 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                       </p>
                     </div>
 
-                    <div className="hidden sm:flex items-center gap-2 shrink-0">
-                      <span className="text-xs font-inter tracking-[-0.3px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
-                        ${contract.monthly_rate}/mo
+                    {contract.boost_title && (
+                      <span className="hidden sm:inline-flex text-xs font-inter tracking-[-0.3px] text-primary bg-primary/10 px-2 py-1 rounded-md shrink-0">
+                        {contract.boost_title}
                       </span>
-                      <span className="text-xs font-inter tracking-[-0.3px] text-muted-foreground bg-muted/50 px-2 py-1 rounded-md">
-                        {contract.videos_per_month} videos/mo
-                      </span>
-                      {contract.boost_title && (
-                        <span className="text-xs font-inter tracking-[-0.3px] text-primary bg-primary/10 px-2 py-1 rounded-md">
-                          {contract.boost_title}
-                        </span>
-                      )}
-                    </div>
+                    )}
 
                     <span className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px] shrink-0 hidden md:block">
                       {formatDistanceToNow(new Date(contract.created_at), { addSuffix: true })}
                     </span>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        {(contract.status === 'sent' || contract.status === 'viewed') && (
-                          <DropdownMenuItem onClick={() => toast.success(`Reminder sent to ${contract.creator_name}`)}>
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Reminder
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download PDF
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
                 );
               })
@@ -894,7 +862,31 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
               )}
             </div>
           )}
-          <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20">
+          <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20 flex-row justify-between">
+            <div className="flex items-center gap-2">
+              {(selectedContract?.status === 'sent' || selectedContract?.status === 'viewed') && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    toast.success(`Reminder sent to ${selectedContract?.creator_name}`);
+                  }} 
+                  className="font-inter tracking-[-0.3px] gap-1.5"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  Send Reminder
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => toast.success('Downloading PDF...')} 
+                className="font-inter tracking-[-0.3px] gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </Button>
+            </div>
             <Button variant="ghost" size="sm" onClick={() => setViewDialogOpen(false)} className="font-inter tracking-[-0.3px]">
               Close
             </Button>
