@@ -752,13 +752,21 @@ export function CreatorsTab({
       
       {/* Left Column - Conversations List */}
       <div className={`w-full lg:w-80 border-r border-border flex flex-col ${mobileView === 'messages' ? 'flex' : 'hidden lg:flex'} ${mobileView === 'conversation' ? 'hidden lg:flex' : ''}`}>
-        <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <h2 className="font-semibold text-sm">Messages</h2>
+        <div className="h-14 px-4 border-b border-border flex items-center gap-2 shrink-0">
+          <div className="flex-1 relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input 
+              placeholder="Search messages..." 
+              className="h-8 pl-8 text-xs bg-muted/50 border-0"
+            />
           </div>
-          <Button variant="ghost" size="sm" className={`h-8 px-3 text-xs gap-1.5 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setShowBroadcasts(!showBroadcasts)}>
-            <Megaphone className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Broadcasts</span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`h-8 w-8 shrink-0 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
+            onClick={() => setShowBroadcasts(!showBroadcasts)}
+          >
+            <Megaphone className="h-4 w-4" />
           </Button>
         </div>
 
