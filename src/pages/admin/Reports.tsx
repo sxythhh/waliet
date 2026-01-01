@@ -360,7 +360,6 @@ export default function ReportsPage() {
           <AdminStatCard
             label="Reports Generated Today"
             value="0"
-            color="blue"
           />
           <AdminStatCard
             label="Last Export"
@@ -373,7 +372,6 @@ export default function ReportsPage() {
           <AdminStatCard
             label="Export Format"
             value={exportFormat.toUpperCase()}
-            color="purple"
           />
         </div>
       </div>
