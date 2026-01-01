@@ -1056,8 +1056,8 @@ export function UserSettingsTab() {
         </div>
       </div>;
   }
-  return <div className="w-full p-1.5">
-      <div className="border border-border rounded-xl bg-card overflow-hidden">
+  return <div className="w-full p-1.5 h-full">
+      <div className="border border-border rounded-xl bg-card overflow-hidden h-full flex flex-col">
         {/* Sticky Header & Tabs */}
         <div className="sticky top-0 z-10 bg-card">
           {/* Header */}
@@ -1100,7 +1100,7 @@ export function UserSettingsTab() {
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-6 space-y-6 max-w-2xl">
+        <div className="p-6 space-y-6 max-w-2xl flex-1 overflow-y-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
         {/* General Tab */}
