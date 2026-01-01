@@ -2172,7 +2172,7 @@ export default function AdminUsers() {
         onUserUpdated={fetchData}
         onPayUser={(user) => {
           setUserContextSheetOpen(false);
-          openPayDialog(user);
+          openPayDialog(user as unknown as User);
         }}
       />
 
