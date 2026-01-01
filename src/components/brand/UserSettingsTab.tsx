@@ -1423,7 +1423,7 @@ export function UserSettingsTab() {
                   
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive email alerts</p>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive webhook and email alerts</p>
                   </div>
                 </div>
                 <div className="divide-y divide-border/50">
