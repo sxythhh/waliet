@@ -777,10 +777,14 @@ export function BlueprintEditor({
                       </span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={addExampleVideo} className="h-auto px-4 text-xs font-inter tracking-[-0.3px] text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-xl border border-dashed border-border/30">
-                    <Plus className="h-3.5 w-3.5 mr-1.5" />
-                    Add URL
-                  </Button>
+                  <div onClick={addExampleVideo} className="rounded-xl border border-dashed border-border/30 bg-muted/10 p-4 cursor-pointer transition-all hover:bg-muted/20 hover:border-border/50">
+                    <div className="flex items-center justify-center gap-2">
+                      <Plus className="h-4 w-4 text-muted-foreground/60" />
+                      <span className="text-sm font-inter tracking-[-0.3px] text-muted-foreground/80">
+                        Add URL
+                      </span>
+                    </div>
+                  </div>
                 </div> : <div className="rounded-xl bg-muted/20 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-inter tracking-[-0.3px] text-foreground truncate">
