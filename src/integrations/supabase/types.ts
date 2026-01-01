@@ -452,6 +452,44 @@ export type Database = {
         }
         Relationships: []
       }
+      blueprint_training_completions: {
+        Row: {
+          blueprint_id: string
+          completed_at: string
+          created_at: string
+          id: string
+          module_id: string
+          quiz_score: number | null
+          user_id: string
+        }
+        Insert: {
+          blueprint_id: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id: string
+          quiz_score?: number | null
+          user_id: string
+        }
+        Update: {
+          blueprint_id?: string
+          completed_at?: string
+          created_at?: string
+          id?: string
+          module_id?: string
+          quiz_score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blueprint_training_completions_blueprint_id_fkey"
+            columns: ["blueprint_id"]
+            isOneToOne: false
+            referencedRelation: "blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blueprints: {
         Row: {
           assets: Json | null
@@ -472,6 +510,7 @@ export type Database = {
           talking_points: Json | null
           target_personas: Json | null
           title: string
+          training_modules: Json | null
           updated_at: string
         }
         Insert: {
@@ -493,6 +532,7 @@ export type Database = {
           talking_points?: Json | null
           target_personas?: Json | null
           title?: string
+          training_modules?: Json | null
           updated_at?: string
         }
         Update: {
@@ -514,6 +554,7 @@ export type Database = {
           talking_points?: Json | null
           target_personas?: Json | null
           title?: string
+          training_modules?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -1305,6 +1346,57 @@ export type Database = {
           {
             foreignKeyName: "brand_members_brand_id_fkey"
             columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_referrals: {
+        Row: {
+          brand_id: string
+          commission_rate: number | null
+          created_at: string
+          id: string
+          referral_code: string
+          referrer_brand_id: string | null
+          status: string
+          total_earned: number | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code: string
+          referrer_brand_id?: string | null
+          status?: string
+          total_earned?: number | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          commission_rate?: number | null
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referrer_brand_id?: string | null
+          status?: string
+          total_earned?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_referrals_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_referrals_referrer_brand_id_fkey"
+            columns: ["referrer_brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
@@ -5027,10 +5119,12 @@ export type Database = {
           legal_business_name: string | null
           onboarding_completed: boolean
           phone_number: string | null
+          portfolio_items: Json | null
           referral_code: string | null
           referral_earnings: number | null
           referral_tier: Database["public"]["Enums"]["referral_tier"] | null
           referred_by: string | null
+          resume_url: string | null
           show_joined_campaigns: boolean | null
           show_location: boolean | null
           show_total_earned: boolean | null
@@ -5096,10 +5190,12 @@ export type Database = {
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
+          portfolio_items?: Json | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          resume_url?: string | null
           show_joined_campaigns?: boolean | null
           show_location?: boolean | null
           show_total_earned?: boolean | null
@@ -5165,10 +5261,12 @@ export type Database = {
           legal_business_name?: string | null
           onboarding_completed?: boolean
           phone_number?: string | null
+          portfolio_items?: Json | null
           referral_code?: string | null
           referral_earnings?: number | null
           referral_tier?: Database["public"]["Enums"]["referral_tier"] | null
           referred_by?: string | null
+          resume_url?: string | null
           show_joined_campaigns?: boolean | null
           show_location?: boolean | null
           show_total_earned?: boolean | null
