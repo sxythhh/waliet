@@ -496,18 +496,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] h-9 text-xs border-0 bg-secondary hover:bg-muted transition-colors rounded-lg">
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-0">
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="sent">Awaiting Signature</SelectItem>
-                  <SelectItem value="signed">Signed</SelectItem>
-                  <SelectItem value="expired">Expired</SelectItem>
-                </SelectContent>
-              </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" className="h-9 px-4 gap-2 font-inter tracking-[-0.3px] text-sm">
