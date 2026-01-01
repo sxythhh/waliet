@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string
+          resource: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          resource: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          resource?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           content: string
@@ -6401,6 +6434,10 @@ export type Database = {
         Returns: number
       }
       get_user_email: { Args: { _user_id: string }; Returns: string }
+      has_admin_permission: {
+        Args: { _action: string; _resource: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
