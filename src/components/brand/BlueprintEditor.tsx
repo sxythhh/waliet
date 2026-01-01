@@ -850,11 +850,9 @@ export function BlueprintEditor({
                 </span>}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {/* Preview button hidden - RLS policies prevent access in new tab
               <button onClick={() => window.open(`/blueprint/${blueprintId}/preview`, '_blank')} className="p-1.5 rounded-md border border-border bg-muted dark:bg-muted/50 text-secondary-foreground hover:bg-muted/80 dark:hover:bg-muted/70 transition-colors">
                 <img src={playArrowIcon} alt="Preview" className="h-5 w-5" />
               </button>
-              */}
               <button onClick={activateBlueprint} className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground border border-primary/20 font-inter font-medium tracking-[-0.4px] text-xs sm:text-sm hover:bg-primary/90 transition-colors">
                 Publish
               </button>
