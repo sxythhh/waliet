@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
@@ -294,52 +294,53 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
               New Broadcast
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="font-inter tracking-[-0.5px]">Create Broadcast</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
+          <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden max-h-[85vh] flex flex-col">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+              {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title" className="text-xs font-medium">Title</Label>
+                <Label htmlFor="title" className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Title</Label>
                 <Input
                   id="title"
                   placeholder="Broadcast title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="text-sm"
+                  className="h-10 font-inter tracking-[-0.5px]"
                 />
               </div>
 
+              {/* Message */}
               <div className="space-y-2">
-                <Label htmlFor="content" className="text-xs font-medium">Message</Label>
+                <Label htmlFor="content" className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Message</Label>
                 <Textarea
                   id="content"
                   placeholder="Write your announcement..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={5}
-                  className="text-sm resize-none"
+                  className="font-inter tracking-[-0.3px] resize-none"
                 />
               </div>
 
+              {/* Target Audience */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Target Audience</Label>
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Target Audience</Label>
                 <Select value={targetType} onValueChange={(v) => setTargetType(v as any)}>
-                  <SelectTrigger className="text-sm">
+                  <SelectTrigger className="h-10 font-inter tracking-[-0.5px] border-0 bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All creators in brand</SelectItem>
-                    <SelectItem value="campaigns">Specific campaigns</SelectItem>
-                    <SelectItem value="boosts">Specific boosts</SelectItem>
+                    <SelectItem value="all" className="font-inter tracking-[-0.5px]">All creators in brand</SelectItem>
+                    <SelectItem value="campaigns" className="font-inter tracking-[-0.5px]">Specific campaigns</SelectItem>
+                    <SelectItem value="boosts" className="font-inter tracking-[-0.5px]">Specific boosts</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Campaign Selection */}
               {targetType === "campaigns" && campaigns.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Select Campaigns</Label>
-                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
+                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Select Campaigns</Label>
+                  <div className="rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
                     {campaigns.map((campaign) => (
                       <div key={campaign.id} className="flex items-center gap-2">
                         <Checkbox
@@ -353,7 +354,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                             }
                           }}
                         />
-                        <label htmlFor={campaign.id} className="text-sm cursor-pointer">
+                        <label htmlFor={campaign.id} className="text-sm cursor-pointer font-inter tracking-[-0.5px]">
                           {campaign.title}
                         </label>
                       </div>
@@ -362,10 +363,11 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                 </div>
               )}
 
+              {/* Boost Selection */}
               {targetType === "boosts" && boosts.length > 0 && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Select Boosts</Label>
-                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
+                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Select Boosts</Label>
+                  <div className="rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
                     {boosts.map((boost) => (
                       <div key={boost.id} className="flex items-center gap-2">
                         <Checkbox
@@ -379,7 +381,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                             }
                           }}
                         />
-                        <label htmlFor={boost.id} className="text-sm cursor-pointer">
+                        <label htmlFor={boost.id} className="text-sm cursor-pointer font-inter tracking-[-0.5px]">
                           {boost.title}
                         </label>
                       </div>
@@ -388,15 +390,16 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                 </div>
               )}
 
+              {/* Schedule */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Schedule (optional)</Label>
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Schedule (optional)</Label>
                 <div className="flex gap-2">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-[200px] justify-start text-left font-normal text-sm",
+                          "flex-1 justify-start text-left font-inter tracking-[-0.5px] h-10 border-0 bg-muted/50",
                           !scheduledDate && "text-muted-foreground"
                         )}
                       >
@@ -418,35 +421,35 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="w-[120px] text-sm"
+                    className="w-[100px] h-10 font-inter tracking-[-0.5px] border-0 bg-muted/50"
                   />
                   {scheduledDate && (
-                    <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)}>
+                    <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)} className="h-10 font-inter tracking-[-0.5px]">
                       Clear
                     </Button>
                   )}
                 </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => handleSendBroadcast(true)} disabled={isSending} className="font-inter tracking-[-0.3px]">
-                  Save as Draft
-                </Button>
-                <Button onClick={() => handleSendBroadcast(false)} disabled={isSending} className="gap-2 font-inter tracking-[-0.3px]">
-                  {scheduledDate ? (
-                    <>
-                      <Clock className="h-4 w-4" />
-                      Schedule
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Send Now
-                    </>
-                  )}
-                </Button>
-              </div>
             </div>
+
+            <DialogFooter className="px-6 py-4 border-t border-border/30 shrink-0">
+              <Button variant="ghost" size="sm" onClick={() => handleSendBroadcast(true)} disabled={isSending} className="font-inter tracking-[-0.5px]">
+                Save as Draft
+              </Button>
+              <Button size="sm" onClick={() => handleSendBroadcast(false)} disabled={isSending} className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90 gap-1.5">
+                {scheduledDate ? (
+                  <>
+                    <Clock className="h-3.5 w-3.5" />
+                    Schedule
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-3.5 w-3.5" />
+                    Send Now
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
