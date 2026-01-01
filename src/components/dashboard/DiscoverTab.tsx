@@ -560,6 +560,31 @@ export function DiscoverTab({
         <div className="md:flex-1 md:overflow-auto px-6 pb-6">
         {/* Campaigns and Bounties Grid */}
         {loading ? <div className="space-y-8">
+            {/* Boosts Section Skeleton */}
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-20" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="rounded-xl border border-border/60 overflow-hidden">
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-5 w-3/4" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3.5 w-full" />
+                      </div>
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                    <div className="px-3 py-2 bg-muted/40 dark:bg-[#111111] border-t border-border/40 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="w-5 h-5 rounded-md" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-3 w-14" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Campaigns Section Skeleton */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -573,31 +598,13 @@ export function DiscoverTab({
                       <Skeleton className="absolute inset-0 w-full h-full" />
                     </div>
                     <div className="flex flex-col gap-1 px-0.5">
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-2.5 w-12" />
-                        <Skeleton className="h-2.5 w-10" />
-                      </div>
+                      <Skeleton className="h-2.5 w-20" />
                       <Skeleton className="h-1.5 w-full rounded-full" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Activity Skeleton */}
-            <div className="space-y-3">
-              <Skeleton className="h-6 w-36" />
-              <div className="space-y-0">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="flex items-center justify-between py-3 border-b border-border/30 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <div className="space-y-1">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Skeleton className="w-3.5 h-3.5 rounded-full" />
+                        <Skeleton className="h-2.5 w-12" />
                       </div>
                     </div>
-                    <Skeleton className="h-4 w-14" />
                   </div>
                 ))}
               </div>
