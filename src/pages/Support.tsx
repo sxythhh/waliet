@@ -370,6 +370,7 @@ const Support = () => {
   const [showChat, setShowChat] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const faqRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Ticket state
   const [tickets, setTickets] = useState<SupportTicket[]>(() => loadTickets());
@@ -588,8 +589,15 @@ const Support = () => {
                 placeholder="Search for help articles..."
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                  const value = e.target.value;
+                  setSearchQuery(value);
                   setSelectedCategory(null);
+                  // Scroll to results when searching
+                  if (value.trim()) {
+                    setTimeout(() => {
+                      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }
                 }}
                 className="pl-12 pr-4 h-14 text-lg rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm shadow-lg"
               />
@@ -893,7 +901,7 @@ const Support = () => {
 
           {/* FAQ List */}
           {(selectedCategory || searchQuery) && (
-            <div className="space-y-3">
+            <div ref={resultsRef} className="space-y-3 scroll-mt-6">
               {filteredFAQs.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
