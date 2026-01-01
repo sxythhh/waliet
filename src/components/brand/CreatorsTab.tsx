@@ -755,17 +755,9 @@ export function CreatorsTab({
         <div className="h-14 px-4 border-b border-border flex items-center gap-2 shrink-0">
           <div className="flex-1 relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input 
-              placeholder="Search messages..." 
-              className="h-8 pl-8 text-xs bg-muted/50 border-0"
-            />
+            <Input placeholder="Search messages..." className="h-8 pl-8 text-xs bg-muted/50 border-0" />
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`h-8 w-8 shrink-0 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} 
-            onClick={() => setShowBroadcasts(!showBroadcasts)}
-          >
+          <Button variant="ghost" size="icon" className={`h-8 w-8 shrink-0 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setShowBroadcasts(!showBroadcasts)}>
             <Megaphone className="h-4 w-4" />
           </Button>
         </div>
@@ -883,35 +875,25 @@ export function CreatorsTab({
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 hover:bg-muted/50"
-                  onClick={() => {
-                    if (bookmarkedConversations.has(activeConversation.id)) {
-                      setBookmarkedConversations(prev => {
-                        const next = new Set(prev);
-                        next.delete(activeConversation.id);
-                        return next;
-                      });
-                      toast.success('Conversation unbookmarked');
-                    } else {
-                      setBookmarkedConversations(prev => new Set(prev).add(activeConversation.id));
-                      toast.success('Conversation bookmarked');
-                    }
-                  }}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={() => {
+                  if (bookmarkedConversations.has(activeConversation.id)) {
+                    setBookmarkedConversations(prev => {
+                      const next = new Set(prev);
+                      next.delete(activeConversation.id);
+                      return next;
+                    });
+                    toast.success('Conversation unbookmarked');
+                  } else {
+                    setBookmarkedConversations(prev => new Set(prev).add(activeConversation.id));
+                    toast.success('Conversation bookmarked');
+                  }
+                }}>
                   <Bookmark className={`h-4 w-4 ${bookmarkedConversations.has(activeConversation.id) ? 'fill-primary text-primary' : ''}`} />
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => {
-                    toast.success('Conversation deleted');
-                    setActiveConversation(null);
-                  }}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive" onClick={() => {
+                  toast.success('Conversation deleted');
+                  setActiveConversation(null);
+                }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -967,7 +949,7 @@ export function CreatorsTab({
         {showBroadcasts && <div className="hidden lg:flex flex-col w-1/2 border-r border-border bg-background overflow-hidden">
             <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <Megaphone className="h-4 w-4 text-muted-foreground" />
+                
                 <h2 className="font-semibold text-sm">Broadcasts</h2>
               </div>
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setShowBroadcasts(false)}>
