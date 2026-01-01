@@ -71,6 +71,7 @@ const Install = lazy(() => import("./pages/Install"));
 const BrandPortal = lazy(() => import("./pages/BrandPortal"));
 const JoinTeam = lazy(() => import("./pages/JoinTeam"));
 const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
+const Store = lazy(() => import("./pages/Store"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -207,6 +208,11 @@ const App = () => (
                   <Route path="/leaderboard" element={
                     <Suspense fallback={<DashboardLoader />}>
                       <DashboardLayout><Leaderboard /></DashboardLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/store" element={
+                    <Suspense fallback={<DashboardLoader />}>
+                      <Store />
                     </Suspense>
                   } />
                   <Route path="/boost/:id" element={<BoostRedirect />} />
