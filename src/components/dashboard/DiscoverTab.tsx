@@ -606,82 +606,7 @@ export function DiscoverTab({
             <img src={emptyCampaignsImage} alt="No campaigns" className="w-64 h-64 object-contain opacity-80" />
             <p className="text-foreground font-medium">No campaigns or bounties found</p>
           </div> : <div className="space-y-8">
-            {/* Campaigns Section - Horizontal Scroll */}
-            {typeFilter !== 'boosts' && sortedCampaigns.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
-                    Campaigns
-                  </h2>
-                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('campaigns-scroll');
-                        if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
-                      }}
-                      className="p-2.5 hover:bg-muted/50 transition-colors"
-                    >
-                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                    <div className="w-px h-5 bg-border/50" />
-                    <button
-                      onClick={() => {
-                        const container = document.getElementById('campaigns-scroll');
-                        if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
-                      }}
-                      className="p-2.5 hover:bg-muted/50 transition-colors"
-                    >
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-                <div
-                  id="campaigns-scroll"
-                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {sortedCampaigns.map(campaign => {
-                    const handleCampaignClick = () => {
-                      if (navigateOnClick) {
-                        navigate(`/c/${campaign.slug}`);
-                      } else {
-                        setSelectedCampaign(campaign);
-                        setSheetOpen(true);
-                      }
-                    };
-                    const isEnded = campaign.status === "ended";
-                    const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
-                    return (
-                      <div key={campaign.id} className="flex-shrink-0 w-[160px]">
-                        <CampaignCard
-                          id={campaign.id}
-                          title={campaign.title}
-                          brand_name={campaign.brand_name}
-                          brand_logo_url={campaign.brand_logo_url}
-                          brand_is_verified={campaign.brand_is_verified}
-                          brand_slug={campaign.brand_slug}
-                          banner_url={campaign.banner_url}
-                          budget={campaign.budget}
-                          budget_used={campaign.budget_used}
-                          is_infinite_budget={campaign.is_infinite_budget}
-                          platforms={campaign.platforms}
-                          isEnded={isEnded}
-                          isBookmarked={isBookmarked}
-                          onClick={handleCampaignClick}
-                          onBookmarkClick={e => toggleBookmark(campaign.id, e)}
-                          onFullscreenClick={e => {
-                            e.stopPropagation();
-                            navigate(`/c/${campaign.slug}`);
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Boosts Section - Grid */}
+            {/* Boosts Section - Grid (Moved above Campaigns) */}
             {typeFilter !== 'campaigns' && (() => {
               const filteredBounties = bounties
                 .filter(b => !showBookmarkedOnly || bookmarkedBountyIds.includes(b.id))
@@ -757,7 +682,83 @@ export function DiscoverTab({
                 </div>
               );
             })()}
-            
+
+            {/* Campaigns Section - Horizontal Scroll */}
+            {typeFilter !== 'boosts' && sortedCampaigns.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold tracking-[-0.3px] font-['Geist',sans-serif]">
+                    Campaigns
+                  </h2>
+                  <div className="flex items-center border border-border/50 rounded-full overflow-hidden bg-muted/30">
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('campaigns-scroll');
+                        if (container) container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    <div className="w-px h-5 bg-border/50" />
+                    <button
+                      onClick={() => {
+                        const container = document.getElementById('campaigns-scroll');
+                        if (container) container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }}
+                      className="p-2.5 hover:bg-muted/50 transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  id="campaigns-scroll"
+                  className="flex gap-3 overflow-x-auto pt-2 pb-2 scrollbar-hide"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {sortedCampaigns.map(campaign => {
+                    const handleCampaignClick = () => {
+                      if (navigateOnClick) {
+                        navigate(`/c/${campaign.slug}`);
+                      } else {
+                        setSelectedCampaign(campaign);
+                        setSheetOpen(true);
+                      }
+                    };
+                    const isEnded = campaign.status === "ended";
+                    const isBookmarked = bookmarkedCampaignIds.includes(campaign.id);
+                    return (
+                      <div key={campaign.id} className="flex-shrink-0 w-[160px]">
+                        <CampaignCard
+                          id={campaign.id}
+                          title={campaign.title}
+                          brand_name={campaign.brand_name}
+                          brand_logo_url={campaign.brand_logo_url}
+                          brand_is_verified={campaign.brand_is_verified}
+                          brand_slug={campaign.brand_slug}
+                          banner_url={campaign.banner_url}
+                          budget={campaign.budget}
+                          budget_used={campaign.budget_used}
+                          is_infinite_budget={campaign.is_infinite_budget}
+                          platforms={campaign.platforms}
+                          isEnded={isEnded}
+                          isBookmarked={isBookmarked}
+                          onClick={handleCampaignClick}
+                          onBookmarkClick={e => toggleBookmark(campaign.id, e)}
+                          onFullscreenClick={e => {
+                            e.stopPropagation();
+                            navigate(`/c/${campaign.slug}`);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+
             {/* Recent Activity */}
             <RecentActivity />
           </div>}

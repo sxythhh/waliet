@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -50,18 +49,19 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   const perVideoRate = videos_per_month > 0 ? monthly_retainer / videos_per_month : 0;
 
   return (
-    <Card
+    <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border/40 transition-all duration-200",
-        "bg-card hover:border-border hover:shadow-md",
+        "group relative rounded-2xl p-5 transition-all duration-300 ease-out",
+        "bg-muted/40 hover:bg-muted/60",
+        "border border-transparent hover:border-border/50",
         isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       )}
       onClick={onClick}
     >
-      {/* Ended Overlay */}
+      {/* Ended Badge */}
       {isEnded && (
-        <div className="absolute top-3 left-3 z-[5]">
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+        <div className="absolute top-4 left-4 z-[5]">
+          <span className="font-['Inter'] tracking-[-0.5px] text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
             Ended
           </span>
         </div>
@@ -69,19 +69,19 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
 
       {/* Full Badge */}
       {isFull && !isEnded && (
-        <div className="absolute top-3 left-3 z-[5]">
-          <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded">
+        <div className="absolute top-4 left-4 z-[5]">
+          <span className="font-['Inter'] tracking-[-0.5px] text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">
             Full
           </span>
         </div>
       )}
 
       {/* Bookmark & Fullscreen Buttons */}
-      <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-4 right-4 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         {onFullscreenClick && (
           <button
             onClick={onFullscreenClick}
-            className="md:hidden p-1.5 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground transition-colors"
+            className="md:hidden p-1.5 rounded-full bg-background/90 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <Maximize2 className="h-3.5 w-3.5" />
           </button>
@@ -90,10 +90,10 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
           <button
             onClick={onBookmarkClick}
             className={cn(
-              "p-1.5 rounded-md backdrop-blur-sm border transition-colors",
+              "p-1.5 rounded-full backdrop-blur-sm transition-colors",
               isBookmarked
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background/80 border-border/50 text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground"
+                : "bg-background/90 text-muted-foreground hover:text-foreground"
             )}
           >
             <Bookmark className={cn("h-3.5 w-3.5", isBookmarked && "fill-current")} />
@@ -101,11 +101,11 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         )}
       </div>
 
-      <CardContent className="p-4 flex flex-col gap-3">
-        {/* Brand */}
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4">
+        {/* Brand Row */}
+        <div className="flex items-center gap-2.5">
           {brand_logo_url ? (
-            <div className="w-6 h-6 rounded-md overflow-hidden flex-shrink-0 border border-border/50">
+            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-background">
               <OptimizedImage
                 src={brand_logo_url}
                 alt={brand_name}
@@ -113,15 +113,15 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
               />
             </div>
           ) : (
-            <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-[10px] font-semibold text-muted-foreground">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-xs font-semibold text-muted-foreground">
                 {brand_name?.charAt(0) || "B"}
               </span>
             </div>
           )}
-          <div className="flex items-center gap-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             <span
-              className="text-xs font-medium text-muted-foreground truncate hover:text-foreground hover:underline cursor-pointer transition-colors"
+              className="font-['Inter'] tracking-[-0.5px] text-sm font-medium text-foreground truncate hover:underline cursor-pointer transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 if (brand_slug) navigate(`/b/${brand_slug}`);
@@ -134,40 +134,33 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-sm font-semibold leading-snug line-clamp-2 text-foreground tracking-[-0.2px]">
+        <h3 className="text-base font-semibold leading-tight line-clamp-2 text-foreground tracking-[-0.3px] group-hover:underline transition-all">
           {title}
         </h3>
 
-        {/* Description */}
-        {description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-            {description}
-          </p>
-        )}
-
         {/* Stats Row */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-          <span>
-            <span className="text-foreground font-semibold">${monthly_retainer.toLocaleString()}</span>
-            <span className="text-muted-foreground/70">/mo</span>
-          </span>
-          <span className="text-border">·</span>
-          <span>
-            <span className="text-foreground font-semibold">{videos_per_month}</span>
-            <span className="text-muted-foreground/70"> videos</span>
-          </span>
-          <span className="text-border">·</span>
-          <span>
-            <span className="text-foreground font-semibold">${perVideoRate.toFixed(0)}</span>
-            <span className="text-muted-foreground/70">/video</span>
-          </span>
+        <div className="flex items-center gap-3 font-['Inter'] tracking-[-0.5px]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-foreground">${monthly_retainer}</span>
+            <span className="text-xs text-muted-foreground">/mo</span>
+          </div>
+          <span className="text-muted-foreground/40">·</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-semibold text-foreground">{videos_per_month}</span>
+            <span className="text-xs text-muted-foreground">videos</span>
+          </div>
+          <span className="text-muted-foreground/40">·</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-semibold text-foreground">${perVideoRate.toFixed(0)}</span>
+            <span className="text-xs text-muted-foreground">/video</span>
+          </div>
         </div>
 
-        {/* Spots */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/30">
-          <span className="text-xs text-muted-foreground">
+        {/* Spots Row */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/20">
+          <span className="font-['Inter'] tracking-[-0.5px] text-xs text-muted-foreground">
             {isFull ? (
-              <span className="text-amber-600 dark:text-amber-400">No spots available</span>
+              <span className="text-amber-600 dark:text-amber-400 font-medium">No spots available</span>
             ) : (
               <>
                 <span className="text-foreground font-medium">{spotsRemaining}</span>
@@ -175,11 +168,11 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
               </>
             )}
           </span>
-          <span className="text-[10px] text-muted-foreground/70">
+          <span className="font-['Inter'] tracking-[-0.5px] text-[11px] text-muted-foreground/60">
             {accepted_creators_count}/{max_accepted_creators} joined
           </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
