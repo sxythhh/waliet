@@ -95,23 +95,28 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
       </div>
 
       {/* Brand Footer */}
-      <div className="px-4 py-3 bg-muted/40 dark:bg-[#1a1a1a] border-t border-border/40 flex items-center gap-2.5">
-        {brand_logo_url ? <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-background">
-            <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />
-          </div> : <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground">
-              {brand_name?.charAt(0) || "B"}
+      <div className="px-3 py-2 bg-muted/40 dark:bg-[#111111] border-t border-border/40 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {brand_logo_url ? <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0 bg-background">
+              <OptimizedImage src={brand_logo_url} alt={brand_name} className="w-full h-full object-cover" />
+            </div> : <div className="w-5 h-5 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+              <span className="text-[10px] font-semibold text-muted-foreground">
+                {brand_name?.charAt(0) || "B"}
+              </span>
+            </div>}
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="font-['Inter'] tracking-[-0.5px] text-xs font-medium text-foreground truncate hover:underline cursor-pointer transition-colors" onClick={e => {
+            e.stopPropagation();
+            if (brand_slug) navigate(`/b/${brand_slug}`);
+          }}>
+              {brand_name}
             </span>
-          </div>}
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="font-['Inter'] tracking-[-0.5px] text-sm font-medium text-foreground truncate hover:underline cursor-pointer transition-colors" onClick={e => {
-          e.stopPropagation();
-          if (brand_slug) navigate(`/b/${brand_slug}`);
-        }}>
-            {brand_name}
-          </span>
-          {brand_is_verified && <VerifiedBadge size="sm" />}
+            {brand_is_verified && <VerifiedBadge size="sm" />}
+          </div>
         </div>
+        <span className="text-[11px] text-muted-foreground font-['Inter'] tracking-[-0.3px] flex-shrink-0">
+          Just now
+        </span>
       </div>
     </div>;
 });
