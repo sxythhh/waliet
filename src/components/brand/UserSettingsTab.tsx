@@ -18,7 +18,6 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { TeamMembersTab } from "./TeamMembersTab";
 import { BrandWalletTab } from "./BrandWalletTab";
 import { LowBalanceSettingsTab } from "./LowBalanceSettingsTab";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -45,74 +44,589 @@ const PLAN_PRICES: Record<string, number> = {
   'growth': 249
 };
 const BRAND_COLORS = ["#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", "#22C55E", "#EAB308", "#F97316", "#EF4444", "#EC4899", "#A855F7", "#D946EF", "#F43F5E", "#64748B", "#1E293B"];
-
-const COUNTRIES = [
-  { code: "AF", name: "Afghanistan" }, { code: "AL", name: "Albania" }, { code: "DZ", name: "Algeria" },
-  { code: "AD", name: "Andorra" }, { code: "AO", name: "Angola" }, { code: "AG", name: "Antigua and Barbuda" },
-  { code: "AR", name: "Argentina" }, { code: "AM", name: "Armenia" }, { code: "AU", name: "Australia" },
-  { code: "AT", name: "Austria" }, { code: "AZ", name: "Azerbaijan" }, { code: "BS", name: "Bahamas" },
-  { code: "BH", name: "Bahrain" }, { code: "BD", name: "Bangladesh" }, { code: "BB", name: "Barbados" },
-  { code: "BY", name: "Belarus" }, { code: "BE", name: "Belgium" }, { code: "BZ", name: "Belize" },
-  { code: "BJ", name: "Benin" }, { code: "BT", name: "Bhutan" }, { code: "BO", name: "Bolivia" },
-  { code: "BA", name: "Bosnia and Herzegovina" }, { code: "BW", name: "Botswana" }, { code: "BR", name: "Brazil" },
-  { code: "BN", name: "Brunei" }, { code: "BG", name: "Bulgaria" }, { code: "BF", name: "Burkina Faso" },
-  { code: "BI", name: "Burundi" }, { code: "CV", name: "Cabo Verde" }, { code: "KH", name: "Cambodia" },
-  { code: "CM", name: "Cameroon" }, { code: "CA", name: "Canada" }, { code: "CF", name: "Central African Republic" },
-  { code: "TD", name: "Chad" }, { code: "CL", name: "Chile" }, { code: "CN", name: "China" },
-  { code: "CO", name: "Colombia" }, { code: "KM", name: "Comoros" }, { code: "CG", name: "Congo" },
-  { code: "CR", name: "Costa Rica" }, { code: "HR", name: "Croatia" }, { code: "CU", name: "Cuba" },
-  { code: "CY", name: "Cyprus" }, { code: "CZ", name: "Czech Republic" }, { code: "DK", name: "Denmark" },
-  { code: "DJ", name: "Djibouti" }, { code: "DM", name: "Dominica" }, { code: "DO", name: "Dominican Republic" },
-  { code: "EC", name: "Ecuador" }, { code: "EG", name: "Egypt" }, { code: "SV", name: "El Salvador" },
-  { code: "GQ", name: "Equatorial Guinea" }, { code: "ER", name: "Eritrea" }, { code: "EE", name: "Estonia" },
-  { code: "SZ", name: "Eswatini" }, { code: "ET", name: "Ethiopia" }, { code: "FJ", name: "Fiji" },
-  { code: "FI", name: "Finland" }, { code: "FR", name: "France" }, { code: "GA", name: "Gabon" },
-  { code: "GM", name: "Gambia" }, { code: "GE", name: "Georgia" }, { code: "DE", name: "Germany" },
-  { code: "GH", name: "Ghana" }, { code: "GR", name: "Greece" }, { code: "GD", name: "Grenada" },
-  { code: "GT", name: "Guatemala" }, { code: "GN", name: "Guinea" }, { code: "GW", name: "Guinea-Bissau" },
-  { code: "GY", name: "Guyana" }, { code: "HT", name: "Haiti" }, { code: "HN", name: "Honduras" },
-  { code: "HU", name: "Hungary" }, { code: "IS", name: "Iceland" }, { code: "IN", name: "India" },
-  { code: "ID", name: "Indonesia" }, { code: "IR", name: "Iran" }, { code: "IQ", name: "Iraq" },
-  { code: "IE", name: "Ireland" }, { code: "IL", name: "Israel" }, { code: "IT", name: "Italy" },
-  { code: "JM", name: "Jamaica" }, { code: "JP", name: "Japan" }, { code: "JO", name: "Jordan" },
-  { code: "KZ", name: "Kazakhstan" }, { code: "KE", name: "Kenya" }, { code: "KI", name: "Kiribati" },
-  { code: "KP", name: "North Korea" }, { code: "KR", name: "South Korea" }, { code: "KW", name: "Kuwait" },
-  { code: "KG", name: "Kyrgyzstan" }, { code: "LA", name: "Laos" }, { code: "LV", name: "Latvia" },
-  { code: "LB", name: "Lebanon" }, { code: "LS", name: "Lesotho" }, { code: "LR", name: "Liberia" },
-  { code: "LY", name: "Libya" }, { code: "LI", name: "Liechtenstein" }, { code: "LT", name: "Lithuania" },
-  { code: "LU", name: "Luxembourg" }, { code: "MG", name: "Madagascar" }, { code: "MW", name: "Malawi" },
-  { code: "MY", name: "Malaysia" }, { code: "MV", name: "Maldives" }, { code: "ML", name: "Mali" },
-  { code: "MT", name: "Malta" }, { code: "MH", name: "Marshall Islands" }, { code: "MR", name: "Mauritania" },
-  { code: "MU", name: "Mauritius" }, { code: "MX", name: "Mexico" }, { code: "FM", name: "Micronesia" },
-  { code: "MD", name: "Moldova" }, { code: "MC", name: "Monaco" }, { code: "MN", name: "Mongolia" },
-  { code: "ME", name: "Montenegro" }, { code: "MA", name: "Morocco" }, { code: "MZ", name: "Mozambique" },
-  { code: "MM", name: "Myanmar" }, { code: "NA", name: "Namibia" }, { code: "NR", name: "Nauru" },
-  { code: "NP", name: "Nepal" }, { code: "NL", name: "Netherlands" }, { code: "NZ", name: "New Zealand" },
-  { code: "NI", name: "Nicaragua" }, { code: "NE", name: "Niger" }, { code: "NG", name: "Nigeria" },
-  { code: "MK", name: "North Macedonia" }, { code: "NO", name: "Norway" }, { code: "OM", name: "Oman" },
-  { code: "PK", name: "Pakistan" }, { code: "PW", name: "Palau" }, { code: "PS", name: "Palestine" },
-  { code: "PA", name: "Panama" }, { code: "PG", name: "Papua New Guinea" }, { code: "PY", name: "Paraguay" },
-  { code: "PE", name: "Peru" }, { code: "PH", name: "Philippines" }, { code: "PL", name: "Poland" },
-  { code: "PT", name: "Portugal" }, { code: "QA", name: "Qatar" }, { code: "RO", name: "Romania" },
-  { code: "RU", name: "Russia" }, { code: "RW", name: "Rwanda" }, { code: "KN", name: "Saint Kitts and Nevis" },
-  { code: "LC", name: "Saint Lucia" }, { code: "VC", name: "Saint Vincent and the Grenadines" },
-  { code: "WS", name: "Samoa" }, { code: "SM", name: "San Marino" }, { code: "ST", name: "Sao Tome and Principe" },
-  { code: "SA", name: "Saudi Arabia" }, { code: "SN", name: "Senegal" }, { code: "RS", name: "Serbia" },
-  { code: "SC", name: "Seychelles" }, { code: "SL", name: "Sierra Leone" }, { code: "SG", name: "Singapore" },
-  { code: "SK", name: "Slovakia" }, { code: "SI", name: "Slovenia" }, { code: "SB", name: "Solomon Islands" },
-  { code: "SO", name: "Somalia" }, { code: "ZA", name: "South Africa" }, { code: "SS", name: "South Sudan" },
-  { code: "ES", name: "Spain" }, { code: "LK", name: "Sri Lanka" }, { code: "SD", name: "Sudan" },
-  { code: "SR", name: "Suriname" }, { code: "SE", name: "Sweden" }, { code: "CH", name: "Switzerland" },
-  { code: "SY", name: "Syria" }, { code: "TW", name: "Taiwan" }, { code: "TJ", name: "Tajikistan" },
-  { code: "TZ", name: "Tanzania" }, { code: "TH", name: "Thailand" }, { code: "TL", name: "Timor-Leste" },
-  { code: "TG", name: "Togo" }, { code: "TO", name: "Tonga" }, { code: "TT", name: "Trinidad and Tobago" },
-  { code: "TN", name: "Tunisia" }, { code: "TR", name: "Turkey" }, { code: "TM", name: "Turkmenistan" },
-  { code: "TV", name: "Tuvalu" }, { code: "UG", name: "Uganda" }, { code: "UA", name: "Ukraine" },
-  { code: "AE", name: "United Arab Emirates" }, { code: "GB", name: "United Kingdom" }, { code: "US", name: "United States" },
-  { code: "UY", name: "Uruguay" }, { code: "UZ", name: "Uzbekistan" }, { code: "VU", name: "Vanuatu" },
-  { code: "VA", name: "Vatican City" }, { code: "VE", name: "Venezuela" }, { code: "VN", name: "Vietnam" },
-  { code: "YE", name: "Yemen" }, { code: "ZM", name: "Zambia" }, { code: "ZW", name: "Zimbabwe" }
-];
+const COUNTRIES = [{
+  code: "AF",
+  name: "Afghanistan"
+}, {
+  code: "AL",
+  name: "Albania"
+}, {
+  code: "DZ",
+  name: "Algeria"
+}, {
+  code: "AD",
+  name: "Andorra"
+}, {
+  code: "AO",
+  name: "Angola"
+}, {
+  code: "AG",
+  name: "Antigua and Barbuda"
+}, {
+  code: "AR",
+  name: "Argentina"
+}, {
+  code: "AM",
+  name: "Armenia"
+}, {
+  code: "AU",
+  name: "Australia"
+}, {
+  code: "AT",
+  name: "Austria"
+}, {
+  code: "AZ",
+  name: "Azerbaijan"
+}, {
+  code: "BS",
+  name: "Bahamas"
+}, {
+  code: "BH",
+  name: "Bahrain"
+}, {
+  code: "BD",
+  name: "Bangladesh"
+}, {
+  code: "BB",
+  name: "Barbados"
+}, {
+  code: "BY",
+  name: "Belarus"
+}, {
+  code: "BE",
+  name: "Belgium"
+}, {
+  code: "BZ",
+  name: "Belize"
+}, {
+  code: "BJ",
+  name: "Benin"
+}, {
+  code: "BT",
+  name: "Bhutan"
+}, {
+  code: "BO",
+  name: "Bolivia"
+}, {
+  code: "BA",
+  name: "Bosnia and Herzegovina"
+}, {
+  code: "BW",
+  name: "Botswana"
+}, {
+  code: "BR",
+  name: "Brazil"
+}, {
+  code: "BN",
+  name: "Brunei"
+}, {
+  code: "BG",
+  name: "Bulgaria"
+}, {
+  code: "BF",
+  name: "Burkina Faso"
+}, {
+  code: "BI",
+  name: "Burundi"
+}, {
+  code: "CV",
+  name: "Cabo Verde"
+}, {
+  code: "KH",
+  name: "Cambodia"
+}, {
+  code: "CM",
+  name: "Cameroon"
+}, {
+  code: "CA",
+  name: "Canada"
+}, {
+  code: "CF",
+  name: "Central African Republic"
+}, {
+  code: "TD",
+  name: "Chad"
+}, {
+  code: "CL",
+  name: "Chile"
+}, {
+  code: "CN",
+  name: "China"
+}, {
+  code: "CO",
+  name: "Colombia"
+}, {
+  code: "KM",
+  name: "Comoros"
+}, {
+  code: "CG",
+  name: "Congo"
+}, {
+  code: "CR",
+  name: "Costa Rica"
+}, {
+  code: "HR",
+  name: "Croatia"
+}, {
+  code: "CU",
+  name: "Cuba"
+}, {
+  code: "CY",
+  name: "Cyprus"
+}, {
+  code: "CZ",
+  name: "Czech Republic"
+}, {
+  code: "DK",
+  name: "Denmark"
+}, {
+  code: "DJ",
+  name: "Djibouti"
+}, {
+  code: "DM",
+  name: "Dominica"
+}, {
+  code: "DO",
+  name: "Dominican Republic"
+}, {
+  code: "EC",
+  name: "Ecuador"
+}, {
+  code: "EG",
+  name: "Egypt"
+}, {
+  code: "SV",
+  name: "El Salvador"
+}, {
+  code: "GQ",
+  name: "Equatorial Guinea"
+}, {
+  code: "ER",
+  name: "Eritrea"
+}, {
+  code: "EE",
+  name: "Estonia"
+}, {
+  code: "SZ",
+  name: "Eswatini"
+}, {
+  code: "ET",
+  name: "Ethiopia"
+}, {
+  code: "FJ",
+  name: "Fiji"
+}, {
+  code: "FI",
+  name: "Finland"
+}, {
+  code: "FR",
+  name: "France"
+}, {
+  code: "GA",
+  name: "Gabon"
+}, {
+  code: "GM",
+  name: "Gambia"
+}, {
+  code: "GE",
+  name: "Georgia"
+}, {
+  code: "DE",
+  name: "Germany"
+}, {
+  code: "GH",
+  name: "Ghana"
+}, {
+  code: "GR",
+  name: "Greece"
+}, {
+  code: "GD",
+  name: "Grenada"
+}, {
+  code: "GT",
+  name: "Guatemala"
+}, {
+  code: "GN",
+  name: "Guinea"
+}, {
+  code: "GW",
+  name: "Guinea-Bissau"
+}, {
+  code: "GY",
+  name: "Guyana"
+}, {
+  code: "HT",
+  name: "Haiti"
+}, {
+  code: "HN",
+  name: "Honduras"
+}, {
+  code: "HU",
+  name: "Hungary"
+}, {
+  code: "IS",
+  name: "Iceland"
+}, {
+  code: "IN",
+  name: "India"
+}, {
+  code: "ID",
+  name: "Indonesia"
+}, {
+  code: "IR",
+  name: "Iran"
+}, {
+  code: "IQ",
+  name: "Iraq"
+}, {
+  code: "IE",
+  name: "Ireland"
+}, {
+  code: "IL",
+  name: "Israel"
+}, {
+  code: "IT",
+  name: "Italy"
+}, {
+  code: "JM",
+  name: "Jamaica"
+}, {
+  code: "JP",
+  name: "Japan"
+}, {
+  code: "JO",
+  name: "Jordan"
+}, {
+  code: "KZ",
+  name: "Kazakhstan"
+}, {
+  code: "KE",
+  name: "Kenya"
+}, {
+  code: "KI",
+  name: "Kiribati"
+}, {
+  code: "KP",
+  name: "North Korea"
+}, {
+  code: "KR",
+  name: "South Korea"
+}, {
+  code: "KW",
+  name: "Kuwait"
+}, {
+  code: "KG",
+  name: "Kyrgyzstan"
+}, {
+  code: "LA",
+  name: "Laos"
+}, {
+  code: "LV",
+  name: "Latvia"
+}, {
+  code: "LB",
+  name: "Lebanon"
+}, {
+  code: "LS",
+  name: "Lesotho"
+}, {
+  code: "LR",
+  name: "Liberia"
+}, {
+  code: "LY",
+  name: "Libya"
+}, {
+  code: "LI",
+  name: "Liechtenstein"
+}, {
+  code: "LT",
+  name: "Lithuania"
+}, {
+  code: "LU",
+  name: "Luxembourg"
+}, {
+  code: "MG",
+  name: "Madagascar"
+}, {
+  code: "MW",
+  name: "Malawi"
+}, {
+  code: "MY",
+  name: "Malaysia"
+}, {
+  code: "MV",
+  name: "Maldives"
+}, {
+  code: "ML",
+  name: "Mali"
+}, {
+  code: "MT",
+  name: "Malta"
+}, {
+  code: "MH",
+  name: "Marshall Islands"
+}, {
+  code: "MR",
+  name: "Mauritania"
+}, {
+  code: "MU",
+  name: "Mauritius"
+}, {
+  code: "MX",
+  name: "Mexico"
+}, {
+  code: "FM",
+  name: "Micronesia"
+}, {
+  code: "MD",
+  name: "Moldova"
+}, {
+  code: "MC",
+  name: "Monaco"
+}, {
+  code: "MN",
+  name: "Mongolia"
+}, {
+  code: "ME",
+  name: "Montenegro"
+}, {
+  code: "MA",
+  name: "Morocco"
+}, {
+  code: "MZ",
+  name: "Mozambique"
+}, {
+  code: "MM",
+  name: "Myanmar"
+}, {
+  code: "NA",
+  name: "Namibia"
+}, {
+  code: "NR",
+  name: "Nauru"
+}, {
+  code: "NP",
+  name: "Nepal"
+}, {
+  code: "NL",
+  name: "Netherlands"
+}, {
+  code: "NZ",
+  name: "New Zealand"
+}, {
+  code: "NI",
+  name: "Nicaragua"
+}, {
+  code: "NE",
+  name: "Niger"
+}, {
+  code: "NG",
+  name: "Nigeria"
+}, {
+  code: "MK",
+  name: "North Macedonia"
+}, {
+  code: "NO",
+  name: "Norway"
+}, {
+  code: "OM",
+  name: "Oman"
+}, {
+  code: "PK",
+  name: "Pakistan"
+}, {
+  code: "PW",
+  name: "Palau"
+}, {
+  code: "PS",
+  name: "Palestine"
+}, {
+  code: "PA",
+  name: "Panama"
+}, {
+  code: "PG",
+  name: "Papua New Guinea"
+}, {
+  code: "PY",
+  name: "Paraguay"
+}, {
+  code: "PE",
+  name: "Peru"
+}, {
+  code: "PH",
+  name: "Philippines"
+}, {
+  code: "PL",
+  name: "Poland"
+}, {
+  code: "PT",
+  name: "Portugal"
+}, {
+  code: "QA",
+  name: "Qatar"
+}, {
+  code: "RO",
+  name: "Romania"
+}, {
+  code: "RU",
+  name: "Russia"
+}, {
+  code: "RW",
+  name: "Rwanda"
+}, {
+  code: "KN",
+  name: "Saint Kitts and Nevis"
+}, {
+  code: "LC",
+  name: "Saint Lucia"
+}, {
+  code: "VC",
+  name: "Saint Vincent and the Grenadines"
+}, {
+  code: "WS",
+  name: "Samoa"
+}, {
+  code: "SM",
+  name: "San Marino"
+}, {
+  code: "ST",
+  name: "Sao Tome and Principe"
+}, {
+  code: "SA",
+  name: "Saudi Arabia"
+}, {
+  code: "SN",
+  name: "Senegal"
+}, {
+  code: "RS",
+  name: "Serbia"
+}, {
+  code: "SC",
+  name: "Seychelles"
+}, {
+  code: "SL",
+  name: "Sierra Leone"
+}, {
+  code: "SG",
+  name: "Singapore"
+}, {
+  code: "SK",
+  name: "Slovakia"
+}, {
+  code: "SI",
+  name: "Slovenia"
+}, {
+  code: "SB",
+  name: "Solomon Islands"
+}, {
+  code: "SO",
+  name: "Somalia"
+}, {
+  code: "ZA",
+  name: "South Africa"
+}, {
+  code: "SS",
+  name: "South Sudan"
+}, {
+  code: "ES",
+  name: "Spain"
+}, {
+  code: "LK",
+  name: "Sri Lanka"
+}, {
+  code: "SD",
+  name: "Sudan"
+}, {
+  code: "SR",
+  name: "Suriname"
+}, {
+  code: "SE",
+  name: "Sweden"
+}, {
+  code: "CH",
+  name: "Switzerland"
+}, {
+  code: "SY",
+  name: "Syria"
+}, {
+  code: "TW",
+  name: "Taiwan"
+}, {
+  code: "TJ",
+  name: "Tajikistan"
+}, {
+  code: "TZ",
+  name: "Tanzania"
+}, {
+  code: "TH",
+  name: "Thailand"
+}, {
+  code: "TL",
+  name: "Timor-Leste"
+}, {
+  code: "TG",
+  name: "Togo"
+}, {
+  code: "TO",
+  name: "Tonga"
+}, {
+  code: "TT",
+  name: "Trinidad and Tobago"
+}, {
+  code: "TN",
+  name: "Tunisia"
+}, {
+  code: "TR",
+  name: "Turkey"
+}, {
+  code: "TM",
+  name: "Turkmenistan"
+}, {
+  code: "TV",
+  name: "Tuvalu"
+}, {
+  code: "UG",
+  name: "Uganda"
+}, {
+  code: "UA",
+  name: "Ukraine"
+}, {
+  code: "AE",
+  name: "United Arab Emirates"
+}, {
+  code: "GB",
+  name: "United Kingdom"
+}, {
+  code: "US",
+  name: "United States"
+}, {
+  code: "UY",
+  name: "Uruguay"
+}, {
+  code: "UZ",
+  name: "Uzbekistan"
+}, {
+  code: "VU",
+  name: "Vanuatu"
+}, {
+  code: "VA",
+  name: "Vatican City"
+}, {
+  code: "VE",
+  name: "Venezuela"
+}, {
+  code: "VN",
+  name: "Vietnam"
+}, {
+  code: "YE",
+  name: "Yemen"
+}, {
+  code: "ZM",
+  name: "Zambia"
+}, {
+  code: "ZW",
+  name: "Zimbabwe"
+}];
 interface Brand {
   id: string;
   name: string;
@@ -565,7 +1079,19 @@ export function UserSettingsTab() {
 
         {/* Tabs Navigation */}
         <div className="flex items-center gap-6 border-b border-border mt-6 px-4">
-          {[{ key: "wallet", label: "Billing" }, { key: "general", label: "General" }, { key: "integrations", label: "Integrations" }, { key: "team", label: "Team" }].map(tab => <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab.key ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+          {[{
+          key: "wallet",
+          label: "Billing"
+        }, {
+          key: "general",
+          label: "General"
+        }, {
+          key: "integrations",
+          label: "Integrations"
+        }, {
+          key: "team",
+          label: "Team"
+        }].map(tab => <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`px-1 py-3 text-sm font-medium tracking-[-0.5px] transition-all border-b-2 -mb-px ${activeTab === tab.key ? "border-[#1f60dd] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {tab.label}
             </button>)}
         </div>
@@ -646,33 +1172,34 @@ export function UserSettingsTab() {
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Legal Business Name</Label>
                   <Input value={profile.legal_business_name} onChange={e => setProfile({
-                    ...profile,
-                    legal_business_name: e.target.value
-                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
+                  ...profile,
+                  legal_business_name: e.target.value
+                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
                 </div>
 
                 {/* Billing Address */}
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Billing Address</Label>
                   <Input value={profile.billing_address} onChange={e => setProfile({
-                    ...profile,
-                    billing_address: e.target.value
-                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
+                  ...profile,
+                  billing_address: e.target.value
+                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
                 </div>
 
                 {/* Country */}
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Country</Label>
-                  <Select value={profile.billing_country} onValueChange={(value) => setProfile({ ...profile, billing_country: value })}>
+                  <Select value={profile.billing_country} onValueChange={value => setProfile({
+                  ...profile,
+                  billing_country: value
+                })}>
                     <SelectTrigger className="h-11 bg-muted/30 border-0 tracking-[-0.5px]">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      {COUNTRIES.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
+                      {COUNTRIES.map(country => <SelectItem key={country.code} value={country.code}>
                           {country.name}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -681,9 +1208,9 @@ export function UserSettingsTab() {
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground tracking-[-0.5px]">VAT Number</Label>
                   <Input value={profile.vat_number} onChange={e => setProfile({
-                    ...profile,
-                    vat_number: e.target.value
-                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
+                  ...profile,
+                  vat_number: e.target.value
+                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
                 </div>
               </div>
 
@@ -893,9 +1420,7 @@ export function UserSettingsTab() {
               {/* Notifications Section */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <img src={mailNotificationIcon} alt="" className="h-5 w-5" />
-                  </div>
+                  
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive email alerts</p>
@@ -912,9 +1437,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewApplication} onCheckedChange={checked => {
-                      setNotifyNewApplication(checked);
-                      handleSaveNotifications();
-                    }} />
+                    setNotifyNewApplication(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
 
                   {/* New boost submission */}
@@ -927,9 +1452,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewSale} onCheckedChange={checked => {
-                      setNotifyNewSale(checked);
-                      handleSaveNotifications();
-                    }} />
+                    setNotifyNewSale(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
 
                   {/* New message from partner */}
@@ -942,9 +1467,9 @@ export function UserSettingsTab() {
                       </div>
                     </div>
                     <Switch checked={notifyNewMessage} onCheckedChange={checked => {
-                      setNotifyNewMessage(checked);
-                      handleSaveNotifications();
-                    }} />
+                    setNotifyNewMessage(checked);
+                    handleSaveNotifications();
+                  }} />
                   </div>
                 </div>
               </div>
@@ -1016,16 +1541,12 @@ export function UserSettingsTab() {
           }} />}
 
           {/* Brand Wallet Component */}
-          {isBrandMode && currentBrand && (
-            <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />
-          )}
+          {isBrandMode && currentBrand && <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />}
 
           {/* Low Balance Protection */}
-          {isBrandMode && currentBrand && (
-            <div className="border-t border-border/50 pt-6">
+          {isBrandMode && currentBrand && <div className="border-t border-border/50 pt-6">
               <LowBalanceSettingsTab brandId={currentBrand.id} />
-            </div>
-          )}
+            </div>}
 
         </TabsContent>
       </Tabs>
