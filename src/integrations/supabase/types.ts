@@ -5940,7 +5940,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["ticket_priority"]
           status?: Database["public"]["Enums"]["ticket_status"]
           subject: string
-          ticket_number: string
+          ticket_number?: string
           updated_at?: string
           user_id: string
         }
