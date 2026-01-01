@@ -158,7 +158,7 @@ export default function PublicProfile() {
       setLoading(false);
       return;
     }
-    setProfile(profileData);
+    setProfile(profileData as unknown as Profile);
 
     // Fetch testimonials
     const {

@@ -781,6 +781,7 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type: string | null
+          reward_amount: number | null
           shortimize_collection_name: string | null
           slug: string | null
           start_date: string | null
@@ -814,6 +815,7 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type?: string | null
+          reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
@@ -847,6 +849,7 @@ export type Database = {
           max_accepted_creators?: number
           monthly_retainer?: number
           position_type?: string | null
+          reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
           start_date?: string | null
@@ -1280,7 +1283,9 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          invite_token: string | null
           invited_by: string
+          is_link_invite: boolean | null
           role: string
           status: string
           updated_at: string
@@ -1291,7 +1296,9 @@ export type Database = {
           email: string
           expires_at?: string
           id?: string
+          invite_token?: string | null
           invited_by: string
+          is_link_invite?: boolean | null
           role?: string
           status?: string
           updated_at?: string
@@ -1302,7 +1309,9 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          invite_token?: string | null
           invited_by?: string
+          is_link_invite?: boolean | null
           role?: string
           status?: string
           updated_at?: string
@@ -1360,6 +1369,8 @@ export type Database = {
           id: string
           referral_code: string
           referrer_brand_id: string | null
+          referrer_id: string | null
+          reward_earned: number | null
           status: string
           total_earned: number | null
           updated_at: string
@@ -1371,6 +1382,8 @@ export type Database = {
           id?: string
           referral_code: string
           referrer_brand_id?: string | null
+          referrer_id?: string | null
+          reward_earned?: number | null
           status?: string
           total_earned?: number | null
           updated_at?: string
@@ -1382,6 +1395,8 @@ export type Database = {
           id?: string
           referral_code?: string
           referrer_brand_id?: string | null
+          referrer_id?: string | null
+          reward_earned?: number | null
           status?: string
           total_earned?: number | null
           updated_at?: string
@@ -1607,6 +1622,8 @@ export type Database = {
           notify_new_application: boolean | null
           notify_new_message: boolean | null
           notify_new_sale: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           renewal_date: string | null
           shortimize_api_key: string | null
           show_account_tab: boolean
@@ -1628,6 +1645,7 @@ export type Database = {
           subscription_status: string | null
           tiktok_handle: string | null
           updated_at: string
+          website: string | null
           website_url: string | null
           whop_company_id: string | null
           whop_manage_url: string | null
@@ -1668,6 +1686,8 @@ export type Database = {
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
@@ -1689,6 +1709,7 @@ export type Database = {
           subscription_status?: string | null
           tiktok_handle?: string | null
           updated_at?: string
+          website?: string | null
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null
@@ -1729,6 +1750,8 @@ export type Database = {
           notify_new_application?: boolean | null
           notify_new_message?: boolean | null
           notify_new_sale?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           renewal_date?: string | null
           shortimize_api_key?: string | null
           show_account_tab?: boolean
@@ -1750,6 +1773,7 @@ export type Database = {
           subscription_status?: string | null
           tiktok_handle?: string | null
           updated_at?: string
+          website?: string | null
           website_url?: string | null
           whop_company_id?: string | null
           whop_manage_url?: string | null

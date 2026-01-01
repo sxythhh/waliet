@@ -85,10 +85,11 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
         .select("user_id, platform");
 
       // Process each creator
+      const typedSubmissions = submissions as unknown as Array<{creator_id: string; status: string; platform: string; created_at: string}>;
       const creatorInsights: CreatorInsight[] = profiles.map((profile) => {
         const userEarnings = earnings?.filter((e) => e.user_id === profile.id) || [];
         const userSubmissions =
-          submissions?.filter((s) => s.creator_id === profile.id) || [];
+          typedSubmissions?.filter((s) => s.creator_id === profile.id) || [];
         const userSocialAccounts =
           socialAccounts?.filter((a) => a.user_id === profile.id) || [];
 

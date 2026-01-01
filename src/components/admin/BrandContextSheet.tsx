@@ -238,7 +238,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
       });
 
       setCampaigns(campaignsData);
-      setTeamMembers(members as TeamMember[]);
+      setTeamMembers(members as unknown as TeamMember[]);
 
       // Format recent activity from transactions
       const activity: RecentActivity[] = transactions.slice(0, 8).map(tx => ({
