@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 import { Search, Users, X, Mail, ExternalLink, Download, MessageSquare, Send, PenSquare, HelpCircle, ArrowLeft, Bookmark, Filter, Plus, Trash2, PanelRightClose, PanelRightOpen, MoreHorizontal, DollarSign, Database, Megaphone } from "lucide-react";
 import { BrandBroadcastsTab } from "@/components/brand/BrandBroadcastsTab";
@@ -862,14 +863,49 @@ export function CreatorsTab({
               <Avatar className="h-10 w-10 ring-2 ring-background shadow-sm">
                 <AvatarImage src={activeConversation.creator?.avatar_url || undefined} />
                 <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-sm font-medium">
-                  {activeConversation.creator?.username.slice(0, 2).toUpperCase() || "??"}
+                  {(activeConversation.creator?.full_name || activeConversation.creator?.username || "?").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <span className="font-inter tracking-[-0.3px] font-semibold text-sm hover:text-primary cursor-pointer transition-colors block truncate" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
-                  {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
-                </span>
-                <span className="text-[11px] text-muted-foreground">@{activeConversation.creator?.username}</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-inter tracking-[-0.3px] font-semibold text-sm hover:underline cursor-pointer transition-colors truncate" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
+                    {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">@{activeConversation.creator?.username}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 hover:bg-muted/50"
+                  onClick={() => {
+                    if (bookmarkedConversations.has(activeConversation.id)) {
+                      setBookmarkedConversations(prev => {
+                        const next = new Set(prev);
+                        next.delete(activeConversation.id);
+                        return next;
+                      });
+                      toast.success('Conversation unbookmarked');
+                    } else {
+                      setBookmarkedConversations(prev => new Set(prev).add(activeConversation.id));
+                      toast.success('Conversation bookmarked');
+                    }
+                  }}
+                >
+                  <Bookmark className={`h-4 w-4 ${bookmarkedConversations.has(activeConversation.id) ? 'fill-primary text-primary' : ''}`} />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => {
+                    toast.success('Conversation deleted');
+                    setActiveConversation(null);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
