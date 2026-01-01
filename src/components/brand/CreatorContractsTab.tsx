@@ -497,15 +497,15 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
             </div>
             <div className="flex items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px] h-9 text-xs border-border/50 bg-zinc-900 hover:bg-zinc-800 transition-colors rounded-lg text-zinc-100">
+                <SelectTrigger className="w-[140px] h-9 text-xs border-0 bg-secondary hover:bg-muted transition-colors rounded-lg">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-zinc-800">
-                  <SelectItem value="all" className="text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">All Statuses</SelectItem>
-                  <SelectItem value="draft" className="text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">Draft</SelectItem>
-                  <SelectItem value="sent" className="text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">Awaiting Signature</SelectItem>
-                  <SelectItem value="signed" className="text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">Signed</SelectItem>
-                  <SelectItem value="expired" className="text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">Expired</SelectItem>
+                <SelectContent className="bg-popover border-0">
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="sent">Awaiting Signature</SelectItem>
+                  <SelectItem value="signed">Signed</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
                 </SelectContent>
               </Select>
               <DropdownMenu>
@@ -515,12 +515,12 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                     <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-zinc-900 border-zinc-800">
-                  <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="gap-2 text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">
+                <DropdownMenuContent align="end" className="w-48 bg-popover border-0">
+                  <DropdownMenuItem onClick={() => setCreateDialogOpen(true)} className="gap-2">
                     <FileText className="h-4 w-4" />
                     New Contract
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { resetTemplateForm(); setTemplateDialogOpen(true); }} className="gap-2 text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100">
+                  <DropdownMenuItem onClick={() => { resetTemplateForm(); setTemplateDialogOpen(true); }} className="gap-2">
                     <Copy className="h-4 w-4" />
                     New Template
                   </DropdownMenuItem>
