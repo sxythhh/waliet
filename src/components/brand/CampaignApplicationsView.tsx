@@ -6,14 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft } from "lucide-react";
+import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
 import instagramLogoWhite from "@/assets/instagram-logo-white.png";
 import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
-type StatusFilter = "all" | "pending" | "approved" | "rejected";
+type StatusFilter = "all" | "pending" | "approved" | "rejected" | "waitlisted";
 interface Application {
   id: string;
   campaign_id?: string;
@@ -70,7 +73,38 @@ export function CampaignApplicationsView({
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [notesCreator, setNotesCreator] = useState<{ id: string; name: string; username: string; avatarUrl?: string | null } | null>(null);
+  const [currentBrandId, setCurrentBrandId] = useState<string | null>(null);
+
+  // Bulk selection state
+  const [selectedApps, setSelectedApps] = useState<Set<string>>(new Set());
+  const [bulkActionDialog, setBulkActionDialog] = useState<{ type: 'accept' | 'reject' | 'waitlist' | 'message' | null; open: boolean }>({ type: null, open: false });
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+
   const isBoost = !!boostId && !brandId;
+
+  // Fetch brand ID from workspace slug
+  useEffect(() => {
+    const fetchBrandId = async () => {
+      if (brandId) {
+        setCurrentBrandId(brandId);
+        return;
+      }
+      if (!workspace) return;
+
+      const { data: brand } = await supabase
+        .from('brands')
+        .select('id')
+        .eq('slug', workspace)
+        .single();
+
+      if (brand) {
+        setCurrentBrandId(brand.id);
+      }
+    };
+    fetchBrandId();
+  }, [workspace, brandId]);
   const isAllMode = !!brandId && !campaignId && !boostId;
   useEffect(() => {
     fetchApplications();
@@ -255,6 +289,7 @@ export function CampaignApplicationsView({
   const pendingCount = applications.filter(a => a.status === 'pending').length;
   const approvedCount = applications.filter(a => a.status === 'approved' || a.status === 'accepted').length;
   const rejectedCount = applications.filter(a => a.status === 'rejected').length;
+  const waitlistedCount = applications.filter(a => a.status === 'waitlisted').length;
   const totalCount = applications.length;
   const filteredApplications = useMemo(() => {
     if (statusFilter === "all") return applications;
@@ -276,6 +311,8 @@ export function CampaignApplicationsView({
         return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-emerald-500 border-0 bg-emerald-500/10 w-[70px] justify-center">Approved</Badge>;
       case 'rejected':
         return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-red-500 border-0 bg-red-500/10 w-[70px] justify-center">Rejected</Badge>;
+      case 'waitlisted':
+        return <Badge variant="outline" className="text-xs font-medium tracking-[-0.3px] text-blue-500 border-0 bg-blue-500/10 w-[70px] justify-center">Waitlisted</Badge>;
       default:
         return <Badge variant="outline" className="text-xs font-inter font-medium tracking-[-0.5px] text-amber-500 border-0 bg-amber-500/10 w-[70px] justify-center">Pending</Badge>;
     }
@@ -289,6 +326,171 @@ export function CampaignApplicationsView({
   };
   const handleMobileBack = () => {
     setMobileShowDetail(false);
+  };
+
+  // Handle message button click
+  const handleMessage = async (creatorId: string) => {
+    if (!workspace) return;
+
+    const { data: brand } = await supabase
+      .from('brands')
+      .select('id')
+      .eq('slug', workspace)
+      .single();
+
+    if (!brand) {
+      toast.error('Could not find brand');
+      return;
+    }
+
+    // Check for existing conversation
+    const { data: existingConvo } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('brand_id', brand.id)
+      .eq('creator_id', creatorId)
+      .single();
+
+    if (!existingConvo) {
+      // Create new conversation
+      await supabase
+        .from('conversations')
+        .insert({
+          brand_id: brand.id,
+          creator_id: creatorId,
+          last_message_at: new Date().toISOString()
+        });
+    }
+
+    // Navigate to messages tab
+    navigate(`/dashboard?workspace=${workspace}&tab=creators&subtab=messages`);
+  };
+
+  // Bulk selection helpers
+  const pendingAppsInFilter = filteredApplications.filter(a => a.status === 'pending');
+  const toggleAppSelection = (appId: string) => {
+    const newSet = new Set(selectedApps);
+    if (newSet.has(appId)) {
+      newSet.delete(appId);
+    } else {
+      newSet.add(appId);
+    }
+    setSelectedApps(newSet);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedApps.size === pendingAppsInFilter.length && pendingAppsInFilter.length > 0) {
+      setSelectedApps(new Set());
+    } else {
+      setSelectedApps(new Set(pendingAppsInFilter.map(a => a.id)));
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkAccept = async () => {
+    setBulkProcessing(true);
+    try {
+      const selectedIds = Array.from(selectedApps);
+      const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
+
+      for (const app of selectedApplications) {
+        const appIsBoost = app.is_boost || !!app.bounty_campaign_id;
+        const tableName = appIsBoost ? "bounty_applications" : "campaign_submissions";
+        const newStatus = appIsBoost ? 'accepted' : 'approved';
+
+        await supabase
+          .from(tableName)
+          .update({ status: newStatus, reviewed_at: new Date().toISOString() })
+          .eq("id", app.id);
+      }
+
+      // Update local state
+      setApplications(prev => prev.map(a =>
+        selectedIds.includes(a.id) && a.status === 'pending'
+          ? { ...a, status: applications.find(app => app.id === a.id)?.is_boost ? 'accepted' : 'approved' }
+          : a
+      ));
+
+      setSelectedApps(new Set());
+      onApplicationReviewed?.();
+      toast.success(`${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''} accepted`);
+    } catch (error) {
+      console.error("Error bulk accepting:", error);
+      toast.error("Failed to accept applications");
+    } finally {
+      setBulkProcessing(false);
+      setBulkActionDialog({ type: null, open: false });
+    }
+  };
+
+  const handleBulkReject = async () => {
+    setBulkProcessing(true);
+    try {
+      const selectedIds = Array.from(selectedApps);
+      const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
+
+      for (const app of selectedApplications) {
+        const appIsBoost = app.is_boost || !!app.bounty_campaign_id;
+        const tableName = appIsBoost ? "bounty_applications" : "campaign_submissions";
+
+        await supabase
+          .from(tableName)
+          .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+          .eq("id", app.id);
+      }
+
+      // Update local state
+      setApplications(prev => prev.map(a =>
+        selectedIds.includes(a.id) && a.status === 'pending'
+          ? { ...a, status: 'rejected' }
+          : a
+      ));
+
+      setSelectedApps(new Set());
+      onApplicationReviewed?.();
+      toast.success(`${selectedApplications.length} application${selectedApplications.length > 1 ? 's' : ''} rejected`);
+    } catch (error) {
+      console.error("Error bulk rejecting:", error);
+      toast.error("Failed to reject applications");
+    } finally {
+      setBulkProcessing(false);
+      setBulkActionDialog({ type: null, open: false });
+    }
+  };
+
+  const handleBulkWaitlist = async () => {
+    setBulkProcessing(true);
+    try {
+      const selectedIds = Array.from(selectedApps);
+      const selectedApplications = applications.filter(a => selectedIds.includes(a.id) && a.status === 'pending');
+
+      for (const app of selectedApplications) {
+        const appIsBoost = app.is_boost || !!app.bounty_campaign_id;
+        if (!appIsBoost) continue; // Only boost applications can be waitlisted
+
+        await supabase
+          .from("bounty_applications")
+          .update({ status: 'waitlisted', reviewed_at: new Date().toISOString() })
+          .eq("id", app.id);
+      }
+
+      // Update local state
+      setApplications(prev => prev.map(a =>
+        selectedIds.includes(a.id) && a.status === 'pending' && (a.is_boost || !!a.bounty_campaign_id)
+          ? { ...a, status: 'waitlisted' }
+          : a
+      ));
+
+      setSelectedApps(new Set());
+      onApplicationReviewed?.();
+      toast.success(`Applications added to waitlist`);
+    } catch (error) {
+      console.error("Error bulk waitlisting:", error);
+      toast.error("Failed to add to waitlist");
+    } finally {
+      setBulkProcessing(false);
+      setBulkActionDialog({ type: null, open: false });
+    }
   };
   if (loading) {
     return <div className="p-6 space-y-4">
@@ -308,12 +510,22 @@ export function CampaignApplicationsView({
         </p>
       </div>;
   }
-  return <div className="flex h-full">
+  return <>
+    <div className="flex h-full">
       {/* Applications List - Left Column (hidden on mobile when detail is shown) */}
       <div className={`w-full md:w-80 border-r border-border flex flex-col ${mobileShowDetail ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold">Applications</h3>
+            <div className="flex items-center gap-2">
+              {pendingAppsInFilter.length > 0 && (
+                <Checkbox
+                  checked={selectedApps.size === pendingAppsInFilter.length && pendingAppsInFilter.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de]"
+                />
+              )}
+              <h3 className="font-semibold">Applications</h3>
+            </div>
             <Select value={statusFilter} onValueChange={value => setStatusFilter(value as StatusFilter)}>
               <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-muted/50 hover:bg-muted focus:ring-0 focus:ring-offset-0 gap-1 px-2.5">
                 <SelectValue />
@@ -323,6 +535,9 @@ export function CampaignApplicationsView({
                 <SelectItem value="pending">Pending ({pendingCount})</SelectItem>
                 <SelectItem value="approved">Approved ({approvedCount})</SelectItem>
                 <SelectItem value="rejected">Rejected ({rejectedCount})</SelectItem>
+                {waitlistedCount > 0 && (
+                  <SelectItem value="waitlisted">Waitlisted ({waitlistedCount})</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -336,17 +551,34 @@ export function CampaignApplicationsView({
               addSuffix: true
             });
             const capitalizedTime = timeAgo.charAt(0).toUpperCase() + timeAgo.slice(1);
-            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted md:bg-muted" : "md:hover:bg-muted/50"}`}>
+            return <button key={app.id} onClick={() => handleSelectApp(app.id)} className={`group w-full p-3 rounded-lg text-left transition-all ${selectedAppId === app.id ? "bg-muted md:bg-muted" : "md:hover:bg-muted/50"}`}>
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={app.profile?.avatar_url || ""} />
-                        <AvatarFallback>
-                          {app.profile?.username?.[0]?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                      {/* Avatar with checkbox overlay for pending applications */}
+                      <div className="relative flex-shrink-0">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={app.profile?.avatar_url || ""} />
+                          <AvatarFallback>
+                            {app.profile?.username?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        {app.status === 'pending' && (
+                          <div
+                            className={`absolute -top-1 -left-1 transition-opacity ${
+                              selectedApps.has(app.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedApps.has(app.id)}
+                              onCheckedChange={() => toggleAppSelection(app.id)}
+                              className="h-4 w-4 rounded-[3px] border-muted-foreground/40 data-[state=checked]:bg-[#2061de] data-[state=checked]:border-[#2061de] bg-background"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p 
+                          <p
                             className="font-medium tracking-[-0.5px] truncate hover:underline cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -421,8 +653,6 @@ export function CampaignApplicationsView({
                         {isAllMode && selectedApp.campaign_title && ` · ${selectedApp.campaign_title}`}
                       </p>
                     </div>
-                    {/* View in Database Button */}
-                    
                   </div>
                 </div>
 
@@ -468,29 +698,165 @@ export function CampaignApplicationsView({
             </div>
 
             {/* Action Buttons - Fixed at bottom */}
-            {(selectedApp.status === 'pending' || selectedApp.status === 'rejected') && <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
+            <div className="sticky bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
                 <div className="flex flex-col sm:flex-row gap-2">
+                  {/* Message Button - Always visible */}
+                  <Button
+                    onClick={() => selectedApp.profile?.id && handleMessage(selectedApp.profile.id)}
+                    disabled={!selectedApp.profile?.id}
+                    className="flex-1 h-11 font-medium tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90 order-1"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Message
+                  </Button>
                   {selectedApp.status === 'pending' ? (
                     <>
                       <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
                         <X className="h-4 w-4 mr-2" />
                         Reject
                       </Button>
-                      <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-1 sm:order-3">
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, selectedApp.is_boost ? 'accepted' : 'approved')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
                         <Check className="h-4 w-4 mr-2" />
                         Accept
                       </Button>
                     </>
-                  ) : (
-                    <Button onClick={() => handleUpdateStatus(selectedApp.id, 'pending')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px]">
+                  ) : selectedApp.status === 'waitlisted' ? (
+                    <>
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] border-transparent text-red-400 hover:bg-red-500/10 hover:text-red-400 order-2">
+                        <X className="h-4 w-4 mr-2" />
+                        Reject
+                      </Button>
+                      <Button onClick={() => handleUpdateStatus(selectedApp.id, 'accepted')} disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] bg-primary hover:bg-primary/90 text-primary-foreground order-3">
+                        <Check className="h-4 w-4 mr-2" />
+                        Promote to Accepted
+                      </Button>
+                    </>
+                  ) : selectedApp.status === 'rejected' ? (
+                    <Button onClick={() => handleUpdateStatus(selectedApp.id, 'pending')} variant="outline" disabled={processing === selectedApp.id} className="flex-1 h-11 font-medium tracking-[-0.5px] order-2">
                       Undo Rejection
                     </Button>
-                  )}
+                  ) : null}
                 </div>
-              </div>}
+              </div>
           </> : <div className="flex items-center justify-center h-full text-muted-foreground">
             Select an application to review
           </div>}
       </div>
-    </div>;
+    </div>
+
+    {/* Bulk Action Bar */}
+    {selectedApps.size > 0 && (
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-background/95 backdrop-blur-xl border border-border rounded-xl shadow-lg px-4 py-3 flex items-center gap-3">
+        <span className="text-sm font-medium tracking-[-0.3px]">
+          {selectedApps.size} selected
+        </span>
+        <div className="w-px h-6 bg-border" />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setSelectedApps(new Set())}
+          className="h-8 px-3 text-xs"
+        >
+          Clear
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => setBulkActionDialog({ type: 'accept', open: true })}
+          disabled={bulkProcessing}
+          className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+        >
+          <Check className="h-3.5 w-3.5 mr-1.5" />
+          Accept All
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setBulkActionDialog({ type: 'reject', open: true })}
+          disabled={bulkProcessing}
+          className="h-8 px-3 text-xs text-red-500 border-red-500/30 hover:bg-red-500/10"
+        >
+          <X className="h-3.5 w-3.5 mr-1.5" />
+          Reject All
+        </Button>
+        {isBoost && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setBulkActionDialog({ type: 'waitlist', open: true })}
+            disabled={bulkProcessing}
+            className="h-8 px-3 text-xs"
+          >
+            Add to Waitlist
+          </Button>
+        )}
+      </div>
+    )}
+
+    {/* Bulk Accept Dialog */}
+    <AlertDialog open={bulkActionDialog.type === 'accept' && bulkActionDialog.open} onOpenChange={(open) => setBulkActionDialog({ type: open ? 'accept' : null, open })}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Accept {selectedApps.size} applications?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will accept all selected applications. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={bulkProcessing}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleBulkAccept} disabled={bulkProcessing} className="bg-emerald-600 hover:bg-emerald-700">
+            {bulkProcessing ? "Processing..." : "Accept All"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Bulk Reject Dialog */}
+    <AlertDialog open={bulkActionDialog.type === 'reject' && bulkActionDialog.open} onOpenChange={(open) => setBulkActionDialog({ type: open ? 'reject' : null, open })}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reject {selectedApps.size} applications?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will reject all selected applications. This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={bulkProcessing}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleBulkReject} disabled={bulkProcessing} className="bg-red-600 hover:bg-red-700">
+            {bulkProcessing ? "Processing..." : "Reject All"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Bulk Waitlist Dialog */}
+    <AlertDialog open={bulkActionDialog.type === 'waitlist' && bulkActionDialog.open} onOpenChange={(open) => setBulkActionDialog({ type: open ? 'waitlist' : null, open })}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Add {selectedApps.size} applications to waitlist?</AlertDialogTitle>
+          <AlertDialogDescription>
+            These creators will be added to the waitlist. You can promote them later when spots become available.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={bulkProcessing}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleBulkWaitlist} disabled={bulkProcessing}>
+            {bulkProcessing ? "Processing..." : "Add to Waitlist"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Creator Notes Dialog */}
+    {currentBrandId && notesCreator && (
+      <CreatorNotesDialog
+        open={notesDialogOpen}
+        onOpenChange={setNotesDialogOpen}
+        brandId={currentBrandId}
+        creatorId={notesCreator.id}
+        creatorName={notesCreator.name}
+        creatorUsername={notesCreator.username}
+        creatorAvatarUrl={notesCreator.avatarUrl}
+      />
+    )}
+  </>;
 }

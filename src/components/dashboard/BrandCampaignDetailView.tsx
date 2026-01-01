@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock, Link2, FileVideo, Upload } from "lucide-react";
+import { ArrowLeft, Home, DollarSign, Pencil, Plus, Users, ChevronDown, UserCheck, Video, Copy, Lock, Link2, FileVideo, Upload, Pause, Play } from "lucide-react";
 import { CampaignAnalyticsTable } from "@/components/CampaignAnalyticsTable";
 import { CampaignCreationWizard } from "@/components/brand/CampaignCreationWizard";
 import { CampaignHomeTab } from "@/components/brand/CampaignHomeTab";
@@ -429,6 +429,155 @@ export function BrandCampaignDetailView({
                 <Copy className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Clone</span>
               </Button>}
+
+            {/* Clone button - for boosts */}
+            {!isAllMode && isBoost && boost && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 font-sans tracking-[-0.5px] bg-muted/50 hover:bg-muted/50 hover:text-current px-2 sm:px-3 border border-[#efefef] dark:border-transparent"
+                onClick={async () => {
+                  try {
+                    // Create clone of boost
+                    const { data: clonedBoost, error: cloneError } = await supabase
+                      .from('bounty_campaigns')
+                      .insert({
+                        title: `${boost.title} (Copy)`,
+                        description: boost.description,
+                        brand_id: boost.brand_id,
+                        monthly_retainer: boost.monthly_retainer,
+                        videos_per_month: boost.videos_per_month,
+                        content_style_requirements: boost.content_style_requirements,
+                        max_accepted_creators: boost.max_accepted_creators,
+                        content_distribution: boost.content_distribution,
+                        position_type: boost.position_type,
+                        availability_requirement: boost.availability_requirement,
+                        work_location: boost.work_location,
+                        banner_url: boost.banner_url,
+                        blueprint_id: boost.blueprint_id,
+                        blueprint_embed_url: boost.blueprint_embed_url,
+                        is_private: boost.is_private,
+                        tags: boost.tags,
+                        application_questions: boost.application_questions,
+                        discord_guild_id: boost.discord_guild_id,
+                        discord_role_id: boost.discord_role_id,
+                        shortimize_collection_name: boost.shortimize_collection_name,
+                        view_bonuses_enabled: boost.view_bonuses_enabled,
+                        status: 'draft',
+                        budget: 0,
+                        budget_used: 0,
+                        accepted_creators_count: 0
+                      })
+                      .select()
+                      .single();
+
+                    if (cloneError) throw cloneError;
+
+                    // Copy view bonuses if enabled
+                    if (boost.view_bonuses_enabled && clonedBoost) {
+                      const { data: bonuses } = await supabase
+                        .from('boost_view_bonuses')
+                        .select('*')
+                        .eq('bounty_campaign_id', boostId);
+
+                      if (bonuses && bonuses.length > 0) {
+                        await supabase
+                          .from('boost_view_bonuses')
+                          .insert(
+                            bonuses.map(b => ({
+                              bounty_campaign_id: clonedBoost.id,
+                              bonus_type: b.bonus_type,
+                              view_threshold: b.view_threshold,
+                              bonus_amount: b.bonus_amount,
+                              min_views: b.min_views,
+                              cpm_rate: b.cpm_rate,
+                              is_active: b.is_active
+                            }))
+                          );
+                      }
+                    }
+
+                    toast.success('Boost cloned successfully! Created as draft.');
+
+                    // Navigate to the cloned boost
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.set('boost', clonedBoost.id);
+                    newParams.delete('campaign');
+                    setSearchParams(newParams);
+                  } catch (error: any) {
+                    console.error('Error cloning boost:', error);
+                    toast.error('Failed to clone boost');
+                  }
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Clone</span>
+              </Button>
+            )}
+
+            {/* Pause/Resume button - only for boosts */}
+            {!isAllMode && isBoost && boost && boost.status !== 'ended' && boost.status !== 'draft' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 font-sans tracking-[-0.5px] px-2 sm:px-3 border ${
+                  boost.status === 'paused'
+                    ? 'bg-green-500/10 hover:bg-green-500/20 text-green-600 border-green-500/20'
+                    : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 border-amber-500/20'
+                }`}
+                onClick={async () => {
+                  const newStatus = boost.status === 'paused' ? 'active' : 'paused';
+
+                  // Handle pausing - auto-waitlist pending applications
+                  if (newStatus === 'paused') {
+                    await supabase
+                      .from('bounty_applications')
+                      .update({
+                        status: 'waitlisted',
+                        auto_waitlisted_from_pause: true
+                      })
+                      .eq('bounty_campaign_id', boostId)
+                      .eq('status', 'pending');
+                  }
+
+                  // Handle resuming - restore auto-waitlisted applications
+                  if (newStatus === 'active') {
+                    await supabase
+                      .from('bounty_applications')
+                      .update({
+                        status: 'pending',
+                        auto_waitlisted_from_pause: false
+                      })
+                      .eq('bounty_campaign_id', boostId)
+                      .eq('auto_waitlisted_from_pause', true);
+                  }
+
+                  const { error } = await supabase
+                    .from('bounty_campaigns')
+                    .update({ status: newStatus })
+                    .eq('id', boostId);
+
+                  if (error) {
+                    toast.error('Failed to update boost status');
+                  } else {
+                    toast.success(newStatus === 'paused' ? 'Boost paused' : 'Boost resumed');
+                    fetchBoost();
+                  }
+                }}
+              >
+                {boost.status === 'paused' ? (
+                  <>
+                    <Play className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Resume</span>
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Pause</span>
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 

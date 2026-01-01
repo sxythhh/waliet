@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CalendarIcon, Upload, Check, Trash2, X, Plus } from "lucide-react";
+import { CalendarIcon, Upload, Check, Trash2, X, Plus, Pause, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -417,12 +417,47 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                 ) : (
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => {
+                    onValueChange={async (value) => {
                       // Prevent changing to active if no subscription
                       if (value === 'active' && subscriptionStatus !== 'active') {
                         toast.error('Activate your subscription to launch this boost');
                         return;
                       }
+
+                      const previousStatus = formData.status;
+
+                      // Handle pausing - auto-waitlist pending applications
+                      if (value === 'paused' && previousStatus !== 'paused') {
+                        const { error: waitlistError } = await supabase
+                          .from('bounty_applications')
+                          .update({
+                            status: 'waitlisted',
+                            auto_waitlisted_from_pause: true
+                          })
+                          .eq('bounty_campaign_id', bountyId)
+                          .eq('status', 'pending');
+
+                        if (waitlistError) {
+                          console.error('Error auto-waitlisting applications:', waitlistError);
+                        }
+                      }
+
+                      // Handle resuming - restore auto-waitlisted applications to pending
+                      if (previousStatus === 'paused' && value === 'active') {
+                        const { error: restoreError } = await supabase
+                          .from('bounty_applications')
+                          .update({
+                            status: 'pending',
+                            auto_waitlisted_from_pause: false
+                          })
+                          .eq('bounty_campaign_id', bountyId)
+                          .eq('auto_waitlisted_from_pause', true);
+
+                        if (restoreError) {
+                          console.error('Error restoring applications:', restoreError);
+                        }
+                      }
+
                       setFormData({ ...formData, status: value });
                     }}
                   >
@@ -433,6 +468,12 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
                       <SelectItem value="draft" style={inputStyle}>Draft</SelectItem>
                       <SelectItem value="active" style={inputStyle} disabled={subscriptionStatus !== 'active'}>
                         Active {subscriptionStatus !== 'active' && '(Subscription required)'}
+                      </SelectItem>
+                      <SelectItem value="paused" style={inputStyle}>
+                        <span className="flex items-center gap-2">
+                          <Pause className="h-3 w-3" />
+                          Paused
+                        </span>
                       </SelectItem>
                       <SelectItem value="ended" style={inputStyle}>Ended</SelectItem>
                     </SelectContent>

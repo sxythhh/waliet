@@ -15,7 +15,7 @@ import AuthDialog from "@/components/AuthDialog";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight } from "lucide-react";
+import { Check, ArrowUp, Plus, ArrowLeft, X, PauseCircle, UserPlus, LogIn, Bookmark, Copy, ChevronRight, Calendar, Briefcase, Film, Tag, Sparkles } from "lucide-react";
 import { ExampleVideosCarousel } from "@/components/ExampleVideosCarousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +94,10 @@ interface BountyCampaign {
   position_type: string | null;
   availability_requirement: string | null;
   work_location: string | null;
+  experience_level: string | null;
+  content_type: string | null;
+  categories: string[] | null;
+  skills: string[] | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -1034,8 +1038,51 @@ export default function CampaignApply() {
               </div>
 
               {/* Boost Details */}
-              {isBoost && boostCampaign && (boostCampaign.position_type || boostCampaign.availability_requirement || boostCampaign.work_location) && (
-                <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+              {isBoost && boostCampaign && (boostCampaign.position_type || boostCampaign.availability_requirement || boostCampaign.work_location || boostCampaign.start_date || boostCampaign.experience_level || boostCampaign.content_type || boostCampaign.categories?.length || boostCampaign.skills?.length) && (
+                <div className="space-y-4 p-4 rounded-xl bg-muted/30">
+                  {/* Start Date */}
+                  {boostCampaign.start_date && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <Calendar className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Starts</p>
+                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">{format(new Date(boostCampaign.start_date), 'MMMM d, yyyy')}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Experience Level */}
+                  {boostCampaign.experience_level && boostCampaign.experience_level !== 'any' && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <Briefcase className="h-4 w-4 text-amber-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Experience</p>
+                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize">{boostCampaign.experience_level}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Content Type */}
+                  {boostCampaign.content_type && boostCampaign.content_type !== 'both' && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
+                        <Film className="h-4 w-4 text-purple-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Content Type</p>
+                        <p className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
+                          {boostCampaign.content_type === 'short_form' ? 'Short Form' :
+                           boostCampaign.content_type === 'long_form' ? 'Long Form' :
+                           'Any Format'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {boostCampaign.position_type && (
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Role</span>
@@ -1046,9 +1093,9 @@ export default function CampaignApply() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Availability</span>
                       <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px]">
-                        {boostCampaign.availability_requirement === 'part_time' ? 'Part-time' : 
-                         boostCampaign.availability_requirement === 'full_time' ? 'Full-time' : 
-                         boostCampaign.availability_requirement === 'projects_gigs' ? 'Projects & Gigs' : 
+                        {boostCampaign.availability_requirement === 'part_time' ? 'Part-time' :
+                         boostCampaign.availability_requirement === 'full_time' ? 'Full-time' :
+                         boostCampaign.availability_requirement === 'projects_gigs' ? 'Projects & Gigs' :
                          boostCampaign.availability_requirement}
                       </span>
                     </div>
@@ -1057,6 +1104,40 @@ export default function CampaignApply() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Location</span>
                       <span className="text-sm font-medium font-['Inter'] tracking-[-0.5px] capitalize">{boostCampaign.work_location}</span>
+                    </div>
+                  )}
+
+                  {/* Categories */}
+                  {boostCampaign.categories && boostCampaign.categories.length > 0 && (
+                    <div className="pt-2 border-t border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Categories</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {boostCampaign.categories.map((cat, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs font-['Inter'] tracking-[-0.5px]">
+                            {cat}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills */}
+                  {boostCampaign.skills && boostCampaign.skills.length > 0 && (
+                    <div className="pt-2 border-t border-border/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.5px]">Skills Needed</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {boostCampaign.skills.map((skill, i) => (
+                          <Badge key={i} variant="outline" className="text-xs font-['Inter'] tracking-[-0.5px]">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

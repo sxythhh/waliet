@@ -121,6 +121,7 @@ export function ApplyToBountySheet({
   if (!bounty) return null;
   const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
   const isFull = spotsRemaining <= 0;
+  const isPaused = bounty.status === 'paused';
   const handleVideoUpload = async (file: File) => {
     if (!file.type.startsWith('video/')) {
       toast.error("Please upload a video file");
@@ -198,16 +199,20 @@ export function ApplyToBountySheet({
         finalVideoUrl = publicUrl;
         setIsUploading(false);
       }
+      // Check if boost is full - if so, add to waitlist
+      const applicationStatus = isFull ? 'waitlisted' : 'pending';
+
       const {
         error
       } = await supabase.from('bounty_applications').insert({
         bounty_campaign_id: bounty.id,
         user_id: session.user.id,
         video_url: finalVideoUrl,
-        application_text: applicationText.trim() || null
+        application_text: applicationText.trim() || null,
+        status: applicationStatus
       });
       if (error) throw error;
-      toast.success("Application submitted successfully!");
+      toast.success(isFull ? "You've been added to the waitlist!" : "Application submitted successfully!");
       onSuccess();
       onOpenChange(false);
 
@@ -328,8 +333,8 @@ export function ApplyToBountySheet({
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="flex-1 font-['Inter'] tracking-[-0.5px]" disabled={submitting || isUploading}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={submitting || isFull || isUploading || !videoUrl.trim() && !uploadedVideoFile} className="flex-1 font-['Inter'] tracking-[-0.5px]">
-                  {isUploading ? "Uploading..." : submitting ? "Submitting..." : isFull ? "No Spots Available" : "Submit Application"}
+                <Button type="submit" disabled={submitting || isPaused || isUploading || !videoUrl.trim() && !uploadedVideoFile} className="flex-1 font-['Inter'] tracking-[-0.5px]">
+                  {isUploading ? "Uploading..." : submitting ? "Submitting..." : isPaused ? "Boost Paused" : isFull ? "Join Waitlist" : "Submit Application"}
                 </Button>
               </div>
             </form>

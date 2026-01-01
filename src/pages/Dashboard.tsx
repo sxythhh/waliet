@@ -216,51 +216,9 @@ export default function Dashboard() {
   };
 
   const renderContent = () => {
-    // Brand mode - show skeleton while fetching brand data
+    // Brand mode - let BrandCampaignsTab handle its own loading state
     if (isBrandMode && !currentBrand) {
-      return (
-        <div className="space-y-8 px-4 sm:px-6 md:px-8 py-6 animate-in fade-in duration-500">
-          {/* Header Skeleton */}
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <div className="h-10 w-full max-w-md bg-muted/30 rounded-lg animate-pulse" />
-            </div>
-            <div className="h-10 w-36 bg-muted/30 rounded-lg animate-pulse shrink-0 ml-4" />
-          </div>
-
-          {/* Section Header Skeleton */}
-          <div className="flex items-center justify-between">
-            <div className="h-5 w-24 bg-muted/30 rounded-md animate-pulse" />
-            <div className="flex gap-2">
-              {[1, 2, 3, 4].map(i => <div key={i} className="h-7 w-16 bg-muted/30 rounded-full animate-pulse" />)}
-            </div>
-          </div>
-
-          {/* Campaign Cards Skeleton - Row layout */}
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card">
-                {/* Banner */}
-                <div className="w-full sm:w-40 md:w-48 h-28 sm:h-auto bg-muted/30 rounded-none flex-shrink-0 animate-pulse" />
-                {/* Content */}
-                <div className="flex-1 p-3 sm:p-4 space-y-2">
-                  <div className="h-3 w-16 bg-muted/30 rounded animate-pulse" />
-                  <div className="h-5 w-48 bg-muted/30 rounded animate-pulse" />
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-24 bg-muted/30 rounded animate-pulse" />
-                    <div className="h-1.5 w-32 bg-muted/30 rounded-full animate-pulse" />
-                    <div className="h-3 w-8 bg-muted/30 rounded animate-pulse" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-5 w-16 bg-muted/30 rounded-full animate-pulse" />
-                    <div className="h-3 w-24 bg-muted/30 rounded animate-pulse" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
+      return null;
     }
 
     // Brand mode
@@ -357,8 +315,8 @@ export default function Dashboard() {
         hideTrigger 
       />
 
-      {/* Creator Chat Widget - hidden for now */}
-      {/* {isCreatorMode && <CreatorChatWidget />} */}
+      {/* Creator Chat Widget */}
+      {isCreatorMode && <CreatorChatWidget />}
 
     </div>;
 }

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Video, Users, Trash2, Copy, Check, Lock } from "lucide-react";
+import { DollarSign, Video, Users, Trash2, Copy, Check, Lock, Pause, Play } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 
@@ -90,26 +91,95 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
                   <h3 className="text-base font-semibold text-foreground truncate">
                     {bounty.title}
                   </h3>
-                  {bounty.is_private && (
-                    <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                      <Lock className="h-3 w-3" />
-                      Private
-                    </span>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {bounty.status === 'paused' && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500">
+                        <Pause className="h-3 w-3" />
+                        Paused
+                      </span>
+                    )}
+                    {bounty.is_private && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                        <Lock className="h-3 w-3" />
+                        Private
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Pause/Resume Button */}
+                  {bounty.status !== 'ended' && bounty.status !== 'draft' && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className={`h-8 w-8 text-muted-foreground ${
+                        bounty.status === 'paused'
+                          ? 'hover:text-green-500 hover:bg-green-500/10'
+                          : 'hover:text-amber-500 hover:bg-amber-500/10'
+                      }`}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const newStatus = bounty.status === 'paused' ? 'active' : 'paused';
+
+                        // Handle pausing - auto-waitlist pending applications
+                        if (newStatus === 'paused') {
+                          await supabase
+                            .from('bounty_applications')
+                            .update({
+                              status: 'waitlisted',
+                              auto_waitlisted_from_pause: true
+                            })
+                            .eq('bounty_campaign_id', bounty.id)
+                            .eq('status', 'pending');
+                        }
+
+                        // Handle resuming - restore auto-waitlisted applications
+                        if (newStatus === 'active' && bounty.status === 'paused') {
+                          await supabase
+                            .from('bounty_applications')
+                            .update({
+                              status: 'pending',
+                              auto_waitlisted_from_pause: false
+                            })
+                            .eq('bounty_campaign_id', bounty.id)
+                            .eq('auto_waitlisted_from_pause', true);
+                        }
+
+                        const { error } = await supabase
+                          .from('bounty_campaigns')
+                          .update({ status: newStatus })
+                          .eq('id', bounty.id);
+
+                        if (error) {
+                          toast.error('Failed to update boost status');
+                        } else {
+                          toast.success(newStatus === 'paused' ? 'Boost paused' : 'Boost resumed');
+                          onRefresh?.();
+                        }
+                      }}
+                      title={bounty.status === 'paused' ? 'Resume boost' : 'Pause boost'}
+                    >
+                      {bounty.status === 'paused' ? (
+                        <Play className="h-4 w-4" />
+                      ) : (
+                        <Pause className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
+                  {onDelete && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(bounty);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   )}
                 </div>
-                {onDelete && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(bounty);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
               </div>
 
               {/* Retainer */}

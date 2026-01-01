@@ -26,6 +26,7 @@ import discordLogo from "@/assets/discord-logo.png";
 import shortimizeLogo from "@/assets/shortimize-logo.png";
 import dubLogo from "@/assets/dub-logo.png";
 import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
+import { CustomWebhooksTab } from "./CustomWebhooksTab";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -1416,6 +1417,9 @@ export function UserSettingsTab() {
                   <Input type="url" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://discord.com/api/webhooks/..." />
                 </div>
               </div>
+
+              {/* Custom Webhooks Section */}
+              <CustomWebhooksTab brandId={brand.id} />
 
               {/* Notifications Section */}
               <div className="rounded-xl border border-border/50 p-4 space-y-4">

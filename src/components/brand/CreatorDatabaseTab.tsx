@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy } from "lucide-react";
+import { Search, Download, Upload, Filter, ExternalLink, Plus, X, Check, AlertCircle, Users, MessageSquare, Trash2, UserX, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, UserPlus, FileSpreadsheet, SlidersHorizontal, GripVertical, Settings, Star, Copy, StickyNote, Tag } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
+import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import discordIconDark from "@/assets/tiktok-icon-dark.svg";
 import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
@@ -306,6 +307,15 @@ export function CreatorDatabaseTab({
   const [testimonialDialogOpen, setTestimonialDialogOpen] = useState(false);
   const [testimonialCreator, setTestimonialCreator] = useState<Creator | null>(null);
 
+  // Notes dialog state
+  const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  const [notesCreator, setNotesCreator] = useState<{ id: string; name: string; username: string; avatarUrl?: string | null } | null>(null);
+
+  // Tag filter state
+  const [selectedTagFilters, setSelectedTagFilters] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [creatorTagsMap, setCreatorTagsMap] = useState<Map<string, string[]>>(new Map());
+
   // Column configuration state
   const ALL_COLUMNS = [{
     id: 'creator',
@@ -419,6 +429,7 @@ export function CreatorDatabaseTab({
   }, [discoverSearch]);
   useEffect(() => {
     fetchCreators();
+    fetchAvailableTags();
     checkSubscription();
   }, [brandId]);
 
@@ -513,6 +524,35 @@ export function CreatorDatabaseTab({
     const allCampaigns: Campaign[] = [...(campaignsResult.data || []), ...(boostsResult.data || [])];
     setCampaigns(allCampaigns);
   };
+
+  // Fetch all unique tags from brand_creator_notes for this brand
+  const fetchAvailableTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brand_creator_notes')
+        .select('creator_id, tags')
+        .eq('brand_id', brandId);
+
+      if (error) throw error;
+
+      // Build creator-to-tags mapping
+      const tagsMap = new Map<string, string[]>();
+      data?.forEach(note => {
+        if (note.tags && note.tags.length > 0) {
+          tagsMap.set(note.creator_id, note.tags);
+        }
+      });
+      setCreatorTagsMap(tagsMap);
+
+      // Flatten all tags and get unique values
+      const allTags = data?.flatMap(note => note.tags || []) || [];
+      const uniqueTags = [...new Set(allTags)].sort();
+      setAvailableTags(uniqueTags);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
+
   const fetchCreators = async () => {
     setLoading(true);
     try {
@@ -726,6 +766,13 @@ export function CreatorDatabaseTab({
         return true;
       });
     }
+    // Tag filter (OR logic - show creators with ANY of the selected tags)
+    if (selectedTagFilters.length > 0) {
+      filtered = filtered.filter(c => {
+        const creatorTags = creatorTagsMap.get(c.id) || [];
+        return selectedTagFilters.some(tag => creatorTags.includes(tag));
+      });
+    }
     // Apply sorting
     if (sortBy) {
       filtered = [...filtered].sort((a, b) => {
@@ -740,7 +787,7 @@ export function CreatorDatabaseTab({
       });
     }
     return filtered;
-  }, [creators, searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, demographicScoreFilter, reliabilityScoreFilter, sortBy, sortOrder]);
+  }, [creators, searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, demographicScoreFilter, reliabilityScoreFilter, selectedTagFilters, creatorTagsMap, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedCreators.length / itemsPerPage);
@@ -752,7 +799,7 @@ export function CreatorDatabaseTab({
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, sortBy, sortOrder, itemsPerPage]);
+  }, [searchQuery, selectedCampaignFilter, platformFilter, sourceFilter, statusFilter, selectedTagFilters, sortBy, sortOrder, itemsPerPage]);
   const handleExportCSV = () => {
     // Export ALL rows that match the current filters/sort (not just the current page)
     const exportCreators = filteredAndSortedCreators;
@@ -1137,11 +1184,11 @@ export function CreatorDatabaseTab({
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' ? 'text-foreground' : 'text-muted-foreground'}`}>
+              <Button variant="ghost" size="sm" className={`h-8 px-2.5 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 hover:text-muted-foreground dark:hover:text-foreground ${selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filters
-                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all') && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
-                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all', demographicScoreFilter !== 'all', reliabilityScoreFilter !== 'all'].filter(Boolean).length}
+                {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#2061de] text-[10px] text-white flex items-center justify-center font-medium">
+                    {[selectedCampaignFilter !== 'all', platformFilter !== 'all', statusFilter !== 'all', sourceFilter !== 'all', demographicScoreFilter !== 'all', reliabilityScoreFilter !== 'all', selectedTagFilters.length > 0].filter(Boolean).length}
                   </span>}
               </Button>
             </PopoverTrigger>
@@ -1149,13 +1196,14 @@ export function CreatorDatabaseTab({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-inter tracking-[-0.5px] text-xs font-medium text-foreground">Filters</span>
-                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all') && <button onClick={() => {
+                  {(selectedCampaignFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all' || sourceFilter !== 'all' || demographicScoreFilter !== 'all' || reliabilityScoreFilter !== 'all' || selectedTagFilters.length > 0) && <button onClick={() => {
                   setSelectedCampaignFilter('all');
                   setPlatformFilter('all');
                   setStatusFilter('all');
                   setSourceFilter('all');
                   setDemographicScoreFilter('all');
                   setReliabilityScoreFilter('all');
+                  setSelectedTagFilters([]);
                 }} className="font-inter tracking-[-0.5px] text-xs text-muted-foreground hover:text-foreground transition-colors">
                       Clear all
                     </button>}
@@ -1250,6 +1298,45 @@ export function CreatorDatabaseTab({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Tag Filter */}
+                {availableTags.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="font-inter tracking-[-0.5px] text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Tag className="h-3 w-3" />
+                      Tags
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {availableTags.map(tag => (
+                        <button
+                          key={tag}
+                          onClick={() => {
+                            if (selectedTagFilters.includes(tag)) {
+                              setSelectedTagFilters(selectedTagFilters.filter(t => t !== tag));
+                            } else {
+                              setSelectedTagFilters([...selectedTagFilters, tag]);
+                            }
+                          }}
+                          className={`px-2 py-1 text-xs rounded-md transition-colors font-inter tracking-[-0.3px] ${
+                            selectedTagFilters.includes(tag)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                    {selectedTagFilters.length > 0 && (
+                      <button
+                        onClick={() => setSelectedTagFilters([])}
+                        className="text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.3px]"
+                      >
+                        Clear tags
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </PopoverContent>
           </Popover>
@@ -1773,6 +1860,20 @@ export function CreatorDatabaseTab({
 
           {/* Action Buttons */}
           <div className="p-4 border-t border-border/50 flex flex-col gap-2">
+            {/* Notes Button */}
+            <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-muted/50 text-foreground rounded-lg hover:bg-muted transition-colors flex items-center justify-center gap-1.5" onClick={e => {
+              e.stopPropagation();
+              setNotesCreator({
+                id: selectedCreatorPanel.id,
+                name: selectedCreatorPanel.full_name || selectedCreatorPanel.username || selectedCreatorPanel.external_name || "Unknown",
+                username: selectedCreatorPanel.username || selectedCreatorPanel.external_handle || "unknown",
+                avatarUrl: selectedCreatorPanel.avatar_url
+              });
+              setNotesDialogOpen(true);
+            }}>
+              <StickyNote className="h-3.5 w-3.5" />
+              Notes & Tags
+            </button>
             {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
             e.stopPropagation();
             setTestimonialCreator(selectedCreatorPanel);
@@ -2144,5 +2245,22 @@ export function CreatorDatabaseTab({
       {testimonialCreator && <LeaveTestimonialDialog open={testimonialDialogOpen} onOpenChange={setTestimonialDialogOpen} brandId={brandId} creatorId={testimonialCreator.id} creatorName={testimonialCreator.full_name || testimonialCreator.username || 'Creator'} creatorAvatarUrl={testimonialCreator.avatar_url} onSuccess={() => {
       setTestimonialCreator(null);
     }} />}
+
+      {/* Creator Notes Dialog */}
+      {notesCreator && (
+        <CreatorNotesDialog
+          open={notesDialogOpen}
+          onOpenChange={setNotesDialogOpen}
+          brandId={brandId}
+          creatorId={notesCreator.id}
+          creatorName={notesCreator.name}
+          creatorUsername={notesCreator.username}
+          creatorAvatarUrl={notesCreator.avatarUrl}
+          onSuccess={() => {
+            // Refresh available tags when notes are saved
+            fetchAvailableTags();
+          }}
+        />
+      )}
     </div>;
 }

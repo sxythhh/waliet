@@ -82,11 +82,29 @@ export function CreateBountyDialog({
     view_bonuses_enabled: false,
     view_bonus_tiers: [] as { bonus_type: 'milestone' | 'cpm'; view_threshold: number; min_views?: number; bonus_amount: number; cpm_rate?: number }[],
     discord_guild_id: "" as string,
-    discord_role_id: "" as string
+    discord_role_id: "" as string,
+    experience_level: "any" as "any" | "beginner" | "intermediate" | "advanced",
+    content_type: "both" as "short_form" | "long_form" | "both",
+    categories: [] as string[],
+    skills: [] as string[]
   });
   const [newQuestion, setNewQuestion] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [categoryInput, setCategoryInput] = useState("");
+  const [skillInput, setSkillInput] = useState("");
+
+  const CATEGORY_SUGGESTIONS = [
+    "Gaming", "Tech", "Lifestyle", "Fashion", "Beauty", "Fitness", "Food",
+    "Travel", "Music", "Education", "Finance", "Entertainment", "Sports",
+    "Health", "Parenting", "Pets", "Home", "Auto", "Art", "Comedy"
+  ];
+
+  const SKILL_SUGGESTIONS = [
+    "Video Editing", "Storytelling", "On-Camera Presence", "Voice Over",
+    "Motion Graphics", "Photography", "Copywriting", "Live Streaming",
+    "Product Reviews", "Tutorials", "Comedy", "ASMR", "Unboxing", "Vlogs"
+  ];
 
   // Fetch brand's available balance and subscription status
   useEffect(() => {
@@ -264,7 +282,11 @@ export function CreateBountyDialog({
         view_bonuses_enabled: formData.view_bonuses_enabled,
         tags: tags.length > 0 ? tags : null,
         discord_guild_id: formData.discord_guild_id || null,
-        discord_role_id: formData.discord_role_id || null
+        discord_role_id: formData.discord_role_id || null,
+        experience_level: formData.experience_level || 'any',
+        content_type: formData.content_type || 'both',
+        categories: formData.categories.length > 0 ? formData.categories : null,
+        skills: formData.skills.length > 0 ? formData.skills : null
       }).select().single();
       if (error) throw error;
 
@@ -321,11 +343,17 @@ export function CreateBountyDialog({
       view_bonuses_enabled: false,
       view_bonus_tiers: [],
       discord_guild_id: "",
-      discord_role_id: ""
+      discord_role_id: "",
+      experience_level: "any",
+      content_type: "both",
+      categories: [],
+      skills: []
     });
     setNewQuestion("");
     setTagInput("");
     setTags([]);
+    setCategoryInput("");
+    setSkillInput("");
     setBannerFile(null);
     setBannerPreview(null);
     setSelectedBlueprintId("");
@@ -772,9 +800,9 @@ export function CreateBountyDialog({
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {tags.map((tag, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
+                      <Badge
+                        key={index}
+                        variant="secondary"
                         className="pl-2 pr-1 py-1 gap-1 text-xs font-inter tracking-[-0.5px]"
                       >
                         {tag}
@@ -792,6 +820,190 @@ export function CreateBountyDialog({
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
                   Add tags to help categorize this boost (e.g., "Gaming", "Tech", "Lifestyle")
                 </p>
+              </div>
+
+              {/* Creator Requirements Section */}
+              <div className="rounded-xl border border-border/50 bg-card/50 overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30 border-b border-border/50">
+                  <h3 className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">Creator Requirements</h3>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  {/* Experience Level & Content Type Row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Experience Level</Label>
+                      <Select value={formData.experience_level} onValueChange={(value: any) => setFormData({...formData, experience_level: value})}>
+                        <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any" className="font-inter tracking-[-0.3px]">Any Level</SelectItem>
+                          <SelectItem value="beginner" className="font-inter tracking-[-0.3px]">Beginner</SelectItem>
+                          <SelectItem value="intermediate" className="font-inter tracking-[-0.3px]">Intermediate</SelectItem>
+                          <SelectItem value="advanced" className="font-inter tracking-[-0.3px]">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Content Type</Label>
+                      <Select value={formData.content_type} onValueChange={(value: any) => setFormData({...formData, content_type: value})}>
+                        <SelectTrigger className="h-10 bg-background border border-border/50 font-inter tracking-[-0.3px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="both" className="font-inter tracking-[-0.3px]">Any Format</SelectItem>
+                          <SelectItem value="short_form" className="font-inter tracking-[-0.3px]">Short Form</SelectItem>
+                          <SelectItem value="long_form" className="font-inter tracking-[-0.3px]">Long Form</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Categories */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Categories / Niches</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={categoryInput}
+                        onChange={(e) => setCategoryInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const trimmed = categoryInput.trim();
+                            if (trimmed && !formData.categories.includes(trimmed)) {
+                              setFormData({...formData, categories: [...formData.categories, trimmed]});
+                              setCategoryInput("");
+                            }
+                          }
+                        }}
+                        placeholder="Add category..."
+                        className="h-9 bg-background border border-border/50 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 px-2.5"
+                        disabled={!categoryInput.trim()}
+                        onClick={() => {
+                          const trimmed = categoryInput.trim();
+                          if (trimmed && !formData.categories.includes(trimmed)) {
+                            setFormData({...formData, categories: [...formData.categories, trimmed]});
+                            setCategoryInput("");
+                          }
+                        }}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    {/* Quick add suggestions */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {CATEGORY_SUGGESTIONS.filter(c => !formData.categories.includes(c)).slice(0, 6).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setFormData({...formData, categories: [...formData.categories, cat]})}
+                          className="px-2 py-0.5 text-[10px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
+                        >
+                          + {cat}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {formData.categories.map((cat, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="pl-2 pr-1 py-0.5 gap-1 text-xs font-inter tracking-[-0.3px]"
+                          >
+                            {cat}
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, categories: formData.categories.filter((_, i) => i !== index)})}
+                              className="ml-0.5 hover:bg-muted rounded-full p-0.5"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Skills */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Skills Needed</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={skillInput}
+                        onChange={(e) => setSkillInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const trimmed = skillInput.trim();
+                            if (trimmed && !formData.skills.includes(trimmed)) {
+                              setFormData({...formData, skills: [...formData.skills, trimmed]});
+                              setSkillInput("");
+                            }
+                          }
+                        }}
+                        placeholder="Add skill..."
+                        className="h-9 bg-background border border-border/50 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.3px] flex-1 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="h-9 px-2.5"
+                        disabled={!skillInput.trim()}
+                        onClick={() => {
+                          const trimmed = skillInput.trim();
+                          if (trimmed && !formData.skills.includes(trimmed)) {
+                            setFormData({...formData, skills: [...formData.skills, trimmed]});
+                            setSkillInput("");
+                          }
+                        }}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    {/* Quick add suggestions */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {SKILL_SUGGESTIONS.filter(s => !formData.skills.includes(s)).slice(0, 5).map((skill) => (
+                        <button
+                          key={skill}
+                          type="button"
+                          onClick={() => setFormData({...formData, skills: [...formData.skills, skill]})}
+                          className="px-2 py-0.5 text-[10px] rounded-full bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-inter tracking-[-0.3px]"
+                        >
+                          + {skill}
+                        </button>
+                      ))}
+                    </div>
+                    {formData.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {formData.skills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="pl-2 pr-1 py-0.5 gap-1 text-xs font-inter tracking-[-0.3px]"
+                          >
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => setFormData({...formData, skills: formData.skills.filter((_, i) => i !== index)})}
+                              className="ml-0.5 hover:bg-muted rounded-full p-0.5"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="rounded-xl bg-muted/20 p-5">

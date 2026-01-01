@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag } from "lucide-react";
+import { X, Sparkles, TrendingUp, Flame, Clock, DollarSign, Gamepad2, Heart, Cpu, Palette, Music, Camera, BookOpen, Globe, Dumbbell, UtensilsCrossed, Shirt, Baby, Dog, Home, Car, Gem, Coins, ShoppingBag, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import tiktokLogoWhite from "@/assets/tiktok-logo-white.png";
+import instagramLogoWhite from "@/assets/instagram-logo-white.png";
+import youtubeLogoWhite from "@/assets/youtube-logo-white.png";
+import tiktokLogoBlack from "@/assets/tiktok-logo-black-new.png";
+import instagramLogoBlack from "@/assets/instagram-logo-black.png";
+import youtubeLogoBlack from "@/assets/youtube-logo-black-new.png";
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -26,10 +32,10 @@ const BROWSE_FILTERS = [
 ];
 
 const PLATFORM_FILTERS = [
-  { id: 'all', label: 'All Platforms' },
-  { id: 'tiktok', label: 'TikTok' },
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'youtube', label: 'YouTube' },
+  { id: 'all', label: 'All Platforms', iconLight: null, iconDark: null },
+  { id: 'tiktok', label: 'TikTok', iconLight: tiktokLogoBlack, iconDark: tiktokLogoWhite },
+  { id: 'instagram', label: 'Instagram', iconLight: instagramLogoBlack, iconDark: instagramLogoWhite },
+  { id: 'youtube', label: 'YouTube', iconLight: youtubeLogoBlack, iconDark: youtubeLogoWhite },
 ];
 
 const NICHES = [
@@ -155,19 +161,31 @@ export function SearchOverlay({
               Platform
             </h3>
             <div className="flex flex-wrap gap-2">
-              {PLATFORM_FILTERS.map((platform) => (
-                <button
-                  key={platform.id}
-                  onClick={() => onPlatformFilter(platform.id === 'all' ? null : (activePlatformFilter === platform.id ? null : platform.id))}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
-                    (activePlatformFilter === null && platform.id === 'all') || activePlatformFilter === platform.id
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted/50 hover:bg-muted text-foreground'
-                  }`}
-                >
-                  {platform.label}
-                </button>
-              ))}
+              {PLATFORM_FILTERS.map((platform) => {
+                const isActive = (activePlatformFilter === null && platform.id === 'all') || activePlatformFilter === platform.id;
+                return (
+                  <button
+                    key={platform.id}
+                    onClick={() => onPlatformFilter(platform.id === 'all' ? null : (activePlatformFilter === platform.id ? null : platform.id))}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
+                      isActive
+                        ? 'bg-foreground text-background'
+                        : 'bg-muted/50 hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    {platform.id === 'all' ? (
+                      <Layers className="h-4 w-4" />
+                    ) : platform.iconLight && (
+                      <img
+                        src={isActive ? platform.iconDark : platform.iconLight}
+                        alt={platform.label}
+                        className={`h-4 w-4 ${!isActive ? 'dark:invert' : 'dark:invert-0'}`}
+                      />
+                    )}
+                    {platform.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

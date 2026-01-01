@@ -1239,15 +1239,76 @@ export function CampaignAnalyticsTable({
       </Card>;
   }
   if (analytics.length === 0 && activeTab === 'analytics') {
-    return <Card className="bg-card border">
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            
-            <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">
-              No account analytics have been imported for this campaign yet. Import stats from a CSV file or connect accounts via Shortimize to start tracking analytics.
-            </p>
-            <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
+    return <Card className="bg-card/50 border-0 shadow-sm">
+        <CardHeader className="px-4 py-0 pt-0 pl-[4px] pr-[4px] pb-[7px]">
+          <div className="flex flex-col sm:flex-row gap-3 items-start justify-between sm:flex sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <ImportCampaignStatsDialog campaignId={campaignId} onImportComplete={fetchAnalytics} onMatchingRequired={() => {}} />
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-44">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/30" />
+                <Input disabled className="pl-9 h-8 bg-muted/30 border-0 text-sm tracking-[-0.5px] cursor-not-allowed" placeholder="" />
+              </div>
+              <Button variant="ghost" size="sm" disabled className="h-8 text-sm tracking-[-0.5px] gap-1.5 bg-muted/30 text-muted-foreground/30 cursor-not-allowed">
+                <Filter className="h-3.5 w-3.5" />
+                Filters
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0 relative">
+          <div className="overflow-hidden rounded-lg dark:border dark:border-[#141414]">
+            <Table>
+              <TableHeader className="bg-card">
+                <TableRow className="border-0 hover:bg-transparent dark:border-b dark:border-[#141414]">
+                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Account</TableHead>
+                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">User</TableHead>
+                  <TableHead className="text-muted-foreground/50 font-medium text-right text-xs tracking-[-0.5px] py-3">Views</TableHead>
+                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Period</TableHead>
+                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Last Paid</TableHead>
+                  <TableHead className="text-muted-foreground/50 font-medium text-xs tracking-[-0.5px] py-3">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(5)].map((_, i) => (
+                  <TableRow key={i} className="border-0">
+                    <TableCell className="py-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded-lg bg-muted/30" />
+                        <div className="h-4 w-24 bg-muted/30 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-muted/30" />
+                        <div className="h-4 w-16 bg-muted/30 rounded" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3.5 text-right">
+                      <div className="h-4 w-12 bg-muted/30 rounded ml-auto" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="h-4 w-28 bg-muted/30 rounded" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="h-4 w-16 bg-muted/30 rounded" />
+                    </TableCell>
+                    <TableCell className="py-3.5">
+                      <div className="h-7 w-7 bg-muted/30 rounded" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Overlay with message */}
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+            <div className="text-center px-6">
+              <p className="text-muted-foreground text-sm">
+                Import analytics to get started
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>;

@@ -16,6 +16,7 @@ import { DiscordBotConfigSection } from "./DiscordBotConfigSection";
 import { DiscordRoleSyncSection } from "./DiscordRoleSyncSection";
 import { DiscordReactionAnalytics } from "./DiscordReactionAnalytics";
 import { DiscordMembershipLog } from "./DiscordMembershipLog";
+import { CustomWebhooksTab } from "./CustomWebhooksTab";
 
 interface DiscordIntegrationTabProps {
   brandId: string;
@@ -167,8 +168,9 @@ export function DiscordIntegrationTab({ brandId }: DiscordIntegrationTabProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="webhooks">Discord</TabsTrigger>
+          <TabsTrigger value="custom">Custom</TabsTrigger>
           <TabsTrigger value="bot">Bot</TabsTrigger>
           <TabsTrigger value="roles">Role Sync</TabsTrigger>
           <TabsTrigger value="reactions">Reactions</TabsTrigger>
@@ -315,6 +317,10 @@ export function DiscordIntegrationTab({ brandId }: DiscordIntegrationTabProps) {
               {isSaving ? "Saving..." : "Save Settings"}
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="custom" className="mt-4 -mx-6 -mb-6">
+          <CustomWebhooksTab brandId={brandId} />
         </TabsContent>
 
         <TabsContent value="bot" className="mt-4">
