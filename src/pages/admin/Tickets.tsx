@@ -475,21 +475,22 @@ export default function Tickets() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-6 pb-4 space-y-4 shrink-0">
-        <div>
-          <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Support Tickets</h1>
-          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-            Manage user support requests • Press <kbd className="bg-muted px-1.5 py-0.5 rounded text-[10px]">?</kbd> for shortcuts
-          </p>
+      {/* Header - compact layout */}
+      <div className="px-6 py-3 space-y-2 shrink-0 border-b border-border/50">
+        {/* Title + Stats in one row */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold font-inter tracking-[-0.5px]">Tickets</h1>
+            <TicketStatsCards
+              stats={stats}
+              activeStatus={filters.status}
+              onStatusClick={(status) => setFilters((prev) => ({ ...prev, status: status === prev.status ? "all" : status }))}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground hidden md:inline">
+            <kbd className="bg-muted px-1 py-0.5 rounded text-[10px]">?</kbd> shortcuts
+          </span>
         </div>
-
-        {/* Stats */}
-        <TicketStatsCards
-          stats={stats}
-          activeStatus={filters.status}
-          onStatusClick={(status) => setFilters((prev) => ({ ...prev, status: status === prev.status ? "all" : status }))}
-        />
 
         {/* Filters */}
         <TicketFilters
@@ -503,7 +504,7 @@ export default function Tickets() {
       </div>
 
       {/* Three-column layout */}
-      <div className="flex-1 overflow-hidden px-6 pb-6">
+      <div className="flex-1 overflow-hidden px-4 pb-4 pt-2">
         <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border border-border/50 bg-card/30">
           {/* Left: Ticket List */}
           <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>

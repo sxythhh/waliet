@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, ComponentType } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  GaugeIcon,
+  UsersIcon,
+  TargetIcon,
+  RocketIcon,
+  CurrencyDollarIcon,
+  LayersIcon,
+  MessageCircleIcon,
+  HeartIcon,
+  ShieldCheckIcon,
+  type AnimatedIconProps,
+} from "@/components/icons";
 
 // Lazy load tab content
 const OverviewContent = lazy(() => import("./admin/Overview"));
@@ -17,6 +29,7 @@ const ResourcesContent = lazy(() => import("./admin/Resources"));
 const FeedbackContent = lazy(() => import("./admin/Feedback"));
 const TicketsContent = lazy(() => import("./admin/Tickets"));
 const PermissionsContent = lazy(() => import("./admin/Permissions"));
+const CampaignsContent = lazy(() => import("./admin/Campaigns"));
 
 function TabLoader() {
   return (
@@ -37,15 +50,16 @@ function TabLoader() {
   );
 }
 
-const tabs = [
-  { id: "overview", label: "Overview" },
-  { id: "users", label: "Users" },
-  { id: "brands", label: "Brands" },
-  { id: "finance", label: "Finance" },
-  { id: "content", label: "Content" },
-  { id: "tickets", label: "Tickets" },
-  { id: "feedback", label: "Feedback" },
-  { id: "permissions", label: "Permissions" },
+const tabs: { id: string; label: string; icon: ComponentType<AnimatedIconProps> }[] = [
+  { id: "overview", label: "Overview", icon: GaugeIcon },
+  { id: "users", label: "Users", icon: UsersIcon },
+  { id: "brands", label: "Brands", icon: TargetIcon },
+  { id: "campaigns", label: "Campaigns", icon: RocketIcon },
+  { id: "finance", label: "Finance", icon: CurrencyDollarIcon },
+  { id: "content", label: "Content", icon: LayersIcon },
+  { id: "tickets", label: "Tickets", icon: MessageCircleIcon },
+  { id: "feedback", label: "Feedback", icon: HeartIcon },
+  { id: "permissions", label: "Permissions", icon: ShieldCheckIcon },
 ];
 
 export default function Admin() {
@@ -129,15 +143,19 @@ export default function Admin() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b border-border px-6 bg-card">
           <TabsList className="h-12 bg-transparent gap-1 p-0">
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="h-12 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent font-inter tracking-[-0.3px] text-sm"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="h-12 px-4 rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent font-inter tracking-[-0.3px] text-sm"
+                >
+                  {/* Icon hidden but preserved: <Icon size={16} strokeWidth={2} /> */}
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </div>
 
@@ -158,6 +176,12 @@ export default function Admin() {
           <TabsContent value="brands" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
               <BrandsContent />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="campaigns" className="m-0 h-full">
+            <Suspense fallback={<TabLoader />}>
+              <CampaignsContent />
             </Suspense>
           </TabsContent>
 

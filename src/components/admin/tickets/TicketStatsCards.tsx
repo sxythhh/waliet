@@ -65,7 +65,7 @@ export function TicketStatsCards({
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+    <div className="flex items-center gap-1.5 flex-wrap">
       {statCards.map((card) => {
         const count = getCount(card.id);
         const isActive = activeStatus === card.id;
@@ -75,26 +75,18 @@ export function TicketStatsCards({
             key={card.id}
             onClick={() => onStatusClick(card.id as TicketStatus)}
             className={cn(
-              "flex items-center gap-3 p-3 rounded-lg transition-all duration-150",
-              "hover:ring-2 hover:ring-primary/20",
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all duration-150 text-sm",
+              "hover:ring-1 hover:ring-primary/20",
               isActive
-                ? "ring-2 ring-primary bg-background shadow-sm"
+                ? "ring-1 ring-primary bg-background shadow-sm"
                 : "bg-muted/30 hover:bg-muted/50"
             )}
           >
-            <div
-              className={cn(
-                "flex items-center justify-center h-8 w-8 rounded-md",
-                card.bgColor,
-                card.color
-              )}
-            >
+            <div className={cn("flex items-center justify-center", card.color)}>
               {card.icon}
             </div>
-            <div className="text-left">
-              <p className="text-xl font-semibold tracking-tight">{count}</p>
-              <p className="text-xs text-muted-foreground">{card.label}</p>
-            </div>
+            <span className="font-semibold tabular-nums">{count}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{card.label}</span>
           </button>
         );
       })}
