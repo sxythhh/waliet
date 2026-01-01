@@ -9,7 +9,6 @@ const MINIMUM_TRANSFER = 1;
 const TRANSFER_FEE_RATE = 0.03; // 3% fee
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,10 +17,8 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Get the authorization header to identify the sender
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('No authorization header provided');
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -35,7 +32,6 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
     if (userError || !user) {
-      console.error('Failed to get user:', userError);
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -43,11 +39,28 @@ Deno.serve(async (req) => {
     }
 
     const senderId = user.id;
-    console.log('Transfer initiated by user:', senderId);
+
+    // Use service role client for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Rate limiting check
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_user_id: senderId,
+      p_action: 'p2p_transfer',
+      p_max_attempts: 5,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError || !allowed) {
+      console.log('Rate limit exceeded for user:', senderId);
+      return new Response(
+        JSON.stringify({ error: 'Too many transfer attempts. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Parse request body
-    const { recipientUsername, amount } = await req.json();
-    console.log('Transfer request:', { recipientUsername, amount });
+    const { recipientUsername, amount, note } = await req.json();
 
     // Validate input
     if (!recipientUsername || typeof recipientUsername !== 'string') {
@@ -65,9 +78,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use service role client for database operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Find recipient by username
     const { data: recipient, error: recipientError } = await supabase
       .from('profiles')
@@ -76,7 +86,6 @@ Deno.serve(async (req) => {
       .single();
 
     if (recipientError || !recipient) {
-      console.error('Recipient not found:', recipientError);
       return new Response(
         JSON.stringify({ error: 'User not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -94,134 +103,31 @@ Deno.serve(async (req) => {
     // Calculate fee and net amount
     const fee = Math.round(transferAmount * TRANSFER_FEE_RATE * 100) / 100;
     const netAmount = Math.round((transferAmount - fee) * 100) / 100;
-    const totalDebit = transferAmount;
 
-    console.log('Transfer calculation:', { transferAmount, fee, netAmount, totalDebit });
+    console.log('Executing atomic P2P transfer:', { senderId, recipientId: recipient.id, amount: transferAmount, fee, netAmount });
 
-    // Get sender's wallet balance
-    const { data: senderWallet, error: senderWalletError } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', senderId)
-      .single();
+    // Execute atomic transfer using RPC
+    const { data: result, error: transferError } = await supabase.rpc('atomic_p2p_transfer', {
+      p_sender_id: senderId,
+      p_recipient_id: recipient.id,
+      p_gross_amount: transferAmount,
+      p_net_amount: netAmount,
+      p_fee: fee,
+      p_note: note || null
+    });
 
-    if (senderWalletError || !senderWallet) {
-      console.error('Sender wallet not found:', senderWalletError);
+    if (transferError) {
+      console.error('Atomic transfer failed:', transferError);
+      const errorMessage = transferError.message.includes('Insufficient balance') 
+        ? 'Insufficient balance'
+        : 'Transfer failed';
       return new Response(
-        JSON.stringify({ error: 'Wallet not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (senderWallet.balance < totalDebit) {
-      return new Response(
-        JSON.stringify({ error: 'Insufficient balance' }),
+        JSON.stringify({ error: errorMessage }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Perform the transfer atomically
-    // 1. Debit sender
-    const { error: debitError } = await supabase
-      .from('wallets')
-      .update({ 
-        balance: senderWallet.balance - totalDebit,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', senderId);
-
-    if (debitError) {
-      console.error('Failed to debit sender:', debitError);
-      return new Response(
-        JSON.stringify({ error: 'Transfer failed' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 2. Credit recipient
-    const { data: recipientWallet } = await supabase
-      .from('wallets')
-      .select('balance')
-      .eq('user_id', recipient.id)
-      .single();
-
-    const recipientBalance = recipientWallet?.balance || 0;
-
-    const { error: creditError } = await supabase
-      .from('wallets')
-      .update({ 
-        balance: recipientBalance + netAmount,
-        total_earned: (recipientWallet as any)?.total_earned + netAmount || netAmount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', recipient.id);
-
-    if (creditError) {
-      // Rollback sender debit
-      console.error('Failed to credit recipient, rolling back:', creditError);
-      await supabase
-        .from('wallets')
-        .update({ balance: senderWallet.balance })
-        .eq('user_id', senderId);
-      
-      return new Response(
-        JSON.stringify({ error: 'Transfer failed' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 3. Log the transfer
-    const { error: logError } = await supabase
-      .from('p2p_transfers')
-      .insert({
-        sender_id: senderId,
-        recipient_id: recipient.id,
-        amount: transferAmount,
-        fee: fee,
-        net_amount: netAmount,
-        status: 'completed'
-      });
-
-    if (logError) {
-      console.error('Failed to log transfer:', logError);
-      // Don't rollback, transfer was successful
-    }
-
-    // 4. Create wallet transaction records for both parties
-    // Get sender's username for the recipient's transaction record
-    const { data: senderProfile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', senderId)
-      .single();
-    
-    await supabase.from('wallet_transactions').insert([
-      {
-        user_id: senderId,
-        amount: -totalDebit,
-        type: 'transfer_sent',
-        status: 'completed',
-        description: `Transfer to @${recipient.username}`,
-        metadata: { 
-          recipient_id: recipient.id, 
-          recipient_username: recipient.username,
-          fee: fee 
-        }
-      },
-      {
-        user_id: recipient.id,
-        amount: netAmount,
-        type: 'transfer_received',
-        status: 'completed',
-        description: `Transfer from @${senderProfile?.username || 'user'}`,
-        metadata: { 
-          sender_id: senderId,
-          sender_username: senderProfile?.username || 'user'
-        }
-      }
-    ]);
-
-    console.log('Transfer completed successfully');
+    console.log('Transfer completed successfully:', result);
 
     return new Response(
       JSON.stringify({ 
@@ -231,7 +137,8 @@ Deno.serve(async (req) => {
           amount: transferAmount,
           fee: fee,
           netAmount: netAmount,
-          recipientUsername: recipient.username
+          recipientUsername: recipient.username,
+          transferId: result?.transfer_id
         }
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

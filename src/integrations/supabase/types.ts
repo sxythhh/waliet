@@ -5377,6 +5377,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempts: number | null
+          created_at: string | null
+          id: string
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       referral_milestone_rewards: {
         Row: {
           awarded_at: string
@@ -6824,13 +6851,56 @@ export type Database = {
       }
     }
     Functions: {
+      atomic_allocate_budget: {
+        Args: {
+          p_amount: number
+          p_brand_id: string
+          p_campaign_id: string
+          p_campaign_type: string
+        }
+        Returns: Json
+      }
+      atomic_brand_to_personal_transfer: {
+        Args: {
+          p_amount: number
+          p_brand_id: string
+          p_description?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      atomic_complete_payout: {
+        Args: { p_approved_by?: string; p_payout_request_id: string }
+        Returns: Json
+      }
+      atomic_p2p_transfer: {
+        Args: {
+          p_fee: number
+          p_gross_amount: number
+          p_net_amount: number
+          p_note?: string
+          p_recipient_id: string
+          p_sender_id: string
+        }
+        Returns: Json
+      }
       brand_has_no_members: { Args: { _brand_id: string }; Returns: boolean }
       can_view_payout_item: { Args: { _item_id: string }; Returns: boolean }
       can_view_profile: {
         Args: { _profile_id: string; _viewer_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_max_attempts?: number
+          p_user_id: string
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       cleanup_demographic_videos: { Args: never; Returns: undefined }
+      cleanup_rate_limits: { Args: never; Returns: undefined }
       create_default_creator_tiers: {
         Args: { p_brand_id: string }
         Returns: undefined
