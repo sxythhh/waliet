@@ -440,7 +440,7 @@ export function BrandCampaignsTab({
                 type: "boost";
               };
               const spotsRemaining = bounty.max_accepted_creators - bounty.accepted_creators_count;
-              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=campaigns&subtab=campaigns&boost=${bounty.id}`)} onTopUp={() => {
+              return <CampaignRowCard key={`boost-${bounty.id}`} id={bounty.id} title={bounty.title} type="boost" bannerUrl={bounty.banner_url} brandColor={brandColor || null} budget={Number(bounty.budget || 0)} budgetUsed={Number(bounty.budget_used || 0)} videosPerMonth={bounty.videos_per_month} spotsRemaining={spotsRemaining} maxCreators={bounty.max_accepted_creators} status={bounty.status} endDate={bounty.end_date} members={bountyMembers[bounty.id] || []} slug={bounty.slug || undefined} onClick={() => navigate(`/dashboard?workspace=${searchParams.get('workspace')}&tab=analytics&boost=${bounty.id}`)} onTopUp={() => {
                 setSelectedCampaignForFunding({
                   id: bounty.id,
                   type: 'boost'
