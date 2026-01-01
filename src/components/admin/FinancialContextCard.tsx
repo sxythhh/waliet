@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, TrendingUp, Loader2, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface FinancialStats {
   totalUserWalletBalance: number;
@@ -22,31 +21,47 @@ export function FinancialContextCard() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // Get total user wallet balances
+      // Get user IDs to exclude (users with @viral handle)
+      const { data: excludedProfiles } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("username", "%viral%");
+
+      const excludedUserIds = (excludedProfiles || []).map((p) => p.id);
+
+      // Get total user wallet balances (excluding @viral users)
       const { data: walletsData } = await supabase
         .from("wallets")
-        .select("balance");
+        .select("balance, user_id");
 
-      const totalUserWalletBalance = (walletsData || []).reduce(
+      const filteredWallets = (walletsData || []).filter(
+        (wallet) => !excludedUserIds.includes(wallet.user_id)
+      );
+
+      const totalUserWalletBalance = filteredWallets.reduce(
         (sum, wallet) => sum + (Number(wallet.balance) || 0),
         0
       );
 
-      const activeUserWallets = (walletsData || []).filter(
+      const activeUserWallets = filteredWallets.filter(
         (wallet) => Number(wallet.balance) > 0
       ).length;
 
-      // Get campaign budgets (budget - budget_used)
+      // Get campaign budgets excluding GoViral campaigns
       const { data: campaignsData } = await supabase
         .from("campaigns")
-        .select("budget, budget_used, status")
+        .select("budget, budget_used, status, title")
         .in("status", ["active", "pending"]);
 
-      const activeCampaigns = (campaignsData || []).filter(
+      const filteredCampaigns = (campaignsData || []).filter(
+        (c) => !c.title?.toLowerCase().includes("goviral")
+      );
+
+      const activeCampaigns = filteredCampaigns.filter(
         (c) => c.status === "active"
       ).length;
 
-      const totalCampaignBudgetRemaining = (campaignsData || []).reduce(
+      const totalCampaignBudgetRemaining = filteredCampaigns.reduce(
         (sum, campaign) => {
           const budget = Number(campaign.budget) || 0;
           const budgetUsed = Number(campaign.budget_used) || 0;
@@ -72,8 +87,7 @@ export function FinancialContextCard() {
     return (
       <Card className="bg-card border-0 shadow-none">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-inter tracking-[-0.5px] flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg font-inter tracking-[-0.5px]">
             Financial Overview
           </CardTitle>
         </CardHeader>
@@ -88,71 +102,47 @@ export function FinancialContextCard() {
 
   if (!stats) return null;
 
-  const statItems = [
-    {
-      label: "User Wallet Funds",
-      value: stats.totalUserWalletBalance,
-      subtext: `${stats.activeUserWallets} active wallets`,
-      icon: <Wallet className="h-5 w-5" />,
-      color: "text-emerald-500",
-      bgColor: "bg-emerald-500/10",
-    },
-    {
-      label: "Campaign Budget Remaining",
-      value: stats.totalCampaignBudgetRemaining,
-      subtext: `${stats.activeCampaigns} active campaigns`,
-      icon: <Building2 className="h-5 w-5" />,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
-    },
-  ];
+  const totalLiability = stats.totalUserWalletBalance + stats.totalCampaignBudgetRemaining;
 
   return (
     <Card className="bg-card border-0 shadow-none">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-inter tracking-[-0.5px] flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" />
+        <CardTitle className="text-lg font-inter tracking-[-0.5px]">
           Financial Overview
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {statItems.map((item, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-4 p-4 rounded-lg bg-muted/30"
-            >
-              <div
-                className={cn(
-                  "flex items-center justify-center h-12 w-12 rounded-lg",
-                  item.bgColor,
-                  item.color
-                )}
-              >
-                {item.icon}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className={cn("text-2xl font-semibold tracking-tight", item.color)}>
-                  ${item.value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </p>
-                <p className="text-xs text-muted-foreground">{item.subtext}</p>
-              </div>
-            </div>
-          ))}
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-2 gap-8">
+          <div>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">User Wallet Funds</p>
+            <p className="text-2xl font-semibold font-inter tracking-[-0.5px] mt-1">
+              ${stats.totalUserWalletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.5px]">
+              {stats.activeUserWallets} active wallets
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Campaign Budget Remaining</p>
+            <p className="text-2xl font-semibold font-inter tracking-[-0.5px] mt-1">
+              ${stats.totalCampaignBudgetRemaining.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.5px]">
+              {stats.activeCampaigns} active campaigns
+            </p>
+          </div>
         </div>
 
-        {/* Combined total */}
-        <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/10">
+        <div className="pt-4 border-t border-border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Platform Liability</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Total Platform Liability</p>
+              <p className="text-xs text-muted-foreground mt-0.5 font-inter tracking-[-0.5px]">
                 Funds owed to users + remaining campaign budgets
               </p>
             </div>
-            <p className="text-3xl font-semibold tracking-tight text-primary">
-              ${(stats.totalUserWalletBalance + stats.totalCampaignBudgetRemaining).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <p className="text-3xl font-semibold font-inter tracking-[-0.5px]">
+              ${totalLiability.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
