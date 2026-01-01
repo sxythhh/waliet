@@ -123,7 +123,7 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
 
                         // Handle pausing - auto-waitlist pending applications
                         if (newStatus === 'paused') {
-                          await supabase
+                          await (supabase as any)
                             .from('bounty_applications')
                             .update({
                               status: 'waitlisted',
@@ -135,7 +135,7 @@ export function BountyCampaignsView({ bounties, onViewApplications, onDelete, on
 
                         // Handle resuming - restore auto-waitlisted applications
                         if (newStatus === 'active' && bounty.status === 'paused') {
-                          await supabase
+                          await (supabase as any)
                             .from('bounty_applications')
                             .update({
                               status: 'pending',

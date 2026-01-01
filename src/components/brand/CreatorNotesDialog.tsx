@@ -60,12 +60,12 @@ export function CreatorNotesDialog({
   const fetchNote = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('brand_creator_notes')
+      const { data, error } = await (supabase
+        .from('brand_creator_notes' as any)
         .select('*')
         .eq('brand_id', brandId)
         .eq('creator_id', creatorId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (error) throw error;
 
@@ -102,17 +102,17 @@ export function CreatorNotesDialog({
 
       if (existingNote) {
         // Update existing note
-        const { error } = await supabase
-          .from('brand_creator_notes')
+        const { error } = await (supabase
+          .from('brand_creator_notes' as any)
           .update(noteData)
-          .eq('id', existingNote.id);
+          .eq('id', existingNote.id) as any);
 
         if (error) throw error;
       } else {
         // Create new note
-        const { error } = await supabase
-          .from('brand_creator_notes')
-          .insert(noteData);
+        const { error } = await (supabase
+          .from('brand_creator_notes' as any)
+          .insert(noteData) as any);
 
         if (error) throw error;
       }

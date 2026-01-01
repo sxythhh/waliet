@@ -88,11 +88,11 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
   const fetchWebhooks = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("brand_webhooks")
+      const { data, error } = await (supabase
+        .from("brand_webhooks" as any)
         .select("*")
         .eq("brand_id", brandId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as any);
 
       if (error) throw error;
       setWebhooks((data as Webhook[]) || []);
@@ -128,8 +128,8 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      const { error } = await supabase
-        .from("brand_webhooks")
+      const { error } = await (supabase
+        .from("brand_webhooks" as any)
         .insert({
           brand_id: brandId,
           name: newWebhook.name.trim(),
@@ -137,7 +137,7 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
           api_version: newWebhook.api_version,
           events: newWebhook.events,
           created_by: user?.id,
-        });
+        }) as any);
 
       if (error) throw error;
 
@@ -155,10 +155,10 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
 
   const handleToggleWebhook = async (webhook: Webhook) => {
     try {
-      const { error } = await supabase
-        .from("brand_webhooks")
+      const { error } = await (supabase
+        .from("brand_webhooks" as any)
         .update({ is_active: !webhook.is_active })
-        .eq("id", webhook.id);
+        .eq("id", webhook.id) as any);
 
       if (error) throw error;
 
@@ -174,10 +174,10 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
 
   const handleDeleteWebhook = async (webhookId: string) => {
     try {
-      const { error } = await supabase
-        .from("brand_webhooks")
+      const { error } = await (supabase
+        .from("brand_webhooks" as any)
         .delete()
-        .eq("id", webhookId);
+        .eq("id", webhookId) as any);
 
       if (error) throw error;
 
@@ -195,12 +195,12 @@ export function CustomWebhooksTab({ brandId }: CustomWebhooksTabProps) {
     setLogsLoading(true);
 
     try {
-      const { data, error } = await supabase
-        .from("webhook_logs")
+      const { data, error } = await (supabase
+        .from("webhook_logs" as any)
         .select("*")
         .eq("webhook_id", webhook.id)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(50) as any);
 
       if (error) throw error;
       setWebhookLogs((data as WebhookLog[]) || []);

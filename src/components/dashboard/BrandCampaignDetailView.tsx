@@ -85,6 +85,17 @@ interface Boost {
   discord_guild_id: string | null;
   budget: number | null;
   budget_used: number | null;
+  content_distribution?: string | null;
+  position_type?: string | null;
+  availability_requirement?: string | null;
+  work_location?: string | null;
+  blueprint_id?: string | null;
+  blueprint_embed_url?: string | null;
+  tags?: string[] | null;
+  application_questions?: any;
+  discord_role_id?: string | null;
+  shortimize_collection_name?: string | null;
+  view_bonuses_enabled?: boolean | null;
 }
 interface BrandCampaignDetailViewProps {
   brandId?: string;
@@ -530,7 +541,7 @@ export function BrandCampaignDetailView({
 
                   // Handle pausing - auto-waitlist pending applications
                   if (newStatus === 'paused') {
-                    await supabase
+                    await (supabase as any)
                       .from('bounty_applications')
                       .update({
                         status: 'waitlisted',
@@ -542,7 +553,7 @@ export function BrandCampaignDetailView({
 
                   // Handle resuming - restore auto-waitlisted applications
                   if (newStatus === 'active') {
-                    await supabase
+                    await (supabase as any)
                       .from('bounty_applications')
                       .update({
                         status: 'pending',
