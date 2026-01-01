@@ -41,6 +41,7 @@ import { ProfileHeader } from "./ProfileHeader";
 import { TransactionShareDialog } from "./TransactionShareDialog";
 import { EarningsChart } from "./EarningsChart";
 import { addDays } from "date-fns";
+import { UsdWithLocal } from "@/components/LocalCurrencyAmount";
 interface UserProfile {
   username?: string;
   avatar_url?: string;
@@ -1210,7 +1211,7 @@ export function WalletTab() {
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-emerald-500 font-inter tracking-[-0.5px]">
-                ${(wallet?.total_earned || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <UsdWithLocal amount={wallet?.total_earned || 0} />
               </p>
               <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Total Earned</p>
             </div>

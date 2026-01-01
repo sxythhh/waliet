@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePaymentLedger } from "@/hooks/usePaymentLedger";
 import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDialog";
 import { TransferDialog } from "@/components/dashboard/TransferDialog";
+import { LocalCurrencyAmount } from "@/components/LocalCurrencyAmount";
 import walletIconWhite from "@/assets/wallet-icon-white.svg";
 interface WalletDropdownProps {
   variant?: "sidebar" | "header";
@@ -95,7 +96,7 @@ export function WalletDropdown({
             <div className="flex items-center gap-2 flex-1">
               {variant === "sidebar" ? <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} /> : <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />}
               <span className="font-semibold font-inter tracking-[-0.5px] text-sm">
-                ${balance.toFixed(2)}
+                <LocalCurrencyAmount amount={balance} tooltipMode />
               </span>
             </div>
             <Button size="sm" className="h-7 px-3 text-xs font-medium font-inter tracking-[-0.5px]" onClick={e => {
@@ -135,15 +136,15 @@ function WalletDropdownContent({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Current Balance</span>
-          <span className="text-sm font-semibold font-inter tracking-[-0.5px]">${balance.toFixed(2)}</span>
+          <span className="text-sm font-semibold font-inter tracking-[-0.5px]"><LocalCurrencyAmount amount={balance} /></span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Pending Balance</span>
-          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${totalPending.toFixed(2)}</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]"><LocalCurrencyAmount amount={totalPending} /></span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">In Transit</span>
-          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">${pendingWithdrawals.toFixed(2)}</span>
+          <span className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]"><LocalCurrencyAmount amount={pendingWithdrawals} /></span>
         </div>
       </div>
       <div className="flex flex-col gap-2">

@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X } from "lucide-react";
+import HelpIcon from "@mui/icons-material/Help";
 import searchIcon from "@/assets/search-icon.svg";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState, useCallback } from "react";
@@ -103,6 +104,15 @@ export default function PublicNavbar({
                               <div>
                                 <div className="font-medium text-foreground">For Brands</div>
                                 <div className="text-xs text-muted-foreground">Launch opportunities on Virality</div>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                          <NavigationMenuLink asChild>
+                            <Link to="/support" className="flex items-center gap-3 px-3 text-sm text-foreground/80 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-lg font-inter tracking-[-0.5px] transition-colors py-[5px]">
+                              <HelpIcon className="text-black dark:text-white" sx={{ fontSize: 20 }} />
+                              <div>
+                                <div className="font-medium text-foreground">Support</div>
+                                <div className="text-xs text-muted-foreground">Get help and find answers</div>
                               </div>
                             </Link>
                           </NavigationMenuLink>

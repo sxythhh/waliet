@@ -3,36 +3,33 @@ import { useLocation } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { SupportChat } from "@/components/support/SupportChat";
 import PublicNavbar from "@/components/PublicNavbar";
-import {
-  Search,
-  ChevronRight,
-  ChevronDown,
-  ExternalLink,
-  Mail,
-  MessageCircle,
-  Sparkles,
-  HelpCircle,
-  Rocket,
-  Zap,
-  Wallet,
-  Share2,
-  Users,
-  Shield,
-  ArrowLeft,
-  Link2,
-  Check,
-  Ticket,
-  Plus,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  XCircle,
-  Loader2,
-  Paperclip,
-  X,
-  ChevronUp,
-  Send
-} from "lucide-react";
+import SearchIcon from "@mui/icons-material/Search";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import EmailIcon from "@mui/icons-material/Email";
+import ChatIcon from "@mui/icons-material/Chat";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import HelpIcon from "@mui/icons-material/Help";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import BoltIcon from "@mui/icons-material/Bolt";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import ShareIcon from "@mui/icons-material/Share";
+import GroupIcon from "@mui/icons-material/Group";
+import ShieldIcon from "@mui/icons-material/Shield";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import LinkIcon from "@mui/icons-material/Link";
+import CheckIcon from "@mui/icons-material/Check";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
+import AddIcon from "@mui/icons-material/Add";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import CancelIcon from "@mui/icons-material/Cancel";
+import LoopIcon from "@mui/icons-material/Loop";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import SendIcon from "@mui/icons-material/Send";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -63,7 +60,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { format, subHours, subDays } from "date-fns";
+import { format } from "date-fns";
 
 // Ticket types
 interface SupportTicket {
@@ -87,71 +84,14 @@ interface TicketMessage {
 
 // Ticket categories
 const TICKET_CATEGORIES = [
-  { id: "billing", name: "Billing & Payments", icon: Wallet },
-  { id: "technical", name: "Technical Issue", icon: AlertCircle },
-  { id: "account", name: "Account & Profile", icon: Users },
-  { id: "campaign", name: "Campaign Issue", icon: Zap },
-  { id: "payout", name: "Payout Request", icon: Wallet },
-  { id: "other", name: "Other", icon: HelpCircle },
+  { id: "billing", name: "Billing & Payments", icon: AccountBalanceWalletIcon },
+  { id: "technical", name: "Technical Issue", icon: ErrorIcon },
+  { id: "account", name: "Account & Profile", icon: GroupIcon },
+  { id: "campaign", name: "Campaign Issue", icon: BoltIcon },
+  { id: "payout", name: "Payout Request", icon: AccountBalanceWalletIcon },
+  { id: "other", name: "Other", icon: HelpIcon },
 ];
 
-// Demo tickets for initial state
-const DEMO_TICKETS: SupportTicket[] = [
-  {
-    id: "TKT-001",
-    subject: "Payout not received after 5 days",
-    category: "payout",
-    priority: "high",
-    status: "in_progress",
-    description: "I requested a payout of $45.50 on Monday but haven't received it yet. My PayPal is verified.",
-    createdAt: subDays(new Date(), 2),
-    updatedAt: subHours(new Date(), 4),
-    messages: [
-      {
-        id: "msg-1",
-        content: "I requested a payout of $45.50 on Monday but haven't received it yet. My PayPal is verified.",
-        sender: "user",
-        createdAt: subDays(new Date(), 2),
-      },
-      {
-        id: "msg-2",
-        content: "Hi there! Thank you for reaching out. I've looked into your payout request and can see it's currently being processed. PayPal payouts typically take 3-5 business days. Your payout should arrive within the next 24-48 hours. I'll keep this ticket open until you confirm receipt.",
-        sender: "support",
-        createdAt: subDays(new Date(), 1),
-      },
-    ],
-  },
-  {
-    id: "TKT-002",
-    subject: "Campaign submission stuck on pending",
-    category: "campaign",
-    priority: "medium",
-    status: "resolved",
-    description: "My submission for the XYZ campaign has been pending for over a week. Can someone review it?",
-    createdAt: subDays(new Date(), 7),
-    updatedAt: subDays(new Date(), 5),
-    messages: [
-      {
-        id: "msg-3",
-        content: "My submission for the XYZ campaign has been pending for over a week. Can someone review it?",
-        sender: "user",
-        createdAt: subDays(new Date(), 7),
-      },
-      {
-        id: "msg-4",
-        content: "Thanks for your patience! I've escalated your submission to the campaign team. They'll review it within 24 hours.",
-        sender: "support",
-        createdAt: subDays(new Date(), 6),
-      },
-      {
-        id: "msg-5",
-        content: "Great news! Your submission has been approved and the earnings have been credited to your wallet. Thank you for participating!",
-        sender: "support",
-        createdAt: subDays(new Date(), 5),
-      },
-    ],
-  },
-];
 
 // LocalStorage key for tickets
 const TICKETS_STORAGE_KEY = "virality_support_tickets";
@@ -175,7 +115,7 @@ function loadTickets(): SupportTicket[] {
   } catch (e) {
     console.error("Failed to load tickets:", e);
   }
-  return DEMO_TICKETS;
+  return [];
 }
 
 // Save tickets to localStorage
@@ -192,49 +132,37 @@ const CATEGORIES = [
   {
     id: "getting-started",
     name: "Getting Started",
-    icon: Rocket,
-    color: "text-violet-500",
-    bgColor: "bg-violet-500/10",
+    icon: RocketLaunchIcon,
     description: "Learn the basics and set up your account"
   },
   {
     id: "campaigns",
     name: "Campaigns",
-    icon: Zap,
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
+    icon: BoltIcon,
     description: "Join and manage your campaigns"
   },
   {
     id: "earnings",
     name: "Earnings & Payouts",
-    icon: Wallet,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10",
+    icon: AccountBalanceWalletIcon,
     description: "Understand how you earn and get paid"
   },
   {
     id: "referrals",
     name: "Referrals",
-    icon: Share2,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
+    icon: ShareIcon,
     description: "Grow your network and earn bonuses"
   },
   {
     id: "account",
     name: "Account & Profile",
-    icon: Users,
-    color: "text-pink-500",
-    bgColor: "bg-pink-500/10",
+    icon: GroupIcon,
     description: "Manage your profile and settings"
   },
   {
     id: "security",
     name: "Security & Privacy",
-    icon: Shield,
-    color: "text-slate-500",
-    bgColor: "bg-slate-500/10",
+    icon: ShieldIcon,
     description: "Keep your account secure"
   },
 ];
@@ -404,32 +332,32 @@ function findFaqByHash(hash: string): typeof FAQ_ITEMS[0] | undefined {
 function getStatusStyles(status: SupportTicket["status"]) {
   switch (status) {
     case "open":
-      return { bg: "bg-blue-500/10", text: "text-blue-500", icon: AlertCircle };
+      return { bg: "bg-muted", text: "text-foreground", icon: ErrorIcon };
     case "in_progress":
-      return { bg: "bg-amber-500/10", text: "text-amber-500", icon: Loader2 };
+      return { bg: "bg-muted", text: "text-foreground", icon: LoopIcon };
     case "awaiting_reply":
-      return { bg: "bg-violet-500/10", text: "text-violet-500", icon: Clock };
+      return { bg: "bg-muted", text: "text-foreground", icon: ScheduleIcon };
     case "resolved":
-      return { bg: "bg-emerald-500/10", text: "text-emerald-500", icon: CheckCircle2 };
+      return { bg: "bg-muted", text: "text-foreground", icon: CheckCircleIcon };
     case "closed":
-      return { bg: "bg-slate-500/10", text: "text-slate-500", icon: XCircle };
+      return { bg: "bg-muted", text: "text-muted-foreground", icon: CancelIcon };
     default:
-      return { bg: "bg-slate-500/10", text: "text-slate-500", icon: HelpCircle };
+      return { bg: "bg-muted", text: "text-muted-foreground", icon: HelpIcon };
   }
 }
 
 function getPriorityStyles(priority: SupportTicket["priority"]) {
   switch (priority) {
     case "urgent":
-      return { bg: "bg-rose-500/10", text: "text-rose-500" };
+      return { bg: "bg-muted", text: "text-foreground" };
     case "high":
-      return { bg: "bg-amber-500/10", text: "text-amber-500" };
+      return { bg: "bg-muted", text: "text-foreground" };
     case "medium":
-      return { bg: "bg-blue-500/10", text: "text-blue-500" };
+      return { bg: "bg-muted", text: "text-foreground" };
     case "low":
-      return { bg: "bg-slate-500/10", text: "text-slate-500" };
+      return { bg: "bg-muted", text: "text-muted-foreground" };
     default:
-      return { bg: "bg-slate-500/10", text: "text-slate-500" };
+      return { bg: "bg-muted", text: "text-muted-foreground" };
   }
 }
 
@@ -624,7 +552,7 @@ const Support = () => {
   const selectedCategoryData = CATEGORIES.find(c => c.id === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex flex-col">
+    <div className="h-screen overflow-y-auto bg-background">
       <SEOHead
         title="Help Center & Support"
         description="Get help with Virality. Browse FAQs, chat with our AI assistant, or contact our support team."
@@ -637,18 +565,12 @@ const Support = () => {
 
       <PublicNavbar />
 
-      <main className="flex-1 pt-24 pb-16">
+      <main className="pt-24 pb-16">
         {/* Hero Section */}
-        <div className="relative overflow-hidden border-b mb-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
-          <div className="absolute inset-0">
-            <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
-          </div>
-
-          <div className="relative max-w-4xl mx-auto px-6 py-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <HelpCircle className="w-4 h-4" />
+        <div className="mb-12">
+          <div className="max-w-4xl mx-auto px-6 py-12 text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-foreground text-sm font-medium mb-6">
+              <HelpIcon sx={{ fontSize: 16 }} />
               Help Center
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -660,7 +582,7 @@ const Support = () => {
 
             {/* Search Bar */}
             <div className="relative max-w-xl mx-auto mb-6">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" sx={{ fontSize: 20 }} />
               <Input
                 type="text"
                 placeholder="Search for help articles..."
@@ -681,7 +603,7 @@ const Support = () => {
                 className="gap-2 rounded-xl"
                 onClick={() => setShowChat(!showChat)}
               >
-                <MessageCircle className="w-5 h-5" />
+                <ChatIcon sx={{ fontSize: 20 }} />
                 {showChat ? "Hide AI Chat" : "Chat with AI"}
               </Button>
               <Button
@@ -690,7 +612,7 @@ const Support = () => {
                 className="gap-2 rounded-xl"
                 onClick={() => setShowTickets(!showTickets)}
               >
-                <Ticket className="w-5 h-5" />
+                <ConfirmationNumberIcon sx={{ fontSize: 20 }} />
                 My Tickets
                 {openTicketCount > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
@@ -701,7 +623,7 @@ const Support = () => {
               <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="gap-2 rounded-xl">
-                    <Plus className="w-5 h-5" />
+                    <AddIcon sx={{ fontSize: 20 }} />
                     Submit Ticket
                   </Button>
                 </DialogTrigger>
@@ -775,7 +697,7 @@ const Support = () => {
                       Cancel
                     </Button>
                     <Button onClick={handleCreateTicket} disabled={isSubmitting} className="gap-2">
-                      {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {isSubmitting && <LoopIcon className="animate-spin" sx={{ fontSize: 16 }} />}
                       Submit Ticket
                     </Button>
                   </DialogFooter>
@@ -798,8 +720,8 @@ const Support = () => {
             <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Ticket className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <ConfirmationNumberIcon className="text-foreground" sx={{ fontSize: 20 }} />
                   </div>
                   <div>
                     <h2 className="font-semibold">My Support Tickets</h2>
@@ -809,21 +731,21 @@ const Support = () => {
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowTickets(false)}>
-                  <ChevronUp className="w-4 h-4" />
+                  <ExpandLessIcon sx={{ fontSize: 16 }} />
                 </Button>
               </div>
 
               {tickets.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <Ticket className="w-8 h-8 text-muted-foreground" />
+                    <ConfirmationNumberIcon className="text-muted-foreground" sx={{ fontSize: 32 }} />
                   </div>
                   <h3 className="font-semibold mb-2">No tickets yet</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     Submit a ticket when you need help from our team
                   </p>
                   <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-                    <Plus className="w-4 h-4" />
+                    <AddIcon sx={{ fontSize: 16 }} />
                     Create Ticket
                   </Button>
                 </div>
@@ -847,7 +769,7 @@ const Support = () => {
                         )}
                       >
                         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", statusStyles.bg)}>
-                          <statusStyles.icon className={cn("w-5 h-5", statusStyles.text, ticket.status === "in_progress" && "animate-spin")} />
+                          <statusStyles.icon className={cn(statusStyles.text, ticket.status === "in_progress" && "animate-spin")} sx={{ fontSize: 20 }} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -863,7 +785,7 @@ const Support = () => {
                             <span>Updated {format(ticket.updatedAt, "MMM d, h:mm a")}</span>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" />
+                        <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" sx={{ fontSize: 20 }} />
                       </button>
                     );
                   })}
@@ -881,7 +803,7 @@ const Support = () => {
               className="mb-6 gap-2"
               onClick={() => setSelectedCategory(null)}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowBackIcon sx={{ fontSize: 16 }} />
               Back to all categories
             </Button>
           )}
@@ -889,11 +811,8 @@ const Support = () => {
           {/* Category Header when selected */}
           {selectedCategoryData && (
             <div className="flex items-center gap-4 mb-8">
-              <div className={cn(
-                "w-14 h-14 rounded-2xl flex items-center justify-center",
-                selectedCategoryData.bgColor
-              )}>
-                <selectedCategoryData.icon className={cn("w-7 h-7", selectedCategoryData.color)} />
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-muted">
+                <selectedCategoryData.icon className="text-foreground" sx={{ fontSize: 28 }} />
               </div>
               <div>
                 <h2 className="text-2xl font-bold">{selectedCategoryData.name}</h2>
@@ -919,17 +838,14 @@ const Support = () => {
                         "hover:border-border hover:shadow-lg group"
                       )}
                     >
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110",
-                        category.bgColor
-                      )}>
-                        <category.icon className={cn("w-6 h-6", category.color)} />
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-muted">
+                        <category.icon className="text-foreground" sx={{ fontSize: 24 }} />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-0.5">{category.name}</h3>
                         <p className="text-sm text-muted-foreground">{category.description}</p>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-1 transition-transform" sx={{ fontSize: 20 }} />
                     </button>
                   ))}
                 </div>
@@ -938,7 +854,7 @@ const Support = () => {
               {/* Popular Articles */}
               <div className="mb-12">
                 <div className="flex items-center gap-2 mb-6">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <AutoAwesomeIcon className="text-foreground" sx={{ fontSize: 20 }} />
                   <h2 className="text-xl font-semibold">Popular Articles</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -957,11 +873,8 @@ const Support = () => {
                           "hover:border-border hover:shadow-lg group"
                         )}
                       >
-                        <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-                          category?.bgColor
-                        )}>
-                          {category && <category.icon className={cn("w-5 h-5", category.color)} />}
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-muted">
+                          {category && <category.icon className="text-foreground" sx={{ fontSize: 20 }} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <Badge variant="secondary" className="text-[10px] mb-2">
@@ -969,7 +882,7 @@ const Support = () => {
                           </Badge>
                           <h3 className="font-medium text-sm line-clamp-2">{article.question}</h3>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRightIcon className="text-muted-foreground shrink-0 mt-1 group-hover:translate-x-1 transition-transform" sx={{ fontSize: 16 }} />
                       </button>
                     );
                   })}
@@ -984,7 +897,7 @@ const Support = () => {
               {filteredFAQs.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground" />
+                    <SearchIcon className="text-muted-foreground" sx={{ fontSize: 32 }} />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">No results found</h3>
                   <p className="text-muted-foreground mb-6">
@@ -1004,7 +917,7 @@ const Support = () => {
                     className={cn(
                       "border border-border/50 rounded-xl overflow-hidden transition-all group/faq",
                       "bg-card/50 backdrop-blur-sm hover:bg-card/80",
-                      expandedItems.has(item.id) && "border-primary/30 bg-card/80 ring-2 ring-primary/10"
+                      expandedItems.has(item.id) && "border-border bg-card/80"
                     )}
                   >
                     <button
@@ -1018,18 +931,18 @@ const Support = () => {
                           className={cn(
                             "p-1.5 rounded-lg transition-all",
                             "opacity-0 group-hover/faq:opacity-100",
-                            "hover:bg-primary/10 text-muted-foreground hover:text-primary",
+                            "hover:bg-muted text-muted-foreground hover:text-foreground",
                             expandedItems.has(item.id) && "opacity-100"
                           )}
                           title="Copy link to this question"
                         >
                           {copiedId === item.id ? (
-                            <Check className="w-4 h-4 text-emerald-500" />
+                            <CheckIcon className="text-foreground" sx={{ fontSize: 16 }} />
                           ) : (
-                            <Link2 className="w-4 h-4" />
+                            <LinkIcon sx={{ fontSize: 16 }} />
                           )}
                         </button>
-                        <ChevronDown
+                        <ExpandMoreIcon
                           className={cn(
                             "w-5 h-5 text-muted-foreground transition-transform",
                             expandedItems.has(item.id) && "rotate-180"
@@ -1052,12 +965,12 @@ const Support = () => {
                             >
                               {copiedId === item.id ? (
                                 <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                  <span className="text-emerald-500">Copied!</span>
+                                  <CheckIcon className="text-foreground" sx={{ fontSize: 14 }} />
+                                  <span>Copied!</span>
                                 </>
                               ) : (
                                 <>
-                                  <Link2 className="w-3.5 h-3.5" />
+                                  <LinkIcon sx={{ fontSize: 14 }} />
                                   Share this answer
                                 </>
                               )}
@@ -1073,14 +986,10 @@ const Support = () => {
           )}
 
           {/* Contact Support Section */}
-          <div className="mt-16 relative overflow-hidden rounded-3xl border border-border/50 bg-gradient-to-br from-primary/5 via-card/50 to-violet-500/5">
-            <div className="absolute inset-0">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
-            </div>
-            <div className="relative p-8 md:p-12 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                <MessageCircle className="w-8 h-8 text-primary" />
+          <div className="mt-16 rounded-3xl border border-border/50 bg-muted/30">
+            <div className="p-8 md:p-12 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-6">
+                <ChatIcon className="text-foreground" sx={{ fontSize: 32 }} />
               </div>
               <h2 className="text-2xl font-bold mb-3">Still need help?</h2>
               <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
@@ -1092,18 +1001,18 @@ const Support = () => {
                   className="gap-2 rounded-xl"
                   onClick={() => setCreateDialogOpen(true)}
                 >
-                  <Plus className="w-4 h-4" />
+                  <AddIcon sx={{ fontSize: 16 }} />
                   Submit a Ticket
                 </Button>
                 <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl">
                   <a href="mailto:support@virality.gg">
-                    <Mail className="w-4 h-4" />
+                    <EmailIcon sx={{ fontSize: 16 }} />
                     Email Support
                   </a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="gap-2 rounded-xl">
                   <a href="https://discord.gg/virality" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4" />
+                    <OpenInNewIcon sx={{ fontSize: 16 }} />
                     Join Discord
                   </a>
                 </Button>
@@ -1166,8 +1075,8 @@ const Support = () => {
                     className={cn(
                       "p-4 rounded-xl",
                       message.sender === "user"
-                        ? "bg-primary/10 ml-8"
-                        : "bg-muted mr-8"
+                        ? "bg-muted ml-8"
+                        : "bg-muted/50 mr-8"
                     )}
                   >
                     <div className="flex items-center gap-2 mb-2">
@@ -1196,11 +1105,11 @@ const Support = () => {
                   />
                   <div className="flex items-center justify-between">
                     <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                      <Paperclip className="w-4 h-4" />
+                      <AttachFileIcon sx={{ fontSize: 16 }} />
                       Attach file
                     </Button>
                     <Button onClick={handleSendReply} disabled={!replyText.trim()} className="gap-2">
-                      <Send className="w-4 h-4" />
+                      <SendIcon sx={{ fontSize: 16 }} />
                       Send Reply
                     </Button>
                   </div>
@@ -1211,7 +1120,7 @@ const Support = () => {
               {(selectedTicket.status === "resolved" || selectedTicket.status === "closed") && (
                 <div className="border-t pt-6">
                   <div className="bg-muted/50 rounded-xl p-4 text-center">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                    <CheckCircleIcon className="text-foreground mx-auto mb-2" sx={{ fontSize: 32 }} />
                     <p className="text-sm font-medium">This ticket has been {selectedTicket.status}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Need more help? Create a new ticket.

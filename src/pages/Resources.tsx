@@ -60,6 +60,7 @@ export default function Resources() {
         .from('blog_posts')
         .select('*')
         .eq('is_published', true)
+        .neq('hidden_from_listing', true)
         .order('published_at', { ascending: false });
 
       if (!postsError && postsData) {

@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { HelmetProvider } from "react-helmet-async";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -178,6 +179,7 @@ const App = () => (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <CurrencyProvider>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -367,6 +369,7 @@ const App = () => (
             </SubdomainHandler>
             </BrowserRouter>
           </TooltipProvider>
+          </CurrencyProvider>
         </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>

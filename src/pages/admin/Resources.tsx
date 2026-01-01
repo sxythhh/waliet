@@ -48,6 +48,7 @@ interface BlogPost {
   image_url: string | null;
   read_time: string | null;
   is_published: boolean;
+  hidden_from_listing: boolean;
   published_at: string | null;
   created_at: string;
   tags: string[] | null;
@@ -116,6 +117,7 @@ export default function Resources() {
     image_url: "",
     read_time: "",
     is_published: false,
+    hidden_from_listing: false,
     tags: [] as string[],
     content_type: "guide",
   });
@@ -380,6 +382,7 @@ export default function Resources() {
       image_url: "",
       read_time: "",
       is_published: false,
+      hidden_from_listing: false,
       tags: [],
       content_type: "guide",
     });
@@ -399,6 +402,7 @@ export default function Resources() {
       image_url: post.image_url || "",
       read_time: post.read_time || "",
       is_published: post.is_published,
+      hidden_from_listing: post.hidden_from_listing || false,
       tags: post.tags || [],
       content_type: post.content_type || "guide",
     });
@@ -425,6 +429,7 @@ export default function Resources() {
       image_url: blogFormData.image_url || null,
       read_time: blogFormData.read_time || null,
       is_published: blogFormData.is_published,
+      hidden_from_listing: blogFormData.hidden_from_listing,
       published_at: blogFormData.is_published ? new Date().toISOString() : null,
       tags: blogFormData.tags.length > 0 ? blogFormData.tags : null,
       content_type: blogFormData.content_type || "guide",
@@ -832,6 +837,12 @@ export default function Resources() {
                           {post.is_published ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
                           {post.is_published ? "Published" : "Draft"}
                         </button>
+                        {post.hidden_from_listing && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                            <EyeOff className="w-2.5 h-2.5" />
+                            SEO Only
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         {post.category && <span className="px-1.5 py-0.5 rounded bg-muted/50">{post.category}</span>}
@@ -1398,12 +1409,23 @@ export default function Resources() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={blogFormData.is_published}
-                onCheckedChange={(checked) => setBlogFormData({ ...blogFormData, is_published: checked })}
-              />
-              <Label className="font-inter tracking-[-0.5px]">Publish immediately</Label>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={blogFormData.is_published}
+                  onCheckedChange={(checked) => setBlogFormData({ ...blogFormData, is_published: checked })}
+                />
+                <Label className="font-inter tracking-[-0.5px]">Publish immediately</Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={blogFormData.hidden_from_listing}
+                  onCheckedChange={(checked) => setBlogFormData({ ...blogFormData, hidden_from_listing: checked })}
+                />
+                <Label className="font-inter tracking-[-0.5px] text-muted-foreground">
+                  Hide from resources page (SEO only)
+                </Label>
+              </div>
             </div>
           </div>
 
