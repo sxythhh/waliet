@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash } from "lucide-react";
+import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
@@ -262,8 +263,35 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="p-6 space-y-8">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <Skeleton className="h-9 w-36 rounded-lg" />
+        </div>
+        
+        {/* Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-xl border border-border/40 bg-card/30 p-5 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+              <Skeleton className="h-12 w-full" />
+              <div className="flex items-center justify-between pt-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -273,18 +301,18 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Blueprints</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h2 className="text-xl font-semibold font-inter tracking-[-0.5px]">Blueprints</h2>
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-0.5">
             Content guidelines for your campaigns
           </p>
         </div>
         <Button
           onClick={() => setTemplateSelectorOpen(true)}
           size="sm"
-          className="gap-2 rounded-full px-4"
+          className="h-9 px-4 gap-2 font-inter tracking-[-0.3px] text-sm"
         >
-          <Plus className="h-4 w-4" />
           New Blueprint
+          <ChevronDown className="h-3.5 w-3.5 opacity-60" />
         </Button>
       </div>
 
