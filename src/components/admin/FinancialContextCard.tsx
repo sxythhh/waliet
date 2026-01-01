@@ -21,21 +21,22 @@ export function FinancialContextCard() {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // Get user IDs to exclude (users with @viral handle)
-      const { data: excludedProfiles } = await supabase
+      // Get user ID for @viral to exclude
+      const { data: excludedProfile } = await supabase
         .from("profiles")
         .select("id")
-        .ilike("username", "%viral%");
+        .eq("username", "viral")
+        .maybeSingle();
 
-      const excludedUserIds = (excludedProfiles || []).map((p) => p.id);
+      const excludedUserId = excludedProfile?.id;
 
-      // Get total user wallet balances (excluding @viral users)
+      // Get total user wallet balances (excluding @viral)
       const { data: walletsData } = await supabase
         .from("wallets")
         .select("balance, user_id");
 
       const filteredWallets = (walletsData || []).filter(
-        (wallet) => !excludedUserIds.includes(wallet.user_id)
+        (wallet) => wallet.user_id !== excludedUserId
       );
 
       const totalUserWalletBalance = filteredWallets.reduce(
@@ -47,19 +48,17 @@ export function FinancialContextCard() {
         (wallet) => Number(wallet.balance) > 0
       ).length;
 
-      // Get campaign budgets excluding GoViral campaigns
+      // Get active campaign budgets excluding GoViral
       const { data: campaignsData } = await supabase
         .from("campaigns")
-        .select("budget, budget_used, status, title")
-        .in("status", ["active", "pending"]);
+        .select("budget, budget_used, title")
+        .eq("status", "active");
 
       const filteredCampaigns = (campaignsData || []).filter(
         (c) => !c.title?.toLowerCase().includes("goviral")
       );
 
-      const activeCampaigns = filteredCampaigns.filter(
-        (c) => c.status === "active"
-      ).length;
+      const activeCampaigns = filteredCampaigns.length;
 
       const totalCampaignBudgetRemaining = filteredCampaigns.reduce(
         (sum, campaign) => {
