@@ -40,23 +40,22 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
       // Fetch wallet balance
       const { data: walletData } = await supabase
         .from("wallets")
-        .select("balance, pending_balance")
+        .select("balance")
         .eq("user_id", userId)
         .maybeSingle();
 
       if (walletData) {
         setBalance({
           available: walletData.balance || 0,
-          pending: walletData.pending_balance || 0,
+          pending: 0,
         });
       }
 
-      // Fetch recent transactions for this brand
+      // Fetch recent transactions from wallet_transactions for this user
       const { data: txData } = await supabase
-        .from("brand_wallet_transactions")
+        .from("wallet_transactions")
         .select("id, amount, description, status, created_at")
-        .eq("brand_id", brand.id)
-        .eq("creator_id", userId)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(10);
 
@@ -222,7 +221,6 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
       <CreatorWithdrawDialog
         open={showWithdrawDialog}
         onOpenChange={setShowWithdrawDialog}
-        balance={balance.available}
         onSuccess={fetchWalletData}
       />
     </div>

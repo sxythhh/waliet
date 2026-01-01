@@ -57,7 +57,7 @@ export default function BrandPortal() {
 
       const { data, error: fetchError } = await supabase
         .from("brands")
-        .select("id, name, slug, logo_url, brand_color, description, portal_settings")
+        .select("id, name, slug, logo_url, brand_color, description")
         .eq("slug", slug)
         .maybeSingle();
 

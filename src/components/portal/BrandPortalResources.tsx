@@ -48,16 +48,9 @@ export function BrandPortalResources({ brand, userId }: BrandPortalResourcesProp
   const fetchResources = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("brand_resources")
-        .select("*")
-        .eq("brand_id", brand.id)
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-
-      if (data) {
-        setResources(data);
-      }
+      // For now, resources are not stored in DB - return empty array
+      // This can be extended later when brand_resources table is created
+      setResources([]);
     } catch (error) {
       console.error("Error fetching resources:", error);
     } finally {
