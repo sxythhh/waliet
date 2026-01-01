@@ -1,24 +1,37 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, TicketCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import supportAvatar from "@/assets/support-avatar.png";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  ticketCreated?: {
+    ticketNumber: string;
+    ticketId: string;
+  };
+}
+
+interface TicketResponse {
+  type: "ticket_created";
+  ticket_number: string;
+  ticket_id: string;
+  message: string;
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
 export const SupportChat = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi there! I'm the Virality AI assistant. I'll do my best to help you out, and if I can't solve the issue, I'll help create a support request for you. How can I help you today?",
+      content: "Hi there! I'm the Virality AI assistant. I'll do my best to help you out, and if I can't solve the issue, I'll create a support ticket for you. How can I help you today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -58,12 +71,52 @@ export const SupportChat = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content }))
+        }),
       });
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to get response");
+      }
+
+      const contentType = response.headers.get("content-type");
+      
+      // Check if this is a JSON response (ticket created)
+      if (contentType?.includes("application/json")) {
+        const data = await response.json();
+        
+        if (data.type === "ticket_created") {
+          const ticketData = data as TicketResponse;
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: ticketData.message,
+              ticketCreated: {
+                ticketNumber: ticketData.ticket_number,
+                ticketId: ticketData.ticket_id,
+              },
+            },
+          ]);
+          
+          toast({
+            title: "Support Ticket Created",
+            description: `Ticket ${ticketData.ticket_number} has been created. Our team will respond soon.`,
+          });
+          return;
+        }
+        
+        // Handle error responses
+        if (data.error) {
+          throw new Error(data.error);
+        }
+      }
+
+      // Handle streaming response
+      if (!response.body) {
+        throw new Error("No response body");
       }
 
       const reader = response.body.getReader();
@@ -129,6 +182,10 @@ export const SupportChat = () => {
     }
   };
 
+  const handleViewTicket = (ticketId: string) => {
+    navigate(`/support/tickets/${ticketId}`);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl shadow-sm flex flex-col h-[500px]">
       {/* Messages */}
@@ -155,6 +212,18 @@ export const SupportChat = () => {
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                
+                {message.ticketCreated && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-3 gap-2"
+                    onClick={() => handleViewTicket(message.ticketCreated!.ticketId)}
+                  >
+                    <TicketCheck className="h-4 w-4" />
+                    View Ticket {message.ticketCreated.ticketNumber}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
