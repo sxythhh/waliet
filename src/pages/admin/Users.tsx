@@ -19,6 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { UserContextSheet } from "@/components/admin/UserContextSheet";
 import { AddReferralDialog } from "@/components/admin/AddReferralDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -129,6 +130,7 @@ export default function AdminUsers() {
   const [paymentNotes, setPaymentNotes] = useState("");
   
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
+  const [userContextSheetOpen, setUserContextSheetOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
   const [userTransactions, setUserTransactions] = useState<any[]>([]);
@@ -801,6 +803,11 @@ export default function AdminUsers() {
     setLoadingPaymentMethods(false);
   };
   const openUserDetailsDialog = (user: User) => {
+    setSelectedUser(user);
+    setUserContextSheetOpen(true);
+  };
+
+  const openUserDetailsDialogLegacy = (user: User) => {
     setSelectedUser(user);
     setUserDetailsDialogOpen(true);
     fetchUserSocialAccounts(user.id);
@@ -2157,7 +2164,19 @@ export default function AdminUsers() {
         </DialogContent>
       </Dialog>
 
-      {/* User Details Dialog */}
+      {/* User Context Sheet (New Apple-like design) */}
+      <UserContextSheet
+        user={selectedUser}
+        open={userContextSheetOpen}
+        onOpenChange={setUserContextSheetOpen}
+        onUserUpdated={fetchUsers}
+        onPayUser={(user) => {
+          setUserContextSheetOpen(false);
+          openPayDialog(user);
+        }}
+      />
+
+      {/* User Details Dialog (Legacy) */}
       <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onEditScore={openEditScoreFromSocialAccount} />
         </TabsContent>
 
