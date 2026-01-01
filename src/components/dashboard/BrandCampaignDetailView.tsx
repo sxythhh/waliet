@@ -337,7 +337,6 @@ export function BrandCampaignDetailView({
     });
   }
 
-
   // Settings tab (only in all mode - contains Discord, Balance, Milestones, Tiers)
   if (isAllMode && brandId) {
     detailTabs.push({
@@ -455,7 +454,7 @@ export function BrandCampaignDetailView({
 
         {/* Tab Navigation */}
         <div className="flex-shrink-0 border-b border-border bg-background">
-          <nav className="flex gap-0 px-[17px]">
+          <nav className="flex gap-0 px-0">
             {detailTabs.map(tab => <button key={tab.id} onClick={() => {
             setActiveDetailTab(tab.id);
             const newParams = new URLSearchParams(searchParams);
