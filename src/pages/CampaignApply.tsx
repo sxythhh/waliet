@@ -259,7 +259,7 @@ export default function CampaignApply() {
           return;
         }
         setIsBoost(true);
-        setBoostCampaign(boostData as BountyCampaign);
+        setBoostCampaign(boostData as unknown as BountyCampaign);
         if (boostData.brands) setBoostBrand(boostData.brands as any);
         if (boostData.blueprint_id) {
           const {

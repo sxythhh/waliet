@@ -528,16 +528,16 @@ export function CreatorDatabaseTab({
   // Fetch all unique tags from brand_creator_notes for this brand
   const fetchAvailableTags = async () => {
     try {
-      const { data, error } = await supabase
-        .from('brand_creator_notes')
+      const { data, error } = await (supabase
+        .from('brand_creator_notes' as any)
         .select('creator_id, tags')
-        .eq('brand_id', brandId);
+        .eq('brand_id', brandId) as any);
 
       if (error) throw error;
 
       // Build creator-to-tags mapping
       const tagsMap = new Map<string, string[]>();
-      data?.forEach(note => {
+      (data as any[])?.forEach((note: any) => {
         if (note.tags && note.tags.length > 0) {
           tagsMap.set(note.creator_id, note.tags);
         }
@@ -545,7 +545,7 @@ export function CreatorDatabaseTab({
       setCreatorTagsMap(tagsMap);
 
       // Flatten all tags and get unique values
-      const allTags = data?.flatMap(note => note.tags || []) || [];
+      const allTags = (data as any[])?.flatMap((note: any) => note.tags || []) || [];
       const uniqueTags = [...new Set(allTags)].sort();
       setAvailableTags(uniqueTags);
     } catch (error) {
