@@ -5919,6 +5919,45 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          created_at: string
+          id: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          ticket_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          ticket_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          created_at?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject?: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       team_earnings: {
         Row: {
           commission_amount: number
@@ -6041,6 +6080,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      ticket_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          ticket_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id: string
+          sender_type: Database["public"]["Enums"]["message_sender_type"]
+          ticket_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string
+          sender_type?: Database["public"]["Enums"]["message_sender_type"]
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tier_change_log: {
         Row: {
@@ -6770,6 +6847,7 @@ export type Database = {
       encrypt_discord_token: { Args: { token: string }; Returns: string }
       encrypt_payout_details: { Args: { details: Json }; Returns: string }
       generate_short_code: { Args: never; Returns: string }
+      generate_ticket_number: { Args: never; Returns: string }
       get_brand_creator_earnings: {
         Args: { p_brand_id: string }
         Returns: {
@@ -6888,9 +6966,24 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user" | "brand"
+      message_sender_type: "user" | "admin"
       payout_status_new: "pending" | "in_transit" | "completed" | "rejected"
       referral_tier: "beginner" | "amateur" | "pro" | "elite"
       sales_stage: "lead" | "qualified" | "negotiation" | "won"
+      ticket_category:
+        | "billing"
+        | "technical"
+        | "account"
+        | "campaign"
+        | "payout"
+        | "other"
+      ticket_priority: "low" | "medium" | "high" | "urgent"
+      ticket_status:
+        | "open"
+        | "in_progress"
+        | "awaiting_reply"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7019,9 +7112,26 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user", "brand"],
+      message_sender_type: ["user", "admin"],
       payout_status_new: ["pending", "in_transit", "completed", "rejected"],
       referral_tier: ["beginner", "amateur", "pro", "elite"],
       sales_stage: ["lead", "qualified", "negotiation", "won"],
+      ticket_category: [
+        "billing",
+        "technical",
+        "account",
+        "campaign",
+        "payout",
+        "other",
+      ],
+      ticket_priority: ["low", "medium", "high", "urgent"],
+      ticket_status: [
+        "open",
+        "in_progress",
+        "awaiting_reply",
+        "resolved",
+        "closed",
+      ],
     },
   },
 } as const
