@@ -27,6 +27,8 @@ import shortimizeLogo from "@/assets/shortimize-logo.png";
 import dubLogo from "@/assets/dub-logo.png";
 import { SubscriptionCheckoutDialog } from "./SubscriptionCheckoutDialog";
 import { CustomWebhooksTab } from "./CustomWebhooksTab";
+import { BillingUsageCard } from "./BillingUsageCard";
+import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
 
 // Plan ID to display name mapping
 const PLAN_DISPLAY_NAMES: Record<string, string> = {
@@ -701,6 +703,7 @@ export function UserSettingsTab() {
   const [deleting, setDeleting] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   // Notification preferences
   const [notifyNewApplication, setNotifyNewApplication] = useState(true);
@@ -1484,7 +1487,7 @@ export function UserSettingsTab() {
 
         {/* Team Tab */}
         <TabsContent value="team" className="mt-6">
-          {isBrandMode && brand && <TeamMembersTab brandId={brand.id} />}
+          {isBrandMode && brand && <TeamMembersTab brandId={brand.id} brandSlug={brand.slug} />}
         </TabsContent>
 
         {/* Wallet Tab */}
@@ -1538,6 +1541,22 @@ export function UserSettingsTab() {
                   </a>
                 </div>}
             </div>}
+
+          {/* Usage Tracking */}
+          {isBrandMode && brand && <div className="pt-4 border-t border-border/50">
+              <BillingUsageCard
+                brandId={brand.id}
+                subscriptionPlan={brand.subscription_plan}
+                onUpgrade={() => setShowUpgradeDialog(true)}
+              />
+            </div>}
+
+          {/* Subscription Upgrade Dialog */}
+          {brand && <SubscriptionGateDialog
+            brandId={brand.id}
+            open={showUpgradeDialog}
+            onOpenChange={setShowUpgradeDialog}
+          />}
 
           {/* Subscription Checkout Dialog */}
           {selectedCheckoutPlan && brand && <SubscriptionCheckoutDialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog} planId={selectedCheckoutPlan.id} planName={selectedCheckoutPlan.name} brandId={brand.slug} onComplete={() => {

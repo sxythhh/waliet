@@ -49,6 +49,10 @@ const AdminSecurity = lazy(() => import("./pages/admin/Security"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const AdminPermissions = lazy(() => import("./pages/admin/Permissions"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth"));
+const AdminCampaignReview = lazy(() => import("./pages/admin/CampaignReview"));
+const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
+const AdminCreatorInsights = lazy(() => import("./pages/admin/CreatorInsights"));
+const AdminOperationsCenter = lazy(() => import("./pages/admin/OperationsCenter"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -73,6 +77,8 @@ const BrandPortal = lazy(() => import("./pages/BrandPortal"));
 const JoinTeam = lazy(() => import("./pages/JoinTeam"));
 const PublicCourseDetail = lazy(() => import("./pages/PublicCourseDetail"));
 const Store = lazy(() => import("./pages/Store"));
+const BrandOnboarding = lazy(() => import("./pages/BrandOnboarding"));
+const AffiliateHowItWorks = lazy(() => import("./pages/AffiliateHowItWorks"));
 
 // Component to track UTM params on app load
 function UtmTracker() {
@@ -200,6 +206,7 @@ const App = () => (
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/course/:id" element={<PublicCourseDetail />} />
                   <Route path="/support" element={<Support />} />
+                  <Route path="/affiliate" element={<AffiliateHowItWorks />} />
                   <Route path="/install" element={<Install />} />
                   <Route path="/referrals" element={
                     <Suspense fallback={<DashboardLoader />}>
@@ -292,9 +299,29 @@ const App = () => (
                       <AdminLayout><AdminPermissions /></AdminLayout>
                     </Suspense>
                   } />
-                  <Route path="/admin/health" element={
+<Route path="/admin/health" element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminLayout><AdminSystemHealth /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/campaign-review" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminCampaignReview /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/analytics" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminAnalytics /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/creator-insights" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminCreatorInsights /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/operations" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminOperationsCenter /></AdminLayout>
                     </Suspense>
                   } />
                   <Route path="/manage" element={
@@ -323,6 +350,8 @@ const App = () => (
                     </Suspense>
                   } />
                   <Route path="/brand/:brandSlug/invite/:invitationId" element={<BrandInvite />} />
+                  <Route path="/brand/:brandSlug/join/:token" element={<BrandInvite />} />
+                  <Route path="/brand/:brandSlug/onboarding" element={<BrandOnboarding />} />
                   <Route path="/brand/:slug/training" element={
                     <Suspense fallback={<PageLoader />}>
                       <BrandLayout><Training /></BrandLayout>

@@ -854,7 +854,7 @@ export function AppSidebar() {
     }} />
       <SubscriptionGateDialog brandId={currentBrandId} open={subscriptionGateOpen} onOpenChange={setSubscriptionGateOpen} />
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} type={feedbackType} />
-      <InviteMemberDialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen} brandId={currentBrandId} onInviteSent={() => {
+      <InviteMemberDialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen} brandId={currentBrandId} brandSlug={workspace || ''} onInviteSent={() => {
       // Refresh member count
       const fetchMemberCount = async () => {
         if (currentBrandId) {

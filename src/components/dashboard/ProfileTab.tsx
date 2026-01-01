@@ -30,6 +30,7 @@ import { CreateBrandDialog } from "@/components/CreateBrandDialog";
 import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboardingChecklist";
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
+import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
 import { SettingsCard, UsernameSettingsCard, EmailSettingsCard } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { useTheme } from "@/components/ThemeProvider";
@@ -75,6 +76,8 @@ interface Profile {
   hide_from_leaderboard: boolean;
   is_private: boolean;
   subscribed_to_updates: boolean;
+  resume_url: string | null;
+  portfolio_items: any[] | null;
 }
 interface SocialAccount {
   id: string;
@@ -1008,6 +1011,22 @@ export function ProfileTab() {
 
       {/* Security Section */}
       <SecuritySection />
+
+      {/* Portfolio Section */}
+      {profile && (
+        <PortfolioSection
+          userId={profile.id}
+          portfolioItems={(profile.portfolio_items || []) as PortfolioItem[]}
+          resumeUrl={profile.resume_url}
+          onUpdate={(items, resumeUrl) => {
+            setProfile({
+              ...profile,
+              portfolio_items: items,
+              resume_url: resumeUrl,
+            });
+          }}
+        />
+      )}
 
       <CreateBrandDialog open={showCreateBrandDialog} onOpenChange={setShowCreateBrandDialog} />
 

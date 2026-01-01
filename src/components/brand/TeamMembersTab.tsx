@@ -29,9 +29,11 @@ interface Invitation {
 }
 interface TeamMembersTabProps {
   brandId: string;
+  brandSlug: string;
 }
 export function TeamMembersTab({
-  brandId
+  brandId,
+  brandSlug
 }: TeamMembersTabProps) {
   const {
     isAdmin
@@ -217,6 +219,6 @@ export function TeamMembersTab({
           </div>
         </div>}
 
-      <InviteMemberDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} brandId={brandId} onInviteSent={fetchTeamData} />
+      <InviteMemberDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} brandId={brandId} brandSlug={brandSlug} onInviteSent={fetchTeamData} />
     </div>;
 }

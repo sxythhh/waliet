@@ -97,6 +97,44 @@ export default function BrandPortal() {
     };
   }, [brand?.brand_color]);
 
+  // Dynamic favicon - set to brand logo on brand portal
+  useEffect(() => {
+    if (!brand?.logo_url) return;
+
+    // Store the original favicon href to restore later
+    const originalFavicon = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    const originalHref = originalFavicon?.href || '/favicon.ico';
+
+    // Update or create the favicon link
+    let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (faviconLink) {
+      faviconLink.href = brand.logo_url;
+    } else {
+      faviconLink = document.createElement('link');
+      faviconLink.rel = 'icon';
+      faviconLink.href = brand.logo_url;
+      document.head.appendChild(faviconLink);
+    }
+
+    // Also update apple-touch-icon if exists
+    const appleTouchIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+    const originalAppleIcon = appleTouchIcon?.href;
+    if (appleTouchIcon) {
+      appleTouchIcon.href = brand.logo_url;
+    }
+
+    // Cleanup: restore original favicon on unmount
+    return () => {
+      const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+      if (link) {
+        link.href = originalHref;
+      }
+      if (appleTouchIcon && originalAppleIcon) {
+        appleTouchIcon.href = originalAppleIcon;
+      }
+    };
+  }, [brand?.logo_url]);
+
   // Compute accent color based on theme
   const accentColor = resolvedTheme === 'dark'
     ? (brand?.portal_settings?.accent_color_dark || brand?.brand_color || '#4B7BF5')

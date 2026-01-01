@@ -107,7 +107,7 @@ export default function BrandAccount() {
           </TabsContent>
 
           <TabsContent value="team" className="mt-6">
-            <TeamMembersTab brandId={brandId} />
+            <TeamMembersTab brandId={brandId} brandSlug={slug || ''} />
           </TabsContent>
 
           <TabsContent value="user" className="mt-6">

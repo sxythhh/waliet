@@ -11,6 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { format, subDays, subMonths } from "date-fns";
 import { TeamsSection } from "./TeamsSection";
+import { BrandReferralCard } from "@/components/brand/BrandReferralCard";
+import { Link } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 interface Milestone {
   id: string;
   milestone_type: string;
@@ -302,6 +305,13 @@ export function ReferralsTab(): JSX.Element {
                       <p className="text-xs text-muted-foreground">Share this link to earn rewards</p>
                     </div>
                   </div>
+                  <Link
+                    to="/affiliate"
+                    className="text-xs text-primary hover:underline flex items-center gap-1 ml-auto mr-4"
+                  >
+                    How it works
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
 
                   <div className="flex-1">
                     {isEditing ? <div className="space-y-3">
@@ -431,6 +441,9 @@ export function ReferralsTab(): JSX.Element {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Brand Referrals */}
+            <BrandReferralCard />
 
             {/* Referrals List */}
             <div className="space-y-4">

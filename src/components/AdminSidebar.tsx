@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText, MessageSquareText, Shield, FileBarChart, UserCog } from "lucide-react";
+import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText, MessageSquareText, Shield, FileBarChart, UserCog, ClipboardCheck, TrendingUp, Lightbulb, Activity } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,8 +18,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { title: "Overview", icon: BarChart3, path: "/admin", resource: "dashboard" },
+  { title: "Analytics", icon: TrendingUp, path: "/admin/analytics", resource: "dashboard" },
+  { title: "Creator Insights", icon: Lightbulb, path: "/admin/creator-insights", resource: "users" },
+  { title: "Operations", icon: Activity, path: "/admin/operations", resource: "dashboard" },
   { title: "Brands", icon: Store, path: "/admin/brands", resource: "brands" },
   { title: "Users", icon: UserCircle, path: "/admin/users", resource: "users" },
+  { title: "Campaign Review", icon: ClipboardCheck, path: "/admin/campaign-review", resource: "brands" },
   { title: "Security", icon: Shield, path: "/admin/security", resource: "security" },
   { title: "Reports", icon: FileBarChart, path: "/admin/reports", resource: "reports" },
   { title: "Feedback", icon: MessageSquareText, path: "/admin/feedback" }, // No specific permission needed

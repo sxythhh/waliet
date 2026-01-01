@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle } from "lucide-react";
+import { Plus, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Video, Users, Mic, MinusCircle, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type SectionType = 
+export type SectionType =
   | "content"
   | "platforms"
   | "brand_voice"
@@ -11,7 +11,8 @@ export type SectionType =
   | "dos_and_donts"
   | "call_to_action"
   | "assets"
-  | "example_videos";
+  | "example_videos"
+  | "training";
 
 interface SectionDefinition {
   id: SectionType;
@@ -74,6 +75,12 @@ const ALL_SECTIONS: SectionDefinition[] = [
     title: "Example Videos",
     description: "Reference content",
     icon: <Video className="h-4 w-4" />,
+  },
+  {
+    id: "training",
+    title: "Creator Training",
+    description: "Training modules for creators",
+    icon: <GraduationCap className="h-4 w-4" />,
   },
 ];
 

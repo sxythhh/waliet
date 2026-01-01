@@ -156,8 +156,8 @@ export function CreateBrandDialog({
       setBrandColor("#8B5CF6");
       onSuccess?.();
 
-      // Navigate to the new brand dashboard
-      navigate(`/dashboard?workspace=${slug}`);
+      // Navigate to the brand onboarding flow
+      navigate(`/brand/${slug}/onboarding`);
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {

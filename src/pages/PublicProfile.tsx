@@ -14,6 +14,7 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import { SEOHead } from "@/components/SEOHead";
 import { generateProfileSchema, getCanonicalUrl, truncateDescription } from "@/lib/seo";
+import { PortfolioDisplay } from "@/components/profile/PortfolioDisplay";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -28,6 +29,8 @@ interface Profile {
   created_at: string;
   trust_score: number | null;
   audience_quality_score: number | null;
+  resume_url: string | null;
+  portfolio_items: any[] | null;
 }
 interface Testimonial {
   id: string;
@@ -479,6 +482,11 @@ export default function PublicProfile() {
             <TabsTrigger value="testimonials" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
               Reviews {testimonials.length > 0 && `(${testimonials.length})`}
             </TabsTrigger>
+            {(profile.portfolio_items?.length > 0 || profile.resume_url) && (
+              <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
+                Portfolio
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Campaigns Tab */}
@@ -609,6 +617,16 @@ export default function PublicProfile() {
                   </div>)}
               </div>}
           </TabsContent>
+
+          {/* Portfolio Tab */}
+          {(profile.portfolio_items?.length > 0 || profile.resume_url) && (
+            <TabsContent value="portfolio" className="mt-6">
+              <PortfolioDisplay
+                portfolioItems={profile.portfolio_items || []}
+                resumeUrl={profile.resume_url}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

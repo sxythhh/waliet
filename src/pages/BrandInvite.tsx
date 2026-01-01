@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Mail, Shield, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Mail, Shield, CheckCircle2, XCircle, Link2 } from "lucide-react";
 
 export default function BrandInvite() {
-  const { brandSlug, invitationId } = useParams();
+  const { brandSlug, invitationId, token } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<any>(null);
@@ -20,10 +20,13 @@ export default function BrandInvite() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  // Determine if this is a link-based (token) or email-based (invitationId) invite
+  const isLinkInvite = !!token;
+
   useEffect(() => {
     loadInvitation();
     checkUser();
-  }, [invitationId]);
+  }, [invitationId, token]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,21 +34,28 @@ export default function BrandInvite() {
   };
 
   const loadInvitation = async () => {
-    if (!invitationId) {
-      console.error("No invitation ID provided");
+    const lookupId = token || invitationId;
+    if (!lookupId) {
+      console.error("No invitation ID or token provided");
       setLoading(false);
       return;
     }
-    
+
     try {
-      console.log("Loading invitation:", invitationId);
-      
-      // Fetch invitation
-      const { data: inviteData, error: inviteError } = await supabase
+      console.log("Loading invitation:", lookupId, isLinkInvite ? "(token)" : "(id)");
+
+      // Fetch invitation by token or ID
+      let query = supabase
         .from("brand_invitations")
-        .select("*")
-        .eq("id", invitationId)
-        .maybeSingle();
+        .select("*");
+
+      if (isLinkInvite) {
+        query = query.eq("invite_token", lookupId);
+      } else {
+        query = query.eq("id", lookupId);
+      }
+
+      const { data: inviteData, error: inviteError } = await query.maybeSingle();
 
       console.log("Invitation response:", { inviteData, inviteError });
 
@@ -55,7 +65,7 @@ export default function BrandInvite() {
         setLoading(false);
         return;
       }
-      
+
       if (!inviteData) {
         console.log("Invitation not found");
         toast.error("Invitation not found");
@@ -79,7 +89,10 @@ export default function BrandInvite() {
       }
 
       setInvitation(inviteData);
-      setEmail(inviteData.email);
+      // For email-based invites, pre-fill the email
+      if (inviteData.email) {
+        setEmail(inviteData.email);
+      }
 
       // Fetch brand details
       const { data: brandData, error: brandError } = await supabase
@@ -94,7 +107,7 @@ export default function BrandInvite() {
         console.error("Brand fetch error:", brandError);
         toast.error("Failed to load brand details");
       }
-      
+
       setBrand(brandData);
     } catch (error: any) {
       console.error("Error loading invitation:", error);
@@ -114,11 +127,13 @@ export default function BrandInvite() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/brand/${brandSlug}/invite/${invitationId}`,
+            emailRedirectTo: isLinkInvite
+              ? `${window.location.origin}/brand/${brandSlug}/join/${token}`
+              : `${window.location.origin}/brand/${brandSlug}/invite/${invitationId}`,
           },
         });
         if (error) throw error;
-        
+
         // If signup is successful and user is created, accept invitation automatically
         if (data.user) {
           setUser(data.user);
@@ -149,10 +164,12 @@ export default function BrandInvite() {
     if (!currentUser || !invitation) return;
 
     try {
-      // Check if user email matches invitation
-      if (currentUser.email?.toLowerCase() !== invitation.email.toLowerCase()) {
-        toast.error("This invitation was sent to a different email address");
-        return;
+      // For email-based invites, check if user email matches invitation
+      if (!invitation.is_link_invite && invitation.email) {
+        if (currentUser.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+          toast.error("This invitation was sent to a different email address");
+          return;
+        }
       }
 
       // Check if user is already a member
@@ -169,7 +186,7 @@ export default function BrandInvite() {
           .from("brand_invitations")
           .update({ status: "accepted" })
           .eq("id", invitation.id);
-        
+
         toast.success("You are already a member of this brand!");
         navigate(`/dashboard?workspace=${brandSlug}`);
         return;
@@ -240,7 +257,10 @@ export default function BrandInvite() {
     );
   }
 
-  const emailMatches = user?.email?.toLowerCase() === invitation.email.toLowerCase();
+  // For email invites, check if logged-in user's email matches
+  const emailMatches = invitation.is_link_invite
+    ? true // Link invites don't require email matching
+    : user?.email?.toLowerCase() === invitation.email?.toLowerCase();
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[hsl(0,0%,3.1%)]">
@@ -259,13 +279,23 @@ export default function BrandInvite() {
         <CardContent className="space-y-6">
           {/* Invitation Details */}
           <div className="space-y-3 p-4 bg-muted rounded-lg">
-            <div className="flex items-start gap-2">
-              <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Invited Email</p>
-                <p className="text-sm text-muted-foreground">{invitation.email}</p>
+            {invitation.is_link_invite ? (
+              <div className="flex items-start gap-2">
+                <Link2 className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Invite Link</p>
+                  <p className="text-sm text-muted-foreground">Anyone with this link can join</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-start gap-2">
+                <Mail className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Invited Email</p>
+                  <p className="text-sm text-muted-foreground">{invitation.email}</p>
+                </div>
+              </div>
+            )}
             <div className="flex items-start gap-2">
               <Shield className="h-4 w-4 mt-0.5 text-muted-foreground" />
               <div className="flex-1">
@@ -286,12 +316,14 @@ export default function BrandInvite() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  readOnly
-                  className="bg-muted"
+                  readOnly={!invitation.is_link_invite && !!invitation.email}
+                  className={!invitation.is_link_invite && invitation.email ? "bg-muted" : ""}
                 />
-                <p className="text-xs text-muted-foreground">
-                  This invitation is for {email}
-                </p>
+                {!invitation.is_link_invite && invitation.email && (
+                  <p className="text-xs text-muted-foreground">
+                    This invitation is for {email}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -321,7 +353,11 @@ export default function BrandInvite() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
-                <p className="text-sm">You're logged in with the invited email!</p>
+                <p className="text-sm">
+                  {invitation.is_link_invite
+                    ? `You're logged in as ${user.email}`
+                    : "You're logged in with the invited email!"}
+                </p>
               </div>
               <Button onClick={handleAcceptInvitation} className="w-full" disabled={processing}>
                 {processing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

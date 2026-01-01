@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Users, Mic, Sparkles } from "lucide-react";
+import { Link as LinkIcon, Plus, Trash2, X, Upload, Video, FileText, Share2, MessageSquare, ListChecks, ThumbsUp, Hash, Folder, Users, Mic, Sparkles, GraduationCap } from "lucide-react";
 import playArrowIcon from "@/assets/play-arrow-icon.svg";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { CreateCampaignTypeDialog } from "@/components/brand/CreateCampaignTypeD
 import { TemplateSelector } from "@/components/brand/TemplateSelector";
 import { BlueprintSection } from "@/components/brand/BlueprintSection";
 import { BlueprintSectionMenu, SectionType, ALL_SECTIONS } from "@/components/brand/BlueprintSectionMenu";
+import { TrainingModuleEditor, type TrainingModule } from "@/components/brand/TrainingModuleEditor";
 import { DndContext, pointerWithin, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragOverlay, DragStartEvent, useDroppable, TouchSensor } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -65,6 +66,7 @@ interface Blueprint {
   talking_points: string[];
   brand_voice: string | null;
   status: string;
+  training_modules: TrainingModule[];
 }
 interface Brand {
   id: string;
@@ -161,7 +163,8 @@ export function BlueprintEditor({
       },
       hashtags: data.hashtags || [],
       example_videos: data.example_videos as ExampleVideo[] || [],
-      talking_points: data.talking_points as string[] || []
+      talking_points: data.talking_points as string[] || [],
+      training_modules: data.training_modules as TrainingModule[] || []
     });
 
     // Load saved section order if it exists
@@ -605,6 +608,13 @@ export function BlueprintEditor({
         } : {
           status: "unfilled"
         };
+      case "training":
+        return blueprint.training_modules.length > 0 ? {
+          status: "filled",
+          count: blueprint.training_modules.length
+        } : {
+          status: "unfilled"
+        };
       default:
         return {};
     }
@@ -619,7 +629,8 @@ export function BlueprintEditor({
       dos_and_donts: <ThumbsUp className="h-4 w-4" />,
       call_to_action: <MessageSquare className="h-4 w-4" />,
       assets: <Folder className="h-4 w-4" />,
-      example_videos: <Video className="h-4 w-4" />
+      example_videos: <Video className="h-4 w-4" />,
+      training: <GraduationCap className="h-4 w-4" />
     };
     return iconMap[sectionId];
   };
@@ -815,6 +826,13 @@ export function BlueprintEditor({
                     </div>)}
                 </div>}
             </div>
+          </BlueprintSection>;
+      case "training":
+        return <BlueprintSection key="training" id="training" title="Creator Training" icon={<GraduationCap className="h-4 w-4" />} status={getSectionStatus("training").status} statusCount={getSectionStatus("training").count} onRemove={() => toggleSection("training")}>
+            <TrainingModuleEditor
+              modules={blueprint.training_modules}
+              onChange={(modules) => updateBlueprint({ training_modules: modules })}
+            />
           </BlueprintSection>;
       default:
         return null;
