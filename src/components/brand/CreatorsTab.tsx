@@ -903,7 +903,7 @@ export function CreatorsTab({
             <div className="p-4 border-t border-border/50 bg-background/80 backdrop-blur-sm">
               <MessageInput value={messageInput} onChange={setMessageInput} onSend={sendMessage} disabled={sendingMessage} />
             </div>
-          </> : <div className="flex-1 flex flex-col bg-gradient-to-b from-muted/20 to-background">
+          </> : <div className="flex-1 flex flex-col">
             {/* Empty state */}
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center max-w-[280px]">
