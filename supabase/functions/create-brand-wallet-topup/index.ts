@@ -84,6 +84,22 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting check
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_action: 'brand_wallet_topup',
+      p_max_attempts: 10,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError || !allowed) {
+      console.log('Rate limit exceeded for user:', user.id);
+      return new Response(JSON.stringify({ error: 'Too many top-up attempts. Please try again later.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Get brand info
     const { data: brand, error: brandError } = await supabase
       .from('brands')
