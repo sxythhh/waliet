@@ -246,7 +246,7 @@ export default function Auth() {
       </div>;
   }
   return <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
-      <SEOHead title="Sign In | Virality" description="Sign in to your Virality account" noIndex={true} />
+      <SEOHead title="Sign In" description="Sign in to your Virality account" noIndex={true} />
       <Card className="w-full max-w-[380px] border-0 backdrop-blur-sm shadow-xl relative z-10 bg-[#111111]/50">
         <CardHeader className="text-center space-y-4 pb-0 pt-[20px]">
           <div className="flex items-center justify-center gap-2">

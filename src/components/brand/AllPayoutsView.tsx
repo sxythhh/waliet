@@ -91,7 +91,7 @@ export function AllPayoutsView({ brandId }: AllPayoutsViewProps) {
     return (
       <div className="p-4 space-y-3">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full bg-muted/50 dark:bg-muted-foreground/20" />
+          <Skeleton key={i} className="h-16 w-full" />
         ))}
       </div>
     );

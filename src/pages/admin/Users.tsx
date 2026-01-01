@@ -23,6 +23,7 @@ import { AddReferralDialog } from "@/components/admin/AddReferralDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
 interface User {
   id: string;
@@ -1479,7 +1480,7 @@ export default function AdminUsers() {
         <p className="text-muted-foreground font-inter tracking-[-0.5px]">Loading users...</p>
       </div>;
   }
-  return <div className="p-6 space-y-4">
+  return <AdminPermissionGuard resource="users"><div className="p-6 space-y-4">
       <Tabs defaultValue="users" className="space-y-4">
         <TabsList className="bg-muted/30 border-0 p-1 h-auto">
           <TabsTrigger value="users" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
@@ -3036,5 +3037,5 @@ export default function AdminUsers() {
         onOpenChange={setAddReferralDialogOpen}
         onSuccess={() => fetchData()}
       />
-    </div>;
+    </div></AdminPermissionGuard>;
 }

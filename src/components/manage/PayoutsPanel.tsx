@@ -13,26 +13,26 @@ export function PayoutsPanel({ transactions, loading }: PayoutsPanelProps) {
       <div className="p-4 space-y-4">
         {/* Header Skeleton */}
         <div className="p-4 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-3">
-          <Skeleton className="h-5 w-32 dark:bg-muted-foreground/20" />
-          <Skeleton className="h-4 w-20 dark:bg-muted-foreground/20" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-20" />
         </div>
         {/* Transaction Row Skeletons */}
         <div className="p-5 rounded-lg bg-muted/30 dark:bg-muted/50 space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3 flex-1">
-                <Skeleton className="w-10 h-10 rounded-full dark:bg-muted-foreground/20" />
+                <Skeleton className="w-10 h-10 rounded-full" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-28 dark:bg-muted-foreground/20" />
-                  <Skeleton className="h-3 w-36 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-36" />
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="space-y-2 text-right">
-                  <Skeleton className="h-4 w-16 dark:bg-muted-foreground/20" />
-                  <Skeleton className="h-3 w-12 dark:bg-muted-foreground/20" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-3 w-12" />
                 </div>
-                <Skeleton className="h-3 w-14 dark:bg-muted-foreground/20" />
+                <Skeleton className="h-3 w-14" />
               </div>
             </div>
           ))}

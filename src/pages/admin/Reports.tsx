@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Shield,
 } from "lucide-react";
+import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
 interface ReportConfig {
   id: string;
@@ -203,6 +204,7 @@ export default function ReportsPage() {
   };
 
   return (
+    <AdminPermissionGuard resource="reports">
     <div className="w-full h-full p-4 md:p-6 pt-16 md:pt-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -376,5 +378,6 @@ export default function ReportsPage() {
         </div>
       </div>
     </div>
+    </AdminPermissionGuard>
   );
 }

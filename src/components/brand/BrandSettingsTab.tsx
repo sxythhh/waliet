@@ -10,13 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Send, ExternalLink, CheckCircle2, AlertCircle,
-  Plus, Trash2
-} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { format, formatDistanceToNow } from "date-fns";
-import discordLogo from "@/assets/discord-logo.png";
+import { formatDistanceToNow } from "date-fns";
 
 interface BrandSettingsTabProps {
   brandId: string;
@@ -75,15 +71,6 @@ const SEVERITY_LEVELS = [
 export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
   const [isLoading, setIsLoading] = useState(true);
 
-  // Discord state
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [notifyApplication, setNotifyApplication] = useState(true);
-  const [notifySale, setNotifySale] = useState(true);
-  const [notifyMessage, setNotifyMessage] = useState(true);
-  const [brandName, setBrandName] = useState("");
-  const [isSavingDiscord, setIsSavingDiscord] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-
   // Milestones state
   const [milestones, setMilestones] = useState<MilestoneConfig[]>([]);
   const [milestoneDialogOpen, setMilestoneDialogOpen] = useState(false);
@@ -114,21 +101,12 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
-      const [brandResult, milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
-        supabase.from("brands").select("name, discord_webhook_url, notify_new_application, notify_new_sale, notify_new_message").eq("id", brandId).single(),
+      const [milestonesResult, tiersResult, strikesResult, creatorsResult] = await Promise.all([
         (supabase.from("milestone_configs" as any).select("*").eq("brand_id", brandId).order("threshold") as any),
         (supabase.from("creator_tiers" as any).select("*").eq("brand_id", brandId).order("tier_order") as any),
         (supabase.from("creator_strikes" as any).select("*, creator:creator_id(username, full_name, avatar_url)").eq("brand_id", brandId).order("created_at", { ascending: false }).limit(10) as any),
         (supabase.from("campaign_participants" as any).select("user_id, profiles:user_id(id, username, full_name)").eq("brand_id", brandId).eq("status", "accepted") as any)
       ]);
-
-      if (brandResult.data) {
-        setBrandName(brandResult.data.name || "");
-        setWebhookUrl(brandResult.data.discord_webhook_url || "");
-        setNotifyApplication(brandResult.data.notify_new_application ?? true);
-        setNotifySale(brandResult.data.notify_new_sale ?? true);
-        setNotifyMessage(brandResult.data.notify_new_message ?? true);
-      }
 
       setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
       setTiers((tiersResult.data || []) as CreatorTier[]);
@@ -145,48 +123,6 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
       console.error("Error fetching settings:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Discord handlers
-  const handleSaveDiscord = async () => {
-    setIsSavingDiscord(true);
-    try {
-      const { error } = await supabase.from("brands").update({
-        discord_webhook_url: webhookUrl || null,
-        notify_new_application: notifyApplication,
-        notify_new_sale: notifySale,
-        notify_new_message: notifyMessage
-      }).eq("id", brandId);
-      if (error) throw error;
-      toast.success("Discord settings saved");
-    } catch (error) {
-      toast.error("Failed to save settings");
-    } finally {
-      setIsSavingDiscord(false);
-    }
-  };
-
-  const handleTestWebhook = async () => {
-    if (!webhookUrl) return;
-    setIsTesting(true);
-    try {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          embeds: [{
-            title: "Test Notification",
-            description: `This is a test from **${brandName}** on Virality.`,
-            color: 5793266
-          }]
-        })
-      });
-      toast.success("Test notification sent!");
-    } catch {
-      toast.error("Failed to send test notification");
-    } finally {
-      setIsTesting(false);
     }
   };
 
@@ -304,8 +240,6 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
     }
   };
 
-  const isWebhookConfigured = !!webhookUrl && webhookUrl.startsWith("https://discord.com/api/webhooks/");
-
   if (isLoading) {
     return (
       <div className="p-6 space-y-8">
@@ -319,66 +253,6 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
 
   return (
     <div className="p-6 space-y-10 max-w-4xl mx-auto">
-      {/* Discord Integration */}
-      <section>
-        <div className="flex items-center gap-3 mb-4">
-          <img src={discordLogo} alt="Discord" className="w-8 h-8 rounded" />
-          <div>
-            <h2 className="text-base font-semibold font-inter tracking-[-0.5px]">Discord Notifications</h2>
-            <p className="text-xs text-muted-foreground">Get notified about applications, submissions, and payouts</p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs">Webhook URL</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://discord.com/api/webhooks/..."
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                className="text-sm"
-              />
-              <Button variant="ghost" size="sm" className="font-inter tracking-[-0.5px]" onClick={handleTestWebhook} disabled={!isWebhookConfigured || isTesting}>
-                <Send className="h-3.5 w-3.5 mr-1.5" />
-                Test
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              {isWebhookConfigured ? (
-                <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-600 border-green-500/20">
-                  <CheckCircle2 className="h-3 w-3 mr-1" /> Configured
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[10px]">
-                  <AlertCircle className="h-3 w-3 mr-1" /> Not configured
-                </Badge>
-              )}
-              <a href="https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline inline-flex items-center gap-1">
-                How to create a webhook <ExternalLink className="h-2.5 w-2.5" />
-              </a>
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">New Applications</span>
-              <Switch checked={notifyApplication} onCheckedChange={setNotifyApplication} disabled={!isWebhookConfigured} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Video Submissions</span>
-              <Switch checked={notifySale} onCheckedChange={setNotifySale} disabled={!isWebhookConfigured} />
-            </div>
-          </div>
-
-          <Button size="sm" className="font-inter tracking-[-0.5px]" onClick={handleSaveDiscord} disabled={isSavingDiscord}>
-            {isSavingDiscord ? "Saving..." : "Save Discord Settings"}
-          </Button>
-        </div>
-      </section>
-
-      <hr className="border-border/50" />
-
       {/* Milestones */}
       <section>
         <div className="flex items-center justify-between mb-4">

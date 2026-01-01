@@ -7,14 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { Plus, Send, Clock, Users, Eye, Megaphone, CalendarIcon, Trash2 } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
+import { Plus, Send, Clock, Users, Eye, Megaphone, CalendarIcon, Trash2, FileEdit, CheckCircle2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -47,6 +46,8 @@ interface BrandBroadcastsTabProps {
   brandId: string;
 }
 
+type FilterType = "all" | "draft" | "scheduled" | "sent";
+
 export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
   const { user } = useAuth();
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
@@ -55,6 +56,7 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
   // Form state
   const [title, setTitle] = useState("");
@@ -72,7 +74,6 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch broadcasts
       const { data: broadcastsData, error: broadcastsError } = await supabase
         .from("brand_broadcasts")
         .select("*")
@@ -81,7 +82,6 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
       if (broadcastsError) throw broadcastsError;
 
-      // Fetch read counts for each broadcast
       const broadcastsWithStats = await Promise.all(
         (broadcastsData || []).map(async (broadcast) => {
           const { count: readCount } = await supabase
@@ -89,16 +89,12 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
             .select("id", { count: "exact", head: true })
             .eq("broadcast_id", broadcast.id);
 
-          return {
-            ...broadcast,
-            read_count: readCount || 0
-          };
+          return { ...broadcast, read_count: readCount || 0 };
         })
       );
 
       setBroadcasts(broadcastsWithStats);
 
-      // Fetch campaigns
       const { data: campaignsData } = await supabase
         .from("campaigns")
         .select("id, title")
@@ -107,7 +103,6 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
       setCampaigns(campaignsData || []);
 
-      // Fetch boosts
       const { data: boostsData } = await supabase
         .from("bounty_campaigns")
         .select("id, title")
@@ -150,7 +145,6 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
     setIsSending(true);
     try {
-      // Determine status and scheduled time
       let status = asDraft ? "draft" : "sent";
       let scheduledAt: string | null = null;
       let sentAt: string | null = null;
@@ -170,7 +164,6 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
         sentAt = new Date().toISOString();
       }
 
-      // Create broadcast
       const { data: broadcast, error: broadcastError } = await supabase
         .from("brand_broadcasts")
         .insert({
@@ -188,18 +181,12 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
       if (broadcastError) throw broadcastError;
 
-      // Create targets if needed
       if (targetType === "campaigns" && selectedCampaigns.length > 0) {
         const targets = selectedCampaigns.map((campaignId) => ({
           broadcast_id: broadcast.id,
           campaign_id: campaignId
         }));
-
-        const { error: targetsError } = await supabase
-          .from("brand_broadcast_targets")
-          .insert(targets);
-
-        if (targetsError) throw targetsError;
+        await supabase.from("brand_broadcast_targets").insert(targets);
       }
 
       if (targetType === "boosts" && selectedBoosts.length > 0) {
@@ -207,20 +194,11 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
           broadcast_id: broadcast.id,
           boost_id: boostId
         }));
-
-        const { error: targetsError } = await supabase
-          .from("brand_broadcast_targets")
-          .insert(targets);
-
-        if (targetsError) throw targetsError;
+        await supabase.from("brand_broadcast_targets").insert(targets);
       }
 
       toast.success(
-        asDraft
-          ? "Broadcast saved as draft"
-          : status === "scheduled"
-          ? "Broadcast scheduled"
-          : "Broadcast sent successfully"
+        asDraft ? "Broadcast saved as draft" : status === "scheduled" ? "Broadcast scheduled" : "Broadcast sent"
       );
 
       resetForm();
@@ -236,13 +214,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
   const handleDeleteBroadcast = async (broadcastId: string) => {
     try {
-      const { error } = await supabase
-        .from("brand_broadcasts")
-        .delete()
-        .eq("id", broadcastId);
-
+      const { error } = await supabase.from("brand_broadcasts").delete().eq("id", broadcastId);
       if (error) throw error;
-
       toast.success("Broadcast deleted");
       fetchData();
     } catch (error) {
@@ -255,15 +228,9 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
     try {
       const { error } = await supabase
         .from("brand_broadcasts")
-        .update({
-          status: "sent",
-          sent_at: new Date().toISOString(),
-          scheduled_at: null
-        })
+        .update({ status: "sent", sent_at: new Date().toISOString(), scheduled_at: null })
         .eq("id", broadcast.id);
-
       if (error) throw error;
-
       toast.success("Broadcast sent");
       fetchData();
     } catch (error) {
@@ -272,31 +239,24 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
     }
   };
 
-  const getStatusBadge = (status: string | null) => {
-    switch (status) {
-      case "draft":
-        return <Badge variant="outline" className="bg-muted/50">Draft</Badge>;
-      case "scheduled":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">Scheduled</Badge>;
-      case "sent":
-        return <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Sent</Badge>;
-      default:
-        return null;
-    }
+  // Filter counts
+  const counts = {
+    all: broadcasts.length,
+    draft: broadcasts.filter((b) => b.status === "draft").length,
+    scheduled: broadcasts.filter((b) => b.status === "scheduled").length,
+    sent: broadcasts.filter((b) => b.status === "sent").length
   };
 
-  const getTargetLabel = (broadcastType: string | null) => {
-    switch (broadcastType) {
-      case "all":
-        return "All creators";
-      case "campaigns":
-        return "Selected campaigns";
-      case "boosts":
-        return "Selected boosts";
-      default:
-        return "All creators";
-    }
-  };
+  const filteredBroadcasts = activeFilter === "all"
+    ? broadcasts
+    : broadcasts.filter((b) => b.status === activeFilter);
+
+  const filterOptions: { key: FilterType; label: string; icon: typeof Megaphone }[] = [
+    { key: "all", label: "All", icon: Megaphone },
+    { key: "draft", label: "Drafts", icon: FileEdit },
+    { key: "scheduled", label: "Scheduled", icon: Clock },
+    { key: "sent", label: "Sent", icon: CheckCircle2 }
+  ];
 
   if (isLoading) {
     return (
@@ -305,8 +265,13 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
+        <div className="flex gap-2 mb-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-9 w-24" />
+          ))}
+        </div>
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-24 w-full" />
+          <Skeleton key={i} className="h-28 w-full" />
         ))}
       </div>
     );
@@ -314,50 +279,53 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-lg font-semibold">Broadcasts</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Broadcasts</h2>
+          <p className="text-sm text-muted-foreground tracking-[-0.3px]">
             Send announcements to creators in your campaigns
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 font-inter tracking-[-0.3px]">
               <Plus className="h-4 w-4" />
               New Broadcast
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-xl">
             <DialogHeader>
-              <DialogTitle>Create Broadcast</DialogTitle>
+              <DialogTitle className="font-inter tracking-[-0.5px]">Create Broadcast</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title" className="text-xs font-medium">Title</Label>
                 <Input
                   id="title"
                   placeholder="Broadcast title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className="text-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="content">Message</Label>
+                <Label htmlFor="content" className="text-xs font-medium">Message</Label>
                 <Textarea
                   id="content"
                   placeholder="Write your announcement..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   rows={5}
+                  className="text-sm resize-none"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Target Audience</Label>
+                <Label className="text-xs font-medium">Target Audience</Label>
                 <Select value={targetType} onValueChange={(v) => setTargetType(v as any)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -370,8 +338,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
               {targetType === "campaigns" && campaigns.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Select Campaigns</Label>
-                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                  <Label className="text-xs font-medium">Select Campaigns</Label>
+                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
                     {campaigns.map((campaign) => (
                       <div key={campaign.id} className="flex items-center gap-2">
                         <Checkbox
@@ -396,8 +364,8 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
               {targetType === "boosts" && boosts.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Select Boosts</Label>
-                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
+                  <Label className="text-xs font-medium">Select Boosts</Label>
+                  <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2 bg-muted/30">
                     {boosts.map((boost) => (
                       <div key={boost.id} className="flex items-center gap-2">
                         <Checkbox
@@ -421,14 +389,14 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
               )}
 
               <div className="space-y-2">
-                <Label>Schedule (optional)</Label>
+                <Label className="text-xs font-medium">Schedule (optional)</Label>
                 <div className="flex gap-2">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-[200px] justify-start text-left font-normal",
+                          "w-[200px] justify-start text-left font-normal text-sm",
                           !scheduledDate && "text-muted-foreground"
                         )}
                       >
@@ -450,14 +418,10 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="w-[120px]"
+                    className="w-[120px] text-sm"
                   />
                   {scheduledDate && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setScheduledDate(undefined)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)}>
                       Clear
                     </Button>
                   )}
@@ -465,18 +429,10 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
               </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => handleSendBroadcast(true)}
-                  disabled={isSending}
-                >
+                <Button variant="outline" onClick={() => handleSendBroadcast(true)} disabled={isSending} className="font-inter tracking-[-0.3px]">
                   Save as Draft
                 </Button>
-                <Button
-                  onClick={() => handleSendBroadcast(false)}
-                  disabled={isSending}
-                  className="gap-2"
-                >
+                <Button onClick={() => handleSendBroadcast(false)} disabled={isSending} className="gap-2 font-inter tracking-[-0.3px]">
                   {scheduledDate ? (
                     <>
                       <Clock className="h-4 w-4" />
@@ -495,51 +451,125 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
         </Dialog>
       </div>
 
-      {broadcasts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Megaphone className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <h3 className="font-medium text-lg mb-1">No broadcasts yet</h3>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            Create broadcasts to send announcements and updates to creators in your campaigns.
+      {/* Filter Pills */}
+      <div className="flex gap-2 mb-6">
+        {filterOptions.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveFilter(key)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+              "font-inter tracking-[-0.3px]",
+              activeFilter === key
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+            {counts[key] > 0 && (
+              <span className={cn(
+                "ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold",
+                activeFilter === key ? "bg-primary-foreground/20" : "bg-background"
+              )}>
+                {counts[key]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Broadcasts List */}
+      {filteredBroadcasts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
+            <Megaphone className="h-8 w-8 text-primary/60" />
+          </div>
+          <h3 className="font-semibold text-base mb-1 font-inter tracking-[-0.5px]">
+            {activeFilter === "all" ? "No broadcasts yet" : `No ${activeFilter} broadcasts`}
+          </h3>
+          <p className="text-sm text-muted-foreground max-w-sm tracking-[-0.3px]">
+            {activeFilter === "all"
+              ? "Create broadcasts to send announcements and updates to creators in your campaigns."
+              : `You don't have any ${activeFilter} broadcasts at the moment.`}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {broadcasts.map((broadcast) => (
-            <Card key={broadcast.id} className="p-4">
+          {filteredBroadcasts.map((broadcast) => (
+            <div
+              key={broadcast.id}
+              className="group relative rounded-xl border border-border/60 bg-card p-4 hover:border-border transition-all duration-200"
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-medium text-sm truncate">{broadcast.title}</h3>
-                    {getStatusBadge(broadcast.status)}
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{broadcast.content}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" />
-                      {getTargetLabel(broadcast.broadcast_type)}
-                    </span>
-                    {broadcast.sent_at && (
-                      <span>Sent {format(new Date(broadcast.sent_at), "PPp")}</span>
+                  {/* Title and Status */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-medium text-sm truncate font-inter tracking-[-0.3px]">{broadcast.title}</h3>
+                    {broadcast.status === "draft" && (
+                      <Badge variant="outline" className="text-[10px] bg-muted/50 border-border">
+                        <FileEdit className="h-2.5 w-2.5 mr-1" />
+                        Draft
+                      </Badge>
                     )}
-                    {broadcast.scheduled_at && broadcast.status === "scheduled" && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        Scheduled for {format(new Date(broadcast.scheduled_at), "PPp")}
+                    {broadcast.status === "scheduled" && (
+                      <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 border-blue-500/20">
+                        <Clock className="h-2.5 w-2.5 mr-1" />
+                        Scheduled
+                      </Badge>
+                    )}
+                    {broadcast.status === "sent" && (
+                      <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-600 border-green-500/20">
+                        <CheckCircle2 className="h-2.5 w-2.5 mr-1" />
+                        Sent
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Content Preview */}
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3 tracking-[-0.2px]">{broadcast.content}</p>
+
+                  {/* Meta Info */}
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
+                      <Users className="h-3 w-3" />
+                      {broadcast.broadcast_type === "all" ? "All creators" :
+                       broadcast.broadcast_type === "campaigns" ? "Campaigns" : "Boosts"}
+                    </span>
+
+                    {broadcast.sent_at && (
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                        Sent {formatDistanceToNow(new Date(broadcast.sent_at), { addSuffix: true })}
                       </span>
                     )}
+
+                    {broadcast.scheduled_at && broadcast.status === "scheduled" && (
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3 text-blue-500" />
+                        {format(new Date(broadcast.scheduled_at), "PPp")}
+                      </span>
+                    )}
+
                     {broadcast.read_count !== undefined && broadcast.read_count > 0 && (
-                      <span className="flex items-center gap-1">
-                        <Eye className="h-3.5 w-3.5" />
-                        {broadcast.read_count} read
+                      <span className="flex items-center gap-1.5">
+                        <Eye className="h-3 w-3" />
+                        {broadcast.read_count} {broadcast.read_count === 1 ? "read" : "reads"}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {(broadcast.status === "draft" || broadcast.status === "scheduled") && (
-                    <Button size="sm" variant="outline" onClick={() => handleSendNow(broadcast)}>
-                      <Send className="h-3.5 w-3.5 mr-1" />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleSendNow(broadcast)}
+                      className="h-8 gap-1.5 text-xs font-inter tracking-[-0.3px]"
+                    >
+                      <Zap className="h-3 w-3" />
                       Send Now
                     </Button>
                   )}
@@ -547,12 +577,13 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
                     size="icon"
                     variant="ghost"
                     onClick={() => handleDeleteBroadcast(broadcast.id)}
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}

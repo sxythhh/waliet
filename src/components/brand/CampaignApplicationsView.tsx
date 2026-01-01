@@ -292,10 +292,10 @@ export function CampaignApplicationsView({
   };
   if (loading) {
     return <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48 bg-muted/50 dark:bg-muted-foreground/20" />
+        <Skeleton className="h-8 w-48" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-64 bg-muted/50 dark:bg-muted-foreground/20" />
-          <Skeleton className="h-64 md:col-span-2 bg-muted/50 dark:bg-muted-foreground/20 hidden md:block" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64 md:col-span-2 hidden md:block" />
         </div>
       </div>;
   }

@@ -2,9 +2,11 @@ import { FraudDashboard } from "@/components/admin/security/FraudDashboard";
 import { AuditLog } from "@/components/admin/security/AuditLog";
 import { FraudReviewQueue } from "@/components/admin/FraudReviewQueue";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
 export default function SecurityPage() {
   return (
+    <AdminPermissionGuard resource="security">
     <div className="w-full h-full p-4 md:p-6 pt-16 md:pt-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
@@ -56,5 +58,6 @@ export default function SecurityPage() {
         </Tabs>
       </div>
     </div>
+    </AdminPermissionGuard>
   );
 }

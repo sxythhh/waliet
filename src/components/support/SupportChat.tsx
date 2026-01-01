@@ -130,7 +130,7 @@ export const SupportChat = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl shadow-sm flex flex-col max-h-[70vh]">
+    <div className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl shadow-sm flex flex-col h-[500px]">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 min-h-[200px]">
         {messages.map((message, index) => (

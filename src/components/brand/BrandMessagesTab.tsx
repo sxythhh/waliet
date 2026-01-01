@@ -440,7 +440,7 @@ export function BrandMessagesTab({ brandId }: BrandMessagesTabProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 bg-background">
             <MessageSquare className="h-16 w-16 text-muted-foreground/20 mb-4" />
             <h3 className="text-lg font-semibold mb-1">Your Messages</h3>
             <p className="text-sm text-muted-foreground max-w-sm">

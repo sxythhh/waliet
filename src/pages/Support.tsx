@@ -38,7 +38,7 @@ const faqs = [
 
 const Support = () => {
   return (
-    <div className="min-h-screen bg-background overflow-y-auto">
+    <div className="min-h-screen bg-background flex flex-col">
       <SEOHead
         title="Support"
         description="Get help with Virality. Chat with our AI assistant about product support, billing questions, or provide feedback."
@@ -48,10 +48,10 @@ const Support = () => {
           { name: "Support", url: "/support" },
         ]}
       />
-      
+
       <PublicNavbar />
 
-      <main className="pt-24 pb-16 px-4">
+      <main className="flex-1 overflow-y-auto pt-24 pb-16 px-4">
         {/* Chat Interface */}
         <div className="mb-16">
           <SupportChat />

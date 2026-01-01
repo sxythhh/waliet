@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, ImageIcon, X } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Edit2, Eye, EyeOff, ExternalLink, GraduationCap, FileText, Newspaper, Pencil, ImageIcon, X, Sparkles, MessageSquare, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
 interface BlueprintTemplate {
   id: string;
@@ -584,40 +585,86 @@ export default function Resources() {
     }
   };
 
+  // Stats for header
+  const activeTemplates = templates.filter(t => t.is_active).length;
+  const publishedPosts = posts.filter(p => p.is_published).length;
+  const totalModules = Object.values(modules).flat().length;
+
   return (
+    <AdminPermissionGuard resource="resources">
     <div className="p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">Resources</h1>
-            <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
+            <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.3px]">
               Manage templates, blog posts, and training courses
             </p>
           </div>
-          <Button 
+          <Button
             onClick={handleCreateResource}
-            className="gap-2 text-white border-t border-t-[#4b85f7] font-geist font-medium text-sm tracking-[-0.5px] rounded-[10px] bg-[#2060df]"
+            className="gap-2 font-inter font-medium text-sm tracking-[-0.3px]"
           >
             <Plus className="h-4 w-4" />
             {getCreateButtonLabel()}
           </Button>
         </div>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-violet-500/10 to-violet-500/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-violet-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{templates.length}</p>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{activeTemplates} active templates</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <Newspaper className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{posts.length}</p>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{publishedPosts} published posts</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <GraduationCap className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{courses.length}</p>
+                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{totalModules} total modules</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ResourceType)} className="w-full">
-          <TabsList className="w-fit bg-card rounded-full p-1">
-            <TabsTrigger value="templates" className="rounded-full px-4 gap-2 data-[state=active]:bg-[#1C1C1C]">
+          <TabsList className="w-fit bg-muted/50 rounded-lg p-1">
+            <TabsTrigger value="templates" className="rounded-md px-4 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm font-inter tracking-[-0.3px]">
               <FileText className="h-4 w-4" />
               Templates
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-muted">{templates.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="blog" className="rounded-full px-4 gap-2 data-[state=active]:bg-[#1C1C1C]">
+            <TabsTrigger value="blog" className="rounded-md px-4 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm font-inter tracking-[-0.3px]">
               <Newspaper className="h-4 w-4" />
               Blog Posts
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-muted">{posts.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="courses" className="rounded-full px-4 gap-2 data-[state=active]:bg-[#1C1C1C]">
+            <TabsTrigger value="courses" className="rounded-md px-4 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm font-inter tracking-[-0.3px]">
               <GraduationCap className="h-4 w-4" />
               Courses
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-muted">{courses.length}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -626,65 +673,74 @@ export default function Resources() {
             {templatesLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-48 rounded-xl" />
+                  <Skeleton key={i} className="h-52 rounded-xl" />
                 ))}
               </div>
             ) : templates.length === 0 ? (
-              <Card className="p-12 text-center border-border/50 bg-card/30">
-                <p className="text-muted-foreground font-inter tracking-[-0.5px]">No templates yet. Create your first template.</p>
-              </Card>
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-4">
+                  <FileText className="h-8 w-8 text-violet-500/60" />
+                </div>
+                <h3 className="font-semibold text-base mb-1 font-inter tracking-[-0.5px]">No templates yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm tracking-[-0.3px]">
+                  Create your first blueprint template to help brands get started quickly.
+                </p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {templates.map(template => (
-                  <Card 
-                    key={template.id} 
-                    className="group border-border/50 bg-card/30 hover:bg-card/50 transition-colors overflow-hidden"
+                  <div
+                    key={template.id}
+                    className="group relative rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm hover:bg-card hover:border-border hover:shadow-md transition-all duration-200"
                   >
-                    <div className="p-5 space-y-4">
+                    {/* Status indicator bar */}
+                    <div className={`absolute top-0 left-4 right-4 h-0.5 rounded-full ${template.is_active ? 'bg-emerald-500' : 'bg-muted'}`} />
+
+                    <div className="p-5 pt-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-[15px] truncate text-foreground font-inter tracking-[-0.5px]">
-                            {template.title}
-                          </h3>
-                          {template.category && (
-                            <Badge variant="secondary" className="mt-1 text-xs">
-                              {template.category}
-                            </Badge>
-                          )}
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${template.is_active ? 'bg-gradient-to-br from-violet-500/20 to-violet-500/5' : 'bg-muted/50'}`}>
+                            <FileText className={`w-5 h-5 ${template.is_active ? 'text-violet-500' : 'text-muted-foreground'}`} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-sm truncate font-inter tracking-[-0.3px]">
+                              {template.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {template.category && (
+                                <span className="text-[10px] text-muted-foreground">{template.category}</span>
+                              )}
+                              <Badge variant={template.is_active ? "default" : "secondary"} className="text-[10px] h-4 px-1.5">
+                                {template.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Badge variant={template.is_active ? "default" : "secondary"} className="text-xs">
-                            {template.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openEditTemplateDialog(template)}>
-                                <Edit2 className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => toggleTemplateActive(template)}>
-                                {template.is_active ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                                {template.is_active ? "Deactivate" : "Activate"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => deleteTemplate(template.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openEditTemplateDialog(template)}>
+                              <Edit2 className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleTemplateActive(template)}>
+                              {template.is_active ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                              {template.is_active ? "Deactivate" : "Activate"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => deleteTemplate(template.id)}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
 
                       {template.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 font-inter tracking-[-0.5px]">
+                        <p className="text-xs text-muted-foreground line-clamp-2 tracking-[-0.2px]">
                           {template.description}
                         </p>
                       )}
@@ -692,19 +748,36 @@ export default function Resources() {
                       {template.platforms && template.platforms.length > 0 && (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {template.platforms.map(platform => (
-                            <Badge key={platform} variant="outline" className="text-xs capitalize">
+                            <Badge key={platform} variant="outline" className="text-[10px] capitalize px-1.5 py-0">
                               {platform}
                             </Badge>
                           ))}
                         </div>
                       )}
 
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t border-border/30">
-                        <span>{template.hooks?.length || 0} hooks</span>
-                        <span>{template.talking_points?.length || 0} talking points</span>
+                      {/* Stats chips */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {(template.hooks?.length || 0) > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                            <Sparkles className="h-3 w-3" />
+                            <span className="text-[10px] font-medium">{template.hooks.length} hooks</span>
+                          </div>
+                        )}
+                        {(template.talking_points?.length || 0) > 0 && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                            <MessageSquare className="h-3 w-3" />
+                            <span className="text-[10px] font-medium">{template.talking_points.length} points</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[10px] text-muted-foreground/70">
+                        <span>Updated {new Date(template.updated_at).toLocaleDateString()}</span>
+                        <span>{(template.dos_and_donts?.dos?.length || 0) + (template.dos_and_donts?.donts?.length || 0)} do's & don'ts</span>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -712,145 +785,178 @@ export default function Resources() {
 
           {/* Blog Posts Tab */}
           <TabsContent value="blog" className="mt-6">
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-inter tracking-[-0.5px]">Title</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px]">Category</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px]">Status</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px]">Date</TableHead>
-                    <TableHead className="font-inter tracking-[-0.5px] text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {postsLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : posts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No posts yet
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    posts.map((post) => (
-                      <TableRow key={post.id}>
-                        <TableCell className="font-inter tracking-[-0.5px] font-medium max-w-[300px] truncate">
-                          {post.title}
-                        </TableCell>
-                        <TableCell className="font-inter tracking-[-0.5px] text-muted-foreground">
-                          {post.category || "-"}
-                        </TableCell>
-                        <TableCell>
-                          <button
-                            onClick={() => togglePublish(post)}
-                            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-inter tracking-[-0.5px] ${
-                              post.is_published
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-yellow-500/20 text-yellow-400"
-                            }`}
-                          >
-                            {post.is_published ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                            {post.is_published ? "Published" : "Draft"}
-                          </button>
-                        </TableCell>
-                        <TableCell className="font-inter tracking-[-0.5px] text-muted-foreground text-sm">
-                          {new Date(post.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => window.open(`/blog`, '_blank')}
-                              className="h-8 w-8"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openEditBlogDialog(post)}
-                              className="h-8 w-8"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeletePost(post.id)}
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            {postsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-20 rounded-xl" />
+                ))}
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center mb-4">
+                  <Newspaper className="h-8 w-8 text-blue-500/60" />
+                </div>
+                <h3 className="font-semibold text-base mb-1 font-inter tracking-[-0.5px]">No blog posts yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm tracking-[-0.3px]">
+                  Create your first blog post to share guides and updates with creators.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="group flex items-center gap-4 p-4 rounded-xl border border-border/60 bg-card/60 hover:bg-card hover:border-border transition-all duration-200"
+                  >
+                    {/* Image thumbnail */}
+                    {post.image_url ? (
+                      <img src={post.image_url} alt="" className="w-20 h-14 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-20 h-14 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center flex-shrink-0">
+                        <Newspaper className="h-6 w-6 text-blue-500/40" />
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-sm truncate font-inter tracking-[-0.3px]">{post.title}</h3>
+                        <button
+                          onClick={() => togglePublish(post)}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                            post.is_published
+                              ? "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
+                              : "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
+                          }`}
+                        >
+                          {post.is_published ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                          {post.is_published ? "Published" : "Draft"}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {post.category && <span className="px-1.5 py-0.5 rounded bg-muted/50">{post.category}</span>}
+                        {post.content_type && <span className="capitalize">{post.content_type.replace('_', ' ')}</span>}
+                        <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                        {post.read_time && <span>{post.read_time}</span>}
+                      </div>
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          {post.tags.slice(0, 3).map((tag, i) => (
+                            <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">{tag}</Badge>
+                          ))}
+                          {post.tags.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground">+{post.tags.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" onClick={() => window.open(`/blog/${post.slug}`, '_blank')} className="h-8 w-8">
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openEditBlogDialog(post)} className="h-8 w-8">
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDeletePost(post.id)} className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Courses Tab */}
           <TabsContent value="courses" className="mt-6">
             {coursesLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2].map(i => (
+                  <Skeleton key={i} className="h-48 rounded-xl" />
+                ))}
+              </div>
             ) : courses.length === 0 ? (
-              <Card className="p-12 text-center border-border/50 bg-card/30">
-                <GraduationCap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground font-inter tracking-[-0.5px]">
-                  No courses yet. Click "Manage Courses" to add courses.
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-4">
+                  <GraduationCap className="h-8 w-8 text-emerald-500/60" />
+                </div>
+                <h3 className="font-semibold text-base mb-1 font-inter tracking-[-0.5px]">No courses yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm tracking-[-0.3px]">
+                  Click "Manage Courses" to create training courses for creators.
                 </p>
-              </Card>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {courses.map((course, index) => (
-                  <Card key={course.id} className="border-border/50 bg-card/30 p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">Course {index + 1}</Badge>
-                          <h3 className="font-semibold text-lg font-inter tracking-[-0.5px]">{course.title}</h3>
-                        </div>
-                        {course.description && (
-                          <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.5px]">
-                            {course.description}
-                          </p>
-                        )}
+                  <div
+                    key={course.id}
+                    className="group relative rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm hover:bg-card hover:border-border hover:shadow-md transition-all duration-200 overflow-hidden"
+                  >
+                    {/* Course number badge */}
+                    <div className="absolute top-3 left-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{index + 1}</span>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingCourseId(course.id);
-                          setCourseDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
                     </div>
-                    {modules[course.id] && modules[course.id].length > 0 && (
-                      <div className="mt-3 pl-4 border-l-2 border-muted">
-                        <p className="text-sm text-muted-foreground mb-2 font-inter tracking-[-0.5px]">
-                          {modules[course.id].length} {modules[course.id].length === 1 ? 'module' : 'modules'}:
-                        </p>
-                        <ul className="space-y-1">
-                          {modules[course.id].map((module, moduleIndex) => (
-                            <li key={module.id} className="text-sm font-inter tracking-[-0.5px]">
-                              {moduleIndex + 1}. {module.title}
-                            </li>
-                          ))}
-                        </ul>
+
+                    <div className="p-5 pl-14">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-base font-inter tracking-[-0.3px]">{course.title}</h3>
+                          {course.description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 tracking-[-0.2px]">
+                              {course.description}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8"
+                          onClick={() => {
+                            setEditingCourseId(course.id);
+                            setCourseDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
+                        </Button>
                       </div>
-                    )}
-                  </Card>
+
+                      {modules[course.id] && modules[course.id].length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-3.5 w-3.5 text-emerald-500" />
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {modules[course.id].length} {modules[course.id].length === 1 ? 'module' : 'modules'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 gap-1.5 pt-2 border-t border-border/40">
+                            {modules[course.id].slice(0, 4).map((module, moduleIndex) => (
+                              <div key={module.id} className="flex items-center gap-2 text-xs">
+                                <span className="w-5 h-5 rounded bg-muted/50 flex items-center justify-center text-[10px] font-medium text-muted-foreground">
+                                  {moduleIndex + 1}
+                                </span>
+                                <span className="truncate text-muted-foreground tracking-[-0.2px]">{module.title}</span>
+                              </div>
+                            ))}
+                            {modules[course.id].length > 4 && (
+                              <span className="text-[10px] text-muted-foreground/60 pl-7">
+                                +{modules[course.id].length - 4} more modules
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                          <BookOpen className="h-3.5 w-3.5" />
+                          <span>No modules added yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -1323,10 +1429,11 @@ export default function Resources() {
         }}
         onSuccess={() => {
           fetchCourses();
-        }} 
+        }}
         initialExpandedCourseId={editingCourseId}
       />
 
     </div>
+    </AdminPermissionGuard>
   );
 }

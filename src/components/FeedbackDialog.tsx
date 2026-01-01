@@ -69,47 +69,52 @@ export function FeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background border border-border sm:max-w-[440px] p-0 overflow-hidden">
+      <DialogContent className="bg-background/95 backdrop-blur-xl border-none shadow-2xl sm:max-w-[440px] p-0 overflow-hidden rounded-2xl">
         {/* Header */}
-        <div className="p-5 pb-0">
+        <div className="p-6 pb-0">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isFeature ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${isFeature ? 'bg-amber-500/10' : 'bg-red-500/10'}`}>
               {isFeature ? (
                 <Lightbulb className="w-5 h-5 text-amber-500" />
               ) : (
                 <Bug className="w-5 h-5 text-red-500" />
               )}
             </div>
-            <h2 className="font-geist font-semibold text-lg tracking-[-0.5px] text-foreground">
-              {isFeature ? "Feature Request" : "Bug Report"}
-            </h2>
+            <div>
+              <h2 className="font-semibold text-lg tracking-tight text-foreground">
+                {isFeature ? "Feature Request" : "Bug Report"}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {isFeature ? "Share your ideas with us" : "Help us fix issues"}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-5 pt-4 space-y-4">
+        <div className="p-6 pt-5 space-y-5">
           <div className="space-y-2">
-            <Textarea 
-              placeholder={isFeature ? "I'd love to see..." : "I encountered an issue when..."} 
-              value={message} 
-              onChange={e => setMessage(e.target.value)} 
-              className="min-h-[140px] bg-muted border-border rounded-xl resize-none font-inter tracking-[-0.5px] text-sm placeholder:text-muted-foreground focus:border-ring focus:ring-0" 
+            <Textarea
+              placeholder={isFeature ? "I'd love to see..." : "I encountered an issue when..."}
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              className="min-h-[140px] bg-transparent border-border/50 rounded-xl resize-none text-sm placeholder:text-muted-foreground/60 focus:border-border focus:ring-0"
             />
           </div>
 
           <div className="flex gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => onOpenChange(false)} 
-              disabled={loading} 
-              className="flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted"
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="flex-1 h-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50"
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleSubmit} 
-              disabled={loading || !message.trim()} 
-              className={`flex-1 h-11 rounded-xl font-inter tracking-[-0.5px] ${isFeature ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-red-500 hover:bg-red-600 text-white'}`}
+            <Button
+              onClick={handleSubmit}
+              disabled={loading || !message.trim()}
+              className={`flex-1 h-11 rounded-xl font-medium ${isFeature ? 'bg-amber-500 hover:bg-amber-600 text-black' : 'bg-red-500 hover:bg-red-600 text-white'}`}
             >
               {loading ? "Submitting..." : "Submit"}
             </Button>

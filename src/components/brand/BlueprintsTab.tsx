@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Plus, MoreHorizontal, FileText, Calendar } from "lucide-react";
+import { Plus, MoreHorizontal, FileText, Calendar, Link2, Sparkles, Zap, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
@@ -10,8 +11,11 @@ import { CreateCampaignTypeDialog } from "./CreateCampaignTypeDialog";
 import { CreateBountyDialog } from "./CreateBountyDialog";
 import { TemplateSelector } from "./TemplateSelector";
 import { SubscriptionGateDialog } from "./SubscriptionGateDialog";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import tiktokIcon from "@/assets/tiktok-logo-black.png";
+import instagramIcon from "@/assets/instagram-logo-black.png";
+import youtubeIcon from "@/assets/youtube-logo-black.png";
 
 interface Blueprint {
   id: string;
@@ -19,6 +23,9 @@ interface Blueprint {
   status: string;
   content: string | null;
   platforms: string[] | null;
+  hooks: string[] | null;
+  talking_points: string[] | null;
+  hashtags: string[] | null;
   created_at: string;
   updated_at: string;
   campaign_id?: string | null;
@@ -90,7 +97,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     setLoading(true);
     const { data, error } = await supabase
       .from("blueprints")
-      .select("id, title, status, content, platforms, created_at, updated_at")
+      .select("id, title, status, content, platforms, hooks, talking_points, hashtags, created_at, updated_at")
       .eq("brand_id", brandId)
       .order("updated_at", { ascending: false });
 
@@ -227,6 +234,32 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
     return format(date, isThisYear ? "MMM d" : "MMM d, yyyy");
   };
 
+  const getPlatformIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "tiktok":
+        return tiktokIcon;
+      case "instagram":
+      case "instagram reels":
+        return instagramIcon;
+      case "youtube":
+      case "youtube shorts":
+        return youtubeIcon;
+      default:
+        return null;
+    }
+  };
+
+  const getCompletionScore = (blueprint: Blueprint) => {
+    let score = 0;
+    let total = 5;
+    if (blueprint.content && blueprint.content.replace(/<[^>]*>/g, "").trim().length > 0) score++;
+    if (blueprint.platforms && blueprint.platforms.length > 0) score++;
+    if (blueprint.hooks && blueprint.hooks.length > 0) score++;
+    if (blueprint.talking_points && blueprint.talking_points.length > 0) score++;
+    if (blueprint.hashtags && blueprint.hashtags.length > 0) score++;
+    return { score, total, percentage: Math.round((score / total) * 100) };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -286,6 +319,8 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
             const status = getBlueprintStatus(blueprint);
             const statusConfig = getStatusConfig(status);
             const contentPreview = getContentPreview(blueprint.content);
+            const completion = getCompletionScore(blueprint);
+            const isLinked = !!campaignLinks[blueprint.id];
 
             return (
               <div
@@ -295,31 +330,56 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                   "group relative cursor-pointer",
                   "rounded-2xl border border-border/60",
                   "bg-card/60 backdrop-blur-sm",
-                  "hover:bg-card hover:border-border hover:shadow-sm",
+                  "hover:bg-card hover:border-border hover:shadow-md",
                   "transition-all duration-200 ease-out"
                 )}
               >
-                <div className="p-5">
+                {/* Completion indicator bar */}
+                <div className="absolute top-0 left-4 right-4 h-0.5 rounded-full bg-muted/50 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      completion.percentage === 100 ? "bg-emerald-500" :
+                      completion.percentage >= 60 ? "bg-amber-500" : "bg-primary/50"
+                    )}
+                    style={{ width: `${completion.percentage}%` }}
+                  />
+                </div>
+
+                <div className="p-5 pt-4">
                   {/* Header row */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-muted-foreground" />
+                      <div className={cn(
+                        "flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center",
+                        status === "assigned" ? "bg-gradient-to-br from-emerald-500/20 to-emerald-500/5" :
+                        status === "draft" ? "bg-gradient-to-br from-amber-500/20 to-amber-500/5" :
+                        "bg-muted/50"
+                      )}>
+                        <FileText className={cn(
+                          "w-5 h-5",
+                          status === "assigned" ? "text-emerald-600 dark:text-emerald-400" :
+                          status === "draft" ? "text-amber-600 dark:text-amber-400" :
+                          "text-muted-foreground"
+                        )} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-[15px] leading-tight truncate">
+                        <h3 className="font-medium text-[15px] leading-tight truncate font-inter tracking-[-0.3px]">
                           {blueprint.title || "Untitled"}
                         </h3>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span
-                            className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              statusConfig.dotColor
-                            )}
-                          />
-                          <span className={cn("text-xs", statusConfig.textColor)}>
-                            {statusConfig.label}
-                          </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn("w-1.5 h-1.5 rounded-full", statusConfig.dotColor)} />
+                            <span className={cn("text-xs font-medium", statusConfig.textColor)}>
+                              {statusConfig.label}
+                            </span>
+                          </div>
+                          {isLinked && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 bg-primary/5 text-primary border-primary/20">
+                              <Link2 className="h-2.5 w-2.5" />
+                              Campaign
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -340,44 +400,72 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openBlueprint(blueprint.id);
-                          }}
-                        >
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openBlueprint(blueprint.id); }}>
                           Edit blueprint
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActivateBlueprint(blueprint.id);
-                          }}
-                        >
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleActivateBlueprint(blueprint.id); }}>
                           Create campaign
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteBlueprint(blueprint.id);
-                          }}
-                        >
+                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); deleteBlueprint(blueprint.id); }}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
 
+                  {/* Platforms */}
+                  {blueprint.platforms && blueprint.platforms.length > 0 && (
+                    <div className="flex items-center gap-1.5 mb-3">
+                      {blueprint.platforms.slice(0, 3).map((platform) => {
+                        const icon = getPlatformIcon(platform);
+                        return icon ? (
+                          <div key={platform} className="w-6 h-6 rounded-md bg-muted/60 flex items-center justify-center" title={platform}>
+                            <img src={icon} alt={platform} className="w-3.5 h-3.5 opacity-70" />
+                          </div>
+                        ) : null;
+                      })}
+                      {blueprint.platforms.length > 3 && (
+                        <span className="text-[10px] text-muted-foreground">+{blueprint.platforms.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Content preview */}
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3 tracking-[-0.2px]">
                     {contentPreview}
                   </p>
 
+                  {/* Quick stats */}
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {blueprint.hooks && blueprint.hooks.length > 0 && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                        <Sparkles className="h-3 w-3" />
+                        <span className="text-[10px] font-medium">{blueprint.hooks.length} hooks</span>
+                      </div>
+                    )}
+                    {blueprint.talking_points && blueprint.talking_points.length > 0 && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <Zap className="h-3 w-3" />
+                        <span className="text-[10px] font-medium">{blueprint.talking_points.length} points</span>
+                      </div>
+                    )}
+                    {blueprint.hashtags && blueprint.hashtags.length > 0 && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400">
+                        <Hash className="h-3 w-3" />
+                        <span className="text-[10px] font-medium">{blueprint.hashtags.length}</span>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Footer */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatDate(blueprint.updated_at)}</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-border/40">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
+                      <Calendar className="w-3 h-3" />
+                      <span>Updated {formatDistanceToNow(new Date(blueprint.updated_at), { addSuffix: true })}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground/50">
+                      {completion.score}/{completion.total} complete
+                    </div>
                   </div>
                 </div>
               </div>

@@ -21,6 +21,7 @@ import { FraudAnalyticsCard } from "@/components/admin/FraudAnalyticsCard";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -605,7 +606,7 @@ export default function AdminPayouts() {
     }
     return <Wallet className="h-5 w-5" />;
   };
-  return <div className="min-h-screen bg-background">
+  return <AdminPermissionGuard resource="payouts"><div className="min-h-screen bg-background">
       {/* Header Section */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
         
@@ -1033,5 +1034,5 @@ export default function AdminPayouts() {
 
       {/* User Details Dialog */}
       <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUserProfile} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} />
-    </div>;
+    </div></AdminPermissionGuard>;
 }

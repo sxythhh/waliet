@@ -217,7 +217,7 @@ async function sendRejectionEmail(supabase: any, request: any) {
                 </div>
 
                 <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid #2a2a2a;">
-                  <p style="color: #525252; font-size: 12px; margin: 0;">© 2025 Virality. All rights reserved.</p>
+                  <p style="color: #525252; font-size: 12px; margin: 0;">© 2026 Virality. All rights reserved.</p>
                 </div>
               </div>
             </div>

@@ -326,11 +326,6 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
         </Card>
       )}
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Settings"}
-        </Button>
-      </div>
     </div>
   );
 }

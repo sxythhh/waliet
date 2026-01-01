@@ -22,7 +22,6 @@ import { CreatorsTab } from "@/components/brand/CreatorsTab";
 import { CreatorDatabaseTab } from "@/components/brand/CreatorDatabaseTab";
 import { CreatorContractsTab } from "@/components/brand/CreatorContractsTab";
 import { CreatorLeaderboardTab } from "@/components/brand/CreatorLeaderboardTab";
-import { ContentCalendar } from "@/components/brand/ContentCalendar";
 import { EducationTab } from "@/components/brand/EducationTab";
 import { UserSettingsTab } from "@/components/brand/UserSettingsTab";
 import { SEOHead } from "@/components/SEOHead";
@@ -259,8 +258,6 @@ export default function Dashboard() {
               return <CreatorDatabaseTab brandId={currentBrand.id} />;
             case "contracts":
               return <CreatorContractsTab brandId={currentBrand.id} />;
-            case "calendar":
-              return <ContentCalendar brandId={currentBrand.id} />;
             case "leaderboard":
               return <CreatorLeaderboardTab brandId={currentBrand.id} />;
             default:
@@ -294,7 +291,7 @@ export default function Dashboard() {
     }
   };
   return <div className="flex h-screen w-full bg-white dark:bg-background">
-      <SEOHead title="Dashboard | Virality" description="Your Virality creator dashboard" noIndex={true} />
+      <SEOHead title="Dashboard" description="Your Virality creator dashboard" noIndex={true} />
       <AppSidebar />
       
       {/* Main Content */}

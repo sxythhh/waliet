@@ -53,8 +53,6 @@ import contractsInactive from "@/assets/contracts-inactive.svg";
 import contractsActive from "@/assets/contracts-active.svg";
 import leaderboardInactive from "@/assets/leaderboard-inactive.svg";
 import leaderboardActive from "@/assets/leaderboard-active.svg";
-import calendarInactive from "@/assets/campaigns-inactive.svg";
-import calendarActive from "@/assets/campaigns-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -164,8 +162,7 @@ const brandMenuItems: MenuItem[] = [{
   subItems: [
     { title: "Messages", subtab: "messages", iconInactive: messagesInactive, iconActive: messagesActive },
     { title: "Database", subtab: "database", iconInactive: databaseInactive, iconActive: databaseActive },
-    { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive },
-    { title: "Calendar", subtab: "calendar", iconInactive: calendarInactive, iconActive: calendarActive }
+    { title: "Contracts", subtab: "contracts", iconInactive: contractsInactive, iconActive: contractsActive }
   ]
 }, {
   title: "Settings",

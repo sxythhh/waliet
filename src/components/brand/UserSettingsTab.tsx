@@ -636,62 +636,54 @@ export function UserSettingsTab() {
 
               <Spacer />
 
-              {/* Notification Preferences */}
+              {/* Business Info */}
               <div className="space-y-4">
                 <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Notifications
+                  Business Information
                 </Label>
-                <div className="rounded-xl border border-border/50 divide-y divide-border/50">
-                  {/* New partner application */}
-                  <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <img src={framePersonIcon} alt="" className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
-                      </div>
-                    </div>
-                    <Switch checked={notifyNewApplication} onCheckedChange={checked => {
-                    setNotifyNewApplication(checked);
-                    handleSaveNotifications();
-                  }} />
-                  </div>
 
-                  {/* New boost submission */}
-                  <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <img src={stackedInboxIcon} alt="" className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
-                      </div>
-                    </div>
-                    <Switch checked={notifyNewSale} onCheckedChange={checked => {
-                    setNotifyNewSale(checked);
-                    handleSaveNotifications();
-                  }} />
-                  </div>
+                {/* Legal Business Name */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Legal Business Name</Label>
+                  <Input value={profile.legal_business_name} onChange={e => setProfile({
+                    ...profile,
+                    legal_business_name: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
+                </div>
 
-                  {/* New message from partner */}
-                  <div className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center flex-shrink-0">
-                        <img src={mailNotificationIcon} alt="" className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
-                      </div>
-                    </div>
-                    <Switch checked={notifyNewMessage} onCheckedChange={checked => {
-                    setNotifyNewMessage(checked);
-                    handleSaveNotifications();
-                  }} />
-                  </div>
+                {/* Billing Address */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Billing Address</Label>
+                  <Input value={profile.billing_address} onChange={e => setProfile({
+                    ...profile,
+                    billing_address: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
+                </div>
+
+                {/* Country */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Country</Label>
+                  <Select value={profile.billing_country} onValueChange={(value) => setProfile({ ...profile, billing_country: value })}>
+                    <SelectTrigger className="h-11 bg-muted/30 border-0 tracking-[-0.5px]">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* VAT Number */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">VAT Number</Label>
+                  <Input value={profile.vat_number} onChange={e => setProfile({
+                    ...profile,
+                    vat_number: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
                 </div>
               </div>
 
@@ -898,6 +890,65 @@ export function UserSettingsTab() {
                 </div>
               </div>
 
+              {/* Notifications Section */}
+              <div className="rounded-xl border border-border/50 p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <img src={mailNotificationIcon} alt="" className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive email alerts</p>
+                  </div>
+                </div>
+                <div className="divide-y divide-border/50">
+                  {/* New partner application */}
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <img src={framePersonIcon} alt="" className="h-5 w-5 opacity-60" />
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewApplication} onCheckedChange={checked => {
+                      setNotifyNewApplication(checked);
+                      handleSaveNotifications();
+                    }} />
+                  </div>
+
+                  {/* New boost submission */}
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <img src={stackedInboxIcon} alt="" className="h-5 w-5 opacity-60" />
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewSale} onCheckedChange={checked => {
+                      setNotifyNewSale(checked);
+                      handleSaveNotifications();
+                    }} />
+                  </div>
+
+                  {/* New message from partner */}
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      <img src={mailNotificationIcon} alt="" className="h-5 w-5 opacity-60" />
+                      <div>
+                        <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
+                      </div>
+                    </div>
+                    <Switch checked={notifyNewMessage} onCheckedChange={checked => {
+                      setNotifyNewMessage(checked);
+                      handleSaveNotifications();
+                    }} />
+                  </div>
+                </div>
+              </div>
+
             </>}
         </TabsContent>
 
@@ -908,20 +959,8 @@ export function UserSettingsTab() {
 
         {/* Wallet Tab */}
         <TabsContent value="wallet" className="mt-6 space-y-6">
-          {/* Brand Wallet Component */}
-          {isBrandMode && currentBrand && (
-            <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />
-          )}
-
-          {/* Low Balance Protection */}
-          {isBrandMode && currentBrand && (
-            <div className="border-t border-border/50 pt-6">
-              <LowBalanceSettingsTab brandId={currentBrand.id} />
-            </div>
-          )}
-
-          {/* Subscription Info */}
-          {isBrandMode && brand && <div className="space-y-4 pt-6 border-t border-border/50">
+          {/* Subscription Info - Moved to top */}
+          {isBrandMode && brand && <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
                 {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
@@ -976,62 +1015,18 @@ export function UserSettingsTab() {
             toast.success("Subscription activated!");
           }} />}
 
-          {/* Legal Business Name */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-              Legal Business Name
-            </Label>
-            <Input value={profile.legal_business_name} onChange={e => setProfile({
-              ...profile,
-              legal_business_name: e.target.value
-            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
-          </div>
+          {/* Brand Wallet Component */}
+          {isBrandMode && currentBrand && (
+            <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />
+          )}
 
-          {/* Billing Address */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-              Billing Address
-            </Label>
-            <Input value={profile.billing_address} onChange={e => setProfile({
-              ...profile,
-              billing_address: e.target.value
-            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
-          </div>
+          {/* Low Balance Protection */}
+          {isBrandMode && currentBrand && (
+            <div className="border-t border-border/50 pt-6">
+              <LowBalanceSettingsTab brandId={currentBrand.id} />
+            </div>
+          )}
 
-          {/* Country */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-              Country
-            </Label>
-            <Select value={profile.billing_country} onValueChange={(value) => setProfile({ ...profile, billing_country: value })}>
-              <SelectTrigger className="h-11 bg-muted/30 border-0 tracking-[-0.5px]">
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {COUNTRIES.map((country) => (
-                  <SelectItem key={country.code} value={country.code}>
-                    {country.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* VAT Number */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-              VAT Number
-            </Label>
-            <Input value={profile.vat_number} onChange={e => setProfile({
-              ...profile,
-              vat_number: e.target.value
-            })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
-          </div>
-
-          
-
-          {/* Save Button */}
-          
         </TabsContent>
       </Tabs>
 

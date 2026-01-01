@@ -1781,6 +1781,13 @@ export function CreatorDatabaseTab({
                 <Star className="h-3.5 w-3.5" />
                 Leave Review
               </button>}
+            {!selectedCreatorPanel.is_external && selectedCreatorPanel.id && <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-1.5" onClick={e => {
+            e.stopPropagation();
+            handleSendMessage(selectedCreatorPanel);
+          }}>
+                <MessageSquare className="h-3.5 w-3.5" />
+                Message
+              </button>}
             <button className="w-full py-2.5 text-xs font-medium font-inter tracking-[-0.3px] text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40 disabled:cursor-not-allowed" onClick={e => {
             e.stopPropagation();
             initiateRemoveCreator(selectedCreatorPanel);

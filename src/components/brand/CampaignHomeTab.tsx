@@ -616,40 +616,40 @@ export function CampaignHomeTab({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="p-4 rounded-lg bg-transparent space-y-3">
-              <Skeleton className="h-4 w-28 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-              <Skeleton className="h-8 w-20 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-              <Skeleton className="h-3 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-8 w-20" />
+              <Skeleton className="h-3 w-24" />
             </div>
           ))}
         </div>
         {/* Chart Skeleton */}
         <div className="p-5 rounded-lg bg-transparent space-y-4">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-5 w-40 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-            <Skeleton className="h-8 w-8 rounded bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-8 w-8 rounded" />
           </div>
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-7 w-20 rounded-full bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+              <Skeleton key={i} className="h-7 w-20 rounded-full" />
             ))}
           </div>
-          <Skeleton className="h-64 w-full bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+          <Skeleton className="h-64 w-full" />
         </div>
         {/* Videos Skeleton */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-6 w-44 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-            <Skeleton className="h-4 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+            <Skeleton className="h-6 w-44" />
+            <Skeleton className="h-4 w-24" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="p-4 rounded-lg bg-transparent flex gap-4">
-                <Skeleton className="w-24 h-36 rounded-lg bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+                <Skeleton className="w-24 h-36 rounded-lg" />
                 <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-24 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-                  <Skeleton className="h-4 w-full bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-                  <Skeleton className="h-4 w-3/4 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
-                  <Skeleton className="h-3 w-20 bg-muted-foreground/15 dark:bg-muted-foreground/30" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-20" />
                 </div>
               </div>
             ))}
