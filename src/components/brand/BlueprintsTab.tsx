@@ -334,53 +334,22 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                   "transition-all duration-200 ease-out"
                 )}
               >
-                {/* Completion indicator bar */}
-                <div className="absolute top-0 left-4 right-4 h-0.5 rounded-full bg-muted/50 overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all duration-300",
-                      completion.percentage === 100 ? "bg-emerald-500" :
-                      completion.percentage >= 60 ? "bg-amber-500" : "bg-primary/50"
-                    )}
-                    style={{ width: `${completion.percentage}%` }}
-                  />
-                </div>
-
-                <div className="p-5 pt-4">
+                <div className="p-4">
                   {/* Header row */}
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className={cn(
-                        "flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center",
-                        status === "assigned" ? "bg-gradient-to-br from-emerald-500/20 to-emerald-500/5" :
-                        status === "draft" ? "bg-gradient-to-br from-amber-500/20 to-amber-500/5" :
-                        "bg-muted/50"
-                      )}>
-                        <FileText className={cn(
-                          "w-5 h-5",
-                          status === "assigned" ? "text-emerald-600 dark:text-emerald-400" :
-                          status === "draft" ? "text-amber-600 dark:text-amber-400" :
-                          "text-muted-foreground"
-                        )} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-[15px] leading-tight truncate font-inter tracking-[-0.3px]">
-                          {blueprint.title || "Untitled"}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className={cn("w-1.5 h-1.5 rounded-full", statusConfig.dotColor)} />
-                            <span className={cn("text-xs font-medium", statusConfig.textColor)}>
-                              {statusConfig.label}
-                            </span>
-                          </div>
-                          {isLinked && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 bg-primary/5 text-primary border-primary/20">
-                              <Link2 className="h-2.5 w-2.5" />
-                              Campaign
-                            </Badge>
-                          )}
-                        </div>
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-[15px] leading-tight truncate font-inter tracking-[-0.5px]">
+                        {blueprint.title || "Untitled"}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={cn("text-xs font-inter tracking-[-0.5px]", statusConfig.textColor)}>
+                          {statusConfig.label}
+                        </span>
+                        {isLinked && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 bg-primary/5 text-primary border-primary/20 font-inter tracking-[-0.5px]">
+                            Campaign
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
@@ -413,59 +382,40 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
                     </DropdownMenu>
                   </div>
 
-                  {/* Platforms */}
-                  {blueprint.platforms && blueprint.platforms.length > 0 && (
-                    <div className="flex items-center gap-1.5 mb-3">
-                      {blueprint.platforms.slice(0, 3).map((platform) => {
-                        const icon = getPlatformIcon(platform);
-                        return icon ? (
-                          <div key={platform} className="w-6 h-6 rounded-md bg-muted/60 flex items-center justify-center" title={platform}>
-                            <img src={icon} alt={platform} className="w-3.5 h-3.5 opacity-70" />
-                          </div>
-                        ) : null;
-                      })}
-                      {blueprint.platforms.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">+{blueprint.platforms.length - 3}</span>
-                      )}
-                    </div>
-                  )}
-
                   {/* Content preview */}
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3 tracking-[-0.2px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3 font-inter tracking-[-0.5px]">
                     {contentPreview}
                   </p>
 
                   {/* Quick stats */}
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     {blueprint.hooks && blueprint.hooks.length > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400">
-                        <Sparkles className="h-3 w-3" />
-                        <span className="text-[10px] font-medium">{blueprint.hooks.length} hooks</span>
-                      </div>
+                      <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
+                        {blueprint.hooks.length} hooks
+                      </span>
                     )}
                     {blueprint.talking_points && blueprint.talking_points.length > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                        <Zap className="h-3 w-3" />
-                        <span className="text-[10px] font-medium">{blueprint.talking_points.length} points</span>
-                      </div>
+                      <>
+                        {blueprint.hooks && blueprint.hooks.length > 0 && <span className="text-muted-foreground/40">·</span>}
+                        <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
+                          {blueprint.talking_points.length} points
+                        </span>
+                      </>
                     )}
                     {blueprint.hashtags && blueprint.hashtags.length > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400">
-                        <Hash className="h-3 w-3" />
-                        <span className="text-[10px] font-medium">{blueprint.hashtags.length}</span>
-                      </div>
+                      <>
+                        {((blueprint.hooks && blueprint.hooks.length > 0) || (blueprint.talking_points && blueprint.talking_points.length > 0)) && <span className="text-muted-foreground/40">·</span>}
+                        <span className="text-[11px] font-inter tracking-[-0.5px] text-muted-foreground">
+                          {blueprint.hashtags.length} tags
+                        </span>
+                      </>
                     )}
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-border/40">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground/70">
-                      <Calendar className="w-3 h-3" />
-                      <span>Updated {formatDistanceToNow(new Date(blueprint.updated_at), { addSuffix: true })}</span>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground/50">
-                      {completion.score}/{completion.total} complete
-                    </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground/60 font-inter tracking-[-0.5px]">
+                    <span>Updated {formatDistanceToNow(new Date(blueprint.updated_at), { addSuffix: true })}</span>
+                    <span>{completion.score}/{completion.total} complete</span>
                   </div>
                 </div>
               </div>
