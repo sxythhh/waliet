@@ -235,14 +235,10 @@ export function CreatorsTab({
       // Fetch unread counts for all conversations in a single query
       const conversationIds = data.map(conv => conv.id);
       const counts = new Map<string, number>();
-
       if (conversationIds.length > 0) {
-        const { data: unreadMessages } = await supabase
-          .from("messages")
-          .select("conversation_id")
-          .in("conversation_id", conversationIds)
-          .eq("sender_type", "creator")
-          .eq("is_read", false);
+        const {
+          data: unreadMessages
+        } = await supabase.from("messages").select("conversation_id").in("conversation_id", conversationIds).eq("sender_type", "creator").eq("is_read", false);
 
         // Count messages per conversation
         if (unreadMessages) {
@@ -647,10 +643,7 @@ export function CreatorsTab({
   };
   const exportToCSV = () => {
     // Use filtered creators if any filter is applied, otherwise export all
-    const creatorsToExport = (searchQuery || campaignFilter !== 'all' || membershipFilter !== 'all') 
-      ? filteredCreators 
-      : creators;
-    
+    const creatorsToExport = searchQuery || campaignFilter !== 'all' || membershipFilter !== 'all' ? filteredCreators : creators;
     const rows: string[][] = [];
     rows.push(["Creator Name", "Username", "Email", "Platform", "Account Username", "Account URL", "Date Joined", "Total Earnings"]);
     for (const creator of creatorsToExport) {
@@ -752,7 +745,6 @@ export function CreatorsTab({
         Creators ({creators.length})
       </button>
     </div>;
-
   return <div className="h-full flex flex-col bg-background font-inter tracking-[-0.5px]">
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
       <MobileNav />
@@ -763,12 +755,7 @@ export function CreatorsTab({
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-sm">Messages</h2>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-8 px-3 text-xs gap-1.5 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-            onClick={() => setShowBroadcasts(!showBroadcasts)}
-          >
+          <Button variant="ghost" size="sm" className={`h-8 px-3 text-xs gap-1.5 ${showBroadcasts ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setShowBroadcasts(!showBroadcasts)}>
             <Megaphone className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Broadcasts</span>
           </Button>
@@ -776,22 +763,13 @@ export function CreatorsTab({
 
         {/* Message Filters */}
         <div className="p-2 border-b border-border/50 flex items-center gap-1.5">
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-all font-medium ${messageFilter === 'all' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            onClick={() => setMessageFilter('all')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-all font-medium ${messageFilter === 'all' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('all')}>
             All
           </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            onClick={() => setMessageFilter('unread')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'unread' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('unread')}>
             Unread
           </button>
-          <button
-            className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}
-            onClick={() => setMessageFilter('bookmarked')}
-          >
+          <button className={`h-7 px-3 text-xs rounded-full transition-all font-medium flex items-center gap-1.5 ${messageFilter === 'bookmarked' ? 'bg-foreground text-background shadow-sm' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`} onClick={() => setMessageFilter('bookmarked')}>
             <Bookmark className="h-3 w-3" />
             Saved
           </button>
@@ -807,12 +785,12 @@ export function CreatorsTab({
                 Start conversations by messaging creators from the right panel.
               </p>
               <Button onClick={() => {
-            if (!activeConversation) {
-              setPlanDialogOpen(true);
-            } else {
-              setRecruitDialogOpen(true);
-            }
-          }} className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md">
+              if (!activeConversation) {
+                setPlanDialogOpen(true);
+              } else {
+                setRecruitDialogOpen(true);
+              }
+            }} className="gap-2 h-9 px-5 text-xs rounded-lg font-medium bg-[#1f60dd] text-white hover:bg-[#1a50c8] shadow-md">
                 <Plus className="h-3.5 w-3.5" />
                 Recruit Creators
               </Button>
@@ -826,23 +804,19 @@ export function CreatorsTab({
               <p className="text-xs text-muted-foreground">
                 {messageFilter === 'unread' ? "You're all caught up!" : "Bookmark conversations to find them here."}
               </p>
-            </div> : <div>
+            </div> : <div className="py-[10px]">
               {filteredConversations.map(conv => {
-            const creator = getConversationCreator(conv);
-            const unreadCount = unreadCounts.get(conv.id) || 0;
-            const isBookmarked = bookmarkedConversations.has(conv.id);
-            const isActive = activeConversation?.id === conv.id;
-            return <div
-              key={conv.id}
-              className={`group px-3 py-2.5 mx-2 rounded-xl cursor-pointer transition-all ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-muted/40"}`}
-              onClick={() => {
+              const creator = getConversationCreator(conv);
+              const unreadCount = unreadCounts.get(conv.id) || 0;
+              const isBookmarked = bookmarkedConversations.has(conv.id);
+              const isActive = activeConversation?.id === conv.id;
+              return <div key={conv.id} className={`group px-3 py-2.5 mx-2 rounded-xl cursor-pointer transition-all ${isActive ? "bg-primary/10 ring-1 ring-primary/20" : "hover:bg-muted/40"}`} onClick={() => {
                 setActiveConversation({
                   ...conv,
                   creator
                 });
                 setMobileView('conversation');
-              }}
-            >
+              }}>
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className={`h-10 w-10 ${isActive ? 'ring-2 ring-primary/30' : ''}`}>
@@ -851,11 +825,9 @@ export function CreatorsTab({
                       {creator?.username.slice(0, 2).toUpperCase() || "??"}
                     </AvatarFallback>
                   </Avatar>
-                  {unreadCount > 0 && (
-                    <div className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
+                  {unreadCount > 0 && <div className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
                       {unreadCount > 9 ? '9+' : unreadCount}
-                    </div>
-                  )}
+                    </div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -866,8 +838,8 @@ export function CreatorsTab({
                   </div>
                   <p className="text-[11px] text-muted-foreground truncate">
                     {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), {
-                      addSuffix: true
-                    }) : "No messages"}
+                        addSuffix: true
+                      }) : "No messages"}
                   </p>
                 </div>
                 <DropdownMenu>
@@ -878,16 +850,16 @@ export function CreatorsTab({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-36">
                     <DropdownMenuItem onClick={e => {
-                      e.stopPropagation();
-                      toggleBookmark(conv.id);
-                    }} className="text-xs">
+                        e.stopPropagation();
+                        toggleBookmark(conv.id);
+                      }} className="text-xs">
                       <Bookmark className={`h-3.5 w-3.5 mr-2 ${isBookmarked ? 'fill-current text-amber-400' : ''}`} />
                       {isBookmarked ? 'Unbookmark' : 'Bookmark'}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={e => {
-                      e.stopPropagation();
-                      setDeleteConfirmId(conv.id);
-                    }} className="text-xs text-destructive focus:text-destructive">
+                        e.stopPropagation();
+                        setDeleteConfirmId(conv.id);
+                      }} className="text-xs text-destructive focus:text-destructive">
                       <Trash2 className="h-3.5 w-3.5 mr-2" />
                       Delete
                     </DropdownMenuItem>
@@ -895,7 +867,7 @@ export function CreatorsTab({
                 </DropdownMenu>
               </div>
             </div>;
-          })}
+            })}
             </div>}
         </ScrollArea>
       </div>
@@ -917,10 +889,7 @@ export function CreatorsTab({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <span
-                  className="font-inter tracking-[-0.3px] font-semibold text-sm hover:text-primary cursor-pointer transition-colors block truncate"
-                  onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}
-                >
+                <span className="font-inter tracking-[-0.3px] font-semibold text-sm hover:text-primary cursor-pointer transition-colors block truncate" onClick={() => window.open(`/@${activeConversation.creator?.username}`, '_blank')}>
                   {activeConversation.creator?.full_name || activeConversation.creator?.username || "Unknown"}
                 </span>
                 <span className="text-[11px] text-muted-foreground">@{activeConversation.creator?.username}</span>
@@ -936,36 +905,18 @@ export function CreatorsTab({
                   const nextMsg = messages[index + 1];
                   const isFirstInGroup = !prevMsg || prevMsg.sender_type !== msg.sender_type;
                   const isLastInGroup = !nextMsg || nextMsg.sender_type !== msg.sender_type;
-
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isFromBrand ? "justify-end" : "justify-start"} ${isFirstInGroup ? "mt-3" : ""}`}
-                    >
+                  return <div key={msg.id} className={`flex ${isFromBrand ? "justify-end" : "justify-start"} ${isFirstInGroup ? "mt-3" : ""}`}>
                       <div className={`
                         max-w-[70%] px-4 py-2.5
-                        ${isFromBrand
-                          ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm"
-                          : "bg-muted/80 dark:bg-muted/50"
-                        }
-                        ${isFirstInGroup && isLastInGroup
-                          ? "rounded-2xl"
-                          : isFirstInGroup
-                            ? isFromBrand ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-bl-md"
-                            : isLastInGroup
-                              ? isFromBrand ? "rounded-2xl rounded-tr-md" : "rounded-2xl rounded-tl-md"
-                              : isFromBrand ? "rounded-xl rounded-r-md" : "rounded-xl rounded-l-md"
-                        }
+                        ${isFromBrand ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-sm" : "bg-muted/80 dark:bg-muted/50"}
+                        ${isFirstInGroup && isLastInGroup ? "rounded-2xl" : isFirstInGroup ? isFromBrand ? "rounded-2xl rounded-br-md" : "rounded-2xl rounded-bl-md" : isLastInGroup ? isFromBrand ? "rounded-2xl rounded-tr-md" : "rounded-2xl rounded-tl-md" : isFromBrand ? "rounded-xl rounded-r-md" : "rounded-xl rounded-l-md"}
                       `}>
                         <p className="text-[13px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                        {isLastInGroup && (
-                          <p className={`text-[10px] mt-1.5 ${isFromBrand ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                        {isLastInGroup && <p className={`text-[10px] mt-1.5 ${isFromBrand ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                             {format(new Date(msg.created_at), "h:mm a")}
-                          </p>
-                        )}
+                          </p>}
                       </div>
-                    </div>
-                  );
+                    </div>;
                 })}
                 <div ref={messagesEndRef} />
               </div>
@@ -992,27 +943,20 @@ export function CreatorsTab({
         </div>
 
         {/* Broadcasts Panel */}
-        {showBroadcasts && (
-          <div className="hidden lg:flex flex-col w-1/2 border-r border-border bg-background overflow-hidden">
+        {showBroadcasts && <div className="hidden lg:flex flex-col w-1/2 border-r border-border bg-background overflow-hidden">
             <div className="h-14 px-4 border-b border-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Megaphone className="h-4 w-4 text-muted-foreground" />
                 <h2 className="font-semibold text-sm">Broadcasts</h2>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowBroadcasts(false)}
-              >
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setShowBroadcasts(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex-1 overflow-auto">
               <BrandBroadcastsTab brandId={brandId} />
             </div>
-          </div>
-        )}
+          </div>}
       </div>
 
 
@@ -1065,8 +1009,8 @@ export function CreatorsTab({
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Campaigns & Boosts</h4>
                 <div className="space-y-1.5">
                   {selectedCreator.campaigns.map(campaign => {
-                  const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
-                  return <div key={campaign.id} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/20 group">
+                    const label = campaign.type === 'campaign' ? 'Joined' : campaign.status === 'accepted' ? 'Accepted' : campaign.status === 'rejected' ? 'Rejected' : 'Applied';
+                    return <div key={campaign.id} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/20 group">
                       <div className="flex-1 min-w-0">
                         <span className="text-[11px] sm:text-xs font-medium truncate block">
                           {campaign.title}
@@ -1074,24 +1018,24 @@ export function CreatorsTab({
                         <span className="text-[10px] text-muted-foreground">{label}</span>
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => {
-                      e.stopPropagation();
-                      setRemovingFromCampaign({
-                        creatorId: selectedCreator.id,
-                        campaign
-                      });
-                    }}>
+                        e.stopPropagation();
+                        setRemovingFromCampaign({
+                          creatorId: selectedCreator.id,
+                          campaign
+                        });
+                      }}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>;
-                })}
+                  })}
                 </div>
               </div>
 
               {/* Message Button */}
               <Button className="w-full h-9 text-xs font-medium bg-foreground text-background hover:bg-foreground/90" onClick={() => {
-              startConversation(selectedCreator);
-              setSelectedCreator(null);
-            }}>
+                startConversation(selectedCreator);
+                setSelectedCreator(null);
+              }}>
                 <MessageSquare className="h-3.5 w-3.5 mr-2" />
                 Send Message
               </Button>
@@ -1112,11 +1056,11 @@ export function CreatorsTab({
           <AlertDialogFooter>
             <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" onClick={() => {
-            if (deleteConfirmId) {
-              deleteConversation(deleteConfirmId);
-              setDeleteConfirmId(null);
-            }
-          }}>
+              if (deleteConfirmId) {
+                deleteConversation(deleteConfirmId);
+                setDeleteConfirmId(null);
+              }
+            }}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1135,10 +1079,10 @@ export function CreatorsTab({
           <AlertDialogFooter>
             <AlertDialogCancel className="font-inter tracking-[-0.5px]">Cancel</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-inter tracking-[-0.5px]" onClick={() => {
-            if (removingFromCampaign) {
-              removeFromCampaign(removingFromCampaign.creatorId, removingFromCampaign.campaign);
-            }
-          }}>
+              if (removingFromCampaign) {
+                removeFromCampaign(removingFromCampaign.creatorId, removingFromCampaign.campaign);
+              }
+            }}>
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1147,32 +1091,32 @@ export function CreatorsTab({
 
       {/* Recruit Creators Dialog */}
       <RecruitCreatorsDialog open={recruitDialogOpen} onOpenChange={setRecruitDialogOpen} brandId={brandId} onStartConversation={async (creatorId, creatorName) => {
-      // Find or create conversation with this creator
-      const creator = creators.find(c => c.id === creatorId);
-      if (creator) {
-        await startConversation(creator);
-      } else {
-        // Fetch creator profile and start conversation
-        const {
-          data: profile
-        } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").eq("id", creatorId).single();
-        if (profile) {
-          const newCreator: Creator = {
-            id: profile.id,
-            username: profile.username,
-            full_name: profile.full_name,
-            avatar_url: profile.avatar_url,
-            email: profile.email,
-            campaigns: [],
-            social_accounts: [],
-            total_views: 0,
-            total_earnings: 0,
-            date_joined: null
-          };
-          await startConversation(newCreator);
+        // Find or create conversation with this creator
+        const creator = creators.find(c => c.id === creatorId);
+        if (creator) {
+          await startConversation(creator);
+        } else {
+          // Fetch creator profile and start conversation
+          const {
+            data: profile
+          } = await supabase.from("profiles").select("id, username, full_name, avatar_url, email").eq("id", creatorId).single();
+          if (profile) {
+            const newCreator: Creator = {
+              id: profile.id,
+              username: profile.username,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url,
+              email: profile.email,
+              campaigns: [],
+              social_accounts: [],
+              total_views: 0,
+              total_earnings: 0,
+              date_joined: null
+            };
+            await startConversation(newCreator);
+          }
         }
-      }
-    }} />
+      }} />
 
       {/* Subscription Gate Dialog */}
       <SubscriptionGateDialog brandId={brandId} open={planDialogOpen} onOpenChange={setPlanDialogOpen} />
