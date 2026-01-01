@@ -48,6 +48,7 @@ const AdminFeedback = lazy(() => import("./pages/admin/Feedback"));
 const AdminSecurity = lazy(() => import("./pages/admin/Security"));
 const AdminReports = lazy(() => import("./pages/admin/Reports"));
 const AdminPermissions = lazy(() => import("./pages/admin/Permissions"));
+const AdminSystemHealth = lazy(() => import("./pages/admin/SystemHealth"));
 const DiscordOAuthCallback = lazy(() => import("./components/DiscordOAuthCallback").then(m => ({ default: m.DiscordOAuthCallback })));
 const XOAuthCallback = lazy(() => import("./components/XOAuthCallback").then(m => ({ default: m.XOAuthCallback })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
@@ -289,6 +290,11 @@ const App = () => (
                   <Route path="/admin/permissions" element={
                     <Suspense fallback={<PageLoader />}>
                       <AdminLayout><AdminPermissions /></AdminLayout>
+                    </Suspense>
+                  } />
+                  <Route path="/admin/health" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <AdminLayout><AdminSystemHealth /></AdminLayout>
                     </Suspense>
                   } />
                   <Route path="/manage" element={
