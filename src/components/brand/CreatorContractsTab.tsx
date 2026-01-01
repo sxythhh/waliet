@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Plus, CheckCircle, Clock, AlertCircle, MoreHorizontal, Download, Send, Eye, Pencil, Trash2, Filter, FileText, Settings2, ChevronDown, Copy, Star, Variable } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -141,6 +141,43 @@ export function CreatorContractsTab({
     default_duration_months: "12",
     is_default: false
   });
+
+  // Textarea ref for cursor position
+  const templateContentRef = useRef<HTMLTextAreaElement>(null);
+
+  const CONTRACT_VARIABLES = [
+    { key: 'brand_name', label: 'Brand Name' },
+    { key: 'creator_name', label: 'Creator Name' },
+    { key: 'monthly_rate', label: 'Monthly Rate' },
+    { key: 'videos_per_month', label: 'Videos/Month' },
+    { key: 'start_date', label: 'Start Date' },
+    { key: 'duration_months', label: 'Duration' },
+    { key: 'additional_terms', label: 'Additional Terms' }
+  ];
+
+  const insertVariable = (variableKey: string) => {
+    const textarea = templateContentRef.current;
+    if (!textarea) return;
+
+    const variableText = `{{${variableKey}}}`;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentContent = templateForm.content;
+    
+    const newContent = currentContent.substring(0, start) + variableText + currentContent.substring(end);
+    
+    setTemplateForm({
+      ...templateForm,
+      content: newContent
+    });
+
+    // Restore focus and set cursor position after the inserted variable
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = start + variableText.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
 
   // New contract form state
   const [newContract, setNewContract] = useState({
@@ -853,20 +890,38 @@ export function CreatorContractsTab({
             </div>
 
             {/* Contract Content */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Contract Content</Label>
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-inter tracking-[-0.3px]">
-                  Use {"{{variable}}"} for dynamic content
+                  Click variables below to insert
                 </span>
               </div>
-              <Textarea id="template-content" placeholder="Enter your contract template content..." value={templateForm.content} onChange={e => setTemplateForm({
-              ...templateForm,
-              content: e.target.value
-            })} rows={12} className="font-inter text-sm tracking-[-0.3px] resize-none leading-relaxed" />
-              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
-                Available: brand_name, creator_name, monthly_rate, videos_per_month, start_date, duration_months, additional_terms
-              </p>
+              <Textarea 
+                ref={templateContentRef}
+                id="template-content" 
+                placeholder="Enter your contract template content..." 
+                value={templateForm.content} 
+                onChange={e => setTemplateForm({
+                  ...templateForm,
+                  content: e.target.value
+                })} 
+                rows={12} 
+                className="font-inter text-sm tracking-[-0.3px] resize-none leading-relaxed" 
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {CONTRACT_VARIABLES.map((variable) => (
+                  <button
+                    key={variable.key}
+                    type="button"
+                    onClick={() => insertVariable(variable.key)}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-inter tracking-[-0.3px] bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-md transition-colors"
+                  >
+                    <Variable className="h-3 w-3" />
+                    {variable.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
