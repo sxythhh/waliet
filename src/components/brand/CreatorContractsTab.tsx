@@ -796,62 +796,55 @@ export function CreatorContractsTab({
       }
     }}>
         <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
-            <DialogTitle className="font-inter tracking-[-0.5px]">{editingTemplate ? "Edit Template" : "New Template"}</DialogTitle>
-            <DialogDescription className="text-sm">
-              Create a reusable contract template with dynamic variables
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
             {/* Name & Description */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Template Name</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Template Name</Label>
                 <Input placeholder="e.g., Standard Agreement" value={templateForm.name} onChange={e => setTemplateForm({
                 ...templateForm,
                 name: e.target.value
-              })} className="h-9 text-sm" />
+              })} className="h-10 font-inter tracking-[-0.5px]" />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Description</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Description</Label>
                 <Input placeholder="Brief description" value={templateForm.description} onChange={e => setTemplateForm({
                 ...templateForm,
                 description: e.target.value
-              })} className="h-9 text-sm" />
+              })} className="h-10 font-inter tracking-[-0.5px]" />
               </div>
             </div>
 
             {/* Defaults */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Default Rate</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Default Rate</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-inter">$</span>
                   <Input type="number" placeholder="1000" value={templateForm.default_monthly_rate} onChange={e => setTemplateForm({
                   ...templateForm,
                   default_monthly_rate: e.target.value
-                })} className="h-9 text-sm pl-7" />
+                })} className="h-10 pl-7 font-inter tracking-[-0.5px]" />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Videos / Month</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos / Month</Label>
                 <Input type="number" placeholder="4" value={templateForm.default_videos_per_month} onChange={e => setTemplateForm({
                 ...templateForm,
                 default_videos_per_month: e.target.value
-              })} className="h-9 text-sm" />
+              })} className="h-10 font-inter tracking-[-0.5px]" />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Duration</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Duration</Label>
                 <Select value={templateForm.default_duration_months} onValueChange={value => setTemplateForm({
                 ...templateForm,
                 default_duration_months: value
               })}>
-                  <SelectTrigger className="h-9 text-sm">
+                  <SelectTrigger className="h-10 font-inter tracking-[-0.5px] border-0 bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[3, 6, 12, 18, 24].map(months => <SelectItem key={months} value={months.toString()}>
+                    {[3, 6, 12, 18, 24].map(months => <SelectItem key={months} value={months.toString()} className="font-inter tracking-[-0.5px]">
                         {months} months
                       </SelectItem>)}
                   </SelectContent>
@@ -860,28 +853,28 @@ export function CreatorContractsTab({
             </div>
 
             {/* Contract Content */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs text-muted-foreground">Contract Content</Label>
-                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Contract Content</Label>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md font-inter tracking-[-0.3px]">
                   Use {"{{variable}}"} for dynamic content
                 </span>
               </div>
               <Textarea id="template-content" placeholder="Enter your contract template content..." value={templateForm.content} onChange={e => setTemplateForm({
               ...templateForm,
               content: e.target.value
-            })} rows={10} className="font-mono text-xs resize-none" />
-              <p className="text-[10px] text-muted-foreground">
+            })} rows={12} className="font-inter text-sm tracking-[-0.3px] resize-none leading-relaxed" />
+              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.3px]">
                 Available: brand_name, creator_name, monthly_rate, videos_per_month, start_date, duration_months, additional_terms
               </p>
             </div>
           </div>
 
-          <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20 shrink-0">
-            <Button variant="ghost" size="sm" onClick={() => setTemplateDialogOpen(false)} className="font-inter tracking-[-0.3px]">
+          <DialogFooter className="px-6 py-4 border-t border-border/30 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => setTemplateDialogOpen(false)} className="font-inter tracking-[-0.5px]">
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSaveTemplate} className="font-inter tracking-[-0.3px]">
+            <Button size="sm" onClick={handleSaveTemplate} className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90">
               {editingTemplate ? "Save Changes" : "Create Template"}
             </Button>
           </DialogFooter>
