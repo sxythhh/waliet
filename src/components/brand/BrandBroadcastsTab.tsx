@@ -278,19 +278,19 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-5">
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-5">
         <div>
-          <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Broadcasts</h2>
-          <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+          <h2 className="text-sm font-semibold font-inter tracking-[-0.3px]">Broadcasts</h2>
+          <p className="text-xs text-muted-foreground tracking-[-0.2px]">
             Send announcements to creators in your campaigns
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-inter tracking-[-0.3px]">
-              <Plus className="h-4 w-4" />
+            <Button size="sm" className="gap-1.5 font-inter tracking-[-0.3px] text-xs h-8 w-full sm:w-auto">
+              <Plus className="h-3.5 w-3.5" />
               New Broadcast
             </Button>
           </DialogTrigger>
@@ -452,26 +452,22 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
       </div>
 
       {/* Filter Pills */}
-      <div className="flex gap-2 mb-6">
-        {filterOptions.map(({ key, label, icon: Icon }) => (
+      <div className="flex flex-wrap gap-1.5 mb-5">
+        {filterOptions.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveFilter(key)}
             className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200",
+              "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
               "font-inter tracking-[-0.3px]",
               activeFilter === key
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            <Icon className="h-3.5 w-3.5" />
             {label}
             {counts[key] > 0 && (
-              <span className={cn(
-                "ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold",
-                activeFilter === key ? "bg-primary-foreground/20" : "bg-background"
-              )}>
+              <span className="ml-1.5 text-[10px] opacity-70">
                 {counts[key]}
               </span>
             )}
@@ -481,17 +477,14 @@ export function BrandBroadcastsTab({ brandId }: BrandBroadcastsTabProps) {
 
       {/* Broadcasts List */}
       {filteredBroadcasts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
-            <Megaphone className="h-8 w-8 text-primary/60" />
-          </div>
-          <h3 className="font-semibold text-base mb-1 font-inter tracking-[-0.5px]">
+        <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+          <p className="text-sm font-medium text-foreground mb-1 font-inter tracking-[-0.3px]">
             {activeFilter === "all" ? "No broadcasts yet" : `No ${activeFilter} broadcasts`}
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-sm tracking-[-0.3px]">
+          </p>
+          <p className="text-xs text-muted-foreground max-w-[280px] tracking-[-0.2px]">
             {activeFilter === "all"
-              ? "Create broadcasts to send announcements and updates to creators in your campaigns."
-              : `You don't have any ${activeFilter} broadcasts at the moment.`}
+              ? "Create broadcasts to send announcements to creators in your campaigns."
+              : `You don't have any ${activeFilter} broadcasts.`}
           </p>
         </div>
       ) : (
