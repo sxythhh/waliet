@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      admin_incidents: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string | null
+          updates: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          updates?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          updates?: Json | null
+        }
+        Relationships: []
+      }
       admin_permissions: {
         Row: {
           can_delete: boolean | null
@@ -43,6 +127,27 @@ export type Database = {
           id?: string
           resource?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: string | null
           user_id?: string
         }
         Relationships: []
@@ -227,6 +332,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           excerpt: string | null
+          hidden_from_listing: boolean | null
           id: string
           image_url: string | null
           is_published: boolean
@@ -245,6 +351,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          hidden_from_listing?: boolean | null
           id?: string
           image_url?: string | null
           is_published?: boolean
@@ -263,6 +370,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           excerpt?: string | null
+          hidden_from_listing?: boolean | null
           id?: string
           image_url?: string | null
           is_published?: boolean
