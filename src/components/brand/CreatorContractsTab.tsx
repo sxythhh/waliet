@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
 interface Contract {
   id: string;
   title: string;
@@ -35,14 +34,12 @@ interface Contract {
   signed_at: string | null;
   terms: string;
 }
-
 interface Boost {
   id: string;
   title: string;
   monthly_retainer: number;
   videos_per_month: number;
 }
-
 interface Template {
   id: string;
   name: string;
@@ -56,11 +53,9 @@ interface Template {
   usage_count?: number;
   created_at?: string;
 }
-
 interface CreatorContractsTabProps {
   brandId: string;
 }
-
 const statusConfig = {
   draft: {
     label: 'Draft',
@@ -93,7 +88,6 @@ const statusConfig = {
     icon: AlertCircle
   }
 };
-
 const DEFAULT_TEMPLATE_CONTENT = `CREATOR CONTENT AGREEMENT
 
 This Creator Content Agreement ("Agreement") is entered into between {{brand_name}} ("Brand") and {{creator_name}} ("Creator").
@@ -121,8 +115,9 @@ Either party may terminate this Agreement with 30 days written notice.
 {{additional_terms}}
 
 By signing below, both parties agree to the terms and conditions outlined in this Agreement.`;
-
-export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
+export function CreatorContractsTab({
+  brandId
+}: CreatorContractsTabProps) {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [boosts, setBoosts] = useState<Boost[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -133,7 +128,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  
+
   // Template dialog state
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -144,7 +139,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
     default_monthly_rate: "",
     default_videos_per_month: "4",
     default_duration_months: "12",
-    is_default: false,
+    is_default: false
   });
 
   // New contract form state
@@ -158,35 +153,33 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
     duration_months: '12',
     custom_terms: ''
   });
-
   useEffect(() => {
     fetchData();
   }, [brandId]);
-
   const fetchData = async () => {
     setLoading(true);
     try {
       // Fetch boosts/job posts
-      const { data: boostsData } = await supabase
-        .from('bounty_campaigns')
-        .select('id, title, monthly_retainer, videos_per_month')
-        .eq('brand_id', brandId)
-        .eq('status', 'active');
+      const {
+        data: boostsData
+      } = await supabase.from('bounty_campaigns').select('id, title, monthly_retainer, videos_per_month').eq('brand_id', brandId).eq('status', 'active');
       setBoosts(boostsData || []);
 
       // Fetch templates
-      const { data: templatesData } = await (supabase
-        .from('contract_templates' as any)
-        .select('*')
-        .eq('brand_id', brandId)
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false }) as any);
+      const {
+        data: templatesData
+      } = await (supabase.from('contract_templates' as any).select('*').eq('brand_id', brandId).order('is_default', {
+        ascending: false
+      }).order('created_at', {
+        ascending: false
+      }) as any);
       setTemplates((templatesData || []) as Template[]);
 
       // Fetch contracts from database
-      const { data: contractsData, error } = await supabase
-        .from('creator_contracts')
-        .select(`
+      const {
+        data: contractsData,
+        error
+      } = await supabase.from('creator_contracts').select(`
           id,
           title,
           creator_id,
@@ -201,10 +194,9 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           custom_terms,
           signed_at,
           created_at
-        `)
-        .eq('brand_id', brandId)
-        .order('created_at', { ascending: false });
-
+        `).eq('brand_id', brandId).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
 
       // Map to Contract interface with creator info
@@ -212,11 +204,9 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         let creatorName = contract.creator_email;
         let creatorAvatar = null;
         if (contract.creator_id) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username, full_name, avatar_url')
-            .eq('id', contract.creator_id)
-            .single();
+          const {
+            data: profile
+          } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', contract.creator_id).single();
           if (profile) {
             creatorName = profile.full_name || profile.username || contract.creator_email;
             creatorAvatar = profile.avatar_url;
@@ -229,7 +219,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           const boost = boostsData?.find(b => b.id === contract.boost_id);
           boostTitle = boost?.title || null;
         }
-
         return {
           id: contract.id,
           title: contract.title,
@@ -256,15 +245,11 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       setLoading(false);
     }
   };
-
   const filteredContracts = contracts.filter(contract => {
-    const matchesSearch = contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.creator_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contract.boost_title?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = contract.title.toLowerCase().includes(searchQuery.toLowerCase()) || contract.creator_name.toLowerCase().includes(searchQuery.toLowerCase()) || contract.boost_title?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || contract.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
   const handleCreateContract = async () => {
     if (!newContract.creator_email) {
       toast.error('Please enter a creator email');
@@ -275,14 +260,15 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
     const startDate = new Date(newContract.start_date);
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + parseInt(newContract.duration_months));
-
     try {
-      const { error } = await supabase.from('creator_contracts').insert({
+      const {
+        error
+      } = await supabase.from('creator_contracts').insert({
         brand_id: brandId,
         template_id: newContract.template_id || null,
         boost_id: newContract.boost_id || null,
         creator_email: newContract.creator_email,
-        title: boost ? `${boost.title} - Creator Agreement` : (template ? template.name : 'Creator Agreement'),
+        title: boost ? `${boost.title} - Creator Agreement` : template ? template.name : 'Creator Agreement',
         monthly_rate: parseFloat(newContract.monthly_rate) || boost?.monthly_retainer || template?.default_monthly_rate || 0,
         videos_per_month: parseInt(newContract.videos_per_month) || boost?.videos_per_month || template?.default_videos_per_month || 1,
         start_date: newContract.start_date,
@@ -291,18 +277,18 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         custom_terms: newContract.custom_terms,
         status: 'sent'
       });
-
       if (error) throw error;
 
       // Increment template usage count
       if (newContract.template_id) {
         try {
-          await (supabase.rpc as any)('increment_template_usage', { template_id_param: newContract.template_id });
+          await (supabase.rpc as any)('increment_template_usage', {
+            template_id_param: newContract.template_id
+          });
         } catch (e) {
           // Function may not exist yet
         }
       }
-
       toast.success('Contract created and sent for signature');
       setCreateDialogOpen(false);
       setNewContract({
@@ -321,12 +307,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error('Failed to create contract');
     }
   };
-
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
     setViewDialogOpen(true);
   };
-
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
@@ -335,10 +319,13 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         template_id: templateId,
         monthly_rate: template.default_monthly_rate?.toString() || newContract.monthly_rate,
         videos_per_month: template.default_videos_per_month?.toString() || newContract.videos_per_month,
-        duration_months: template.default_duration_months.toString(),
+        duration_months: template.default_duration_months.toString()
       });
     } else {
-      setNewContract({ ...newContract, template_id: '' });
+      setNewContract({
+        ...newContract,
+        template_id: ''
+      });
     }
   };
 
@@ -348,7 +335,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error("Please enter a template name");
       return;
     }
-
     try {
       const templateData = {
         brand_id: brandId,
@@ -359,24 +345,21 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         default_videos_per_month: templateForm.default_videos_per_month ? parseInt(templateForm.default_videos_per_month) : null,
         default_duration_months: parseInt(templateForm.default_duration_months) || 12,
         is_default: templateForm.is_default,
-        is_active: true,
+        is_active: true
       };
-
       if (editingTemplate) {
-        const { error } = await (supabase
-          .from("contract_templates" as any)
-          .update(templateData)
-          .eq("id", editingTemplate.id) as any);
+        const {
+          error
+        } = await (supabase.from("contract_templates" as any).update(templateData).eq("id", editingTemplate.id) as any);
         if (error) throw error;
         toast.success("Template updated");
       } else {
-        const { error } = await (supabase
-          .from("contract_templates" as any)
-          .insert(templateData) as any);
+        const {
+          error
+        } = await (supabase.from("contract_templates" as any).insert(templateData) as any);
         if (error) throw error;
         toast.success("Template created");
       }
-
       resetTemplateForm();
       setTemplateDialogOpen(false);
       setEditingTemplate(null);
@@ -386,7 +369,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error(error.message || "Failed to save template");
     }
   };
-
   const handleEditTemplate = (template: Template) => {
     setTemplateForm({
       name: template.name,
@@ -395,27 +377,26 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       default_monthly_rate: template.default_monthly_rate?.toString() || "",
       default_videos_per_month: template.default_videos_per_month?.toString() || "4",
       default_duration_months: template.default_duration_months.toString(),
-      is_default: template.is_default,
+      is_default: template.is_default
     });
     setEditingTemplate(template);
     setTemplateDialogOpen(true);
   };
-
   const handleDuplicateTemplate = async (template: Template) => {
     try {
-      const { error } = await (supabase
-        .from("contract_templates" as any)
-        .insert({
-          brand_id: brandId,
-          name: `${template.name} (Copy)`,
-          description: template.description,
-          content: template.content,
-          default_monthly_rate: template.default_monthly_rate,
-          default_videos_per_month: template.default_videos_per_month,
-          default_duration_months: template.default_duration_months,
-          is_default: false,
-          is_active: true,
-        }) as any);
+      const {
+        error
+      } = await (supabase.from("contract_templates" as any).insert({
+        brand_id: brandId,
+        name: `${template.name} (Copy)`,
+        description: template.description,
+        content: template.content,
+        default_monthly_rate: template.default_monthly_rate,
+        default_videos_per_month: template.default_videos_per_month,
+        default_duration_months: template.default_duration_months,
+        is_default: false,
+        is_active: true
+      }) as any);
       if (error) throw error;
       toast.success("Template duplicated");
       fetchData();
@@ -424,15 +405,12 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error("Failed to duplicate template");
     }
   };
-
   const handleDeleteTemplate = async (template: Template) => {
     if (!confirm("Are you sure you want to delete this template?")) return;
-
     try {
-      const { error } = await (supabase
-        .from("contract_templates" as any)
-        .delete()
-        .eq("id", template.id) as any);
+      const {
+        error
+      } = await (supabase.from("contract_templates" as any).delete().eq("id", template.id) as any);
       if (error) throw error;
       toast.success("Template deleted");
       fetchData();
@@ -441,13 +419,13 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error("Failed to delete template");
     }
   };
-
   const handleSetDefaultTemplate = async (template: Template) => {
     try {
-      const { error } = await (supabase
-        .from("contract_templates" as any)
-        .update({ is_default: true })
-        .eq("id", template.id) as any);
+      const {
+        error
+      } = await (supabase.from("contract_templates" as any).update({
+        is_default: true
+      }).eq("id", template.id) as any);
       if (error) throw error;
       toast.success("Default template updated");
       fetchData();
@@ -456,7 +434,6 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       toast.error("Failed to set default template");
     }
   };
-
   const resetTemplateForm = () => {
     setTemplateForm({
       name: "",
@@ -465,13 +442,11 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       default_monthly_rate: "",
       default_videos_per_month: "4",
       default_duration_months: "12",
-      is_default: false,
+      is_default: false
     });
   };
-
   if (loading) {
-    return (
-      <div className="p-6 space-y-6">
+    return <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
@@ -479,21 +454,16 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
         <div className="space-y-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-20" />)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-full flex flex-col">
+  return <div className="h-full flex flex-col">
       <ScrollArea className="flex-1">
         <div className="p-4 md:p-6 space-y-6">
           {/* Header */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-lg font-semibold font-inter tracking-[-0.5px]">Contracts</h1>
-              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
-                Manage creator agreements and templates
-              </p>
+              
             </div>
             <div className="flex items-center gap-2">
               <DropdownMenu>
@@ -508,7 +478,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                     <FileText className="h-4 w-4" />
                     New Contract
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { resetTemplateForm(); setTemplateDialogOpen(true); }} className="gap-2">
+                  <DropdownMenuItem onClick={() => {
+                  resetTemplateForm();
+                  setTemplateDialogOpen(true);
+                }} className="gap-2">
                     <Copy className="h-4 w-4" />
                     New Template
                   </DropdownMenuItem>
@@ -518,30 +491,20 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           </div>
 
           {/* Templates Row */}
-          {templates.length > 0 && (
-            <div className="space-y-3">
+          {templates.length > 0 && <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.3px]">Templates</h2>
                 <span className="text-xs text-muted-foreground">{templates.length} available</span>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-                {templates.map((template) => (
-                  <div
-                    key={template.id}
-                    className={cn(
-                      "group flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl border bg-card hover:bg-muted/30 transition-all cursor-pointer",
-                      template.is_default && "border-primary/30 bg-primary/5"
-                    )}
-                  >
+                {templates.map(template => <div key={template.id} className={cn("group flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl border bg-card hover:bg-muted/30 transition-all cursor-pointer", template.is_default && "border-primary/30 bg-primary/5")}>
                     <div className="p-2 rounded-lg bg-muted">
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium font-inter tracking-[-0.3px] truncate max-w-[120px]">{template.name}</span>
-                        {template.is_default && (
-                          <Star className="h-3 w-3 fill-amber-500 text-amber-500 shrink-0" />
-                        )}
+                        {template.is_default && <Star className="h-3 w-3 fill-amber-500 text-amber-500 shrink-0" />}
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                         {template.default_monthly_rate && <span>${template.default_monthly_rate}/mo</span>}
@@ -549,7 +512,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                       </div>
                     </div>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0 ml-2">
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </Button>
@@ -563,12 +526,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                           <Copy className="h-4 w-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
-                        {!template.is_default && (
-                          <DropdownMenuItem onClick={() => handleSetDefaultTemplate(template)}>
+                        {!template.is_default && <DropdownMenuItem onClick={() => handleSetDefaultTemplate(template)}>
                             <Star className="h-4 w-4 mr-2" />
                             Set as Default
-                          </DropdownMenuItem>
-                        )}
+                          </DropdownMenuItem>}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteTemplate(template)}>
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -576,33 +537,21 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </div>
-                ))}
+                  </div>)}
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Contracts List */}
           <div className="space-y-3">
-            {filteredContracts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="p-4 rounded-2xl bg-muted/30 mb-4">
-                  <FileText className="h-8 w-8 text-muted-foreground/50" />
-                </div>
+            {filteredContracts.length === 0 ? <div className="flex flex-col items-center justify-center py-16 text-center">
+                
                 <p className="text-base font-medium font-inter tracking-[-0.5px] mb-1">No contracts yet</p>
                 <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] max-w-xs">
                   Create your first contract to start managing creator agreements
                 </p>
-              </div>
-            ) : (
-              filteredContracts.map(contract => {
-                const StatusIcon = statusConfig[contract.status].icon;
-                return (
-                  <div
-                    key={contract.id}
-                    className="group flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:bg-muted/20 transition-all cursor-pointer"
-                    onClick={() => handleViewContract(contract)}
-                  >
+              </div> : filteredContracts.map(contract => {
+            const StatusIcon = statusConfig[contract.status].icon;
+            return <div key={contract.id} className="group flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card hover:bg-muted/20 transition-all cursor-pointer" onClick={() => handleViewContract(contract)}>
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={contract.creator_avatar || undefined} />
                       <AvatarFallback className="bg-muted text-muted-foreground font-inter text-sm font-medium">
@@ -613,10 +562,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-sm font-medium font-inter tracking-[-0.3px] truncate">{contract.title}</span>
-                        <Badge
-                          variant="secondary"
-                          className={`${statusConfig[contract.status].color} text-[10px] font-inter tracking-[-0.3px] px-2 py-0.5 shrink-0`}
-                        >
+                        <Badge variant="secondary" className={`${statusConfig[contract.status].color} text-[10px] font-inter tracking-[-0.3px] px-2 py-0.5 shrink-0`}>
                           {statusConfig[contract.status].label}
                         </Badge>
                       </div>
@@ -625,19 +571,17 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                       </p>
                     </div>
 
-                    {contract.boost_title && (
-                      <span className="hidden sm:inline-flex text-xs font-inter tracking-[-0.3px] text-primary bg-primary/10 px-2 py-1 rounded-md shrink-0">
+                    {contract.boost_title && <span className="hidden sm:inline-flex text-xs font-inter tracking-[-0.3px] text-primary bg-primary/10 px-2 py-1 rounded-md shrink-0">
                         {contract.boost_title}
-                      </span>
-                    )}
+                      </span>}
 
                     <span className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px] shrink-0 hidden md:block">
-                      {formatDistanceToNow(new Date(contract.created_at), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(contract.created_at), {
+                  addSuffix: true
+                })}
                     </span>
-                  </div>
-                );
-              })
-            )}
+                  </div>;
+          })}
           </div>
         </div>
       </ScrollArea>
@@ -654,50 +598,44 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           <div className="px-6 py-5 space-y-5 max-h-[60vh] overflow-y-auto">
             {/* Template & Job Post Selection */}
             <div className="grid grid-cols-2 gap-3">
-              {templates.length > 0 && (
-                <div className="space-y-1.5">
+              {templates.length > 0 && <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Template</Label>
                   <Select value={newContract.template_id} onValueChange={handleTemplateSelect}>
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue placeholder="Select template" />
                     </SelectTrigger>
                     <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
+                      {templates.map(template => <SelectItem key={template.id} value={template.id}>
                           {template.name} {template.is_default && "★"}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-              )}
+                </div>}
               <div className={cn("space-y-1.5", templates.length === 0 && "col-span-2")}>
                 <Label className="text-xs text-muted-foreground">Job Post</Label>
-                <Select
-                  value={newContract.boost_id}
-                  onValueChange={(value) => {
-                    const boost = boosts.find(b => b.id === value);
-                    if (boost) {
-                      setNewContract({
-                        ...newContract,
-                        boost_id: value,
-                        monthly_rate: boost.monthly_retainer.toString(),
-                        videos_per_month: boost.videos_per_month.toString()
-                      });
-                    } else {
-                      setNewContract({ ...newContract, boost_id: '' });
-                    }
-                  }}
-                >
+                <Select value={newContract.boost_id} onValueChange={value => {
+                const boost = boosts.find(b => b.id === value);
+                if (boost) {
+                  setNewContract({
+                    ...newContract,
+                    boost_id: value,
+                    monthly_rate: boost.monthly_retainer.toString(),
+                    videos_per_month: boost.videos_per_month.toString()
+                  });
+                } else {
+                  setNewContract({
+                    ...newContract,
+                    boost_id: ''
+                  });
+                }
+              }}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Link to job post" />
                   </SelectTrigger>
                   <SelectContent>
-                    {boosts.map((boost) => (
-                      <SelectItem key={boost.id} value={boost.id}>
+                    {boosts.map(boost => <SelectItem key={boost.id} value={boost.id}>
                         {boost.title}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -706,13 +644,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
             {/* Creator Email */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Creator Email</Label>
-              <Input
-                type="email"
-                placeholder="creator@example.com"
-                value={newContract.creator_email}
-                onChange={(e) => setNewContract({ ...newContract, creator_email: e.target.value })}
-                className="h-9 text-sm"
-              />
+              <Input type="email" placeholder="creator@example.com" value={newContract.creator_email} onChange={e => setNewContract({
+              ...newContract,
+              creator_email: e.target.value
+            })} className="h-9 text-sm" />
             </div>
 
             {/* Rate & Videos */}
@@ -721,24 +656,18 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                 <Label className="text-xs text-muted-foreground">Monthly Rate</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    placeholder="1000"
-                    value={newContract.monthly_rate}
-                    onChange={(e) => setNewContract({ ...newContract, monthly_rate: e.target.value })}
-                    className="h-9 text-sm pl-7"
-                  />
+                  <Input type="number" placeholder="1000" value={newContract.monthly_rate} onChange={e => setNewContract({
+                  ...newContract,
+                  monthly_rate: e.target.value
+                })} className="h-9 text-sm pl-7" />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Videos / Month</Label>
-                <Input
-                  type="number"
-                  placeholder="4"
-                  value={newContract.videos_per_month}
-                  onChange={(e) => setNewContract({ ...newContract, videos_per_month: e.target.value })}
-                  className="h-9 text-sm"
-                />
+                <Input type="number" placeholder="4" value={newContract.videos_per_month} onChange={e => setNewContract({
+                ...newContract,
+                videos_per_month: e.target.value
+              })} className="h-9 text-sm" />
               </div>
             </div>
 
@@ -746,28 +675,24 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Start Date</Label>
-                <Input
-                  type="date"
-                  value={newContract.start_date}
-                  onChange={(e) => setNewContract({ ...newContract, start_date: e.target.value })}
-                  className="h-9 text-sm"
-                />
+                <Input type="date" value={newContract.start_date} onChange={e => setNewContract({
+                ...newContract,
+                start_date: e.target.value
+              })} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Duration</Label>
-                <Select
-                  value={newContract.duration_months}
-                  onValueChange={(value) => setNewContract({ ...newContract, duration_months: value })}
-                >
+                <Select value={newContract.duration_months} onValueChange={value => setNewContract({
+                ...newContract,
+                duration_months: value
+              })}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[3, 6, 12, 18, 24].map((months) => (
-                      <SelectItem key={months} value={months.toString()}>
+                    {[3, 6, 12, 18, 24].map(months => <SelectItem key={months} value={months.toString()}>
                         {months} months
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -776,13 +701,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
             {/* Additional Terms */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Additional Terms</Label>
-              <Textarea
-                placeholder="Any additional terms or notes..."
-                value={newContract.custom_terms}
-                onChange={(e) => setNewContract({ ...newContract, custom_terms: e.target.value })}
-                rows={2}
-                className="text-sm resize-none"
-              />
+              <Textarea placeholder="Any additional terms or notes..." value={newContract.custom_terms} onChange={e => setNewContract({
+              ...newContract,
+              custom_terms: e.target.value
+            })} rows={2} className="text-sm resize-none" />
             </div>
           </div>
           <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20">
@@ -805,8 +727,7 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
               Contract with {selectedContract?.creator_name}
             </DialogDescription>
           </DialogHeader>
-          {selectedContract && (
-            <div className="px-6 py-5 space-y-4">
+          {selectedContract && <div className="px-6 py-5 space-y-4">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedContract.creator_avatar || undefined} />
@@ -834,46 +755,30 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Start Date</span>
                   <p className="text-sm font-medium font-inter">{format(new Date(selectedContract.start_date), 'MMM d, yyyy')}</p>
                 </div>
-                {selectedContract.signed_at && (
-                  <div className="space-y-1">
+                {selectedContract.signed_at && <div className="space-y-1">
                     <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Signed</span>
                     <p className="text-sm font-medium font-inter">{format(new Date(selectedContract.signed_at), 'MMM d, yyyy')}</p>
-                  </div>
-                )}
+                  </div>}
               </div>
-              {selectedContract.terms && (
-                <div className="space-y-1.5 pt-2 border-t border-border/50">
+              {selectedContract.terms && <div className="space-y-1.5 pt-2 border-t border-border/50">
                   <span className="text-[11px] text-muted-foreground uppercase tracking-wider">Additional Terms</span>
                   <p className="text-sm text-muted-foreground">{selectedContract.terms}</p>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
           <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20 flex-row justify-between">
             <div className="flex items-center gap-2">
-              {(selectedContract?.status === 'sent' || selectedContract?.status === 'viewed') && (
-                <button 
-                  onClick={() => {
-                    toast.success(`Reminder sent to ${selectedContract?.creator_name}`);
-                  }} 
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-                >
+              {(selectedContract?.status === 'sent' || selectedContract?.status === 'viewed') && <button onClick={() => {
+              toast.success(`Reminder sent to ${selectedContract?.creator_name}`);
+            }} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                   <Send className="h-3.5 w-3.5" />
                   Send Reminder
-                </button>
-              )}
-              <button 
-                onClick={() => toast.success('Downloading PDF...')} 
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-              >
+                </button>}
+              <button onClick={() => toast.success('Downloading PDF...')} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
                 <Download className="h-3.5 w-3.5" />
                 Download
               </button>
             </div>
-            <button 
-              onClick={() => setViewDialogOpen(false)} 
-              className="px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors"
-            >
+            <button onClick={() => setViewDialogOpen(false)} className="px-3 py-1.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-lg transition-colors">
               Close
             </button>
           </DialogFooter>
@@ -881,18 +786,15 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
       </Dialog>
 
       {/* Template Editor Dialog */}
-      <Dialog
-        open={templateDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setTemplateDialogOpen(false);
-            setEditingTemplate(null);
-            resetTemplateForm();
-          } else {
-            setTemplateDialogOpen(true);
-          }
-        }}
-      >
+      <Dialog open={templateDialogOpen} onOpenChange={open => {
+      if (!open) {
+        setTemplateDialogOpen(false);
+        setEditingTemplate(null);
+        resetTemplateForm();
+      } else {
+        setTemplateDialogOpen(true);
+      }
+    }}>
         <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden max-h-[85vh] flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50 shrink-0">
             <DialogTitle className="font-inter tracking-[-0.5px]">{editingTemplate ? "Edit Template" : "New Template"}</DialogTitle>
@@ -906,21 +808,17 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Template Name</Label>
-                <Input
-                  placeholder="e.g., Standard Agreement"
-                  value={templateForm.name}
-                  onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                  className="h-9 text-sm"
-                />
+                <Input placeholder="e.g., Standard Agreement" value={templateForm.name} onChange={e => setTemplateForm({
+                ...templateForm,
+                name: e.target.value
+              })} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Description</Label>
-                <Input
-                  placeholder="Brief description"
-                  value={templateForm.description}
-                  onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
-                  className="h-9 text-sm"
-                />
+                <Input placeholder="Brief description" value={templateForm.description} onChange={e => setTemplateForm({
+                ...templateForm,
+                description: e.target.value
+              })} className="h-9 text-sm" />
               </div>
             </div>
 
@@ -930,40 +828,32 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                 <Label className="text-xs text-muted-foreground">Default Rate</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                  <Input
-                    type="number"
-                    placeholder="1000"
-                    value={templateForm.default_monthly_rate}
-                    onChange={(e) => setTemplateForm({ ...templateForm, default_monthly_rate: e.target.value })}
-                    className="h-9 text-sm pl-7"
-                  />
+                  <Input type="number" placeholder="1000" value={templateForm.default_monthly_rate} onChange={e => setTemplateForm({
+                  ...templateForm,
+                  default_monthly_rate: e.target.value
+                })} className="h-9 text-sm pl-7" />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Videos / Month</Label>
-                <Input
-                  type="number"
-                  placeholder="4"
-                  value={templateForm.default_videos_per_month}
-                  onChange={(e) => setTemplateForm({ ...templateForm, default_videos_per_month: e.target.value })}
-                  className="h-9 text-sm"
-                />
+                <Input type="number" placeholder="4" value={templateForm.default_videos_per_month} onChange={e => setTemplateForm({
+                ...templateForm,
+                default_videos_per_month: e.target.value
+              })} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Duration</Label>
-                <Select
-                  value={templateForm.default_duration_months}
-                  onValueChange={(value) => setTemplateForm({ ...templateForm, default_duration_months: value })}
-                >
+                <Select value={templateForm.default_duration_months} onValueChange={value => setTemplateForm({
+                ...templateForm,
+                default_duration_months: value
+              })}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[3, 6, 12, 18, 24].map((months) => (
-                      <SelectItem key={months} value={months.toString()}>
+                    {[3, 6, 12, 18, 24].map(months => <SelectItem key={months} value={months.toString()}>
                         {months} months
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -977,14 +867,10 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
                   Use {"{{variable}}"} for dynamic content
                 </span>
               </div>
-              <Textarea
-                id="template-content"
-                placeholder="Enter your contract template content..."
-                value={templateForm.content}
-                onChange={(e) => setTemplateForm({ ...templateForm, content: e.target.value })}
-                rows={10}
-                className="font-mono text-xs resize-none"
-              />
+              <Textarea id="template-content" placeholder="Enter your contract template content..." value={templateForm.content} onChange={e => setTemplateForm({
+              ...templateForm,
+              content: e.target.value
+            })} rows={10} className="font-mono text-xs resize-none" />
               <p className="text-[10px] text-muted-foreground">
                 Available: brand_name, creator_name, monthly_rate, videos_per_month, start_date, duration_months, additional_terms
               </p>
@@ -1001,6 +887,5 @@ export function CreatorContractsTab({ brandId }: CreatorContractsTabProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 }
