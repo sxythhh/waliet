@@ -9,11 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Bell, Pause, Ban, CreditCard, CheckCircle2, DollarSign } from "lucide-react";
 import { toast } from "sonner";
-
 interface LowBalanceSettingsTabProps {
   brandId: string;
 }
-
 interface BrandSettings {
   slash_balance_cents: number | null;
   low_balance_notify_threshold: number | null;
@@ -22,7 +20,6 @@ interface BrandSettings {
   low_balance_auto_topup_enabled: boolean | null;
   low_balance_auto_topup_amount: number | null;
 }
-
 interface Alert {
   id: string;
   alert_type: string;
@@ -31,8 +28,9 @@ interface Alert {
   created_at: string;
   resolved_at: string | null;
 }
-
-export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
+export function LowBalanceSettingsTab({
+  brandId
+}: LowBalanceSettingsTabProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<BrandSettings | null>(null);
@@ -44,33 +42,19 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
   const [pauseCampaignThreshold, setPauseCampaignThreshold] = useState("100");
   const [autoTopupEnabled, setAutoTopupEnabled] = useState(false);
   const [autoTopupAmount, setAutoTopupAmount] = useState("1000");
-
   useEffect(() => {
     fetchData();
   }, [brandId]);
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [settingsResult, alertsResult] = await Promise.all([
-        supabase
-          .from("brands")
-          .select(`slash_balance_cents`)
-          .eq("id", brandId)
-          .single(),
-        (supabase
-          .from("low_balance_alerts" as any)
-          .select("*")
-          .eq("brand_id", brandId)
-          .order("created_at", { ascending: false })
-          .limit(10) as any)
-      ]);
-
+      const [settingsResult, alertsResult] = await Promise.all([supabase.from("brands").select(`slash_balance_cents`).eq("id", brandId).single(), supabase.from("low_balance_alerts" as any).select("*").eq("brand_id", brandId).order("created_at", {
+        ascending: false
+      }).limit(10) as any]);
       if (settingsResult.error && settingsResult.error.code !== 'PGRST116') {
         // Ignore column not found errors - table might not be migrated yet
         console.log("Settings query returned:", settingsResult);
       }
-
       if (settingsResult.data) {
         // Cast to any since columns may not exist yet
         const data = settingsResult.data as any;
@@ -81,7 +65,6 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
         setAutoTopupEnabled(data.low_balance_auto_topup_enabled || false);
         setAutoTopupAmount(String(data.low_balance_auto_topup_amount || 1000));
       }
-
       if (!alertsResult.error && alertsResult.data) {
         setAlerts(alertsResult.data as Alert[]);
       }
@@ -91,23 +74,19 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
       setIsLoading(false);
     }
   };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { error } = await (supabase
-        .from("brands")
-        .update({
-          low_balance_notify_threshold: parseFloat(notifyThreshold) || 1000,
-          low_balance_pause_payouts_threshold: parseFloat(pausePayoutsThreshold) || 500,
-          low_balance_pause_campaign_threshold: parseFloat(pauseCampaignThreshold) || 100,
-          low_balance_auto_topup_enabled: autoTopupEnabled,
-          low_balance_auto_topup_amount: parseFloat(autoTopupAmount) || 1000
-        } as any)
-        .eq("id", brandId) as any);
-
+      const {
+        error
+      } = await (supabase.from("brands").update({
+        low_balance_notify_threshold: parseFloat(notifyThreshold) || 1000,
+        low_balance_pause_payouts_threshold: parseFloat(pausePayoutsThreshold) || 500,
+        low_balance_pause_campaign_threshold: parseFloat(pauseCampaignThreshold) || 100,
+        low_balance_auto_topup_enabled: autoTopupEnabled,
+        low_balance_auto_topup_amount: parseFloat(autoTopupAmount) || 1000
+      } as any).eq("id", brandId) as any);
       if (error) throw error;
-
       toast.success("Low balance settings saved");
       fetchData();
     } catch (error) {
@@ -117,38 +96,45 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
       setIsSaving(false);
     }
   };
-
   const currentBalance = (settings?.slash_balance_cents || 0) / 100;
-
   const getBalanceStatus = () => {
     const notify = parseFloat(notifyThreshold) || 1000;
     const pause = parseFloat(pausePayoutsThreshold) || 500;
     const critical = parseFloat(pauseCampaignThreshold) || 100;
-
     if (currentBalance <= critical) {
-      return { status: "critical", color: "destructive", message: "Balance is critically low" };
+      return {
+        status: "critical",
+        color: "destructive",
+        message: "Balance is critically low"
+      };
     } else if (currentBalance <= pause) {
-      return { status: "warning", color: "warning", message: "Payouts may be paused" };
+      return {
+        status: "warning",
+        color: "warning",
+        message: "Payouts may be paused"
+      };
     } else if (currentBalance <= notify) {
-      return { status: "low", color: "secondary", message: "Balance is getting low" };
+      return {
+        status: "low",
+        color: "secondary",
+        message: "Balance is getting low"
+      };
     }
-    return { status: "healthy", color: "default", message: "Balance is healthy" };
+    return {
+      status: "healthy",
+      color: "default",
+      message: "Balance is healthy"
+    };
   };
-
   const balanceStatus = getBalanceStatus();
-
   if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
+    return <div className="p-6 space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-48 w-full" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6 max-w-2xl">
+  return <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Low Balance Protection</h2>
@@ -163,7 +149,7 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
 
       {/* Alert Thresholds */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Thresholds</h3>
+        
         
         <div className="grid gap-4">
           <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
@@ -178,12 +164,7 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
-              <Input
-                type="number"
-                value={notifyThreshold}
-                onChange={(e) => setNotifyThreshold(e.target.value)}
-                className="w-24 h-9 text-right"
-              />
+              <Input type="number" value={notifyThreshold} onChange={e => setNotifyThreshold(e.target.value)} className="w-24 h-9 text-right" />
             </div>
           </div>
 
@@ -199,12 +180,7 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
-              <Input
-                type="number"
-                value={pausePayoutsThreshold}
-                onChange={(e) => setPausePayoutsThreshold(e.target.value)}
-                className="w-24 h-9 text-right"
-              />
+              <Input type="number" value={pausePayoutsThreshold} onChange={e => setPausePayoutsThreshold(e.target.value)} className="w-24 h-9 text-right" />
             </div>
           </div>
 
@@ -220,12 +196,7 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground text-sm">$</span>
-              <Input
-                type="number"
-                value={pauseCampaignThreshold}
-                onChange={(e) => setPauseCampaignThreshold(e.target.value)}
-                className="w-24 h-9 text-right"
-              />
+              <Input type="number" value={pauseCampaignThreshold} onChange={e => setPauseCampaignThreshold(e.target.value)} className="w-24 h-9 text-right" />
             </div>
           </div>
         </div>
@@ -246,40 +217,25 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
                 <p className="text-xs text-muted-foreground">Automatically charge your card</p>
               </div>
             </div>
-            <Switch
-              checked={autoTopupEnabled}
-              onCheckedChange={setAutoTopupEnabled}
-            />
+            <Switch checked={autoTopupEnabled} onCheckedChange={setAutoTopupEnabled} />
           </div>
 
-          {autoTopupEnabled && (
-            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+          {autoTopupEnabled && <div className="flex items-center justify-between pt-4 border-t border-border/50">
               <p className="text-sm text-muted-foreground">Top-up amount</p>
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground text-sm">$</span>
-                <Input
-                  type="number"
-                  value={autoTopupAmount}
-                  onChange={(e) => setAutoTopupAmount(e.target.value)}
-                  className="w-24 h-9 text-right"
-                />
+                <Input type="number" value={autoTopupAmount} onChange={e => setAutoTopupAmount(e.target.value)} className="w-24 h-9 text-right" />
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
       {/* Recent Alerts */}
-      {alerts.length > 0 && (
-        <div className="space-y-4">
+      {alerts.length > 0 && <div className="space-y-4">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Recent Alerts</h3>
           
           <div className="space-y-2">
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/50"
-              >
+            {alerts.map(alert => <div key={alert.id} className="flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/50">
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   <div>
@@ -295,17 +251,10 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
                   <span className="text-xs text-muted-foreground">
                     {new Date(alert.created_at).toLocaleDateString()}
                   </span>
-                  {alert.resolved_at ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
-                  )}
+                  {alert.resolved_at ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />}
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 }
