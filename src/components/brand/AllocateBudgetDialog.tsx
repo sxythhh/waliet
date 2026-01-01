@@ -208,7 +208,7 @@ export function AllocateBudgetDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[440px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[440px] bg-card border-0 p-0 overflow-hidden rounded-2xl font-inter tracking-[-0.5px]">
         {/* Header */}
         <div className="px-6 pt-6">
           <DialogHeader className="space-y-1">
