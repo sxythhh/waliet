@@ -4,6 +4,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 export interface BoostDiscoverCardProps {
   id: string;
   title: string;
@@ -19,6 +20,7 @@ export interface BoostDiscoverCardProps {
   isEnded?: boolean;
   isBookmarked?: boolean;
   slug?: string;
+  created_at?: string;
   onClick?: () => void;
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
@@ -37,6 +39,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   accepted_creators_count,
   isEnded,
   isBookmarked,
+  created_at,
   onClick,
   onBookmarkClick,
   onFullscreenClick
@@ -115,7 +118,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
           </div>
         </div>
         <span className="text-[11px] text-muted-foreground font-['Inter'] tracking-[-0.3px] flex-shrink-0">
-          Just now
+          {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true }) : 'Recently'}
         </span>
       </div>
     </div>;
