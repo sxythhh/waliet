@@ -819,10 +819,10 @@ export function CreatorsTab({
               }}>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Avatar className={`h-10 w-10 ${isActive ? 'ring-2 ring-primary/30' : ''}`}>
+                  <Avatar className="h-10 w-10">
                     <AvatarImage src={creator?.avatar_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-muted to-muted/50 text-muted-foreground text-xs font-medium">
-                      {creator?.username.slice(0, 2).toUpperCase() || "??"}
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
+                      {(creator?.full_name || creator?.username || "?").charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {unreadCount > 0 && <div className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center shadow-sm">
@@ -842,29 +842,6 @@ export function CreatorsTab({
                       }) : "No messages"}
                   </p>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50 hover:text-foreground">
-                      <MoreHorizontal className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36">
-                    <DropdownMenuItem onClick={e => {
-                        e.stopPropagation();
-                        toggleBookmark(conv.id);
-                      }} className="text-xs">
-                      <Bookmark className={`h-3.5 w-3.5 mr-2 ${isBookmarked ? 'fill-current text-amber-400' : ''}`} />
-                      {isBookmarked ? 'Unbookmark' : 'Bookmark'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={e => {
-                        e.stopPropagation();
-                        setDeleteConfirmId(conv.id);
-                      }} className="text-xs text-destructive focus:text-destructive">
-                      <Trash2 className="h-3.5 w-3.5 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
             </div>;
             })}
