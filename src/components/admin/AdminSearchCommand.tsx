@@ -33,13 +33,6 @@ interface SearchResult {
   platform?: string;
 }
 
-function MaterialIcon({ name, className }: { name: string; className?: string }) {
-  return (
-    <span className={cn("material-symbols-rounded", className)} style={{ fontSize: 'inherit' }}>
-      {name}
-    </span>
-  );
-}
 
 interface AdminSearchCommandProps {
   open: boolean;
@@ -73,12 +66,12 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
     }
   };
 
-  const filterOptions: { value: SearchFilter; label: string; icon: string; color: string }[] = [
-    { value: 'all', label: 'All', icon: 'apps', color: 'text-muted-foreground' },
-    { value: 'user', label: 'Users', icon: 'person', color: 'text-blue-500' },
-    { value: 'brand', label: 'Brands', icon: 'inventory_2', color: 'text-purple-500' },
-    { value: 'campaign', label: 'Campaigns', icon: 'campaign', color: 'text-emerald-500' },
-    { value: 'account', label: 'Accounts', icon: 'alternate_email', color: 'text-orange-500' },
+  const filterOptions: { value: SearchFilter; label: string; color: string }[] = [
+    { value: 'all', label: 'All', color: 'text-muted-foreground' },
+    { value: 'user', label: 'Users', color: 'text-blue-500' },
+    { value: 'brand', label: 'Brands', color: 'text-purple-500' },
+    { value: 'campaign', label: 'Campaigns', color: 'text-emerald-500' },
+    { value: 'account', label: 'Accounts', color: 'text-orange-500' },
   ];
 
   const search = useCallback(async (searchQuery: string, activeFilter: SearchFilter) => {
@@ -194,14 +187,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
     navigate(result.path);
   };
 
-  const getIcon = (type: SearchResult['type']) => {
-    switch (type) {
-      case 'user': return 'person';
-      case 'brand': return 'inventory_2';
-      case 'campaign': return 'campaign';
-      case 'account': return 'alternate_email';
-    }
-  };
 
   const getTypeColor = (type: SearchResult['type']) => {
     switch (type) {
@@ -245,19 +230,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
               {result.title.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className={cn(
-            "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#0a0a0a]",
-            result.type === 'user' && "bg-blue-500",
-            result.type === 'brand' && "bg-purple-500",
-            result.type === 'campaign' && "bg-emerald-500",
-            result.type === 'account' && "bg-neutral-600"
-          )}>
-            {result.type === 'account' && platformLogo ? (
-              <img src={platformLogo} alt={result.platform} className="w-full h-full object-contain p-0.5" />
-            ) : (
-              <MaterialIcon name={getIcon(result.type)} className="text-[10px] text-white" />
-            )}
-          </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -273,7 +245,7 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             <p className="text-xs text-white/50 font-inter tracking-[-0.5px] truncate mt-0.5 capitalize">{result.subtitle}</p>
           )}
         </div>
-        <MaterialIcon name="arrow_forward" className="text-base text-white/30" />
+        
       </CommandItem>
     );
   };
@@ -302,7 +274,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
                 : "text-white/50 hover:text-white/70 hover:bg-white/5"
             )}
           >
-            <MaterialIcon name={opt.icon} className={cn("text-sm", filter === opt.value ? opt.color : "")} />
             {opt.label}
           </button>
         ))}
@@ -316,9 +287,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
           </div>
         ) : results.length === 0 && query ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center">
-              <MaterialIcon name="search_off" className="text-2xl text-white/30" />
-            </div>
             <div className="text-center">
               <p className="text-sm font-medium font-inter tracking-[-0.5px] text-white">No results found</p>
               <p className="text-xs text-white/50 font-inter tracking-[-0.5px] mt-1">Try a different search term</p>
@@ -326,9 +294,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
           </div>
         ) : !query ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center">
-              <MaterialIcon name="keyboard" className="text-2xl text-white/30" />
-            </div>
             <div className="text-center">
               <p className="text-sm font-medium font-inter tracking-[-0.5px] text-white">Start typing to search</p>
               <p className="text-xs text-white/50 font-inter tracking-[-0.5px] mt-1">Search across users, brands, campaigns & accounts</p>
@@ -339,9 +304,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             {groupedResults.users.length > 0 && (
               <CommandGroup>
                 <div className="flex items-center gap-2 px-4 py-2">
-                  <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">
-                    <MaterialIcon name="person" className="text-xs text-blue-500" />
-                  </div>
                   <span className="text-xs font-medium text-white/50 font-inter tracking-[-0.5px] uppercase">Users</span>
                   <span className="text-[10px] text-white/30 font-inter">{groupedResults.users.length}</span>
                 </div>
@@ -354,9 +316,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             {groupedResults.brands.length > 0 && (
               <CommandGroup>
                 <div className="flex items-center gap-2 px-4 py-2 mt-2">
-                  <div className="w-6 h-6 rounded-md bg-purple-500/10 flex items-center justify-center">
-                    <MaterialIcon name="inventory_2" className="text-xs text-purple-500" />
-                  </div>
                   <span className="text-xs font-medium text-white/50 font-inter tracking-[-0.5px] uppercase">Brands</span>
                   <span className="text-[10px] text-white/30 font-inter">{groupedResults.brands.length}</span>
                 </div>
@@ -369,9 +328,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             {groupedResults.campaigns.length > 0 && (
               <CommandGroup>
                 <div className="flex items-center gap-2 px-4 py-2 mt-2">
-                  <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                    <MaterialIcon name="campaign" className="text-xs text-emerald-500" />
-                  </div>
                   <span className="text-xs font-medium text-white/50 font-inter tracking-[-0.5px] uppercase">Campaigns</span>
                   <span className="text-[10px] text-white/30 font-inter">{groupedResults.campaigns.length}</span>
                 </div>
@@ -384,9 +340,6 @@ export function AdminSearchCommand({ open, onOpenChange }: AdminSearchCommandPro
             {groupedResults.accounts.length > 0 && (
               <CommandGroup>
                 <div className="flex items-center gap-2 px-4 py-2 mt-2">
-                  <div className="w-6 h-6 rounded-md bg-orange-500/10 flex items-center justify-center">
-                    <MaterialIcon name="alternate_email" className="text-xs text-orange-500" />
-                  </div>
                   <span className="text-xs font-medium text-white/50 font-inter tracking-[-0.5px] uppercase">Social Accounts</span>
                   <span className="text-[10px] text-white/30 font-inter">{groupedResults.accounts.length}</span>
                 </div>
