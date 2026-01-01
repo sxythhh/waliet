@@ -804,7 +804,7 @@ export function CreatorsTab({
               <p className="text-xs text-muted-foreground">
                 {messageFilter === 'unread' ? "You're all caught up!" : "Bookmark conversations to find them here."}
               </p>
-            </div> : <div className="py-[10px]">
+            </div> : <div className="py-[10px] flex flex-col gap-1">
               {filteredConversations.map(conv => {
               const creator = getConversationCreator(conv);
               const unreadCount = unreadCounts.get(conv.id) || 0;
