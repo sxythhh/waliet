@@ -132,15 +132,15 @@ export function CreateCampaignTypeDialog({
                   onClick={() => handleTemplateSelect(template)}
                   className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
                 >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Zap className="h-5 w-5 text-primary" />
+                  <div className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0">
+                    <img src={noteStackIcon} alt="" className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm">
                         {template.name}
                       </span>
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
                         ${template.defaults.rpm_rate} CPM
                       </Badge>
                     </div>
@@ -148,11 +148,11 @@ export function CreateCampaignTypeDialog({
                       {template.description}
                     </p>
                     <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground/70">
+                      <span className="text-[10px] text-muted-foreground/70 font-inter tracking-[-0.5px]">
                         ${Number(template.defaults.budget).toLocaleString()} budget
                       </span>
                       <span className="text-[10px] text-muted-foreground/70">•</span>
-                      <span className="text-[10px] text-muted-foreground/70 capitalize">
+                      <span className="text-[10px] text-muted-foreground/70 font-inter tracking-[-0.5px] capitalize">
                         {template.defaults.allowed_platforms.join(', ')}
                       </span>
                     </div>
