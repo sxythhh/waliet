@@ -77,12 +77,9 @@ export const CampaignCard = memo(function CampaignCard({
       {/* Budget progress below the card */}
       <div className="flex flex-col gap-1 px-0.5">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-foreground font-semibold tracking-[-0.3px] font-['Inter',sans-serif]">
-            {is_infinite_budget ? '∞ unlimited' : `$${budget.toLocaleString()}`}
+          <span className="text-[10px] text-muted-foreground font-medium tracking-[-0.3px] font-['Inter',sans-serif]">
+            {is_infinite_budget ? '∞ unlimited' : `$${budget_used.toLocaleString()} / $${budget.toLocaleString()}`}
           </span>
-          {!is_infinite_budget && <span className="text-[10px] text-muted-foreground font-semibold tracking-[-0.5px] font-['Inter',sans-serif]">
-              {Math.round(budget_used / budget * 100)}% used
-            </span>}
         </div>
         {!is_infinite_budget && <Progress value={budget_used / budget * 100} className="h-1.5 rounded-full" />}
         
