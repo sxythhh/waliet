@@ -51,33 +51,15 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   return (
     <div
       className={cn(
-        "group relative rounded-2xl p-5 transition-all duration-300 ease-out",
-        "bg-muted/40 hover:bg-muted/60",
-        "border border-transparent hover:border-border/50",
+        "group relative rounded-xl overflow-hidden transition-all duration-200",
+        "border border-border/60 hover:border-border",
+        "bg-transparent hover:bg-muted/20",
         isEnded ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
       )}
       onClick={onClick}
     >
-      {/* Ended Badge */}
-      {isEnded && (
-        <div className="absolute top-4 left-4 z-[5]">
-          <span className="font-['Inter'] tracking-[-0.5px] text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            Ended
-          </span>
-        </div>
-      )}
-
-      {/* Full Badge */}
-      {isFull && !isEnded && (
-        <div className="absolute top-4 left-4 z-[5]">
-          <span className="font-['Inter'] tracking-[-0.5px] text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">
-            Full
-          </span>
-        </div>
-      )}
-
       {/* Bookmark & Fullscreen Buttons */}
-      <div className="absolute top-4 right-4 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute top-3 right-3 z-[5] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         {onFullscreenClick && (
           <button
             onClick={onFullscreenClick}
@@ -101,76 +83,80 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-4">
-        {/* Brand Row */}
-        <div className="flex items-center gap-2.5">
-          {brand_logo_url ? (
-            <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-background">
-              <OptimizedImage
-                src={brand_logo_url}
-                alt={brand_name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <span className="text-xs font-semibold text-muted-foreground">
-                {brand_name?.charAt(0) || "B"}
-              </span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span
-              className="font-['Inter'] tracking-[-0.5px] text-sm font-medium text-foreground truncate hover:underline cursor-pointer transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (brand_slug) navigate(`/b/${brand_slug}`);
-              }}
-            >
-              {brand_name}
-            </span>
-            {brand_is_verified && <VerifiedBadge size="sm" />}
-          </div>
-        </div>
-
+      {/* Main Content */}
+      <div className="p-4 space-y-3">
         {/* Title */}
-        <h3 className="text-base font-semibold leading-tight line-clamp-2 text-foreground tracking-[-0.3px] group-hover:underline transition-all">
+        <h3 className="text-[15px] font-semibold leading-tight line-clamp-2 text-foreground tracking-[-0.3px] group-hover:underline transition-all pr-8">
           {title}
         </h3>
 
-        {/* Stats Row */}
-        <div className="flex items-center gap-3 font-['Inter'] tracking-[-0.5px]">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-foreground">${monthly_retainer}</span>
-            <span className="text-xs text-muted-foreground">/mo</span>
-          </div>
-          <span className="text-muted-foreground/40">·</span>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-semibold text-foreground">{videos_per_month}</span>
-            <span className="text-xs text-muted-foreground">videos</span>
-          </div>
-          <span className="text-muted-foreground/40">·</span>
-          <div className="flex items-center gap-1">
-            <span className="text-sm font-semibold text-foreground">${perVideoRate.toFixed(0)}</span>
-            <span className="text-xs text-muted-foreground">/video</span>
+        {/* Stats */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="text-foreground font-medium">${monthly_retainer}</span>/mo
+            </span>
+            <span className="text-border">·</span>
+            <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="text-foreground font-medium">{videos_per_month}</span>
+              <span className="text-muted-foreground">videos</span>
+            </span>
+            <span className="text-border">·</span>
+            <span className="font-['Inter'] tracking-[-0.5px]">
+              <span className="text-foreground font-medium">${perVideoRate.toFixed(0)}</span>/video
+            </span>
           </div>
         </div>
 
-        {/* Spots Row */}
-        <div className="flex items-center justify-between pt-3 border-t border-border/20">
-          <span className="font-['Inter'] tracking-[-0.5px] text-xs text-muted-foreground">
-            {isFull ? (
-              <span className="text-amber-600 dark:text-amber-400 font-medium">No spots available</span>
-            ) : (
-              <>
-                <span className="text-foreground font-medium">{spotsRemaining}</span>
-                {" "}spots left
-              </>
-            )}
-          </span>
-          <span className="font-['Inter'] tracking-[-0.5px] text-[11px] text-muted-foreground/60">
+        {/* Spots Info */}
+        <div className="flex items-center gap-2 font-['Inter'] tracking-[-0.5px]">
+          {isEnded ? (
+            <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
+              Ended
+            </span>
+          ) : isFull ? (
+            <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              No spots available
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">{spotsRemaining}</span> spots left
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground/60">
             {accepted_creators_count}/{max_accepted_creators} joined
           </span>
+        </div>
+      </div>
+
+      {/* Brand Footer */}
+      <div className="px-4 py-3 bg-muted/40 dark:bg-[#1a1a1a] border-t border-border/40 flex items-center gap-2.5">
+        {brand_logo_url ? (
+          <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 bg-background">
+            <OptimizedImage
+              src={brand_logo_url}
+              alt={brand_name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-semibold text-muted-foreground">
+              {brand_name?.charAt(0) || "B"}
+            </span>
+          </div>
+        )}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className="font-['Inter'] tracking-[-0.5px] text-sm font-medium text-foreground truncate hover:underline cursor-pointer transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (brand_slug) navigate(`/b/${brand_slug}`);
+            }}
+          >
+            {brand_name}
+          </span>
+          {brand_is_verified && <VerifiedBadge size="sm" />}
         </div>
       </div>
     </div>
