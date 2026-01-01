@@ -4,14 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, formatDistanceToNow } from "date-fns";
@@ -29,19 +25,25 @@ import {
   TrendingUp,
   Clock,
   AlertTriangle,
-  Mail,
-  Phone,
-  MapPin,
   Sparkles,
   BarChart3,
-  Settings,
   ChevronRight,
   DollarSign,
   ArrowUpRight,
   ArrowDownRight,
   Plus,
   Minus,
-  X
+  X,
+  Activity,
+  Zap,
+  Target,
+  Eye,
+  Video,
+  CircleDollarSign,
+  ArrowRight,
+  Play,
+  Pause,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -79,8 +81,38 @@ interface BrandStats {
   walletBalance: number;
   totalCampaigns: number;
   activeCampaigns: number;
+  completedCampaigns: number;
   totalCreators: number;
   totalSpend: number;
+  totalDeposits: number;
+  pendingPayouts: number;
+}
+
+interface TeamMember {
+  id: string;
+  role: string;
+  user: {
+    id: string;
+    username: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface RecentActivity {
+  id: string;
+  type: string;
+  description: string;
+  amount?: number;
+  created_at: string;
+}
+
+interface Campaign {
+  id: string;
+  title: string;
+  status: string;
+  budget: number;
+  created_at: string;
 }
 
 interface BrandContextSheetProps {
@@ -93,8 +125,11 @@ interface BrandContextSheetProps {
 export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }: BrandContextSheetProps) {
   const navigate = useNavigate();
   const [stats, setStats] = useState<BrandStats | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeSection, setActiveSection] = useState<"overview" | "subscription" | "wallet">("overview");
+  const [activeSection, setActiveSection] = useState<"overview" | "activity" | "settings">("overview");
 
   // Subscription editing state
   const [subscriptionStatus, setSubscriptionStatus] = useState("");
@@ -102,6 +137,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const [isUpdatingSubscription, setIsUpdatingSubscription] = useState(false);
 
   // Wallet adjustment state
+  const [showWalletAdjust, setShowWalletAdjust] = useState(false);
   const [walletAmount, setWalletAmount] = useState("");
   const [walletDescription, setWalletDescription] = useState("");
   const [walletAction, setWalletAction] = useState<"add" | "remove">("add");
@@ -109,23 +145,53 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
 
   useEffect(() => {
     if (brand && open) {
-      fetchBrandStats(brand.id);
+      fetchAllBrandData(brand.id);
       setSubscriptionStatus(brand.subscription_status || "inactive");
       setSubscriptionPlan(brand.subscription_plan || "");
       setActiveSection("overview");
+      setShowWalletAdjust(false);
     }
   }, [brand, open]);
 
-  const fetchBrandStats = async (brandId: string) => {
+  const fetchAllBrandData = async (brandId: string) => {
     setLoading(true);
     try {
-      // Fetch wallet balance
-      const { data: transactions } = await supabase
-        .from("brand_wallet_transactions")
-        .select("type, amount, status")
-        .eq("brand_id", brandId);
+      // Fetch all data in parallel
+      const [transactionsRes, campaignsRes, membersRes] = await Promise.all([
+        supabase
+          .from("brand_wallet_transactions")
+          .select("*")
+          .eq("brand_id", brandId)
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("campaigns")
+          .select("id, title, status, budget, created_at")
+          .eq("brand_id", brandId)
+          .order("created_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from("brand_members")
+          .select(`
+            id,
+            role,
+            user:profiles!brand_members_user_id_fkey (
+              id,
+              username,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq("brand_id", brandId)
+          .limit(5)
+      ]);
 
-      const walletBalance = (transactions || []).reduce((acc, tx) => {
+      const transactions = transactionsRes.data || [];
+      const campaignsData = campaignsRes.data || [];
+      const members = membersRes.data || [];
+
+      // Calculate stats
+      const walletBalance = transactions.reduce((acc, tx) => {
         if (tx.status !== "completed") return acc;
         const txAmount = Number(tx.amount) || 0;
         if (["deposit", "topup", "refund", "admin_credit"].includes(tx.type)) {
@@ -135,17 +201,16 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
         }
       }, 0);
 
-      // Fetch campaign stats
-      const { data: campaigns } = await supabase
-        .from("campaigns")
-        .select("id, status")
-        .eq("brand_id", brandId);
+      const totalDeposits = transactions.reduce((acc, tx) => {
+        if (tx.status !== "completed") return acc;
+        const txAmount = Number(tx.amount) || 0;
+        if (["deposit", "topup", "admin_credit"].includes(tx.type)) {
+          return acc + txAmount;
+        }
+        return acc;
+      }, 0);
 
-      const totalCampaigns = campaigns?.length || 0;
-      const activeCampaigns = campaigns?.filter(c => c.status === "active").length || 0;
-
-      // Calculate total spend from completed transactions
-      const totalSpend = (transactions || []).reduce((acc, tx) => {
+      const totalSpend = transactions.reduce((acc, tx) => {
         if (tx.status !== "completed") return acc;
         const txAmount = Number(tx.amount) || 0;
         if (!["deposit", "topup", "refund", "admin_credit"].includes(tx.type)) {
@@ -154,17 +219,71 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
         return acc;
       }, 0);
 
+      const pendingPayouts = transactions.reduce((acc, tx) => {
+        if (tx.status === "pending" && tx.type === "payout") {
+          return acc + (Number(tx.amount) || 0);
+        }
+        return acc;
+      }, 0);
+
       setStats({
         walletBalance,
-        totalCampaigns,
-        activeCampaigns,
-        totalCreators: 0, // Would need a proper query
+        totalCampaigns: campaignsData.length,
+        activeCampaigns: campaignsData.filter(c => c.status === "active").length,
+        completedCampaigns: campaignsData.filter(c => c.status === "completed").length,
+        totalCreators: members.length,
         totalSpend,
+        totalDeposits,
+        pendingPayouts,
       });
+
+      setCampaigns(campaignsData);
+      setTeamMembers(members as TeamMember[]);
+
+      // Format recent activity from transactions
+      const activity: RecentActivity[] = transactions.slice(0, 8).map(tx => ({
+        id: tx.id,
+        type: tx.type,
+        description: tx.description || getActivityDescription(tx.type),
+        amount: Number(tx.amount),
+        created_at: tx.created_at,
+      }));
+      setRecentActivity(activity);
+
     } catch (error) {
-      console.error("Error fetching brand stats:", error);
+      console.error("Error fetching brand data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getActivityDescription = (type: string) => {
+    const descriptions: Record<string, string> = {
+      deposit: "Funds deposited",
+      topup: "Balance topped up",
+      admin_credit: "Admin credit added",
+      admin_debit: "Admin debit",
+      payout: "Creator payout",
+      refund: "Refund processed",
+      campaign_spend: "Campaign spend",
+    };
+    return descriptions[type] || type;
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "deposit":
+      case "topup":
+      case "admin_credit":
+        return <ArrowDownRight className="w-3.5 h-3.5 text-emerald-500" />;
+      case "payout":
+      case "admin_debit":
+      case "campaign_spend":
+        return <ArrowUpRight className="w-3.5 h-3.5 text-rose-500" />;
+      case "refund":
+        return <RefreshCw className="w-3.5 h-3.5 text-blue-500" />;
+      default:
+        return <Activity className="w-3.5 h-3.5 text-muted-foreground" />;
     }
   };
 
@@ -187,7 +306,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
 
       if (error) throw error;
 
-      toast.success("Subscription updated successfully");
+      toast.success("Subscription updated");
       onBrandUpdated?.();
     } catch (error) {
       console.error("Error updating subscription:", error);
@@ -229,10 +348,11 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
 
       if (error) throw error;
 
-      toast.success(`Successfully ${walletAction === "add" ? "added" : "removed"} $${numAmount.toFixed(2)}`);
+      toast.success(`$${numAmount.toFixed(2)} ${walletAction === "add" ? "added" : "removed"}`);
       setWalletAmount("");
       setWalletDescription("");
-      fetchBrandStats(brand.id);
+      setShowWalletAdjust(false);
+      fetchAllBrandData(brand.id);
       onBrandUpdated?.();
     } catch (error) {
       console.error("Error adjusting balance:", error);
@@ -244,373 +364,677 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
 
   if (!brand) return null;
 
-  const getStatusColor = (status: string | null) => {
+  const getStatusConfig = (status: string | null) => {
     switch (status) {
-      case "active": return "text-emerald-500 bg-emerald-500/10";
-      case "past_due": return "text-amber-500 bg-amber-500/10";
-      case "cancelled": return "text-rose-500 bg-rose-500/10";
-      default: return "text-slate-400 bg-slate-500/10";
+      case "active":
+        return {
+          color: "text-emerald-600 dark:text-emerald-400",
+          bg: "bg-emerald-50 dark:bg-emerald-500/10",
+          border: "border-emerald-200 dark:border-emerald-500/20",
+          icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+          label: "Active"
+        };
+      case "past_due":
+        return {
+          color: "text-amber-600 dark:text-amber-400",
+          bg: "bg-amber-50 dark:bg-amber-500/10",
+          border: "border-amber-200 dark:border-amber-500/20",
+          icon: <AlertTriangle className="w-3.5 h-3.5" />,
+          label: "Past Due"
+        };
+      case "cancelled":
+        return {
+          color: "text-rose-600 dark:text-rose-400",
+          bg: "bg-rose-50 dark:bg-rose-500/10",
+          border: "border-rose-200 dark:border-rose-500/20",
+          icon: <XCircle className="w-3.5 h-3.5" />,
+          label: "Cancelled"
+        };
+      default:
+        return {
+          color: "text-slate-600 dark:text-slate-400",
+          bg: "bg-slate-50 dark:bg-slate-500/10",
+          border: "border-slate-200 dark:border-slate-500/20",
+          icon: <Clock className="w-3.5 h-3.5" />,
+          label: "Inactive"
+        };
     }
   };
 
-  const getStatusIcon = (status: string | null) => {
-    switch (status) {
-      case "active": return <CheckCircle2 className="w-4 h-4" />;
-      case "past_due": return <AlertTriangle className="w-4 h-4" />;
-      case "cancelled": return <XCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
-    }
-  };
+  const statusConfig = getStatusConfig(brand.subscription_status);
+  const memberAge = formatDistanceToNow(new Date(brand.created_at), { addSuffix: false });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg p-0 border-l border-border/50 bg-background/95 backdrop-blur-xl">
+      <SheetContent
+        className={cn(
+          "w-full sm:max-w-[480px] p-0 gap-0",
+          "border-l border-border/40",
+          "bg-gradient-to-b from-background via-background to-muted/20",
+          "shadow-2xl shadow-black/10"
+        )}
+      >
         <ScrollArea className="h-full">
-          {/* Header with Brand Info */}
-          <div className="relative">
-            {/* Background Gradient */}
-            <div className="absolute inset-0 h-32 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent" />
+          {/* Hero Header */}
+          <div className="relative overflow-hidden">
+            {/* Ambient Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-            <div className="relative p-6 pb-4">
-              {/* Close button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-4 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+            <div className="relative px-6 pt-6 pb-5">
+              {/* Close Button */}
+              <button
                 onClick={() => onOpenChange(false)}
+                className={cn(
+                  "absolute top-4 right-4 p-2 rounded-full",
+                  "bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10",
+                  "transition-all duration-200 active:scale-95"
+                )}
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
 
-              <div className="flex items-start gap-4 mb-4">
-                <Avatar className="h-16 w-16 rounded-2xl border-2 border-background shadow-lg">
-                  <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
-                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-primary to-primary/50 text-lg font-bold text-white">
-                    {brand.name.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+              {/* Brand Identity */}
+              <div className="flex items-start gap-4">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-primary/20 to-primary/0 rounded-[20px] blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Avatar className="relative h-[72px] w-[72px] rounded-[18px] border-2 border-white/80 dark:border-white/10 shadow-xl">
+                    <AvatarImage src={brand.logo_url || ''} alt={brand.name} className="object-cover" />
+                    <AvatarFallback className="rounded-[18px] bg-gradient-to-br from-primary via-primary to-primary/80 text-xl font-semibold text-white">
+                      {brand.name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {brand.is_verified && (
+                    <div className="absolute -bottom-1 -right-1 p-1 bg-background rounded-full shadow-lg border border-border/50">
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex-1 min-w-0 pt-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="text-xl font-bold truncate">{brand.name}</h2>
-                    {brand.is_verified && (
-                      <CheckCircle2 className="w-5 h-5 text-blue-500 shrink-0" />
-                    )}
-                  </div>
+                  <h2 className="text-xl font-semibold tracking-tight truncate mb-1.5">
+                    {brand.name}
+                  </h2>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className={cn("capitalize gap-1", getStatusColor(brand.subscription_status))}>
-                      {getStatusIcon(brand.subscription_status)}
-                      {brand.subscription_status || "Inactive"}
-                    </Badge>
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
+                      statusConfig.bg, statusConfig.color, statusConfig.border
+                    )}>
+                      {statusConfig.icon}
+                      {statusConfig.label}
+                    </span>
                     {brand.subscription_plan && (
-                      <Badge variant="secondary" className="capitalize">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-muted/60 text-muted-foreground capitalize">
                         {brand.subscription_plan}
-                      </Badge>
+                      </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-card/50 border border-border/50 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center mb-1">
-                    <Wallet className="w-4 h-4 text-muted-foreground" />
+              {/* Quick Info Pills */}
+              <div className="flex items-center gap-3 mt-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {memberAge} old
+                </span>
+                {brand.home_url && (
+                  <a
+                    href={brand.home_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    Website
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Stats Grid - Apple Card Style */}
+            <div className="px-6 pb-5">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Balance Card - Featured */}
+                <div
+                  onClick={() => !loading && setShowWalletAdjust(!showWalletAdjust)}
+                  className={cn(
+                    "col-span-2 p-4 rounded-2xl cursor-pointer group",
+                    "bg-gradient-to-br from-emerald-500 to-emerald-600",
+                    "shadow-lg shadow-emerald-500/20",
+                    "transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.02]",
+                    "active:scale-[0.98]"
+                  )}
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-emerald-100 text-xs font-medium mb-1">Wallet Balance</p>
+                      <p className="text-white text-3xl font-bold tracking-tight">
+                        {loading ? (
+                          <Skeleton className="h-9 w-28 bg-white/20" />
+                        ) : (
+                          `$${stats?.walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`
+                        )}
+                      </p>
+                    </div>
+                    <div className={cn(
+                      "p-2.5 rounded-xl bg-white/20 backdrop-blur-sm",
+                      "group-hover:bg-white/30 transition-colors"
+                    )}>
+                      <Wallet className="w-5 h-5 text-white" />
+                    </div>
                   </div>
-                  <p className="text-lg font-bold">
-                    {loading ? <Skeleton className="h-6 w-16 mx-auto" /> : `$${stats?.walletBalance.toFixed(2) || "0.00"}`}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Balance</p>
-                </div>
-                <div className="bg-card/50 border border-border/50 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center mb-1">
-                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex items-center gap-1.5 mt-3 text-emerald-100 text-xs">
+                    <span>Tap to adjust</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </div>
-                  <p className="text-lg font-bold">
-                    {loading ? <Skeleton className="h-6 w-10 mx-auto" /> : stats?.activeCampaigns || 0}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Campaigns</p>
                 </div>
-                <div className="bg-card/50 border border-border/50 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center mb-1">
-                    <DollarSign className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-lg font-bold">
-                    {loading ? <Skeleton className="h-6 w-16 mx-auto" /> : `$${stats?.totalSpend.toFixed(0) || "0"}`}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">Spent</p>
-                </div>
+
+                {/* Stat Cards */}
+                <StatCard
+                  label="Campaigns"
+                  value={loading ? null : stats?.activeCampaigns || 0}
+                  subValue={`${stats?.totalCampaigns || 0} total`}
+                  icon={<Target className="w-4 h-4" />}
+                  color="blue"
+                />
+                <StatCard
+                  label="Total Spend"
+                  value={loading ? null : `$${stats?.totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }) || "0"}`}
+                  subValue={`$${stats?.totalDeposits.toLocaleString(undefined, { maximumFractionDigits: 0 }) || "0"} deposited`}
+                  icon={<TrendingUp className="w-4 h-4" />}
+                  color="violet"
+                />
               </div>
             </div>
           </div>
 
+          {/* Wallet Adjustment Panel */}
+          {showWalletAdjust && (
+            <div className="px-6 pb-5 animate-in slide-in-from-top-2 duration-300">
+              <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Adjust Balance</h3>
+                  <button
+                    onClick={() => setShowWalletAdjust(false)}
+                    className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+
+                {/* Action Toggle */}
+                <div className="flex gap-2 p-1 bg-muted/60 rounded-xl">
+                  <button
+                    onClick={() => setWalletAction("add")}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      walletAction === "add"
+                        ? "bg-emerald-500 text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                  <button
+                    onClick={() => setWalletAction("remove")}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      walletAction === "remove"
+                        ? "bg-rose-500 text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Minus className="w-4 h-4" />
+                    Remove
+                  </button>
+                </div>
+
+                {/* Amount */}
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={walletAmount}
+                    onChange={(e) => setWalletAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-8 h-12 text-lg font-medium rounded-xl border-border/50 bg-background"
+                  />
+                </div>
+
+                {/* Note */}
+                <Input
+                  value={walletDescription}
+                  onChange={(e) => setWalletDescription(e.target.value)}
+                  placeholder="Add a note (optional)"
+                  className="h-11 rounded-xl border-border/50 bg-background"
+                />
+
+                {/* Preview & Submit */}
+                {walletAmount && parseFloat(walletAmount) > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/60 text-sm">
+                    <span className="text-muted-foreground">New balance</span>
+                    <span className={cn(
+                      "font-semibold",
+                      walletAction === "add" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                    )}>
+                      ${((stats?.walletBalance || 0) + (walletAction === "add" ? 1 : -1) * parseFloat(walletAmount)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleWalletAdjustment}
+                  disabled={isAdjustingWallet || !walletAmount}
+                  className={cn(
+                    "w-full h-11 rounded-xl font-medium",
+                    walletAction === "add"
+                      ? "bg-emerald-500 hover:bg-emerald-600"
+                      : "bg-rose-500 hover:bg-rose-600"
+                  )}
+                >
+                  {isAdjustingWallet ? "Processing..." : `${walletAction === "add" ? "Add" : "Remove"} Funds`}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Section Tabs */}
-          <div className="px-6 pb-2">
-            <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+          <div className="px-6 pb-2 sticky top-0 z-10 bg-gradient-to-b from-background via-background to-background/0 pt-1">
+            <div className="flex gap-1 p-1 bg-muted/50 backdrop-blur-xl rounded-xl border border-border/30">
               {[
                 { id: "overview", label: "Overview", icon: Building2 },
-                { id: "subscription", label: "Plan", icon: CreditCard },
-                { id: "wallet", label: "Wallet", icon: Wallet },
+                { id: "activity", label: "Activity", icon: Activity },
+                { id: "settings", label: "Settings", icon: CreditCard },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveSection(tab.id as any)}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200",
                     activeSection === tab.id
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <tab.icon className="w-4 h-4" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Section Content */}
-          <div className="p-6 pt-4 space-y-4">
+          {/* Content Sections */}
+          <div className="px-6 py-4 space-y-6">
             {activeSection === "overview" && (
               <>
-                {/* Brand Details */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Details</h3>
-                  <div className="bg-card/50 border border-border/50 rounded-xl divide-y divide-border/50">
-                    <div className="flex items-center justify-between p-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="w-4 h-4" />
-                        Created
+                {/* Team Members */}
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Team</h3>
+                    <span className="text-xs text-muted-foreground">{teamMembers.length} members</span>
+                  </div>
+                  <div className="space-y-2">
+                    {loading ? (
+                      <div className="space-y-2">
+                        {[1, 2].map(i => (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-24 mb-1" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <span className="text-sm font-medium">
-                        {format(new Date(brand.created_at), 'MMM dd, yyyy')}
-                      </span>
-                    </div>
-                    {brand.home_url && (
-                      <div className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Globe className="w-4 h-4" />
-                          Website
-                        </div>
-                        <a
-                          href={brand.home_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+                    ) : teamMembers.length > 0 ? (
+                      teamMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                         >
-                          Visit
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    )}
-                    {brand.brand_type && (
-                      <div className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building2 className="w-4 h-4" />
-                          Type
+                          <Avatar className="h-10 w-10 border border-border/50">
+                            <AvatarImage src={member.user?.avatar_url || ''} />
+                            <AvatarFallback className="text-xs font-medium">
+                              {member.user?.username?.slice(0, 2).toUpperCase() || "??"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {member.user?.full_name || member.user?.username || "Unknown"}
+                            </p>
+                            <p className="text-xs text-muted-foreground capitalize">{member.role}</p>
+                          </div>
                         </div>
-                        <span className="text-sm font-medium capitalize">{brand.brand_type}</span>
-                      </div>
-                    )}
-                    {brand.renewal_date && (
-                      <div className="flex items-center justify-between p-3">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          Renewal
-                        </div>
-                        <span className="text-sm font-medium">
-                          {format(new Date(brand.renewal_date), 'MMM dd, yyyy')}
-                        </span>
-                      </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No team members</p>
                     )}
                   </div>
-                </div>
+                </section>
 
-                {/* Description */}
-                {brand.description && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">About</h3>
-                    <p className="text-sm text-muted-foreground bg-card/50 border border-border/50 rounded-xl p-4">
-                      {brand.description}
-                    </p>
+                {/* Campaigns */}
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground">Recent Campaigns</h3>
+                    <button
+                      onClick={() => navigate(`/brand/${brand.slug}/campaigns`)}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      View all
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
                   </div>
-                )}
+                  <div className="space-y-2">
+                    {loading ? (
+                      <div className="space-y-2">
+                        {[1, 2, 3].map(i => (
+                          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                        ))}
+                      </div>
+                    ) : campaigns.length > 0 ? (
+                      campaigns.map((campaign) => (
+                        <div
+                          key={campaign.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => navigate(`/brand/${brand.slug}/campaigns`)}
+                        >
+                          <div className={cn(
+                            "p-2 rounded-lg",
+                            campaign.status === "active" ? "bg-emerald-500/10" : "bg-muted"
+                          )}>
+                            {campaign.status === "active" ? (
+                              <Play className="w-4 h-4 text-emerald-500" />
+                            ) : campaign.status === "paused" ? (
+                              <Pause className="w-4 h-4 text-amber-500" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{campaign.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              ${campaign.budget?.toLocaleString() || 0} budget
+                            </p>
+                          </div>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "text-[10px] capitalize",
+                              campaign.status === "active" && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            )}
+                          >
+                            {campaign.status}
+                          </Badge>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">No campaigns yet</p>
+                    )}
+                  </div>
+                </section>
 
                 {/* Quick Actions */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Actions</h3>
+                <section>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">Quick Actions</h3>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex-col gap-1"
+                    <ActionButton
+                      icon={<Building2 className="w-5 h-5" />}
+                      label="Dashboard"
                       onClick={() => navigate(`/brand/${brand.slug}`)}
-                    >
-                      <Building2 className="w-4 h-4" />
-                      <span className="text-xs">Dashboard</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-auto py-3 flex-col gap-1"
-                      onClick={() => navigate(`/brand/${brand.slug}/campaigns`)}
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                      <span className="text-xs">Campaigns</span>
-                    </Button>
+                    />
+                    <ActionButton
+                      icon={<BarChart3 className="w-5 h-5" />}
+                      label="Analytics"
+                      onClick={() => navigate(`/brand/${brand.slug}/analytics`)}
+                    />
                   </div>
-                </div>
+                </section>
               </>
             )}
 
-            {activeSection === "subscription" && (
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <Label>Status</Label>
-                  <Select value={subscriptionStatus} onValueChange={setSubscriptionStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          Active
+            {activeSection === "activity" && (
+              <section>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3">Recent Transactions</h3>
+                <div className="space-y-1">
+                  {loading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <Skeleton key={i} className="h-14 w-full rounded-xl" />
+                      ))}
+                    </div>
+                  ) : recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <div
+                        key={activity.id}
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-xl hover:bg-muted/30 transition-colors",
+                          index === 0 && "bg-muted/20"
+                        )}
+                      >
+                        <div className="p-2 rounded-lg bg-muted/50">
+                          {getActivityIcon(activity.type)}
                         </div>
-                      </SelectItem>
-                      <SelectItem value="past_due">
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-500" />
-                          Past Due
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{activity.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                          </p>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="cancelled">
-                        <div className="flex items-center gap-2">
-                          <XCircle className="w-4 h-4 text-rose-500" />
-                          Cancelled
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="inactive">
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-slate-400" />
-                          Inactive
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        {activity.amount && (
+                          <span className={cn(
+                            "text-sm font-semibold tabular-nums",
+                            ["deposit", "topup", "admin_credit", "refund"].includes(activity.type)
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-rose-600 dark:text-rose-400"
+                          )}>
+                            {["deposit", "topup", "admin_credit", "refund"].includes(activity.type) ? "+" : "-"}
+                            ${activity.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Activity className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">No activity yet</p>
+                    </div>
+                  )}
                 </div>
-
-                <div className="space-y-3">
-                  <Label>Plan</Label>
-                  <Select value={subscriptionPlan} onValueChange={setSubscriptionPlan}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="starter">Starter</SelectItem>
-                      <SelectItem value="growth">Growth</SelectItem>
-                      <SelectItem value="enterprise">Enterprise</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={handleUpdateSubscription}
-                  disabled={isUpdatingSubscription}
-                >
-                  {isUpdatingSubscription ? "Saving..." : "Save Changes"}
-                </Button>
-              </div>
+              </section>
             )}
 
-            {activeSection === "wallet" && (
-              <div className="space-y-4">
-                {/* Current Balance */}
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-4">
-                  <p className="text-sm text-muted-foreground mb-1">Current Balance</p>
-                  <p className="text-3xl font-bold">
-                    ${stats?.walletBalance.toFixed(2) || "0.00"}
-                  </p>
-                </div>
+            {activeSection === "settings" && (
+              <div className="space-y-6">
+                {/* Subscription Settings */}
+                <section>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">Subscription</h3>
+                  <div className="space-y-4 p-4 rounded-2xl bg-muted/30 border border-border/30">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Status</Label>
+                      <Select value={subscriptionStatus} onValueChange={setSubscriptionStatus}>
+                        <SelectTrigger className="h-11 rounded-xl border-border/50">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              Active
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="past_due">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-amber-500" />
+                              Past Due
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="cancelled">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-rose-500" />
+                              Cancelled
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="inactive">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-slate-400" />
+                              Inactive
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Action Toggle */}
-                <div className="flex gap-2">
-                  <Button
-                    variant={walletAction === "add" ? "default" : "outline"}
-                    className="flex-1 gap-1.5"
-                    onClick={() => setWalletAction("add")}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Funds
-                  </Button>
-                  <Button
-                    variant={walletAction === "remove" ? "default" : "outline"}
-                    className="flex-1 gap-1.5"
-                    onClick={() => setWalletAction("remove")}
-                  >
-                    <Minus className="h-4 w-4" />
-                    Remove
-                  </Button>
-                </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Plan</Label>
+                      <Select value={subscriptionPlan} onValueChange={setSubscriptionPlan}>
+                        <SelectTrigger className="h-11 rounded-xl border-border/50">
+                          <SelectValue placeholder="Select plan" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="starter">Starter</SelectItem>
+                          <SelectItem value="growth">Growth</SelectItem>
+                          <SelectItem value="enterprise">Enterprise</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Amount Input */}
-                <div className="space-y-3">
-                  <Label>Amount</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={walletAmount}
-                      onChange={(e) => setWalletAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="pl-7"
-                    />
+                    <Button
+                      onClick={handleUpdateSubscription}
+                      disabled={isUpdatingSubscription}
+                      className="w-full h-11 rounded-xl"
+                    >
+                      {isUpdatingSubscription ? "Saving..." : "Update Subscription"}
+                    </Button>
                   </div>
-                </div>
+                </section>
+
+                {/* Brand Info */}
+                <section>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3">Details</h3>
+                  <div className="rounded-2xl bg-muted/30 border border-border/30 divide-y divide-border/30">
+                    <InfoRow label="Created" value={format(new Date(brand.created_at), 'MMMM d, yyyy')} />
+                    <InfoRow label="Slug" value={brand.slug} mono />
+                    {brand.brand_type && <InfoRow label="Type" value={brand.brand_type} />}
+                    {brand.renewal_date && (
+                      <InfoRow label="Renews" value={format(new Date(brand.renewal_date), 'MMM d, yyyy')} />
+                    )}
+                  </div>
+                </section>
 
                 {/* Description */}
-                <div className="space-y-3">
-                  <Label>Description (optional)</Label>
-                  <Textarea
-                    value={walletDescription}
-                    onChange={(e) => setWalletDescription(e.target.value)}
-                    placeholder="Reason for adjustment..."
-                    rows={2}
-                  />
-                </div>
-
-                {/* Preview */}
-                {walletAmount && parseFloat(walletAmount) > 0 && (
-                  <div className="bg-muted/30 rounded-lg p-3 text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">New Balance:</span>
-                      <span className={cn(
-                        "font-medium flex items-center gap-1",
-                        walletAction === "add" ? "text-emerald-500" : "text-rose-500"
-                      )}>
-                        {walletAction === "add" ? (
-                          <ArrowUpRight className="w-4 h-4" />
-                        ) : (
-                          <ArrowDownRight className="w-4 h-4" />
-                        )}
-                        ${((stats?.walletBalance || 0) + (walletAction === "add" ? 1 : -1) * parseFloat(walletAmount)).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+                {brand.description && (
+                  <section>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-3">About</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed p-4 rounded-2xl bg-muted/30 border border-border/30">
+                      {brand.description}
+                    </p>
+                  </section>
                 )}
-
-                <Button
-                  className="w-full"
-                  onClick={handleWalletAdjustment}
-                  disabled={isAdjustingWallet || !walletAmount}
-                >
-                  {isAdjustingWallet ? "Processing..." : "Confirm Adjustment"}
-                </Button>
               </div>
             )}
           </div>
+
+          {/* Bottom Safe Area */}
+          <div className="h-6" />
         </ScrollArea>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// Helper Components
+function StatCard({
+  label,
+  value,
+  subValue,
+  icon,
+  color
+}: {
+  label: string;
+  value: string | number | null;
+  subValue?: string;
+  icon: React.ReactNode;
+  color: "blue" | "violet" | "amber" | "rose";
+}) {
+  const colorClasses = {
+    blue: "from-blue-500/10 to-blue-500/5 border-blue-500/20",
+    violet: "from-violet-500/10 to-violet-500/5 border-violet-500/20",
+    amber: "from-amber-500/10 to-amber-500/5 border-amber-500/20",
+    rose: "from-rose-500/10 to-rose-500/5 border-rose-500/20",
+  };
+
+  const iconColorClasses = {
+    blue: "text-blue-500",
+    violet: "text-violet-500",
+    amber: "text-amber-500",
+    rose: "text-rose-500",
+  };
+
+  return (
+    <div className={cn(
+      "p-4 rounded-2xl border",
+      "bg-gradient-to-br",
+      colorClasses[color]
+    )}>
+      <div className="flex items-start justify-between mb-2">
+        <span className={iconColorClasses[color]}>{icon}</span>
+      </div>
+      <p className="text-xl font-bold tracking-tight">
+        {value === null ? <Skeleton className="h-7 w-16" /> : value}
+      </p>
+      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+      {subValue && <p className="text-[10px] text-muted-foreground/70 mt-1">{subValue}</p>}
+    </div>
+  );
+}
+
+function ActionButton({
+  icon,
+  label,
+  onClick
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center justify-center gap-2 p-4 rounded-2xl",
+        "bg-muted/30 hover:bg-muted/50 border border-border/30",
+        "transition-all duration-200 active:scale-[0.98]"
+      )}
+    >
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="text-xs font-medium">{label}</span>
+    </button>
+  );
+}
+
+function InfoRow({
+  label,
+  value,
+  mono
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between p-3.5">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={cn(
+        "text-sm font-medium capitalize",
+        mono && "font-mono text-xs bg-muted/50 px-2 py-0.5 rounded"
+      )}>
+        {value}
+      </span>
+    </div>
   );
 }
