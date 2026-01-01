@@ -105,7 +105,7 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
       console.error("Error fetching blueprints:", error);
       toast.error("Failed to load blueprints");
     } else {
-      setBlueprints(data || []);
+      setBlueprints((data || []) as Blueprint[]);
       if (data && data.length > 0) {
         const blueprintIds = data.map((b) => b.id);
         const { data: campaigns } = await supabase

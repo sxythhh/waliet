@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, subDays, subMonths, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
-import { Download, Users, DollarSign, Eye, Video, BarChart3 } from "lucide-react";
+import { Download, BarChart3, Users } from "lucide-react";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { cn } from "@/lib/utils";
 import { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
@@ -316,64 +316,47 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
     <div className="p-4 pb-[70px] sm:pb-4 space-y-5">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-4 bg-card border-border">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Total Views</p>
-              <p className="text-2xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Views</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatNumber(stats.totalViews)}</p>
             </div>
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <Eye className="h-4 w-4 text-blue-500" />
-            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatNumber(stats.avgViewsPerCreator)} avg per creator</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {formatNumber(stats.avgViewsPerCreator)} avg per creator
-          </p>
         </Card>
 
-        <Card className="p-4 bg-card border-border">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Total Spent</p>
-              <p className="text-2xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Total Spent</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{formatCurrency(stats.totalPayouts)}</p>
             </div>
-            <div className="p-2 rounded-lg bg-emerald-500/10">
-              <DollarSign className="h-4 w-4 text-emerald-500" />
-            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{formatCurrency(stats.effectiveCPM)} CPM</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {formatCurrency(stats.effectiveCPM)} CPM
-          </p>
         </Card>
 
-        <Card className="p-4 bg-card border-border">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Active Creators</p>
-              <p className="text-2xl font-bold tracking-[-0.5px]">{stats.activeCreators}</p>
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Active Creators</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.activeCreators}</p>
             </div>
-            <div className="p-2 rounded-lg bg-purple-500/10">
-              <Users className="h-4 w-4 text-purple-500" />
-            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalSubmissions} total submissions</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {stats.totalSubmissions} total submissions
-          </p>
         </Card>
 
-        <Card className="p-4 bg-card border-border">
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground tracking-[-0.3px]">Videos</p>
-              <p className="text-2xl font-bold tracking-[-0.5px]">{stats.approvedSubmissions}</p>
+        <Card className="p-4 bg-stats-card border-table-border">
+          <div className="space-y-2">
+            <p className="font-medium text-foreground tracking-[-0.5px] text-xs">Videos</p>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold tracking-[-0.5px]">{stats.approvedSubmissions}</p>
+              <div className="text-xs px-2 py-1 rounded-full tracking-[-0.5px] bg-primary/10 text-primary">
+                {stats.totalSubmissions - stats.approvedSubmissions} pending
+              </div>
             </div>
-            <div className="p-2 rounded-lg bg-orange-500/10">
-              <Video className="h-4 w-4 text-orange-500" />
-            </div>
+            <p className="text-xs text-muted-foreground tracking-[-0.5px]">{stats.totalSubmissions} total</p>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {stats.totalSubmissions - stats.approvedSubmissions} pending
-          </p>
         </Card>
       </div>
 
