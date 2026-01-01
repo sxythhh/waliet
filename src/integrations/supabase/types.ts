@@ -966,6 +966,61 @@ export type Database = {
           },
         ]
       }
+      brand_creator_notes: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string
+          creator_id: string
+          id: string
+          note_content: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by: string
+          creator_id: string
+          id?: string
+          note_content?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string
+          creator_id?: string
+          id?: string
+          note_content?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_creator_notes_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_creator_notes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_creator_notes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand_creator_relationships: {
         Row: {
           brand_id: string
@@ -1258,6 +1313,62 @@ export type Database = {
             foreignKeyName: "brand_wallets_brand_id_fkey"
             columns: ["brand_id"]
             isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_webhooks: {
+        Row: {
+          api_version: string | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          endpoint_url: string
+          events: string[]
+          failure_count: number | null
+          id: string
+          is_active: boolean | null
+          last_status_code: number | null
+          last_triggered_at: string | null
+          name: string
+          secret_key: string
+        }
+        Insert: {
+          api_version?: string | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          endpoint_url: string
+          events: string[]
+          failure_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_status_code?: number | null
+          last_triggered_at?: string | null
+          name: string
+          secret_key?: string
+        }
+        Update: {
+          api_version?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          endpoint_url?: string
+          events?: string[]
+          failure_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_status_code?: number | null
+          last_triggered_at?: string | null
+          name?: string
+          secret_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_webhooks_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
           },
@@ -6190,6 +6301,50 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          success: boolean
+          webhook_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          event_type: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          success: boolean
+          webhook_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "brand_webhooks"
             referencedColumns: ["id"]
           },
         ]
