@@ -625,32 +625,45 @@ export function CreatorContractsTab({
 
       {/* Create Contract Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] p-0 gap-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
-            <DialogTitle className="font-inter tracking-[-0.5px]">New Contract</DialogTitle>
-            <DialogDescription className="text-sm">
-              Send a contract to a creator for signature
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-5 space-y-5 max-h-[60vh] overflow-y-auto">
-            {/* Template & Job Post Selection */}
-            <div className="grid grid-cols-2 gap-3">
-              {templates.length > 0 && <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Template</Label>
-                  <Select value={newContract.template_id} onValueChange={handleTemplateSelect}>
-                    <SelectTrigger className="h-9 text-sm">
-                      <SelectValue placeholder="Select template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map(template => <SelectItem key={template.id} value={template.id}>
-                          {template.name} {template.is_default && "★"}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>}
-              <div className={cn("space-y-1.5", templates.length === 0 && "col-span-2")}>
-                <Label className="text-xs text-muted-foreground">Job Post</Label>
-                <Select value={newContract.boost_id} onValueChange={value => {
+        <DialogContent className="sm:max-w-[520px] p-0 gap-0 overflow-hidden max-h-[85vh] flex flex-col">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+            {/* Template Selection */}
+            {templates.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Contract Template</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {templates.map(template => (
+                    <button
+                      key={template.id}
+                      type="button"
+                      onClick={() => handleTemplateSelect(template.id)}
+                      className={cn(
+                        "flex flex-col items-start gap-1 p-3 rounded-lg border transition-all text-left",
+                        newContract.template_id === template.id 
+                          ? "border-foreground bg-foreground/5" 
+                          : "border-border/50 hover:border-border hover:bg-muted/30"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="font-inter tracking-[-0.5px] text-sm truncate">{template.name}</span>
+                        {template.is_default && <Star className="h-3 w-3 text-amber-500 shrink-0 ml-auto" />}
+                      </div>
+                      {template.description && (
+                        <span className="text-[11px] text-muted-foreground font-inter tracking-[-0.3px] line-clamp-1">
+                          {template.description}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Job Post */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Link to Job Post (optional)</Label>
+              <Select value={newContract.boost_id} onValueChange={value => {
                 const boost = boosts.find(b => b.id === value);
                 if (boost) {
                   setNewContract({
@@ -666,89 +679,122 @@ export function CreatorContractsTab({
                   });
                 }
               }}>
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="Link to job post" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {boosts.map(boost => <SelectItem key={boost.id} value={boost.id}>
-                        {boost.title}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+                <SelectTrigger className="h-10 font-inter tracking-[-0.5px] border-0 bg-muted/50">
+                  <SelectValue placeholder="Select a job post" />
+                </SelectTrigger>
+                <SelectContent>
+                  {boosts.map(boost => (
+                    <SelectItem key={boost.id} value={boost.id} className="font-inter tracking-[-0.5px]">
+                      {boost.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Creator Email */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Creator Email</Label>
-              <Input type="email" placeholder="creator@example.com" value={newContract.creator_email} onChange={e => setNewContract({
-              ...newContract,
-              creator_email: e.target.value
-            })} className="h-9 text-sm" />
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Creator Email</Label>
+              <Input 
+                type="email" 
+                placeholder="creator@example.com" 
+                value={newContract.creator_email} 
+                onChange={e => setNewContract({
+                  ...newContract,
+                  creator_email: e.target.value
+                })} 
+                className="h-10 font-inter tracking-[-0.5px]" 
+              />
             </div>
 
             {/* Rate & Videos */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Monthly Rate</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Monthly Rate</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
-                  <Input type="number" placeholder="1000" value={newContract.monthly_rate} onChange={e => setNewContract({
-                  ...newContract,
-                  monthly_rate: e.target.value
-                })} className="h-9 text-sm pl-7" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-inter">$</span>
+                  <Input 
+                    type="number" 
+                    placeholder="1000" 
+                    value={newContract.monthly_rate} 
+                    onChange={e => setNewContract({
+                      ...newContract,
+                      monthly_rate: e.target.value
+                    })} 
+                    className="h-10 pl-7 font-inter tracking-[-0.5px]" 
+                  />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Videos / Month</Label>
-                <Input type="number" placeholder="4" value={newContract.videos_per_month} onChange={e => setNewContract({
-                ...newContract,
-                videos_per_month: e.target.value
-              })} className="h-9 text-sm" />
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Videos / Month</Label>
+                <Input 
+                  type="number" 
+                  placeholder="4" 
+                  value={newContract.videos_per_month} 
+                  onChange={e => setNewContract({
+                    ...newContract,
+                    videos_per_month: e.target.value
+                  })} 
+                  className="h-10 font-inter tracking-[-0.5px]" 
+                />
               </div>
             </div>
 
             {/* Start Date & Duration */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Start Date</Label>
-                <Input type="date" value={newContract.start_date} onChange={e => setNewContract({
-                ...newContract,
-                start_date: e.target.value
-              })} className="h-9 text-sm" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Start Date</Label>
+                <Input 
+                  type="date" 
+                  value={newContract.start_date} 
+                  onChange={e => setNewContract({
+                    ...newContract,
+                    start_date: e.target.value
+                  })} 
+                  className="h-10 font-inter tracking-[-0.5px]" 
+                />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Duration</Label>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Duration</Label>
                 <Select value={newContract.duration_months} onValueChange={value => setNewContract({
-                ...newContract,
-                duration_months: value
-              })}>
-                  <SelectTrigger className="h-9 text-sm">
+                  ...newContract,
+                  duration_months: value
+                })}>
+                  <SelectTrigger className="h-10 font-inter tracking-[-0.5px] border-0 bg-muted/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[3, 6, 12, 18, 24].map(months => <SelectItem key={months} value={months.toString()}>
+                    {[3, 6, 12, 18, 24].map(months => (
+                      <SelectItem key={months} value={months.toString()} className="font-inter tracking-[-0.5px]">
                         {months} months
-                      </SelectItem>)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             {/* Additional Terms */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Additional Terms</Label>
-              <Textarea placeholder="Any additional terms or notes..." value={newContract.custom_terms} onChange={e => setNewContract({
-              ...newContract,
-              custom_terms: e.target.value
-            })} rows={2} className="text-sm resize-none" />
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Additional Terms</Label>
+              <Textarea 
+                placeholder="Any additional terms or notes..." 
+                value={newContract.custom_terms} 
+                onChange={e => setNewContract({
+                  ...newContract,
+                  custom_terms: e.target.value
+                })} 
+                rows={3} 
+                className="font-inter tracking-[-0.3px] resize-none" 
+              />
             </div>
           </div>
-          <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20">
-            <Button variant="ghost" size="sm" onClick={() => setCreateDialogOpen(false)} className="font-inter tracking-[-0.3px]">
+
+          <DialogFooter className="px-6 py-4 border-t border-border/30 shrink-0">
+            <Button variant="ghost" size="sm" onClick={() => setCreateDialogOpen(false)} className="font-inter tracking-[-0.5px]">
               Cancel
             </Button>
-            <Button size="sm" onClick={handleCreateContract} className="font-inter tracking-[-0.3px]">
+            <Button size="sm" onClick={handleCreateContract} className="font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90">
               Create & Send
             </Button>
           </DialogFooter>
