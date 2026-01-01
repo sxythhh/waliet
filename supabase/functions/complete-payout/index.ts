@@ -25,187 +25,66 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Completing payout request', { payoutRequestId, approvedBy });
-
-    // 1. Fetch the payout request
-    const { data: payoutRequest, error: requestError } = await supabase
-      .from('submission_payout_requests')
-      .select('*')
-      .eq('id', payoutRequestId)
-      .single();
-
-    if (requestError || !payoutRequest) {
-      return new Response(JSON.stringify({ error: 'Payout request not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Rate limiting check (if approvedBy is provided, use that user for rate limiting)
+    if (approvedBy) {
+      const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+        p_user_id: approvedBy,
+        p_action: 'complete_payout',
+        p_max_attempts: 10,
+        p_window_seconds: 60
       });
-    }
 
-    // 2. Check if clearing period has ended
-    const clearingEndsAt = new Date(payoutRequest.clearing_ends_at);
-    const now = new Date();
-
-    if (now < clearingEndsAt && payoutRequest.status !== 'approved') {
-      return new Response(JSON.stringify({ 
-        error: 'Clearing period has not ended yet',
-        clearingEndsAt: clearingEndsAt.toISOString(),
-        daysRemaining: Math.ceil((clearingEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // 3. Fetch all locked ledger entries for this payout request
-    const { data: lockedEntries, error: ledgerError } = await supabase
-      .from('payment_ledger')
-      .select('*')
-      .eq('payout_request_id', payoutRequestId)
-      .eq('status', 'locked');
-
-    if (ledgerError) {
-      console.error('Failed to fetch locked entries:', ledgerError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch locked entries' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (!lockedEntries || lockedEntries.length === 0) {
-      return new Response(JSON.stringify({ error: 'No locked entries found for this payout' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // 4. Calculate total amount to pay
-    const totalToPay = lockedEntries.reduce((sum, entry) => {
-      const pending = parseFloat(entry.accrued_amount) - parseFloat(entry.paid_amount);
-      return sum + Math.max(0, pending);
-    }, 0);
-
-    // 5. Update ledger entries to paid
-    const entryIds = lockedEntries.map(e => e.id);
-    const { error: updateError } = await supabase
-      .from('payment_ledger')
-      .update({
-        status: 'paid',
-        paid_amount: supabase.rpc('raw', { sql: 'accrued_amount' }), // Set paid = accrued
-        cleared_at: new Date().toISOString(),
-        last_paid_at: new Date().toISOString(),
-      })
-      .in('id', entryIds);
-
-    // Alternative: Update each entry individually to set paid_amount = accrued_amount
-    for (const entry of lockedEntries) {
-      await supabase
-        .from('payment_ledger')
-        .update({
-          status: 'paid',
-          paid_amount: entry.accrued_amount,
-          cleared_at: new Date().toISOString(),
-          last_paid_at: new Date().toISOString(),
-        })
-        .eq('id', entry.id);
-    }
-
-    // 6. Create wallet transaction for the user
-    const { data: transaction, error: txError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: payoutRequest.user_id,
-        amount: parseFloat(totalToPay.toFixed(2)),
-        type: 'earning',
-        status: 'completed',
-        description: `Payout completed - ${lockedEntries.length} video(s)`,
-        metadata: {
-          payout_request_id: payoutRequestId,
-          entries_count: lockedEntries.length,
-        },
-      })
-      .select()
-      .single();
-
-    if (txError) {
-      console.error('Failed to create wallet transaction:', txError);
-      // Continue - the ledger update is the source of truth
-    }
-
-    // 7. Update user's wallet balance
-    const { error: walletError } = await supabase
-      .from('wallets')
-      .update({
-        balance: supabase.rpc('increment_balance', { amount: totalToPay }),
-        total_earned: supabase.rpc('increment_total_earned', { amount: totalToPay }),
-      })
-      .eq('user_id', payoutRequest.user_id);
-
-    // Update wallet balance directly
-    const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance, total_earned')
-      .eq('user_id', payoutRequest.user_id)
-      .single();
-
-    if (wallet) {
-      await supabase
-        .from('wallets')
-        .update({
-          balance: parseFloat(wallet.balance || 0) + totalToPay,
-          total_earned: parseFloat(wallet.total_earned || 0) + totalToPay,
-        })
-        .eq('user_id', payoutRequest.user_id);
-    }
-
-    // 8. Update payout request status
-    await supabase
-      .from('submission_payout_requests')
-      .update({
-        status: 'completed',
-        processed_at: new Date().toISOString(),
-        approved_by: approvedBy,
-      })
-      .eq('id', payoutRequestId);
-
-    // 9. Update campaign/boost budget_used
-    const sourceUpdates = new Map<string, number>();
-    for (const entry of lockedEntries) {
-      const key = `${entry.source_type}:${entry.source_id}`;
-      const amount = parseFloat(entry.accrued_amount) - parseFloat(entry.paid_amount);
-      sourceUpdates.set(key, (sourceUpdates.get(key) || 0) + amount);
-    }
-
-    for (const [key, amount] of sourceUpdates) {
-      const [sourceType, sourceId] = key.split(':');
-      const table = sourceType === 'campaign' ? 'campaigns' : 'bounty_campaigns';
-      
-      const { data: source } = await supabase
-        .from(table)
-        .select('budget_used')
-        .eq('id', sourceId)
-        .single();
-
-      if (source) {
-        await supabase
-          .from(table)
-          .update({
-            budget_used: parseFloat(source.budget_used || 0) + amount,
-          })
-          .eq('id', sourceId);
+      if (rateLimitError || !allowed) {
+        console.log('Rate limit exceeded for payout approver:', approvedBy);
+        return new Response(JSON.stringify({ error: 'Too many payout attempts. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     }
 
-    console.log('Payout completed successfully', {
-      payoutRequestId,
-      totalPaid: totalToPay,
-      entriesCompleted: lockedEntries.length,
+    console.log('Executing atomic payout completion:', { payoutRequestId, approvedBy });
+
+    // Execute atomic payout using RPC
+    const { data: result, error: payoutError } = await supabase.rpc('atomic_complete_payout', {
+      p_payout_request_id: payoutRequestId,
+      p_approved_by: approvedBy || null
     });
+
+    if (payoutError) {
+      console.error('Atomic payout failed:', payoutError);
+      
+      // Map specific error messages
+      let errorMessage = 'Payout failed';
+      let statusCode = 500;
+      
+      if (payoutError.message.includes('not found')) {
+        errorMessage = 'Payout request not found';
+        statusCode = 404;
+      } else if (payoutError.message.includes('already completed')) {
+        errorMessage = 'Payout already completed';
+        statusCode = 400;
+      } else if (payoutError.message.includes('Clearing period')) {
+        errorMessage = 'Clearing period has not ended yet';
+        statusCode = 400;
+      } else if (payoutError.message.includes('No locked entries')) {
+        errorMessage = 'No locked entries found for this payout';
+        statusCode = 400;
+      }
+
+      return new Response(JSON.stringify({ error: errorMessage }), {
+        status: statusCode,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Payout completed successfully:', result);
 
     return new Response(JSON.stringify({
       success: true,
-      totalPaid: parseFloat(totalToPay.toFixed(2)),
-      entriesCompleted: lockedEntries.length,
-      transactionId: transaction?.id,
+      totalPaid: result?.total_paid,
+      entriesCompleted: result?.entries_completed,
+      transactionId: result?.transaction_id,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -36,6 +36,22 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting check
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_action: 'allocate_budget',
+      p_max_attempts: 20,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError || !allowed) {
+      console.log('Rate limit exceeded for user:', user.id);
+      return new Response(JSON.stringify({ error: 'Too many budget allocation attempts. Please try again later.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { brand_id, campaign_id, boost_id, amount } = await req.json();
 
     if (!brand_id || !amount) {
@@ -52,7 +68,8 @@ serve(async (req) => {
       });
     }
 
-    if (amount <= 0) {
+    const allocateAmount = Number(amount);
+    if (isNaN(allocateAmount) || allocateAmount <= 0) {
       return new Response(JSON.stringify({ error: 'Amount must be greater than 0' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -74,164 +91,59 @@ serve(async (req) => {
       });
     }
 
-    // Get brand wallet balance
-    const { data: brandWallet, error: walletError } = await supabase
-      .from('brand_wallets')
-      .select('id, balance')
-      .eq('brand_id', brand_id)
+    // Verify campaign/boost belongs to this brand
+    const targetId = campaign_id || boost_id;
+    const campaignType = campaign_id ? 'campaign' : 'boost';
+    const table = campaign_id ? 'campaigns' : 'bounty_campaigns';
+
+    const { data: target, error: targetError } = await supabase
+      .from(table)
+      .select('id, brand_id, title')
+      .eq('id', targetId)
       .single();
 
-    if (walletError || !brandWallet) {
-      return new Response(JSON.stringify({ error: 'Brand wallet not found' }), {
+    if (targetError || !target || target.brand_id !== brand_id) {
+      return new Response(JSON.stringify({ error: `${campaignType} not found or does not belong to this brand` }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const walletBalance = brandWallet.balance || 0;
-    console.log(`Brand ${brand_id} wallet balance: $${walletBalance}`);
+    console.log('Executing atomic budget allocation:', { brandId: brand_id, targetId, campaignType, amount: allocateAmount });
 
-    if (walletBalance < amount) {
-      return new Response(JSON.stringify({ 
-        error: 'Insufficient brand wallet balance',
-        current_balance: walletBalance,
-        requested_amount: amount
-      }), {
+    // Execute atomic budget allocation using RPC
+    const { data: result, error: allocateError } = await supabase.rpc('atomic_allocate_budget', {
+      p_brand_id: brand_id,
+      p_campaign_id: targetId,
+      p_campaign_type: campaignType,
+      p_amount: allocateAmount
+    });
+
+    if (allocateError) {
+      console.error('Atomic allocation failed:', allocateError);
+      const errorMessage = allocateError.message.includes('Insufficient') 
+        ? 'Insufficient brand wallet balance'
+        : 'Budget allocation failed';
+      return new Response(JSON.stringify({ error: errorMessage }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Allocate budget to campaign or boost
-    if (campaign_id) {
-      // Verify campaign belongs to this brand
-      const { data: campaign, error: campaignError } = await supabase
-        .from('campaigns')
-        .select('id, brand_id, budget, title')
-        .eq('id', campaign_id)
-        .single();
+    console.log('Budget allocation completed:', result);
 
-      if (campaignError || !campaign || campaign.brand_id !== brand_id) {
-        return new Response(JSON.stringify({ error: 'Campaign not found or does not belong to this brand' }), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Update campaign budget
-      const { error: updateError } = await supabase
-        .from('campaigns')
-        .update({ budget: (campaign.budget || 0) + amount })
-        .eq('id', campaign_id);
-
-      if (updateError) {
-        console.error('Error updating campaign budget:', updateError);
-        return new Response(JSON.stringify({ error: 'Failed to update campaign budget' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Deduct from brand wallet
-      const { error: walletUpdateError } = await supabase
-        .from('brand_wallets')
-        .update({ balance: walletBalance - amount })
-        .eq('brand_id', brand_id);
-
-      if (walletUpdateError) {
-        console.error('Error updating brand wallet:', walletUpdateError);
-        // Rollback campaign budget update
-        await supabase
-          .from('campaigns')
-          .update({ budget: campaign.budget || 0 })
-          .eq('id', campaign_id);
-        return new Response(JSON.stringify({ error: 'Failed to update brand wallet' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Log transaction in brand_wallet_transactions
-      await supabase
-        .from('brand_wallet_transactions')
-        .insert({
-          brand_id: brand_id,
-          campaign_id: campaign_id,
-          type: 'campaign_funding',
-          amount: -amount,
-          description: `Funded campaign: ${campaign.title}`,
-          created_by: user.id
-        });
-
-      console.log(`Brand ${brand_id} funded campaign ${campaign_id} with $${amount}`);
-
-    } else if (boost_id) {
-      // Verify boost belongs to this brand
-      const { data: boost, error: boostError } = await supabase
-        .from('bounty_campaigns')
-        .select('id, brand_id, budget, title')
-        .eq('id', boost_id)
-        .single();
-
-      if (boostError || !boost || boost.brand_id !== brand_id) {
-        return new Response(JSON.stringify({ error: 'Boost not found or does not belong to this brand' }), {
-          status: 404,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Update boost budget
-      const { error: updateError } = await supabase
-        .from('bounty_campaigns')
-        .update({ budget: (boost.budget || 0) + amount })
-        .eq('id', boost_id);
-
-      if (updateError) {
-        console.error('Error updating boost budget:', updateError);
-        return new Response(JSON.stringify({ error: 'Failed to update boost budget' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Deduct from brand wallet
-      const { error: walletUpdateError } = await supabase
-        .from('brand_wallets')
-        .update({ balance: walletBalance - amount })
-        .eq('brand_id', brand_id);
-
-      if (walletUpdateError) {
-        console.error('Error updating brand wallet:', walletUpdateError);
-        // Rollback boost budget update
-        await supabase
-          .from('bounty_campaigns')
-          .update({ budget: boost.budget || 0 })
-          .eq('id', boost_id);
-        return new Response(JSON.stringify({ error: 'Failed to update brand wallet' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // Log transaction in brand_wallet_transactions
-      await supabase
-        .from('brand_wallet_transactions')
-        .insert({
-          brand_id: brand_id,
-          boost_id: boost_id,
-          type: 'boost_funding',
-          amount: -amount,
-          description: `Funded boost: ${boost.title}`,
-          created_by: user.id
-        });
-
-      console.log(`Brand ${brand_id} funded boost ${boost_id} with $${amount}`);
-    }
+    // Get updated brand wallet balance
+    const { data: updatedWallet } = await supabase
+      .from('brand_wallets')
+      .select('balance')
+      .eq('brand_id', brand_id)
+      .single();
 
     return new Response(JSON.stringify({ 
       success: true,
-      allocated_amount: amount,
-      remaining_balance: walletBalance - amount
+      allocated_amount: allocateAmount,
+      remaining_balance: Number(updatedWallet?.balance) || 0,
+      new_budget: result?.new_budget
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -37,6 +37,22 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting check
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_action: 'brand_to_personal_transfer',
+      p_max_attempts: 10,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError || !allowed) {
+      console.log('Rate limit exceeded for user:', user.id);
+      return new Response(JSON.stringify({ error: 'Too many transfer attempts. Please try again later.' }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { brand_id, amount, description } = await req.json();
 
     if (!brand_id || !amount) {
@@ -69,158 +85,35 @@ serve(async (req) => {
       });
     }
 
-    // Get brand wallet balance
-    const { data: brandWallet, error: brandWalletError } = await supabase
-      .from('brand_wallets')
-      .select('id, balance, total_spent')
-      .eq('brand_id', brand_id)
+    // Get brand name for description
+    const { data: brand } = await supabase
+      .from('brands')
+      .select('name')
+      .eq('id', brand_id)
       .single();
 
-    if (brandWalletError || !brandWallet) {
-      return new Response(JSON.stringify({ error: 'Brand wallet not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    console.log('Executing atomic brand-to-personal transfer:', { brandId: brand_id, userId: user.id, amount: transferAmount });
 
-    const currentBrandBalance = Number(brandWallet.balance) || 0;
-    if (currentBrandBalance < transferAmount) {
-      return new Response(JSON.stringify({ 
-        error: 'Insufficient balance in brand wallet',
-        current_balance: currentBrandBalance,
-        requested_amount: transferAmount
-      }), {
+    // Execute atomic transfer using RPC
+    const { data: result, error: transferError } = await supabase.rpc('atomic_brand_to_personal_transfer', {
+      p_brand_id: brand_id,
+      p_user_id: user.id,
+      p_amount: transferAmount,
+      p_description: description || `Transfer from brand: ${brand?.name || 'Unknown'}`
+    });
+
+    if (transferError) {
+      console.error('Atomic transfer failed:', transferError);
+      const errorMessage = transferError.message.includes('Insufficient') 
+        ? 'Insufficient balance in brand wallet'
+        : 'Transfer failed';
+      return new Response(JSON.stringify({ error: errorMessage }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Get brand info
-    const { data: brand, error: brandError } = await supabase
-      .from('brands')
-      .select('id, name')
-      .eq('id', brand_id)
-      .single();
-
-    if (brandError || !brand) {
-      return new Response(JSON.stringify({ error: 'Brand not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`Transferring $${transferAmount} from brand ${brand.name} to user ${user.id}`);
-
-    // Deduct from brand wallet
-    const { error: deductError } = await supabase
-      .from('brand_wallets')
-      .update({
-        balance: currentBrandBalance - transferAmount,
-        total_spent: Number(brandWallet.total_spent || 0) + transferAmount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('brand_id', brand_id);
-
-    if (deductError) {
-      console.error('Error deducting from brand wallet:', deductError);
-      return new Response(JSON.stringify({ error: 'Failed to deduct from brand wallet' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Record brand wallet transaction
-    await supabase
-      .from('brand_wallet_transactions')
-      .insert({
-        brand_id: brand_id,
-        type: 'transfer_out',
-        amount: -transferAmount,
-        status: 'completed',
-        description: description || `Transfer to personal wallet`,
-        created_by: user.id,
-        metadata: {
-          destination_type: 'personal_wallet',
-          destination_user_id: user.id
-        }
-      });
-
-    // Get or create user's personal wallet
-    let { data: personalWallet } = await supabase
-      .from('wallets')
-      .select('id, balance, total_earned')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!personalWallet) {
-      // Create wallet if it doesn't exist
-      const { data: newWallet } = await supabase
-        .from('wallets')
-        .insert({
-          user_id: user.id,
-          balance: 0,
-          total_earned: 0,
-          total_withdrawn: 0,
-          pending_balance: 0
-        })
-        .select()
-        .single();
-      
-      personalWallet = newWallet;
-    }
-
-    if (!personalWallet) {
-      return new Response(JSON.stringify({ error: 'Failed to get or create personal wallet' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Credit personal wallet
-    const { error: creditError } = await supabase
-      .from('wallets')
-      .update({
-        balance: Number(personalWallet.balance) + transferAmount,
-        total_earned: Number(personalWallet.total_earned || 0) + transferAmount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user.id);
-
-    if (creditError) {
-      console.error('Error crediting personal wallet:', creditError);
-      // Try to rollback brand wallet
-      await supabase
-        .from('brand_wallets')
-        .update({
-          balance: currentBrandBalance,
-          total_spent: Number(brandWallet.total_spent || 0),
-          updated_at: new Date().toISOString()
-        })
-        .eq('brand_id', brand_id);
-      
-      return new Response(JSON.stringify({ error: 'Failed to credit personal wallet' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Record personal wallet transaction
-    await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: user.id,
-        amount: transferAmount,
-        type: 'transfer_in',
-        status: 'completed',
-        description: description || `Transfer from brand: ${brand.name}`,
-        metadata: {
-          source_type: 'brand_wallet',
-          brand_id: brand_id,
-          brand_name: brand.name
-        }
-      });
-
-    console.log(`Successfully transferred $${transferAmount} from brand ${brand.name} to user ${user.id}`);
+    console.log('Brand-to-personal transfer completed:', result);
 
     // Get updated balances
     const { data: updatedPersonalWallet } = await supabase
