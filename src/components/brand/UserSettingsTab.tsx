@@ -1056,7 +1056,7 @@ export function UserSettingsTab() {
         </div>
       </div>;
   }
-  return <div className="w-full">
+  return <div className="w-full p-1.5">
       <div className="border border-border rounded-xl bg-card overflow-hidden">
         {/* Sticky Header & Tabs */}
         <div className="sticky top-0 z-10 bg-card">
