@@ -31,7 +31,7 @@ import { ProfileOnboardingChecklist } from "@/components/dashboard/ProfileOnboar
 import { PaymentMethodsSection } from "@/components/dashboard/PaymentMethodsSection";
 import { SecuritySection } from "@/components/dashboard/SecuritySection";
 import { PortfolioSection, PortfolioItem } from "@/components/dashboard/PortfolioSection";
-import { SettingsCard, UsernameSettingsCard, EmailSettingsCard } from "@/components/dashboard/settings";
+import { SettingsCard, UsernameSettingsCard, EmailSettingsCard, CurrencySettingsCard } from "@/components/dashboard/settings";
 import { SocialAccountsTable } from "@/components/dashboard/SocialAccountsTable";
 import { useTheme } from "@/components/ThemeProvider";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
@@ -969,6 +969,9 @@ export function ProfileTab() {
         ...profile,
         subscribed_to_updates: checked
       })} subscriptionHasChanges={profile.subscribed_to_updates !== originalSubscribedToUpdates} onSaveSubscription={handleSaveSubscription} savingSubscription={savingSubscription} />
+
+        {/* Currency Card */}
+        <CurrencySettingsCard />
 
         {/* Discord Card */}
         <SettingsCard title="Discord" description="Connect your Discord account to join our community and receive updates directly" footerHint={profile.discord_username ? "Your Discord account is connected." : "Connect to unlock community features."}>
