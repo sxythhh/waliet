@@ -112,12 +112,16 @@ export function CampaignRowCard({
             </div>}
           
           {/* Status Badge - positioned in corner */}
-          {daysLeft !== null && daysLeft > 0 && <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-amber-500/90 text-white rounded">
+          {daysLeft !== null && daysLeft > 0 && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-amber-500/90 text-white rounded">
               {daysLeft} days left
-            </span>}
-          {status === "draft" && <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium text-white rounded bg-secondary">
+            </span>
+          )}
+          {status === "draft" && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-muted-foreground/80 text-white rounded">
               Draft
-            </span>}
+            </span>
+          )}
         </div>
 
         {/* Content Section */}
