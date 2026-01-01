@@ -1,9 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsOptions } from "../_shared/cors.ts";
+import { safeLog, safeError, truncateId } from "../_shared/logging.ts";
 
 // Simple hash function for IP anonymization
 function hashIP(ip: string): string {
@@ -37,13 +34,12 @@ function parseUserAgent(ua: string): {
     device = "Tablet";
   } else if (ua.includes("Android")) {
     os = "Android";
-    // Check device type for Android
     if (ua.includes("Mobile")) {
       device = "Mobile";
     } else if (ua.includes("Tablet")) {
       device = "Tablet";
     } else {
-      device = "Mobile"; // Default Android to mobile
+      device = "Mobile";
     }
   } else if (ua.includes("Windows")) {
     os = "Windows";
@@ -96,9 +92,11 @@ function getDeviceName(os: string, device: string): string {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
 
   try {
@@ -111,7 +109,7 @@ Deno.serve(async (req) => {
     const { userId, sessionId } = await req.json();
 
     if (!userId || !sessionId) {
-      console.error("Missing required fields:", { userId, sessionId });
+      safeError("Missing required fields");
       return new Response(
         JSON.stringify({ error: "Missing userId or sessionId" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -121,8 +119,8 @@ Deno.serve(async (req) => {
     // Get user agent from headers
     const userAgent = req.headers.get("user-agent") || "";
     
-    // Get IP from various headers (Cloudflare, etc.)
-    const ip = req.headers.get("cf-connecting-ip") || 
+    // Get IP from various headers (Cloudflare, etc.) - immediately hash for privacy
+    const rawIp = req.headers.get("cf-connecting-ip") || 
                req.headers.get("x-real-ip") || 
                req.headers.get("x-forwarded-for")?.split(",")[0] || 
                "unknown";
@@ -131,13 +129,12 @@ Deno.serve(async (req) => {
     const country = req.headers.get("cf-ipcountry") || null;
     const city = req.headers.get("cf-ipcity") || null;
 
-    console.log("Session tracking request:", {
-      userId,
-      sessionId,
-      ip: hashIP(ip),
-      country,
-      city,
-      userAgent: userAgent.substring(0, 100)
+    // Log without sensitive data
+    safeLog("Session tracking request", {
+      userId: truncateId(userId),
+      sessionId: truncateId(sessionId),
+      hasLocation: !!(country || city),
+      device: userAgent.includes("Mobile") ? "mobile" : "desktop"
     });
 
     // Parse user agent
@@ -145,7 +142,7 @@ Deno.serve(async (req) => {
     const deviceName = getDeviceName(os, device);
 
     // Hash the IP for privacy
-    const hashedIp = ip !== "unknown" ? hashIP(ip) : null;
+    const hashedIp = rawIp !== "unknown" ? hashIP(rawIp) : null;
 
     // Update user's profile with location if available
     if (country || city) {
@@ -159,9 +156,7 @@ Deno.serve(async (req) => {
         .eq("id", userId);
 
       if (profileError) {
-        console.error("Error updating profile location:", profileError);
-      } else {
-        console.log("Updated profile location:", { country, city });
+        safeError("Error updating profile location", profileError);
       }
     }
 
@@ -172,7 +167,6 @@ Deno.serve(async (req) => {
       .eq("user_id", userId);
 
     // Use upsert to handle race conditions and duplicates gracefully
-    // The unique constraint is on (user_id, session_id)
     const { data: session, error: sessionError } = await supabase
       .from("user_sessions")
       .upsert({
@@ -195,18 +189,17 @@ Deno.serve(async (req) => {
       .single();
 
     if (sessionError) {
-      console.error("Error upserting session:", sessionError);
+      safeError("Error upserting session", sessionError);
       return new Response(
-        JSON.stringify({ error: "Failed to track session", details: sessionError.message }),
+        JSON.stringify({ error: "Failed to track session" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Session tracked successfully:", {
-      sessionId: session?.id,
+    safeLog("Session tracked successfully", {
+      sessionId: truncateId(session?.id),
       device: deviceName,
-      browser: `${browser} ${browserVersion}`,
-      location: `${city || "Unknown"}, ${country || "Unknown"}`
+      browser: browser
     });
 
     return new Response(
@@ -224,9 +217,9 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Unexpected error in track-user-session:", error);
+    safeError("Unexpected error in track-user-session", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

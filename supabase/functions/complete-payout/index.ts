@@ -1,13 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from "../_shared/cors.ts";
+import { safeLog, safeError, truncateId } from "../_shared/logging.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
 
   try {
@@ -35,7 +34,7 @@ Deno.serve(async (req) => {
       });
 
       if (rateLimitError || !allowed) {
-        console.log('Rate limit exceeded for payout approver:', approvedBy);
+        safeLog('Rate limit exceeded for payout', { approver: truncateId(approvedBy) });
         return new Response(JSON.stringify({ error: 'Too many payout attempts. Please try again later.' }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,7 +42,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log('Executing atomic payout completion:', { payoutRequestId, approvedBy });
+    safeLog('Executing atomic payout completion', { 
+      payoutRequestId: truncateId(payoutRequestId), 
+      approvedBy: truncateId(approvedBy) 
+    });
 
     // Execute atomic payout using RPC
     const { data: result, error: payoutError } = await supabase.rpc('atomic_complete_payout', {
@@ -52,7 +54,7 @@ Deno.serve(async (req) => {
     });
 
     if (payoutError) {
-      console.error('Atomic payout failed:', payoutError);
+      safeError('Atomic payout failed', payoutError);
       
       // Map specific error messages
       let errorMessage = 'Payout failed';
@@ -78,7 +80,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Payout completed successfully:', result);
+    safeLog('Payout completed successfully', { 
+      totalPaid: result?.total_paid,
+      entriesCompleted: result?.entries_completed 
+    });
 
     return new Response(JSON.stringify({
       success: true,
@@ -90,10 +95,10 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: unknown) {
-    console.error('Error completing payout:', error);
+    safeError('Error completing payout', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'An unexpected error occurred',
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,15 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from "../_shared/cors.ts";
+import { safeLog, safeError, truncateId } from "../_shared/logging.ts";
 
 const CLEARING_PERIOD_DAYS = 7;
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
 
   try {
@@ -39,7 +38,12 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { sourceType, sourceId, videoSubmissionId, boostSubmissionId } = body;
 
-    console.log('Processing payout request', { userId: user.id, sourceType, sourceId, videoSubmissionId, boostSubmissionId });
+    safeLog('Processing payout request', { 
+      userId: truncateId(user.id), 
+      sourceType, 
+      hasVideoSubmission: !!videoSubmissionId,
+      hasBoostSubmission: !!boostSubmissionId 
+    });
 
     // 1. Fetch all pending ledger entries for this user (optionally filtered)
     let ledgerQuery = supabase
@@ -54,14 +58,13 @@ Deno.serve(async (req) => {
     } else if (boostSubmissionId) {
       ledgerQuery = ledgerQuery.eq('boost_submission_id', boostSubmissionId);
     } else if (sourceType && sourceId) {
-      // Filter by source (program) if provided
       ledgerQuery = ledgerQuery.eq('source_type', sourceType).eq('source_id', sourceId);
     }
 
     const { data: pendingEntries, error: ledgerError } = await ledgerQuery;
 
     if (ledgerError) {
-      console.error('Failed to fetch pending entries:', ledgerError);
+      safeError('Failed to fetch pending entries', ledgerError);
       return new Response(JSON.stringify({ error: 'Failed to fetch pending payments' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (requestError) {
-      console.error('Failed to create payout request:', requestError);
+      safeError('Failed to create payout request', requestError);
       return new Response(JSON.stringify({ error: 'Failed to create payout request' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -124,7 +127,7 @@ Deno.serve(async (req) => {
       .in('id', entryIds);
 
     if (lockError) {
-      console.error('Failed to lock entries:', lockError);
+      safeError('Failed to lock entries', lockError);
       // Rollback: delete the payout request
       await supabase.from('submission_payout_requests').delete().eq('id', payoutRequest.id);
       return new Response(JSON.stringify({ error: 'Failed to lock pending payments' }), {
@@ -133,7 +136,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 5. Create payout items for each entry (for tracking in existing system)
+    // 5. Create payout items for each entry
     const payoutItems = pendingEntries.map(entry => ({
       payout_request_id: payoutRequest.id,
       submission_id: entry.video_submission_id,
@@ -148,15 +151,14 @@ Deno.serve(async (req) => {
       .insert(payoutItems);
 
     if (itemsError) {
-      console.error('Failed to create payout items:', itemsError);
+      safeError('Failed to create payout items', itemsError);
       // Continue anyway, the ledger entries are the source of truth
     }
 
-    console.log('Payout request created successfully', {
-      requestId: payoutRequest.id,
+    safeLog('Payout request created successfully', {
+      requestId: truncateId(payoutRequest.id),
       totalAmount: totalPending,
       entriesLocked: entryIds.length,
-      clearingEndsAt: clearingEndsAt.toISOString(),
     });
 
     // 6. Run fraud check on the payout request
@@ -174,12 +176,10 @@ Deno.serve(async (req) => {
       if (fraudCheckResponse.ok) {
         const fraudCheckData = await fraudCheckResponse.json();
         fraudCheckResult = fraudCheckData.result;
-        console.log('Fraud check completed', fraudCheckResult);
-      } else {
-        console.error('Fraud check failed:', await fraudCheckResponse.text());
+        safeLog('Fraud check completed', { result: fraudCheckResult?.risk_level });
       }
     } catch (fraudError) {
-      console.error('Error running fraud check:', fraudError);
+      safeError('Error running fraud check', fraudError);
       // Continue even if fraud check fails - will default to manual review
     }
 
@@ -198,10 +198,10 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: unknown) {
-    console.error('Error processing payout request:', error);
+    safeError('Error processing payout request', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'An unexpected error occurred',
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,16 +1,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getCorsHeaders, handleCorsOptions } from "../_shared/cors.ts";
+import { safeLog, safeError, truncateId } from "../_shared/logging.ts";
 
 const MINIMUM_TRANSFER = 1;
 const TRANSFER_FEE_RATE = 0.03; // 3% fee
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleCorsOptions(req);
   }
 
   try {
@@ -52,7 +51,7 @@ Deno.serve(async (req) => {
     });
 
     if (rateLimitError || !allowed) {
-      console.log('Rate limit exceeded for user:', senderId);
+      safeLog('Rate limit exceeded for P2P transfer', { userId: truncateId(senderId) });
       return new Response(
         JSON.stringify({ error: 'Too many transfer attempts. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -104,7 +103,12 @@ Deno.serve(async (req) => {
     const fee = Math.round(transferAmount * TRANSFER_FEE_RATE * 100) / 100;
     const netAmount = Math.round((transferAmount - fee) * 100) / 100;
 
-    console.log('Executing atomic P2P transfer:', { senderId, recipientId: recipient.id, amount: transferAmount, fee, netAmount });
+    safeLog('Executing atomic P2P transfer', { 
+      senderId: truncateId(senderId), 
+      recipientId: truncateId(recipient.id), 
+      amount: transferAmount, 
+      fee 
+    });
 
     // Execute atomic transfer using RPC
     const { data: result, error: transferError } = await supabase.rpc('atomic_p2p_transfer', {
@@ -117,7 +121,7 @@ Deno.serve(async (req) => {
     });
 
     if (transferError) {
-      console.error('Atomic transfer failed:', transferError);
+      safeError('Atomic transfer failed', transferError);
       const errorMessage = transferError.message.includes('Insufficient balance') 
         ? 'Insufficient balance'
         : 'Transfer failed';
@@ -127,7 +131,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log('Transfer completed successfully:', result);
+    safeLog('Transfer completed successfully', { 
+      transferId: truncateId(result?.transfer_id),
+      netAmount 
+    });
 
     return new Response(
       JSON.stringify({ 
@@ -145,7 +152,7 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Transfer error:', error);
+    safeError('Transfer error', error);
     return new Response(
       JSON.stringify({ error: 'An unexpected error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
