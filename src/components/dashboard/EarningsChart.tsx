@@ -104,9 +104,7 @@ export function EarningsChart({ transactions, totalEarned, className }: Earnings
             dataKey="week"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11 }}
-            tickMargin={8}
-            interval="preserveStartEnd"
+            tick={false}
           />
           <YAxis
             tickLine={false}
