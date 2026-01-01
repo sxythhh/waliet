@@ -237,15 +237,16 @@ export function usePaymentLedger(userId?: string) {
   useEffect(() => {
     fetchEntries();
 
-    // Set up real-time listener
+    // Set up real-time listener - filtered by user_id for efficiency
     const channel = supabase
-      .channel('payment-ledger-updates')
+      .channel(`payment-ledger-${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'payment_ledger',
+          filter: userId ? `user_id=eq.${userId}` : undefined,
         },
         () => {
           fetchEntries();

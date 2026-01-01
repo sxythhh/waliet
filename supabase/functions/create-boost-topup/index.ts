@@ -5,9 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Whop company ID for Virality
-const WHOP_COMPANY_ID = "biz_QjHKs1kOH9Sxrl";
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,6 +12,8 @@ Deno.serve(async (req) => {
 
   try {
     const whopApiKey = Deno.env.get("WHOP_API_KEY");
+    const WHOP_COMPANY_ID = Deno.env.get("WHOP_PARENT_COMPANY_ID") || "biz_QjHKs1kOH9Sxrl";
+    
     if (!whopApiKey) {
       throw new Error("WHOP_API_KEY not configured");
     }
@@ -78,6 +77,19 @@ Deno.serve(async (req) => {
       throw new Error("You must be a brand member to top up this boost");
     }
 
+    // Rate limiting check
+    const { data: allowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_action: 'boost_topup',
+      p_max_attempts: 10,
+      p_window_seconds: 60
+    });
+
+    if (rateLimitError || !allowed) {
+      console.log('Rate limit exceeded for user:', user.id);
+      throw new Error("Too many top-up attempts. Please try again later.");
+    }
+
     // Get brand info
     const { data: brand, error: brandError } = await supabase
       .from("brands")
@@ -89,7 +101,7 @@ Deno.serve(async (req) => {
       throw new Error("Brand not found");
     }
 
-    console.log(`Creating checkout configuration for boost ${boostId} with amount $${amount}`);
+    console.log(`Creating boost topup for user ${user.id}, boost ${boostId}, amount: $${amount}`);
 
     // Create checkout configuration with dynamic one-time plan using Whop REST API (v1)
     const checkoutResponse = await fetch("https://api.whop.com/api/v1/checkout_configurations", {

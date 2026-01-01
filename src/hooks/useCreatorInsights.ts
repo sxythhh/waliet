@@ -56,77 +56,39 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
     setLoading(true);
 
     try {
-      // Fetch profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, username, email, avatar_url, created_at")
-        .order("created_at", { ascending: false })
-        .limit(100);
+      // Use optimized RPC function instead of multiple N+1 queries
+      const { data: insightsData, error: insightsError } = await supabase
+        .rpc('get_creator_insights', { p_limit: 100, p_offset: 0 });
 
-      if (!profiles) {
+      if (insightsError) {
+        console.error("Error fetching creator insights:", insightsError);
         setLoading(false);
         return;
       }
 
-      // Fetch all earnings
-      const { data: earnings } = await supabase
-        .from("wallet_transactions")
-        .select("user_id, amount, created_at")
-        .eq("type", "earning");
+      // Fetch stats using optimized RPC
+      const { data: statsData, error: statsError } = await supabase
+        .rpc('get_creator_insights_stats');
 
-      // Fetch submissions
-      const { data: submissions } = await supabase
-        .from("campaign_submissions")
-        .select("creator_id, status, platform, created_at");
+      const now = new Date();
 
-      // Fetch social accounts
-      const { data: socialAccounts } = await supabase
-        .from("social_accounts")
-        .select("user_id, platform");
-
-      // Process each creator
-      const typedSubmissions = submissions as unknown as Array<{creator_id: string; status: string; platform: string; created_at: string}>;
-      const creatorInsights: CreatorInsight[] = profiles.map((profile) => {
-        const userEarnings = earnings?.filter((e) => e.user_id === profile.id) || [];
-        const userSubmissions =
-          typedSubmissions?.filter((s) => s.creator_id === profile.id) || [];
-        const userSocialAccounts =
-          socialAccounts?.filter((a) => a.user_id === profile.id) || [];
-
-        const totalEarnings = userEarnings.reduce(
-          (sum, e) => sum + Math.abs(e.amount),
-          0
-        );
-        const totalSubmissions = userSubmissions.length;
-        const approvedSubmissions = userSubmissions.filter(
-          (s) => s.status === "approved"
-        ).length;
-        const approvalRate =
-          totalSubmissions > 0
-            ? (approvedSubmissions / totalSubmissions) * 100
-            : 0;
-
-        // Platform breakdown
-        const platformCounts: Record<string, number> = {};
-        userSubmissions.forEach((s) => {
-          platformCounts[s.platform] = (platformCounts[s.platform] || 0) + 1;
-        });
-        const platformBreakdown = Object.entries(platformCounts).map(
-          ([platform, count]) => ({ platform, count })
-        );
-
-        // Calculate last active
-        const submissionDates = userSubmissions
-          .map((s) => new Date(s.created_at))
-          .filter((d) => !isNaN(d.getTime()));
-        const lastActive =
-          submissionDates.length > 0
-            ? new Date(Math.max(...submissionDates.map((d) => d.getTime())))
-                .toISOString()
-            : null;
+      // Process the data from RPC
+      const creatorInsights: CreatorInsight[] = (insightsData || []).map((row: any) => {
+        const totalEarnings = Number(row.total_earnings) || 0;
+        const totalSubmissions = Number(row.total_submissions) || 0;
+        const approvedSubmissions = Number(row.approved_submissions) || 0;
+        const approvalRate = Number(row.approval_rate) || 0;
+        const lastActive = row.last_active;
+        
+        // Parse platform breakdown from JSONB
+        const platformBreakdown = Array.isArray(row.platform_breakdown) 
+          ? row.platform_breakdown.map((p: any) => ({
+              platform: p.platform,
+              count: Number(p.count) || 0
+            }))
+          : [];
 
         // Retention status based on last activity
-        const now = new Date();
         const daysSinceActive = lastActive
           ? Math.floor(
               (now.getTime() - new Date(lastActive).getTime()) /
@@ -144,7 +106,7 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
         const monthsActive = Math.max(
           1,
           Math.ceil(
-            (now.getTime() - new Date(profile.created_at).getTime()) /
+            (now.getTime() - new Date(row.created_at).getTime()) /
               (1000 * 60 * 60 * 24 * 30)
           )
         );
@@ -160,7 +122,7 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
 
         // Fraud risk score (0-100) - higher is more risky
         const accountAge =
-          (now.getTime() - new Date(profile.created_at).getTime()) /
+          (now.getTime() - new Date(row.created_at).getTime()) /
           (1000 * 60 * 60 * 24);
         const newAccountRisk = accountAge < 7 ? 30 : accountAge < 30 ? 15 : 0;
         const velocityRisk =
@@ -172,18 +134,18 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
           newAccountRisk + velocityRisk + rejectionRisk
         );
 
-        // Generate sparkline (random for now, would be real data)
+        // Generate sparkline (simplified, would be real data in production)
         const sparkline = Array.from(
           { length: 7 },
           () => Math.random() * earningsVelocity
         );
 
         return {
-          id: profile.id,
-          username: profile.username || "Unknown",
-          email: profile.email || "",
-          avatar_url: profile.avatar_url,
-          created_at: profile.created_at,
+          id: row.id,
+          username: row.username || "Unknown",
+          email: row.email || "",
+          avatar_url: row.avatar_url,
+          created_at: row.created_at,
           totalEarnings,
           totalSubmissions,
           approvedSubmissions,
@@ -198,35 +160,43 @@ export function useCreatorInsights(): UseCreatorInsightsResult {
         };
       });
 
-      // Calculate stats
-      const activeCount = creatorInsights.filter(
-        (c) => c.retentionStatus === "active"
-      ).length;
-      const atRiskCount = creatorInsights.filter(
-        (c) => c.retentionStatus === "at-risk"
-      ).length;
-      const dormantCount = creatorInsights.filter(
-        (c) => c.retentionStatus === "dormant"
-      ).length;
-      const churnedCount = creatorInsights.filter(
-        (c) => c.retentionStatus === "churned"
-      ).length;
-      const avgPerformance =
-        creatorInsights.reduce((sum, c) => sum + c.performanceScore, 0) /
-        (creatorInsights.length || 1);
-      const avgFraudRisk =
-        creatorInsights.reduce((sum, c) => sum + c.fraudRiskScore, 0) /
-        (creatorInsights.length || 1);
+      // Use stats from RPC if available, otherwise calculate from data
+      if (statsData && statsData.length > 0) {
+        const s = statsData[0];
+        setStats({
+          total: Number(s.total_creators) || creatorInsights.length,
+          active: Number(s.active_creators) || creatorInsights.filter(c => c.retentionStatus === "active").length,
+          atRisk: Number(s.at_risk_creators) || creatorInsights.filter(c => c.retentionStatus === "at-risk").length,
+          dormant: Number(s.dormant_creators) || creatorInsights.filter(c => c.retentionStatus === "dormant").length,
+          churned: Number(s.churned_creators) || creatorInsights.filter(c => c.retentionStatus === "churned").length,
+          avgPerformanceScore: Math.round(
+            creatorInsights.reduce((sum, c) => sum + c.performanceScore, 0) /
+              (creatorInsights.length || 1)
+          ),
+          avgFraudRiskScore: Math.round(
+            creatorInsights.reduce((sum, c) => sum + c.fraudRiskScore, 0) /
+              (creatorInsights.length || 1)
+          ),
+        });
+      } else {
+        // Fallback to calculating from data
+        const activeCount = creatorInsights.filter(c => c.retentionStatus === "active").length;
+        const atRiskCount = creatorInsights.filter(c => c.retentionStatus === "at-risk").length;
+        const dormantCount = creatorInsights.filter(c => c.retentionStatus === "dormant").length;
+        const churnedCount = creatorInsights.filter(c => c.retentionStatus === "churned").length;
+        const avgPerformance = creatorInsights.reduce((sum, c) => sum + c.performanceScore, 0) / (creatorInsights.length || 1);
+        const avgFraudRisk = creatorInsights.reduce((sum, c) => sum + c.fraudRiskScore, 0) / (creatorInsights.length || 1);
 
-      setStats({
-        total: creatorInsights.length,
-        active: activeCount,
-        atRisk: atRiskCount,
-        dormant: dormantCount,
-        churned: churnedCount,
-        avgPerformanceScore: Math.round(avgPerformance),
-        avgFraudRiskScore: Math.round(avgFraudRisk),
-      });
+        setStats({
+          total: creatorInsights.length,
+          active: activeCount,
+          atRisk: atRiskCount,
+          dormant: dormantCount,
+          churned: churnedCount,
+          avgPerformanceScore: Math.round(avgPerformance),
+          avgFraudRiskScore: Math.round(avgFraudRisk),
+        });
+      }
 
       setCreators(creatorInsights);
     } catch (error) {

@@ -6925,6 +6925,33 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_creator_insights: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          approval_rate: number
+          approved_submissions: number
+          avatar_url: string
+          created_at: string
+          email: string
+          id: string
+          last_active: string
+          platform_breakdown: Json
+          total_earnings: number
+          total_submissions: number
+          username: string
+        }[]
+      }
+      get_creator_insights_stats: {
+        Args: never
+        Returns: {
+          active_creators: number
+          at_risk_creators: number
+          avg_earnings: number
+          churned_creators: number
+          dormant_creators: number
+          total_creators: number
+        }[]
+      }
       get_cron_jobs: {
         Args: never
         Returns: {
