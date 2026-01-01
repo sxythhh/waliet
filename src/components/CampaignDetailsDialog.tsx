@@ -103,8 +103,8 @@ const formatDate = (dateString: string) => {
 const getFaviconUrl = (url: string) => {
   try {
     const urlObj = new URL(url);
-    // Use Clearbit for high-quality logos
-    return `https://logo.clearbit.com/${urlObj.hostname}`;
+    // Use Google's favicon service - more reliable
+    return `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`;
   } catch {
     return null;
   }
