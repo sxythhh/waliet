@@ -1,18 +1,11 @@
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Home, Briefcase, Wallet, FileVideo, User, LogOut, ExternalLink } from "lucide-react";
+import { Home, Briefcase, Wallet, FileVideo, MessageCircle, BookOpen, Settings, LogOut, ExternalLink, ChevronUp, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url: string | null;
-  brand_color: string | null;
-  description: string | null;
-}
+import { Brand } from "@/pages/BrandPortal";
 
 interface BrandPortalSidebarProps {
   brand: Brand;
@@ -22,15 +15,19 @@ interface BrandPortalSidebarProps {
 const menuItems = [
   { title: "Home", tab: "home", icon: Home },
   { title: "Campaigns", tab: "campaigns", icon: Briefcase },
-  { title: "Earnings", tab: "earnings", icon: Wallet },
   { title: "Submissions", tab: "submissions", icon: FileVideo },
-  { title: "Profile", tab: "profile", icon: User },
+  { title: "Earnings", tab: "earnings", icon: TrendingUp },
+  { title: "Wallet", tab: "wallet", icon: Wallet },
+  { title: "Messages", tab: "messages", icon: MessageCircle },
+  { title: "Resources", tab: "resources", icon: BookOpen },
+  { title: "Settings", tab: "settings", icon: Settings },
 ];
 
 export function BrandPortalSidebar({ brand, currentTab }: BrandPortalSidebarProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; email: string | null } | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,7 +38,7 @@ export function BrandPortalSidebar({ brand, currentTab }: BrandPortalSidebarProp
           .select("username, avatar_url")
           .eq("id", user.id)
           .maybeSingle();
-        setProfile(data);
+        setProfile({ ...data, email: user.email || null });
       }
     };
     fetchProfile();
@@ -108,39 +105,66 @@ export function BrandPortalSidebar({ brand, currentTab }: BrandPortalSidebarProp
         })}
       </nav>
 
-      {/* User Section */}
+      {/* User Section with Popover */}
       <div className="p-3 border-t border-gray-100 dark:border-border bg-gray-50/50 dark:bg-muted/20">
-        {/* Go to Main Dashboard */}
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 dark:text-muted-foreground hover:bg-white dark:hover:bg-muted hover:text-gray-900 dark:hover:text-foreground hover:shadow-sm transition-all duration-200 mb-2"
-        >
-          <ExternalLink className="h-[18px] w-[18px]" />
-          <span className="text-[13px] font-medium">Main Dashboard</span>
-        </button>
-
-        {/* Profile */}
-        <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-white dark:bg-muted shadow-sm">
-          <Avatar className="h-8 w-8 ring-2 ring-gray-100 dark:ring-border">
-            <AvatarImage src={profile?.avatar_url || ""} />
-            <AvatarFallback className="bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground text-xs font-medium">
-              {profile?.username?.charAt(0)?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-gray-900 dark:text-foreground truncate">
-              {profile?.username || "Creator"}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSignOut}
-            className="h-8 w-8 text-gray-400 hover:text-gray-600 dark:hover:text-foreground hover:bg-gray-100 dark:hover:bg-background rounded-lg"
+        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+          <PopoverTrigger asChild>
+            <button className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-white dark:bg-muted shadow-sm hover:shadow-md transition-all duration-200 group">
+              <Avatar className="h-8 w-8 ring-2 ring-gray-100 dark:ring-border">
+                <AvatarImage src={profile?.avatar_url || ""} />
+                <AvatarFallback className="bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground text-xs font-medium">
+                  {profile?.username?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-[13px] font-medium text-gray-900 dark:text-foreground truncate">
+                  {profile?.username || "Creator"}
+                </p>
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {profile?.email || ""}
+                </p>
+              </div>
+              <ChevronUp className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-foreground transition-colors" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="top"
+            align="start"
+            className="w-56 p-2"
+            sideOffset={8}
           >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  handleTabClick("settings");
+                  setPopoverOpen(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-foreground hover:bg-muted transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/dashboard");
+                  setPopoverOpen(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-foreground hover:bg-muted transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Main Dashboard
+              </button>
+              <div className="h-px bg-border my-1" />
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </aside>
   );

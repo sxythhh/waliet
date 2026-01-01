@@ -4,18 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Eye, DollarSign, Video, ArrowRight } from "lucide-react";
+import { TrendingUp, Eye, DollarSign, Video, ArrowRight, Briefcase, Wallet, MessageCircle } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-
-interface Brand {
-  id: string;
-  name: string;
-  slug: string;
-  logo_url: string | null;
-  brand_color: string | null;
-  description: string | null;
-}
+import { Brand } from "@/pages/BrandPortal";
 
 interface BrandPortalHomeProps {
   brand: Brand;
@@ -184,16 +176,16 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Earnings</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm text-muted-foreground mb-1 tracking-[-0.3px]">Total Earnings</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
                   ${stats?.totalEarnings?.toFixed(2) || "0.00"}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-xl"
                 style={{ backgroundColor: `${accentColor}15` }}
               >
@@ -203,16 +195,16 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Views</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm text-muted-foreground mb-1 tracking-[-0.3px]">Total Views</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
                   {stats?.totalViews?.toLocaleString() || "0"}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-xl"
                 style={{ backgroundColor: `${accentColor}15` }}
               >
@@ -222,16 +214,16 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Videos Submitted</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm text-muted-foreground mb-1 tracking-[-0.3px]">Videos Submitted</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
                   {stats?.totalVideos || 0}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-xl"
                 style={{ backgroundColor: `${accentColor}15` }}
               >
@@ -241,16 +233,16 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Pending Payouts</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-sm text-muted-foreground mb-1 tracking-[-0.3px]">Pending Payouts</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
                   ${stats?.pendingPayouts?.toFixed(2) || "0.00"}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-xl"
                 style={{ backgroundColor: `${accentColor}15` }}
               >
@@ -264,63 +256,63 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <button
               onClick={() => setSearchParams({ tab: "campaigns" })}
-              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors text-left"
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-border hover:border-gray-200 dark:hover:border-border hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="p-2 rounded-lg"
                   style={{ backgroundColor: `${accentColor}15` }}
                 >
                   <Briefcase className="h-5 w-5" style={{ color: accentColor }} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">View Campaigns</p>
-                  <p className="text-sm text-gray-500">Browse available campaigns</p>
+                  <p className="font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">View Campaigns</p>
+                  <p className="text-sm text-muted-foreground tracking-[-0.3px]">Browse available campaigns</p>
                 </div>
               </div>
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </button>
 
             <button
-              onClick={() => setSearchParams({ tab: "earnings" })}
-              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors text-left"
+              onClick={() => setSearchParams({ tab: "wallet" })}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-border hover:border-gray-200 dark:hover:border-border hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="p-2 rounded-lg"
                   style={{ backgroundColor: `${accentColor}15` }}
                 >
                   <Wallet className="h-5 w-5" style={{ color: accentColor }} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">View Earnings</p>
-                  <p className="text-sm text-gray-500">Check your payment history</p>
+                  <p className="font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">View Wallet</p>
+                  <p className="text-sm text-muted-foreground tracking-[-0.3px]">Check balance & withdraw</p>
                 </div>
               </div>
               <ArrowRight className="h-5 w-5 text-gray-400" />
             </button>
 
             <button
-              onClick={() => setSearchParams({ tab: "submissions" })}
-              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors text-left"
+              onClick={() => setSearchParams({ tab: "messages" })}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-border hover:border-gray-200 dark:hover:border-border hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="p-2 rounded-lg"
                   style={{ backgroundColor: `${accentColor}15` }}
                 >
-                  <Video className="h-5 w-5" style={{ color: accentColor }} />
+                  <MessageCircle className="h-5 w-5" style={{ color: accentColor }} />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">My Submissions</p>
-                  <p className="text-sm text-gray-500">Track your video submissions</p>
+                  <p className="font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">Messages</p>
+                  <p className="text-sm text-muted-foreground tracking-[-0.3px]">Chat with {brand.name}</p>
                 </div>
               </div>
               <ArrowRight className="h-5 w-5 text-gray-400" />
@@ -329,24 +321,24 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="bg-white border-gray-100 shadow-sm">
+        <Card className="bg-white dark:bg-card border-0 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold text-gray-900">Recent Activity</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             {recentActivity.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">No recent activity</p>
+                <p className="text-muted-foreground tracking-[-0.3px]">No recent activity</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {recentActivity.map((activity) => (
                   <div
                     key={activity.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-muted/50"
                   >
                     <div className="flex items-center gap-3">
-                      <div 
+                      <div
                         className="p-2 rounded-lg"
                         style={{ backgroundColor: `${accentColor}15` }}
                       >
@@ -357,19 +349,19 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
                         )}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">{activity.title}</p>
+                        <p className="text-xs text-muted-foreground tracking-[-0.3px]">
                           {format(new Date(activity.date), "MMM d, yyyy")}
                         </p>
                       </div>
                     </div>
                     {activity.amount && (
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className="border-0 font-medium"
-                        style={{ 
+                        style={{
                           backgroundColor: `${accentColor}15`,
-                          color: accentColor 
+                          color: accentColor
                         }}
                       >
                         +${activity.amount.toFixed(2)}
@@ -385,6 +377,3 @@ export function BrandPortalHome({ brand, userId }: BrandPortalHomeProps) {
     </div>
   );
 }
-
-// Import missing icons
-import { Briefcase, Wallet } from "lucide-react";
