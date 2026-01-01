@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-import { 
-  ChevronRight, 
-  Calendar, 
-  Globe, 
-  CheckCircle2, 
+import {
+  ChevronRight,
+  Calendar,
+  Globe,
+  CheckCircle2,
   XCircle,
   Building2,
   ExternalLink,
-  MoreHorizontal
+  MoreHorizontal,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -73,19 +73,8 @@ export function AllBrandsView() {
 
   if (loading) {
     return (
-      <div className="grid gap-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="p-4 rounded-xl bg-card/50 border border-border/50">
-            <div className="flex items-center gap-4">
-              <Skeleton className="h-12 w-12 rounded-xl" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-48" />
-              </div>
-              <Skeleton className="h-6 w-16 rounded-full" />
-            </div>
-          </div>
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

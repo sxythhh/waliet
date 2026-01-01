@@ -6,15 +6,12 @@ import { useTheme } from "@/components/ThemeProvider";
 import { BrandPortalSidebar } from "@/components/portal/BrandPortalSidebar";
 import { BrandPortalMobileNav } from "@/components/portal/BrandPortalMobileNav";
 import { BrandPortalCampaigns } from "@/components/portal/BrandPortalCampaigns";
-import { BrandPortalEarnings } from "@/components/portal/BrandPortalEarnings";
-import { BrandPortalSubmissions } from "@/components/portal/BrandPortalSubmissions";
-import { BrandPortalProfile } from "@/components/portal/BrandPortalProfile";
 import { BrandPortalHome } from "@/components/portal/BrandPortalHome";
 import { BrandPortalWallet } from "@/components/portal/BrandPortalWallet";
 import { BrandPortalMessages } from "@/components/portal/BrandPortalMessages";
 import { BrandPortalResources } from "@/components/portal/BrandPortalResources";
 import { BrandPortalSettings } from "@/components/portal/BrandPortalSettings";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 
 interface PortalSettings {
   welcome_message?: string;
@@ -142,42 +139,25 @@ export default function BrandPortal() {
 
   if (loading || authLoading) {
     return (
-      <div className="flex min-h-screen bg-white dark:bg-background">
-        {/* Desktop Sidebar Skeleton */}
-        <div className="hidden md:block w-64 border-r border-gray-200 dark:border-border p-4">
-          <Skeleton className="h-10 w-full mb-6" />
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
-        </div>
-        <div className="flex-1 p-6 md:p-8 pb-24 md:pb-8">
-          <Skeleton className="h-8 w-64 mb-6" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-28 w-full rounded-xl" />
-            ))}
-          </div>
-          <Skeleton className="h-64 w-full mt-6 rounded-xl" />
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#fdfdfd] dark:bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error || !brand) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-[#fdfdfd] dark:bg-background">
         <div className="text-center px-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-foreground mb-2">
+          <h1 className="text-2xl font-semibold text-foreground mb-2 font-inter tracking-[-0.5px]">
             {error || "Brand not found"}
           </h1>
-          <p className="text-gray-500 dark:text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-4 font-inter tracking-[-0.3px]">
             The brand portal you're looking for doesn't exist.
           </p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 bg-foreground text-background rounded-lg hover:opacity-90 transition-opacity font-inter font-medium tracking-[-0.5px]"
           >
             Go to Dashboard
           </button>
@@ -191,22 +171,18 @@ export default function BrandPortal() {
     switch (currentTab) {
       case "home":
         return <BrandPortalHome brand={brand} userId={userId} />;
-      case "campaigns":
-        return <BrandPortalCampaigns brand={brand} userId={userId} />;
-      case "earnings":
-        return <BrandPortalEarnings brand={brand} userId={userId} />;
-      case "submissions":
-        return <BrandPortalSubmissions brand={brand} userId={userId} />;
-      case "wallet":
+      case "profile":
+        // Profile tab shows wallet with earnings
         return <BrandPortalWallet brand={brand} userId={userId} />;
-      case "messages":
-        return <BrandPortalMessages brand={brand} userId={userId} />;
+      case "discover":
+        // Discover tab shows available campaigns
+        return <BrandPortalCampaigns brand={brand} userId={userId} />;
       case "resources":
         return <BrandPortalResources brand={brand} userId={userId} />;
+      case "messages":
+        return <BrandPortalMessages brand={brand} userId={userId} />;
       case "settings":
         return <BrandPortalSettings brand={brand} userId={userId} />;
-      case "profile":
-        return <BrandPortalProfile brand={brand} userId={userId} />;
       default:
         return <BrandPortalHome brand={brand} userId={userId} />;
     }
@@ -214,27 +190,23 @@ export default function BrandPortal() {
 
   return (
     <div
-      className="flex min-h-screen bg-[#fafafa] dark:bg-background"
+      className="flex h-screen overflow-hidden bg-[#fdfdfd] dark:bg-background"
       style={{
         '--portal-accent': accentColor,
       } as React.CSSProperties}
     >
       {/* Desktop Sidebar */}
-      <div className="hidden md:block">
-        <BrandPortalSidebar brand={brand} currentTab={currentTab} />
-      </div>
+      <BrandPortalSidebar brand={brand} currentTab={currentTab} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pb-20 md:pb-0">
+      <main className="flex-1 overflow-y-auto pt-14 pb-20 md:pt-0 md:pb-0">
         <div className="p-4 md:p-6 lg:p-8">
           {renderContent()}
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden">
-        <BrandPortalMobileNav brand={brand} currentTab={currentTab} />
-      </div>
+      {/* Mobile Navigation (Header + Bottom Nav) */}
+      <BrandPortalMobileNav brand={brand} currentTab={currentTab} />
     </div>
   );
 }

@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format, formatDistanceToNow, differenceInDays } from "date-fns";
-import { Flag, DollarSign, Clock, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Flag, DollarSign, Clock, CheckCircle2, XCircle, AlertTriangle, ExternalLink, RefreshCw, Loader2 } from "lucide-react";
 
 interface FlaggedItem {
   id: string;
@@ -252,10 +251,8 @@ export function FlaggedReviewsTab() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-32 w-full rounded-xl" />
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

@@ -1207,7 +1207,6 @@ export function WalletTab() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-semibold font-inter tracking-[-0.5px] text-sm">Earnings Over Time</h3>
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">Last 12 weeks</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-bold text-emerald-500 font-inter tracking-[-0.5px]">

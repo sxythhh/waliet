@@ -1,27 +1,29 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, subDays, startOfMonth } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, DollarSign, Clock, CheckCircle2, XCircle, CreditCard, Wallet, TrendingUp, Users as UsersIcon, ChevronDown, ChevronUp, RotateCcw, Copy, Filter, ArrowUpDown, Flag, Shield } from "lucide-react";
+import {
+  DollarSign, Clock, CheckCircle2, XCircle, Wallet, TrendingUp,
+  ChevronDown, ChevronUp, RotateCcw, Copy, Search, X, ArrowUpRight,
+  ArrowDownRight, Loader2, Calendar, CreditCard, AlertTriangle
+} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
-import { FlaggedReviewsTab } from "@/components/admin/FlaggedReviewsTab";
-import { FraudReviewQueue } from "@/components/admin/FraudReviewQueue";
-import { FraudAnalyticsCard } from "@/components/admin/FraudAnalyticsCard";
-import tiktokLogo from "@/assets/tiktok-logo-white.png";
-import instagramLogo from "@/assets/instagram-logo-white.png";
-import youtubeLogo from "@/assets/youtube-logo-white.png";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
+
 interface PayoutRequest {
   id: string;
   user_id: string;
@@ -46,6 +48,18 @@ interface PayoutRequest {
     };
   };
 }
+
+interface FinanceStats {
+  totalProcessed: number;
+  totalPending: number;
+  thisMonthProcessed: number;
+  pendingCount: number;
+  completedCount: number;
+  rejectedCount: number;
+  avgPayoutAmount: number;
+  change: number;
+}
+
 interface SocialAccount {
   id: string;
   platform: string;
@@ -61,16 +75,21 @@ interface SocialAccount {
     brand_logo_url: string;
   };
 }
+
+type StatusFilter = 'all' | 'pending' | 'in_transit' | 'completed' | 'rejected';
+
 export default function AdminPayouts() {
   const [allRequests, setAllRequests] = useState<PayoutRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState<PayoutRequest | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [action, setAction] = useState<'approve' | 'reject' | 'complete' | 'revert' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [transactionId, setTransactionId] = useState('');
   const [notes, setNotes] = useState('');
-  const [activeTab, setActiveTab] = useState('pending');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
   const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
   const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
   const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
@@ -82,23 +101,17 @@ export default function AdminPayouts() {
   const [transactionsOpen, setTransactionsOpen] = useState(false);
   const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
   const [selectedUserProfile, setSelectedUserProfile] = useState<PayoutRequest['profiles'] | null>(null);
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'amount' | 'username'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [minAmount, setMinAmount] = useState<string>('');
-  const [maxAmount, setMaxAmount] = useState<string>('');
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     fetchPayoutRequests();
   }, []);
+
   const fetchPayoutRequests = async () => {
     setLoading(true);
-    const {
-      data,
-      error
-    } = await supabase.from("payout_requests").select(`
+    const { data, error } = await supabase
+      .from("payout_requests")
+      .select(`
         *,
         profiles:user_id (
           id,
@@ -111,9 +124,9 @@ export default function AdminPayouts() {
             total_withdrawn
           )
         )
-      `).order("requested_at", {
-      ascending: false
-    });
+      `)
+      .order("requested_at", { ascending: false });
+
     if (error) {
       toast({
         variant: "destructive",
@@ -125,85 +138,119 @@ export default function AdminPayouts() {
     }
     setLoading(false);
   };
+
+  // Calculate stats
+  const stats = useMemo((): FinanceStats => {
+    const monthStart = startOfMonth(new Date());
+    const lastMonthStart = startOfMonth(subDays(monthStart, 1));
+
+    const completed = allRequests.filter(r => r.status === 'completed');
+    const pending = allRequests.filter(r => r.status === 'pending');
+    const thisMonth = completed.filter(r => new Date(r.processed_at || r.requested_at) >= monthStart);
+    const lastMonth = completed.filter(r => {
+      const date = new Date(r.processed_at || r.requested_at);
+      return date >= lastMonthStart && date < monthStart;
+    });
+
+    const thisMonthTotal = thisMonth.reduce((sum, r) => sum + Number(r.amount), 0);
+    const lastMonthTotal = lastMonth.reduce((sum, r) => sum + Number(r.amount), 0);
+    const change = lastMonthTotal > 0 ? ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100 : 0;
+
+    return {
+      totalProcessed: completed.reduce((sum, r) => sum + Number(r.amount), 0),
+      totalPending: pending.reduce((sum, r) => sum + Number(r.amount), 0),
+      thisMonthProcessed: thisMonthTotal,
+      pendingCount: pending.length,
+      completedCount: completed.length,
+      rejectedCount: allRequests.filter(r => r.status === 'rejected').length,
+      avgPayoutAmount: completed.length > 0 ? completed.reduce((sum, r) => sum + Number(r.amount), 0) / completed.length : 0,
+      change
+    };
+  }, [allRequests]);
+
+  // Filter requests
+  const filteredRequests = useMemo(() => {
+    let filtered = allRequests;
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(r => r.status === statusFilter);
+    }
+
+    if (paymentMethodFilter !== 'all') {
+      filtered = filtered.filter(r => r.payout_method === paymentMethodFilter);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.profiles?.username?.toLowerCase().includes(query) ||
+        r.profiles?.full_name?.toLowerCase().includes(query) ||
+        r.payout_details?.email?.toLowerCase().includes(query) ||
+        r.payout_details?.address?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [allRequests, statusFilter, paymentMethodFilter, searchQuery]);
+
+  const statusCounts = useMemo(() => ({
+    all: allRequests.length,
+    pending: allRequests.filter(r => r.status === 'pending').length,
+    in_transit: allRequests.filter(r => r.status === 'in_transit').length,
+    completed: allRequests.filter(r => r.status === 'completed').length,
+    rejected: allRequests.filter(r => r.status === 'rejected').length,
+  }), [allRequests]);
+
   const fetchUserSocialAccounts = async (userId: string) => {
     setLoadingSocialAccounts(true);
-    const {
-      data,
-      error
-    } = await supabase.from("social_accounts").select(`
+    const { data, error } = await supabase
+      .from("social_accounts")
+      .select(`
         *,
         campaigns:campaign_id (
-          id,
-          title,
-          brand_name,
-          brand_logo_url
+          id, title, brand_name, brand_logo_url
         ),
         demographic_submissions (
-          status,
-          tier1_percentage,
-          submitted_at
+          status, tier1_percentage, submitted_at
         )
-      `).eq("user_id", userId);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch social accounts"
-      });
-      setUserSocialAccounts([]);
-    } else {
-      setUserSocialAccounts(data || []);
-    }
+      `)
+      .eq("user_id", userId);
+
+    if (!error) setUserSocialAccounts(data || []);
     setLoadingSocialAccounts(false);
   };
+
   const fetchUserTransactions = async (userId: string) => {
     setLoadingTransactions(true);
-    const {
-      data,
-      error
-    } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
-      ascending: false
-    }).limit(10);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch transactions"
-      });
-      setUserTransactions([]);
-    } else {
-      setUserTransactions(data || []);
-    }
+    const { data, error } = await supabase
+      .from("wallet_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (!error) setUserTransactions(data || []);
     setLoadingTransactions(false);
   };
+
   const fetchUserPaymentMethods = async (userId: string) => {
     setLoadingPaymentMethods(true);
-    const {
-      data,
-      error
-    } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
-    if (error) {
-      console.error("Error fetching payment methods:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch payment methods"
-      });
-      setUserPaymentMethods([]);
-    } else if (data && data.payout_details && Array.isArray(data.payout_details)) {
-      // payout_details is an array of payment methods
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("payout_method, payout_details")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!error && data?.payout_details && Array.isArray(data.payout_details)) {
       setUserPaymentMethods(data.payout_details);
-    } else if (data && data.payout_method) {
-      // Fallback for old format
-      setUserPaymentMethods([{
-        method: data.payout_method,
-        details: {}
-      }]);
+    } else if (!error && data?.payout_method) {
+      setUserPaymentMethods([{ method: data.payout_method, details: {} }]);
     } else {
       setUserPaymentMethods([]);
     }
     setLoadingPaymentMethods(false);
   };
+
   const openUserDetailsDialog = (profile: PayoutRequest['profiles']) => {
     setSelectedUserProfile(profile);
     setUserDetailsDialogOpen(true);
@@ -211,828 +258,782 @@ export default function AdminPayouts() {
     fetchUserTransactions(profile.id);
     fetchUserPaymentMethods(profile.id);
   };
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
-      case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
-      case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
-      default:
-        return <UsersIcon className="h-5 w-5" />;
-    }
+
+  const openPayoutDetails = (request: PayoutRequest) => {
+    setSelectedRequest(request);
+    setDetailsOpen(true);
   };
 
-  // Filter and sort requests locally
-  const filteredRequests = useMemo(() => {
-    let filtered = activeTab === 'all' ? allRequests : allRequests.filter(r => r.status === activeTab);
-    
-    // Apply payment method filter
-    if (paymentMethodFilter !== 'all') {
-      filtered = filtered.filter(r => r.payout_method === paymentMethodFilter);
-    }
-    
-    // Apply amount range filter
-    if (minAmount) {
-      filtered = filtered.filter(r => Number(r.amount) >= Number(minAmount));
-    }
-    if (maxAmount) {
-      filtered = filtered.filter(r => Number(r.amount) <= Number(maxAmount));
-    }
-    
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      let comparison = 0;
-      
-      if (sortBy === 'date') {
-        comparison = new Date(a.requested_at).getTime() - new Date(b.requested_at).getTime();
-      } else if (sortBy === 'amount') {
-        comparison = Number(a.amount) - Number(b.amount);
-      } else if (sortBy === 'username') {
-        const nameA = (a.profiles?.username || '').toLowerCase();
-        const nameB = (b.profiles?.username || '').toLowerCase();
-        comparison = nameA.localeCompare(nameB);
-      }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
-    
-    return filtered;
-  }, [allRequests, activeTab, paymentMethodFilter, minAmount, maxAmount, sortBy, sortOrder]);
-  const stats = useMemo(() => ({
-    pending: allRequests.filter(r => r.status === 'pending').length,
-    in_transit: allRequests.filter(r => r.status === 'in_transit').length,
-    completed: allRequests.filter(r => r.status === 'completed').length,
-    rejected: allRequests.filter(r => r.status === 'rejected').length,
-    totalPending: allRequests.filter(r => r.status === 'pending').reduce((sum, r) => sum + Number(r.amount), 0)
-  }), [allRequests]);
   const openActionDialog = (request: PayoutRequest, actionType: 'approve' | 'reject' | 'complete' | 'revert') => {
     setSelectedRequest(request);
     setAction(actionType);
     setRejectionReason('');
-    setTransactionId('');
     setNotes('');
     setDialogOpen(true);
   };
-  const handleRevertStatus = async () => {
-    if (!selectedRequest) return;
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
-    if (!session) return;
-    let newStatus: 'pending' | 'in_transit' | 'completed' | 'rejected' = 'pending';
-    let updateData: any = {
-      processed_at: new Date().toISOString(),
-      processed_by: session.user.id,
-      notes: notes || null
-    };
 
-    // Determine new status based on current status
-    if (selectedRequest.status === 'in_transit') {
-      newStatus = 'pending';
-      updateData.rejection_reason = null;
-    } else if (selectedRequest.status === 'completed') {
-      newStatus = 'in_transit';
-      updateData.transaction_id = null;
-
-      // Get current wallet data first
-      const {
-        data: walletData,
-        error: walletFetchError
-      } = await supabase.from("wallets").select("balance, total_withdrawn").eq("user_id", selectedRequest.user_id).single();
-      if (walletFetchError || !walletData) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch wallet data"
-        });
-        return;
-      }
-      const newBalance = Number(walletData.balance) + Number(selectedRequest.amount);
-      const newTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
-
-      // Restore wallet balance
-      const {
-        error: walletError
-      } = await supabase.from("wallets").update({
-        balance: newBalance,
-        total_withdrawn: newTotalWithdrawn
-      }).eq("user_id", selectedRequest.user_id);
-      if (walletError) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to restore wallet balance"
-        });
-        return;
-      }
-    } else if (selectedRequest.status === 'rejected') {
-      newStatus = 'pending';
-      updateData.rejection_reason = null;
-    }
-    updateData.status = newStatus;
-    const {
-      error
-    } = await supabase.from("payout_requests").update(updateData).eq("id", selectedRequest.id);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to revert payout status"
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: `Payout status reverted to ${newStatus}`
-      });
-      setDialogOpen(false);
-      fetchPayoutRequests();
-    }
-  };
   const handleCompleteDirectly = async (request: PayoutRequest) => {
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Find the matching pending transaction
-    const {
-      data: pendingTransaction,
-      error: findError
-    } = await supabase.from("wallet_transactions").select("id").eq("user_id", request.user_id).eq("type", "withdrawal").eq("amount", -Number(request.amount)).eq("status", "pending").order("created_at", {
-      ascending: false
-    }).limit(1).maybeSingle();
-    if (findError) {
-      console.error("Error finding transaction:", findError);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to find pending transaction"
-      });
-      return;
-    }
-    if (!pendingTransaction) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No matching pending transaction found"
-      });
-      return;
+    const { data: pendingTransaction } = await supabase
+      .from("wallet_transactions")
+      .select("id")
+      .eq("user_id", request.user_id)
+      .eq("type", "withdrawal")
+      .eq("amount", -Number(request.amount))
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingTransaction) {
+      await supabase
+        .from("wallet_transactions")
+        .update({ status: 'completed', updated_at: new Date().toISOString() })
+        .eq("id", pendingTransaction.id);
     }
 
-    // Update the specific transaction to completed
-    const {
-      error: transactionError
-    } = await supabase.from("wallet_transactions").update({
-      status: 'completed',
-      updated_at: new Date().toISOString()
-    }).eq("id", pendingTransaction.id);
-    if (transactionError) {
-      console.error("Failed to update transaction:", transactionError);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update transaction status"
-      });
-      return;
-    }
-    if (transactionError) {
-      console.error("Failed to update transaction:", transactionError);
-    }
-    const updateData = {
-      status: 'completed' as const,
-      processed_at: new Date().toISOString(),
-      processed_by: session.user.id
-    };
-    const {
-      error
-    } = await supabase.from("payout_requests").update(updateData).eq("id", request.id);
+    const { error } = await supabase
+      .from("payout_requests")
+      .update({
+        status: 'completed',
+        processed_at: new Date().toISOString(),
+        processed_by: session.user.id
+      })
+      .eq("id", request.id);
+
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to complete payout request"
-      });
+      toast({ variant: "destructive", title: "Error", description: "Failed to complete payout" });
     } else {
-      toast({
-        title: "Success",
-        description: "Payout marked as completed"
-      });
+      toast({ title: "Success", description: "Payout completed" });
       fetchPayoutRequests();
+      setDetailsOpen(false);
     }
   };
+
   const handleProcessRequest = async () => {
     if (!selectedRequest || !action) return;
-    if (action === 'revert') {
-      await handleRevertStatus();
-      return;
-    }
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
+
+    const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
+
     let updateData: any = {
       processed_at: new Date().toISOString(),
       processed_by: session.user.id,
       notes: notes || null
     };
+
     if (action === 'approve') {
       updateData.status = 'in_transit';
     } else if (action === 'reject') {
       if (!rejectionReason) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Please provide a rejection reason"
-        });
+        toast({ variant: "destructive", title: "Error", description: "Please provide a rejection reason" });
         return;
       }
       updateData.status = 'rejected';
       updateData.rejection_reason = rejectionReason;
 
-      // Find the pending withdrawal transaction
-      const {
-        data: pendingTransaction,
-        error: findError
-      } = await supabase.from("wallet_transactions").select("id").eq("user_id", selectedRequest.user_id).eq("type", "withdrawal").eq("amount", -Number(selectedRequest.amount)).eq("status", "pending").order("created_at", {
-        ascending: false
-      }).limit(1).maybeSingle();
-      if (findError) {
-        console.error("Error finding transaction:", findError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to find pending transaction"
-        });
-        return;
-      }
+      // Handle wallet restoration for rejection
+      const { data: pendingTransaction } = await supabase
+        .from("wallet_transactions")
+        .select("id")
+        .eq("user_id", selectedRequest.user_id)
+        .eq("type", "withdrawal")
+        .eq("amount", -Number(selectedRequest.amount))
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       if (pendingTransaction) {
-        // Update the transaction to rejected
-        const {
-          error: transactionError
-        } = await supabase.from("wallet_transactions").update({
-          status: 'rejected',
-          updated_at: new Date().toISOString()
-        }).eq("id", pendingTransaction.id);
-        if (transactionError) {
-          console.error("Failed to update transaction:", transactionError);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to update transaction status"
-          });
-          return;
-        }
+        await supabase
+          .from("wallet_transactions")
+          .update({ status: 'rejected', updated_at: new Date().toISOString() })
+          .eq("id", pendingTransaction.id);
 
-        // Add the money back to the wallet
-        const {
-          data: walletData,
-          error: walletFetchError
-        } = await supabase.from("wallets").select("balance, total_withdrawn").eq("user_id", selectedRequest.user_id).single();
-        if (walletFetchError || !walletData) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to fetch wallet data"
-          });
-          return;
-        }
+        const { data: walletData } = await supabase
+          .from("wallets")
+          .select("balance, total_withdrawn")
+          .eq("user_id", selectedRequest.user_id)
+          .single();
 
-        // Restore the balance and reduce total_withdrawn
-        const restoredBalance = Number(walletData.balance) + Number(selectedRequest.amount);
-        const adjustedTotalWithdrawn = Number(walletData.total_withdrawn) - Number(selectedRequest.amount);
-        const {
-          error: walletError
-        } = await supabase.from("wallets").update({
-          balance: restoredBalance,
-          total_withdrawn: Math.max(0, adjustedTotalWithdrawn) // Prevent negative values
-        }).eq("user_id", selectedRequest.user_id);
-        if (walletError) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to restore wallet balance"
-          });
-          return;
+        if (walletData) {
+          await supabase
+            .from("wallets")
+            .update({
+              balance: Number(walletData.balance) + Number(selectedRequest.amount),
+              total_withdrawn: Math.max(0, Number(walletData.total_withdrawn) - Number(selectedRequest.amount))
+            })
+            .eq("user_id", selectedRequest.user_id);
         }
       }
+    } else if (action === 'revert') {
+      let newStatus: 'pending' | 'in_transit' = 'pending';
+
+      if (selectedRequest.status === 'completed') {
+        newStatus = 'in_transit';
+
+        const { data: walletData } = await supabase
+          .from("wallets")
+          .select("balance, total_withdrawn")
+          .eq("user_id", selectedRequest.user_id)
+          .single();
+
+        if (walletData) {
+          await supabase
+            .from("wallets")
+            .update({
+              balance: Number(walletData.balance) + Number(selectedRequest.amount),
+              total_withdrawn: Number(walletData.total_withdrawn) - Number(selectedRequest.amount)
+            })
+            .eq("user_id", selectedRequest.user_id);
+        }
+      }
+
+      updateData.status = newStatus;
+      updateData.rejection_reason = null;
     }
-    const {
-      error
-    } = await supabase.from("payout_requests").update(updateData).eq("id", selectedRequest.id);
+
+    const { error } = await supabase
+      .from("payout_requests")
+      .update(updateData)
+      .eq("id", selectedRequest.id);
+
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to ${action} payout request`
-      });
+      toast({ variant: "destructive", title: "Error", description: `Failed to ${action} payout` });
     } else {
-      toast({
-        title: "Success",
-        description: `Payout request ${action}d successfully`
-      });
+      toast({ title: "Success", description: `Payout ${action}d successfully` });
       setDialogOpen(false);
+      setDetailsOpen(false);
       fetchPayoutRequests();
     }
   };
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      pending: {
-        variant: "secondary",
-        label: "Pending",
-        icon: Clock
-      },
-      in_transit: {
-        variant: "default",
-        label: "In Transit",
-        icon: TrendingUp
-      },
-      rejected: {
-        variant: "destructive",
-        label: "Rejected",
-        icon: XCircle
-      },
-      completed: {
-        variant: "default",
-        label: "Completed",
-        icon: CheckCircle2
-      }
-    };
-    const {
-      variant,
-      label,
-      icon: Icon
-    } = variants[status] || {
-      variant: "secondary",
-      label: "Unknown",
-      icon: Clock
-    };
-    return <Badge variant={variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
-        {label}
-      </Badge>;
-  };
-  const getPayoutMethodIcon = (method: string, details?: any) => {
-    console.log('=== PAYOUT METHOD DEBUG ===');
-    console.log('Method:', method);
-    console.log('Details:', JSON.stringify(details, null, 2));
-    console.log('========================');
-    if (method === 'paypal') {
-      return <img src="/src/assets/paypal-logo.svg" alt="PayPal" className="h-5 w-5" />;
-    } else if (method === 'wise') {
-      return <img src="/src/assets/wise-logo.svg" alt="Wise" className="h-5 w-5" />;
-    } else if (method === 'crypto' && details?.network) {
-      const network = details.network.toLowerCase();
-      console.log('Network:', network);
-      const logoMap: Record<string, string> = {
-        'ethereum': '/src/assets/ethereum-logo.png',
-        'polygon': '/src/assets/polygon-logo.png',
-        'solana': '/src/assets/solana-logo.png',
-        'optimism': '/src/assets/optimism-logo.png',
-        'usdc': '/src/assets/usdc-logo.png'
-      };
-      const logoUrl = logoMap[network];
-      console.log('Logo URL:', logoUrl);
-      if (logoUrl) {
-        return <img src={logoUrl} alt={details.network} className="h-5 w-5" />;
-      }
+
+  const getPaymentInfo = (request: PayoutRequest) => {
+    if (request.payout_method === 'crypto') {
+      return request.payout_details?.address || request.payout_details?.wallet_address || 'N/A';
+    } else if (request.payout_method === 'upi') {
+      return request.payout_details?.upi_id || 'N/A';
+    } else if (request.payout_method === 'wise') {
+      return request.payout_details?.account_holder_name || request.payout_details?.email || 'N/A';
     }
-    return <Wallet className="h-5 w-5" />;
+    return request.payout_details?.email || request.payout_details?.account_number || 'N/A';
   };
-  return <AdminPermissionGuard resource="payouts"><div className="min-h-screen bg-background">
-      {/* Header Section */}
-      <div className="border-b bg-card/50 backdrop-blur-sm">
-        
-      </div>
 
-      {/* Main Content */}
-      <div className="p-6 space-y-6">
-        {/* Fraud Analytics Overview */}
-        <FraudAnalyticsCard />
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copied!", description: "Copied to clipboard" });
+  };
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* Filter and Sort Controls */}
-          <div className="mb-6 space-y-4">
-            {/* Filter Row */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Payment Method Filter */}
-              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
-                <SelectTrigger className="w-[140px] h-9 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]">
-                  <Wallet className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="font-inter tracking-[-0.5px]">All Methods</SelectItem>
-                  <SelectItem value="paypal" className="font-inter tracking-[-0.5px]">PayPal</SelectItem>
-                  <SelectItem value="crypto" className="font-inter tracking-[-0.5px]">Crypto</SelectItem>
-                  <SelectItem value="wise" className="font-inter tracking-[-0.5px]">Wise</SelectItem>
-                  <SelectItem value="revolut" className="font-inter tracking-[-0.5px]">Revolut</SelectItem>
-                </SelectContent>
-              </Select>
+  const getNetAmount = (request: PayoutRequest) => {
+    const amount = Number(request.amount);
+    if (request.payout_method === 'paypal') {
+      return amount - (amount * 0.06);
+    }
+    return amount - (amount * 0.0075) - 1;
+  };
 
-              {/* Amount Range */}
-              <div className="flex items-center gap-2 bg-card/50 rounded-lg px-3 h-9">
-                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  type="number"
-                  placeholder="Min"
-                  value={minAmount}
-                  onChange={(e) => setMinAmount(e.target.value)}
-                  className="w-16 h-7 bg-transparent border-0 text-sm font-inter tracking-[-0.5px] p-0 focus-visible:ring-0"
-                />
-                <span className="text-muted-foreground text-xs">—</span>
-                <Input
-                  type="number"
-                  placeholder="Max"
-                  value={maxAmount}
-                  onChange={(e) => setMaxAmount(e.target.value)}
-                  className="w-16 h-7 bg-transparent border-0 text-sm font-inter tracking-[-0.5px] p-0 focus-visible:ring-0"
-                />
+  return (
+    <AdminPermissionGuard resource="payouts">
+      <div className="h-full flex flex-col overflow-hidden">
+        {/* Stats Header */}
+        <div className="p-6 border-b border-border/50 bg-card/30">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Finance</h1>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                  Manage payouts and track financial metrics
+                </p>
+              </div>
+              <Button onClick={fetchPayoutRequests} variant="outline" size="sm" className="gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-card/50 rounded-xl p-4 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-inter">Total Processed</span>
+                  <DollarSign className="h-4 w-4 text-emerald-500" />
+                </div>
+                <p className="text-2xl font-bold font-inter tracking-[-0.5px]">
+                  ${stats.totalProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-muted-foreground font-inter">{stats.completedCount} payouts</p>
               </div>
 
-              {/* Sort Controls */}
-              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
-                <SelectTrigger className="w-[120px] h-9 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]">
-                  <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="date" className="font-inter tracking-[-0.5px]">Date</SelectItem>
-                  <SelectItem value="amount" className="font-inter tracking-[-0.5px]">Amount</SelectItem>
-                  <SelectItem value="username" className="font-inter tracking-[-0.5px]">Username</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="bg-card/50 rounded-xl p-4 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-inter">Pending</span>
+                  <Clock className="h-4 w-4 text-amber-500" />
+                </div>
+                <p className="text-2xl font-bold font-inter tracking-[-0.5px] text-amber-500">
+                  ${stats.totalPending.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-muted-foreground font-inter">{stats.pendingCount} requests</p>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-1.5"
-              >
-                {sortOrder === 'desc' ? (
-                  <>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                    Newest
-                  </>
-                ) : (
-                  <>
-                    <ChevronUp className="h-3.5 w-3.5" />
-                    Oldest
-                  </>
-                )}
-              </Button>
+              <div className="bg-card/50 rounded-xl p-4 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-inter">This Month</span>
+                  <Calendar className="h-4 w-4 text-blue-500" />
+                </div>
+                <p className="text-2xl font-bold font-inter tracking-[-0.5px]">
+                  ${stats.thisMonthProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+                <div className="flex items-center gap-1">
+                  {stats.change >= 0 ? (
+                    <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3 text-rose-500" />
+                  )}
+                  <span className={cn(
+                    "text-xs font-inter",
+                    stats.change >= 0 ? "text-emerald-500" : "text-rose-500"
+                  )}>
+                    {Math.abs(stats.change).toFixed(0)}% vs last month
+                  </span>
+                </div>
+              </div>
 
-              {/* Clear Filters */}
-              {(paymentMethodFilter !== 'all' || minAmount || maxAmount || sortBy !== 'date' || sortOrder !== 'desc') && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setPaymentMethodFilter('all');
-                    setMinAmount('');
-                    setMaxAmount('');
-                    setSortBy('date');
-                    setSortOrder('desc');
-                  }}
-                  className="h-9 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
+              <div className="bg-card/50 rounded-xl p-4 border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground font-inter">Avg Payout</span>
+                  <TrendingUp className="h-4 w-4 text-violet-500" />
+                </div>
+                <p className="text-2xl font-bold font-inter tracking-[-0.5px]">
+                  ${stats.avgPayoutAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-muted-foreground font-inter">{stats.rejectedCount} rejected</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="px-6 py-4 border-b border-border/50 bg-background/50">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
+            {/* Status Pills */}
+            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1">
+              {(['pending', 'in_transit', 'completed', 'rejected', 'all'] as StatusFilter[]).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-xs font-medium font-inter tracking-[-0.3px] transition-all",
+                    statusFilter === status
+                      ? status === 'pending' ? "bg-amber-500/20 text-amber-500"
+                        : status === 'in_transit' ? "bg-blue-500/20 text-blue-500"
+                        : status === 'completed' ? "bg-emerald-500/20 text-emerald-500"
+                        : status === 'rejected' ? "bg-rose-500/20 text-rose-500"
+                        : "bg-card text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  <RotateCcw className="h-3 w-3 mr-1.5" />
-                  Reset
-                </Button>
+                  {status === 'in_transit' ? 'In Transit' : status.charAt(0).toUpperCase() + status.slice(1)}
+                  <span className="ml-1.5 opacity-60">{statusCounts[status]}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <div className="flex-1 min-w-[200px] max-w-sm relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 bg-muted/30 border-0 font-inter text-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
               )}
             </div>
 
-            {/* Status Tabs */}
-            <TabsList className="bg-muted/30 border-0 p-1 h-auto w-auto inline-flex">
-              <TabsTrigger
-                value="fraud"
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-red-500/20 data-[state=active]:text-red-500 px-4 py-2 gap-1.5"
-              >
-                <Shield className="h-3.5 w-3.5" />
-                Fraud Review
-              </TabsTrigger>
-              <TabsTrigger
-                value="flagged"
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5"
-              >
-                <Flag className="h-3.5 w-3.5" />
-                Flagged
-              </TabsTrigger>
-              <TabsTrigger 
-                value="pending" 
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5"
-              >
-                <Clock className="h-3.5 w-3.5" />
-                Pending ({stats.pending})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="completed" 
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-500 px-4 py-2 gap-1.5"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Completed ({stats.completed})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="rejected" 
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive px-4 py-2 gap-1.5"
-              >
-                <XCircle className="h-3.5 w-3.5" />
-                Rejected ({stats.rejected})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="all" 
-                className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card px-4 py-2"
-              >
-                All ({allRequests.length})
-              </TabsTrigger>
-            </TabsList>
+            {/* Payment Method Filter */}
+            <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+              <SelectTrigger className="w-[140px] h-9 bg-muted/30 border-0 text-sm font-inter">
+                <CreditCard className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                <SelectValue placeholder="Method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Methods</SelectItem>
+                <SelectItem value="paypal">PayPal</SelectItem>
+                <SelectItem value="crypto">Crypto</SelectItem>
+                <SelectItem value="wise">Wise</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
-          {/* Fraud Review Tab */}
-          <TabsContent value="fraud">
-            <FraudReviewQueue />
-          </TabsContent>
-
-          {/* Flagged Reviews Tab */}
-          <TabsContent value="flagged">
-            <FlaggedReviewsTab />
-          </TabsContent>
-
-          <TabsContent value={activeTab}>
-            {(activeTab === "flagged" || activeTab === "fraud") ? null : loading ? <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                  <p className="text-muted-foreground">Loading payout requests...</p>
+        {/* Requests List */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="max-w-7xl mx-auto p-6">
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              </div> : filteredRequests.length === 0 ? <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Wallet className="h-12 w-12 text-muted-foreground mb-3" />
-                  <p className="text-lg font-medium text-muted-foreground">No {activeTab !== 'all' ? activeTab : ''} requests found</p>
-                  <p className="text-sm text-muted-foreground mt-1">Payout requests will appear here</p>
-                </CardContent>
-              </Card> : <div className="grid grid-cols-1 gap-3">
-                {filteredRequests.map(request => {
-                  const amount = Number(request.amount);
-                  const isPayPal = request.payout_method === 'paypal';
-                  let netAmount;
-                  
-                  if (isPayPal) {
-                    const fee = amount * 0.06;
-                    netAmount = amount - fee;
-                  } else {
-                    const percentageFee = amount * 0.0075;
-                    const afterPercentage = amount - percentageFee;
-                    netAmount = afterPercentage - 1;
-                  }
+              ) : filteredRequests.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <p className="text-lg font-medium text-muted-foreground">No requests found</p>
+                  <p className="text-sm text-muted-foreground/70 mt-1">
+                    {statusFilter !== 'all' ? `No ${statusFilter} payout requests` : 'No payout requests yet'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground font-inter">
+                    <div className="col-span-4">User</div>
+                    <div className="col-span-2">Method</div>
+                    <div className="col-span-2 text-right">Amount</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-2 text-right">Actions</div>
+                  </div>
 
-                  const getPaymentInfo = () => {
-                    if (request.payout_method === 'crypto') {
-                      return request.payout_details?.address || request.payout_details?.wallet_address || 'N/A';
-                    } else if (request.payout_method === 'upi') {
-                      return request.payout_details?.upi_id || 'N/A';
-                    } else if (request.payout_method === 'wise') {
-                      return request.payout_details?.account_holder_name || request.payout_details?.email || 'N/A';
-                    }
-                    return request.payout_details?.email || request.payout_details?.account_number || 'N/A';
-                  };
-
-                  const copyPaymentDetails = (e: React.MouseEvent) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const text = String(getPaymentInfo()).trim();
-                    if (text && text !== 'N/A') {
-                      navigator.clipboard.writeText(text);
-                      toast({ title: "Copied!", description: "Payment details copied to clipboard" });
-                    }
-                  };
-
-                  return (
-                    <div 
-                      key={request.id} 
-                      className="bg-card/50 rounded-xl p-4 hover:bg-card/80 transition-colors"
-                    >
-                      {/* Top Row: User, Status, Amount */}
-                      <div className="flex items-center justify-between gap-4 mb-4">
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div 
-                            className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
-                            onClick={() => request.profiles && openUserDetailsDialog(request.profiles)}
-                          >
-                            <span className="text-sm font-medium font-inter tracking-[-0.5px]">
-                              {(request.profiles?.full_name || request.profiles?.username || '?')[0].toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <h3 
-                              className="text-sm font-semibold font-inter tracking-[-0.5px] truncate cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => request.profiles && openUserDetailsDialog(request.profiles)}
-                            >
-                              {request.profiles?.full_name || request.profiles?.username}
-                            </h3>
-                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                              {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 shrink-0">
-                          {getStatusBadge(request.status)}
-                          <div className="text-right">
-                            <p className="text-lg font-bold font-inter tracking-[-0.5px]">${amount.toFixed(2)}</p>
-                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">→ ${netAmount.toFixed(2)}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Payment Details Row */}
-                      <div className="flex items-center gap-6 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Method</span>
-                          <span className="text-sm font-medium font-inter tracking-[-0.5px] capitalize">
-                            {request.payout_method === 'crypto' && request.payout_details?.network 
-                              ? `${request.payout_details.network} (${request.payout_details?.currency?.toUpperCase() || 'Crypto'})`
-                              : request.payout_method}
-                          </span>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div 
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted/30 rounded-md px-2 py-1 -ml-2 transition-colors group"
-                            onClick={copyPaymentDetails}
-                          >
-                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] shrink-0">
-                              {request.payout_method === 'crypto' ? 'Address' : request.payout_method === 'upi' ? 'UPI' : 'Account'}
-                            </span>
-                            <span className="text-sm font-mono truncate">{getPaymentInfo()}</span>
-                            <Copy className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </div>
-
-                        {request.profiles?.wallets && (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Balance</span>
-                            <span className="text-sm font-medium font-inter tracking-[-0.5px]">
-                              ${(Number(request.profiles.wallets.balance) + (request.status === 'rejected' ? Number(request.amount) : 0)).toFixed(2)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Additional Info */}
-                      {(request.transaction_id || request.rejection_reason || request.notes) && (
-                        <div className="flex flex-wrap gap-2 py-3">
-                          {request.transaction_id && (
-                            <div className="px-2.5 py-1.5 bg-muted/40 rounded-md">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">TX: </span>
-                              <span className="text-xs font-mono">{request.transaction_id}</span>
-                            </div>
-                          )}
-                          {request.rejection_reason && (
-                            <div className="px-2.5 py-1.5 bg-destructive/10 rounded-md text-destructive">
-                              <span className="text-xs font-inter tracking-[-0.5px]">{request.rejection_reason}</span>
-                            </div>
-                          )}
-                          {request.notes && (
-                            <div className="px-2.5 py-1.5 bg-muted/40 rounded-md">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{request.notes}</span>
-                            </div>
-                          )}
-                        </div>
+                  {/* Table Rows */}
+                  {filteredRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className={cn(
+                        "grid grid-cols-12 gap-4 px-4 py-3 rounded-xl items-center cursor-pointer transition-colors",
+                        "bg-card/50 hover:bg-card border border-transparent hover:border-border/50",
+                        selectedRequest?.id === request.id && "border-primary/50 bg-primary/5"
                       )}
+                      onClick={() => openPayoutDetails(request)}
+                    >
+                      {/* User */}
+                      <div className="col-span-4 flex items-center gap-3 min-w-0">
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarImage src={request.profiles?.avatar_url || ''} />
+                          <AvatarFallback className="text-xs font-medium bg-muted">
+                            {(request.profiles?.username || '?')[0].toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium font-inter truncate">
+                            {request.profiles?.full_name || request.profiles?.username}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-inter truncate">
+                            {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Method */}
+                      <div className="col-span-2">
+                        <Badge variant="secondary" className="capitalize font-inter text-xs">
+                          {request.payout_method === 'crypto' && request.payout_details?.network
+                            ? request.payout_details.network
+                            : request.payout_method}
+                        </Badge>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="col-span-2 text-right">
+                        <p className="text-sm font-semibold font-inter">${Number(request.amount).toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground font-inter">
+                          → ${getNetAmount(request).toFixed(2)}
+                        </p>
+                      </div>
+
+                      {/* Status */}
+                      <div className="col-span-2">
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "font-inter text-xs border-0",
+                            request.status === 'pending' && "bg-amber-500/10 text-amber-500",
+                            request.status === 'in_transit' && "bg-blue-500/10 text-blue-500",
+                            request.status === 'completed' && "bg-emerald-500/10 text-emerald-500",
+                            request.status === 'rejected' && "bg-rose-500/10 text-rose-500"
+                          )}
+                        >
+                          {request.status === 'in_transit' ? 'In Transit' : request.status}
+                        </Badge>
+                      </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2 pt-3">
+                      <div className="col-span-2 flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         {request.status === 'pending' && (
                           <>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleCompleteDirectly(request)} 
-                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-700"
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleCompleteDirectly(request)}
+                              className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
                             >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Complete
+                              <CheckCircle2 className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => openActionDialog(request, 'reject')} 
-                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openActionDialog(request, 'reject')}
+                              className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
                             >
-                              <XCircle className="h-3.5 w-3.5" />
-                              Reject
+                              <XCircle className="h-4 w-4" />
                             </Button>
                           </>
                         )}
-                        
                         {request.status === 'in_transit' && (
-                          <>
-                            <Button 
-                              size="sm" 
-                              onClick={() => handleCompleteDirectly(request)} 
-                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px]"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Complete
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => openActionDialog(request, 'revert')} 
-                              className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5" />
-                              Revert
-                            </Button>
-                          </>
-                        )}
-
-                        {request.status === 'rejected' && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => openActionDialog(request, 'revert')} 
-                            className="gap-1.5 h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground"
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleCompleteDirectly(request)}
+                            className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
                           >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Revert
+                            <CheckCircle2 className="h-4 w-4" />
                           </Button>
                         )}
-
-                        {request.status === 'completed' && request.processed_at && (
-                          <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                            Processed {format(new Date(request.processed_at), 'MMM dd, yyyy')}
-                          </span>
+                        {(request.status === 'completed' || request.status === 'rejected' || request.status === 'in_transit') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openActionDialog(request, 'revert')}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>}
-          </TabsContent>
-        </Tabs>
-      </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
 
-      {/* Action Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {action === 'approve' && 'Approve Payout'}
-              {action === 'reject' && 'Reject Payout'}
-              {action === 'complete' && 'Complete Payout'}
-              {action === 'revert' && 'Revert Payout Status'}
-            </DialogTitle>
-          </DialogHeader>
+        {/* Details Sheet */}
+        <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <SheetContent className="w-full sm:max-w-md p-0 border-l border-border/50">
+            {selectedRequest && (
+              <ScrollArea className="h-full">
+                <div className="p-6 space-y-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        className="h-12 w-12 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                        onClick={() => selectedRequest.profiles && openUserDetailsDialog(selectedRequest.profiles)}
+                      >
+                        <AvatarImage src={selectedRequest.profiles?.avatar_url || ''} />
+                        <AvatarFallback className="text-sm font-medium bg-muted">
+                          {(selectedRequest.profiles?.username || '?')[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3
+                          className="font-semibold font-inter cursor-pointer hover:text-primary transition-colors"
+                          onClick={() => selectedRequest.profiles && openUserDetailsDialog(selectedRequest.profiles)}
+                        >
+                          {selectedRequest.profiles?.full_name || selectedRequest.profiles?.username}
+                        </h3>
+                        <p className="text-sm text-muted-foreground font-inter">
+                          @{selectedRequest.profiles?.username}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge
+                      className={cn(
+                        "font-inter text-xs border-0",
+                        selectedRequest.status === 'pending' && "bg-amber-500/10 text-amber-500",
+                        selectedRequest.status === 'in_transit' && "bg-blue-500/10 text-blue-500",
+                        selectedRequest.status === 'completed' && "bg-emerald-500/10 text-emerald-500",
+                        selectedRequest.status === 'rejected' && "bg-rose-500/10 text-rose-500"
+                      )}
+                    >
+                      {selectedRequest.status === 'in_transit' ? 'In Transit' : selectedRequest.status}
+                    </Badge>
+                  </div>
 
-          {selectedRequest && <div className="space-y-4">
-              <div>
-                <p className="font-medium">{selectedRequest.profiles?.username}</p>
-                <p className="text-2xl font-bold">${Number(selectedRequest.amount).toFixed(2)}</p>
-              </div>
+                  {/* Amount Card */}
+                  <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
+                    <p className="text-xs text-muted-foreground font-inter mb-1">Requested Amount</p>
+                    <p className="text-3xl font-bold font-inter tracking-[-0.5px]">
+                      ${Number(selectedRequest.amount).toFixed(2)}
+                    </p>
+                    <p className="text-sm text-muted-foreground font-inter mt-1">
+                      Net: ${getNetAmount(selectedRequest).toFixed(2)} after fees
+                    </p>
+                  </div>
 
-              {action === 'reject' && <div className="space-y-2">
-                  <Label htmlFor="reason">Rejection Reason *</Label>
-                  <Textarea id="reason" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Explain why..." rows={3} />
-                </div>}
+                  {/* Details Grid */}
+                  <div className="space-y-4">
+                    <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                      <h4 className="text-sm font-medium font-inter text-muted-foreground">Payment Details</h4>
 
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground font-inter">Method</span>
+                        <Badge variant="secondary" className="capitalize">
+                          {selectedRequest.payout_method}
+                        </Badge>
+                      </div>
 
-              {action === 'revert' && selectedRequest && <div className="p-4 bg-muted/20 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    This will revert the status from <span className="font-semibold text-foreground">{selectedRequest.status}</span> to{' '}
-                    <span className="font-semibold text-foreground">
-                      {selectedRequest.status === 'in_transit' ? 'pending' : selectedRequest.status === 'completed' ? 'in transit' : 'pending'}
-                    </span>.
+                      {selectedRequest.payout_method === 'crypto' && selectedRequest.payout_details?.network && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter">Network</span>
+                          <span className="text-sm font-medium font-inter">{selectedRequest.payout_details.network}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-muted-foreground font-inter shrink-0">
+                          {selectedRequest.payout_method === 'crypto' ? 'Address' : 'Account'}
+                        </span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-mono truncate">{getPaymentInfo(selectedRequest)}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 shrink-0"
+                            onClick={() => copyToClipboard(getPaymentInfo(selectedRequest))}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                      <h4 className="text-sm font-medium font-inter text-muted-foreground">Timeline</h4>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground font-inter">Requested</span>
+                        <span className="text-sm font-inter">
+                          {format(new Date(selectedRequest.requested_at), 'MMM dd, yyyy HH:mm')}
+                        </span>
+                      </div>
+
+                      {selectedRequest.processed_at && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter">Processed</span>
+                          <span className="text-sm font-inter">
+                            {format(new Date(selectedRequest.processed_at), 'MMM dd, yyyy HH:mm')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Wallet Info */}
+                    {selectedRequest.profiles?.wallets && (
+                      <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                        <h4 className="text-sm font-medium font-inter text-muted-foreground">User Wallet</h4>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter">Current Balance</span>
+                          <span className="text-sm font-semibold font-inter">
+                            ${Number(selectedRequest.profiles.wallets.balance).toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter">Total Earned</span>
+                          <span className="text-sm font-inter">
+                            ${Number(selectedRequest.profiles.wallets.total_earned).toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground font-inter">Total Withdrawn</span>
+                          <span className="text-sm font-inter">
+                            ${Number(selectedRequest.profiles.wallets.total_withdrawn).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Rejection Reason */}
+                    {selectedRequest.rejection_reason && (
+                      <div className="bg-rose-500/10 rounded-xl p-4 border border-rose-500/20">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium font-inter text-rose-500">Rejection Reason</p>
+                            <p className="text-sm text-rose-400 mt-1">{selectedRequest.rejection_reason}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {selectedRequest.notes && (
+                      <div className="bg-muted/30 rounded-xl p-4">
+                        <p className="text-sm font-medium font-inter text-muted-foreground mb-2">Notes</p>
+                        <p className="text-sm font-inter">{selectedRequest.notes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-4 border-t border-border/50">
+                    {selectedRequest.status === 'pending' && (
+                      <>
+                        <Button
+                          onClick={() => handleCompleteDirectly(selectedRequest)}
+                          className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Complete
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => openActionDialog(selectedRequest, 'reject')}
+                          className="flex-1 gap-2 text-rose-500 hover:text-rose-600 border-rose-500/30 hover:bg-rose-500/10"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    {selectedRequest.status === 'in_transit' && (
+                      <>
+                        <Button
+                          onClick={() => handleCompleteDirectly(selectedRequest)}
+                          className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Complete
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => openActionDialog(selectedRequest, 'revert')}
+                          className="gap-2"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Revert
+                        </Button>
+                      </>
+                    )}
+                    {(selectedRequest.status === 'completed' || selectedRequest.status === 'rejected') && (
+                      <Button
+                        variant="outline"
+                        onClick={() => openActionDialog(selectedRequest, 'revert')}
+                        className="w-full gap-2"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Revert Status
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </ScrollArea>
+            )}
+          </SheetContent>
+        </Sheet>
+
+        {/* Action Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-inter">
+                {action === 'approve' && 'Approve Payout'}
+                {action === 'reject' && 'Reject Payout'}
+                {action === 'complete' && 'Complete Payout'}
+                {action === 'revert' && 'Revert Status'}
+              </DialogTitle>
+            </DialogHeader>
+
+            {selectedRequest && (
+              <div className="space-y-4">
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <p className="text-sm text-muted-foreground font-inter">Amount</p>
+                  <p className="text-2xl font-bold font-inter">${Number(selectedRequest.amount).toFixed(2)}</p>
+                  <p className="text-sm text-muted-foreground font-inter mt-1">
+                    for @{selectedRequest.profiles?.username}
                   </p>
-                  {selectedRequest.status === 'completed' && <p className="text-sm text-warning">
-                      ⚠️ This will restore the funds to the user's wallet balance.
-                    </p>}
-                </div>}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes..." rows={2} />
+                {action === 'reject' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="reason" className="font-inter">Rejection Reason *</Label>
+                    <Textarea
+                      id="reason"
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                      placeholder="Explain why this request was rejected..."
+                      className="font-inter"
+                      rows={3}
+                    />
+                  </div>
+                )}
+
+                {action === 'revert' && (
+                  <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                    <p className="text-sm text-amber-500 font-inter">
+                      This will revert from <strong>{selectedRequest.status}</strong> to{' '}
+                      <strong>
+                        {selectedRequest.status === 'in_transit' ? 'pending' :
+                         selectedRequest.status === 'completed' ? 'in transit' : 'pending'}
+                      </strong>
+                      {selectedRequest.status === 'completed' && (
+                        <span className="block mt-2">The funds will be restored to the user's wallet.</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="font-inter">Notes (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any notes..."
+                    className="font-inter"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleProcessRequest}
+                    className={cn(
+                      "flex-1",
+                      action === 'reject' && "bg-rose-600 hover:bg-rose-700"
+                    )}
+                  >
+                    Confirm
+                  </Button>
+                </div>
               </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleProcessRequest}>
-                  Confirm
-                </Button>
-              </div>
-            </div>}
-        </DialogContent>
-      </Dialog>
-
-      {/* User Details Dialog */}
-      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUserProfile} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} />
-    </div></AdminPermissionGuard>;
+        {/* User Details Dialog */}
+        <UserDetailsDialog
+          open={userDetailsDialogOpen}
+          onOpenChange={setUserDetailsDialogOpen}
+          user={selectedUserProfile}
+          socialAccounts={userSocialAccounts}
+          transactions={userTransactions}
+          paymentMethods={userPaymentMethods}
+          loadingSocialAccounts={loadingSocialAccounts}
+          loadingTransactions={loadingTransactions}
+          loadingPaymentMethods={loadingPaymentMethods}
+          socialAccountsOpen={socialAccountsOpen}
+          onSocialAccountsOpenChange={setSocialAccountsOpen}
+          transactionsOpen={transactionsOpen}
+          onTransactionsOpenChange={setTransactionsOpen}
+          paymentMethodsOpen={paymentMethodsOpen}
+          onPaymentMethodsOpenChange={setPaymentMethodsOpen}
+        />
+      </div>
+    </AdminPermissionGuard>
+  );
 }

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { format, subDays, subMonths, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { Download, BarChart3, Users } from "lucide-react";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
@@ -295,22 +294,6 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
     link.click();
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-28" />
-          ))}
-        </div>
-        <Skeleton className="h-72" />
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 pb-[70px] sm:pb-4 space-y-5">

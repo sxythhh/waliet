@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminMetric, AdminAlertMetric } from "../design-system/AdminMetric";
 import { AdminMiniStatCard } from "../design-system/AdminCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { subDays } from "date-fns";
 
 interface MetricsData {
@@ -195,24 +195,8 @@ export function MetricsGrid() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-muted/30 rounded-xl p-5 border border-border">
-              <Skeleton className="h-4 w-20 mb-3" />
-              <Skeleton className="h-8 w-24 mb-1" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-muted/20 rounded-xl p-4 border border-border">
-              <Skeleton className="h-6 w-12 mb-1" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-          ))}
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

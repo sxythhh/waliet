@@ -15,6 +15,7 @@ const BrandsContent = lazy(() => import("./admin/Brands"));
 const PayoutsContent = lazy(() => import("./admin/Payouts"));
 const ResourcesContent = lazy(() => import("./admin/Resources"));
 const FeedbackContent = lazy(() => import("./admin/Feedback"));
+const TicketsContent = lazy(() => import("./admin/Tickets"));
 const PermissionsContent = lazy(() => import("./admin/Permissions"));
 
 function TabLoader() {
@@ -42,6 +43,7 @@ const tabs = [
   { id: "brands", label: "Brands" },
   { id: "finance", label: "Finance" },
   { id: "content", label: "Content" },
+  { id: "tickets", label: "Tickets" },
   { id: "feedback", label: "Feedback" },
   { id: "permissions", label: "Permissions" },
 ];
@@ -168,6 +170,12 @@ export default function Admin() {
           <TabsContent value="content" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
               <ResourcesContent />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="tickets" className="m-0 h-full">
+            <Suspense fallback={<TabLoader />}>
+              <TicketsContent />
             </Suspense>
           </TabsContent>
 

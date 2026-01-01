@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import {
@@ -14,7 +13,8 @@ import {
   TrendingUp,
   Users,
   DollarSign,
-  Wallet
+  Wallet,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandContextSheet } from "./BrandContextSheet";
@@ -123,17 +123,8 @@ export function BrandPipelineView() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {PIPELINE_STAGES.map((stage) => (
-          <div key={stage.id} className="space-y-3">
-            <Skeleton className="h-10 w-full rounded-xl" />
-            <div className="space-y-2">
-              {[1, 2].map((i) => (
-                <Skeleton key={i} className="h-24 w-full rounded-xl" />
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

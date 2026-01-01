@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Calendar as CalendarIcon, Loader2, Undo2, ChevronLeft, ChevronRight, Download, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
@@ -557,16 +556,13 @@ export default function Transactions() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                [...Array(10)].map((_, i) => (
-                  <TableRow key={i} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
-                    <TableCell className="py-4"><div className="flex items-center gap-3"><Skeleton className="h-8 w-8 rounded-full bg-white/5" /><Skeleton className="h-4 w-24 bg-white/5" /></div></TableCell>
-                    <TableCell className="py-4"><Skeleton className="h-4 w-28 bg-white/5" /></TableCell>
-                    <TableCell className="py-4"><Skeleton className="h-6 w-20 rounded-full bg-white/5" /></TableCell>
-                    <TableCell className="py-4"><Skeleton className="h-4 w-16 bg-white/5" /></TableCell>
-                    <TableCell className="py-4"><Skeleton className="h-4 w-40 bg-white/5" /></TableCell>
-                    <TableCell className="py-4 text-right"><Skeleton className="h-8 w-8 rounded-lg bg-white/5 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : filteredTransactions.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={6} className="text-center py-12 text-white/40 font-inter">

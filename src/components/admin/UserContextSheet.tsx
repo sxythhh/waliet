@@ -8,7 +8,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -42,7 +41,8 @@ import {
   Sparkles,
   ArrowRight,
   Ban,
-  LogIn
+  LogIn,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -556,10 +556,8 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                   </div>
                   <div className="space-y-2">
                     {loading ? (
-                      <div className="space-y-2">
-                        {[1, 2].map(i => (
-                          <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                        ))}
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
                     ) : socialAccounts.length > 0 ? (
                       socialAccounts.map((account) => {
@@ -661,10 +659,8 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">Recent Transactions</h3>
                 <div className="space-y-1">
                   {loading ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <Skeleton key={i} className="h-14 w-full rounded-xl" />
-                      ))}
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : transactions.length > 0 ? (
                     transactions.map((tx, index) => (

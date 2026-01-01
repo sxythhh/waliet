@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Plus, ChevronDown, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -275,13 +274,6 @@ export function BrandWalletTab({
       toast.error('Failed to resume payment');
     }
   };
-  if (loading) {
-    return <div className="space-y-6">
-        <Skeleton className="h-40 w-full bg-[#1a1a1a]" />
-        <Skeleton className="h-64 w-full bg-[#1a1a1a]" />
-      </div>;
-  }
-
   return <div className="space-y-6">
       {/* Balance Card */}
       <Card className="border-border overflow-hidden bg-black/0">

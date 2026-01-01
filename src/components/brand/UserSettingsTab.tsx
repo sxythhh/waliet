@@ -10,7 +10,6 @@ import framePersonIcon from "@/assets/frame-person-notification-icon.svg";
 import stackedInboxIcon from "@/assets/stacked-inbox-icon.svg";
 import mailNotificationIcon from "@/assets/mail-notification-icon.svg";
 import { useNavigate } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { EditBrandDialog } from "@/components/EditBrandDialog";
 import { CreateBrandDialog } from "@/components/CreateBrandDialog";
@@ -996,69 +995,6 @@ export function UserSettingsTab() {
     setShowCreateBrandDialog(false);
   };
   const Spacer = () => <div className="h-6" />;
-  if (loading) {
-    return <div className="p-4 space-y-6 max-w-xl mx-auto">
-        {/* Header Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-24 rounded-lg" />
-          <Skeleton className="h-4 w-56 rounded-md" />
-        </div>
-
-        {/* Tabs Navigation Skeleton */}
-        <div className="flex items-center gap-1">
-          <Skeleton className="h-9 w-20 rounded-full" />
-          <Skeleton className="h-9 w-16 rounded-full" />
-          <Skeleton className="h-9 w-18 rounded-full" />
-        </div>
-
-        {/* Avatar Section Skeleton */}
-        <div className="space-y-3 pt-2">
-          <Skeleton className="h-4 w-14 rounded-md" />
-          <div className="flex items-center gap-4">
-            <Skeleton className="w-16 h-16 rounded-xl" />
-            <Skeleton className="h-10 w-32 rounded-lg" />
-          </div>
-          <Skeleton className="h-3 w-36 rounded-md" />
-        </div>
-
-        {/* Brand Name Input Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-24 rounded-md" />
-          <Skeleton className="h-11 w-full rounded-lg" />
-        </div>
-
-        {/* Public URL Input Skeleton */}
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-20 rounded-md" />
-          <div className="flex items-center">
-            <Skeleton className="h-11 flex-1 rounded-l-lg rounded-r-none" />
-            <Skeleton className="h-11 w-24 rounded-r-lg rounded-l-none" />
-          </div>
-        </div>
-
-        {/* Save Button Skeleton */}
-        <Skeleton className="h-11 w-full rounded-lg" />
-
-        {/* Admin Plan Section Skeleton */}
-        <div className="space-y-4 p-4 rounded-xl bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-4 rounded" />
-            <Skeleton className="h-4 w-40 rounded-md" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-10 rounded-md" />
-              <Skeleton className="h-10 w-full rounded-lg" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-12 rounded-md" />
-              <Skeleton className="h-10 w-full rounded-lg" />
-            </div>
-          </div>
-          <Skeleton className="h-9 w-full rounded-lg" />
-        </div>
-      </div>;
-  }
   return <div className="w-full p-1.5 h-full">
       <div className="border border-border rounded-xl bg-card overflow-hidden h-full flex flex-col">
         {/* Sticky Header & Tabs */}
@@ -1103,386 +1039,375 @@ export function UserSettingsTab() {
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-6 space-y-6 max-w-2xl flex-1 overflow-y-auto">
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
 
         {/* General Tab */}
-        <TabsContent value="general" className="mt-6 space-y-0">
-          {isBrandMode && brand && <>
-              {/* Icon Section */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2.5">
-                  {/* Logo Preview or Initials with Color */}
-                  <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" style={{
-                  backgroundColor: brand.logo_url ? undefined : brandColor
-                }} onClick={() => document.getElementById('brand-logo-upload')?.click()}>
-                    {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-white text-sm font-semibold font-inter">
-                        {brand.name?.slice(0, 2).toUpperCase() || "B"}
-                      </span>}
+        <TabsContent value="general" className="mt-6">
+          {isBrandMode && brand && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Brand Identity & Business Info */}
+              <div className="space-y-6">
+                {/* Brand Identity Card */}
+                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px]">Brand Identity</h3>
+
+                  {/* Icon Section */}
+                  <div className="flex items-center gap-2.5">
+                    {/* Logo Preview or Initials with Color */}
+                    <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" style={{
+                    backgroundColor: brand.logo_url ? undefined : brandColor
+                  }} onClick={() => document.getElementById('brand-logo-upload')?.click()}>
+                      {brand.logo_url ? <img src={brand.logo_url} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-white text-sm font-semibold font-inter">
+                          {brand.name?.slice(0, 2).toUpperCase() || "B"}
+                        </span>}
+                    </div>
+
+                    {/* Color Picker */}
+                    <div className="grid grid-cols-7 gap-0.5">
+                      {BRAND_COLORS.map(color => <button key={color} type="button" className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`} style={{
+                      backgroundColor: color
+                    }} onClick={() => setBrandColor(color)} />)}
+                    </div>
+
+                    {/* Upload/Remove Buttons */}
+                    <div className="flex items-center gap-1">
+                      <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-muted dark:bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-muted/80 dark:hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
+                        <Upload className="h-3 w-3" />
+                        {brand.logo_url ? 'Change' : 'Upload'}
+                        <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+                      </label>
+                    </div>
                   </div>
 
-                  {/* Color Picker */}
-                  <div className="grid grid-cols-7 gap-0.5">
-                    {BRAND_COLORS.map(color => <button key={color} type="button" className={`w-[18px] h-[18px] rounded transition-all flex-shrink-0 ${brandColor === color ? 'ring-1 ring-offset-1 ring-offset-background ring-white/80' : 'hover:opacity-80'}`} style={{
-                    backgroundColor: color
-                  }} onClick={() => setBrandColor(color)} />)}
-                  </div>
-
-                  {/* Upload/Remove Buttons */}
-                  <div className="flex items-center gap-1">
-                    <label className="h-7 px-2.5 text-xs font-inter tracking-[-0.3px] gap-1.5 bg-muted dark:bg-[#0f0f0f] border-0 text-muted-foreground hover:bg-muted/80 dark:hover:bg-[#1a1a1a] hover:text-foreground rounded-md cursor-pointer flex items-center transition-colors">
-                      <Upload className="h-3 w-3" />
-                      {brand.logo_url ? 'Change' : 'Upload'}
-                      <input id="brand-logo-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <Spacer />
-
-              {/* Brand Name */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Brand name
-                </Label>
-                <Input value={editedBrandName} onChange={e => setEditedBrandName(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
-              </div>
-
-              <Spacer />
-
-              {/* Public URL */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Public URL
-                </Label>
-                <div className="flex items-center">
-                  <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
-                  <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
-                    .virality.gg
-                  </span>
-                </div>
-                
-              </div>
-
-              <Spacer />
-
-              {/* Business Info */}
-              <div className="space-y-4">
-                <Label className="text-sm font-medium tracking-[-0.5px] text-foreground">
-                  Business Information
-                </Label>
-
-                {/* Legal Business Name */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Legal Business Name</Label>
-                  <Input value={profile.legal_business_name} onChange={e => setProfile({
-                  ...profile,
-                  legal_business_name: e.target.value
-                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
-                </div>
-
-                {/* Billing Address */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Billing Address</Label>
-                  <Input value={profile.billing_address} onChange={e => setProfile({
-                  ...profile,
-                  billing_address: e.target.value
-                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
-                </div>
-
-                {/* Country */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Country</Label>
-                  <Select value={profile.billing_country} onValueChange={value => setProfile({
-                  ...profile,
-                  billing_country: value
-                })}>
-                    <SelectTrigger className="h-11 bg-muted/30 border-0 tracking-[-0.5px]">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {COUNTRIES.map(country => <SelectItem key={country.code} value={country.code}>
-                          {country.name}
-                        </SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* VAT Number */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground tracking-[-0.5px]">VAT Number</Label>
-                  <Input value={profile.vat_number} onChange={e => setProfile({
-                  ...profile,
-                  vat_number: e.target.value
-                })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
-                </div>
-              </div>
-
-              <Spacer />
-
-              {/* Social Media Section */}
-              <div className="space-y-4">
-                {/* Instagram */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">Instagram</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
-                  </div>
-                </div>
-
-                {/* LinkedIn */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">LinkedIn</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
-                  </div>
-                </div>
-
-                {/* TikTok */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">TikTok</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
-                    <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
-                  </div>
-                </div>
-
-                {/* Website */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">Website</Label>
-                  <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
-                </div>
-
-                {/* App Store URL */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-foreground tracking-[-0.5px]">App Store URL</Label>
-                  <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
-                </div>
-              </div>
-
-              <Spacer />
-
-              {/* Website URL */}
-              {brand.home_url && <>
+                  {/* Brand Name */}
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                      Website
-                    </Label>
-                    <Input value={brand.home_url} readOnly className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Brand name</Label>
+                    <Input value={editedBrandName} onChange={e => setEditedBrandName(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
                   </div>
-                  <Spacer />
-                </>}
 
-
-              {/* Admin: Subscription Plan Management */}
-              {isAdmin && <div className="space-y-4 p-4 rounded-xl bg-amber-500/10">
-                  <div className="flex items-center gap-2">
-                    <Crown className="h-4 w-4 text-amber-500" />
-                    <h3 className="text-sm font-medium tracking-[-0.5px]">Admin: Override Subscription</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Plan</Label>
-                      <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                        <SelectTrigger className="bg-background h-10">
-                          <SelectValue placeholder="Select plan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="starter">Starter</SelectItem>
-                          <SelectItem value="growth">Growth</SelectItem>
-                          <SelectItem value="enterprise">Enterprise</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Status</Label>
-                      <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                        <SelectTrigger className="bg-background h-10">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="past_due">Past Due</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  {/* Public URL */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Public URL</Label>
+                    <div className="flex items-center">
+                      <Input value={editedSlug} onChange={e => setEditedSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="h-11 bg-muted/30 border-0 rounded-r-none tracking-[-0.5px]" />
+                      <span className="h-11 px-3 flex items-center text-sm text-muted-foreground bg-muted/30 rounded-r-lg tracking-[-0.5px]">
+                        .virality.gg
+                      </span>
                     </div>
                   </div>
-                  
-                  <Button onClick={handleUpdatePlan} disabled={savingPlan} size="sm" className="w-full">
-                    {savingPlan ? "Updating..." : "Update Plan"}
-                  </Button>
-                </div>}
 
-              {/* Danger Zone - Delete Workspace */}
-              <Spacer />
-              <div className="space-y-4 p-4 rounded-xl bg-destructive/5">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium tracking-[-0.5px] text-destructive">Danger Zone</h3>
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">
-                    Once you delete a workspace, there is no going back. Please be certain.
-                  </p>
+                  {/* Website URL (readonly) */}
+                  {brand.home_url && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
+                      <Input value={brand.home_url} readOnly className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" />
+                    </div>
+                  )}
                 </div>
-                <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full h-10 tracking-[-0.5px]">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Workspace
-                </Button>
+
+                {/* Business Information Card */}
+                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px]">Business Information</h3>
+
+                  {/* Legal Business Name */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Legal Business Name</Label>
+                    <Input value={profile.legal_business_name} onChange={e => setProfile({
+                    ...profile,
+                    legal_business_name: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Company Name LLC" />
+                  </div>
+
+                  {/* Billing Address */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Billing Address</Label>
+                    <Input value={profile.billing_address} onChange={e => setProfile({
+                    ...profile,
+                    billing_address: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="123 Main St, City, State, ZIP" />
+                  </div>
+
+                  {/* Country */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Country</Label>
+                    <Select value={profile.billing_country} onValueChange={value => setProfile({
+                    ...profile,
+                    billing_country: value
+                  })}>
+                      <SelectTrigger className="h-11 bg-muted/30 border-0 tracking-[-0.5px]">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {COUNTRIES.map(country => <SelectItem key={country.code} value={country.code}>
+                            {country.name}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* VAT Number */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">VAT Number</Label>
+                    <Input value={profile.vat_number} onChange={e => setProfile({
+                    ...profile,
+                    vat_number: e.target.value
+                  })} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="EU123456789" />
+                  </div>
+                </div>
               </div>
-            </>}
+
+              {/* Right Column - Social Media & Danger Zone */}
+              <div className="space-y-6">
+                {/* Social Media Card */}
+                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                  <h3 className="text-sm font-medium tracking-[-0.5px]">Social Media</h3>
+
+                  {/* Instagram */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Instagram</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                      <Input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your Instagram handle" />
+                    </div>
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">LinkedIn</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                      <Input value={linkedinHandle} onChange={e => setLinkedinHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your LinkedIn handle" />
+                    </div>
+                  </div>
+
+                  {/* TikTok */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">TikTok</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                      <Input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value.replace(/^@/, ''))} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pl-8" placeholder="Add your TikTok handle" />
+                    </div>
+                  </div>
+
+                  {/* Website */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Website</Label>
+                    <Input value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://yourwebsite.com" />
+                  </div>
+
+                  {/* App Store URL */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">App Store URL</Label>
+                    <Input value={appStoreUrl} onChange={e => setAppStoreUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="Add a link to your App Store" />
+                  </div>
+                </div>
+
+                {/* Admin: Subscription Plan Management */}
+                {isAdmin && (
+                  <div className="space-y-4 p-4 rounded-xl bg-amber-500/10">
+                    <div className="flex items-center gap-2">
+                      <Crown className="h-4 w-4 text-amber-500" />
+                      <h3 className="text-sm font-medium tracking-[-0.5px]">Admin: Override Subscription</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Plan</Label>
+                        <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                          <SelectTrigger className="bg-background h-10">
+                            <SelectValue placeholder="Select plan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="free">Free</SelectItem>
+                            <SelectItem value="starter">Starter</SelectItem>
+                            <SelectItem value="growth">Growth</SelectItem>
+                            <SelectItem value="enterprise">Enterprise</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Status</Label>
+                        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                          <SelectTrigger className="bg-background h-10">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="past_due">Past Due</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <Button onClick={handleUpdatePlan} disabled={savingPlan} size="sm" className="w-full">
+                      {savingPlan ? "Updating..." : "Update Plan"}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Danger Zone - Delete Workspace */}
+                <div className="space-y-4 p-4 rounded-xl bg-destructive/5">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-medium tracking-[-0.5px] text-destructive">Danger Zone</h3>
+                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">
+                      Once you delete a workspace, there is no going back. Please be certain.
+                    </p>
+                  </div>
+                  <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full h-10 tracking-[-0.5px]">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Workspace
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Integrations Tab */}
-        <TabsContent value="integrations" className="mt-6 space-y-6">
-          {isBrandMode && brand && <>
-              {/* Shortimize API Key */}
-              <div className="rounded-xl border border-border/50 p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
-                  <div>
-                    <h3 className="font-medium tracking-[-0.5px]">Shortimize</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Connect to track video analytics</p>
+        <TabsContent value="integrations" className="mt-6">
+          {isBrandMode && brand && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Analytics Integrations */}
+              <div className="space-y-6">
+                {/* Shortimize API Key */}
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <img src={shortimizeLogo} alt="Shortimize" className="w-10 h-10 rounded-lg object-cover" />
+                    <div>
+                      <h3 className="font-medium tracking-[-0.5px]">Shortimize</h3>
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Connect to track video analytics</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">API Key</Label>
+                    <div className="relative">
+                      <Input type={showShortimizeKey ? "text" : "password"} value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Shortimize API key" />
+                      <button type="button" onClick={() => setShowShortimizeKey(!showShortimizeKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                    API Key
-                  </Label>
-                  <div className="relative">
-                    <Input type={showShortimizeKey ? "text" : "password"} value={shortimizeApiKey} onChange={e => setShortimizeApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Shortimize API key" />
-                    <button type="button" onClick={() => setShowShortimizeKey(!showShortimizeKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showShortimizeKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+
+                {/* Dub.co Link Tracking */}
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
+                    <div>
+                      <h3 className="font-medium tracking-[-0.5px]">Dub.co</h3>
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Create short links and track click analytics</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">API Key</Label>
+                    <div className="relative">
+                      <Input type={showDubKey ? "text" : "password"} value={dubApiKey} onChange={e => setDubApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Dub.co API key" />
+                      <button type="button" onClick={() => setShowDubKey(!showDubKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                        {showDubKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Get your API key from <a href="https://dub.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dub.co/settings/tokens</a>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Slack Webhook */}
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
+                    <div>
+                      <h3 className="font-medium tracking-[-0.5px]">Slack</h3>
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Webhook URL</Label>
+                    <Input type="url" value={slackWebhookUrl} onChange={e => setSlackWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://hooks.slack.com/services/..." />
+                  </div>
+                </div>
+
+                {/* Discord Webhook */}
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
+                  <div className="flex items-center gap-3">
+                    <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
+                    <div>
+                      <h3 className="font-medium tracking-[-0.5px]">Discord</h3>
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground tracking-[-0.5px]">Webhook URL</Label>
+                    <Input type="url" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://discord.com/api/webhooks/..." />
                   </div>
                 </div>
               </div>
 
-              {/* Dub.co Link Tracking */}
-              <div className="rounded-xl border border-border/50 p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <img src={dubLogo} alt="Dub" className="w-10 h-10 rounded-lg object-cover bg-white p-1" />
-                  <div>
-                    <h3 className="font-medium tracking-[-0.5px]">Dub.co</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Create short links and track click analytics</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                    API Key
-                  </Label>
-                  <div className="relative">
-                    <Input type={showDubKey ? "text" : "password"} value={dubApiKey} onChange={e => setDubApiKey(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px] pr-10" placeholder="Enter your Dub.co API key" />
-                    <button type="button" onClick={() => setShowDubKey(!showDubKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showDubKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Get your API key from <a href="https://dub.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">dub.co/settings/tokens</a>
-                  </p>
-                </div>
-              </div>
+              {/* Right Column - Custom Webhooks & Notifications */}
+              <div className="space-y-6">
+                {/* Custom Webhooks Section */}
+                <CustomWebhooksTab brandId={brand.id} />
 
-              {/* Slack Webhook */}
-              <div className="rounded-xl border border-border/50 p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <img alt="Slack" className="w-10 h-10 rounded-lg object-contain" src="/lovable-uploads/25b74ff6-cd28-4cbc-aabb-4a5090ade12b.webp" />
-                  <div>
-                    <h3 className="font-medium tracking-[-0.5px]">Slack</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                    Webhook URL
-                  </Label>
-                  <Input type="url" value={slackWebhookUrl} onChange={e => setSlackWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://hooks.slack.com/services/..." />
-                </div>
-              </div>
-
-              {/* Discord Webhook */}
-              <div className="rounded-xl border border-border/50 p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <img src={discordLogo} alt="Discord" className="w-10 h-10 rounded-lg object-cover" />
-                  <div>
-                    <h3 className="font-medium tracking-[-0.5px]">Discord</h3>
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Get notified when you receive new applications</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium tracking-[-0.5px] text-muted-foreground">
-                    Webhook URL
-                  </Label>
-                  <Input type="url" value={discordWebhookUrl} onChange={e => setDiscordWebhookUrl(e.target.value)} className="h-11 bg-muted/30 border-0 tracking-[-0.5px]" placeholder="https://discord.com/api/webhooks/..." />
-                </div>
-              </div>
-
-              {/* Custom Webhooks Section */}
-              <CustomWebhooksTab brandId={brand.id} />
-
-              {/* Notifications Section */}
-              <div className="rounded-xl border border-border/50 p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  
+                {/* Notifications Section */}
+                <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-muted/20">
                   <div>
                     <h3 className="font-medium tracking-[-0.5px]">Notifications</h3>
                     <p className="text-xs text-muted-foreground tracking-[-0.5px]">Configure when to receive webhook and email alerts</p>
                   </div>
-                </div>
-                <div className="divide-y divide-border/50">
-                  {/* New partner application */}
-                  <div className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <img src={framePersonIcon} alt="" className="h-5 w-5 opacity-60" />
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
+                  <div className="divide-y divide-border/50">
+                    {/* New partner application */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={framePersonIcon} alt="" className="h-5 w-5 opacity-60" />
+                        <div>
+                          <p className="text-sm font-medium tracking-[-0.5px]">New creator application</p>
+                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new creator applies to your program.</p>
+                        </div>
                       </div>
+                      <Switch checked={notifyNewApplication} onCheckedChange={checked => {
+                      setNotifyNewApplication(checked);
+                      handleSaveNotifications();
+                    }} />
                     </div>
-                    <Switch checked={notifyNewApplication} onCheckedChange={checked => {
-                    setNotifyNewApplication(checked);
-                    handleSaveNotifications();
-                  }} />
-                  </div>
 
-                  {/* New boost submission */}
-                  <div className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <img src={stackedInboxIcon} alt="" className="h-5 w-5 opacity-60" />
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
+                    {/* New boost submission */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={stackedInboxIcon} alt="" className="h-5 w-5 opacity-60" />
+                        <div>
+                          <p className="text-sm font-medium tracking-[-0.5px]">New boost submission</p>
+                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new submission is made to your boost.</p>
+                        </div>
                       </div>
+                      <Switch checked={notifyNewSale} onCheckedChange={checked => {
+                      setNotifyNewSale(checked);
+                      handleSaveNotifications();
+                    }} />
                     </div>
-                    <Switch checked={notifyNewSale} onCheckedChange={checked => {
-                    setNotifyNewSale(checked);
-                    handleSaveNotifications();
-                  }} />
-                  </div>
 
-                  {/* New message from partner */}
-                  <div className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
-                      <img src={mailNotificationIcon} alt="" className="h-5 w-5 opacity-60" />
-                      <div>
-                        <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
-                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
+                    {/* New message from partner */}
+                    <div className="flex items-center justify-between py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={mailNotificationIcon} alt="" className="h-5 w-5 opacity-60" />
+                        <div>
+                          <p className="text-sm font-medium tracking-[-0.5px]">New message from creator</p>
+                          <p className="text-xs text-muted-foreground tracking-[-0.5px]">Alert when a new message is received from a creator.</p>
+                        </div>
                       </div>
+                      <Switch checked={notifyNewMessage} onCheckedChange={checked => {
+                      setNotifyNewMessage(checked);
+                      handleSaveNotifications();
+                    }} />
                     </div>
-                    <Switch checked={notifyNewMessage} onCheckedChange={checked => {
-                    setNotifyNewMessage(checked);
-                    handleSaveNotifications();
-                  }} />
                   </div>
                 </div>
               </div>
-
-            </>}
+            </div>
+          )}
         </TabsContent>
 
         {/* Team Tab */}
@@ -1491,65 +1416,81 @@ export function UserSettingsTab() {
         </TabsContent>
 
         {/* Wallet Tab */}
-        <TabsContent value="wallet" className="mt-6 space-y-6">
-          {/* Subscription Info - Moved to top */}
-          {isBrandMode && brand && <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
-                {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
-                    Active
-                  </span>}
-                {brand.subscription_status !== 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
-                    {brand.subscription_status || 'Inactive'}
-                  </span>}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Current Plan</p>
-                  <p className="text-sm font-medium tracking-[-0.5px]">
-                    {brand.subscription_plan ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan : 'No plan'}
-                  </p>
-                </div>
-                
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground tracking-[-0.5px]">Price</p>
-                  <p className="text-sm font-medium tracking-[-0.5px]">
-                    {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan] ? `$${PLAN_PRICES[brand.subscription_plan]}/month` : '—'}
-                  </p>
-                </div>
-                
-                {brand.subscription_started_at && <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Started</p>
-                    <p className="text-sm font-medium tracking-[-0.5px]">
-                      {new Date(brand.subscription_started_at).toLocaleDateString()}
-                    </p>
-                  </div>}
-                
-                {brand.subscription_expires_at && <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground tracking-[-0.5px]">Renews</p>
-                    <p className="text-sm font-medium tracking-[-0.5px]">
-                      {new Date(brand.subscription_expires_at).toLocaleDateString()}
-                    </p>
-                  </div>}
-              </div>
-              
-              
-              {brand.whop_manage_url && <div className="pt-2 border-t border-border/50">
-                  <a href={brand.whop_manage_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
-                    Manage billing →
-                  </a>
-                </div>}
-            </div>}
+        <TabsContent value="wallet" className="mt-6">
+          {isBrandMode && brand && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Subscription & Usage */}
+              <div className="space-y-6">
+                {/* Subscription Info */}
+                <div className="p-4 rounded-xl border border-border/50 bg-muted/20 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium tracking-[-0.5px]">Subscription</h3>
+                    {brand.subscription_status === 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-green-500/10 text-green-600 rounded-full">
+                        Active
+                      </span>}
+                    {brand.subscription_status !== 'active' && <span className="px-2 py-0.5 text-xs font-medium font-['Inter'] tracking-[-0.5px] bg-muted text-muted-foreground rounded-full">
+                        {brand.subscription_status || 'Inactive'}
+                      </span>}
+                  </div>
 
-          {/* Usage Tracking */}
-          {isBrandMode && brand && <div className="pt-4 border-t border-border/50">
-              <BillingUsageCard
-                brandId={brand.id}
-                subscriptionPlan={brand.subscription_plan}
-                onUpgrade={() => setShowUpgradeDialog(true)}
-              />
-            </div>}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Current Plan</p>
+                      <p className="text-sm font-medium tracking-[-0.5px]">
+                        {brand.subscription_plan ? PLAN_DISPLAY_NAMES[brand.subscription_plan] || brand.subscription_plan : 'No plan'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground tracking-[-0.5px]">Price</p>
+                      <p className="text-sm font-medium tracking-[-0.5px]">
+                        {brand.subscription_plan && PLAN_PRICES[brand.subscription_plan] ? `$${PLAN_PRICES[brand.subscription_plan]}/month` : '—'}
+                      </p>
+                    </div>
+
+                    {brand.subscription_started_at && <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Started</p>
+                        <p className="text-sm font-medium tracking-[-0.5px]">
+                          {new Date(brand.subscription_started_at).toLocaleDateString()}
+                        </p>
+                      </div>}
+
+                    {brand.subscription_expires_at && <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground tracking-[-0.5px]">Renews</p>
+                        <p className="text-sm font-medium tracking-[-0.5px]">
+                          {new Date(brand.subscription_expires_at).toLocaleDateString()}
+                        </p>
+                      </div>}
+                  </div>
+
+                  {brand.whop_manage_url && <div className="pt-2 border-t border-border/50">
+                      <a href={brand.whop_manage_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline tracking-[-0.5px]">
+                        Manage billing →
+                      </a>
+                    </div>}
+                </div>
+
+                {/* Usage Tracking */}
+                <div className="p-4 rounded-xl border border-border/50 bg-muted/20">
+                  <BillingUsageCard
+                    brandId={brand.id}
+                    subscriptionPlan={brand.subscription_plan}
+                    onUpgrade={() => setShowUpgradeDialog(true)}
+                  />
+                </div>
+
+                {/* Low Balance Protection */}
+                {currentBrand && <div className="p-4 rounded-xl border border-border/50 bg-muted/20">
+                    <LowBalanceSettingsTab brandId={currentBrand.id} />
+                  </div>}
+              </div>
+
+              {/* Right Column - Wallet */}
+              <div>
+                {currentBrand && <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />}
+              </div>
+            </div>
+          )}
 
           {/* Subscription Upgrade Dialog */}
           {brand && <SubscriptionGateDialog
@@ -1563,15 +1504,6 @@ export function UserSettingsTab() {
             fetchBrand();
             toast.success("Subscription activated!");
           }} />}
-
-          {/* Brand Wallet Component */}
-          {isBrandMode && currentBrand && <BrandWalletTab brandId={currentBrand.id} brandSlug={currentBrand.slug} />}
-
-          {/* Low Balance Protection */}
-          {isBrandMode && currentBrand && <div className="border-t border-border/50 pt-6">
-              <LowBalanceSettingsTab brandId={currentBrand.id} />
-            </div>}
-
         </TabsContent>
       </Tabs>
 

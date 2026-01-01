@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Laptop, Smartphone, Tablet, Monitor, Lock, LogOut, Loader2, MapPin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -177,15 +176,6 @@ export function SecuritySection() {
     }
     return null;
   };
-  if (loading) {
-    return <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="p-6">
-          <Skeleton className="h-5 w-32 mb-1" />
-          <Skeleton className="h-4 w-64 mb-4" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </div>;
-  }
   return <div className="rounded-xl border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="p-6 pb-0">

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, ArrowUpRight, Clock, CheckCircle2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Wallet, ArrowUpRight, Clock, CheckCircle2, DollarSign, TrendingUp, Loader2, ExternalLink, XCircle } from "lucide-react";
 import { Brand } from "@/pages/BrandPortal";
 import { CreatorWithdrawDialog } from "@/components/dashboard/CreatorWithdrawDialog";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 
 interface BrandPortalWalletProps {
   brand: Brand;
@@ -20,23 +20,50 @@ interface Transaction {
   description: string | null;
   status: string;
   created_at: string;
+  type?: string;
+}
+
+interface EarningsStats {
+  totalEarnings: number;
+  pendingPayouts: number;
+  lastPayout: number;
+  transactionCount: number;
+}
+
+interface UserProfile {
+  username: string | null;
+  avatar_url: string | null;
+  full_name: string | null;
+  email: string | null;
+  bio: string | null;
 }
 
 export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [balance, setBalance] = useState({ available: 0, pending: 0 });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [stats, setStats] = useState<EarningsStats | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
-  const accentColor = brand.brand_color || "#2061de";
-
   useEffect(() => {
-    fetchWalletData();
+    fetchData();
   }, [brand.id, userId]);
 
-  const fetchWalletData = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
+      // Fetch user profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("username, avatar_url, full_name, bio")
+          .eq("id", userId)
+          .maybeSingle();
+        setProfile({ ...profileData, email: user.email || null });
+      }
+
       // Fetch wallet balance
       const { data: walletData } = await supabase
         .from("wallets")
@@ -51,17 +78,45 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
         });
       }
 
-      // Fetch recent transactions from wallet_transactions for this user
+      // Fetch transactions from wallet_transactions
       const { data: txData } = await supabase
         .from("wallet_transactions")
-        .select("id, amount, description, status, created_at")
+        .select("id, amount, description, status, created_at, type")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(20);
 
-      setTransactions((txData as Transaction[]) || []);
+      const formattedTx: Transaction[] = (txData || []).map(t => ({
+        id: t.id,
+        amount: t.amount || 0,
+        description: t.description,
+        status: t.status || "pending",
+        created_at: t.created_at || new Date().toISOString(),
+        type: t.type,
+      }));
+
+      setTransactions(formattedTx);
+
+      // Calculate stats
+      const totalEarnings = formattedTx
+        .filter(t => t.status === "completed" && t.type === "earning")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const pendingPayouts = formattedTx
+        .filter(t => t.status === "pending")
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const completedTx = formattedTx.filter(t => t.status === "completed" && t.type === "earning");
+      const lastPayout = completedTx.length > 0 ? completedTx[0].amount : 0;
+
+      setStats({
+        totalEarnings,
+        pendingPayouts,
+        lastPayout,
+        transactionCount: formattedTx.length,
+      });
     } catch (error) {
-      console.error("Error fetching wallet data:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -71,16 +126,23 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
     switch (status) {
       case "completed":
         return (
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px]">
+          <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[10px]">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             Completed
           </Badge>
         );
       case "pending":
         return (
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px]">
+          <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[10px]">
             <Clock className="h-3 w-3 mr-1" />
             Pending
+          </Badge>
+        );
+      case "failed":
+        return (
+          <Badge className="bg-red-500/10 text-red-500 border-0 text-[10px]">
+            <XCircle className="h-3 w-3 mr-1" />
+            Failed
           </Badge>
         );
       default:
@@ -94,54 +156,62 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-2 gap-4">
-          <Skeleton className="h-32 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
-          Wallet
-        </h1>
-        <p className="text-sm text-muted-foreground tracking-[-0.3px]">
-          Your earnings from {brand.name}
-        </p>
+      {/* Profile Header */}
+      <div className="bg-card rounded-2xl p-6 border border-border">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 ring-2 ring-border">
+            <AvatarImage src={profile?.avatar_url || ""} />
+            <AvatarFallback className="text-lg font-semibold bg-muted text-muted-foreground">
+              {profile?.full_name?.charAt(0)?.toUpperCase() || profile?.username?.charAt(0)?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+              {profile?.full_name || profile?.username || "Creator"}
+            </h1>
+            {profile?.username && (
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                @{profile.username}
+              </p>
+            )}
+            {profile?.bio && (
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mt-1 line-clamp-1">
+                {profile.bio}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Balance & Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Available Balance */}
-        <Card className="border-0 shadow-sm bg-white dark:bg-card">
+        <Card className="bg-card border-border col-span-2 lg:col-span-1">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground tracking-[-0.3px] mb-1">
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mb-1">
                   Available Balance
                 </p>
-                <p className="text-3xl font-semibold tracking-[-0.5px]">
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
                   ${balance.available.toFixed(2)}
                 </p>
               </div>
-              <div
-                className="p-2.5 rounded-xl"
-                style={{ backgroundColor: `${accentColor}15` }}
-              >
-                <Wallet className="h-5 w-5" style={{ color: accentColor }} />
+              <div className="p-2.5 rounded-xl bg-emerald-500/10">
+                <Wallet className="h-5 w-5 text-emerald-500" />
               </div>
             </div>
             <Button
               onClick={() => setShowWithdrawDialog(true)}
-              className="w-full mt-4 gap-2"
-              style={{ backgroundColor: accentColor }}
+              className="w-full mt-4 gap-2 bg-foreground text-background hover:bg-foreground/90"
               disabled={balance.available <= 0}
             >
               <ArrowUpRight className="h-4 w-4" />
@@ -150,62 +220,114 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
           </CardContent>
         </Card>
 
-        {/* Pending Balance */}
-        <Card className="border-0 shadow-sm bg-white dark:bg-card">
+        {/* Total Earned */}
+        <Card className="bg-card border-border">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground tracking-[-0.3px] mb-1">
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mb-1">
+                  Total Earned
+                </p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  ${stats?.totalEarnings?.toFixed(2) || "0.00"}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-blue-500/10">
+                <DollarSign className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending */}
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mb-1">
                   Pending
                 </p>
-                <p className="text-3xl font-semibold tracking-[-0.5px]">
-                  ${balance.pending.toFixed(2)}
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  ${stats?.pendingPayouts?.toFixed(2) || "0.00"}
                 </p>
               </div>
               <div className="p-2.5 rounded-xl bg-amber-500/10">
                 <Clock className="h-5 w-5 text-amber-500" />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-4 tracking-[-0.3px]">
-              Earnings being processed
-            </p>
+          </CardContent>
+        </Card>
+
+        {/* Transactions Count */}
+        <Card className="bg-card border-border">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px] mb-1">
+                  Transactions
+                </p>
+                <p className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
+                  {stats?.transactionCount || 0}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-purple-500/10">
+                <TrendingUp className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Transactions */}
-      <Card className="border-0 shadow-sm bg-white dark:bg-card">
-        <CardContent className="p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-foreground mb-4 tracking-[-0.5px]">
-            Recent Transactions
-          </h3>
-
+      {/* Transaction History */}
+      <Card className="bg-card border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-foreground font-inter tracking-[-0.5px]">
+            Transaction History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           {transactions.length === 0 ? (
-            <div className="text-center py-8">
-              <Wallet className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+            <div className="text-center py-12">
+              <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-muted">
+                <Wallet className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-inter tracking-[-0.3px] text-sm">
                 No transactions yet
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 font-inter tracking-[-0.3px]">
+                Your earnings will appear here
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {transactions.map((tx) => (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between py-3 border-b border-border/50 last:border-0"
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate tracking-[-0.3px]">
-                      {tx.description || "Payment"}
-                    </p>
-                    <p className="text-xs text-muted-foreground tracking-[-0.3px]">
-                      {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
-                    </p>
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`p-2 rounded-lg ${tx.type === 'earning' ? 'bg-emerald-500/10' : 'bg-muted'}`}>
+                      {tx.type === 'earning' ? (
+                        <ArrowUpRight className="h-4 w-4 text-emerald-500" />
+                      ) : tx.type === 'withdrawal' ? (
+                        <Wallet className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground font-inter tracking-[-0.3px] truncate">
+                        {tx.description || "Transaction"}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                        {format(new Date(tx.created_at), "MMM d, yyyy")} · {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {getStatusBadge(tx.status)}
-                    <span className={`text-sm font-semibold tracking-[-0.3px] ${
-                      tx.amount >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600"
+                    <span className={`text-sm font-semibold font-inter tracking-[-0.3px] ${
+                      tx.amount >= 0 ? "text-emerald-500" : "text-red-500"
                     }`}>
                       {tx.amount >= 0 ? "+" : ""}${Math.abs(tx.amount).toFixed(2)}
                     </span>
@@ -221,7 +343,7 @@ export function BrandPortalWallet({ brand, userId }: BrandPortalWalletProps) {
       <CreatorWithdrawDialog
         open={showWithdrawDialog}
         onOpenChange={setShowWithdrawDialog}
-        onSuccess={fetchWalletData}
+        onSuccess={fetchData}
       />
     </div>
   );

@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageInput } from "./MessageInput";
 import { format, isToday, isYesterday } from "date-fns";
@@ -229,22 +228,6 @@ export function BrandMessagesTab({ brandId }: BrandMessagesTabProps) {
     conv.creator?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     conv.creator?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  if (isLoading) {
-    return (
-      <div className="h-full flex">
-        <div className="w-80 border-r border-border p-4 space-y-3">
-          <Skeleton className="h-10 w-full" />
-          {[1, 2, 3, 4].map(i => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-        <div className="flex-1 p-4">
-          <Skeleton className="h-full" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-[calc(100vh-120px)] flex bg-background">

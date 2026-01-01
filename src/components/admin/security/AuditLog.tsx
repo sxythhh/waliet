@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminCard } from "../design-system/AdminCard";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -207,17 +207,8 @@ export function AuditLog() {
       {/* Log entries */}
       <div className="max-h-[600px] overflow-y-auto">
         {loading ? (
-          <div className="space-y-2 p-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3">
-                <Skeleton className="h-8 w-8 rounded-lg bg-white/5" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32 bg-white/5" />
-                  <Skeleton className="h-3 w-48 bg-white/5" />
-                </div>
-                <Skeleton className="h-3 w-20 bg-white/5" />
-              </div>
-            ))}
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-white/40" />
           </div>
         ) : filteredEntries.length === 0 ? (
           <div className="p-8 text-center">

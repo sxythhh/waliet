@@ -3,7 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, TrendingUp, Award } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeaderboardEntry {
   rank: number;
@@ -97,18 +96,6 @@ export function LeaderboardTab() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-8 max-w-5xl mx-auto">
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full" />
-          ))}
-        </div>
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
 
   const topThree = leaderboard.slice(0, 3);
 

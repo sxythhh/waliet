@@ -8,7 +8,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -43,7 +42,8 @@ import {
   ArrowRight,
   Play,
   Pause,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -512,7 +512,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                       <p className="text-emerald-100 text-xs font-medium mb-1">Wallet Balance</p>
                       <p className="text-white text-3xl font-bold tracking-tight">
                         {loading ? (
-                          <Skeleton className="h-9 w-28 bg-white/20" />
+                          <Loader2 className="h-7 w-7 animate-spin text-white/60" />
                         ) : (
                           `$${stats?.walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`
                         )}
@@ -680,16 +680,8 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   </div>
                   <div className="space-y-2">
                     {loading ? (
-                      <div className="space-y-2">
-                        {[1, 2].map(i => (
-                          <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                            <Skeleton className="h-10 w-10 rounded-full" />
-                            <div className="flex-1">
-                              <Skeleton className="h-4 w-24 mb-1" />
-                              <Skeleton className="h-3 w-16" />
-                            </div>
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
                     ) : teamMembers.length > 0 ? (
                       teamMembers.map((member) => (
@@ -731,10 +723,8 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   </div>
                   <div className="space-y-2">
                     {loading ? (
-                      <div className="space-y-2">
-                        {[1, 2, 3].map(i => (
-                          <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                        ))}
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       </div>
                     ) : campaigns.length > 0 ? (
                       campaigns.map((campaign) => (
@@ -802,10 +792,8 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">Recent Transactions</h3>
                 <div className="space-y-1">
                   {loading ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <Skeleton key={i} className="h-14 w-full rounded-xl" />
-                      ))}
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : recentActivity.length > 0 ? (
                     recentActivity.map((activity, index) => (
@@ -985,7 +973,7 @@ function StatCard({
         <span className={iconColorClasses[color]}>{icon}</span>
       </div>
       <p className="text-xl font-bold tracking-tight">
-        {value === null ? <Skeleton className="h-7 w-16" /> : value}
+        {value === null ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : value}
       </p>
       <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
       {subValue && <p className="text-[10px] text-muted-foreground/70 mt-1">{subValue}</p>}

@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { SupportChat } from "@/components/support/SupportChat";
 import PublicNavbar from "@/components/PublicNavbar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import SearchIcon from "@mui/icons-material/Search";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -65,21 +67,26 @@ import { format } from "date-fns";
 // Ticket types
 interface SupportTicket {
   id: string;
+  ticket_number: string;
+  user_id: string;
   subject: string;
   category: string;
   priority: "low" | "medium" | "high" | "urgent";
   status: "open" | "in_progress" | "awaiting_reply" | "resolved" | "closed";
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-  messages: TicketMessage[];
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+  messages?: TicketMessage[];
 }
 
 interface TicketMessage {
   id: string;
+  ticket_id: string;
+  sender_id: string;
+  sender_type: "user" | "admin";
   content: string;
-  sender: "user" | "support";
-  createdAt: Date;
+  is_internal: boolean;
+  created_at: string;
 }
 
 // Ticket categories
@@ -93,39 +100,6 @@ const TICKET_CATEGORIES = [
 ];
 
 
-// LocalStorage key for tickets
-const TICKETS_STORAGE_KEY = "virality_support_tickets";
-
-// Load tickets from localStorage
-function loadTickets(): SupportTicket[] {
-  try {
-    const stored = localStorage.getItem(TICKETS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      return parsed.map((t: any) => ({
-        ...t,
-        createdAt: new Date(t.createdAt),
-        updatedAt: new Date(t.updatedAt),
-        messages: t.messages.map((m: any) => ({
-          ...m,
-          createdAt: new Date(m.createdAt),
-        })),
-      }));
-    }
-  } catch (e) {
-    console.error("Failed to load tickets:", e);
-  }
-  return [];
-}
-
-// Save tickets to localStorage
-function saveTickets(tickets: SupportTicket[]) {
-  try {
-    localStorage.setItem(TICKETS_STORAGE_KEY, JSON.stringify(tickets));
-  } catch (e) {
-    console.error("Failed to save tickets:", e);
-  }
-}
 
 // Help article categories
 const CATEGORIES = [
@@ -364,6 +338,7 @@ function getPriorityStyles(priority: SupportTicket["priority"]) {
 const Support = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -373,7 +348,8 @@ const Support = () => {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   // Ticket state
-  const [tickets, setTickets] = useState<SupportTicket[]>(() => loadTickets());
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
   const [showTickets, setShowTickets] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -391,10 +367,101 @@ const Support = () => {
   // Reply state
   const [replyText, setReplyText] = useState("");
 
-  // Save tickets when they change
+  // Fetch user's tickets from database
+  const fetchUserTickets = async () => {
+    if (!user) return;
+
+    setTicketsLoading(true);
+    try {
+      // Fetch tickets
+      const { data: ticketsData, error: ticketsError } = await supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (ticketsError) throw ticketsError;
+
+      // Fetch messages for each ticket
+      const ticketsWithMessages = await Promise.all(
+        (ticketsData || []).map(async (ticket) => {
+          const { data: messagesData } = await supabase
+            .from("ticket_messages")
+            .select("*")
+            .eq("ticket_id", ticket.id)
+            .eq("is_internal", false)
+            .order("created_at", { ascending: true });
+
+          return {
+            ...ticket,
+            messages: messagesData || [],
+          };
+        })
+      );
+
+      setTickets(ticketsWithMessages as SupportTicket[]);
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+    } finally {
+      setTicketsLoading(false);
+    }
+  };
+
+  // Fetch tickets when user is available
   useEffect(() => {
-    saveTickets(tickets);
-  }, [tickets]);
+    if (user) {
+      fetchUserTickets();
+    }
+  }, [user]);
+
+  // Real-time subscription for ticket updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("user-tickets")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "support_tickets",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUserTickets();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "ticket_messages",
+        },
+        (payload) => {
+          // Refresh tickets to get new messages
+          fetchUserTickets();
+          // Update selected ticket if it's the one with new message
+          if (selectedTicket && payload.new.ticket_id === selectedTicket.id) {
+            setSelectedTicket((prev) => {
+              if (!prev) return prev;
+              const newMessage = payload.new as TicketMessage;
+              if (newMessage.is_internal) return prev; // Don't show internal notes
+              return {
+                ...prev,
+                messages: [...(prev.messages || []), newMessage],
+              };
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, selectedTicket?.id]);
 
   // Handle URL hash on mount and hash changes
   useEffect(() => {
@@ -471,82 +538,104 @@ const Support = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Not logged in",
+        description: "Please log in to submit a support ticket.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Create the ticket
+      const { data: ticketData, error: ticketError } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: user.id,
+          subject: newTicket.subject,
+          category: newTicket.category,
+          priority: newTicket.priority,
+        })
+        .select()
+        .single();
 
-    const ticket: SupportTicket = {
-      id: `TKT-${String(tickets.length + 1).padStart(3, '0')}`,
-      subject: newTicket.subject,
-      category: newTicket.category,
-      priority: newTicket.priority,
-      status: "open",
-      description: newTicket.description,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      messages: [
-        {
-          id: `msg-${Date.now()}`,
+      if (ticketError) throw ticketError;
+
+      // Create the first message with the description
+      const { error: messageError } = await supabase
+        .from("ticket_messages")
+        .insert({
+          ticket_id: ticketData.id,
+          sender_id: user.id,
+          sender_type: "user",
           content: newTicket.description,
-          sender: "user",
-          createdAt: new Date(),
-        },
-      ],
-    };
+        });
 
-    setTickets(prev => [ticket, ...prev]);
-    setNewTicket({ subject: "", category: "", priority: "medium", description: "" });
-    setCreateDialogOpen(false);
-    setIsSubmitting(false);
-    setShowTickets(true);
+      if (messageError) throw messageError;
 
-    toast({
-      title: "Ticket created!",
-      description: `Your ticket ${ticket.id} has been submitted. We'll respond within 24 hours.`,
-    });
+      setNewTicket({ subject: "", category: "", priority: "medium", description: "" });
+      setCreateDialogOpen(false);
+      setShowTickets(true);
+      fetchUserTickets();
+
+      toast({
+        title: "Ticket created!",
+        description: `Your ticket ${ticketData.ticket_number} has been submitted. We'll respond within 24 hours.`,
+      });
+    } catch (error: any) {
+      console.error("Error creating ticket:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create ticket. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSendReply = () => {
-    if (!replyText.trim() || !selectedTicket) return;
+  const handleSendReply = async () => {
+    if (!replyText.trim() || !selectedTicket || !user) return;
 
-    const newMessage: TicketMessage = {
-      id: `msg-${Date.now()}`,
-      content: replyText,
-      sender: "user",
-      createdAt: new Date(),
-    };
+    try {
+      // Insert the message
+      const { error: messageError } = await supabase
+        .from("ticket_messages")
+        .insert({
+          ticket_id: selectedTicket.id,
+          sender_id: user.id,
+          sender_type: "user",
+          content: replyText.trim(),
+        });
 
-    setTickets(prev =>
-      prev.map(t =>
-        t.id === selectedTicket.id
-          ? {
-              ...t,
-              messages: [...t.messages, newMessage],
-              updatedAt: new Date(),
-              status: "awaiting_reply" as const,
-            }
-          : t
-      )
-    );
+      if (messageError) throw messageError;
 
-    setSelectedTicket(prev =>
-      prev
-        ? {
-            ...prev,
-            messages: [...prev.messages, newMessage],
-            updatedAt: new Date(),
-            status: "awaiting_reply",
-          }
-        : null
-    );
+      // Update ticket status to awaiting_reply
+      await supabase
+        .from("support_tickets")
+        .update({ status: "awaiting_reply" })
+        .eq("id", selectedTicket.id);
 
-    setReplyText("");
+      setReplyText("");
 
-    toast({
-      title: "Reply sent",
-      description: "Your message has been sent to support.",
-    });
+      toast({
+        title: "Reply sent",
+        description: "Your message has been sent to support.",
+      });
+
+      // Refresh tickets to get latest data
+      fetchUserTickets();
+    } catch (error: any) {
+      console.error("Error sending reply:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to send reply. Please try again.",
+      });
+    }
   };
 
   const openTicketCount = tickets.filter(t => t.status !== "resolved" && t.status !== "closed").length;
@@ -781,7 +870,7 @@ const Support = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-muted-foreground font-mono">{ticket.id}</span>
+                            <span className="text-xs text-muted-foreground font-mono">{ticket.ticket_number}</span>
                             <Badge variant="outline" className={cn("text-[10px] capitalize", priorityStyles.text, priorityStyles.bg)}>
                               {ticket.priority}
                             </Badge>
@@ -790,7 +879,7 @@ const Support = () => {
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <span className="capitalize">{ticket.status.replace("_", " ")}</span>
                             <span>•</span>
-                            <span>Updated {format(ticket.updatedAt, "MMM d, h:mm a")}</span>
+                            <span>Updated {format(new Date(ticket.updated_at), "MMM d, h:mm a")}</span>
                           </div>
                         </div>
                         <ChevronRightIcon className="text-muted-foreground group-hover:translate-x-1 transition-transform shrink-0" sx={{ fontSize: 20 }} />
@@ -1052,7 +1141,7 @@ const Support = () => {
             <>
               <SheetHeader className="pb-6">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono mb-2">
-                  {selectedTicket.id}
+                  {selectedTicket.ticket_number}
                 </div>
                 <SheetTitle className="text-xl">{selectedTicket.subject}</SheetTitle>
                 <SheetDescription>
@@ -1077,22 +1166,22 @@ const Support = () => {
 
               {/* Messages */}
               <div className="space-y-4 mb-6">
-                {selectedTicket.messages.map((message) => (
+                {(selectedTicket.messages || []).map((message) => (
                   <div
                     key={message.id}
                     className={cn(
                       "p-4 rounded-xl",
-                      message.sender === "user"
+                      message.sender_type === "user"
                         ? "bg-muted ml-8"
                         : "bg-muted/50 mr-8"
                     )}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-medium">
-                        {message.sender === "user" ? "You" : "Support Team"}
+                        {message.sender_type === "user" ? "You" : "Support Team"}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {format(message.createdAt, "MMM d, h:mm a")}
+                        {format(new Date(message.created_at), "MMM d, h:mm a")}
                       </span>
                     </div>
                     <p className="text-sm leading-relaxed">{message.content}</p>

@@ -286,9 +286,9 @@ export function ReferralsTab(): JSX.Element {
         </div>
 
         {/* Tab Content */}
-        <div className="p-[10px]">
+        <div className="p-[10px] min-h-[calc(100vh-220px)]">
         {activeTab === 'team' ? (/* Team Tab Content */
-        <div className="space-y-6">
+        <div className="h-full min-h-[calc(100vh-240px)]">
             <TeamsSection />
           </div>) : (/* Affiliate Tab Content */
         <div className="space-y-6">

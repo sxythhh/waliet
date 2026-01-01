@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
@@ -676,10 +676,8 @@ export default function Resources() {
           {/* Templates Tab */}
           <TabsContent value="templates" className="mt-6">
             {templatesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-52 rounded-xl" />
-                ))}
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : templates.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -791,10 +789,8 @@ export default function Resources() {
           {/* Blog Posts Tab */}
           <TabsContent value="blog" className="mt-6">
             {postsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-20 rounded-xl" />
-                ))}
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -883,10 +879,8 @@ export default function Resources() {
           {/* Courses Tab */}
           <TabsContent value="courses" className="mt-6">
             {coursesLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2].map(i => (
-                  <Skeleton key={i} className="h-48 rounded-xl" />
-                ))}
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : courses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">

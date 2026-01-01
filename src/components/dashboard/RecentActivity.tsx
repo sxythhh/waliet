@@ -201,13 +201,7 @@ export function RecentActivity() {
         <Leaderboard />
       ) : (
         <>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-muted/30 rounded-lg animate-pulse" />
-              ))}
-            </div>
-          ) : activities.length === 0 ? (
+          {activities.length === 0 && !loading ? (
             <p className="text-sm text-muted-foreground py-8 text-center">
               No recent activity
             </p>

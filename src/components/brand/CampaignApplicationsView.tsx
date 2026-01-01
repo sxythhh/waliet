@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, X, User, ChevronUp, ChevronDown, Users, Database, ArrowLeft, MessageSquare, StickyNote, CheckSquare, Square } from "lucide-react";
@@ -492,16 +491,7 @@ export function CampaignApplicationsView({
       setBulkActionDialog({ type: null, open: false });
     }
   };
-  if (loading) {
-    return <div className="p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64 md:col-span-2 hidden md:block" />
-        </div>
-      </div>;
-  }
-  if (applications.length === 0) {
+  if (applications.length === 0 && !loading) {
     return <div className="flex flex-col items-center justify-center h-64 text-center">
         <User className="h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-semibold mb-2">No applications</h3>

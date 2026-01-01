@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Gift, TrendingUp, Plus, X, DollarSign, Eye, Users, Video, RefreshCw } from "lucide-react";
@@ -237,16 +236,6 @@ export function ViewBonusesTab({ boostId, brandId }: ViewBonusesTabProps) {
     if (views >= 1000) return `${(views / 1000).toFixed(0)}K`;
     return views.toString();
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-6 p-6">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
 
   return (
     <div className="p-6 space-y-6">

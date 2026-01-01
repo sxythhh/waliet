@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
-import { ShieldX, ArrowLeft } from "lucide-react";
+import { ShieldX, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminPermissions, type AdminResource, type AdminAction } from "@/hooks/useAdminPermissions";
 
 interface AdminPermissionGuardProps {
@@ -39,21 +38,10 @@ function AccessDenied() {
   );
 }
 
-function LoadingSkeleton() {
+function LoadingSpinner() {
   return (
-    <div className="w-full h-full p-4 md:p-6 pt-16 md:pt-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-72" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Skeleton className="h-32 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
+    <div className="w-full h-full flex items-center justify-center py-16">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
   );
 }
@@ -66,7 +54,7 @@ export function AdminPermissionGuard({
   const { hasPermission, loading } = useAdminPermissions();
 
   if (loading) {
-    return <LoadingSkeleton />;
+    return <LoadingSpinner />;
   }
 
   if (!hasPermission(resource, action)) {

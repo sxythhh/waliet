@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/ThemeProvider";
 import { Camera, Upload, Pencil, Users, Grid3X3, Eye, FileText, X, Plus, ExternalLink, Check } from "lucide-react";
@@ -281,18 +280,6 @@ export function ProfileHeader({
     return count.toString();
   };
   const totalFollowers = socialAccounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
-  if (loading) {
-    return <div className="space-y-4">
-        <Skeleton className="w-full h-32 rounded-xl" />
-        <div className="flex items-start gap-4">
-          <Skeleton className="w-20 h-20 rounded-xl" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-        </div>
-      </div>;
-  }
   return <div className="space-y-6">
       {/* Banner with Profile Picture Overlap */}
       <div className="relative">

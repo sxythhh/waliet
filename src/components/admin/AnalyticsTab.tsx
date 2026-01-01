@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check } from "lucide-react";
+import { ChevronDown, ArrowUpRight, ArrowDownRight, Calendar, Check, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -759,15 +758,9 @@ export function AnalyticsTab() {
       {/* Key metrics - redesigned */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {isLoading ? (
-          <>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/[0.03] rounded-xl p-5">
-                <Skeleton className="h-4 w-20 mb-3" />
-                <Skeleton className="h-8 w-24 mb-1" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-            ))}
-          </>
+          <div className="col-span-full flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+          </div>
         ) : (
           <>
             <div className="bg-white/[0.03] rounded-xl p-5">
@@ -852,14 +845,9 @@ export function AnalyticsTab() {
       {/* Secondary metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {isLoading ? (
-          <>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/[0.02] rounded-xl p-4">
-                <Skeleton className="h-6 w-12 mb-1" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            ))}
-          </>
+          <div className="col-span-full flex items-center justify-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+          </div>
         ) : (
           <>
             <div className="bg-white/[0.02] rounded-xl p-4">
@@ -888,14 +876,9 @@ export function AnalyticsTab() {
       {/* Tertiary metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {isLoading ? (
-          <>
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white/[0.02] rounded-xl p-4">
-                <Skeleton className="h-6 w-12 mb-1" />
-                <Skeleton className="h-3 w-20" />
-              </div>
-            ))}
-          </>
+          <div className="col-span-full flex items-center justify-center py-6">
+            <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+          </div>
         ) : (
           <>
             <div className="bg-white/[0.02] rounded-xl p-4">

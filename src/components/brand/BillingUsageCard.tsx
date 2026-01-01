@@ -1,6 +1,5 @@
 import { useBrandUsage } from "@/hooks/useBrandUsage";
 import { UsageProgressBar } from "./UsageProgressBar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Zap, TrendingUp } from "lucide-react";
 
@@ -23,26 +22,6 @@ export function BillingUsageCard({
   const hasReachedAnyLimit =
     !isUnlimitedPlan &&
     (boostsUsed >= boostsLimit || hiresUsed >= hiresLimit);
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-32" />
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-2 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-2 w-full" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!subscriptionPlan) {
     return (

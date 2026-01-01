@@ -13,9 +13,8 @@ import { format, formatDistanceToNow } from "date-fns";
 import {
   Shield, AlertTriangle, Clock, CheckCircle2, XCircle,
   ExternalLink, RefreshCw, Play, FileVideo, Link2,
-  TrendingUp, Users, History, Ban
+  TrendingUp, Users, History, Ban, Loader2
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface FraudReviewItem {
   id: string;
@@ -259,10 +258,8 @@ export function FraudReviewQueue() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-48 w-full rounded-xl" />
-        ))}
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

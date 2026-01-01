@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
+import { BrandOnboardingDialog } from "./BrandOnboardingDialog";
 
 const BRAND_COLORS = [
   "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
@@ -29,14 +29,24 @@ interface CreateBrandDialogProps {
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
 }
+interface CreatedBrand {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  logo_url: string | null;
+  brand_color: string | null;
+}
+
 export function CreateBrandDialog({
   onSuccess,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideTrigger = false
 }: CreateBrandDialogProps) {
-  const navigate = useNavigate();
   const [internalOpen, setInternalOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [createdBrand, setCreatedBrand] = useState<CreatedBrand | null>(null);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? controlledOnOpenChange || (() => {}) : setInternalOpen;
@@ -156,8 +166,16 @@ export function CreateBrandDialog({
       setBrandColor("#8B5CF6");
       onSuccess?.();
 
-      // Navigate to the brand onboarding flow
-      navigate(`/brand/${slug}/onboarding`);
+      // Open the onboarding dialog
+      setCreatedBrand({
+        id: brandData.id,
+        name: brandData.name,
+        slug: brandData.slug,
+        description: brandData.description,
+        logo_url: brandData.logo_url,
+        brand_color: brandData.brand_color,
+      });
+      setOnboardingOpen(true);
     } catch (error: any) {
       console.error("Error creating brand:", error);
       if (error.code === "23505") {
@@ -176,7 +194,8 @@ export function CreateBrandDialog({
     setBrandColor("#8B5CF6");
     setOpen(false);
   };
-  return <Dialog open={open} onOpenChange={setOpen}>
+  return (<>
+    <Dialog open={open} onOpenChange={setOpen}>
       {!hideTrigger && <DialogTrigger asChild />}
       <DialogContent className="sm:max-w-[420px] bg-card border-0 p-0 overflow-hidden rounded-2xl">
         <Form {...form}>
@@ -312,5 +331,15 @@ export function CreateBrandDialog({
           </form>
         </Form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+
+    {/* Onboarding Dialog */}
+    {createdBrand && (
+      <BrandOnboardingDialog
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        brand={createdBrand}
+      />
+    )}
+  </>);
 }

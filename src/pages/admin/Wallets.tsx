@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { format } from "date-fns";
+import { PlatformIncomeChart } from "@/components/admin/PlatformIncomeChart";
 
 interface UserWallet {
   user_id: string;
@@ -233,9 +234,12 @@ export default function Wallets() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Wallet Management</h1>
-        <p className="text-muted-foreground mt-1">Manage user wallet balances and transactions</p>
+        <h1 className="text-3xl font-bold tracking-tight">Finance</h1>
+        <p className="text-muted-foreground mt-1">Platform income, wallet balances, and transactions</p>
       </div>
+
+      {/* Platform Income Chart */}
+      <PlatformIncomeChart />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

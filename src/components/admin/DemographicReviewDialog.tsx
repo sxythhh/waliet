@@ -20,6 +20,19 @@ import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
 
+interface UserProfile {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  trust_score: number;
+  demographics_score: number;
+  total_earnings: number;
+  country: string | null;
+  created_at: string;
+}
+
 interface DemographicSubmission {
   id: string;
   tier1_percentage: number;
@@ -38,6 +51,7 @@ interface DemographicSubmission {
     follower_count?: number | null;
     bio?: string | null;
     account_link?: string | null;
+    profiles?: UserProfile | null;
   };
 }
 
@@ -190,8 +204,17 @@ export function DemographicReviewDialog({
   if (!submission) return null;
 
   const account = submission.social_accounts;
+  const userProfile = account.profiles;
   const hasAvatar = !!account.avatar_url;
   const followerCount = account.follower_count || 0;
+
+  // Helper to format trust score color
+  const getTrustScoreColor = (score: number) => {
+    if (score >= 80) return "text-emerald-500";
+    if (score >= 60) return "text-blue-500";
+    if (score >= 40) return "text-amber-500";
+    return "text-red-500";
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -325,6 +348,85 @@ export function DemographicReviewDialog({
                 </p>
               </div>
             </a>
+
+            {/* User Context */}
+            {userProfile && (
+              <div className="mt-4 p-3 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-3 mb-3">
+                  {userProfile.avatar_url ? (
+                    <img
+                      src={userProfile.avatar_url}
+                      alt={userProfile.username}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {userProfile.username?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold font-inter tracking-[-0.5px] truncate">
+                      {userProfile.full_name || userProfile.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      @{userProfile.username}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Trust Score - Most Important */}
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                      Trust Score
+                    </p>
+                    <p className={cn("text-lg font-bold font-inter tracking-[-0.5px]", getTrustScoreColor(userProfile.trust_score || 0))}>
+                      {userProfile.trust_score || 0}%
+                    </p>
+                  </div>
+
+                  {/* Demographics Score */}
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                      Demo Score
+                    </p>
+                    <p className="text-lg font-bold font-inter tracking-[-0.5px]">
+                      {userProfile.demographics_score || 0}%
+                    </p>
+                  </div>
+
+                  {/* Total Earnings */}
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                      Earnings
+                    </p>
+                    <p className="text-sm font-semibold font-inter tracking-[-0.5px]">
+                      ${(userProfile.total_earnings || 0).toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* Country */}
+                  <div className="p-2 rounded-lg bg-background/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">
+                      Country
+                    </p>
+                    <p className="text-sm font-semibold font-inter tracking-[-0.5px]">
+                      {userProfile.country || "Unknown"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Member Since */}
+                <p className="text-[10px] text-muted-foreground mt-2 font-inter tracking-[-0.3px]">
+                  Member since {new Date(userProfile.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+            )}
 
             {/* Meta Info */}
             <div className="mt-4 space-y-3">

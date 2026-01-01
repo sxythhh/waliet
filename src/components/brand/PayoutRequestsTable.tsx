@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -883,21 +882,6 @@ export function PayoutRequestsTable({
     return { inReviewAmount, inReviewCount, approvedAmount, approvedCount, flaggedAmount, flaggedCount, earliestClearingEndsAt, canStillFlag: canStillFlagAny };
   }, [requests, campaignId, boostId]);
 
-  if (loading) {
-    return <div className="p-6">
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => <div key={i} className="flex items-center gap-4 p-4 rounded-lg">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-6 w-16" />
-            </div>)}
-        </div>
-      </div>;
-  }
   const hasAnyData = requests.length > 0 || transactions.length > 0;
   if (!hasAnyData && showEmpty) {
     return <Card className="bg-card border-0 h-full">

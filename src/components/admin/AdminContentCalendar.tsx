@@ -2,9 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, ChevronLeft, ChevronRight, Megaphone, Video, Clock, Building2 } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Megaphone, Video, Clock, Building2, Loader2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -128,9 +127,10 @@ export function AdminContentCalendar() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-border/50 bg-card p-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-[400px] w-full" />
+      <div className="rounded-2xl border border-border/50 bg-card p-6">
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
       </div>
     );
   }

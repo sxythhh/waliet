@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import { Brand } from "@/pages/BrandPortal";
 import {
@@ -20,6 +18,7 @@ import {
   Sun,
   Moon,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -59,8 +58,6 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const accentColor = brand.brand_color || "#2061de";
-
   useEffect(() => {
     fetchProfile();
     fetchSocialAccounts();
@@ -70,7 +67,7 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("profiles")
         .select("username, full_name, bio, avatar_url")
         .eq("id", userId)
@@ -182,10 +179,8 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 rounded-xl" />
-        <Skeleton className="h-48 rounded-xl" />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -194,33 +189,33 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
     <div className="space-y-6 max-w-2xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
+        <h1 className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">
           Settings
         </h1>
-        <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+        <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
           Manage your profile and preferences
         </p>
       </div>
 
       {/* Profile Card */}
-      <Card className="border-0 shadow-sm bg-white dark:bg-card">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-foreground mb-4 tracking-[-0.5px]">
+          <h3 className="font-semibold text-foreground mb-4 font-inter tracking-[-0.5px]">
             Profile
           </h3>
 
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
-              <Avatar className="h-20 w-20 ring-4 ring-gray-100 dark:ring-border">
+              <Avatar className="h-16 w-16 ring-2 ring-border">
                 <AvatarImage src={avatarPreview || profile?.avatar_url || ""} />
-                <AvatarFallback className="text-lg font-medium bg-muted">
+                <AvatarFallback className="text-lg font-medium bg-muted text-muted-foreground">
                   {profile?.username?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-white dark:bg-card shadow-md border border-border hover:bg-muted transition-colors"
+                className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-card shadow-md border border-border hover:bg-muted transition-colors"
               >
                 <Upload className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
@@ -233,10 +228,10 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
               />
             </div>
             <div>
-              <p className="font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">
+              <p className="font-medium text-foreground font-inter tracking-[-0.3px]">
                 @{profile?.username || "username"}
               </p>
-              <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                 {profile?.email}
               </p>
             </div>
@@ -245,7 +240,7 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
           {/* Form */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="full_name" className="text-sm text-muted-foreground">
+              <Label htmlFor="full_name" className="text-sm text-muted-foreground font-inter">
                 Full Name
               </Label>
               <Input
@@ -260,7 +255,7 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
             </div>
 
             <div>
-              <Label htmlFor="bio" className="text-sm text-muted-foreground">
+              <Label htmlFor="bio" className="text-sm text-muted-foreground font-inter">
                 Bio
               </Label>
               <Textarea
@@ -278,11 +273,10 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="gap-2"
-              style={{ backgroundColor: accentColor }}
+              className="gap-2 bg-foreground text-background hover:bg-foreground/90"
             >
               {isSaving ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Check className="h-4 w-4" />
               )}
@@ -293,10 +287,10 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
       </Card>
 
       {/* Connected Accounts */}
-      <Card className="border-0 shadow-sm bg-white dark:bg-card">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-foreground tracking-[-0.5px]">
+            <h3 className="font-semibold text-foreground font-inter tracking-[-0.5px]">
               Connected Accounts
             </h3>
             <Button
@@ -312,35 +306,37 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
 
           {socialAccounts.length === 0 ? (
             <div className="text-center py-8">
-              <User className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground tracking-[-0.3px]">
+              <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center bg-muted">
+                <User className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
                 No social accounts connected
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {socialAccounts.map((account) => (
                 <div
                   key={account.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/50"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/30"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={account.avatar_url || ""} />
-                    <AvatarFallback className="text-xs font-medium bg-muted">
+                    <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
                       {getPlatformIcon(account.platform)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-900 dark:text-foreground truncate tracking-[-0.3px]">
+                      <p className="text-sm font-medium text-foreground truncate font-inter tracking-[-0.3px]">
                         @{account.username}
                       </p>
                       {account.is_verified && (
                         <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground capitalize tracking-[-0.3px]">
-                      {account.platform} &bull; {formatFollowers(account.follower_count)} followers
+                    <p className="text-xs text-muted-foreground capitalize font-inter tracking-[-0.3px]">
+                      {account.platform} · {formatFollowers(account.follower_count)} followers
                     </p>
                   </div>
                 </div>
@@ -350,14 +346,40 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
         </CardContent>
       </Card>
 
-      {/* Appearance */}
-      <Card className="border-0 shadow-sm bg-white dark:bg-card">
+      {/* Brand Partnership */}
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-foreground mb-4 tracking-[-0.5px]">
+          <h3 className="font-semibold text-foreground mb-4 font-inter tracking-[-0.5px]">
+            Brand Partnership
+          </h3>
+          <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+            <Avatar className="h-12 w-12 rounded-lg">
+              <AvatarImage src={brand.logo_url || ""} className="object-cover" />
+              <AvatarFallback className="rounded-lg bg-muted text-muted-foreground font-semibold">
+                {brand.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h4 className="font-semibold text-foreground font-inter tracking-[-0.5px]">{brand.name}</h4>
+              <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+                {brand.description || "Creator Partnership"}
+              </p>
+            </div>
+            <Badge className="bg-emerald-500/10 text-emerald-500 border-0">
+              Active
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Appearance */}
+      <Card className="bg-card border-border">
+        <CardContent className="p-6">
+          <h3 className="font-semibold text-foreground mb-4 font-inter tracking-[-0.5px]">
             Appearance
           </h3>
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
             <div className="flex items-center gap-3">
               {resolvedTheme === "dark" ? (
                 <Moon className="h-5 w-5 text-muted-foreground" />
@@ -365,10 +387,10 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
                 <Sun className="h-5 w-5 text-muted-foreground" />
               )}
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-foreground tracking-[-0.3px]">
+                <p className="text-sm font-medium text-foreground font-inter tracking-[-0.3px]">
                   Dark Mode
                 </p>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px]">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
                   {resolvedTheme === "dark"
                     ? "Currently using dark theme"
                     : "Currently using light theme"}
@@ -384,12 +406,12 @@ export function BrandPortalSettings({ brand, userId }: BrandPortalSettingsProps)
       </Card>
 
       {/* Need Help */}
-      <Card className="border-0 shadow-sm bg-white dark:bg-card">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-foreground mb-2 tracking-[-0.5px]">
+          <h3 className="font-semibold text-foreground mb-2 font-inter tracking-[-0.5px]">
             Need More Options?
           </h3>
-          <p className="text-sm text-muted-foreground mb-4 tracking-[-0.3px]">
+          <p className="text-sm text-muted-foreground mb-4 font-inter tracking-[-0.3px]">
             Access full settings including payment methods, security, and more from your main dashboard.
           </p>
           <Button

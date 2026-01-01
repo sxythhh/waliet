@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FraudStats {
@@ -97,11 +97,8 @@ export function FraudAnalyticsCard() {
   if (loading) {
     return (
       <div className="rounded-xl bg-card border border-border p-6">
-        <Skeleton className="h-5 w-48 mb-6" />
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-xl" />
-          ))}
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       </div>
     );

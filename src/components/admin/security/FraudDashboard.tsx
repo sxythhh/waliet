@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminCard, AdminStatCard } from "../design-system/AdminCard";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -150,19 +150,8 @@ export function FraudDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-muted/30 rounded-xl p-5 border border-border">
-              <Skeleton className="h-4 w-20 mb-3" />
-              <Skeleton className="h-8 w-24" />
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-[300px] rounded-xl" />
-          <Skeleton className="h-[300px] rounded-xl" />
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

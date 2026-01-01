@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1121,61 +1120,6 @@ export function CreatorDatabaseTab({
     setCreatorToRemove(creator);
     setRemoveCreatorDialogOpen(true);
   };
-  if (loading) {
-    return <div className="h-full flex flex-col">
-        {/* Table Container */}
-        <div className="flex-1 overflow-hidden">
-          {/* Table Header */}
-          <div className="px-4 py-3 flex items-center gap-4 border-b border-border/40">
-            <Skeleton className="h-4 w-4 rounded-[3px]" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-14" />
-            <Skeleton className="h-4 w-14" />
-            <Skeleton className="h-4 w-12 ml-auto" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-14" />
-          </div>
-          
-          {/* Table Rows */}
-          <div className="divide-y divide-border/20">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => <div key={i} className="px-4 py-3 flex items-center gap-4">
-                <Skeleton className="h-4 w-4 rounded-[3px]" />
-                <div className="flex items-center gap-3 min-w-[180px]">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="space-y-1.5">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
-                <Skeleton className="h-5 w-[70px] rounded" />
-                <div className="flex items-center gap-1">
-                  <Skeleton className="h-7 w-7 rounded-md" />
-                  <Skeleton className="h-7 w-7 rounded-md" />
-                </div>
-                <Skeleton className="h-4 w-12 ml-auto" />
-                <Skeleton className="h-4 w-14" />
-                <Skeleton className="h-4 w-20" />
-              </div>)}
-          </div>
-        </div>
-        
-        {/* Footer Skeleton */}
-        <div className="border-t border-border/40 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-4 w-10" />
-            <Skeleton className="h-7 w-[70px] rounded-md" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-          <div className="flex items-center gap-1">
-            <Skeleton className="h-4 w-20 mr-2" />
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-7 w-7 rounded-md" />
-            <Skeleton className="h-7 w-7 rounded-md" />
-          </div>
-        </div>
-      </div>;
-  }
   return <div className="h-full flex flex-col pb-20 md:pb-0">
       {/* Header */}
       <div className="border-b border-border px-[7px] py-[5px]">

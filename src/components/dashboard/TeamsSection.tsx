@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Check, Users, Crown, UserPlus, Upload, Loader2, DollarSign, Percent, Pencil } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import settingsIconLight from "@/assets/icons/settings-icon.svg";
 import settingsIconDark from "@/assets/icons/settings-icon-dark.svg";
 import deleteIconLight from "@/assets/icons/delete-icon.svg";
@@ -385,54 +384,12 @@ export function TeamsSection(): JSX.Element {
     }
   };
   if (loading) {
-    return <div className="min-h-[calc(100vh-200px)] space-y-6">
-        {/* Team Header Skeleton */}
-        <Card className="bg-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-24" />
-              <div className="flex gap-2">
-                <Skeleton className="h-9 flex-1" />
-                <Skeleton className="h-9 w-12" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Earnings Chart Skeleton */}
-        <Card className="bg-card">
-          <CardContent className="p-6">
-            <Skeleton className="h-4 w-28 mb-4" />
-            <Skeleton className="h-48 w-full" />
-          </CardContent>
-        </Card>
-
-        {/* Team Members Skeleton */}
-        <Card className="bg-card">
-          <CardContent className="p-6">
-            <Skeleton className="h-4 w-28 mb-4" />
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-2 w-16" />
-                  </div>
-                  <Skeleton className="h-4 w-12" />
-                </div>)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
+    return null;
   }
 
   // User is a member of a team (not owner)
   if (membershipInfo) {
-    return <Card className="bg-card">
+    return <Card className="bg-card h-full min-h-[calc(100vh-260px)]">
         <CardContent className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -844,9 +801,9 @@ export function TeamsSection(): JSX.Element {
   }
 
   // User has no team and is not a member - show create team option
-  return <Card className="bg-card">
-      <CardContent className="p-6">
-        <div className="text-center py-8">
+  return <Card className="bg-card h-full min-h-[calc(100vh-260px)]">
+      <CardContent className="p-6 h-full flex flex-col">
+        <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
           
           <h3 className="font-semibold text-lg mb-2">Create Your Team</h3>
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">

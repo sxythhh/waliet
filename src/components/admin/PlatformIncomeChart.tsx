@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
 import { 
   Area, 
   AreaChart, 
@@ -130,11 +130,10 @@ export function PlatformIncomeChart() {
   if (loading) {
     return (
       <Card className="border-border">
-        <CardHeader className="pb-2">
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-[300px] w-full" />
+        <CardContent className="py-24">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
         </CardContent>
       </Card>
     );

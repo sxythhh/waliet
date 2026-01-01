@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Shield, Check, X, Loader2, UserCog, Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -247,36 +246,11 @@ function UserRow({
   );
 }
 
-// Loading skeleton
-function PermissionsSkeleton() {
+// Loading spinner
+function PermissionsLoader() {
   return (
-    <div className="space-y-6">
-      {[1, 2].map((i) => (
-        <div
-          key={i}
-          className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden"
-        >
-          <div className="flex items-center gap-3 p-4 border-b border-white/[0.06]">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-3 w-48" />
-            </div>
-          </div>
-          <div className="p-4 space-y-3">
-            {[1, 2, 3, 4, 5].map((j) => (
-              <div key={j} className="flex items-center gap-4">
-                <Skeleton className="h-4 w-24" />
-                <div className="flex gap-2 ml-auto">
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                  <Skeleton className="h-8 w-8 rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="flex items-center justify-center py-16">
+      <Loader2 className="h-6 w-6 animate-spin text-white/40" />
     </div>
   );
 }
@@ -408,7 +382,7 @@ export default function PermissionsPage() {
 
         {/* Content */}
         {loading ? (
-          <PermissionsSkeleton />
+          <PermissionsLoader />
         ) : adminUsers.length === 0 ? (
           <EmptyState />
         ) : (

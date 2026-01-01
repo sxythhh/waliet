@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { Bug, Lightbulb, MessageSquare, CheckCircle, Clock, XCircle } from "lucide-react";
@@ -214,9 +213,9 @@ export default function Feedback() {
           {/* Submissions List */}
           <div className="space-y-3">
             {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
-              ))
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground" />
+              </div>
             ) : submissions.length === 0 ? (
               <Card className="bg-card/50">
                 <CardContent className="p-8 text-center">

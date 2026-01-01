@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -961,19 +960,6 @@ export function VideoSubmissionsTab({
     });
     return Array.from(statsMap.values()).sort((a, b) => b.approvedThisMonth - a.approvedThisMonth || b.totalViews - a.totalViews);
   }, [allVideos, profiles, monthStart, monthEnd]);
-  if (loading) {
-    return <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          <div className="hidden md:flex md:w-[340px] flex-shrink-0 border-r border-border p-4 space-y-4 flex-col">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
-          </div>
-          <div className="flex-1 p-6 space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
-      </div>;
-  }
   const formatNumber = (num: number | null | undefined) => {
     if (num === null || num === undefined) return '—';
     if (num === 0) return '0';
