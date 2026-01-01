@@ -660,6 +660,7 @@ export function DiscoverTab({
                           isEnded={isEnded}
                           isBookmarked={isBookmarked}
                           slug={bounty.slug}
+                          created_at={bounty.created_at}
                           onClick={() => {
                             if (!isEnded) {
                               if (navigateOnClick && bounty.slug) {
