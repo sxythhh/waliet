@@ -110,19 +110,24 @@ export function CampaignRowCard({
         }}>
               <img alt="" src="/lovable-uploads/090bbb71-fff3-4820-a16e-521aac57990e.png" className="w-8 h-8 opacity-100" />
             </div>}
+          
+          {/* Status Badge - positioned in corner */}
+          {daysLeft !== null && daysLeft > 0 && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-amber-500/90 text-white rounded">
+              {daysLeft} days left
+            </span>
+          )}
+          {status === "draft" && (
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[11px] font-medium bg-muted-foreground/80 text-white rounded">
+              Draft
+            </span>
+          )}
         </div>
 
         {/* Content Section */}
         <div className="flex-1 p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
           {/* Main Info */}
           <div className="flex-1 min-w-0 space-y-2">
-            {/* Days Left Label */}
-            {daysLeft !== null && daysLeft > 0 && <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-500">
-                {daysLeft} DAYS LEFT
-              </span>}
-            {status === "draft" && <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                DRAFT
-              </span>}
 
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm sm:text-base font-semibold truncate group-hover:underline">
