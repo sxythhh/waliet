@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Zap, ChevronRight, ChevronLeft } from "lucide-react";
+import { Plus, ChevronRight, ChevronLeft, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
 import clippingIcon from "@/assets/clipping-icon.svg";
 import boostIcon from "@/assets/boost-icon.svg";
 import blueprintsIcon from "@/assets/blueprints-inactive.svg";
+import noteStackIcon from "@/assets/icons/note-stack.svg";
 import { CAMPAIGN_TEMPLATES, CampaignTemplate } from "./CampaignCreationWizard";
 interface Blueprint {
   id: string;
@@ -193,13 +194,20 @@ export function CreateCampaignTypeDialog({
               {hasBlueprints && (
                 <button
                   onClick={() => setShowTemplates(true)}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all text-left"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all text-left group"
                 >
-                  <Zap className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-primary font-inter tracking-[-0.5px]">
-                    Quick Start Templates
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-primary/50 ml-auto" />
+                  <div className="w-10 h-10 rounded-xl bg-[#7e47ff] flex items-center justify-center shrink-0">
+                    <img src={noteStackIcon} alt="" className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-foreground font-inter tracking-[-0.5px] text-sm block">
+                      Quick Start Templates
+                    </span>
+                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.3px]">
+                      Choose from pre-built campaign setups
+                    </span>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </button>
               )}
 
