@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
@@ -84,6 +84,8 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
   const [tierName, setTierName] = useState("");
   const [tierRpm, setTierRpm] = useState("1.0");
   const [tierColor, setTierColor] = useState("#8B5CF6");
+  const [tierDescription, setTierDescription] = useState("");
+  const [editingTier, setEditingTier] = useState<CreatorTier | null>(null);
 
   // Strikes state
   const [strikes, setStrikes] = useState<Strike[]>([]);
@@ -182,17 +184,55 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
         name: tierName,
         tier_order: tiers.length + 1,
         rpm_multiplier: parseFloat(tierRpm) || 1.0,
-        color: tierColor
+        color: tierColor,
+        description: tierDescription || null
       }) as any);
       if (error) throw error;
       toast.success("Tier created");
-      setTierDialogOpen(false);
-      setTierName("");
-      setTierRpm("1.0");
+      resetTierForm();
       fetchAllData();
     } catch {
       toast.error("Failed to create tier");
     }
+  };
+
+  const handleEditTier = async () => {
+    if (!editingTier || !tierName) {
+      toast.error("Please enter a tier name");
+      return;
+    }
+    try {
+      const { error } = await (supabase.from("creator_tiers" as any).update({
+        name: tierName,
+        rpm_multiplier: parseFloat(tierRpm) || 1.0,
+        color: tierColor,
+        description: tierDescription || null
+      }).eq("id", editingTier.id) as any);
+      if (error) throw error;
+      toast.success("Tier updated");
+      resetTierForm();
+      fetchAllData();
+    } catch {
+      toast.error("Failed to update tier");
+    }
+  };
+
+  const resetTierForm = () => {
+    setTierDialogOpen(false);
+    setTierName("");
+    setTierRpm("1.0");
+    setTierColor("#8B5CF6");
+    setTierDescription("");
+    setEditingTier(null);
+  };
+
+  const openEditTierDialog = (tier: CreatorTier) => {
+    setEditingTier(tier);
+    setTierName(tier.name);
+    setTierRpm(tier.rpm_multiplier.toString());
+    setTierColor(tier.color || "#8B5CF6");
+    setTierDescription(tier.description || "");
+    setTierDialogOpen(true);
   };
 
   const handleDeleteTier = async (id: string) => {
@@ -340,39 +380,43 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
               Create Default Tiers
             </Button>
           ) : (
-            <Dialog open={tierDialogOpen} onOpenChange={setTierDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Tier</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
+            <Button size="sm" variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => { resetTierForm(); setTierDialogOpen(true); }}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
+            </Button>
+          )}
+          <Dialog open={tierDialogOpen} onOpenChange={(open) => { if (!open) resetTierForm(); else setTierDialogOpen(true); }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingTier ? "Edit Tier" : "Add Tier"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input placeholder="e.g., Gold" value={tierName} onChange={(e) => setTierName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Input placeholder="e.g., For top performers" value={tierDescription} onChange={(e) => setTierDescription(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Name</Label>
-                    <Input placeholder="e.g., Gold" value={tierName} onChange={(e) => setTierName(e.target.value)} />
+                    <Label>RPM Multiplier</Label>
+                    <Input type="number" step="0.1" value={tierRpm} onChange={(e) => setTierRpm(e.target.value)} />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>RPM Multiplier</Label>
-                      <Input type="number" step="0.1" value={tierRpm} onChange={(e) => setTierRpm(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Color</Label>
-                      <Input type="color" value={tierColor} onChange={(e) => setTierColor(e.target.value)} className="h-10 w-20" />
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={() => setTierDialogOpen(false)}>Cancel</Button>
-                    <Button className="font-inter tracking-[-0.5px]" onClick={handleAddTier}>Create</Button>
+                  <div className="space-y-2">
+                    <Label>Color</Label>
+                    <Input type="color" value={tierColor} onChange={(e) => setTierColor(e.target.value)} className="h-10 w-20" />
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          )}
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="ghost" className="font-inter tracking-[-0.5px]" onClick={resetTierForm}>Cancel</Button>
+                  <Button className="font-inter tracking-[-0.5px]" onClick={editingTier ? handleEditTier : handleAddTier}>
+                    {editingTier ? "Save" : "Create"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {tiers.length === 0 ? (
@@ -392,9 +436,14 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
                     {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
                   </div>
                 </div>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTier(t.id)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openEditTierDialog(t)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => handleDeleteTier(t.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
