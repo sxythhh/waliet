@@ -148,115 +148,103 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <h2 className="text-lg font-semibold">Low Balance Protection</h2>
-        <p className="text-sm text-muted-foreground">
-          Configure automatic actions when your brand wallet runs low
-        </p>
+    <div className="space-y-6 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold font-inter tracking-[-0.5px]">Low Balance Protection</h2>
+          <p className="text-sm text-muted-foreground font-inter tracking-[-0.3px]">
+            Configure automatic actions when your wallet runs low
+          </p>
+        </div>
+        <Button onClick={handleSave} disabled={isSaving} size="sm">
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
       </div>
 
-      {/* Current Balance Status */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Current Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold">${currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-              <p className="text-sm text-muted-foreground">Current balance</p>
+      {/* Alert Thresholds */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Thresholds</h3>
+        
+        <div className="grid gap-4">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <Bell className="h-4 w-4 text-yellow-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Email Notification</p>
+                <p className="text-xs text-muted-foreground">Alert when balance drops below</p>
+              </div>
             </div>
-            <Badge variant={balanceStatus.color as any}>
-              {balanceStatus.message}
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Threshold Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Alert Thresholds</CardTitle>
-          <CardDescription>
-            Set balance levels that trigger different actions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Notify Threshold */}
-          <div className="space-y-2">
-            <div>
-              <Label className="font-medium">Notification Alert</Label>
-              <p className="text-xs text-muted-foreground">
-                Send email notification when balance drops below this amount
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">$</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground text-sm">$</span>
               <Input
                 type="number"
                 value={notifyThreshold}
                 onChange={(e) => setNotifyThreshold(e.target.value)}
-                className="w-32"
+                className="w-24 h-9 text-right"
               />
             </div>
           </div>
 
-          {/* Pause Payouts Threshold */}
-          <div className="space-y-2">
-            <div>
-              <Label className="font-medium">Pause Payouts</Label>
-              <p className="text-xs text-muted-foreground">
-                Queue payouts instead of processing when balance is below this
-              </p>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                <Pause className="h-4 w-4 text-orange-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Payouts</p>
+                <p className="text-xs text-muted-foreground">Queue payouts when below</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">$</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground text-sm">$</span>
               <Input
                 type="number"
                 value={pausePayoutsThreshold}
                 onChange={(e) => setPausePayoutsThreshold(e.target.value)}
-                className="w-32"
+                className="w-24 h-9 text-right"
               />
             </div>
           </div>
 
-          {/* Pause Campaign Threshold */}
-          <div className="space-y-2">
-            <div>
-              <Label className="font-medium">Pause Campaigns</Label>
-              <p className="text-xs text-muted-foreground">
-                Stop accepting new submissions when balance is critically low
-              </p>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <Ban className="h-4 w-4 text-red-500" />
+              </div>
+              <div>
+                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Pause Campaigns</p>
+                <p className="text-xs text-muted-foreground">Stop new submissions when below</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">$</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground text-sm">$</span>
               <Input
                 type="number"
                 value={pauseCampaignThreshold}
                 onChange={(e) => setPauseCampaignThreshold(e.target.value)}
-                className="w-32"
+                className="w-24 h-9 text-right"
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Auto Top-up Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Auto Top-up</CardTitle>
-          <CardDescription>
-            Automatically add funds when balance gets low
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Auto Top-up */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Auto Top-up</h3>
+        
+        <div className="p-4 rounded-xl bg-card/50 border border-border/50 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <Label className="font-medium">Enable Auto Top-up</Label>
-              <p className="text-xs text-muted-foreground">
-                Automatically charge your card to maintain minimum balance
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                <CreditCard className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium font-inter tracking-[-0.3px]">Enable Auto Top-up</p>
+                <p className="text-xs text-muted-foreground">Automatically charge your card</p>
+              </div>
             </div>
             <Switch
               checked={autoTopupEnabled}
@@ -265,67 +253,59 @@ export function LowBalanceSettingsTab({ brandId }: LowBalanceSettingsTabProps) {
           </div>
 
           {autoTopupEnabled && (
-            <div className="space-y-2 pt-2 border-t">
-              <Label>Top-up Amount</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+              <p className="text-sm text-muted-foreground">Top-up amount</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground text-sm">$</span>
                 <Input
                   type="number"
                   value={autoTopupAmount}
                   onChange={(e) => setAutoTopupAmount(e.target.value)}
-                  className="w-32"
+                  className="w-24 h-9 text-right"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                This amount will be charged when balance falls below the notification threshold
-              </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Recent Alerts */}
       {alerts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Recent Alerts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Recent Alerts</h3>
+          
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/50"
+              >
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
                   <div>
-                    <p className="font-medium text-sm capitalize">
+                    <p className="text-sm font-medium capitalize font-inter tracking-[-0.3px]">
                       {alert.alert_type.replace("_", " ")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Balance: ${alert.balance_at_alert.toFixed(2)} (threshold: ${alert.threshold_value})
+                      ${alert.balance_at_alert.toFixed(2)} → threshold ${alert.threshold_value}
                     </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(alert.created_at).toLocaleDateString()}
-                    </p>
-                    {alert.resolved_at ? (
-                      <Badge variant="outline" className="text-xs bg-green-500/10 text-green-500">
-                        Resolved
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-xs bg-yellow-500/10 text-yellow-500">
-                        Active
-                      </Badge>
-                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="text-right flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(alert.created_at).toLocaleDateString()}
+                  </span>
+                  {alert.resolved_at ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
-
     </div>
   );
 }
