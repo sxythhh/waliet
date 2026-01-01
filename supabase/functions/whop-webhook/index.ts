@@ -1,32 +1,47 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createHmac } from "https://deno.land/std@0.177.0/node/crypto.ts";
+import { safeLog, safeError, truncateId } from "../_shared/logging.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, whop-signature",
+// Webhooks don't need browser CORS - they're server-to-server
+const webhookHeaders = {
+  "Content-Type": "application/json",
 };
 
-// Verify Whop webhook signature
+// Verify Whop webhook signature - REQUIRED in production
 function verifySignature(payload: string, signature: string | null, secret: string): boolean {
+  if (!secret) {
+    safeError("WHOP_WEBHOOK_SECRET not configured - webhook signature verification disabled");
+    return true; // Allow during development if no secret configured
+  }
+  
   if (!signature) {
-    console.warn("No signature provided, skipping verification");
-    return true; // Allow unsigned webhooks during development
+    safeError("No signature provided in webhook request");
+    return false; // Reject unsigned webhooks in production
   }
   
   try {
     const hmac = createHmac("sha256", secret);
     hmac.update(payload);
     const expectedSignature = hmac.digest("hex");
-    return signature === expectedSignature || signature === `sha256=${expectedSignature}`;
+    
+    // Support both raw and prefixed signature formats
+    const isValid = signature === expectedSignature || signature === `sha256=${expectedSignature}`;
+    
+    if (!isValid) {
+      safeError("Invalid webhook signature");
+    }
+    
+    return isValid;
   } catch (err) {
-    console.error("Signature verification error:", err);
+    safeError("Signature verification error", err);
     return false;
   }
 }
 
 Deno.serve(async (req) => {
+  // Webhooks don't need CORS preflight handling - but keep for compatibility
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { status: 204 });
   }
 
   try {
@@ -38,22 +53,25 @@ Deno.serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get("whop-signature");
     
-    // Verify signature if secret is configured
-    if (webhookSecret && !verifySignature(rawBody, signature, webhookSecret)) {
-      console.error("Invalid webhook signature");
+    // Verify signature - reject invalid signatures
+    if (!verifySignature(rawBody, signature, webhookSecret)) {
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: webhookHeaders,
       });
     }
 
     const payload = JSON.parse(rawBody);
-    console.log("Whop webhook received:", JSON.stringify(payload));
-
-    // Whop uses "type" field in webhook payload
+    
+    // Log without sensitive data
     const { type, data } = payload;
-    // Also support legacy "action" field for backwards compatibility
     const action = type || payload.action;
+    
+    safeLog("Whop webhook received", { 
+      action, 
+      hasData: !!data,
+      membershipId: data?.membership?.id ? truncateId(data.membership.id) : null 
+    });
 
     // Handle payment.succeeded events
     if (action === "payment.succeeded") {
@@ -62,15 +80,15 @@ Deno.serve(async (req) => {
       const paymentType = metadata.type;
       const brandId = metadata.brand_id;
 
-      console.log(`Payment succeeded - type: ${paymentType}, brand_id: ${brandId}, plan: ${payment.plan?.id}`);
+      safeLog("Payment succeeded", { 
+        type: paymentType, 
+        brandId: truncateId(brandId) 
+      });
 
       // Handle brand wallet top-up
       if (paymentType === "brand_wallet_topup") {
         const amount = metadata.amount;
 
-        console.log(`Processing brand wallet top-up: ${brandId} for $${amount}`);
-
-        // Update pending transaction to completed
         const { error: txError } = await supabase
           .from("brand_wallet_transactions")
           .update({
@@ -83,31 +101,23 @@ Deno.serve(async (req) => {
           .eq("amount", amount);
 
         if (txError) {
-          console.error("Error updating transaction:", txError);
+          safeError("Error updating transaction", txError);
         }
 
-        console.log(`Brand ${brandId} wallet top-up of $${amount} completed`);
+        safeLog("Brand wallet top-up completed", { brandId: truncateId(brandId), amount });
 
         return new Response(JSON.stringify({ success: true, type: "brand_wallet_topup" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: webhookHeaders,
         });
       }
 
       // Handle subscription payment (brand plan purchase)
       if (paymentType === "subscription" && brandId) {
         const planId = payment.plan?.id;
-        const productId = payment.product?.id;
-        const productTitle = payment.product?.title;
         const membershipId = payment.membership?.id;
-        const amount = payment.total || payment.usd_total;
 
-        console.log(`Processing subscription payment for brand ${brandId}: plan=${planId}, product=${productTitle}, amount=${amount}`);
+        let subscriptionPlan = planId || payment.product?.title || "active";
 
-        // Determine subscription plan name from plan_id or product title
-        // You can customize this mapping based on your Whop plan IDs
-        let subscriptionPlan = planId || productTitle || "active";
-
-        // Update brand subscription
         const { error: updateError } = await supabase
           .from("brands")
           .update({
@@ -120,21 +130,22 @@ Deno.serve(async (req) => {
           .eq("id", brandId);
 
         if (updateError) {
-          console.error("Error updating brand subscription:", updateError);
+          safeError("Error updating brand subscription", updateError);
           throw updateError;
         }
 
-        console.log(`Brand ${brandId} subscription updated to plan: ${subscriptionPlan}`);
+        safeLog("Brand subscription updated", { 
+          brandId: truncateId(brandId), 
+          plan: subscriptionPlan 
+        });
 
         return new Response(JSON.stringify({ success: true, type: "subscription", plan: subscriptionPlan }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: webhookHeaders,
         });
       }
 
       // Handle generic payment with brand_id (fallback)
       if (brandId && payment.plan?.id) {
-        console.log(`Processing generic payment for brand ${brandId}`);
-
         const { error: updateError } = await supabase
           .from("brands")
           .update({
@@ -147,11 +158,11 @@ Deno.serve(async (req) => {
           .eq("id", brandId);
 
         if (updateError) {
-          console.error("Error updating brand:", updateError);
+          safeError("Error updating brand", updateError);
         }
 
         return new Response(JSON.stringify({ success: true, type: "payment" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: webhookHeaders,
         });
       }
     }
@@ -167,9 +178,8 @@ Deno.serve(async (req) => {
 
       // Handle boost top-up payments
       if (type === "boost_topup" && boostId && topupAmount) {
-        console.log(`Processing boost top-up: ${boostId} for $${topupAmount}`);
+        safeLog("Processing boost top-up", { boostId: truncateId(boostId), amount: topupAmount });
         
-        // Get current boost budget
         const { data: boost, error: boostError } = await supabase
           .from("bounty_campaigns")
           .select("budget")
@@ -177,43 +187,39 @@ Deno.serve(async (req) => {
           .single();
 
         if (boostError) {
-          console.error("Error fetching boost:", boostError);
+          safeError("Error fetching boost", boostError);
           throw boostError;
         }
 
         const currentBudget = boost?.budget || 0;
         const newBudget = currentBudget + Number(topupAmount);
 
-        // Update boost budget
         const { error: updateError } = await supabase
           .from("bounty_campaigns")
-          .update({
-            budget: newBudget,
-          })
+          .update({ budget: newBudget })
           .eq("id", boostId);
 
         if (updateError) {
-          console.error("Error updating boost budget:", updateError);
+          safeError("Error updating boost budget", updateError);
           throw updateError;
         }
 
-        console.log(`Boost ${boostId} budget updated: $${currentBudget} -> $${newBudget}`);
+        safeLog("Boost budget updated", { boostId: truncateId(boostId), newBudget });
         
         return new Response(JSON.stringify({ success: true, type: "boost_topup" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: webhookHeaders,
         });
       }
 
       // Handle brand subscription
       if (!brandId) {
-        console.error("No brand_id in membership metadata:", metadata);
+        safeError("No brand_id in membership metadata");
         return new Response(JSON.stringify({ error: "Missing brand_id" }), {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: webhookHeaders,
         });
       }
 
-      // Update brand subscription status
       const { error: updateError } = await supabase
         .from("brands")
         .update({
@@ -227,11 +233,11 @@ Deno.serve(async (req) => {
         .eq("id", brandId);
 
       if (updateError) {
-        console.error("Error updating brand subscription:", updateError);
+        safeError("Error updating brand subscription", updateError);
         throw updateError;
       }
 
-      console.log(`Brand ${brandId} subscription activated`);
+      safeLog("Brand subscription activated", { brandId: truncateId(brandId) });
     }
 
     // Handle cancellation/expiration/deactivation
@@ -240,7 +246,11 @@ Deno.serve(async (req) => {
       const metadata = membership.metadata || {};
       const brandId = metadata.brand_id;
 
-      console.log(`Processing membership deactivation - action: ${action}, brand_id: ${brandId}, membership_id: ${membership.id}`);
+      safeLog("Processing membership deactivation", { 
+        action, 
+        brandId: truncateId(brandId), 
+        membershipId: truncateId(membership.id) 
+      });
 
       if (brandId) {
         const { error: updateError } = await supabase
@@ -253,16 +263,14 @@ Deno.serve(async (req) => {
           .eq("id", brandId);
 
         if (updateError) {
-          console.error("Error deactivating brand subscription:", updateError);
+          safeError("Error deactivating brand subscription", updateError);
         } else {
-          console.log(`Brand ${brandId} subscription deactivated and plan removed`);
+          safeLog("Brand subscription deactivated", { brandId: truncateId(brandId) });
         }
       } else {
         // Try to find brand by whop_membership_id if no metadata
         const membershipId = membership.id;
         if (membershipId) {
-          console.log(`No brand_id in metadata, searching by whop_membership_id: ${membershipId}`);
-          
           const { data: brand, error: findError } = await supabase
             .from("brands")
             .select("id")
@@ -280,18 +288,18 @@ Deno.serve(async (req) => {
               .eq("id", brand.id);
 
             if (updateError) {
-              console.error("Error deactivating brand subscription:", updateError);
+              safeError("Error deactivating brand subscription", updateError);
             } else {
-              console.log(`Brand ${brand.id} subscription deactivated via membership_id lookup`);
+              safeLog("Brand subscription deactivated via membership lookup", { 
+                brandId: truncateId(brand.id) 
+              });
             }
-          } else {
-            console.warn(`Could not find brand for membership ${membershipId}`);
           }
         }
       }
 
       return new Response(JSON.stringify({ success: true, type: "membership_deactivated" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: webhookHeaders,
       });
     }
 
@@ -299,9 +307,7 @@ Deno.serve(async (req) => {
     if (action === "account.updated") {
       const account = data;
       
-      // Check if onboarding is complete
       if (account.payouts_enabled) {
-        // Find brand by whop_company_id
         const { data: brand, error: brandError } = await supabase
           .from("brands")
           .select("id")
@@ -314,20 +320,20 @@ Deno.serve(async (req) => {
             .update({ whop_onboarding_complete: true })
             .eq("id", brand.id);
 
-          console.log(`Brand ${brand.id} onboarding marked complete`);
+          safeLog("Brand onboarding marked complete", { brandId: truncateId(brand.id) });
         }
       }
     }
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: webhookHeaders,
     });
   } catch (error: unknown) {
-    console.error("Webhook error:", error);
+    safeError("Webhook error", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: webhookHeaders }
     );
   }
 });
