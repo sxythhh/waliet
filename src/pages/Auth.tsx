@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
-import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { getStoredUtmParams, clearStoredUtmParams, preserveTrackingForOAuth } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,12 +100,31 @@ export default function Auth() {
             description: signUpError.message
           });
         } else if (signUpData.user) {
-          await trackReferral(signUpData.user.id);
+          const referralResult = await trackReferral(signUpData.user.id);
           clearStoredUtmParams();
-          toast({
-            title: "Welcome to Virality!",
-            description: "Your account has been created successfully."
-          });
+
+          if (referralResult.success) {
+            toast({
+              title: "Welcome to Virality!",
+              description: "Your account has been created and referral applied successfully."
+            });
+          } else if (referralResult.error) {
+            toast({
+              title: "Welcome to Virality!",
+              description: "Your account has been created successfully."
+            });
+            // Show referral error as a separate notification
+            toast({
+              variant: "destructive",
+              title: "Referral Error",
+              description: referralResult.error
+            });
+          } else {
+            toast({
+              title: "Welcome to Virality!",
+              description: "Your account has been created successfully."
+            });
+          }
         }
       } else {
         setLoading(false);
@@ -121,6 +140,9 @@ export default function Auth() {
   };
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    // Preserve UTM and referral params before OAuth redirect
+    preserveTrackingForOAuth();
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -138,6 +160,9 @@ export default function Auth() {
   };
   const handleDiscordSignIn = () => {
     setLoading(true);
+    // Preserve UTM and referral params before OAuth redirect
+    preserveTrackingForOAuth();
+
     const DISCORD_CLIENT_ID = '1358316231341375518';
     const redirectUri = `${window.location.origin}/discord/callback`;
     const state = btoa(JSON.stringify({

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
-import { getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { getStoredUtmParams, clearStoredUtmParams, preserveTrackingForOAuth } from "@/hooks/useUtmTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,12 +111,30 @@ export default function AuthDialog({
             });
           }
         } else if (signUpData.user) {
-          await trackReferral(signUpData.user.id);
+          const referralResult = await trackReferral(signUpData.user.id);
           clearStoredUtmParams();
-          toast({
-            title: "Account created!",
-            description: "Welcome to Virality."
-          });
+
+          if (referralResult.success) {
+            toast({
+              title: "Account created!",
+              description: "Welcome to Virality. Referral applied successfully."
+            });
+          } else if (referralResult.error) {
+            toast({
+              title: "Account created!",
+              description: "Welcome to Virality."
+            });
+            toast({
+              variant: "destructive",
+              title: "Referral Error",
+              description: referralResult.error
+            });
+          } else {
+            toast({
+              title: "Account created!",
+              description: "Welcome to Virality."
+            });
+          }
           setLoading(false);
           onOpenChange(false);
           navigate("/dashboard");
@@ -137,12 +155,15 @@ export default function AuthDialog({
   };
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    // Preserve UTM and referral params before OAuth redirect
+    preserveTrackingForOAuth();
+
     const {
       error
     } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     });
     if (error) {
@@ -156,6 +177,9 @@ export default function AuthDialog({
   };
   const handleDiscordSignIn = () => {
     setLoading(true);
+    // Preserve UTM and referral params before OAuth redirect
+    preserveTrackingForOAuth();
+
     const DISCORD_CLIENT_ID = '1358316231341375518';
     const redirectUri = `${window.location.origin}/discord/callback`;
     const state = btoa(JSON.stringify({

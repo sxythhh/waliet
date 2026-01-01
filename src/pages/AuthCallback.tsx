@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { restoreTrackingFromOAuth, getStoredUtmParams, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const { trackReferral } = useReferralTracking();
+  const { toast } = useToast();
 
   useEffect(() => {
     const run = async () => {
@@ -19,11 +24,42 @@ export default function AuthCallback() {
           throw new Error(decodeURIComponent(errorDescription || errorParam || "OAuth error"));
         }
 
+        // Restore tracking params from sessionStorage
+        restoreTrackingFromOAuth();
+
         // PKCE flow (preferred)
         const code = url.searchParams.get("code");
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
+
+          // Check if this is a new user and process referral
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Check if user was just created (metadata indicates new signup)
+            const createdAt = new Date(user.created_at);
+            const now = new Date();
+            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // Created within last minute
+
+            if (isNewUser) {
+              const referralResult = await trackReferral(user.id);
+              clearStoredUtmParams();
+
+              if (referralResult.success) {
+                toast({
+                  title: "Welcome to Virality!",
+                  description: "Referral applied successfully."
+                });
+              } else if (referralResult.error) {
+                toast({
+                  variant: "destructive",
+                  title: "Referral Error",
+                  description: referralResult.error
+                });
+              }
+            }
+          }
+
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -39,6 +75,33 @@ export default function AuthCallback() {
             refresh_token,
           });
           if (setSessionError) throw setSessionError;
+
+          // Check if this is a new user and process referral
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const createdAt = new Date(user.created_at);
+            const now = new Date();
+            const isNewUser = (now.getTime() - createdAt.getTime()) < 60000;
+
+            if (isNewUser) {
+              const referralResult = await trackReferral(user.id);
+              clearStoredUtmParams();
+
+              if (referralResult.success) {
+                toast({
+                  title: "Welcome to Virality!",
+                  description: "Referral applied successfully."
+                });
+              } else if (referralResult.error) {
+                toast({
+                  variant: "destructive",
+                  title: "Referral Error",
+                  description: referralResult.error
+                });
+              }
+            }
+          }
+
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -51,7 +114,7 @@ export default function AuthCallback() {
     };
 
     run();
-  }, [navigate]);
+  }, [navigate, trackReferral, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
