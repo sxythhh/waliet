@@ -184,7 +184,7 @@ export function PortfolioSection({
 
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ portfolio_items: updatedItems })
+        .update({ portfolio_items: updatedItems as unknown as any })
         .eq("id", userId);
 
       if (updateError) throw updateError;
@@ -229,7 +229,7 @@ export function PortfolioSection({
 
       const { error } = await supabase
         .from("profiles")
-        .update({ portfolio_items: updatedItems })
+        .update({ portfolio_items: updatedItems as unknown as any })
         .eq("id", userId);
 
       if (error) throw error;
@@ -260,7 +260,7 @@ export function PortfolioSection({
 
       const { error } = await supabase
         .from("profiles")
-        .update({ portfolio_items: updatedItems })
+        .update({ portfolio_items: updatedItems as unknown as any })
         .eq("id", userId);
 
       if (error) throw error;

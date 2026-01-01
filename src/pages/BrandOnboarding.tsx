@@ -54,11 +54,13 @@ export default function BrandOnboarding() {
 
         if (error) throw error;
 
+        const brandData = data as unknown as Brand;
+
         // Check if user has access to this brand
         const { data: membership, error: memberError } = await supabase
           .from("brand_members")
           .select("role")
-          .eq("brand_id", data.id)
+          .eq("brand_id", brandData.id)
           .eq("user_id", user.id)
           .single();
 
@@ -68,11 +70,11 @@ export default function BrandOnboarding() {
           return;
         }
 
-        setBrand(data);
-        setCurrentStep(data.onboarding_step || 0);
+        setBrand(brandData);
+        setCurrentStep(brandData.onboarding_step || 0);
 
         // If onboarding is already completed, redirect to dashboard
-        if (data.onboarding_completed) {
+        if (brandData.onboarding_completed) {
           navigate(`/dashboard?workspace=${brandSlug}`);
         }
       } catch (error) {
@@ -135,7 +137,7 @@ export default function BrandOnboarding() {
         .update({
           onboarding_completed: true,
           onboarding_step: ONBOARDING_STEPS.length,
-        })
+        } as any)
         .eq("id", brand.id);
 
       if (error) throw error;

@@ -52,7 +52,7 @@ export function useTrainingCompletion(
         return;
       }
 
-      const trainingModules = blueprint.training_modules as TrainingModule[];
+      const trainingModules = blueprint.training_modules as unknown as TrainingModule[];
       setModules(trainingModules);
 
       // Fetch user's completions

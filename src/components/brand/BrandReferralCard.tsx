@@ -60,18 +60,19 @@ export function BrandReferralCard() {
 
       if (referralsData && referralsData.length > 0) {
         // Fetch brand details
-        const brandIds = referralsData.map((r) => r.brand_id);
+        const typedReferrals = referralsData as unknown as Array<{id: string; brand_id: string; status: string; reward_earned: number; created_at: string}>;
+        const brandIds = typedReferrals.map((r) => r.brand_id);
         const { data: brandsData } = await supabase
           .from("brands")
           .select("id, name, logo_url, subscription_plan")
           .in("id", brandIds);
 
-        const referralsWithBrands = referralsData.map((referral) => ({
+        const referralsWithBrands = typedReferrals.map((referral) => ({
           ...referral,
           brand: brandsData?.find((b) => b.id === referral.brand_id),
         }));
 
-        setBrandReferrals(referralsWithBrands);
+        setBrandReferrals(referralsWithBrands as any);
       }
     } catch (error) {
       console.error("Error fetching brand referrals:", error);
