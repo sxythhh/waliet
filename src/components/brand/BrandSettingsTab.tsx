@@ -429,11 +429,11 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color || "#8B5CF6" }} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{t.name}</span>
-                      {t.is_default && <Badge variant="outline" className="text-[10px]">Default</Badge>}
-                      <Badge variant="outline" className="text-[10px]">{t.rpm_multiplier}x RPM</Badge>
+                      <span className="text-sm font-medium font-geist">{t.name}</span>
+                      {t.is_default && <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px]">Default</Badge>}
+                      <Badge variant="outline" className="text-[10px] font-inter tracking-[-0.5px]">{t.rpm_multiplier}x RPM</Badge>
                     </div>
-                    {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
+                    {t.description && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">{t.description}</p>}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
