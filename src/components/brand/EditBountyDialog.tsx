@@ -428,7 +428,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
 
                       // Handle pausing - auto-waitlist pending applications
                       if (value === 'paused' && previousStatus !== 'paused') {
-                        const { error: waitlistError } = await supabase
+                        const { error: waitlistError } = await (supabase as any)
                           .from('bounty_applications')
                           .update({
                             status: 'waitlisted',
@@ -444,7 +444,7 @@ export function EditBountyDialog({ open, onOpenChange, bountyId, onSuccess }: Ed
 
                       // Handle resuming - restore auto-waitlisted applications to pending
                       if (previousStatus === 'paused' && value === 'active') {
-                        const { error: restoreError } = await supabase
+                        const { error: restoreError } = await (supabase as any)
                           .from('bounty_applications')
                           .update({
                             status: 'pending',
