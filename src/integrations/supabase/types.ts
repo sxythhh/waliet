@@ -781,6 +781,8 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type: string | null
+          review_notes: string | null
+          review_status: string | null
           reward_amount: number | null
           shortimize_collection_name: string | null
           slug: string | null
@@ -815,6 +817,8 @@ export type Database = {
           max_accepted_creators: number
           monthly_retainer: number
           position_type?: string | null
+          review_notes?: string | null
+          review_status?: string | null
           reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
@@ -849,6 +853,8 @@ export type Database = {
           max_accepted_creators?: number
           monthly_retainer?: number
           position_type?: string | null
+          review_notes?: string | null
+          review_status?: string | null
           reward_amount?: number | null
           shortimize_collection_name?: string | null
           slug?: string | null
