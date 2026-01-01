@@ -239,7 +239,7 @@ export default function Dashboard() {
           {/* Campaign Cards Skeleton - Row layout */}
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card">
+              <div key={i} className="flex flex-col sm:flex-row rounded-xl overflow-hidden bg-card border border-border">
                 {/* Banner */}
                 <div className="w-full sm:w-40 md:w-48 h-28 sm:h-auto bg-muted/30 rounded-none flex-shrink-0 animate-pulse" />
                 {/* Content */}
