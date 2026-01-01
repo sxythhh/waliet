@@ -51,16 +51,39 @@ export default function Referrals() {
 
       setProfile(profileResponse.data);
 
-      // Fetch users referred by current user
+      // Fetch users referred by current user from the referrals table
       const referralsResponse = await (supabase as any)
-        .from("profiles")
-        .select("id, username, full_name, avatar_url, total_earnings, created_at")
-        .eq("referred_by", user.id)
+        .from("referrals")
+        .select(`
+          referred_id,
+          status,
+          created_at,
+          profiles:referred_id (
+            id,
+            username,
+            full_name,
+            avatar_url,
+            total_earnings
+          )
+        `)
+        .eq("referrer_id", user.id)
         .order("created_at", { ascending: false });
 
       if (referralsResponse.error) throw referralsResponse.error;
 
-      setReferredUsers(referralsResponse.data || []);
+      // Transform the data to match the expected format
+      const transformedData = (referralsResponse.data || [])
+        .filter((r: any) => r.profiles) // Filter out any null profiles
+        .map((r: any) => ({
+          id: r.profiles.id,
+          username: r.profiles.username,
+          full_name: r.profiles.full_name,
+          avatar_url: r.profiles.avatar_url,
+          total_earnings: r.profiles.total_earnings || 0,
+          created_at: r.created_at,
+        }));
+
+      setReferredUsers(transformedData);
     } catch (error) {
       console.error("Error fetching referral data:", error);
       toast({

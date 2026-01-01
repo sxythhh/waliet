@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { restoreTrackingFromOAuth, clearStoredUtmParams } from "@/hooks/useUtmTracking";
+import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 export function DiscordOAuthCallback() {
@@ -9,6 +12,8 @@ export function DiscordOAuthCallback() {
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const hasProcessed = useRef(false);
+  const { trackReferral } = useReferralTracking();
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -114,6 +119,10 @@ export function DiscordOAuthCallback() {
       // This is authentication flow (not popup)
       try {
         setStatus('loading');
+
+        // Restore tracking params from sessionStorage
+        restoreTrackingFromOAuth();
+
         // Must exactly match the redirect_uri used in the initial authorize URL
         const redirectUri = `${window.location.origin}/discord/callback`;
         // Call the discord-auth function to sign in/up
@@ -124,6 +133,25 @@ export function DiscordOAuthCallback() {
         if (functionError) throw functionError;
 
         if (data.success && data.actionLink) {
+          // Check if this is a new user signup
+          if (data.isNewUser && data.userId) {
+            const referralResult = await trackReferral(data.userId);
+            clearStoredUtmParams();
+
+            if (referralResult.success) {
+              toast({
+                title: "Welcome to Virality!",
+                description: "Referral applied successfully."
+              });
+            } else if (referralResult.error) {
+              toast({
+                variant: "destructive",
+                title: "Referral Error",
+                description: referralResult.error
+              });
+            }
+          }
+
           // Redirect to the magic link to complete sign in
           window.location.href = data.actionLink;
         } else {
@@ -138,7 +166,7 @@ export function DiscordOAuthCallback() {
     };
 
     handleCallback();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, trackReferral, toast]);
 
   if (status === 'error') {
     return (
