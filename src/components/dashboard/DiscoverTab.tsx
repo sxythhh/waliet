@@ -77,6 +77,7 @@ interface BountyCampaign {
   brand_id: string;
   blueprint_id?: string | null;
   slug?: string | null;
+  tags?: string[] | null;
   brands?: {
     name: string;
     logo_url: string;
@@ -620,9 +621,11 @@ export function DiscoverTab({
                 .filter(b => {
                   if (!searchQuery) return true;
                   const query = searchQuery.toLowerCase();
+                  const matchesTags = b.tags?.some(tag => tag.toLowerCase().includes(query)) || false;
                   return b.title.toLowerCase().includes(query) || 
                     b.description?.toLowerCase().includes(query) || 
-                    b.brands?.name?.toLowerCase().includes(query);
+                    b.brands?.name?.toLowerCase().includes(query) ||
+                    matchesTags;
                 })
                 .sort((a, b) => {
                   const aEnded = a.status === 'ended';
@@ -668,6 +671,7 @@ export function DiscoverTab({
                           isBookmarked={isBookmarked}
                           slug={bounty.slug}
                           created_at={bounty.created_at}
+                          tags={bounty.tags}
                           onClick={() => {
                             if (!isEnded) {
                               if (navigateOnClick && bounty.slug) {

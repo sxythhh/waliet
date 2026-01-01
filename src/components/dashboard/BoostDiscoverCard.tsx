@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Bookmark, Maximize2 } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -21,6 +22,7 @@ export interface BoostDiscoverCardProps {
   isBookmarked?: boolean;
   slug?: string;
   created_at?: string;
+  tags?: string[] | null;
   onClick?: () => void;
   onBookmarkClick?: (e: React.MouseEvent) => void;
   onFullscreenClick?: (e: React.MouseEvent) => void;
@@ -40,6 +42,7 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
   isEnded,
   isBookmarked,
   created_at,
+  tags,
   onClick,
   onBookmarkClick,
   onFullscreenClick
@@ -83,6 +86,24 @@ export const BoostDiscoverCard = memo(function BoostDiscoverCard({
             </span>
           </div>
         </div>
+
+        {/* Tags */}
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {tags.slice(0, 3).map((tag, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-[10px] px-1.5 py-0 h-5 font-normal bg-muted/60 text-muted-foreground"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <span className="text-[10px] text-muted-foreground">+{tags.length - 3}</span>
+            )}
+          </div>
+        )}
 
         {/* Spots Info */}
         <div className="flex items-center gap-2 font-['Inter'] tracking-[-0.5px]">
