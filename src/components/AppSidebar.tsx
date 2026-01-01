@@ -55,7 +55,7 @@ import leaderboardInactive from "@/assets/leaderboard-inactive.svg";
 import leaderboardActive from "@/assets/leaderboard-active.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -680,6 +680,7 @@ export function AppSidebar() {
           </div>}
 
         {/* Main Navigation */}
+        <TooltipProvider delayDuration={0}>
         <nav className="flex-1 py-0 px-2">
           <div className="flex flex-col gap-1">
             {menuItems.map(item => {
@@ -769,6 +770,7 @@ export function AppSidebar() {
           })}
           </div>
         </nav>
+        </TooltipProvider>
 
         {/* Joined Campaigns Section - Hidden, campaigns shown on home page instead */}
 
