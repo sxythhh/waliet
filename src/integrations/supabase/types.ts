@@ -6363,6 +6363,10 @@ export type Database = {
         Returns: boolean
       }
       cleanup_demographic_videos: { Args: never; Returns: undefined }
+      create_default_creator_tiers: {
+        Args: { p_brand_id: string }
+        Returns: undefined
+      }
       decrypt_discord_token: {
         Args: { encrypted_token: string }
         Returns: string
