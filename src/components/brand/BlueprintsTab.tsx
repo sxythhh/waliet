@@ -336,50 +336,20 @@ export function BlueprintsTab({ brandId }: BlueprintsTabProps) {
               >
                 <div className="p-4">
                   {/* Header row */}
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-[15px] leading-tight truncate font-inter tracking-[-0.5px]">
-                        {blueprint.title || "Untitled"}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={cn("text-xs font-inter tracking-[-0.5px]", statusConfig.textColor)}>
-                          {statusConfig.label}
-                        </span>
-                        {isLinked && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 bg-primary/5 text-primary border-primary/20 font-inter tracking-[-0.5px]">
-                            Campaign
-                          </Badge>
-                        )}
-                      </div>
+                  <div className="mb-2">
+                    <h3 className="font-medium text-[15px] leading-tight truncate font-inter tracking-[-0.5px]">
+                      {blueprint.title || "Untitled"}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={cn("text-xs font-inter tracking-[-0.5px]", statusConfig.textColor)}>
+                        {statusConfig.label}
+                      </span>
+                      {isLinked && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-0.5 bg-primary/5 text-primary border-primary/20 font-inter tracking-[-0.5px]">
+                          Campaign
+                        </Badge>
+                      )}
                     </div>
-
-                    {/* Actions menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8 -mr-1",
-                            "opacity-0 group-hover:opacity-100",
-                            "transition-opacity duration-150"
-                          )}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openBlueprint(blueprint.id); }}>
-                          Edit blueprint
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleActivateBlueprint(blueprint.id); }}>
-                          Create campaign
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); deleteBlueprint(blueprint.id); }}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </div>
 
                   {/* Content preview */}
