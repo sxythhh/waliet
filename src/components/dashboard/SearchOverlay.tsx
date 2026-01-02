@@ -169,13 +169,11 @@ export function SearchOverlay({
                     onClick={() => onPlatformFilter(platform.id === 'all' ? null : (activePlatformFilter === platform.id ? null : platform.id))}
                     className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all font-['Inter'] tracking-[-0.5px] ${
                       isActive
-                        ? 'bg-foreground text-background'
+                        ? 'bg-black text-white dark:bg-blue-600 dark:text-white'
                         : 'bg-muted/50 hover:bg-muted text-foreground'
                     }`}
                   >
-                    {platform.id === 'all' ? (
-                      <Layers className="h-4 w-4" />
-                    ) : platform.iconLight && (
+                    {platform.id !== 'all' && platform.iconLight && (
                       <img
                         src={isActive ? platform.iconDark : platform.iconLight}
                         alt={platform.label}
