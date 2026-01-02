@@ -14,6 +14,7 @@ const USDC_DECIMALS = 6;
 
 interface ProcessPayoutRequest {
   payoutRequestId: string;
+  approvalId?: string; // Optional: if provided, requires approval to be in 'approved' state
 }
 
 Deno.serve(async (req) => {
@@ -87,7 +88,7 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: ProcessPayoutRequest = await req.json();
-    const { payoutRequestId } = body;
+    const { payoutRequestId, approvalId } = body;
 
     if (!payoutRequestId) {
       return new Response(JSON.stringify({ error: 'payoutRequestId is required' }), {
@@ -96,7 +97,47 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Processing crypto payout', { payoutRequestId, adminId: user.id });
+    console.log('Processing crypto payout', { payoutRequestId, approvalId, adminId: user.id });
+
+    // If approvalId is provided, validate the approval is in 'approved' state
+    if (approvalId) {
+      const { data: approval, error: approvalError } = await supabase
+        .from('payout_approvals')
+        .select('*')
+        .eq('id', approvalId)
+        .single();
+
+      if (approvalError || !approval) {
+        return new Response(JSON.stringify({ error: 'Approval not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (approval.status !== 'approved') {
+        return new Response(JSON.stringify({
+          error: 'Approval not ready',
+          details: `Approval status is: ${approval.status}. Must be "approved" to execute.`,
+          required_approvals: approval.required_approvals
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Verify approval matches payout request
+      if (approval.payout_request_id !== payoutRequestId) {
+        return new Response(JSON.stringify({
+          error: 'Approval mismatch',
+          details: 'The approval does not match the payout request'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log('Approval validated:', { approvalId, status: approval.status });
+    }
 
     // Fetch payout request
     const { data: payoutRequest, error: payoutError } = await supabase
@@ -291,6 +332,34 @@ Deno.serve(async (req) => {
     }
 
     console.log('Transaction confirmed:', signature);
+
+    // Update approval status to executed if approvalId provided
+    if (approvalId) {
+      await supabase
+        .from('payout_approvals')
+        .update({
+          status: 'executed',
+          executed_at: new Date().toISOString(),
+          executed_by: user.id,
+          tx_signature: signature
+        })
+        .eq('id', approvalId);
+
+      // Log audit entry
+      await supabase
+        .from('payout_audit_log')
+        .insert({
+          payout_id: payoutRequestId,
+          approval_id: approvalId,
+          action: 'executed',
+          actor_id: user.id,
+          details: {
+            tx_signature: signature,
+            amount: amountUSD,
+            wallet_address: walletAddress
+          }
+        });
+    }
 
     // Update payout request with transaction details
     const { error: updateError } = await supabase

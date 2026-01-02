@@ -21,12 +21,14 @@ import {
   Activity, Wallet, Clock, CheckCircle2, XCircle, RotateCcw, Copy, X,
   CreditCard, AlertTriangle, Coins, ExternalLink, ChevronDown, ChevronUp
 } from "lucide-react";
-import { format, subDays, formatDistanceToNow, startOfMonth } from "date-fns";
+import { format, subDays, subWeeks, subMonths, formatDistanceToNow, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { CryptoPayoutDialog } from "@/components/admin/CryptoPayoutDialog";
-import { useTreasuryBalance, formatUsdcBalance } from "@/hooks/useTreasuryBalance";
+import { useTreasuryBalance, formatUsdcBalance, formatSolBalance } from "@/hooks/useTreasuryBalance";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
+import { StatCard } from "@/components/admin/StatCard";
+import { PayoutApprovals } from "@/components/admin/PayoutApprovals";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -73,8 +75,41 @@ interface PayoutRequest {
 
 type ViewMode = "all" | "transactions" | "payouts";
 type ContextType = "transaction" | "payout" | null;
+type DatePreset = "today" | "this_week" | "last_week" | "this_month" | "last_3_months" | "all_time" | "custom";
 
 const ITEMS_PER_PAGE = 25;
+
+const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "this_week", label: "This Week" },
+  { value: "last_week", label: "Last Week" },
+  { value: "this_month", label: "This Month" },
+  { value: "last_3_months", label: "Last 3 Months" },
+  { value: "all_time", label: "All Time" },
+  { value: "custom", label: "Custom Range" },
+];
+
+function getDateRangeFromPreset(preset: DatePreset): { from: Date | undefined; to: Date | undefined } {
+  const now = new Date();
+  switch (preset) {
+    case "today":
+      return { from: startOfDay(now), to: endOfDay(now) };
+    case "this_week":
+      return { from: startOfWeek(now, { weekStartsOn: 1 }), to: endOfDay(now) };
+    case "last_week":
+      const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+      const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+      return { from: lastWeekStart, to: lastWeekEnd };
+    case "this_month":
+      return { from: startOfMonth(now), to: endOfDay(now) };
+    case "last_3_months":
+      return { from: subMonths(now, 3), to: endOfDay(now) };
+    case "all_time":
+    case "custom":
+    default:
+      return { from: undefined, to: undefined };
+  }
+}
 
 export default function Finance() {
   // Data states
@@ -87,9 +122,24 @@ export default function Finance() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [payoutStatusFilter, setPayoutStatusFilter] = useState<string>("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("all_time");
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [customDatePickerOpen, setCustomDatePickerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Handle date preset changes
+  const handleDatePresetChange = (preset: DatePreset) => {
+    setDatePreset(preset);
+    if (preset === "custom") {
+      setCustomDatePickerOpen(true);
+    } else {
+      const { from, to } = getDateRangeFromPreset(preset);
+      setDateFrom(from);
+      setDateTo(to);
+      setCustomDatePickerOpen(false);
+    }
+  };
 
   // Context panel states
   const [contextOpen, setContextOpen] = useState(false);
@@ -124,41 +174,53 @@ export default function Finance() {
   const [processingPayout, setProcessingPayout] = useState<string | null>(null);
 
   const { toast } = useToast();
-  const { usdcBalance, loading: treasuryLoading } = useTreasuryBalance();
+  const { usdcBalance, solBalance, loading: treasuryLoading } = useTreasuryBalance();
 
-  // Calculate combined stats
+  // Filter transactions and payouts by date range
+  const dateFilteredTransactions = useMemo(() => {
+    if (!dateFrom && !dateTo) return transactions;
+    return transactions.filter(tx => {
+      const txDate = new Date(tx.created_at);
+      if (dateFrom && txDate < dateFrom) return false;
+      if (dateTo && txDate > dateTo) return false;
+      return true;
+    });
+  }, [transactions, dateFrom, dateTo]);
+
+  const dateFilteredPayouts = useMemo(() => {
+    if (!dateFrom && !dateTo) return payoutRequests;
+    return payoutRequests.filter(r => {
+      const rDate = new Date(r.requested_at);
+      if (dateFrom && rDate < dateFrom) return false;
+      if (dateTo && rDate > dateTo) return false;
+      return true;
+    });
+  }, [payoutRequests, dateFrom, dateTo]);
+
+  // Calculate combined stats based on date filter
   const stats = useMemo(() => {
-    const today = new Date();
-    const last7Days = subDays(today, 7);
-    const monthStart = startOfMonth(today);
+    // Transaction stats - use date filtered data
+    const totalEarnings = dateFilteredTransactions.filter(tx => tx.type === 'earning').reduce((sum, tx) => sum + tx.amount, 0);
+    const totalWithdrawals = dateFilteredTransactions.filter(tx => tx.type === 'withdrawal').reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    const totalVolume = dateFilteredTransactions.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
 
-    // Transaction stats
-    const todayTx = transactions.filter(tx => new Date(tx.created_at) >= new Date(today.setHours(0, 0, 0, 0)));
-    const weekTx = transactions.filter(tx => new Date(tx.created_at) >= last7Days);
-    const totalEarnings = transactions.filter(tx => tx.type === 'earning').reduce((sum, tx) => sum + tx.amount, 0);
-    const totalWithdrawals = transactions.filter(tx => tx.type === 'withdrawal').reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    const weekVolume = weekTx.reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-
-    // Payout stats
-    const pendingPayouts = payoutRequests.filter(r => r.status === 'pending');
-    const completedPayouts = payoutRequests.filter(r => r.status === 'completed');
-    const thisMonthPayouts = completedPayouts.filter(r => new Date(r.processed_at || r.requested_at) >= monthStart);
+    // Payout stats - use date filtered data
+    const pendingPayouts = dateFilteredPayouts.filter(r => r.status === 'pending');
+    const completedPayouts = dateFilteredPayouts.filter(r => r.status === 'completed');
     const totalPendingAmount = pendingPayouts.reduce((sum, r) => sum + Number(r.amount), 0);
-    const thisMonthProcessed = thisMonthPayouts.reduce((sum, r) => sum + Number(r.amount), 0);
+    const totalProcessed = completedPayouts.reduce((sum, r) => sum + Number(r.amount), 0);
 
     return {
       totalEarnings,
       totalWithdrawals,
-      weekVolume,
-      weekCount: weekTx.length,
-      todayCount: todayTx.length,
-      totalTransactions: transactions.length,
+      totalVolume,
+      transactionCount: dateFilteredTransactions.length,
       pendingPayoutsCount: pendingPayouts.length,
       totalPendingAmount,
       completedPayoutsCount: completedPayouts.length,
-      thisMonthProcessed,
+      totalProcessed,
     };
-  }, [transactions, payoutRequests]);
+  }, [dateFilteredTransactions, dateFilteredPayouts]);
 
   // Fetch data
   useEffect(() => {
@@ -385,9 +447,9 @@ export default function Finance() {
     setCryptoPayoutDialogOpen(true);
   };
 
-  // Filtering
+  // Filtering (uses date-filtered data)
   const filteredTransactions = useMemo(() => {
-    return transactions.filter(tx => {
+    return dateFilteredTransactions.filter(tx => {
       const matchesSearch = !searchTerm ||
         tx.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         tx.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -395,19 +457,12 @@ export default function Finance() {
 
       const matchesType = selectedType === "all" || tx.type === selectedType;
 
-      let matchesDate = true;
-      if (dateFrom || dateTo) {
-        const txDate = new Date(tx.created_at);
-        if (dateFrom) matchesDate = txDate >= dateFrom;
-        if (dateTo && matchesDate) matchesDate = txDate <= dateTo;
-      }
-
-      return matchesSearch && matchesType && matchesDate;
+      return matchesSearch && matchesType;
     });
-  }, [transactions, searchTerm, selectedType, dateFrom, dateTo]);
+  }, [dateFilteredTransactions, searchTerm, selectedType]);
 
   const filteredPayouts = useMemo(() => {
-    return payoutRequests.filter(r => {
+    return dateFilteredPayouts.filter(r => {
       const matchesSearch = !searchTerm ||
         r.profiles?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -416,8 +471,9 @@ export default function Finance() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [payoutRequests, searchTerm, payoutStatusFilter]);
+  }, [dateFilteredPayouts, searchTerm, payoutStatusFilter]);
 
+  // Pending payouts always shows all pending (not date filtered)
   const pendingPayouts = payoutRequests.filter(r => r.status === 'pending');
 
   // Combined items for unified view
@@ -433,7 +489,7 @@ export default function Finance() {
   const totalPages = Math.ceil(combinedItems.length / ITEMS_PER_PAGE);
   const paginatedItems = combinedItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedType, payoutStatusFilter, dateFrom, dateTo, viewMode]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, selectedType, payoutStatusFilter, dateFrom, dateTo, datePreset, viewMode]);
 
   // Helpers
   const getTypeLabel = (type: string) => {
@@ -492,81 +548,104 @@ export default function Finance() {
 
   return (
     <AdminPermissionGuard resource="finance">
-      <div className="h-full flex flex-col overflow-hidden bg-background">
-        {/* Stats Dashboard */}
-        <div className="p-6 border-b border-border/50 bg-card/30 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Finance</h1>
-              <p className="text-sm text-muted-foreground font-inter">Unified view of all financial activity</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm" onClick={fetchAllData} className="gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-            <div className="rounded-xl p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="h-4 w-4 text-emerald-500" />
-                <span className="text-xs text-muted-foreground">Total Earnings</span>
+      <div className="h-full overflow-auto bg-background">
+        {/* Header with Date Filter */}
+        <div className="sticky top-0 z-10 bg-background border-b border-border/50">
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Finance</h1>
+                <p className="text-sm text-muted-foreground font-inter">Unified view of all financial activity</p>
               </div>
-              <p className="text-xl font-bold text-emerald-500">${stats.totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-            </div>
+              <div className="flex items-center gap-2">
+                {/* Date Preset Dropdown */}
+                <Select value={datePreset} onValueChange={(v) => handleDatePresetChange(v as DatePreset)}>
+                  <SelectTrigger className="w-[150px] h-9">
+                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DATE_PRESETS.map(preset => (
+                      <SelectItem key={preset.value} value={preset.value}>{preset.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <div className="rounded-xl p-4 bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingDown className="h-4 w-4 text-orange-500" />
-                <span className="text-xs text-muted-foreground">Withdrawals</span>
-              </div>
-              <p className="text-xl font-bold text-orange-500">${stats.totalWithdrawals.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-            </div>
+                {/* Custom Date Range Picker */}
+                {datePreset === "custom" && (
+                  <Popover open={customDatePickerOpen} onOpenChange={setCustomDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("gap-2", dateFrom && "text-foreground")}>
+                        {dateFrom ? (dateTo ? `${format(dateFrom, "MMM d")} - ${format(dateTo, "MMM d")}` : format(dateFrom, "MMM d, y")) : "Pick dates"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <div className="p-3 space-y-3">
+                        <div className="text-xs font-medium text-muted-foreground">From:</div>
+                        <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} />
+                        <div className="text-xs font-medium text-muted-foreground">To:</div>
+                        <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={date => dateFrom ? date < dateFrom : false} />
+                        <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }} className="w-full">Clear dates</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
 
-            <div className="rounded-xl p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-blue-500" />
-                <span className="text-xs text-muted-foreground">Week Volume</span>
+                <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  Export
+                </Button>
+                <Button variant="outline" size="sm" onClick={fetchAllData} className="gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Refresh
+                </Button>
               </div>
-              <p className="text-xl font-bold text-blue-500">${stats.weekVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className="text-[10px] text-muted-foreground">{stats.weekCount} transactions</p>
-            </div>
-
-            <div className="rounded-xl p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <span className="text-xs text-muted-foreground">Pending Payouts</span>
-              </div>
-              <p className="text-xl font-bold text-amber-500">${stats.totalPendingAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className="text-[10px] text-muted-foreground">{stats.pendingPayoutsCount} requests</p>
             </div>
 
-            <div className="rounded-xl p-4 bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-4 w-4 text-violet-500" />
-                <span className="text-xs text-muted-foreground">This Month</span>
-              </div>
-              <p className="text-xl font-bold text-violet-500">${stats.thisMonthProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className="text-[10px] text-muted-foreground">{stats.completedPayoutsCount} completed</p>
-            </div>
-
-            <div className="rounded-xl p-4 bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/30">
-              <div className="flex items-center gap-2 mb-2">
-                <Coins className="h-4 w-4 text-amber-500" />
-                <span className="text-xs text-muted-foreground">Treasury</span>
-              </div>
-              <p className="text-xl font-bold text-amber-500">{treasuryLoading ? "..." : formatUsdcBalance(usdcBalance)}</p>
-              <p className="text-[10px] text-muted-foreground">USDC on Solana</p>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+              <StatCard
+                label="Earnings"
+                value={`$${stats.totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                subtext={datePreset !== "all_time" ? DATE_PRESETS.find(p => p.value === datePreset)?.label : undefined}
+                icon={TrendingUp}
+              />
+              <StatCard
+                label="Withdrawals"
+                value={`$${stats.totalWithdrawals.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                icon={TrendingDown}
+              />
+              <StatCard
+                label="Volume"
+                value={`$${stats.totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                subtext={`${stats.transactionCount} transactions`}
+                icon={Activity}
+              />
+              <StatCard
+                label="Pending Payouts"
+                value={`$${stats.totalPendingAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                subtext={`${stats.pendingPayoutsCount} requests`}
+                icon={Clock}
+              />
+              <StatCard
+                label="Processed"
+                value={`$${stats.totalProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                subtext={`${stats.completedPayoutsCount} completed`}
+                icon={DollarSign}
+              />
+              <StatCard
+                label="Treasury"
+                value={treasuryLoading ? "..." : formatUsdcBalance(usdcBalance)}
+                subtext={treasuryLoading ? "Loading..." : `${formatSolBalance(solBalance)} SOL`}
+                icon={Coins}
+                variant="primary"
+              />
             </div>
           </div>
         </div>
+
+        {/* Pending Crypto Approvals */}
+        <PayoutApprovals />
 
         {/* Pending Payouts Queue (Collapsible) */}
         {pendingPayouts.length > 0 && (
@@ -634,7 +713,7 @@ export default function Finance() {
         )}
 
         {/* Filters */}
-        <div className="px-6 py-4 border-b border-border/50 bg-background/50">
+        <div className="px-6 py-4 border-b border-border/50 bg-card/30">
           <div className="flex flex-wrap items-center gap-3">
             {/* View Mode */}
             <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-1">
@@ -699,33 +778,12 @@ export default function Finance() {
               </Select>
             )}
 
-            {/* Date Range */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" className={cn("h-9 px-3 bg-muted/30 hover:bg-muted/50", !dateFrom && !dateTo && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFrom ? (dateTo ? `${format(dateFrom, "MMM d")} - ${format(dateTo, "MMM d")}` : format(dateFrom, "MMM d, y")) : "Date range"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <div className="p-3 space-y-3">
-                  <div className="text-xs font-medium text-muted-foreground">From:</div>
-                  <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} />
-                  <div className="text-xs font-medium text-muted-foreground">To:</div>
-                  <Calendar mode="single" selected={dateTo} onSelect={setDateTo} disabled={date => dateFrom ? date < dateFrom : false} />
-                  <Button variant="ghost" size="sm" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }} className="w-full">Clear dates</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-
             <span className="text-xs text-muted-foreground ml-auto">{combinedItems.length.toLocaleString()} items</span>
           </div>
         </div>
 
         {/* Main Table */}
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="p-6">
+        <div className="p-6">
               {loading ? (
                 <div className="flex items-center justify-center py-16">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -885,8 +943,6 @@ export default function Finance() {
                   )}
                 </>
               )}
-            </div>
-          </ScrollArea>
         </div>
 
         {/* Context Panel (Sheet) */}

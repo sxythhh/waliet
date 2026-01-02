@@ -164,3 +164,18 @@ verify_jwt = true
 
 [functions.discord-interactions]
 verify_jwt = false
+
+[functions.get-treasury-balance]
+verify_jwt = true
+
+[functions.process-crypto-payout]
+verify_jwt = true
+
+[functions.calculate-trust-score]
+verify_jwt = false
+
+[functions.request-crypto-payout]
+verify_jwt = true
+
+[functions.approve-payout]
+verify_jwt = true

@@ -111,15 +111,30 @@ function modalResponse(customId: string, title: string, components: any[]) {
 
 // Get linked user from Discord ID
 async function getLinkedUser(supabase: any, discordId: string) {
+  console.log("Looking up user with discord_id:", discordId, "type:", typeof discordId);
+
   const { data, error } = await supabase
     .from("profiles")
     .select("id, username, display_name, wallet_balance, discord_id, discord_username")
     .eq("discord_id", discordId)
     .single();
 
+  if (error) {
+    console.log("Lookup error:", error.message, error.code);
+    // Try to find if any profile has this discord_id to debug
+    const { data: debugData } = await supabase
+      .from("profiles")
+      .select("id, discord_id, discord_username")
+      .not("discord_id", "is", null)
+      .limit(5);
+    console.log("Sample discord_ids in DB:", debugData?.map((d: any) => ({ id: d.discord_id, username: d.discord_username })));
+  }
+
   if (error || !data) {
     return null;
   }
+
+  console.log("Found user:", data.username, "with discord_id:", data.discord_id);
   return data;
 }
 

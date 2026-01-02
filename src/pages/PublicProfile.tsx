@@ -14,7 +14,10 @@ import { JoinCampaignSheet } from "@/components/JoinCampaignSheet";
 import { format } from "date-fns";
 import { SEOHead } from "@/components/SEOHead";
 import { generateProfileSchema, getCanonicalUrl, truncateDescription } from "@/lib/seo";
-import { PortfolioDisplay } from "@/components/profile/PortfolioDisplay";
+import { PortfolioDisplay as LegacyPortfolioDisplay } from "@/components/profile/PortfolioDisplay";
+import { PortfolioDisplay } from "@/components/portfolio/display/PortfolioDisplay";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import type { CreatorPortfolio } from "@/types/portfolio";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -109,6 +112,7 @@ export default function PublicProfile() {
   const [campaignParticipations, setCampaignParticipations] = useState<CampaignParticipation[]>([]);
   const [boostParticipations, setBoostParticipations] = useState<BoostParticipation[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [creatorPortfolio, setCreatorPortfolio] = useState<CreatorPortfolio | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -185,6 +189,17 @@ export default function PublicProfile() {
         created_at: t.created_at,
         brand: t.brands as any
       })));
+    }
+
+    // Fetch creator portfolio
+    const { data: portfolioData } = await supabase
+      .from("creator_portfolios")
+      .select("*")
+      .eq("user_id", profileData.id)
+      .eq("is_public", true)
+      .maybeSingle();
+    if (portfolioData) {
+      setCreatorPortfolio(portfolioData as CreatorPortfolio);
     }
 
     // Fetch social accounts (exclude hidden ones from public profile)
@@ -482,7 +497,7 @@ export default function PublicProfile() {
             <TabsTrigger value="testimonials" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
               Reviews {testimonials.length > 0 && `(${testimonials.length})`}
             </TabsTrigger>
-            {(profile.portfolio_items?.length > 0 || profile.resume_url) && (
+            {(creatorPortfolio || profile.portfolio_items?.length > 0 || profile.resume_url) && (
               <TabsTrigger value="portfolio" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none py-3 font-['Inter'] tracking-[-0.5px] font-medium">
                 Portfolio
               </TabsTrigger>
@@ -619,12 +634,19 @@ export default function PublicProfile() {
           </TabsContent>
 
           {/* Portfolio Tab */}
-          {(profile.portfolio_items?.length > 0 || profile.resume_url) && (
-            <TabsContent value="portfolio" className="mt-6">
-              <PortfolioDisplay
-                portfolioItems={profile.portfolio_items || []}
-                resumeUrl={profile.resume_url}
-              />
+          {(creatorPortfolio || profile.portfolio_items?.length > 0 || profile.resume_url) && (
+            <TabsContent value="portfolio" className="mt-6 space-y-6">
+              {/* New Portfolio System */}
+              {creatorPortfolio && (
+                <PortfolioDisplay portfolio={creatorPortfolio} />
+              )}
+              {/* Legacy Portfolio Display (backward compatibility) */}
+              {(profile.portfolio_items?.length > 0 || profile.resume_url) && !creatorPortfolio && (
+                <LegacyPortfolioDisplay
+                  portfolioItems={profile.portfolio_items || []}
+                  resumeUrl={profile.resume_url}
+                />
+              )}
             </TabsContent>
           )}
         </Tabs>
