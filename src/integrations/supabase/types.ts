@@ -4878,6 +4878,7 @@ export type Database = {
           fee: number
           id: string
           net_amount: number
+          note: string | null
           recipient_id: string
           sender_id: string
           status: string
@@ -4888,6 +4889,7 @@ export type Database = {
           fee?: number
           id?: string
           net_amount: number
+          note?: string | null
           recipient_id: string
           sender_id: string
           status?: string
@@ -4898,6 +4900,7 @@ export type Database = {
           fee?: number
           id?: string
           net_amount?: number
+          note?: string | null
           recipient_id?: string
           sender_id?: string
           status?: string
