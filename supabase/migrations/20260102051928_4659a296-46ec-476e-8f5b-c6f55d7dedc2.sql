@@ -1,0 +1,1 @@
+ALTER TABLE public.video_submissions ADD COLUMN video_playback_url TEXT;

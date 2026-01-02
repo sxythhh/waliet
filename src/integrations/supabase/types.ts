@@ -6395,6 +6395,7 @@ export type Database = {
           video_author_avatar: string | null
           video_author_username: string | null
           video_description: string | null
+          video_playback_url: string | null
           video_thumbnail_url: string | null
           video_title: string | null
           video_upload_date: string | null
@@ -6436,6 +6437,7 @@ export type Database = {
           video_author_avatar?: string | null
           video_author_username?: string | null
           video_description?: string | null
+          video_playback_url?: string | null
           video_thumbnail_url?: string | null
           video_title?: string | null
           video_upload_date?: string | null
@@ -6477,6 +6479,7 @@ export type Database = {
           video_author_avatar?: string | null
           video_author_username?: string | null
           video_description?: string | null
+          video_playback_url?: string | null
           video_thumbnail_url?: string | null
           video_title?: string | null
           video_upload_date?: string | null
