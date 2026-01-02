@@ -17,6 +17,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import { ApplicationQuestionsEditor } from "@/components/brand/ApplicationQuestionsEditor";
+import { ApplicationQuestion } from "@/types/applicationQuestions";
 const campaignSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(100),
   description: z.string().trim().max(500).optional(),
@@ -33,7 +35,7 @@ const campaignSchema = z.object({
   preview_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   analytics_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
   allowed_platforms: z.array(z.string()).min(1, "Select at least one platform"),
-  application_questions: z.array(z.string().trim().min(1)).max(3, "Maximum 3 questions allowed"),
+  application_questions: z.array(z.any()).max(10, "Maximum 10 questions allowed"),
   is_private: z.boolean().default(false),
   access_code: z.string().trim().optional(),
   requires_application: z.boolean().default(true),
@@ -642,28 +644,14 @@ export function CreateCampaignDialog({
             <FormField control={form.control} name="application_questions" render={({
                 field
               }) => <FormItem>
-                  <FormLabel className="text-white">Application Questions (Optional, max 3)</FormLabel>
-                  <div className="space-y-2">
-                    {field.value?.map((question, index) => <div key={index} className="flex gap-2">
-                        <Input value={question} onChange={e => {
-                      const newQuestions = [...(field.value || [])];
-                      newQuestions[index] = e.target.value;
-                      field.onChange(newQuestions);
-                    }} placeholder={`Question ${index + 1}`} className="bg-[#191919] text-white placeholder:text-white/40" />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => {
-                      const newQuestions = field.value?.filter((_, i) => i !== index) || [];
-                      field.onChange(newQuestions);
-                    }} className="text-destructive/60 hover:text-destructive hover:bg-destructive/10">
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>)}
-                    {(!field.value || field.value.length < 3) && <Button type="button" variant="outline" size="sm" onClick={() => field.onChange([...(field.value || []), ""])} className="w-full bg-[#191919] text-white hover:bg-white/5">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Question
-                      </Button>}
-                  </div>
+                  <FormLabel className="text-white">Application Questions (Optional)</FormLabel>
+                  <ApplicationQuestionsEditor
+                    questions={field.value as ApplicationQuestion[] || []}
+                    onChange={(questions) => field.onChange(questions)}
+                    maxQuestions={10}
+                  />
                   <p className="text-xs text-white/40 mt-1">
-                    Custom questions for creators to answer when applying to this campaign
+                    Add text, dropdown, video, or image questions for creators
                   </p>
                   <FormMessage className="text-destructive/80" />
                 </FormItem>} />
