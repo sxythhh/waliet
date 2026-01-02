@@ -280,9 +280,12 @@ export default function BrandManagement() {
     if (!selectedCampaignId) return;
     setLoadingCampaignUsers(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated');
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-campaign-users?campaign_id=${selectedCampaignId}`,
-        { headers: { 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
       );
       if (!response.ok) throw new Error('Failed to fetch users');
       const result = await response.json();

@@ -34,17 +34,17 @@ const getBrowserSessionId = (): string => {
 };
 
 // Track user session for security/device tracking
-const trackUserSession = async (userId: string) => {
+const trackUserSession = async (userId: string, accessToken: string) => {
   try {
     const browserSessionId = getBrowserSessionId();
-    
+
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-user-session`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           userId,
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             hasTrackedSession.current = browserSessionId;
             // Use setTimeout to avoid blocking the auth flow
             setTimeout(() => {
-              trackUserSession(currentSession.user.id);
+              trackUserSession(currentSession.user.id, currentSession.access_token);
             }, 0);
           }
         } else if (event === 'INITIAL_SESSION' && !currentSession) {
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (existingSession && !hasTrackedSession.current) {
         const browserSessionId = getBrowserSessionId();
         hasTrackedSession.current = browserSessionId;
-        trackUserSession(existingSession.user.id);
+        trackUserSession(existingSession.user.id, existingSession.access_token);
       }
     });
 

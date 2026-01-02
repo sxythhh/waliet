@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval, subDays, startOfDay, endOfDay } from "date-fns";
+import { startOfMonth, endOfMonth, subMonths, format, subDays } from "date-fns";
 
 interface AnalyticsData {
   loading: boolean;
@@ -60,11 +60,17 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
     cohorts: [],
   });
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [dateRange.from, dateRange.to]);
+  // Track mounted state to prevent state updates after unmount
+  const isMountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
+    // Cancel any in-flight requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setData((prev) => ({ ...prev, loading: true }));
 
     try {
@@ -262,30 +268,38 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
           ?.filter((p) => p.status === "completed")
           .reduce((sum, p) => sum + p.amount, 0) || 0;
 
-      // Cohort analysis - monthly new vs returning
-      const cohorts = [];
-      for (let i = 5; i >= 0; i--) {
-        const monthStart = startOfMonth(subMonths(new Date(), i));
+      // Cohort analysis - monthly new vs returning (run in parallel)
+      const cohortMonths = Array.from({ length: 6 }, (_, i) => {
+        const monthStart = startOfMonth(subMonths(new Date(), 5 - i));
         const monthEnd = endOfMonth(monthStart);
+        return { monthStart, monthEnd, label: format(monthStart, "MMM yyyy") };
+      });
 
-        const { count: newCount } = await supabase
-          .from("profiles")
-          .select("id", { count: "exact" })
-          .gte("created_at", format(monthStart, "yyyy-MM-dd"))
-          .lte("created_at", format(monthEnd, "yyyy-MM-dd") + "T23:59:59");
+      const cohortPromises = cohortMonths.map(async ({ monthStart, monthEnd, label }) => {
+        const [newResult, activeResult] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", format(monthStart, "yyyy-MM-dd"))
+            .lte("created_at", format(monthEnd, "yyyy-MM-dd") + "T23:59:59"),
+          supabase
+            .from("campaign_submissions")
+            .select("creator_id", { count: "exact", head: true })
+            .gte("created_at", format(monthStart, "yyyy-MM-dd"))
+            .lte("created_at", format(monthEnd, "yyyy-MM-dd") + "T23:59:59"),
+        ]);
 
-        const { count: activeCount } = await supabase
-          .from("campaign_submissions")
-          .select("creator_id", { count: "exact" })
-          .gte("created_at", format(monthStart, "yyyy-MM-dd"))
-          .lte("created_at", format(monthEnd, "yyyy-MM-dd") + "T23:59:59");
+        return {
+          month: label,
+          new: newResult.count || 0,
+          returning: Math.max(0, (activeResult.count || 0) - (newResult.count || 0)),
+        };
+      });
 
-        cohorts.push({
-          month: format(monthStart, "MMM yyyy"),
-          new: newCount || 0,
-          returning: Math.max(0, (activeCount || 0) - (newCount || 0)),
-        });
-      }
+      const cohorts = await Promise.all(cohortPromises);
+
+      // Check if request was aborted or component unmounted
+      if (!isMountedRef.current) return;
 
       setData({
         loading: false,
@@ -316,10 +330,26 @@ export function useAnalyticsDashboard(dateRange: { from: Date; to: Date }) {
         cohorts,
       });
     } catch (error) {
+      // Ignore abort errors
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error("Error fetching analytics:", error);
-      setData((prev) => ({ ...prev, loading: false }));
+      if (isMountedRef.current) {
+        setData((prev) => ({ ...prev, loading: false }));
+      }
     }
-  };
+  }, [dateRange.from, dateRange.to]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchAnalytics();
+
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchAnalytics]);
 
   return data;
 }

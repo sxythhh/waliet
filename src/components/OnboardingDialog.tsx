@@ -8,6 +8,7 @@ import { PhoneInput } from "@/components/PhoneInput";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Check } from "lucide-react";
+import { generateSlug } from "@/lib/slug";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -229,7 +230,7 @@ export function OnboardingDialog({
         }
         setLoading(true);
         try {
-          const slug = companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          const slug = generateSlug(companyName);
           const {
             data: brand,
             error

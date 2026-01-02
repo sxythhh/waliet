@@ -204,15 +204,32 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
           }
         }
 
+        // Fetch demographics scores for all creators in this batch
+        const creatorIds = [...new Set(submissions.map((s: any) => s.creator_id))];
+        const { data: creatorProfiles } = await supabase
+          .from('profiles')
+          .select('id, demographics_score')
+          .in('id', creatorIds);
+
+        // Create a map of creator demographics scores
+        const demographicsMap: Record<string, number> = {};
+        for (const profile of creatorProfiles || []) {
+          demographicsMap[profile.id] = profile.demographics_score || 0;
+        }
+
         // Process each submission individually to handle status correctly
         for (const submission of submissions) {
           const views = submission.views || 0;
           const rpmRate = campaign.rpm_rate || 0;
-          
-          // Calculate CPM earnings: (views / 1000) * rpm_rate
-          const cpmEarnings = (views / 1000) * rpmRate;
-          
-          // Add flat rate if applicable
+
+          // Get demographics multiplier (default 0.4 if no demographics submitted, otherwise tier1_percentage / 100)
+          const demographicsScore = demographicsMap[submission.creator_id] || 0;
+          const demographicsMultiplier = demographicsScore > 0 ? demographicsScore / 100 : 0.4;
+
+          // Calculate CPM earnings: (views / 1000) * rpm_rate * demographics_multiplier
+          const cpmEarnings = (views / 1000) * rpmRate * demographicsMultiplier;
+
+          // Add flat rate if applicable (flat rate is NOT multiplied by demographics)
           const flatRate = campaign.flat_rate_per_video || 0;
           const newAccrued = parseFloat((cpmEarnings + flatRate).toFixed(2));
 
@@ -233,7 +250,8 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
               
               if (newAccrued > existingPaid) {
                 // Update with new accrued amount, preserve paid_amount, set status to pending
-                const { error: updateError } = await supabase
+                // Use optimistic locking: only update if status is still 'paid' (prevents race conditions)
+                const { data: updateData, error: updateError } = await supabase
                   .from('payment_ledger')
                   .update({
                     accrued_amount: newAccrued,
@@ -241,10 +259,16 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
                     status: 'pending', // Re-enable for payout
                     last_calculated_at: new Date().toISOString(),
                   })
-                  .eq('id', existing.id);
+                  .eq('id', existing.id)
+                  .eq('status', 'paid') // Optimistic lock: only update if status unchanged
+                  .select('id');
 
                 if (updateError) {
                   result.errors.push(`Failed to update paid entry ${existing.id}: ${updateError.message}`);
+                } else if (!updateData || updateData.length === 0) {
+                  // Status changed between check and update (race condition), skip
+                  console.log(`Entry ${existing.id} status changed, skipping (race condition detected)`);
+                  result.skipped++;
                 } else {
                   console.log(`Updated paid entry ${existing.id}: accrued ${existingPaid} -> ${newAccrued}, now pending`);
                   result.updated++;
@@ -256,8 +280,8 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
               continue;
             }
 
-            // For pending entries, update normally
-            const { error: updateError } = await supabase
+            // For pending entries, update with optimistic locking
+            const { data: updateData, error: updateError } = await supabase
               .from('payment_ledger')
               .update({
                 accrued_amount: newAccrued,
@@ -265,10 +289,16 @@ async function processCampaignPayments(supabase: any, campaignId?: string) {
                 rate: rpmRate,
                 last_calculated_at: new Date().toISOString(),
               })
-              .eq('id', existing.id);
+              .eq('id', existing.id)
+              .eq('status', 'pending') // Optimistic lock: only update if still pending
+              .select('id');
 
             if (updateError) {
               result.errors.push(`Failed to update entry ${existing.id}: ${updateError.message}`);
+            } else if (!updateData || updateData.length === 0) {
+              // Status changed between check and update (race condition), skip
+              console.log(`Entry ${existing.id} status changed, skipping (race condition detected)`);
+              result.skipped++;
             } else {
               result.updated++;
             }

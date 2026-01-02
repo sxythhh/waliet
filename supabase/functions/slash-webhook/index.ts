@@ -11,8 +11,8 @@ const webhookHeaders = {
 // Verify Slash webhook signature
 function verifySlashSignature(payload: string, signature: string | null, secret: string): boolean {
   if (!secret) {
-    safeError("SLASH_WEBHOOK_SECRET not configured - webhook signature verification disabled");
-    return true; // Allow during development if no secret configured
+    safeError("SLASH_WEBHOOK_SECRET not configured - rejecting request for security");
+    return false; // Reject when secret not configured - must be set in production
   }
   
   if (!signature) {

@@ -28,6 +28,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { SubscriptionGateDialog } from "@/components/brand/SubscriptionGateDialog";
 import { LeaveTestimonialDialog } from "@/components/brand/LeaveTestimonialDialog";
 import { CreatorNotesDialog } from "@/components/brand/CreatorNotesDialog";
+import { CreatorDiscoveryWizard } from "@/components/brand/CreatorDiscoveryWizard";
 import vpnKeyIcon from "@/assets/vpn-key-icon.svg";
 import discordIconDark from "@/assets/tiktok-icon-dark.svg";
 import removeCreatorIcon from "@/assets/remove-creator-icon.svg";
@@ -243,6 +244,7 @@ export function CreatorDatabaseTab({
 
   // Mode toggle
   const [showFindCreators, setShowFindCreators] = useState(false);
+  const [discoveryWizardOpen, setDiscoveryWizardOpen] = useState(false);
 
   // Database state
   const [creators, setCreators] = useState<Creator[]>([]);
@@ -1287,9 +1289,9 @@ export function CreatorDatabaseTab({
           </Popover>
 
           <div className="flex items-center gap-1.5 ml-auto">
-            <Button size="sm" onClick={() => setAddCreatorsDialogOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
+            <Button size="sm" onClick={() => setDiscoveryWizardOpen(true)} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs border-t border-[#4b85f7] bg-[#2061de] hover:bg-[#2061de]/90">
               <Plus className="h-3.5 w-3.5" />
-              Add Creators
+              Find Creators
             </Button>
             <Button variant="ghost" size="sm" onClick={handleExportCSV} className="h-8 px-3 gap-1.5 font-inter tracking-[-0.5px] text-xs bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground">
               <Download className="h-3.5 w-3.5" />
@@ -1636,16 +1638,16 @@ export function CreatorDatabaseTab({
                 <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mr-2">
                   Page {currentPage} of {totalPages}
                 </span>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} aria-label="Go to first page">
                   <ChevronsLeft className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} aria-label="Go to previous page">
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} aria-label="Go to next page">
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-muted" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} aria-label="Go to last page">
                   <ChevronsRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -1666,7 +1668,7 @@ export function CreatorDatabaseTab({
               if (currentIndex > 0) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex - 1]);
               }
-            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0}>
+            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) <= 0} aria-label="Previous creator">
                 <ChevronUp className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => {
@@ -1674,10 +1676,10 @@ export function CreatorDatabaseTab({
               if (currentIndex < filteredCreators.length - 1) {
                 setSelectedCreatorPanel(filteredCreators[currentIndex + 1]);
               }
-            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1}>
+            }} disabled={filteredCreators.findIndex(c => c.id === selectedCreatorPanel?.id) >= filteredCreators.length - 1} aria-label="Next creator">
                 <ChevronDown className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => setSelectedCreatorPanel(null)}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm hover:bg-muted" onClick={() => setSelectedCreatorPanel(null)} aria-label="Close panel">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -1794,7 +1796,7 @@ export function CreatorDatabaseTab({
                       campaignType: campaign.type
                     });
                     setKickFromCampaignDialogOpen(true);
-                  }}>
+                  }} aria-label="Remove creator from campaign">
                           <img src={removeCreatorIcon} alt="Remove" className="h-4 w-4" />
                         </Button>
                       </div>)}
@@ -2207,5 +2209,16 @@ export function CreatorDatabaseTab({
           }}
         />
       )}
+
+      {/* Creator Discovery Wizard */}
+      <CreatorDiscoveryWizard
+        open={discoveryWizardOpen}
+        onOpenChange={setDiscoveryWizardOpen}
+        brandId={brandId}
+        onCreatorAdded={() => {
+          fetchCreators();
+          fetchAvailableTags();
+        }}
+      />
     </div>;
 }

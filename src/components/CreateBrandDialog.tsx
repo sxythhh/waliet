@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { BrandOnboardingDialog } from "./BrandOnboardingDialog";
+import { generateSlug } from "@/lib/slug";
 
 const BRAND_COLORS = [
   "#8B5CF6", "#3B82F6", "#0EA5E9", "#14B8A6", 
@@ -107,9 +108,6 @@ export function CreateBrandDialog({
       }
     } = supabase.storage.from("campaign-banners").getPublicUrl(filePath);
     return publicUrl;
-  };
-  const generateSlug = (name: string): string => {
-    return name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   };
   const onSubmit = async (values: BrandFormValues) => {
     setIsSubmitting(true);

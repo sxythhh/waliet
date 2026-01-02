@@ -710,7 +710,7 @@ export function BlueprintEditor({
                   <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add attention-grabbing hooks for creators to use</p>
                 </div> : blueprint.hooks.map((hook, index) => <div key={`hook-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
                     <Input value={hook} onChange={e => updateHook(index, e.target.value)} placeholder={`Hook #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
-                    <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                    <Button variant="ghost" size="icon" onClick={() => removeHook(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove hook">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
@@ -727,7 +727,7 @@ export function BlueprintEditor({
                   <p className="text-muted-foreground/60 text-sm font-inter tracking-[-0.3px]">Add requirements that creators must follow</p>
                 </div> : blueprint.talking_points.map((point, index) => <div key={`point-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
                     <Input value={point} onChange={e => updateTalkingPoint(index, e.target.value)} placeholder={`Requirement #${index + 1}`} className="flex-1 h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
-                    <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                    <Button variant="ghost" size="icon" onClick={() => removeTalkingPoint(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove requirement">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
@@ -747,7 +747,7 @@ export function BlueprintEditor({
                 <div className="space-y-2">
                   {blueprint.dos_and_donts.dos.map((item, index) => <div key={`do-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
                       <Input value={item} onChange={e => updateDo(index, e.target.value)} placeholder="Add a do..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-emerald-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
-                      <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                      <Button variant="ghost" size="icon" onClick={() => removeDo(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove do item">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>)}
@@ -764,7 +764,7 @@ export function BlueprintEditor({
                 <div className="space-y-2">
                   {blueprint.dos_and_donts.donts.map((item, index) => <div key={`dont-${index}-${blueprint.id}`} className="flex items-center gap-2 group">
                       <Input value={item} onChange={e => updateDont(index, e.target.value)} placeholder="Add a don't..." className="flex-1 h-9 rounded-lg bg-background/60 border-0 focus-visible:ring-1 focus-visible:ring-red-500/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
-                      <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                      <Button variant="ghost" size="icon" onClick={() => removeDont(index)} className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove don't item">
                         <X className="h-3 w-3" />
                       </Button>
                     </div>)}
@@ -795,7 +795,7 @@ export function BlueprintEditor({
                       </div>
                       <Input value={asset.notes} onChange={e => updateAsset(index, "notes", e.target.value)} placeholder="Description..." className="h-10 rounded-xl bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 focus-visible:bg-muted/40 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                    <Button variant="ghost" size="icon" onClick={() => removeAsset(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove asset">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>)}
@@ -849,7 +849,7 @@ export function BlueprintEditor({
                           <Input value={video.url} onChange={e => updateExampleVideo(index, "url", e.target.value)} placeholder="Video URL (TikTok, YouTube, Instagram...)" className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                           <Input value={video.description} onChange={e => updateExampleVideo(index, "description", e.target.value)} placeholder="Why this is a good example..." className="h-9 rounded-lg bg-background/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 font-inter tracking-[-0.3px] text-sm placeholder:text-muted-foreground/50 transition-colors" />
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all">
+                        <Button variant="ghost" size="icon" onClick={() => removeExampleVideo(index)} className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all" aria-label="Remove example video">
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -890,6 +890,7 @@ export function BlueprintEditor({
                       size="icon"
                       onClick={() => removeFAQ(index)}
                       className="absolute top-2 right-2 h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                      aria-label="Remove FAQ"
                     >
                       <X className="h-3.5 w-3.5" />
                     </Button>

@@ -7,6 +7,7 @@ import { Download, BarChart3, Users } from "lucide-react";
 import { PerformanceChart, MetricsData } from "./PerformanceChart";
 import { cn } from "@/lib/utils";
 import { TimeframeOption } from "@/components/dashboard/BrandCampaignDetailView";
+import { exportToCSV, generateCSVFilename } from "@/lib/csv";
 
 interface CreatorROI {
   oduserId: string;
@@ -271,7 +272,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
   };
 
   // CSV Export function
-  const exportToCSV = () => {
+  const handleExportCSV = () => {
     const headers = ['Creator', 'Videos', 'Total Views', 'Avg Views/Video', 'Total Paid', 'CPM'];
     const rows = creatorROI.map(c => [
       c.username,
@@ -281,17 +282,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
       c.totalPaid.toFixed(2),
       c.costPerView.toFixed(2)
     ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `creator-roi-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    link.click();
+    exportToCSV(headers, rows, generateCSVFilename('creator-roi'));
   };
 
 
@@ -357,7 +348,7 @@ export function BrandPerformanceDashboard({ brandId, timeframe = "all_time" }: B
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold tracking-[-0.5px]">Creator ROI</h3>
           </div>
-          <Button variant="ghost" size="sm" onClick={exportToCSV} className="text-xs">
+          <Button variant="ghost" size="sm" onClick={handleExportCSV} className="text-xs">
             <Download className="h-3.5 w-3.5 mr-1.5" />
             Export CSV
           </Button>

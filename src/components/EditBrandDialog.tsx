@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Pencil, Upload, X, Globe, Link2, FolderOpen } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { sanitizeSlugInput } from "@/lib/slug";
 
 const brandSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
@@ -233,8 +234,7 @@ export function EditBrandDialog({
                           className="bg-muted/50 dark:bg-[#111] border-border dark:border-[#1a1a1a] h-9 text-sm"
                           {...field}
                           onChange={e => {
-                            const slug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                            field.onChange(slug);
+                            field.onChange(sanitizeSlugInput(e.target.value));
                           }}
                         />
                       </div>
