@@ -144,6 +144,36 @@ const commands = [
       },
     ],
   },
+  {
+    name: "setup-tickets",
+    description: "Configure the Discord ticket system (Admin only)",
+    options: [
+      {
+        name: "panel_channel",
+        description: "Channel where the ticket panel will be posted",
+        type: OptionType.CHANNEL,
+        required: true,
+      },
+      {
+        name: "category",
+        description: "Category where ticket channels will be created",
+        type: OptionType.CHANNEL,
+        required: false,
+      },
+      {
+        name: "support_role",
+        description: "Role that can view and respond to tickets",
+        type: OptionType.ROLE,
+        required: false,
+      },
+      {
+        name: "welcome_message",
+        description: "Message shown when a ticket is created",
+        type: OptionType.STRING,
+        required: false,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {
