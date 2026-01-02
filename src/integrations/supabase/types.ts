@@ -501,6 +501,7 @@ export type Database = {
           created_at: string
           dos_and_donts: Json | null
           example_videos: Json | null
+          faqs: Json | null
           hashtags: string[] | null
           hooks: Json | null
           id: string
@@ -523,6 +524,7 @@ export type Database = {
           created_at?: string
           dos_and_donts?: Json | null
           example_videos?: Json | null
+          faqs?: Json | null
           hashtags?: string[] | null
           hooks?: Json | null
           id?: string
@@ -545,6 +547,7 @@ export type Database = {
           created_at?: string
           dos_and_donts?: Json | null
           example_videos?: Json | null
+          faqs?: Json | null
           hashtags?: string[] | null
           hooks?: Json | null
           id?: string
@@ -6268,6 +6271,51 @@ export type Database = {
             columns: ["to_tier_id"]
             isOneToOne: false
             referencedRelation: "creator_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trust_score_history: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          reason: string | null
+          score: number
+          score_change: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          score: number
+          score_change?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          score?: number
+          score_change?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trust_score_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trust_score_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
