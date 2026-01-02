@@ -4274,6 +4274,147 @@ export type Database = {
           },
         ]
       }
+      discord_ticket_config: {
+        Row: {
+          auto_close_hours: number | null
+          brand_id: string
+          category_id: string | null
+          created_at: string
+          guild_id: string
+          id: string
+          is_active: boolean | null
+          support_role_id: string | null
+          updated_at: string
+          welcome_message: string | null
+        }
+        Insert: {
+          auto_close_hours?: number | null
+          brand_id: string
+          category_id?: string | null
+          created_at?: string
+          guild_id: string
+          id?: string
+          is_active?: boolean | null
+          support_role_id?: string | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Update: {
+          auto_close_hours?: number | null
+          brand_id?: string
+          category_id?: string | null
+          created_at?: string
+          guild_id?: string
+          id?: string
+          is_active?: boolean | null
+          support_role_id?: string | null
+          updated_at?: string
+          welcome_message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_ticket_config_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_tickets: {
+        Row: {
+          assigned_to: string | null
+          brand_id: string
+          channel_id: string | null
+          closed_at: string | null
+          closed_by: string | null
+          config_id: string | null
+          created_at: string
+          discord_user_id: string
+          discord_username: string | null
+          id: string
+          priority: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          brand_id: string
+          channel_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          config_id?: string | null
+          created_at?: string
+          discord_user_id: string
+          discord_username?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          brand_id?: string
+          channel_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          config_id?: string | null
+          created_at?: string
+          discord_user_id?: string
+          discord_username?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tickets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tickets_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tickets_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_tickets_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "discord_ticket_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discord_tokens: {
         Row: {
           access_token_encrypted: string
@@ -5067,6 +5208,67 @@ export type Database = {
           {
             foreignKeyName: "payout_requests_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pitches: {
+        Row: {
+          brand_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          message: string
+          responded_at: string | null
+          response: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          message: string
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          message?: string
+          responded_at?: string | null
+          response?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pitches_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitches_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pitches_creator_id_fkey"
+            columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
