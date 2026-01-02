@@ -4277,40 +4277,90 @@ export type Database = {
           },
         ]
       }
+      discord_ticket_channels: {
+        Row: {
+          channel_id: string
+          channel_name: string | null
+          closed_at: string | null
+          created_at: string | null
+          discord_user_id: string
+          guild_id: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          channel_id: string
+          channel_name?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          discord_user_id: string
+          guild_id: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          channel_id?: string
+          channel_name?: string | null
+          closed_at?: string | null
+          created_at?: string | null
+          discord_user_id?: string
+          guild_id?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_ticket_channels_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: true
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discord_ticket_config: {
         Row: {
           auto_close_hours: number | null
           brand_id: string
-          category_id: string | null
           created_at: string
           guild_id: string
           id: string
           is_active: boolean | null
+          log_channel_id: string | null
+          panel_channel_id: string | null
+          panel_message_id: string | null
           support_role_id: string | null
+          ticket_category_id: string | null
           updated_at: string
           welcome_message: string | null
         }
         Insert: {
           auto_close_hours?: number | null
           brand_id: string
-          category_id?: string | null
           created_at?: string
           guild_id: string
           id?: string
           is_active?: boolean | null
+          log_channel_id?: string | null
+          panel_channel_id?: string | null
+          panel_message_id?: string | null
           support_role_id?: string | null
+          ticket_category_id?: string | null
           updated_at?: string
           welcome_message?: string | null
         }
         Update: {
           auto_close_hours?: number | null
           brand_id?: string
-          category_id?: string | null
           created_at?: string
           guild_id?: string
           id?: string
           is_active?: boolean | null
+          log_channel_id?: string | null
+          panel_channel_id?: string | null
+          panel_message_id?: string | null
           support_role_id?: string | null
+          ticket_category_id?: string | null
           updated_at?: string
           welcome_message?: string | null
         }
@@ -4320,6 +4370,51 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discord_ticket_messages: {
+        Row: {
+          channel_id: string
+          discord_message_id: string
+          id: string
+          source: string
+          synced_at: string | null
+          ticket_id: string
+          ticket_message_id: string | null
+        }
+        Insert: {
+          channel_id: string
+          discord_message_id: string
+          id?: string
+          source: string
+          synced_at?: string | null
+          ticket_id: string
+          ticket_message_id?: string | null
+        }
+        Update: {
+          channel_id?: string
+          discord_message_id?: string
+          id?: string
+          source?: string
+          synced_at?: string | null
+          ticket_id?: string
+          ticket_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_ticket_messages_ticket_message_id_fkey"
+            columns: ["ticket_message_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -6326,6 +6421,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          discord_synced: boolean | null
           id: string
           is_internal: boolean
           sender_id: string
@@ -6335,6 +6431,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          discord_synced?: boolean | null
           id?: string
           is_internal?: boolean
           sender_id: string
@@ -6344,6 +6441,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          discord_synced?: boolean | null
           id?: string
           is_internal?: boolean
           sender_id?: string
