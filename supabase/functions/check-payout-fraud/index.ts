@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         // Collect unique flags from bot scoring
         botScoringFlags = [...new Set(
           (botResult.scores || []).flatMap((s: any) => s.flags || [])
-        )];
+        )] as string[];
 
         console.log('Bot scoring completed', { avgBotScore, flagCount: botScoringFlags.length });
       }
