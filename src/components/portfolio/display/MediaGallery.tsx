@@ -9,13 +9,17 @@ interface MediaGalleryProps {
   showcaseItems: ShowcaseItem[];
 }
 
+type VideoItem = FeaturedVideo & { mediaType: "video" };
+type ShowcaseMediaItem = ShowcaseItem & { mediaType: "showcase" };
+type MediaItem = VideoItem | ShowcaseMediaItem;
+
 export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const allMedia = [
-    ...featuredVideos.map((v) => ({ type: "video" as const, ...v })),
-    ...showcaseItems.map((i) => ({ type: "showcase" as const, ...i })),
+  const allMedia: MediaItem[] = [
+    ...featuredVideos.map((v): VideoItem => ({ ...v, mediaType: "video" })),
+    ...showcaseItems.map((i): ShowcaseMediaItem => ({ ...i, mediaType: "showcase" })),
   ];
 
   const openLightbox = (index: number) => {
@@ -38,6 +42,15 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
     return views.toString();
   };
 
+  const isVideoItem = (item: MediaItem): item is VideoItem => item.mediaType === "video";
+  const isShowcaseItem = (item: MediaItem): item is ShowcaseMediaItem => item.mediaType === "showcase";
+
+  const getItemImageSrc = (item: MediaItem): string => {
+    if (item.thumbnailUrl) return item.thumbnailUrl;
+    if (isShowcaseItem(item)) return item.url;
+    return "";
+  };
+
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -47,9 +60,9 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
             onClick={() => openLightbox(index)}
             className="group relative aspect-video bg-muted rounded-lg overflow-hidden"
           >
-            {item.thumbnailUrl || (item.type === "showcase" && item.type === "image") ? (
+            {item.thumbnailUrl || (isShowcaseItem(item) && item.type === "image") ? (
               <img
-                src={item.thumbnailUrl || ("url" in item ? item.url : "")}
+                src={getItemImageSrc(item)}
                 alt={item.title}
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
@@ -62,7 +75,7 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
             {/* Overlay */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                {item.type === "video" ? (
+                {isVideoItem(item) ? (
                   <Play className="h-10 w-10 text-white" />
                 ) : (
                   <ExternalLink className="h-8 w-8 text-white" />
@@ -71,7 +84,7 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
             </div>
 
             {/* Video views badge */}
-            {item.type === "video" && item.views && (
+            {isVideoItem(item) && item.views && (
               <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
                 <Eye className="h-3 w-3" />
                 {formatViews(item.views)}
@@ -113,8 +126,8 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
 
             {/* Content */}
             <div className="aspect-video flex items-center justify-center">
-              {allMedia[lightboxIndex]?.type === "video" ? (
-                allMedia[lightboxIndex].externalUrl ? (
+              {allMedia[lightboxIndex] && isVideoItem(allMedia[lightboxIndex]) ? (
+                (allMedia[lightboxIndex] as VideoItem).externalUrl ? (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-8">
                     {allMedia[lightboxIndex].thumbnailUrl && (
                       <img
@@ -124,11 +137,11 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
                       />
                     )}
                     <Button
-                      onClick={() => window.open(allMedia[lightboxIndex].externalUrl, "_blank")}
+                      onClick={() => window.open((allMedia[lightboxIndex] as VideoItem).externalUrl, "_blank")}
                       className="gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Watch on {allMedia[lightboxIndex].platform || "External Site"}
+                      Watch on {(allMedia[lightboxIndex] as VideoItem).platform || "External Site"}
                     </Button>
                   </div>
                 ) : (
@@ -138,7 +151,7 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
                 )
               ) : (
                 <img
-                  src={allMedia[lightboxIndex]?.thumbnailUrl || ("url" in allMedia[lightboxIndex] ? allMedia[lightboxIndex].url : "")}
+                  src={getItemImageSrc(allMedia[lightboxIndex])}
                   alt={allMedia[lightboxIndex]?.title}
                   className="max-w-full max-h-full object-contain"
                 />
@@ -151,10 +164,10 @@ export function MediaGallery({ featuredVideos, showcaseItems }: MediaGalleryProp
               {allMedia[lightboxIndex]?.description && (
                 <p className="text-sm text-white/70 mt-1">{allMedia[lightboxIndex].description}</p>
               )}
-              {allMedia[lightboxIndex]?.type === "video" && allMedia[lightboxIndex]?.views && (
+              {allMedia[lightboxIndex] && isVideoItem(allMedia[lightboxIndex]) && (allMedia[lightboxIndex] as VideoItem).views && (
                 <p className="text-sm text-white/50 mt-1 flex items-center gap-1">
                   <Eye className="h-3.5 w-3.5" />
-                  {formatViews(allMedia[lightboxIndex].views)} views
+                  {formatViews((allMedia[lightboxIndex] as VideoItem).views)}
                 </p>
               )}
             </div>

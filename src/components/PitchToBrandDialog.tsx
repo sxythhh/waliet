@@ -116,7 +116,7 @@ export function PitchToBrandDialog({
         proposed_rate: proposedRate ? parseFloat(proposedRate) : null,
       };
 
-      const { error } = await supabase.from("pitches").insert(pitchData);
+      const { error } = await supabase.from("pitches").insert(pitchData as any);
       if (error) throw error;
     },
     onSuccess: () => {

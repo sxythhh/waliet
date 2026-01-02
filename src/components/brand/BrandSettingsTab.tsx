@@ -136,8 +136,8 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
       ]);
 
       // Parse brand settings from JSONB column
-      if (brandResult.data?.settings) {
-        setSettings({ ...DEFAULT_SETTINGS, ...brandResult.data.settings });
+      if (brandResult.data?.settings && typeof brandResult.data.settings === 'object' && !Array.isArray(brandResult.data.settings)) {
+        setSettings({ ...DEFAULT_SETTINGS, ...(brandResult.data.settings as unknown as BrandSettings) });
       }
 
       setMilestones((milestonesResult.data || []) as MilestoneConfig[]);
@@ -163,7 +163,7 @@ export function BrandSettingsTab({ brandId }: BrandSettingsTabProps) {
     try {
       const { error } = await supabase
         .from("brands")
-        .update({ settings })
+        .update({ settings: settings as any })
         .eq("id", brandId);
       if (error) throw error;
       toast.success("Settings saved");

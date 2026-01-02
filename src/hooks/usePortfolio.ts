@@ -20,7 +20,7 @@ export function useMyPortfolio() {
         .maybeSingle();
 
       if (error) throw error;
-      return data as CreatorPortfolio | null;
+      return data as unknown as CreatorPortfolio | null;
     },
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000,
@@ -41,7 +41,7 @@ export function usePortfolio(userId: string | undefined) {
         .maybeSingle();
 
       if (error) throw error;
-      return data as CreatorPortfolio | null;
+      return data as unknown as CreatorPortfolio | null;
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
@@ -61,7 +61,7 @@ export function useUpsertPortfolio() {
       const { data, error } = await supabase
         .from("creator_portfolios")
         .upsert({
-          ...portfolio,
+          ...portfolio as any,
           user_id: user.id,
         }, {
           onConflict: "user_id",
@@ -70,7 +70,7 @@ export function useUpsertPortfolio() {
         .single();
 
       if (error) throw error;
-      return data as CreatorPortfolio;
+      return data as unknown as CreatorPortfolio;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["portfolio"] });
@@ -116,7 +116,7 @@ export function useUpdatePortfolioField() {
           .single();
 
         if (error) throw error;
-        return data as CreatorPortfolio;
+        return data as unknown as CreatorPortfolio;
       } else {
         // Create new with field
         const { data, error } = await supabase
@@ -129,7 +129,7 @@ export function useUpdatePortfolioField() {
           .single();
 
         if (error) throw error;
-        return data as CreatorPortfolio;
+        return data as unknown as CreatorPortfolio;
       }
     },
     onSuccess: () => {

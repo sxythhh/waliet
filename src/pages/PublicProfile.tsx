@@ -199,7 +199,7 @@ export default function PublicProfile() {
       .eq("is_public", true)
       .maybeSingle();
     if (portfolioData) {
-      setCreatorPortfolio(portfolioData as CreatorPortfolio);
+      setCreatorPortfolio(portfolioData as unknown as CreatorPortfolio);
     }
 
     // Fetch social accounts (exclude hidden ones from public profile)
