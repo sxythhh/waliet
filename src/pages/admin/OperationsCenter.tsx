@@ -37,6 +37,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import { LoadingState } from "@/components/ui/loading-bar";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { formatDistanceToNow, format } from "date-fns";
 import { toast } from "sonner";
@@ -216,8 +217,8 @@ function PayoutQueuePanel() {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="py-8">
+            <LoadingState size="sm" />
           </div>
         ) : payouts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm">
@@ -320,8 +321,8 @@ function TransactionStreamPanel() {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="py-8">
+            <LoadingState size="sm" />
           </div>
         ) : transactions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm">
@@ -465,8 +466,8 @@ function AlertsConsolePanel() {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="py-8">
+            <LoadingState size="sm" />
           </div>
         ) : alerts.length === 0 ? (
           <div className="text-center py-8">
@@ -638,8 +639,8 @@ function IncidentBoardPanel() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="py-8">
+              <LoadingState size="sm" />
             </div>
           ) : incidents.length === 0 ? (
             <div className="text-center py-8">

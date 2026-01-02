@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { ManageTrainingDialog } from "@/components/ManageTrainingDialog";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
@@ -599,63 +599,10 @@ export default function Resources() {
     <AdminPermissionGuard resource="resources">
     <div className="p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground font-inter tracking-[-0.5px]">Resources</h1>
-            <p className="text-sm text-muted-foreground mt-1 font-inter tracking-[-0.3px]">
-              Manage templates, blog posts, and training courses
-            </p>
-          </div>
-          <Button
-            onClick={handleCreateResource}
-            className="gap-2 font-inter font-medium text-sm tracking-[-0.3px]"
-          >
-            <Plus className="h-4 w-4" />
-            {getCreateButtonLabel()}
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-violet-500/10 to-violet-500/5 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{templates.length}</p>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{activeTemplates} active templates</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <Newspaper className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{posts.length}</p>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{publishedPosts} published posts</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/50 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                <GraduationCap className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">{courses.length}</p>
-                <p className="text-xs text-muted-foreground tracking-[-0.3px]">{totalModules} total modules</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ResourceType)} className="w-full">
-          <TabsList className="w-fit bg-muted/50 rounded-lg p-1">
+          <div className="flex items-center justify-between">
+            <TabsList className="w-fit bg-muted/50 rounded-lg p-1">
             <TabsTrigger value="templates" className="rounded-md px-4 gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm font-inter tracking-[-0.3px]">
               <FileText className="h-4 w-4" />
               Templates
@@ -672,13 +619,19 @@ export default function Resources() {
               <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-muted">{courses.length}</span>
             </TabsTrigger>
           </TabsList>
+          <Button
+            onClick={handleCreateResource}
+            className="gap-2 font-inter font-medium text-sm tracking-[-0.3px]"
+          >
+            <Plus className="h-4 w-4" />
+            {getCreateButtonLabel()}
+          </Button>
+          </div>
 
           {/* Templates Tab */}
           <TabsContent value="templates" className="mt-6">
             {templatesLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <PageLoading text="Loading templates..." />
             ) : templates.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 flex items-center justify-center mb-4">
@@ -789,9 +742,7 @@ export default function Resources() {
           {/* Blog Posts Tab */}
           <TabsContent value="blog" className="mt-6">
             {postsLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <PageLoading text="Loading posts..." />
             ) : posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center mb-4">
@@ -879,9 +830,7 @@ export default function Resources() {
           {/* Courses Tab */}
           <TabsContent value="courses" className="mt-6">
             {coursesLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <PageLoading text="Loading courses..." />
             ) : courses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center mb-4">

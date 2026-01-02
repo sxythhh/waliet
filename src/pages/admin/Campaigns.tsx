@@ -402,44 +402,7 @@ export default function Campaigns() {
 
   return (
     <AdminPermissionGuard resource="brands">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Campaigns</h1>
-            <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] mt-1">
-              Manage campaigns and boosts across all brands
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={fetchCampaigns}
-            className="h-9 text-sm font-inter tracking-[-0.5px]"
-          >
-            Refresh
-          </Button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-5 gap-4">
-          {[
-            { label: "Total", value: stats.total },
-            { label: "Active", value: stats.active },
-            { label: "Paused", value: stats.paused },
-            { label: "Draft", value: stats.draft },
-            { label: "Pending Review", value: stats.pendingReview },
-          ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-xl bg-muted/30 border border-border/50">
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">
-                {stat.label}
-              </p>
-              <p className="text-2xl font-semibold font-inter tracking-[-0.5px]">
-                {stat.value}
-              </p>
-            </div>
-          ))}
-        </div>
-
+      <div className="p-6 space-y-6">
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <Input
@@ -508,6 +471,13 @@ export default function Campaigns() {
               </div>
             </>
           )}
+
+          <button
+            onClick={fetchCampaigns}
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+          >
+            Refresh
+          </button>
         </div>
 
         {/* Campaign List */}
@@ -736,13 +706,13 @@ export default function Campaigns() {
                     )}
                   </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => {
                       setNewBudget(selectedCampaign.budget?.toString() || "");
                       setBudgetDialogOpen(true);
                     }}
-                    className="h-8 text-xs font-inter tracking-[-0.5px]"
+                    className="h-8 text-xs font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                   >
                     Adjust
                   </Button>
@@ -863,36 +833,36 @@ export default function Campaigns() {
                     <div className="flex gap-2">
                       {selectedCampaign.status !== "active" && (
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
                             setNewStatus("active");
                             setStatusDialogOpen(true);
                           }}
-                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                         >
                           Activate
                         </Button>
                       )}
                       {selectedCampaign.status !== "paused" && selectedCampaign.status !== "draft" && (
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
                             setNewStatus("paused");
                             setStatusDialogOpen(true);
                           }}
-                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                         >
                           Pause
                         </Button>
                       )}
                       {selectedCampaign.status !== "ended" && (
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
                             setNewStatus("ended");
                             setStatusDialogOpen(true);
                           }}
-                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                         >
                           End
                         </Button>
@@ -912,22 +882,22 @@ export default function Campaigns() {
                           Approve
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
                             setReviewAction("changes");
                             setReviewDialogOpen(true);
                           }}
-                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                         >
                           Request Changes
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => {
                             setReviewAction("reject");
                             setReviewDialogOpen(true);
                           }}
-                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] text-muted-foreground"
+                          className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted text-muted-foreground"
                         >
                           Reject
                         </Button>
@@ -973,9 +943,9 @@ export default function Campaigns() {
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setBudgetDialogOpen(false)}
-              className="font-inter tracking-[-0.5px]"
+              className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
             >
               Cancel
             </Button>
@@ -1020,9 +990,9 @@ export default function Campaigns() {
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setReviewDialogOpen(false)}
-              className="font-inter tracking-[-0.5px]"
+              className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
             >
               Cancel
             </Button>
@@ -1055,9 +1025,9 @@ export default function Campaigns() {
           </p>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setStatusDialogOpen(false)}
-              className="font-inter tracking-[-0.5px]"
+              className="font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
             >
               Cancel
             </Button>

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { subDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, DollarSign, Users, Briefcase, CreditCard } from "lucide-react";
+import { DollarSign, Users, Briefcase, CreditCard } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { DateRangePicker } from "@/components/admin/analytics/DateRangePicker";
 import { RevenueForecast } from "@/components/admin/analytics/RevenueForecast";
@@ -77,9 +78,7 @@ export default function AdminAnalytics() {
               Comprehensive insights and performance metrics
             </p>
           </div>
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <PageLoading text="Loading analytics..." />
         </div>
       </AdminPermissionGuard>
     );

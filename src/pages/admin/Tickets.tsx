@@ -8,6 +8,13 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Bug, Lightbulb, MessageSquare, CheckCircle, Clock, XCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { PageLoading } from "@/components/ui/loading-bar";
 import {
   SupportTicket,
   TicketMessage,
@@ -28,6 +35,21 @@ import {
   TicketActionBar,
   TicketShortcutsHelp,
 } from "@/components/admin/tickets";
+
+// Feedback types
+interface FeedbackSubmission {
+  id: string;
+  user_id: string;
+  type: string;
+  message: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    username: string;
+    email: string;
+  };
+}
 
 export default function Tickets() {
   const { user } = useAuth();
@@ -70,6 +92,13 @@ export default function Tickets() {
   const [showUserContext, setShowUserContext] = useState(true);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [shortcutsHelpOpen, setShortcutsHelpOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"tickets" | "feedback">("tickets");
+
+  // Feedback state
+  const [feedbackSubmissions, setFeedbackSubmissions] = useState<FeedbackSubmission[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackFilter, setFeedbackFilter] = useState<string>("all");
+  const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
   // Stats
   const stats: TicketStats = useMemo(() => ({
@@ -176,6 +205,122 @@ export default function Tickets() {
     }
   }, []);
 
+  // Fetch feedback submissions
+  const fetchFeedback = useCallback(async () => {
+    setFeedbackLoading(true);
+    try {
+      let query = supabase
+        .from("feedback_submissions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (feedbackFilter !== "all") {
+        if (feedbackFilter === "bug" || feedbackFilter === "feature") {
+          query = query.eq("type", feedbackFilter);
+        } else {
+          query = query.eq("status", feedbackFilter);
+        }
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (data) {
+        const userIds = [...new Set(data.map((s) => s.user_id))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, username, email")
+          .in("id", userIds);
+
+        const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+        const enrichedData = data.map((submission) => ({
+          ...submission,
+          user: profileMap.get(submission.user_id),
+        }));
+
+        setFeedbackSubmissions(enrichedData);
+      }
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+    } finally {
+      setFeedbackLoading(false);
+    }
+  }, [feedbackFilter]);
+
+  // Update feedback status
+  const updateFeedbackStatus = useCallback(async (id: string, newStatus: string) => {
+    setUpdatingFeedbackId(id);
+    try {
+      const { error } = await supabase
+        .from("feedback_submissions")
+        .update({ status: newStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setFeedbackSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s))
+      );
+      toast({ title: "Status updated" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Failed to update status" });
+    } finally {
+      setUpdatingFeedbackId(null);
+    }
+  }, [toast]);
+
+  // Feedback helpers
+  const getFeedbackTypeIcon = (type: string) => {
+    switch (type) {
+      case "bug":
+        return <Bug className="h-4 w-4 text-red-500" />;
+      case "feature":
+        return <Lightbulb className="h-4 w-4 text-amber-500" />;
+      default:
+        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+    }
+  };
+
+  const getFeedbackStatusBadge = (status: string) => {
+    switch (status) {
+      case "resolved":
+        return (
+          <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-xs">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Resolved
+          </Badge>
+        );
+      case "in_progress":
+        return (
+          <Badge className="bg-blue-500/10 text-blue-500 border-0 text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            In Progress
+          </Badge>
+        );
+      case "rejected":
+        return (
+          <Badge className="bg-red-500/10 text-red-500 border-0 text-xs">
+            <XCircle className="h-3 w-3 mr-1" />
+            Rejected
+          </Badge>
+        );
+      default:
+        return (
+          <Badge className="bg-amber-500/10 text-amber-500 border-0 text-xs">
+            <Clock className="h-3 w-3 mr-1" />
+            Pending
+          </Badge>
+        );
+    }
+  };
+
+  const feedbackStats = useMemo(() => ({
+    total: feedbackSubmissions.length,
+    bugs: feedbackSubmissions.filter((s) => s.type === "bug").length,
+    features: feedbackSubmissions.filter((s) => s.type === "feature").length,
+    pending: feedbackSubmissions.filter((s) => s.status === "pending").length,
+  }), [feedbackSubmissions]);
+
   // Fetch messages
   const fetchMessages = useCallback(async (ticketId: string) => {
     setLoadingMessages(true);
@@ -272,6 +417,13 @@ export default function Tickets() {
     fetchTickets();
     fetchAdminUsers();
   }, [fetchTickets, fetchAdminUsers]);
+
+  // Fetch feedback when tab changes or filter changes
+  useEffect(() => {
+    if (activeTab === "feedback") {
+      fetchFeedback();
+    }
+  }, [activeTab, fetchFeedback]);
 
   // Fetch messages and user context when ticket selected
   useEffect(() => {
@@ -486,97 +638,276 @@ export default function Tickets() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header - compact layout */}
-      <div className="px-6 py-3 space-y-2 shrink-0 border-b border-border/50">
-        {/* Title + Stats in one row */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold font-inter tracking-[-0.5px]">Tickets</h1>
-            <TicketStatsCards
-              stats={stats}
-              activeStatus={filters.status}
-              onStatusClick={(status) => setFilters((prev) => ({ ...prev, status: status === prev.status ? "all" : status }))}
-            />
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "tickets" | "feedback")} className="h-full flex flex-col">
+        {/* Header */}
+        <div className="px-6 py-3 shrink-0 border-b border-border/50">
+          <div className="flex items-center justify-between gap-4">
+            <TabsList className="bg-muted/30 p-1 h-auto">
+              <TabsTrigger value="tickets" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+                Tickets
+                {stats.open > 0 && (
+                  <span className="ml-2 bg-blue-500/20 text-blue-400 text-xs px-1.5 py-0.5 rounded-full">
+                    {stats.open}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="feedback" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+                Feedback
+                {feedbackStats.pending > 0 && (
+                  <span className="ml-2 bg-amber-500/20 text-amber-400 text-xs px-1.5 py-0.5 rounded-full">
+                    {feedbackStats.pending}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            <span className="text-xs text-muted-foreground hidden md:inline">
+              <kbd className="bg-muted px-1 py-0.5 rounded text-[10px]">?</kbd> shortcuts
+            </span>
           </div>
-          <span className="text-xs text-muted-foreground hidden md:inline">
-            <kbd className="bg-muted px-1 py-0.5 rounded text-[10px]">?</kbd> shortcuts
-          </span>
         </div>
 
-        {/* Filters */}
-        <TicketFilters
-          ref={searchInputRef}
-          filters={filters}
-          onFiltersChange={(updates) => setFilters((prev) => ({ ...prev, ...updates }))}
-          onRefresh={fetchTickets}
-          adminUsers={adminUsers}
-          loading={loading}
-        />
-      </div>
-
-      {/* Three-column layout */}
-      <div className="flex-1 overflow-hidden px-4 pb-4 pt-2">
-        <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border border-border/50 bg-card/30">
-          {/* Left: Ticket List */}
-          <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
-            <TicketListPanel
-              tickets={filteredTickets}
-              selectedTicketId={selectedTicket?.id || null}
-              selectedIds={selectedIds}
-              onSelectTicket={setSelectedTicket}
-              onCheckChange={handleCheckChange}
-              showCheckboxes={selectedIds.size > 0}
-              loading={loading}
-              emptyMessage={filters.search ? "No tickets match your search" : "No tickets found"}
-            />
-          </ResizablePanel>
-
-          <ResizableHandle withHandle />
-
-          {/* Center: Ticket Detail */}
-          <ResizablePanel defaultSize={showUserContext ? 50 : 75} minSize={40}>
-            <TicketDetailPanel
-              ref={replyInputRef}
-              ticket={selectedTicket}
-              messages={messages}
+        {/* Tickets Tab */}
+        <TabsContent value="tickets" className="flex-1 flex flex-col overflow-hidden mt-0 data-[state=inactive]:hidden">
+          {/* Tickets Header */}
+          <div className="px-6 py-3 space-y-2 shrink-0 border-b border-border/50">
+            <div className="flex items-center gap-4">
+              <TicketStatsCards
+                stats={stats}
+                activeStatus={filters.status}
+                onStatusClick={(status) => setFilters((prev) => ({ ...prev, status: status === prev.status ? "all" : status }))}
+              />
+            </div>
+            <TicketFilters
+              ref={searchInputRef}
+              filters={filters}
+              onFiltersChange={(updates) => setFilters((prev) => ({ ...prev, ...updates }))}
+              onRefresh={fetchTickets}
               adminUsers={adminUsers}
-              currentUserId={user?.id}
-              replyText={replyText}
-              onReplyChange={setReplyText}
-              isInternal={isInternal}
-              onInternalChange={setIsInternal}
-              onSendReply={handleSendReply}
-              onOpenTemplates={() => setTemplatesOpen(true)}
-              onStatusChange={updateTicketStatus}
-              onPriorityChange={updateTicketPriority}
-              onAssigneeChange={assignTicket}
-              onResolve={handleResolve}
-              onClose={handleClose}
-              loadingMessages={loadingMessages}
-              sendingReply={sending}
-              updatingTicket={updatingTicket}
+              loading={loading}
             />
-          </ResizablePanel>
+          </div>
 
-          {/* Right: User Context */}
-          {showUserContext && (
-            <>
-              <ResizableHandle withHandle />
+          {/* Three-column layout */}
+          <div className="flex-1 overflow-hidden px-4 pb-4 pt-2">
+            <ResizablePanelGroup direction="horizontal" className="h-full rounded-lg border border-border/50 bg-card/30">
+              {/* Left: Ticket List */}
               <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
-                <TicketUserContext
-                  userContext={userContext}
-                  loading={loadingUserContext}
-                  onClose={() => setShowUserContext(false)}
-                  onViewTicket={(ticketId) => {
-                    const ticket = tickets.find((t) => t.id === ticketId);
-                    if (ticket) setSelectedTicket(ticket);
-                  }}
+                <TicketListPanel
+                  tickets={filteredTickets}
+                  selectedTicketId={selectedTicket?.id || null}
+                  selectedIds={selectedIds}
+                  onSelectTicket={setSelectedTicket}
+                  onCheckChange={handleCheckChange}
+                  showCheckboxes={selectedIds.size > 0}
+                  loading={loading}
+                  emptyMessage={filters.search ? "No tickets match your search" : "No tickets found"}
                 />
               </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
-      </div>
+
+              <ResizableHandle withHandle />
+
+              {/* Center: Ticket Detail */}
+              <ResizablePanel defaultSize={showUserContext ? 50 : 75} minSize={40}>
+                <TicketDetailPanel
+                  ref={replyInputRef}
+                  ticket={selectedTicket}
+                  messages={messages}
+                  adminUsers={adminUsers}
+                  currentUserId={user?.id}
+                  replyText={replyText}
+                  onReplyChange={setReplyText}
+                  isInternal={isInternal}
+                  onInternalChange={setIsInternal}
+                  onSendReply={handleSendReply}
+                  onOpenTemplates={() => setTemplatesOpen(true)}
+                  onStatusChange={updateTicketStatus}
+                  onPriorityChange={updateTicketPriority}
+                  onAssigneeChange={assignTicket}
+                  onResolve={handleResolve}
+                  onClose={handleClose}
+                  loadingMessages={loadingMessages}
+                  sendingReply={sending}
+                  updatingTicket={updatingTicket}
+                />
+              </ResizablePanel>
+
+              {/* Right: User Context */}
+              {showUserContext && (
+                <>
+                  <ResizableHandle withHandle />
+                  <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+                    <TicketUserContext
+                      userContext={userContext}
+                      loading={loadingUserContext}
+                      onClose={() => setShowUserContext(false)}
+                      onViewTicket={(ticketId) => {
+                        const ticket = tickets.find((t) => t.id === ticketId);
+                        if (ticket) setSelectedTicket(ticket);
+                      }}
+                    />
+                  </ResizablePanel>
+                </>
+              )}
+            </ResizablePanelGroup>
+          </div>
+        </TabsContent>
+
+        {/* Feedback Tab */}
+        <TabsContent value="feedback" className="flex-1 overflow-auto mt-0 data-[state=inactive]:hidden">
+          <div className="p-6 space-y-4 max-w-5xl mx-auto">
+            {/* Feedback Header */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Total:</span>
+                  <span className="font-medium">{feedbackStats.total}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Bug className="h-4 w-4 text-red-500" />
+                  <span>{feedbackStats.bugs}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  <span>{feedbackStats.features}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  <span>{feedbackStats.pending} pending</span>
+                </div>
+              </div>
+              <Select value={feedbackFilter} onValueChange={setFeedbackFilter}>
+                <SelectTrigger className="w-[160px] h-9 bg-muted/30 border-0 text-sm">
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Submissions</SelectItem>
+                  <SelectItem value="bug">Bugs Only</SelectItem>
+                  <SelectItem value="feature">Features Only</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Feedback List */}
+            {feedbackLoading ? (
+              <PageLoading />
+            ) : feedbackSubmissions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <MessageSquare className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground font-['Inter'] tracking-[-0.3px]">No feedback submissions found</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {feedbackSubmissions.map((submission) => {
+                  const isUpdating = updatingFeedbackId === submission.id;
+                  return (
+                    <div key={submission.id} className="bg-muted/20 rounded-xl overflow-hidden">
+                      {/* Card Header */}
+                      <div className="px-4 py-3 border-b border-border/30 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {getFeedbackTypeIcon(submission.type)}
+                          <Badge variant="secondary" className="capitalize text-xs">
+                            {submission.type}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                            {format(new Date(submission.created_at), "MMM d, yyyy")}
+                          </span>
+                        </div>
+                        {submission.user && (
+                          <span className="text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                            {submission.user.username || submission.user.email}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="px-4 py-3">
+                        <p className="text-sm font-['Inter'] tracking-[-0.3px] whitespace-pre-wrap leading-relaxed">
+                          {submission.message}
+                        </p>
+                      </div>
+
+                      {/* Card Footer - Status Actions */}
+                      <div className="px-4 py-3 bg-muted/30 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          {isUpdating ? (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Updating...
+                            </div>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                  submission.status === "pending"
+                                    ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30"
+                                    : "hover:bg-muted text-muted-foreground"
+                                }`}
+                                onClick={() => updateFeedbackStatus(submission.id, "pending")}
+                                disabled={submission.status === "pending"}
+                              >
+                                <Clock className="h-3 w-3 mr-1" />
+                                Pending
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                  submission.status === "in_progress"
+                                    ? "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30"
+                                    : "hover:bg-muted text-muted-foreground"
+                                }`}
+                                onClick={() => updateFeedbackStatus(submission.id, "in_progress")}
+                                disabled={submission.status === "in_progress"}
+                              >
+                                <ArrowRight className="h-3 w-3 mr-1" />
+                                In Progress
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                  submission.status === "resolved"
+                                    ? "bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30"
+                                    : "hover:bg-muted text-muted-foreground"
+                                }`}
+                                onClick={() => updateFeedbackStatus(submission.id, "resolved")}
+                                disabled={submission.status === "resolved"}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Resolved
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-7 px-2.5 text-xs font-['Inter'] tracking-[-0.3px] ${
+                                  submission.status === "rejected"
+                                    ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                                    : "hover:bg-muted text-muted-foreground"
+                                }`}
+                                onClick={() => updateFeedbackStatus(submission.id, "rejected")}
+                                disabled={submission.status === "rejected"}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Rejected
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                        {getFeedbackStatusBadge(submission.status)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Bulk Action Bar */}
       <TicketActionBar

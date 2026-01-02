@@ -1,32 +1,30 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { DollarSign, Search, Users as UsersIcon, Wallet, Upload, FileDown, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, TrendingUp, Image as ImageIcon, BadgeCheck, AlertCircle, ArrowUpDown, ArrowUp, ArrowDown, UserPlus, Loader2 } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock, BadgeCheck, ArrowUpDown, ArrowUp, ArrowDown, Phone, X, Filter, RefreshCw } from "lucide-react";
+import { PageLoading, LoadingBar } from "@/components/ui/loading-bar";
+import { formatDistanceToNow, format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import { UserContextSheet } from "@/components/admin/UserContextSheet";
-import { AddReferralDialog } from "@/components/admin/AddReferralDialog";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
+import discordIcon from "@/assets/discord-white-icon.webp";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
-import { VideoThumbnail } from "@/components/admin/VideoThumbnail";
 import { DemographicReviewDialog } from "@/components/admin/DemographicReviewDialog";
 
+// Types
 interface User {
   id: string;
   username: string;
@@ -38,6 +36,8 @@ interface User {
   discord_avatar?: string | null;
   phone_number?: string | null;
   created_at?: string | null;
+  email?: string | null;
+  trust_score?: number | null;
   wallets: {
     balance: number;
     total_earned: number;
@@ -53,33 +53,12 @@ interface User {
     }>;
   }>;
 }
+
 interface Campaign {
   id: string;
   title: string;
 }
-interface SocialAccount {
-  id: string;
-  platform: string;
-  username: string;
-  follower_count: number;
-  is_verified: boolean;
-  account_link: string;
-  campaign_id: string | null;
-  campaigns?: {
-    id: string;
-    title: string;
-    brand_name: string;
-    brand_logo_url: string;
-    brands?: {
-      logo_url: string;
-    } | null;
-  };
-  demographic_submissions?: Array<{
-    status: string;
-    tier1_percentage: number;
-    submitted_at: string;
-  }>;
-}
+
 interface DemographicSubmission {
   id: string;
   tier1_percentage: number;
@@ -100,1258 +79,429 @@ interface DemographicSubmission {
     account_link?: string | null;
   };
 }
+
+interface FilterState {
+  search: string;
+  campaign: string;
+  signupTimeframe: string;
+  hasDiscord: boolean | null;
+  hasPhone: boolean | null;
+  hasSocialAccount: boolean | null;
+  hasApprovedDemographics: boolean | null;
+  hasBrandRole: boolean | null;
+  minEarnings: string;
+  minBalance: string;
+  platform: string;
+  sortField: "balance" | "totalEarned" | "created_at" | "trust_score" | null;
+  sortOrder: "asc" | "desc";
+}
+
+const USERS_PER_PAGE = 50;
+const BATCH_SIZE = 1000;
+
+// Platform icon helper
+const getPlatformIcon = (platform: string) => {
+  switch (platform?.toLowerCase()) {
+    case "tiktok":
+      return <img src={tiktokLogo} alt="TikTok" className="w-3.5 h-3.5" />;
+    case "instagram":
+      return <img src={instagramLogo} alt="Instagram" className="w-3.5 h-3.5" />;
+    case "youtube":
+      return <img src={youtubeLogo} alt="YouTube" className="w-3.5 h-3.5" />;
+    default:
+      return null;
+  }
+};
+
 export default function AdminUsers() {
+  // Core state
   const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [totalUserCount, setTotalUserCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
-  const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
-  
-  // Advanced filters
-  const [minEarnings, setMinEarnings] = useState<string>("");
-  const [earningsTimeframe, setEarningsTimeframe] = useState<string>("all");
-  const [hasDiscord, setHasDiscord] = useState<boolean | null>(null);
-  const [hasPhone, setHasPhone] = useState<boolean | null>(null);
-  const [hasSocialAccount, setHasSocialAccount] = useState<boolean | null>(null);
-  const [signupTimeframe, setSignupTimeframe] = useState<string>("all");
-  const [hasApprovedDemographics, setHasApprovedDemographics] = useState<boolean | null>(null);
-  const [hasBrandRole, setHasBrandRole] = useState<boolean | null>(null);
-  const [minBalance, setMinBalance] = useState<string>("");
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(50);
-  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    campaign: "all",
+    signupTimeframe: "all",
+    hasDiscord: null,
+    hasPhone: null,
+    hasSocialAccount: null,
+    hasApprovedDemographics: null,
+    hasBrandRole: null,
+    minEarnings: "",
+    minBalance: "",
+    platform: "all",
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // UI state
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userContextSheetOpen, setUserContextSheetOpen] = useState(false);
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
-  
-  const [userDetailsDialogOpen, setUserDetailsDialogOpen] = useState(false);
-  const [userContextSheetOpen, setUserContextSheetOpen] = useState(false);
-  const [userSocialAccounts, setUserSocialAccounts] = useState<SocialAccount[]>([]);
-  const [loadingSocialAccounts, setLoadingSocialAccounts] = useState(false);
-  const [userTransactions, setUserTransactions] = useState<any[]>([]);
-  const [loadingTransactions, setLoadingTransactions] = useState(false);
-  const [userPaymentMethods, setUserPaymentMethods] = useState<any[]>([]);
-  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
-  const [socialAccountsOpen, setSocialAccountsOpen] = useState(false);
-  const [transactionsOpen, setTransactionsOpen] = useState(false);
-  const [paymentMethodsOpen, setPaymentMethodsOpen] = useState(false);
-  const [csvImportDialogOpen, setCsvImportDialogOpen] = useState(false);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [importResults, setImportResults] = useState<any>(null);
-  const [isImporting, setIsImporting] = useState(false);
+  const [campaignPopoverOpen, setCampaignPopoverOpen] = useState(false);
 
   // Demographics state
   const [submissions, setSubmissions] = useState<DemographicSubmission[]>([]);
-  const [selectedSubmission, setSelectedSubmission] = useState<DemographicSubmission | null>(null);
-  const [score, setScore] = useState("");
-  const [adminNotes, setAdminNotes] = useState("");
-  const [reviewStatus, setReviewStatus] = useState<"approved" | "rejected">("approved");
-  const [updating, setUpdating] = useState(false);
-  const [inlineScores, setInlineScores] = useState<Record<string, string>>({});
-  const [processingSubmission, setProcessingSubmission] = useState<string | null>(null);
-  const [editScoreDialogOpen, setEditScoreDialogOpen] = useState(false);
-  const [editingSubmission, setEditingSubmission] = useState<DemographicSubmission | null>(null);
-  const [editScore, setEditScore] = useState("");
-  const [sortField, setSortField] = useState<"balance" | "totalEarned" | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [addToCampaignDialogOpen, setAddToCampaignDialogOpen] = useState(false);
-  const [selectedCampaignForAdd, setSelectedCampaignForAdd] = useState<string>("");
-  const [selectedSocialAccountForAdd, setSelectedSocialAccountForAdd] = useState<string>("");
-  const [addingToCampaign, setAddingToCampaign] = useState(false);
-  const [addReferralDialogOpen, setAddReferralDialogOpen] = useState(false);
-
-  // Demographics review dialog
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewingSubmission, setReviewingSubmission] = useState<DemographicSubmission | null>(null);
-  
-  // Demographics filters
-  const [demoSearchQuery, setDemoSearchQuery] = useState("");
-  const [demoPlatformFilter, setDemoPlatformFilter] = useState<string>("all");
-  const [demoSortOrder, setDemoSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [demoScoreFilter, setDemoScoreFilter] = useState<string>("all"); // all, high (70+), medium (40-69), low (<40)
-  
-  // Pagination for approved/rejected
-  const [approvedPage, setApprovedPage] = useState(1);
-  const [rejectedPage, setRejectedPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
-  
-  const {
-    toast
-  } = useToast();
-  useEffect(() => {
-    fetchData();
-    fetchSubmissions();
-  }, []);
-  
-  // Debounce search query
+  const [processingSubmission, setProcessingSubmission] = useState<string | null>(null);
+
+  const { toast: toastHook } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 500);
-    
+      setDebouncedSearch(filters.search);
+      setCurrentPage(1);
+    }, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
-  
+  }, [filters.search]);
+
+  // Initial data fetch
   useEffect(() => {
-    if (initialLoadComplete) {
-      filterUsers();
-      setCurrentPage(1); // Reset to first page when filters change
-    }
-  }, [debouncedSearchQuery, selectedCampaign, sortField, sortOrder, minEarnings, earningsTimeframe, hasDiscord, hasPhone, hasSocialAccount, signupTimeframe, hasApprovedDemographics, hasBrandRole, minBalance, initialLoadComplete]);
-  const fetchData = async () => {
-    setLoading(true);
+    fetchCampaigns();
+    fetchSubmissions();
+  }, []);
 
-    // Fetch total user count
-    const { count: totalCount } = await supabase
-      .from("profiles")
-      .select("*", { count: 'exact', head: true });
-    
-    if (totalCount) {
-      setTotalUserCount(totalCount);
-    }
+  // Fetch users when filters or page changes
+  useEffect(() => {
+    fetchUsers();
+  }, [debouncedSearch, filters.campaign, filters.signupTimeframe, filters.hasDiscord, filters.hasPhone,
+      filters.hasSocialAccount, filters.hasApprovedDemographics, filters.hasBrandRole,
+      filters.minEarnings, filters.minBalance, filters.platform, filters.sortField, filters.sortOrder, currentPage]);
 
-    // Fetch users with wallets and social accounts
-    const {
-      data: usersData,
-      error: usersError
-    } = await supabase.from("profiles").select(`
-        *,
-        wallets (
-          balance,
-          total_earned,
-          total_withdrawn
-        ),
-        social_accounts (
-          id,
-          platform,
-          username,
-          follower_count,
-          demographic_submissions (
-            status
-          )
-        )
-      `).order("created_at", {
-      ascending: false
-    }).limit(1000);
-    if (usersError) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch users"
-      });
-    } else {
-      setUsers(usersData as any || []);
-      setFilteredUsers(usersData as any || []);
-    }
-
-    // Fetch campaigns
-    const {
-      data: campaignsData,
-      error: campaignsError
-    } = await supabase.from("campaigns").select("id, title").order("title");
-    if (!campaignsError) {
-      setCampaigns(campaignsData || []);
-    }
-    setLoading(false);
-    setInitialLoadComplete(true);
+  const fetchCampaigns = async () => {
+    const { data } = await supabase.from("campaigns").select("id, title").order("title");
+    if (data) setCampaigns(data);
   };
-  const filterUsers = async () => {
+
+  const fetchUsers = async () => {
     setLoading(true);
 
-    // Build database query with all filters
+    try {
+      // Check if we need to search across ALL users (for post-query filters)
+      const needsFullScan = filters.hasSocialAccount !== null ||
+                           filters.hasApprovedDemographics !== null ||
+                           filters.hasBrandRole !== null ||
+                           filters.campaign !== "all" ||
+                           (filters.minBalance && parseFloat(filters.minBalance) > 0) ||
+                           (filters.minEarnings && parseFloat(filters.minEarnings) > 0);
+
+      if (needsFullScan) {
+        await fetchAllUsersWithFilters();
+      } else {
+        await fetchPaginatedUsers();
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toastHook({ variant: "destructive", title: "Error", description: "Failed to fetch users" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Paginated fetch for simple filters (fast)
+  const fetchPaginatedUsers = async () => {
     let query = supabase.from("profiles").select(`
       *,
-      wallets (
-        balance,
-        total_earned,
-        total_withdrawn
-      ),
-      social_accounts (
-        id,
-        platform,
-        username,
-        follower_count,
-        demographic_submissions (
-          status
-        )
-      )
-    `, { count: 'exact' });
+      wallets (balance, total_earned, total_withdrawn),
+      social_accounts (id, platform, username, follower_count, demographic_submissions (status))
+    `, { count: "exact" });
 
-    // Search filter - searches across all users in database (profile fields only, social accounts filtered post-query)
-    if (debouncedSearchQuery) {
-      const searchTerm = debouncedSearchQuery.toLowerCase();
-      // Note: we also do post-query filter for social_accounts.username
-      query = query.or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+    // Apply database-level filters
+    query = applyDatabaseFilters(query);
+
+    // Apply sorting
+    if (filters.sortField === "created_at") {
+      query = query.order("created_at", { ascending: filters.sortOrder === "asc" });
+    } else {
+      query = query.order("created_at", { ascending: false });
     }
 
-    // Discord filter
-    if (hasDiscord === true) {
-      query = query.not('discord_id', 'is', null);
-    } else if (hasDiscord === false) {
-      query = query.is('discord_id', null);
+    // Apply pagination
+    const from = (currentPage - 1) * USERS_PER_PAGE;
+    const to = from + USERS_PER_PAGE - 1;
+    query = query.range(from, to);
+
+    const { data, count, error } = await query;
+
+    if (error) throw error;
+
+    let filtered = data as User[] || [];
+
+    // Client-side sorting for wallet fields
+    if (filters.sortField === "balance" || filters.sortField === "totalEarned" || filters.sortField === "trust_score") {
+      filtered = sortUsers(filtered);
     }
 
-    // Phone filter
-    if (hasPhone === true) {
-      query = query.not('phone_number', 'is', null);
-    } else if (hasPhone === false) {
-      query = query.is('phone_number', null);
-    }
+    setUsers(filtered);
+    setTotalCount(count || 0);
+  };
 
-    // Signup timeframe filter
-    if (signupTimeframe !== "all" && signupTimeframe) {
-      const now = new Date();
-      let cutoffDate: Date;
-      
-      switch (signupTimeframe) {
-        case "24h":
-          cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-          break;
-        case "7d":
-          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case "30d":
-          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case "90d":
-          cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          break;
-        default:
-          cutoffDate = new Date(0);
+  // Full scan for complex filters (bypasses 1000 limit)
+  const fetchAllUsersWithFilters = async () => {
+    let allUsers: User[] = [];
+    let offset = 0;
+    let totalCount: number | null = null;
+
+    // Fetch in batches to bypass 1000 limit
+    while (true) {
+      let query = supabase.from("profiles").select(`
+        *,
+        wallets (balance, total_earned, total_withdrawn),
+        social_accounts (id, platform, username, follower_count, demographic_submissions (status))
+      `, { count: "exact" });
+
+      query = applyDatabaseFilters(query);
+      query = query.order("created_at", { ascending: false });
+      query = query.range(offset, offset + BATCH_SIZE - 1);
+
+      const { data, count, error } = await query;
+
+      if (error) throw error;
+
+      if (totalCount === null && count !== null) {
+        totalCount = count;
       }
-      query = query.gte('created_at', cutoffDate.toISOString());
-    }
 
-    // Order by created_at desc
-    // Remove limit when filtering by balance or earnings to ensure all users are checked
-    const hasPostQueryFilters = (minBalance && parseFloat(minBalance) > 0) || 
-                                 (minEarnings && parseFloat(minEarnings) > 0) ||
-                                 hasSocialAccount !== null ||
-                                 hasApprovedDemographics !== null ||
-                                 hasBrandRole !== null ||
-                                 selectedCampaign !== "all";
-    
-    query = query.order("created_at", { ascending: false });
-    if (!hasPostQueryFilters) {
-      query = query.limit(1000);
-    }
-
-    const { data: usersData, error, count } = await query;
-
-    if (error) {
-      console.error('Filter error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to filter users"
-      });
-      setLoading(false);
-      return;
-    }
-
-    let filtered = usersData as User[] || [];
-
-    // If searching, also include users whose social accounts match the search term
-    if (debouncedSearchQuery) {
-      const searchTerm = debouncedSearchQuery.toLowerCase();
-      
-      // Search for social accounts matching the query
-      const { data: matchingSocialAccounts } = await supabase
-        .from("social_accounts")
-        .select("user_id")
-        .ilike("username", `%${searchTerm}%`);
-      
-      if (matchingSocialAccounts && matchingSocialAccounts.length > 0) {
-        const socialAccountUserIds = new Set(matchingSocialAccounts.map(sa => sa.user_id));
-        
-        // Fetch additional users whose social accounts match but weren't in the original query
-        const existingUserIds = new Set(filtered.map(u => u.id));
-        const missingUserIds = [...socialAccountUserIds].filter(id => !existingUserIds.has(id));
-        
-        if (missingUserIds.length > 0) {
-          const { data: additionalUsers } = await supabase
-            .from("profiles")
-            .select(`
-              *,
-              wallets (
-                balance,
-                total_earned,
-                total_withdrawn
-              ),
-              social_accounts (
-                id,
-                platform,
-                username,
-                follower_count,
-                demographic_submissions (
-                  status
-                )
-              )
-            `)
-            .in("id", missingUserIds);
-          
-          if (additionalUsers) {
-            filtered = [...filtered, ...(additionalUsers as User[])];
-          }
-        }
+      if (data && data.length > 0) {
+        allUsers = allUsers.concat(data as User[]);
       }
-    }
 
-    // Campaign filter (requires separate query)
-    if (selectedCampaign !== "all") {
-      const { data: submissions } = await supabase
-        .from("campaign_submissions")
-        .select("creator_id")
-        .eq("campaign_id", selectedCampaign);
-      if (submissions) {
-        const creatorIds = submissions.map(s => s.creator_id);
-        filtered = filtered.filter(user => creatorIds.includes(user.id));
+      if (!data || data.length < BATCH_SIZE) {
+        break;
       }
+
+      offset += BATCH_SIZE;
     }
 
-    // Social account filter (post-query filter since it's a relation)
-    if (hasSocialAccount === true) {
-      filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
-    } else if (hasSocialAccount === false) {
-      filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
+    // Apply client-side filters
+    let filtered = allUsers;
+
+    // Social account filter
+    if (filters.hasSocialAccount === true) {
+      filtered = filtered.filter(u => u.social_accounts && u.social_accounts.length > 0);
+    } else if (filters.hasSocialAccount === false) {
+      filtered = filtered.filter(u => !u.social_accounts || u.social_accounts.length === 0);
     }
 
-    // Approved demographics filter (post-query filter)
-    if (hasApprovedDemographics === true) {
-      filtered = filtered.filter(user => 
-        user.social_accounts?.some(account => 
-          account.demographic_submissions?.some(sub => sub.status === 'approved')
-        )
-      );
-    } else if (hasApprovedDemographics === false) {
-      filtered = filtered.filter(user => 
-        !user.social_accounts?.some(account => 
-          account.demographic_submissions?.some(sub => sub.status === 'approved')
-        )
+    // Platform filter
+    if (filters.platform !== "all") {
+      filtered = filtered.filter(u =>
+        u.social_accounts?.some(acc => acc.platform.toLowerCase() === filters.platform.toLowerCase())
       );
     }
 
-    // Brand role filter (post-query filter)
-    if (hasBrandRole !== null) {
-      // Get users with brand role or brand membership
-      const { data: brandRoleUsers } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "brand");
-      
-      const { data: brandMemberUsers } = await supabase
-        .from("brand_members")
-        .select("user_id");
-      
+    // Approved demographics filter
+    if (filters.hasApprovedDemographics === true) {
+      filtered = filtered.filter(u =>
+        u.social_accounts?.some(acc => acc.demographic_submissions?.some(sub => sub.status === "approved"))
+      );
+    } else if (filters.hasApprovedDemographics === false) {
+      filtered = filtered.filter(u =>
+        !u.social_accounts?.some(acc => acc.demographic_submissions?.some(sub => sub.status === "approved"))
+      );
+    }
+
+    // Brand role filter
+    if (filters.hasBrandRole !== null) {
+      const { data: brandRoleUsers } = await supabase.from("user_roles").select("user_id").eq("role", "brand");
+      const { data: brandMemberUsers } = await supabase.from("brand_members").select("user_id");
+
       const brandUserIds = new Set([
         ...(brandRoleUsers?.map(r => r.user_id) || []),
         ...(brandMemberUsers?.map(m => m.user_id) || [])
       ]);
-      
-      if (hasBrandRole === true) {
-        filtered = filtered.filter(user => brandUserIds.has(user.id));
+
+      if (filters.hasBrandRole === true) {
+        filtered = filtered.filter(u => brandUserIds.has(u.id));
       } else {
-        filtered = filtered.filter(user => !brandUserIds.has(user.id));
+        filtered = filtered.filter(u => !brandUserIds.has(u.id));
       }
     }
 
-    // Minimum earnings filter (post-query filter since wallets is a relation)
-    if (minEarnings && parseFloat(minEarnings) > 0) {
-      const minEarningsValue = parseFloat(minEarnings);
-      filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
+    // Campaign filter
+    if (filters.campaign !== "all") {
+      const { data: subs } = await supabase.from("campaign_submissions").select("creator_id").eq("campaign_id", filters.campaign);
+      if (subs) {
+        const creatorIds = new Set(subs.map(s => s.creator_id));
+        filtered = filtered.filter(u => creatorIds.has(u.id));
+      }
     }
 
-    // Minimum balance filter (post-query filter)
-    if (minBalance && parseFloat(minBalance) > 0) {
-      const minBalanceValue = parseFloat(minBalance);
-      filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
+    // Min earnings filter
+    if (filters.minEarnings && parseFloat(filters.minEarnings) > 0) {
+      const min = parseFloat(filters.minEarnings);
+      filtered = filtered.filter(u => (u.wallets?.total_earned || 0) >= min);
     }
 
-    // Sort users
-    if (sortField) {
-      filtered = [...filtered].sort((a, b) => {
-        let aValue = 0;
-        let bValue = 0;
-
-        if (sortField === "balance") {
-          aValue = a.wallets?.balance || 0;
-          bValue = b.wallets?.balance || 0;
-        } else if (sortField === "totalEarned") {
-          aValue = a.wallets?.total_earned || 0;
-          bValue = b.wallets?.total_earned || 0;
-        }
-
-        if (sortOrder === "asc") {
-          return aValue - bValue;
-        } else {
-          return bValue - aValue;
-        }
-      });
+    // Min balance filter
+    if (filters.minBalance && parseFloat(filters.minBalance) > 0) {
+      const min = parseFloat(filters.minBalance);
+      filtered = filtered.filter(u => (u.wallets?.balance || 0) >= min);
     }
 
-    // Update the total count if we got it from the query
-    if (count !== null) {
-      setTotalUserCount(count);
-    }
+    // Sort
+    filtered = sortUsers(filtered);
 
-    setFilteredUsers(filtered);
-    setLoading(false);
+    // Paginate results
+    const from = (currentPage - 1) * USERS_PER_PAGE;
+    const paginated = filtered.slice(from, from + USERS_PER_PAGE);
+
+    setUsers(paginated);
+    setTotalCount(filtered.length);
   };
 
-  const applyFiltersAcrossAllUsers = async () => {
-    setLoading(true);
+  const applyDatabaseFilters = (query: any) => {
+    // Search filter
+    if (debouncedSearch) {
+      const term = debouncedSearch.toLowerCase();
+      query = query.or(`username.ilike.%${term}%,full_name.ilike.%${term}%,email.ilike.%${term}%`);
+    }
 
-    try {
-      const pageSize = 1000;
-      let offset = 0;
-      let allUsers: User[] = [];
-      let totalCount: number | null = null;
+    // Discord filter
+    if (filters.hasDiscord === true) {
+      query = query.not("discord_id", "is", null);
+    } else if (filters.hasDiscord === false) {
+      query = query.is("discord_id", null);
+    }
 
-      while (true) {
-        let query = supabase.from("profiles").select(`
-          *,
-          wallets (
-            balance,
-            total_earned,
-            total_withdrawn
-          ),
-          social_accounts (
-            id,
-            platform,
-            username,
-            follower_count,
-            demographic_submissions (
-              status
-            )
-          )
-        `, { count: 'exact' });
+    // Phone filter
+    if (filters.hasPhone === true) {
+      query = query.not("phone_number", "is", null);
+    } else if (filters.hasPhone === false) {
+      query = query.is("phone_number", null);
+    }
 
-        // Reuse the same base filters as filterUsers
-        if (debouncedSearchQuery) {
-          const searchTerm = debouncedSearchQuery.toLowerCase();
-          query = query.or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-        }
+    // Signup timeframe filter
+    if (filters.signupTimeframe !== "all") {
+      const now = new Date();
+      let cutoff: Date;
+      switch (filters.signupTimeframe) {
+        case "24h": cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000); break;
+        case "7d": cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); break;
+        case "30d": cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); break;
+        case "90d": cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000); break;
+        default: cutoff = new Date(0);
+      }
+      query = query.gte("created_at", cutoff.toISOString());
+    }
 
-        if (hasDiscord === true) {
-          query = query.not('discord_id', 'is', null);
-        } else if (hasDiscord === false) {
-          query = query.is('discord_id', null);
-        }
+    return query;
+  };
 
-        if (hasPhone === true) {
-          query = query.not('phone_number', 'is', null);
-        } else if (hasPhone === false) {
-          query = query.is('phone_number', null);
-        }
+  const sortUsers = (users: User[]) => {
+    if (!filters.sortField) return users;
 
-        if (signupTimeframe !== "all" && signupTimeframe) {
-          const now = new Date();
-          let cutoffDate: Date;
+    return [...users].sort((a, b) => {
+      let aVal = 0, bVal = 0;
 
-          switch (signupTimeframe) {
-            case "24h":
-              cutoffDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-              break;
-            case "7d":
-              cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-              break;
-            case "30d":
-              cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-              break;
-            case "90d":
-              cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-              break;
-            default:
-              cutoffDate = new Date(0);
-          }
-          query = query.gte('created_at', cutoffDate.toISOString());
-        }
-
-        query = query.order("created_at", { ascending: false }).range(offset, offset + pageSize - 1);
-
-        const { data, error, count } = await query;
-
-        if (error) {
-          console.error('Filter all users error:', error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to filter all users"
-          });
-          return;
-        }
-
-        if (data && data.length > 0) {
-          allUsers = allUsers.concat(data as User[]);
-        }
-
-        if (totalCount === null && typeof count === 'number') {
-          totalCount = count;
-        }
-
-        if (!data || data.length < pageSize) {
+      switch (filters.sortField) {
+        case "balance":
+          aVal = a.wallets?.balance || 0;
+          bVal = b.wallets?.balance || 0;
           break;
-        }
-
-        offset += pageSize;
+        case "totalEarned":
+          aVal = a.wallets?.total_earned || 0;
+          bVal = b.wallets?.total_earned || 0;
+          break;
+        case "trust_score":
+          aVal = a.trust_score || 0;
+          bVal = b.trust_score || 0;
+          break;
+        case "created_at":
+          aVal = a.created_at ? new Date(a.created_at).getTime() : 0;
+          bVal = b.created_at ? new Date(b.created_at).getTime() : 0;
+          break;
       }
 
-      let filtered = allUsers;
-
-      // Apply the same client-side filters as filterUsers
-      if (selectedCampaign !== "all") {
-        const { data: submissions } = await supabase
-          .from("campaign_submissions")
-          .select("creator_id")
-          .eq("campaign_id", selectedCampaign);
-        if (submissions) {
-          const creatorIds = submissions.map(s => s.creator_id);
-          filtered = filtered.filter(user => creatorIds.includes(user.id));
-        }
-      }
-
-      if (hasSocialAccount === true) {
-        filtered = filtered.filter(user => user.social_accounts && user.social_accounts.length > 0);
-      } else if (hasSocialAccount === false) {
-        filtered = filtered.filter(user => !user.social_accounts || user.social_accounts.length === 0);
-      }
-
-      if (hasApprovedDemographics === true) {
-        filtered = filtered.filter(user =>
-          user.social_accounts?.some(account =>
-            account.demographic_submissions?.some(sub => sub.status === 'approved')
-          )
-        );
-      } else if (hasApprovedDemographics === false) {
-        filtered = filtered.filter(user =>
-          !user.social_accounts?.some(account =>
-            account.demographic_submissions?.some(sub => sub.status === 'approved')
-          )
-        );
-      }
-
-      if (minEarnings && parseFloat(minEarnings) > 0) {
-        const minEarningsValue = parseFloat(minEarnings);
-        filtered = filtered.filter(user => (user.wallets?.total_earned || 0) >= minEarningsValue);
-      }
-
-      if (minBalance && parseFloat(minBalance) > 0) {
-        const minBalanceValue = parseFloat(minBalance);
-        filtered = filtered.filter(user => (user.wallets?.balance || 0) >= minBalanceValue);
-      }
-
-      if (sortField) {
-        filtered = [...filtered].sort((a, b) => {
-          let aValue = 0;
-          let bValue = 0;
-
-          if (sortField === "balance") {
-            aValue = a.wallets?.balance || 0;
-            bValue = b.wallets?.balance || 0;
-          } else if (sortField === "totalEarned") {
-            aValue = a.wallets?.total_earned || 0;
-            bValue = b.wallets?.total_earned || 0;
-          }
-
-          if (sortOrder === "asc") {
-            return aValue - bValue;
-          } else {
-            return bValue - aValue;
-          }
-        });
-      }
-
-      if (totalCount !== null) {
-        setTotalUserCount(totalCount);
-      } else {
-        setTotalUserCount(filtered.length);
-      }
-
-      setFilteredUsers(filtered);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openPayDialog = (user: User) => {
-    setSelectedUser(user);
-    setPaymentAmount("");
-    setPaymentNotes("");
-    setPayDialogOpen(true);
-  };
-  const fetchUserSocialAccounts = async (userId: string) => {
-    setLoadingSocialAccounts(true);
-    const {
-      data,
-      error
-    } = await supabase.from("social_accounts").select(`
-        *,
-        social_account_campaigns (
-          campaigns (
-            id,
-            title,
-            brand_name,
-            brand_logo_url,
-            brands:brand_id (
-              logo_url
-            )
-          )
-        ),
-        demographic_submissions (
-          status,
-          tier1_percentage,
-          submitted_at
-        )
-      `).eq("user_id", userId);
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch social accounts"
-      });
-      setUserSocialAccounts([]);
-    } else {
-      setUserSocialAccounts(data || []);
-    }
-    setLoadingSocialAccounts(false);
-  };
-  const fetchUserTransactions = async (userId: string) => {
-    setLoadingTransactions(true);
-    const {
-      data: txData,
-      error
-    } = await supabase.from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", {
-      ascending: false
+      return filters.sortOrder === "asc" ? aVal - bVal : bVal - aVal;
     });
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch transactions"
-      });
-      setUserTransactions([]);
-    } else {
-      // Enrich transactions with campaign and account data
-      const enrichedTransactions = await Promise.all((txData || []).map(async (tx) => {
-        const metadata = (tx.metadata || {}) as any;
-        
-        console.log('=== Transaction Debug ===');
-        console.log('ID:', tx.id);
-        console.log('Type:', tx.type);
-        console.log('Description:', tx.description);
-        console.log('Metadata before enrichment:', JSON.stringify(metadata, null, 2));
-        
-        // If metadata has campaign_id, fetch campaign details
-        if (metadata.campaign_id) {
-          const { data: campaignData, error } = await supabase
-            .from("campaigns")
-            .select("title, brand_name")
-            .eq("id", metadata.campaign_id)
-            .maybeSingle();
-          
-          if (error) {
-            console.error('Error fetching campaign:', error);
-          }
-          
-          if (campaignData) {
-            metadata.campaign_name = campaignData.title;
-            console.log('Campaign fetched:', campaignData.title);
-          }
-        }
-        
-        console.log('Metadata after enrichment:', JSON.stringify(metadata, null, 2));
-        console.log('=========================');
-        
-        return {
-          ...tx,
-          metadata
-        };
-      }));
-      
-      setUserTransactions(enrichedTransactions);
-    }
-    setLoadingTransactions(false);
-  };
-  const fetchUserPaymentMethods = async (userId: string) => {
-    setLoadingPaymentMethods(true);
-    const {
-      data,
-      error
-    } = await supabase.from("wallets").select("payout_method, payout_details").eq("user_id", userId).maybeSingle();
-    if (error) {
-      console.error("Error fetching payment methods:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch payment methods"
-      });
-      setUserPaymentMethods([]);
-    } else if (data && data.payout_details && Array.isArray(data.payout_details)) {
-      // payout_details is an array of payment methods
-      setUserPaymentMethods(data.payout_details);
-    } else if (data && data.payout_method) {
-      // Fallback for old format
-      setUserPaymentMethods([{
-        method: data.payout_method,
-        details: {}
-      }]);
-    } else {
-      setUserPaymentMethods([]);
-    }
-    setLoadingPaymentMethods(false);
-  };
-  const openUserDetailsDialog = (user: User) => {
-    setSelectedUser(user);
-    setUserContextSheetOpen(true);
   };
 
-  const openUserDetailsDialogLegacy = (user: User) => {
-    setSelectedUser(user);
-    setUserDetailsDialogOpen(true);
-    fetchUserSocialAccounts(user.id);
-    fetchUserTransactions(user.id);
-    fetchUserPaymentMethods(user.id);
+  const updateFilter = <K extends keyof FilterState>(key: K, value: FilterState[K]) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    if (key !== "search") setCurrentPage(1);
   };
-  const openAddToCampaignDialog = (user: User) => {
-    setSelectedUser(user);
-    setSelectedCampaignForAdd("");
-    setSelectedSocialAccountForAdd("");
-    fetchUserSocialAccounts(user.id);
-    setAddToCampaignDialogOpen(true);
-  };
-  const handleAddToCampaign = async () => {
-    if (!selectedUser || !selectedCampaignForAdd || !selectedSocialAccountForAdd) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please select both a campaign and a social account"
-      });
-      return;
-    }
 
-    setAddingToCampaign(true);
-
-    try {
-      // Get the selected social account details
-      const selectedAccount = userSocialAccounts.find(acc => acc.id === selectedSocialAccountForAdd);
-      if (!selectedAccount) {
-        throw new Error("Selected social account not found");
-      }
-
-      // Check if already has a submission for this campaign
-      const { data: existingSubmission } = await supabase
-        .from("campaign_submissions")
-        .select("id, status")
-        .eq("campaign_id", selectedCampaignForAdd)
-        .eq("creator_id", selectedUser.id)
-        .eq("platform", selectedAccount.platform)
-        .maybeSingle();
-
-      if (existingSubmission && existingSubmission.status !== "withdrawn") {
-        toast({
-          variant: "destructive",
-          title: "Already Applied",
-          description: "This user already has an active application for this campaign on this platform"
-        });
-        setAddingToCampaign(false);
-        return;
-      }
-
-      // Create campaign submission
-      const { error: submissionError } = await supabase
-        .from("campaign_submissions")
-        .insert({
-          campaign_id: selectedCampaignForAdd,
-          creator_id: selectedUser.id,
-          platform: selectedAccount.platform,
-          content_url: "",
-          status: "approved"
-        });
-
-      if (submissionError) throw submissionError;
-
-      // Link social account to campaign
-      const { error: linkError } = await supabase
-        .from("social_account_campaigns")
-        .insert({
-          social_account_id: selectedSocialAccountForAdd,
-          campaign_id: selectedCampaignForAdd,
-          user_id: selectedUser.id
-        });
-
-      if (linkError) throw linkError;
-
-      const campaign = campaigns.find(c => c.id === selectedCampaignForAdd);
-      toast({
-        title: "Success",
-        description: `${selectedUser.username} has been added to ${campaign?.title || "the campaign"}`
-      });
-
-      setAddToCampaignDialogOpen(false);
-      fetchData();
-    } catch (error: any) {
-      console.error("Error adding user to campaign:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to add user to campaign"
-      });
-    } finally {
-      setAddingToCampaign(false);
-    }
-  };
-  const getPlatformIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'tiktok':
-        return <img src={tiktokLogo} alt="TikTok" className="h-5 w-5" />;
-      case 'instagram':
-        return <img src={instagramLogo} alt="Instagram" className="h-5 w-5" />;
-      case 'youtube':
-        return <img src={youtubeLogo} alt="YouTube" className="h-5 w-5" />;
-      default:
-        return <UsersIcon className="h-5 w-5" />;
-    }
-  };
-  const handlePayUser = async () => {
-    if (!selectedUser || !paymentAmount) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a payment amount"
-      });
-      return;
-    }
-    const amount = parseFloat(paymentAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a valid amount"
-      });
-      return;
-    }
-    const {
-      data: {
-        session
-      }
-    } = await supabase.auth.getSession();
-    if (!session) return;
-
-    // Get the current wallet balance from database to ensure accuracy
-    const { data: currentWallet, error: fetchError } = await supabase
-      .from("wallets")
-      .select("balance, total_earned")
-      .eq("user_id", selectedUser.id)
-      .maybeSingle();
-
-    if (fetchError) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch wallet"
-      });
-      return;
-    }
-
-    // Create wallet if it doesn't exist
-    if (!currentWallet) {
-      const { error: createError } = await supabase
-        .from("wallets")
-        .insert({ user_id: selectedUser.id, balance: 0, total_earned: 0 });
-      
-      if (createError) {
-        console.error("Failed to create wallet:", createError);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: `Failed to create wallet: ${createError.message}`
-        });
-        return;
-      }
-    }
-
-    const currentBalance = currentWallet?.balance || 0;
-    const currentEarned = currentWallet?.total_earned || 0;
-
-    // Update wallet balance with fresh data
-    const {
-      error: walletError
-    } = await supabase.from("wallets").update({
-      balance: currentBalance + amount,
-      total_earned: currentEarned + amount
-    }).eq("user_id", selectedUser.id);
-    if (walletError) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to process payment"
-      });
-      return;
-    }
-
-    // Create transaction record
-    const {
-      error: transactionError
-    } = await supabase.from("wallet_transactions").insert({
-      user_id: selectedUser.id,
-      type: "earning",
-      amount: amount,
-      status: "completed",
-      description: paymentNotes || "Manual payment from admin",
-      created_by: session.user.id,
-      metadata: {
-        source: "admin_payment",
-        recipient: selectedUser.username,
-        notes: paymentNotes
-      }
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      campaign: "all",
+      signupTimeframe: "all",
+      hasDiscord: null,
+      hasPhone: null,
+      hasSocialAccount: null,
+      hasApprovedDemographics: null,
+      hasBrandRole: null,
+      minEarnings: "",
+      minBalance: "",
+      platform: "all",
+      sortField: "created_at",
+      sortOrder: "desc",
     });
-    
-    if (transactionError) {
-      console.error("Failed to create transaction:", transactionError);
-      // Still show success as wallet was updated, but log the error
-    }
-
-    // Log audit (table was removed, skip audit logging)
-    console.log("Manual payment sent:", {
-      user_id: session.user.id,
-      action: "MANUAL_PAYMENT",
-      recipient: selectedUser.username,
-      amount,
-      notes: paymentNotes
-    });
-    toast({
-      title: "Success",
-      description: `Payment of $${amount.toFixed(2)} sent to ${selectedUser.username}`
-    });
-    setPayDialogOpen(false);
-    
-    // Refresh data and update the selected user with new wallet balance
-    await fetchData();
-    
-    // If user details dialog is open, update the selected user with new data
-    if (userDetailsDialogOpen) {
-      const { data: updatedUserData } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          wallets(balance, total_earned, total_withdrawn)
-        `)
-        .eq("id", selectedUser.id)
-        .single();
-      
-      if (updatedUserData) {
-        setSelectedUser(updatedUserData);
-        // Also refresh transactions to show the new payment
-        fetchUserTransactions(selectedUser.id);
-      }
-    }
-  };
-  const handleCsvImport = async () => {
-    if (!csvFile) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please select a CSV file"
-      });
-      return;
-    }
-    setIsImporting(true);
-    setImportResults(null);
-    try {
-      const fileContent = await csvFile.text();
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('import-transactions', {
-        body: {
-          csvContent: fileContent
-        }
-      });
-      if (error) throw error;
-      setImportResults(data);
-      if (data.successful > 0) {
-        toast({
-          title: "Import Complete",
-          description: `Successfully imported ${data.successful} of ${data.processed} transactions`
-        });
-        fetchData(); // Refresh user data
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Import Failed",
-          description: `Failed to import any transactions. Check the results for details.`
-        });
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to import transactions"
-      });
-    } finally {
-      setIsImporting(false);
-    }
-  };
-  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCsvFile(e.target.files[0]);
-      setImportResults(null);
-    }
-  };
-  const downloadCsvTemplate = () => {
-    const template = 'account_username;payout amount;date\ntiktok_user123;100.50;2025-10-02\ninsta_creator;250.00;2025-10-01';
-    const blob = new Blob([template], {
-      type: 'text/csv'
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'transaction_import_template.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setCurrentPage(1);
   };
 
-  // Demographics functions
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.campaign !== "all") count++;
+    if (filters.signupTimeframe !== "all") count++;
+    if (filters.hasDiscord !== null) count++;
+    if (filters.hasPhone !== null) count++;
+    if (filters.hasSocialAccount !== null) count++;
+    if (filters.hasApprovedDemographics !== null) count++;
+    if (filters.hasBrandRole !== null) count++;
+    if (filters.minEarnings) count++;
+    if (filters.minBalance) count++;
+    if (filters.platform !== "all") count++;
+    return count;
+  }, [filters]);
+
+  // Demographics
   const fetchSubmissions = async () => {
-    console.log('Fetching demographic submissions...');
-    const {
-      data,
-      error
-    } = await supabase.from("demographic_submissions").select(`
-        *,
-        social_accounts (
-          id,
-          platform,
-          username,
-          user_id,
-          avatar_url,
-          follower_count,
-          bio,
-          account_link,
-          profiles:user_id (
-            id,
-            username,
-            full_name,
-            avatar_url,
-            email,
-            trust_score,
-            demographics_score,
-            total_earnings,
-            country,
-            created_at
-          )
-        )
-      `).order("submitted_at", {
-      ascending: false
-    });
-    
-    if (error) {
-      console.error('Error fetching demographic submissions:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch submissions"
-      });
-    } else {
-      console.log('Fetched demographic submissions:', data?.length || 0, 'submissions');
-      // Filter out any submissions where social_accounts is null (orphaned records)
-      const validSubmissions = (data || []).filter(sub => sub.social_accounts !== null);
-      if (validSubmissions.length !== (data || []).length) {
-        console.warn('Filtered out', (data || []).length - validSubmissions.length, 'orphaned submissions');
-      }
-      setSubmissions(validSubmissions);
-    }
-  };
-  const handleReview = async (status?: "approved" | "rejected") => {
-    if (!selectedSubmission) return;
-    
-    const finalStatus = status || reviewStatus;
-    const scoreValue = parseInt(score);
-    
-    // Only validate score if approving
-    if (finalStatus === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Score",
-        description: "Score must be between 0 and 100"
-      });
-      return;
-    }
-    
-    setUpdating(true);
-    try {
-      const {
-        data: {
-          session
-        }
-      } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      const updateData: any = {
-        status: finalStatus,
-        score: finalStatus === "approved" ? scoreValue : null,
-        admin_notes: adminNotes.trim() || null,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: session.user.id
-      };
-      
-      // Only update tier1_percentage when approving (it's required, so don't null it on reject)
-      if (finalStatus === "approved") {
-        updateData.tier1_percentage = scoreValue;
-      }
-      
-      const {
-        error: updateError
-      } = await supabase.from("demographic_submissions").update(updateData).eq("id", selectedSubmission.id);
-      if (updateError) throw updateError;
-      if (finalStatus === "approved") {
-        const {
-          error: profileError
-        } = await supabase.from("profiles").update({
-          demographics_score: scoreValue
-        }).eq("id", selectedSubmission.social_accounts.user_id);
-        if (profileError) throw profileError;
-      }
-      toast({
-        title: "Success",
-        description: "Submission reviewed successfully"
-      });
-      setSelectedSubmission(null);
-      setScore("");
-      setAdminNotes("");
-      fetchSubmissions();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update submission"
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
-  const openReviewDialog = (submission: DemographicSubmission) => {
-    setReviewingSubmission(submission);
-    setReviewDialogOpen(true);
-  };
-  
-  const handleInlineReview = async (submission: DemographicSubmission, status: "approved" | "rejected") => {
-    const scoreValue = parseInt(inlineScores[submission.id] || "0");
-    
-    // Only validate score if approving
-    if (status === "approved" && (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Score",
-        description: "Score must be between 0 and 100"
-      });
-      return;
-    }
-    
-    setProcessingSubmission(submission.id);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      
-      const updateData: any = {
-        status: status,
-        score: status === "approved" ? scoreValue : null,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: session.user.id
-      };
-      
-      if (status === "approved") {
-        updateData.tier1_percentage = scoreValue;
-      }
-      
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update(updateData)
-        .eq("id", submission.id);
-      
-      if (updateError) throw updateError;
-      
-      if (status === "approved") {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ demographics_score: scoreValue })
-          .eq("id", submission.social_accounts.user_id);
-        if (profileError) throw profileError;
-      }
-      
-      toast({
-        title: "Success",
-        description: `Submission ${status === "approved" ? "approved" : "rejected"}`
-      });
-      
-      // Clear the inline score
-      setInlineScores(prev => {
-        const next = { ...prev };
-        delete next[submission.id];
-        return next;
-      });
-      
-      fetchSubmissions();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update submission"
-      });
-    } finally {
-      setProcessingSubmission(null);
+    const { data, error } = await supabase.from("demographic_submissions").select(`
+      *,
+      social_accounts (
+        id, platform, username, user_id, avatar_url, follower_count, bio, account_link,
+        profiles:user_id (id, username, full_name, avatar_url, email, trust_score, demographics_score, total_earnings, country, created_at)
+      )
+    `).order("submitted_at", { ascending: false });
+
+    if (!error && data) {
+      setSubmissions(data.filter(s => s.social_accounts !== null) as DemographicSubmission[]);
     }
   };
 
-  // Review dialog handlers
   const handleDialogApprove = async (submission: DemographicSubmission, score: number) => {
     setProcessingSubmission(submission.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update({
-          status: "approved",
-          score: score,
-          tier1_percentage: score,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: session.user.id
-        })
-        .eq("id", submission.id);
+      await supabase.from("demographic_submissions").update({
+        status: "approved",
+        score: score,
+        tier1_percentage: score,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: session.user.id
+      }).eq("id", submission.id);
 
-      if (updateError) throw updateError;
+      await supabase.from("profiles").update({ demographics_score: score }).eq("id", submission.social_accounts.user_id);
 
-      // Update profile demographics_score
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ demographics_score: score })
-        .eq("id", submission.social_accounts.user_id);
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: "Approved",
-        description: `Submission approved with score ${score}`
-      });
-
+      toast.success(`Approved with score ${score}%`);
       fetchSubmissions();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to approve submission"
-      });
+      toast.error(error.message || "Failed to approve");
     } finally {
       setProcessingSubmission(null);
     }
@@ -1363,1699 +513,683 @@ export default function AdminUsers() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const { error: updateError } = await supabase
-        .from("demographic_submissions")
-        .update({
-          status: "rejected",
-          score: null,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: session.user.id
-        })
-        .eq("id", submission.id);
+      await supabase.from("demographic_submissions").update({
+        status: "rejected",
+        score: null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: session.user.id
+      }).eq("id", submission.id);
 
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Rejected",
-        description: "Submission rejected"
-      });
-
+      toast.success("Rejected");
       fetchSubmissions();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to reject submission"
-      });
+      toast.error(error.message || "Failed to reject");
     } finally {
       setProcessingSubmission(null);
     }
   };
 
-  const openEditScoreDialog = (submission: DemographicSubmission) => {
-    setEditingSubmission(submission);
-    setEditScore(submission.score?.toString() || "");
-    setEditScoreDialogOpen(true);
+  // User actions
+  const openUserDetails = (user: User) => {
+    setSelectedUser(user);
+    setUserContextSheetOpen(true);
   };
 
-  const openEditScoreFromSocialAccount = async (account: SocialAccount) => {
-    // Fetch the latest demographic submission for this account
-    const { data, error } = await supabase
-      .from("demographic_submissions")
-      .select("*")
-      .eq("social_account_id", account.id)
-      .order("submitted_at", { ascending: false })
-      .limit(1)
-      .single();
-    
-    if (!error && data) {
-      setEditingSubmission({
-        ...data,
-        social_accounts: {
-          id: account.id,
-          platform: account.platform,
-          username: account.username,
-          user_id: selectedUser?.id || ""
-        }
-      });
-      setEditScore(data.score?.toString() || "");
-      setEditScoreDialogOpen(true);
-    }
+  const openPayDialog = (user: User) => {
+    setSelectedUser(user);
+    setPaymentAmount("");
+    setPaymentNotes("");
+    setPayDialogOpen(true);
   };
-  const handleUpdateScore = async () => {
-    if (!editingSubmission) return;
-    const scoreValue = parseInt(editScore);
-    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
-      toast({
-        variant: "destructive",
-        title: "Invalid Score",
-        description: "Score must be between 0 and 100"
-      });
-      return;
-    }
-    setUpdating(true);
+
+  const handlePayUser = async () => {
+    if (!selectedUser || !paymentAmount) return;
+
     try {
-      const {
-        error: updateError
-      } = await supabase.from("demographic_submissions").update({
-        score: scoreValue,
-        tier1_percentage: scoreValue
-      }).eq("id", editingSubmission.id);
-      if (updateError) throw updateError;
+      const amount = parseFloat(paymentAmount);
+      if (isNaN(amount) || amount <= 0) {
+        toastHook({ variant: "destructive", title: "Invalid amount" });
+        return;
+      }
 
-      // Also update the profile's demographics score
-      const {
-        error: profileError
-      } = await supabase.from("profiles").update({
-        demographics_score: scoreValue
-      }).eq("id", editingSubmission.social_accounts.user_id);
-      if (profileError) throw profileError;
-      toast({
-        title: "Success",
-        description: "Demographics score updated successfully"
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      // Update wallet balance
+      const { error: walletError } = await supabase.rpc("add_to_wallet", {
+        p_user_id: selectedUser.id,
+        p_amount: amount,
       });
-      setEditScoreDialogOpen(false);
-      setEditingSubmission(null);
-      setEditScore("");
-      fetchSubmissions();
+
+      if (walletError) throw walletError;
+
+      // Create transaction record
+      await supabase.from("wallet_transactions").insert({
+        user_id: selectedUser.id,
+        type: "earning",
+        amount: amount,
+        description: paymentNotes || "Manual payment from admin",
+        metadata: { admin_id: session.user.id, manual_payment: true }
+      });
+
+      toast.success(`Paid $${amount.toFixed(2)} to @${selectedUser.username}`);
+      setPayDialogOpen(false);
+      fetchUsers();
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update score"
-      });
-    } finally {
-      setUpdating(false);
+      toastHook({ variant: "destructive", title: "Error", description: error.message });
     }
   };
-  const getStatusBadge = (status: string) => {
-    const config = {
-      pending: {
-        variant: "secondary" as const,
-        icon: Clock,
-        color: "text-warning"
-      },
-      approved: {
-        variant: "default" as const,
-        icon: CheckCircle2,
-        color: "text-success"
-      },
-      rejected: {
-        variant: "destructive" as const,
-        icon: XCircle,
-        color: "text-destructive"
-      }
-    };
-    const {
-      variant,
-      icon: Icon,
-      color
-    } = config[status as keyof typeof config] || config.pending;
-    return <Badge variant={variant} className="gap-1">
-        <Icon className={`h-3 w-3 ${color}`} />
-        {status}
-      </Badge>;
-  };
-  // Apply filters to submissions
-  const filterSubmissions = (subs: DemographicSubmission[]) => {
-    return subs.filter(s => {
-      if (!s.social_accounts) return false;
-      
-      // Platform filter
-      if (demoPlatformFilter !== "all" && s.social_accounts.platform !== demoPlatformFilter) return false;
-      
-      // Search filter
-      if (demoSearchQuery) {
-        const query = demoSearchQuery.toLowerCase();
-        const matchesUsername = s.social_accounts.username.toLowerCase().includes(query);
-        const profile = (s.social_accounts as any).profiles;
-        const matchesEmail = profile?.email?.toLowerCase().includes(query);
-        const matchesFullName = profile?.full_name?.toLowerCase().includes(query);
-        if (!matchesUsername && !matchesEmail && !matchesFullName) return false;
-      }
-      
-      // Score filter (only for approved submissions with scores)
-      if (demoScoreFilter !== "all" && s.status === "approved" && s.score !== null) {
-        if (demoScoreFilter === "high" && s.score < 70) return false;
-        if (demoScoreFilter === "medium" && (s.score < 40 || s.score >= 70)) return false;
-        if (demoScoreFilter === "low" && s.score >= 40) return false;
-      }
-      
-      return true;
-    });
-  };
-  
-  const sortSubmissions = (subs: DemographicSubmission[]) => {
-    return [...subs].sort((a, b) => {
-      const dateA = new Date(a.submitted_at).getTime();
-      const dateB = new Date(b.submitted_at).getTime();
-      return demoSortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-  };
-  
-  // Memoize submission filtering and sorting
-  const pendingSubmissions = useMemo(() =>
-    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "pending"))),
-    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
-  );
-  const approvedSubmissions = useMemo(() =>
-    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "approved"))),
-    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
-  );
-  const rejectedSubmissions = useMemo(() =>
-    sortSubmissions(filterSubmissions(submissions.filter(s => s.status === "rejected"))),
-    [submissions, demoSearchQuery, demoPlatformFilter, demoSortOrder]
-  );
 
-  // Memoize stats calculations
-  const { avgTier1, stats } = useMemo(() => ({
-    avgTier1: submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.tier1_percentage, 0) / submissions.length : 0,
-    stats: {
-      totalUsers: totalUserCount,
-      totalBalance: users.reduce((sum, u) => sum + (u.wallets?.balance || 0), 0),
-      totalEarned: users.reduce((sum, u) => sum + (u.wallets?.total_earned || 0), 0)
-    }
-  }), [submissions, totalUserCount, users]);
+  // Computed values
+  const pendingSubmissions = useMemo(() => submissions.filter(s => s.status === "pending"), [submissions]);
+  const totalPages = Math.ceil(totalCount / USERS_PER_PAGE);
 
-  // Pagination logic - memoized to avoid recalculation on every render
-  const { currentUsers, totalPages } = useMemo(() => {
-    const indexOfLastUser = currentPage * usersPerPage;
-    const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    return {
-      currentUsers: filteredUsers.slice(indexOfFirstUser, indexOfLastUser),
-      totalPages: Math.ceil(filteredUsers.length / usersPerPage)
-    };
-  }, [filteredUsers, currentPage, usersPerPage]);
+  return (
+    <AdminPermissionGuard resource="users">
+      <div className="p-6 space-y-4">
+        <Tabs defaultValue="users" className="space-y-4">
+          <TabsList className="bg-muted/30 p-1 h-auto">
+            <TabsTrigger value="users" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+              Users ({totalCount.toLocaleString()})
+            </TabsTrigger>
+            <TabsTrigger value="demographics" className="text-sm font-['Inter'] tracking-[-0.3px] data-[state=active]:bg-card px-4 py-2">
+              Demographics ({pendingSubmissions.length} pending)
+            </TabsTrigger>
+          </TabsList>
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  if (false && loading) {
-    return <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground font-inter tracking-[-0.5px]">Loading users...</p>
-      </div>;
-  }
-  return <AdminPermissionGuard resource="users"><div className="p-6 space-y-4">
-      <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="bg-muted/30 border-0 p-1 h-auto">
-          <TabsTrigger value="users" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
-            Users ({stats.totalUsers})
-          </TabsTrigger>
-          <TabsTrigger value="demographics" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-card data-[state=active]:text-foreground px-4 py-2">
-            Demographics ({pendingSubmissions.length} pending)
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="users" className="space-y-4">
-          
-          {/* Filters Row */}
-          <div className="space-y-3">
-            {/* Search bar and actions */}
+          <TabsContent value="users" className="space-y-4">
+            {/* Search & Actions Row */}
             <div className="flex gap-3 items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by username, name, or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 bg-card/50 border-0 font-inter tracking-[-0.5px]"
+                  ref={searchInputRef}
+                  placeholder="Search by username, name, email, or social account..."
+                  value={filters.search}
+                  onChange={(e) => updateFilter("search", e.target.value)}
+                  className="pl-10 h-10 bg-muted/30 border-0 font-['Inter'] tracking-[-0.3px]"
                 />
+                {filters.search && (
+                  <button
+                    onClick={() => updateFilter("search", "")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
+
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setAddReferralDialogOpen(true)}
-                className="h-10 gap-2 bg-card/50 font-inter tracking-[-0.5px]"
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn(
+                  "h-10 gap-2 font-['Inter'] tracking-[-0.3px]",
+                  showFilters || activeFilterCount > 0 ? "bg-primary/10 text-primary" : "bg-muted/30"
+                )}
               >
-                <UserPlus className="h-4 w-4" />
-                Add Referral
+                <Filter className="h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
               </Button>
-            </div>
-            {/* Main filter row */}
-            <div className="flex gap-3 items-center flex-wrap">
-              {/* Campaign filter */}
-              <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" className="h-9 px-3 bg-card/50 text-sm font-inter tracking-[-0.5px] gap-2">
-                    {selectedCampaign === "all" ? "All Campaigns" : campaigns.find(c => c.id === selectedCampaign)?.title}
-                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-0 bg-popover z-50" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search campaigns..." className="font-inter tracking-[-0.5px]" />
-                    <CommandList>
-                      <CommandEmpty className="font-inter tracking-[-0.5px]">No campaign found.</CommandEmpty>
-                      <CommandGroup>
-                        <CommandItem value="all" onSelect={() => {
-                            setSelectedCampaign("all");
-                            setCampaignPopoverOpen(false);
-                          }} className="font-inter tracking-[-0.5px]">
-                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === "all" ? "opacity-100" : "opacity-0")} />
-                          All Campaigns
-                        </CommandItem>
-                        {campaigns.map(campaign => <CommandItem key={campaign.id} value={campaign.title} onSelect={() => {
-                            setSelectedCampaign(campaign.id);
-                            setCampaignPopoverOpen(false);
-                          }} className="font-inter tracking-[-0.5px]">
-                          <Check className={cn("mr-2 h-4 w-4", selectedCampaign === campaign.id ? "opacity-100" : "opacity-0")} />
-                          {campaign.title}
-                        </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
 
-              {/* Signup timeframe */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" className={cn(
-                    "h-9 px-3 text-sm font-inter tracking-[-0.5px] gap-2",
-                    signupTimeframe !== "all" ? "bg-primary/10 text-primary" : "bg-card/50"
-                  )}>
-                    {signupTimeframe === "all" ? "All Time" : 
-                     signupTimeframe === "24h" ? "Last 24h" :
-                     signupTimeframe === "7d" ? "Last 7 days" :
-                     signupTimeframe === "30d" ? "Last 30 days" :
-                     signupTimeframe === "90d" ? "Last 90 days" : "All Time"}
-                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-40 p-1 bg-popover" align="start">
-                  <div className="space-y-0.5">
-                    {[
-                      { value: "all", label: "All Time" },
-                      { value: "24h", label: "Last 24 hours" },
-                      { value: "7d", label: "Last 7 days" },
-                      { value: "30d", label: "Last 30 days" },
-                      { value: "90d", label: "Last 90 days" },
-                    ].map(option => (
+              <button
+                onClick={fetchUsers}
+                disabled={loading}
+                className="h-10 w-10 flex items-center justify-center rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                {loading ? <LoadingBar size="sm" /> : <RefreshCw className="h-4 w-4 text-muted-foreground" />}
+              </button>
+            </div>
+
+            {/* Filters Panel */}
+            {showFilters && (
+              <div className="bg-muted/20 rounded-xl p-4 space-y-4">
+                {/* Quick Filters Row */}
+                <div className="flex flex-wrap gap-2">
+                  {/* Campaign */}
+                  <Popover open={campaignPopoverOpen} onOpenChange={setCampaignPopoverOpen}>
+                    <PopoverTrigger asChild>
                       <Button
-                        key={option.value}
-                        variant={signupTimeframe === option.value ? "secondary" : "ghost"}
-                        size="sm"
-                        className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
-                        onClick={() => setSignupTimeframe(option.value)}
+                        variant="ghost"
+                        className={cn(
+                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          filters.campaign !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
+                        )}
                       >
-                        {option.label}
+                        {filters.campaign === "all" ? "Campaign" : campaigns.find(c => c.id === filters.campaign)?.title?.slice(0, 20)}
+                        <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search campaigns..." />
+                        <CommandList>
+                          <CommandEmpty>No campaign found.</CommandEmpty>
+                          <CommandGroup>
+                            <CommandItem onSelect={() => { updateFilter("campaign", "all"); setCampaignPopoverOpen(false); }}>
+                              <Check className={cn("mr-2 h-4 w-4", filters.campaign === "all" ? "opacity-100" : "opacity-0")} />
+                              All Campaigns
+                            </CommandItem>
+                            {campaigns.map(c => (
+                              <CommandItem key={c.id} onSelect={() => { updateFilter("campaign", c.id); setCampaignPopoverOpen(false); }}>
+                                <Check className={cn("mr-2 h-4 w-4", filters.campaign === c.id ? "opacity-100" : "opacity-0")} />
+                                {c.title}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Time Period */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          filters.signupTimeframe !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
+                        )}
+                      >
+                        {filters.signupTimeframe === "all" ? "Joined" :
+                          filters.signupTimeframe === "24h" ? "Last 24h" :
+                          filters.signupTimeframe === "7d" ? "Last 7d" :
+                          filters.signupTimeframe === "30d" ? "Last 30d" : "Last 90d"}
+                        <ChevronDown className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-36 p-1" align="start">
+                      {["all", "24h", "7d", "30d", "90d"].map(v => (
+                        <Button
+                          key={v}
+                          variant={filters.signupTimeframe === v ? "secondary" : "ghost"}
+                          size="sm"
+                          className="w-full justify-start text-xs"
+                          onClick={() => updateFilter("signupTimeframe", v)}
+                        >
+                          {v === "all" ? "All Time" : v === "24h" ? "Last 24 hours" : `Last ${v.replace("d", " days")}`}
+                        </Button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Platform */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "h-8 px-3 text-xs font-['Inter'] tracking-[-0.3px] gap-1.5",
+                          filters.platform !== "all" ? "bg-primary/10 text-primary" : "bg-muted/50"
+                        )}
+                      >
+                        {filters.platform === "all" ? "Platform" : filters.platform}
+                        <ChevronDown className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-36 p-1" align="start">
+                      {["all", "tiktok", "instagram", "youtube"].map(v => (
+                        <Button
+                          key={v}
+                          variant={filters.platform === v ? "secondary" : "ghost"}
+                          size="sm"
+                          className="w-full justify-start text-xs gap-2"
+                          onClick={() => updateFilter("platform", v)}
+                        >
+                          {v !== "all" && getPlatformIcon(v)}
+                          {v === "all" ? "All Platforms" : v.charAt(0).toUpperCase() + v.slice(1)}
+                        </Button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Toggle Filters */}
+                  <div className="flex gap-1">
+                    {[
+                      { key: "hasDiscord" as const, label: "Discord", activeColor: "bg-[#5865F2]/20 text-[#5865F2]" },
+                      { key: "hasPhone" as const, label: "Phone", activeColor: "bg-emerald-500/20 text-emerald-400" },
+                      { key: "hasSocialAccount" as const, label: "Social", activeColor: "bg-blue-500/20 text-blue-400" },
+                      { key: "hasApprovedDemographics" as const, label: "Demographics", activeColor: "bg-amber-500/20 text-amber-400" },
+                      { key: "hasBrandRole" as const, label: "Brand", activeColor: "bg-purple-500/20 text-purple-400" },
+                    ].map(({ key, label, activeColor }) => (
+                      <Button
+                        key={key}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "h-8 px-2.5 text-xs font-['Inter'] tracking-[-0.3px]",
+                          filters[key] === true ? activeColor :
+                          filters[key] === false ? "bg-muted/80 text-muted-foreground line-through" : "bg-muted/50"
+                        )}
+                        onClick={() => {
+                          const current = filters[key];
+                          updateFilter(key, current === true ? false : current === false ? null : true);
+                        }}
+                      >
+                        {label}
+                        {filters[key] !== null && (
+                          <span className="ml-1 opacity-70">{filters[key] ? "✓" : "✗"}</span>
+                        )}
                       </Button>
                     ))}
                   </div>
-                </PopoverContent>
-              </Popover>
+                </div>
 
-              {/* Toggle filters */}
-              <div className="flex gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
-                    hasDiscord === true ? "bg-[#5865F2]/20 text-[#5865F2]" : 
-                    hasDiscord === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
-                  )}
-                  onClick={() => setHasDiscord(hasDiscord === true ? false : hasDiscord === false ? null : true)}
-                >
-                  Discord {hasDiscord === true ? "Yes" : hasDiscord === false ? "No" : ""}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
-                    hasPhone === true ? "bg-green-500/20 text-green-400" : 
-                    hasPhone === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
-                  )}
-                  onClick={() => setHasPhone(hasPhone === true ? false : hasPhone === false ? null : true)}
-                >
-                  Phone {hasPhone === true ? "Yes" : hasPhone === false ? "No" : ""}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
-                    hasSocialAccount === true ? "bg-blue-500/20 text-blue-400" : 
-                    hasSocialAccount === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
-                  )}
-                  onClick={() => setHasSocialAccount(hasSocialAccount === true ? false : hasSocialAccount === false ? null : true)}
-                >
-                  Social {hasSocialAccount === true ? "Yes" : hasSocialAccount === false ? "No" : ""}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
-                    hasApprovedDemographics === true ? "bg-emerald-500/20 text-emerald-400" : 
-                    hasApprovedDemographics === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
-                  )}
-                  onClick={() => setHasApprovedDemographics(hasApprovedDemographics === true ? false : hasApprovedDemographics === false ? null : true)}
-                >
-                  Demographics {hasApprovedDemographics === true ? "Yes" : hasApprovedDemographics === false ? "No" : ""}
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-9 px-3 text-xs font-inter tracking-[-0.5px] hover:bg-muted",
-                    hasBrandRole === true ? "bg-purple-500/20 text-purple-400" : 
-                    hasBrandRole === false ? "bg-muted/50 text-muted-foreground" : "bg-card/50"
-                  )}
-                  onClick={() => setHasBrandRole(hasBrandRole === true ? false : hasBrandRole === false ? null : true)}
-                >
-                  Brand {hasBrandRole === true ? "Yes" : hasBrandRole === false ? "No" : ""}
-                </Button>
-              </div>
-
-              {/* Expand/Collapse more filters */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 px-3 text-xs font-inter tracking-[-0.5px] bg-card/50 ml-auto gap-1.5 hover:bg-muted"
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
-              >
-                {filtersExpanded ? "Less filters" : "More filters"}
-                {filtersExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-              </Button>
-
-              {/* Sort button */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className={cn(
-                    "h-9 w-9",
-                    sortField ? "bg-primary/10" : "bg-card/50"
-                  )}>
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 bg-popover" align="end">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 px-2 font-inter tracking-[-0.5px]">Sort by</p>
-                    <Button
-                      variant={sortField === "balance" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
-                      onClick={() => {
-                        if (sortField === "balance") {
-                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                        } else {
-                          setSortField("balance");
-                          setSortOrder("desc");
-                        }
-                      }}
-                    >
-                      Balance
-                      {sortField === "balance" && (
-                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                      )}
-                    </Button>
-                    <Button
-                      variant={sortField === "totalEarned" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs font-inter tracking-[-0.5px]"
-                      onClick={() => {
-                        if (sortField === "totalEarned") {
-                          setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-                        } else {
-                          setSortField("totalEarned");
-                          setSortOrder("desc");
-                        }
-                      }}
-                    >
-                      Total Earned
-                      {sortField === "totalEarned" && (
-                        sortOrder === "desc" ? <ArrowDown className="h-3 w-3 ml-auto" /> : <ArrowUp className="h-3 w-3 ml-auto" />
-                      )}
-                    </Button>
-                    {sortField && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-xs text-muted-foreground font-inter tracking-[-0.5px]"
-                        onClick={() => {
-                          setSortField(null);
-                          setSortOrder("desc");
-                        }}
-                      >
-                        Clear sort
-                      </Button>
-                    )}
+                {/* Advanced Filters Row */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Min Earned</Label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={filters.minEarnings}
+                        onChange={e => updateFilter("minEarnings", e.target.value)}
+                        className="w-24 h-8 pl-6 bg-muted/50 border-0 text-xs"
+                      />
+                    </div>
                   </div>
-                </PopoverContent>
-              </Popover>
+
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">Min Balance</Label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={filters.minBalance}
+                        onChange={e => updateFilter("minBalance", e.target.value)}
+                        className="w-24 h-8 pl-6 bg-muted/50 border-0 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sort */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className={cn("h-8 gap-1.5 text-xs ml-auto", filters.sortField ? "bg-muted/80" : "bg-muted/50")}>
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                        Sort: {filters.sortField === "created_at" ? "Recent" : filters.sortField === "balance" ? "Balance" : filters.sortField === "totalEarned" ? "Earned" : filters.sortField === "trust_score" ? "Trust" : "None"}
+                        {filters.sortField && (filters.sortOrder === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-44 p-1" align="end">
+                      {[
+                        { field: "created_at" as const, label: "Join Date" },
+                        { field: "balance" as const, label: "Balance" },
+                        { field: "totalEarned" as const, label: "Total Earned" },
+                        { field: "trust_score" as const, label: "Trust Score" },
+                      ].map(({ field, label }) => (
+                        <Button
+                          key={field}
+                          variant={filters.sortField === field ? "secondary" : "ghost"}
+                          size="sm"
+                          className="w-full justify-between text-xs"
+                          onClick={() => {
+                            if (filters.sortField === field) {
+                              updateFilter("sortOrder", filters.sortOrder === "asc" ? "desc" : "asc");
+                            } else {
+                              setFilters(prev => ({ ...prev, sortField: field, sortOrder: "desc" }));
+                              setCurrentPage(1);
+                            }
+                          }}
+                        >
+                          {label}
+                          {filters.sortField === field && (
+                            filters.sortOrder === "desc" ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />
+                          )}
+                        </Button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+
+                  {activeFilterCount > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs text-muted-foreground hover:text-foreground">
+                      Clear all
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Results Count */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+              <span>
+                {loading ? "Loading..." : `Showing ${users.length} of ${totalCount.toLocaleString()} users`}
+              </span>
+              {activeFilterCount > 0 && <span className="text-primary">{activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active</span>}
             </div>
 
-            {/* Expanded filters */}
-            {filtersExpanded && (
-              <div className="flex gap-3 items-center flex-wrap p-4 bg-card/30 rounded-lg">
-                {/* Min earnings */}
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
-                    Min Earned $
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={minEarnings}
-                    onChange={e => setMinEarnings(e.target.value)}
-                    className="w-20 h-8 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]"
-                  />
-                </div>
-
-                {/* Min balance */}
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground font-inter tracking-[-0.5px] whitespace-nowrap">
-                    Min Balance $
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={minBalance}
-                    onChange={e => setMinBalance(e.target.value)}
-                    className="w-20 h-8 bg-card/50 border-0 text-sm font-inter tracking-[-0.5px]"
-                  />
-                </div>
-
-                {/* Clear all filters & apply to all users */}
-                <div className="flex items-center gap-2 ml-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs font-inter tracking-[-0.5px]"
-                    onClick={applyFiltersAcrossAllUsers}
-                    disabled={loading}
-                  >
-                    Apply to all users
+            {/* Users List */}
+            {loading ? (
+              <PageLoading />
+            ) : users.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground font-['Inter'] tracking-[-0.3px]">No users found</p>
+                {activeFilterCount > 0 && (
+                  <Button variant="link" onClick={clearFilters} className="mt-2 text-sm">
+                    Clear filters
                   </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {/* Header */}
+                <div className="grid grid-cols-12 gap-3 px-4 py-2 text-xs font-medium text-muted-foreground font-['Inter'] tracking-[-0.3px]">
+                  <div className="col-span-4">User</div>
+                  <div className="col-span-2">Accounts</div>
+                  <div className="col-span-1 text-center">Trust</div>
+                  <div className="col-span-2">Joined</div>
+                  <div className="col-span-1 text-right">Balance</div>
+                  <div className="col-span-1 text-right">Earned</div>
+                  <div className="col-span-1"></div>
+                </div>
+
+                {/* User Rows */}
+                {users.map(user => {
+                  const balance = user.wallets?.balance || 0;
+                  const totalEarned = user.wallets?.total_earned || 0;
+                  const trustScore = user.trust_score ?? 0;
+                  const trustColor = trustScore >= 70 ? "text-emerald-500" : trustScore >= 40 ? "text-amber-500" : "text-red-400";
+
+                  return (
+                    <div
+                      key={user.id}
+                      onClick={() => openUserDetails(user)}
+                      className="grid grid-cols-12 gap-3 px-4 py-3 bg-muted/20 hover:bg-muted/40 rounded-xl cursor-pointer transition-colors items-center"
+                    >
+                      {/* User */}
+                      <div className="col-span-4 flex items-center gap-3 min-w-0">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <span className="text-sm font-medium">{(user.full_name || user.username || "?")[0].toUpperCase()}</span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium truncate">{user.username}</span>
+                            {user.discord_id && <img src={discordIcon} alt="" className="w-3.5 h-3.5 opacity-60" />}
+                            {user.phone_number && <Phone className="w-3.5 h-3.5 text-muted-foreground/60" />}
+                          </div>
+                          {user.full_name && <p className="text-xs text-muted-foreground truncate">{user.full_name}</p>}
+                        </div>
+                      </div>
+
+                      {/* Accounts */}
+                      <div className="col-span-2">
+                        {user.social_accounts && user.social_accounts.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.social_accounts.slice(0, 3).map(acc => {
+                              const status = acc.demographic_submissions?.[0]?.status;
+                              return (
+                                <div key={acc.id} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 text-xs">
+                                  {getPlatformIcon(acc.platform)}
+                                  {status === "approved" && <BadgeCheck className="h-3 w-3 text-emerald-500" />}
+                                  {status === "pending" && <Clock className="h-3 w-3 text-amber-500" />}
+                                </div>
+                              );
+                            })}
+                            {user.social_accounts.length > 3 && (
+                              <span className="text-xs text-muted-foreground">+{user.social_accounts.length - 3}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/50">—</span>
+                        )}
+                      </div>
+
+                      {/* Trust */}
+                      <div className="col-span-1 text-center">
+                        <span className={cn("text-sm font-medium", trustColor)}>{trustScore}</span>
+                      </div>
+
+                      {/* Joined */}
+                      <div className="col-span-2">
+                        <span className="text-xs text-muted-foreground">
+                          {user.created_at ? formatDistanceToNow(new Date(user.created_at), { addSuffix: true }) : "—"}
+                        </span>
+                      </div>
+
+                      {/* Balance */}
+                      <div className="col-span-1 text-right">
+                        <span className="text-sm font-medium">${balance.toFixed(2)}</span>
+                      </div>
+
+                      {/* Earned */}
+                      <div className="col-span-1 text-right">
+                        <span className="text-sm font-medium text-emerald-500">${totalEarned.toFixed(2)}</span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="col-span-1 flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={e => { e.stopPropagation(); openPayDialog(user); }}
+                          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          Pay
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-xs text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground font-inter tracking-[-0.5px]"
-                    onClick={() => {
-                      setSelectedCampaign("all");
-                      setMinEarnings("");
-                      setMinBalance("");
-                      setHasDiscord(null);
-                      setHasPhone(null);
-                      setHasSocialAccount(null);
-                      setHasApprovedDemographics(null);
-                      setSignupTimeframe("all");
-                      setSortField(null);
-                    }}
-                    disabled={loading}
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    className="h-8 px-3 text-xs"
                   >
-                    Clear all filters
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
                   </Button>
-                </div>
-              </div>
-            )}
 
-            {/* Active filter count & results */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-              <span>
-                {loading ? "Loading..." : `${filteredUsers.length} user${filteredUsers.length !== 1 ? 's' : ''}`}
-                {!loading && totalUserCount > 0 && <span className="text-muted-foreground/60 ml-1">of {totalUserCount} total</span>}
-              </span>
-              {(selectedCampaign !== "all" || minEarnings || minBalance || hasDiscord !== null || hasPhone !== null || hasSocialAccount !== null || hasApprovedDemographics !== null || signupTimeframe !== "all" || debouncedSearchQuery) && (
-                <span className="text-primary">
-                  Filters active
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Users List */}
-          {loading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {/* Header */}
-              <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px]">
-                <div className="col-span-3">User</div>
-                <div className="col-span-4">Accounts</div>
-                <div className="col-span-1 text-right">Balance</div>
-                <div className="col-span-1 text-right">Earned</div>
-                <div className="col-span-3 text-right">Actions</div>
-              </div>
-
-              {/* User Rows */}
-              {currentUsers.map(user => {
-                const balance = user.wallets?.balance || 0;
-                const totalEarned = user.wallets?.total_earned || 0;
-                return (
-                  <div 
-                    key={user.id} 
-                    onClick={() => openUserDetailsDialog(user)}
-                    className="grid grid-cols-12 gap-4 px-4 py-3 bg-card/50 rounded-lg hover:bg-card/80 cursor-pointer transition-colors items-center"
-                  >
-                    <div className="col-span-3 flex items-center gap-3 min-w-0">
-                      {user.avatar_url ? (
-                        <img src={user.avatar_url} alt={user.username} className="h-8 w-8 rounded-full object-cover shrink-0" />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <span className="text-xs font-medium font-inter tracking-[-0.5px]">
-                            {(user.full_name || user.username || '?')[0].toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">{user.username}</p>
-                        {user.full_name && <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate">{user.full_name}</p>}
-                      </div>
-                    </div>
-
-                    <div className="col-span-4">
-                      {user.social_accounts && user.social_accounts.length > 0 ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {user.social_accounts.slice(0, 3).map(account => {
-                            const demographicStatus = account.demographic_submissions?.[0]?.status;
-                            return (
-                              <div 
-                                key={account.id} 
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-muted/30 font-inter tracking-[-0.5px]"
-                              >
-                                {getPlatformIcon(account.platform)}
-                                <span className="max-w-[80px] truncate">{account.username}</span>
-                                {demographicStatus === 'approved' && <BadgeCheck className="h-3 w-3 text-emerald-500 shrink-0" />}
-                                {demographicStatus === 'pending' && <Clock className="h-3 w-3 text-amber-500 shrink-0" />}
-                                {demographicStatus === 'rejected' && <XCircle className="h-3 w-3 text-destructive shrink-0" />}
-                                {!demographicStatus && <AlertCircle className="h-3 w-3 text-muted-foreground shrink-0" />}
-                              </div>
-                            );
-                          })}
-                          {user.social_accounts.length > 3 && (
-                            <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">+{user.social_accounts.length - 3}</span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/50 font-inter tracking-[-0.5px]">No accounts</span>
-                      )}
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-medium font-inter tracking-[-0.5px]">${balance.toFixed(2)}</span>
-                    </div>
-
-                    <div className="col-span-1 text-right">
-                      <span className="text-sm font-medium font-inter tracking-[-0.5px] text-emerald-500">${totalEarned.toFixed(2)}</span>
-                    </div>
-
-                    <div className="col-span-3 flex gap-2 justify-end">
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={e => {
-                          e.stopPropagation();
-                          openAddToCampaignDialog(user);
-                        }} 
-                        className="h-7 px-2.5 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
-                      >
-                        Add
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        onClick={e => {
-                          e.stopPropagation();
-                          openPayDialog(user);
-                        }} 
-                        className="h-7 px-2.5 text-xs font-inter tracking-[-0.5px] bg-emerald-600 hover:bg-emerald-700"
-                      >
-                        Pay
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {filteredUsers.length > usersPerPage && (
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                {(currentPage - 1) * usersPerPage + 1}-{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length}
-              </p>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="h-7 px-2 text-xs font-inter tracking-[-0.5px]"
-                >
-                  Prev
-                </Button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => handlePageChange(pageNum)}
-                      className="h-7 w-7 p-0 text-xs font-inter tracking-[-0.5px]"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="h-7 px-2 text-xs font-inter tracking-[-0.5px]"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-
-      {/* Payment Dialog */}
-      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pay User</DialogTitle>
-            <DialogDescription>
-              {selectedUser && `Send payment to @${selectedUser.username}`}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount (USD) *</Label>
-              <Input id="amount" type="number" step="0.01" min="0" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="0.00" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Textarea id="notes" value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} placeholder="Add payment notes..." rows={3} />
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setPayDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handlePayUser}>
-                Send Payment
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CSV Import Dialog */}
-      <Dialog open={csvImportDialogOpen} onOpenChange={setCsvImportDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Import Transactions from CSV</DialogTitle>
-            <DialogDescription>
-              Upload a CSV file with format: account_username ; payout amount ; date
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="csv-file">CSV File</Label>
-                <Button variant="ghost" size="sm" onClick={downloadCsvTemplate} className="gap-2 h-8">
-                  <FileDown className="h-4 w-4" />
-                  Download Template
-                </Button>
-              </div>
-              <Input id="csv-file" type="file" accept=".csv" onChange={handleCsvFileChange} disabled={isImporting} />
-              {csvFile && <p className="text-sm text-muted-foreground">
-                  Selected: {csvFile.name}
-                </p>}
-            </div>
-
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-              <p className="text-sm font-medium">CSV Format:</p>
-              <code className="text-xs block bg-background p-2 rounded">
-                account_username;payout amount;date<br />
-                tiktok_user123;150.00;2025-10-02<br />
-                insta_creator;200.50;2025-10-01
-              </code>
-              <p className="text-xs text-muted-foreground">
-                • Use semicolons (;) as separators<br />
-                • <strong>Username must match their connected social account username</strong> (TikTok, Instagram, YouTube)<br />
-                • Amount should be in USD (e.g., 150.00)<br />
-                • Date is optional, defaults to today
-              </p>
-            </div>
-
-            {importResults && <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-4">
-                  <Card className="bg-background">
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Processed</p>
-                      <p className="text-2xl font-bold">{importResults.processed}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-success/10">
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Successful</p>
-                      <p className="text-2xl font-bold text-success">{importResults.successful}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-destructive/10">
-                    <CardContent className="pt-4">
-                      <p className="text-xs text-muted-foreground">Failed</p>
-                      <p className="text-2xl font-bold text-destructive">{importResults.failed}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {importResults.errors && importResults.errors.length > 0 && <div className="space-y-2">
-                    <p className="text-sm font-medium text-destructive">Errors:</p>
-                    <div className="bg-destructive/10 p-3 rounded-lg max-h-40 overflow-y-auto">
-                      {importResults.errors.map((error: any, idx: number) => <p key={idx} className="text-xs text-destructive mb-1">
-                          Row {error.row} ({error.username}): {error.error}
-                        </p>)}
-                    </div>
-                  </div>}
-
-                {importResults.details && importResults.details.length > 0 && <div className="space-y-2">
-                    <p className="text-sm font-medium">Transaction Details:</p>
-                    <div className="bg-muted/50 p-3 rounded-lg max-h-60 overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Username</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {importResults.details.map((detail: any, idx: number) => <TableRow key={idx}>
-                              <TableCell className="font-medium">{detail.username}</TableCell>
-                              <TableCell className="text-right">${detail.amount.toFixed(2)}</TableCell>
-                              <TableCell className="text-right">
-                                {detail.status === 'success' ? <span className="text-success">✓ Success</span> : <span className="text-destructive">✗ Failed</span>}
-                              </TableCell>
-                            </TableRow>)}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>}
-              </div>}
-
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => {
-                  setCsvImportDialogOpen(false);
-                  setCsvFile(null);
-                  setImportResults(null);
-                }} disabled={isImporting}>
-                Close
-              </Button>
-              <Button onClick={handleCsvImport} disabled={!csvFile || isImporting} className="gap-2">
-                {isImporting ? <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Importing...
-                  </> : <>
-                    <Upload className="h-4 w-4" />
-                    Import Transactions
-                  </>}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* User Context Sheet (New Apple-like design) */}
-      <UserContextSheet
-        user={selectedUser}
-        open={userContextSheetOpen}
-        onOpenChange={setUserContextSheetOpen}
-        onUserUpdated={fetchData}
-        onPayUser={(user) => {
-          setUserContextSheetOpen(false);
-          openPayDialog(user as unknown as User);
-        }}
-      />
-
-      {/* User Details Dialog (Legacy) */}
-      <UserDetailsDialog open={userDetailsDialogOpen} onOpenChange={setUserDetailsDialogOpen} user={selectedUser} socialAccounts={userSocialAccounts} transactions={userTransactions} paymentMethods={userPaymentMethods} loadingSocialAccounts={loadingSocialAccounts} loadingTransactions={loadingTransactions} loadingPaymentMethods={loadingPaymentMethods} socialAccountsOpen={socialAccountsOpen} onSocialAccountsOpenChange={setSocialAccountsOpen} transactionsOpen={transactionsOpen} onTransactionsOpenChange={setTransactionsOpen} paymentMethodsOpen={paymentMethodsOpen} onPaymentMethodsOpenChange={setPaymentMethodsOpen} onEditScore={openEditScoreFromSocialAccount} />
-        </TabsContent>
-
-        {/* Demographics Tab */}
-        <TabsContent value="demographics" className="space-y-6">
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search username, email..."
-                value={demoSearchQuery}
-                onChange={(e) => setDemoSearchQuery(e.target.value)}
-                className="pl-9 h-9 text-sm font-inter tracking-[-0.5px]"
-              />
-            </div>
-            
-            {/* Platform Filter */}
-            <div className="flex items-center gap-1.5">
-              {[
-                { value: 'all', label: 'All' },
-                { value: 'tiktok', label: 'TikTok', icon: tiktokLogo },
-                { value: 'instagram', label: 'Instagram', icon: instagramLogo },
-                { value: 'youtube', label: 'YouTube', icon: youtubeLogo },
-              ].map((platform) => (
-                <Button
-                  key={platform.value}
-                  variant={demoPlatformFilter === platform.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setDemoPlatformFilter(platform.value)}
-                  className={cn(
-                    "h-8 px-3 text-xs font-inter tracking-[-0.5px] gap-1.5",
-                    demoPlatformFilter === platform.value && "bg-primary text-primary-foreground"
-                  )}
-                >
-                  {platform.icon && (
-                    <img src={platform.icon} alt={platform.label} className="h-3.5 w-3.5" />
-                  )}
-                  {platform.value === 'all' ? 'All Platforms' : platform.label}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Score Filter (for approved) */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">Score:</span>
-              {[
-                { value: 'all', label: 'All' },
-                { value: 'high', label: '70+', color: 'text-emerald-500' },
-                { value: 'medium', label: '40-69', color: 'text-amber-500' },
-                { value: 'low', label: '<40', color: 'text-destructive' },
-              ].map((scoreOption) => (
-                <Button
-                  key={scoreOption.value}
-                  variant={demoScoreFilter === scoreOption.value ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setDemoScoreFilter(scoreOption.value)}
-                  className={cn(
-                    "h-7 px-2 text-xs font-inter tracking-[-0.5px]",
-                    demoScoreFilter !== scoreOption.value && scoreOption.color
-                  )}
-                >
-                  {scoreOption.label}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Sort Order */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDemoSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-              className="h-8 gap-1.5 text-xs font-inter tracking-[-0.5px] ml-auto"
-            >
-              {demoSortOrder === 'asc' ? (
-                <>
-                  <ArrowUp className="h-3.5 w-3.5" />
-                  Oldest First
-                </>
-              ) : (
-                <>
-                  <ArrowDown className="h-3.5 w-3.5" />
-                  Newest First
-                </>
-              )}
-            </Button>
-            
-            {/* Clear Filters */}
-            {(demoSearchQuery || demoPlatformFilter !== 'all' || demoScoreFilter !== 'all') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setDemoSearchQuery("");
-                  setDemoPlatformFilter("all");
-                  setDemoScoreFilter("all");
-                }}
-                className="h-8 text-xs font-inter tracking-[-0.5px] text-muted-foreground hover:text-foreground"
-              >
-                Clear filters
-              </Button>
-            )}
-          </div>
-          
-          {/* Demographics Tabs */}
-          <Tabs defaultValue="pending" className="space-y-4">
-            <TabsList className="bg-muted/30 border-0 p-1 h-auto">
-              <TabsTrigger value="pending" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500 px-4 py-2 gap-1.5">
-                <Clock className="w-3.5 h-3.5" />
-                Pending ({pendingSubmissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="approved" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-500 px-4 py-2 gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Approved ({approvedSubmissions.length})
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="text-sm font-inter tracking-[-0.5px] data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive px-4 py-2 gap-1.5">
-                <XCircle className="w-3.5 h-3.5" />
-                Rejected ({rejectedSubmissions.length})
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Pending Submissions */}
-            <TabsContent value="pending" className="space-y-4">
-              {pendingSubmissions.length === 0 ? (
-                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No pending submissions
-                </div>
-              ) : (
-                <>
-                  {/* Keyboard shortcuts hint */}
-                  <div className="flex items-center justify-between px-1">
-                    <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                      Click a video to review. Use keyboard shortcuts: <kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px]">A</kbd> approve, <kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px]">R</kbd> reject, <kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px]">←</kbd><kbd className="px-1.5 py-0.5 bg-muted rounded border text-[10px]">→</kbd> navigate
-                    </p>
-                  </div>
-
-                  {/* Grid of video thumbnails */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {pendingSubmissions.map(submission => {
-                      const account = submission.social_accounts;
-                      const followerCount = account.follower_count || 0;
-                      const hasAvatar = !!account.avatar_url;
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) pageNum = i + 1;
+                      else if (currentPage <= 3) pageNum = i + 1;
+                      else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                      else pageNum = currentPage - 2 + i;
 
                       return (
-                        <div
-                          key={submission.id}
-                          className="bg-card/50 hover:bg-card rounded-xl p-3 transition-all group"
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "ghost"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="h-8 w-8 p-0 text-xs"
                         >
-                          {/* Video Thumbnail */}
-                          {submission.screenshot_url ? (
-                            <VideoThumbnail
-                              src={submission.screenshot_url}
-                              onClick={() => openReviewDialog(submission)}
-                              isSelected={reviewingSubmission?.id === submission.id}
-                              className="mb-3"
-                            />
-                          ) : (
-                            <div
-                              className="aspect-[9/16] rounded-lg bg-muted/30 flex items-center justify-center mb-3 cursor-pointer"
-                              onClick={() => openReviewDialog(submission)}
-                            >
-                              <div className="text-center text-muted-foreground">
-                                <ImageIcon className="w-6 h-6 mx-auto mb-1 opacity-50" />
-                                <p className="text-[10px] font-inter tracking-[-0.5px]">No video</p>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Compact Account Info */}
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="relative flex-shrink-0">
-                              {hasAvatar ? (
-                                <img
-                                  src={account.avatar_url!}
-                                  alt={account.username}
-                                  className="w-7 h-7 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                                  <span className="text-[10px] font-semibold text-muted-foreground">
-                                    {account.username.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-background flex items-center justify-center">
-                                {getPlatformIcon(account.platform)}
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-xs font-inter tracking-[-0.5px] truncate">
-                                @{account.username}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px]">
-                                {followerCount > 0 ? `${(followerCount / 1000).toFixed(1)}K` : 'No data'}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Tier badge */}
-                          <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px] w-full justify-center">
-                            Tier 1: {submission.tier1_percentage}%
-                          </Badge>
-                        </div>
+                          {pageNum}
+                        </Button>
                       );
                     })}
                   </div>
-                </>
-              )}
-            </TabsContent>
 
-            {/* Demographics Review Dialog */}
-            <DemographicReviewDialog
-              open={reviewDialogOpen}
-              onOpenChange={setReviewDialogOpen}
-              submission={reviewingSubmission}
-              submissions={pendingSubmissions}
-              onApprove={handleDialogApprove}
-              onReject={handleDialogReject}
-              onNavigate={(s) => setReviewingSubmission(s)}
-              isProcessing={!!processingSubmission}
-            />
-
-            {/* Approved Submissions */}
-            <TabsContent value="approved" className="space-y-4">
-              {approvedSubmissions.length === 0 ? (
-                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No approved submissions
-                </div>
-              ) : (
-                <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {approvedSubmissions
-                    .slice((approvedPage - 1) * ITEMS_PER_PAGE, approvedPage * ITEMS_PER_PAGE)
-                    .map(submission => {
-                      const account = submission.social_accounts;
-                      const hasAvatar = !!account.avatar_url;
-                      const followerCount = account.follower_count || 0;
-                      const reviewedDate = submission.reviewed_at ? new Date(submission.reviewed_at) : new Date(submission.submitted_at);
-                      const profile = (account as any).profiles;
-                      
-                      // Get all submissions for this account to show history
-                      const accountSubmissions = submissions.filter(
-                        s => s.social_accounts?.id === account.id
-                      );
-                      const hasHistory = accountSubmissions.length > 1;
-                      
-                      return (
-                        <div 
-                          key={submission.id} 
-                          className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all"
-                        >
-                          {/* Owner Info */}
-                          {profile && (
-                            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border/50">
-                              {profile.avatar_url ? (
-                                <img 
-                                  src={profile.avatar_url} 
-                                  alt={profile.username}
-                                  className="w-6 h-6 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-muted-foreground">
-                                    {(profile.full_name || profile.username || '?').charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium font-inter tracking-[-0.5px] truncate">
-                                  {profile.full_name || profile.username}
-                                </p>
-                                {profile.email && (
-                                  <p className="text-[10px] text-muted-foreground truncate">
-                                    {profile.email}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          
-                          {/* Header with avatar and account info */}
-                          <a 
-                            href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-                          >
-                            {/* Avatar */}
-                            <div className="relative flex-shrink-0">
-                              {hasAvatar ? (
-                                <img 
-                                  src={account.avatar_url!} 
-                                  alt={account.username}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                  <span className="text-lg font-semibold text-muted-foreground">
-                                    {account.username.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                                {getPlatformIcon(account.platform)}
-                              </div>
-                            </div>
-
-                            {/* Account Info */}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
-                                @{account.username}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                  {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
-                                </span>
-                              </div>
-                            </div>
-                          </a>
-
-                          {/* Score Display */}
-                          <div 
-                            className="mt-4 bg-emerald-500/10 rounded-lg p-3 cursor-pointer hover:bg-emerald-500/15 transition-colors"
-                            onClick={() => openEditScoreDialog(submission)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Demographics Score</p>
-                                <p className="text-2xl font-bold font-inter tracking-[-0.5px] text-emerald-500">{submission.score}</p>
-                              </div>
-                              <Badge className="bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 text-[10px] font-inter tracking-[-0.5px]">
-                                <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Approved
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Stats Row - Just reviewed date */}
-                          <div className="mt-3 text-xs font-inter tracking-[-0.5px]">
-                            <div className="bg-muted/30 rounded-lg p-2">
-                              <p className="text-muted-foreground text-[10px]">Reviewed</p>
-                              <p className="font-medium">
-                                {reviewedDate.toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Bio Preview */}
-                          {account.bio && (
-                            <p className="text-[11px] text-muted-foreground mt-3 line-clamp-2 font-inter tracking-[-0.5px]">
-                              {account.bio}
-                            </p>
-                          )}
-
-                          {/* Admin Notes */}
-                          {submission.admin_notes && (
-                            <p className="text-[11px] text-muted-foreground/70 mt-2 line-clamp-1 italic font-inter tracking-[-0.5px]">
-                              Note: {submission.admin_notes}
-                            </p>
-                          )}
-                          
-                          {/* Submission History */}
-                          {hasHistory && (
-                            <div className="mt-3 pt-3 border-t border-border/50">
-                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-2">
-                                {accountSubmissions.length} total submissions
-                              </p>
-                              <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                                {accountSubmissions.map((sub, idx) => (
-                                  <div 
-                                    key={sub.id} 
-                                    className={`flex items-center justify-between text-[10px] font-inter tracking-[-0.5px] p-1.5 rounded ${sub.id === submission.id ? 'bg-primary/10' : 'bg-muted/20'}`}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className={`w-1.5 h-1.5 rounded-full ${
-                                        sub.status === 'approved' ? 'bg-emerald-500' : 
-                                        sub.status === 'rejected' ? 'bg-destructive' : 'bg-amber-500'
-                                      }`} />
-                                      <span className="text-muted-foreground">
-                                        {new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">T1: {sub.tier1_percentage}%</span>
-                                      {sub.score !== null && <span className="text-muted-foreground">Score: {sub.score}</span>}
-                                      {sub.screenshot_url && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            openReviewDialog(sub);
-                                          }}
-                                          className="text-primary hover:underline"
-                                        >
-                                          View
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Pagination */}
-                  {approvedSubmissions.length > ITEMS_PER_PAGE && (
-                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                        Showing {((approvedPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(approvedPage * ITEMS_PER_PAGE, approvedSubmissions.length)} of {approvedSubmissions.length}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setApprovedPage(p => Math.max(1, p - 1))}
-                          disabled={approvedPage === 1}
-                          className="text-xs font-inter tracking-[-0.5px]"
-                        >
-                          <ChevronLeft className="w-4 h-4 mr-1" />
-                          Previous
-                        </Button>
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          Page {approvedPage} of {Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE)}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setApprovedPage(p => Math.min(Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE), p + 1))}
-                          disabled={approvedPage >= Math.ceil(approvedSubmissions.length / ITEMS_PER_PAGE)}
-                          className="text-xs font-inter tracking-[-0.5px]"
-                        >
-                          Next
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </TabsContent>
-
-            {/* Rejected Submissions */}
-            <TabsContent value="rejected" className="space-y-4">
-              {rejectedSubmissions.length === 0 ? (
-                <div className="py-16 text-center text-muted-foreground font-inter tracking-[-0.5px]">
-                  No rejected submissions
-                </div>
-              ) : (
-                <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {rejectedSubmissions
-                    .slice((rejectedPage - 1) * ITEMS_PER_PAGE, rejectedPage * ITEMS_PER_PAGE)
-                    .map(submission => {
-                    const account = submission.social_accounts;
-                    const hasAvatar = !!account.avatar_url;
-                    const followerCount = account.follower_count || 0;
-                    
-                    return (
-                      <div 
-                        key={submission.id} 
-                        className="group bg-card/50 hover:bg-card rounded-xl p-4 transition-all opacity-75 hover:opacity-100"
-                      >
-                        {/* Header with avatar and account info */}
-                        <a 
-                          href={account.account_link || `https://${account.platform}.com/@${account.username}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-                        >
-                          {/* Avatar */}
-                          <div className="relative flex-shrink-0">
-                            {hasAvatar ? (
-                              <img 
-                                src={account.avatar_url!} 
-                                alt={account.username}
-                                className="w-12 h-12 rounded-full object-cover grayscale"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                <span className="text-lg font-semibold text-muted-foreground">
-                                  {account.username.charAt(0).toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background flex items-center justify-center">
-                              {getPlatformIcon(account.platform)}
-                            </div>
-                          </div>
-
-                          {/* Account Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm font-inter tracking-[-0.5px] truncate group-hover:underline">
-                              @{account.username}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                                {followerCount > 0 ? `${followerCount.toLocaleString()} followers` : 'No data'}
-                              </span>
-                            </div>
-                          </div>
-                        </a>
-
-                        {/* Rejected Status */}
-                        <div className="mt-4 bg-destructive/10 rounded-lg p-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] text-muted-foreground font-inter tracking-[-0.5px] mb-0.5">Status</p>
-                              <p className="text-sm font-medium font-inter tracking-[-0.5px] text-destructive">Rejected</p>
-                            </div>
-                            <Badge className="bg-destructive/20 text-destructive hover:bg-destructive/30 text-[10px] font-inter tracking-[-0.5px]">
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Rejected
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Stats Row */}
-                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-inter tracking-[-0.5px]">
-                          <div className="bg-muted/30 rounded-lg p-2">
-                            <p className="text-muted-foreground text-[10px]">Submitted</p>
-                            <p className="font-medium">
-                              {new Date(submission.submitted_at).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </p>
-                          </div>
-                          <div className="bg-muted/30 rounded-lg p-2">
-                            <p className="text-muted-foreground text-[10px]">Tier 1</p>
-                            <p className="font-medium">{submission.tier1_percentage}%</p>
-                          </div>
-                        </div>
-
-                        {/* Admin Notes */}
-                        {submission.admin_notes && (
-                          <p className="text-[11px] text-muted-foreground/70 mt-3 line-clamp-2 italic font-inter tracking-[-0.5px]">
-                            Reason: {submission.admin_notes}
-                          </p>
-                        )}
-
-                        {/* View Submission Button */}
-                        {submission.screenshot_url && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full mt-3 text-xs font-inter tracking-[-0.5px]"
-                            onClick={() => openReviewDialog(submission)}
-                          >
-                            View Submission
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                  {/* Pagination */}
-                  {rejectedSubmissions.length > ITEMS_PER_PAGE && (
-                    <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                      <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                        Showing {((rejectedPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(rejectedPage * ITEMS_PER_PAGE, rejectedSubmissions.length)} of {rejectedSubmissions.length}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRejectedPage(p => Math.max(1, p - 1))}
-                          disabled={rejectedPage === 1}
-                          className="text-xs font-inter tracking-[-0.5px]"
-                        >
-                          <ChevronLeft className="w-4 h-4 mr-1" />
-                          Previous
-                        </Button>
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          Page {rejectedPage} of {Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE)}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setRejectedPage(p => Math.min(Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE), p + 1))}
-                          disabled={rejectedPage >= Math.ceil(rejectedSubmissions.length / ITEMS_PER_PAGE)}
-                          className="text-xs font-inter tracking-[-0.5px]"
-                        >
-                          Next
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </TabsContent>
-          </Tabs>
-
-          {/* Review Dialog */}
-          <Dialog open={!!selectedSubmission} onOpenChange={() => setSelectedSubmission(null)}>
-            <DialogContent className="max-w-md bg-card border-0">
-              <DialogHeader className="pb-2">
-                <DialogTitle className="text-lg font-inter tracking-[-0.5px]">Review Demographic Submission</DialogTitle>
-              </DialogHeader>
-
-              {selectedSubmission && (
-                <div className="space-y-4">
-                  {/* Account Info in Dialog */}
-                  <a 
-                    href={selectedSubmission.social_accounts.account_link || `https://${selectedSubmission.social_accounts.platform}.com/@${selectedSubmission.social_accounts.username}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/40 transition-colors group"
-                  >
-                    {/* Avatar in dialog */}
-                    <div className="relative flex-shrink-0">
-                      {selectedSubmission.social_accounts.avatar_url ? (
-                        <img 
-                          src={selectedSubmission.social_accounts.avatar_url} 
-                          alt={selectedSubmission.social_accounts.username}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                          <span className="text-base font-semibold text-muted-foreground">
-                            {selectedSubmission.social_accounts.username.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background flex items-center justify-center">
-                        {getPlatformIcon(selectedSubmission.social_accounts.platform)}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold group-hover:underline font-inter tracking-[-0.5px]">@{selectedSubmission.social_accounts.username}</p>
-                      {selectedSubmission.social_accounts.follower_count && (
-                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                          {selectedSubmission.social_accounts.follower_count.toLocaleString()} followers
-                        </p>
-                      )}
-                    </div>
-                    <Badge variant="secondary" className="text-[10px] font-inter tracking-[-0.5px]">
-                      Tier 1: {selectedSubmission.tier1_percentage}%
-                    </Badge>
-                  </a>
-
-                  {selectedSubmission.screenshot_url && (
-                    <div>
-                      <Label className="text-xs mb-2 block font-inter tracking-[-0.5px]">Demographics Video</Label>
-                      <div className="rounded-lg overflow-hidden border bg-black flex items-center justify-center">
-                        <video 
-                          src={selectedSubmission.screenshot_url} 
-                          controls 
-                          className="w-full max-h-[60vh] object-contain"
-                          preload="metadata"
-                        >
-                          Your browser does not support the video tag.
-                        </video>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="score" className="text-xs font-inter tracking-[-0.5px]">Score (0-100)</Label>
-                    <Input id="score" type="number" min="0" max="100" value={score} onChange={e => setScore(e.target.value)} placeholder="Enter score" className="h-9 text-sm font-inter tracking-[-0.5px]" />
-                  </div>
-
-                  <div className="flex gap-2 pt-3 border-t">
-                    <Button variant="destructive" size="sm" onClick={() => handleReview("rejected")} disabled={updating} className="flex-1 font-inter tracking-[-0.5px]">
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                    <Button onClick={() => handleReview("approved")} disabled={updating} size="sm" className="flex-1 font-inter tracking-[-0.5px]">
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      {updating ? "Accepting..." : "Accept"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-      </Tabs>
-
-      {/* Edit Score Dialog */}
-      <Dialog open={editScoreDialogOpen} onOpenChange={setEditScoreDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Demographics Score</DialogTitle>
-            <DialogDescription>
-              Update the demographics score for @{editingSubmission?.social_accounts.username}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-score">Score (0-100)</Label>
-              <Input id="edit-score" type="number" min="0" max="100" value={editScore} onChange={e => setEditScore(e.target.value)} placeholder="Enter score" />
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setEditScoreDialogOpen(false)} disabled={updating} className="flex-1">
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateScore} disabled={updating} className="flex-1">
-                {updating ? "Updating..." : "Update Score"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add to Campaign Dialog */}
-      <Dialog open={addToCampaignDialogOpen} onOpenChange={setAddToCampaignDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add User to Campaign</DialogTitle>
-            <DialogDescription>
-              Assign {selectedUser?.username} to a campaign with one of their social accounts
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Select Campaign</Label>
-              <Popover>
-                <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between"
+                    variant="ghost"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    className="h-8 px-3 text-xs"
                   >
-                    {selectedCampaignForAdd
-                      ? campaigns.find(c => c.id === selectedCampaignForAdd)?.title
-                      : "Select campaign..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search campaigns..." />
-                    <CommandList>
-                      <CommandEmpty>No campaign found.</CommandEmpty>
-                      <CommandGroup>
-                        {campaigns.map(campaign => (
-                          <CommandItem
-                            key={campaign.id}
-                            value={campaign.title}
-                            onSelect={() => setSelectedCampaignForAdd(campaign.id)}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedCampaignForAdd === campaign.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {campaign.title}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-            <div className="space-y-2">
-              <Label>Select Social Account</Label>
-              {loadingSocialAccounts ? (
-                <div className="text-sm text-muted-foreground">Loading accounts...</div>
-              ) : userSocialAccounts.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No social accounts found</div>
-              ) : (
-                <div className="space-y-2">
-                  {userSocialAccounts.map(account => (
-                    <Button
-                      key={account.id}
-                      variant={selectedSocialAccountForAdd === account.id ? "default" : "outline"}
-                      className="w-full justify-start gap-2"
-                      onClick={() => setSelectedSocialAccountForAdd(account.id)}
+          {/* Demographics Tab */}
+          <TabsContent value="demographics" className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              {/* Pending */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Pending</h3>
+                  <Badge variant="secondary" className="text-xs">{pendingSubmissions.length}</Badge>
+                </div>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                  {pendingSubmissions.map(sub => (
+                    <div
+                      key={sub.id}
+                      onClick={() => { setReviewingSubmission(sub); setReviewDialogOpen(true); }}
+                      className="p-3 bg-muted/30 rounded-xl hover:bg-muted/50 cursor-pointer transition-colors"
                     >
-                      {getPlatformIcon(account.platform)}
-                      <span>{account.username}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {typeof account.follower_count === "number" && account.follower_count > 0
-                          ? `${account.follower_count.toLocaleString()} followers`
-                          : "No follower data"}
-                      </span>
-                    </Button>
+                      <div className="flex items-center gap-2 mb-2">
+                        {getPlatformIcon(sub.social_accounts.platform)}
+                        <span className="text-sm font-medium truncate">@{sub.social_accounts.username}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{sub.tier1_percentage}% Tier 1</span>
+                        <span>{formatDistanceToNow(new Date(sub.submitted_at), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {pendingSubmissions.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">No pending submissions</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Approved */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Approved</h3>
+                  <Badge className="text-xs bg-emerald-500/20 text-emerald-400">
+                    {submissions.filter(s => s.status === "approved").length}
+                  </Badge>
+                </div>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                  {submissions.filter(s => s.status === "approved").slice(0, 20).map(sub => (
+                    <div key={sub.id} className="p-3 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getPlatformIcon(sub.social_accounts.platform)}
+                        <span className="text-sm font-medium truncate">@{sub.social_accounts.username}</span>
+                        <Badge className="ml-auto text-xs bg-emerald-500/20 text-emerald-400">{sub.score}%</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {sub.reviewed_at && format(new Date(sub.reviewed_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setAddToCampaignDialogOpen(false)}
-                disabled={addingToCampaign}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddToCampaign}
-                disabled={addingToCampaign || !selectedCampaignForAdd || !selectedSocialAccountForAdd}
-                className="flex-1"
-              >
-                {addingToCampaign ? "Adding..." : "Add to Campaign"}
-              </Button>
+              {/* Rejected */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Rejected</h3>
+                  <Badge variant="destructive" className="text-xs">
+                    {submissions.filter(s => s.status === "rejected").length}
+                  </Badge>
+                </div>
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                  {submissions.filter(s => s.status === "rejected").slice(0, 20).map(sub => (
+                    <div key={sub.id} className="p-3 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getPlatformIcon(sub.social_accounts.platform)}
+                        <span className="text-sm font-medium truncate">@{sub.social_accounts.username}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {sub.reviewed_at && format(new Date(sub.reviewed_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </TabsContent>
+        </Tabs>
 
-      {/* Add Referral Dialog */}
-      <AddReferralDialog
-        open={addReferralDialogOpen}
-        onOpenChange={setAddReferralDialogOpen}
-        onSuccess={() => fetchData()}
-      />
-    </div></AdminPermissionGuard>;
+        {/* Payment Dialog */}
+        <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-['Inter'] tracking-[-0.3px]">Pay User</DialogTitle>
+              <DialogDescription>
+                {selectedUser && `Send payment to @${selectedUser.username}`}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Amount (USD)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={paymentAmount}
+                  onChange={e => setPaymentAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="bg-muted/30 border-0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes (Optional)</Label>
+                <Textarea
+                  value={paymentNotes}
+                  onChange={e => setPaymentNotes(e.target.value)}
+                  placeholder="Payment notes..."
+                  className="bg-muted/30 border-0"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="ghost" onClick={() => setPayDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handlePayUser} className="bg-emerald-600 hover:bg-emerald-700">
+                  Send Payment
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* User Context Sheet */}
+        <UserContextSheet
+          user={selectedUser}
+          open={userContextSheetOpen}
+          onOpenChange={setUserContextSheetOpen}
+          onUserUpdated={fetchUsers}
+          onPayUser={openPayDialog}
+        />
+
+        {/* Demographic Review Dialog */}
+        {reviewingSubmission && (
+          <DemographicReviewDialog
+            submission={reviewingSubmission}
+            submissions={pendingSubmissions}
+            open={reviewDialogOpen}
+            onOpenChange={(open) => {
+              setReviewDialogOpen(open);
+              if (!open) setReviewingSubmission(null);
+            }}
+            onApprove={handleDialogApprove}
+            onReject={handleDialogReject}
+            onNavigate={setReviewingSubmission}
+            isProcessing={processingSubmission === reviewingSubmission.id}
+          />
+        )}
+      </div>
+    </AdminPermissionGuard>
+  );
 }

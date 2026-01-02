@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminMetric, AdminAlertMetric } from "../design-system/AdminMetric";
 import { AdminMiniStatCard } from "../design-system/AdminCard";
-import { Loader2 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { subDays } from "date-fns";
 
 interface MetricsData {
   // Primary metrics
-  totalRevenue: number;
-  revenueChange: number;
+  creatorEarnings: number;
+  earningsChange: number;
   activeUsers: number;
   activeUsersChange: number;
   pendingPayouts: number;
@@ -46,51 +46,76 @@ export function MetricsGrid() {
       const sevenDaysAgo = subDays(now, 7);
       const fourteenDaysAgo = subDays(now, 14);
 
-      // Fetch total revenue (from wallets)
+      // Fetch total creator earnings (from wallets)
       const { data: walletData } = await supabase
         .from("wallets")
         .select("total_earned");
-      const totalRevenue = walletData?.reduce((sum, w) => sum + (Number(w.total_earned) || 0), 0) || 0;
+      const creatorEarnings = walletData?.reduce((sum, w) => sum + (Number(w.total_earned) || 0), 0) || 0;
 
-      // Fetch revenue for last 7 days
+      // Fetch earnings for last 7 days
       const { data: recentEarnings } = await supabase
         .from("wallet_transactions")
         .select("amount, created_at")
         .eq("type", "earning")
         .gte("created_at", sevenDaysAgo.toISOString());
-      const currentPeriodRevenue = recentEarnings?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
+      const currentPeriodEarnings = recentEarnings?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
 
-      // Fetch revenue for previous 7 days
+      // Fetch earnings for previous 7 days
       const { data: prevEarnings } = await supabase
         .from("wallet_transactions")
         .select("amount")
         .eq("type", "earning")
         .gte("created_at", fourteenDaysAgo.toISOString())
         .lt("created_at", sevenDaysAgo.toISOString());
-      const prevPeriodRevenue = prevEarnings?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
+      const prevPeriodEarnings = prevEarnings?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
 
-      const revenueChange = prevPeriodRevenue > 0
-        ? ((currentPeriodRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 100
-        : currentPeriodRevenue > 0 ? 100 : 0;
+      const earningsChange = prevPeriodEarnings > 0
+        ? ((currentPeriodEarnings - prevPeriodEarnings) / prevPeriodEarnings) * 100
+        : currentPeriodEarnings > 0 ? 100 : 0;
 
-      // Active users (users with activity in last 30 days)
+      // Active users (users with earnings or submissions in last 30 days)
       const thirtyDaysAgo = subDays(now, 30);
-      const { data: activePayouts } = await supabase
-        .from("payout_requests")
-        .select("user_id")
-        .eq("status", "completed")
-        .gte("created_at", thirtyDaysAgo.toISOString());
-      const activeUsers = new Set(activePayouts?.map(p => p.user_id) || []).size;
-
-      // Active users previous period
       const sixtyDaysAgo = subDays(now, 60);
-      const { data: prevActivePayouts } = await supabase
-        .from("payout_requests")
+
+      // Get users with wallet transactions (earnings) in last 30 days
+      const { data: usersWithEarnings } = await supabase
+        .from("wallet_transactions")
         .select("user_id")
-        .eq("status", "completed")
+        .eq("type", "earning")
+        .gte("created_at", thirtyDaysAgo.toISOString());
+
+      // Get users with campaign submissions in last 30 days
+      const { data: usersWithSubmissions } = await supabase
+        .from("campaign_submissions")
+        .select("creator_id")
+        .gte("created_at", thirtyDaysAgo.toISOString());
+
+      // Combine both sources for unique active users
+      const activeUserIds = new Set([
+        ...(usersWithEarnings?.map(t => t.user_id) || []),
+        ...(usersWithSubmissions?.map(s => s.creator_id) || []),
+      ]);
+      const activeUsers = activeUserIds.size;
+
+      // Previous period active users
+      const { data: prevUsersWithEarnings } = await supabase
+        .from("wallet_transactions")
+        .select("user_id")
+        .eq("type", "earning")
         .gte("created_at", sixtyDaysAgo.toISOString())
         .lt("created_at", thirtyDaysAgo.toISOString());
-      const prevActiveUsers = new Set(prevActivePayouts?.map(p => p.user_id) || []).size;
+
+      const { data: prevUsersWithSubmissions } = await supabase
+        .from("campaign_submissions")
+        .select("creator_id")
+        .gte("created_at", sixtyDaysAgo.toISOString())
+        .lt("created_at", thirtyDaysAgo.toISOString());
+
+      const prevActiveUserIds = new Set([
+        ...(prevUsersWithEarnings?.map(t => t.user_id) || []),
+        ...(prevUsersWithSubmissions?.map(s => s.creator_id) || []),
+      ]);
+      const prevActiveUsers = prevActiveUserIds.size;
 
       const activeUsersChange = prevActiveUsers > 0
         ? ((activeUsers - prevActiveUsers) / prevActiveUsers) * 100
@@ -170,8 +195,8 @@ export function MetricsGrid() {
         .gte("created_at", today.toISOString());
 
       setMetrics({
-        totalRevenue,
-        revenueChange,
+        creatorEarnings,
+        earningsChange,
         activeUsers,
         activeUsersChange,
         pendingPayouts,
@@ -194,11 +219,7 @@ export function MetricsGrid() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PageLoading />;
   }
 
   if (!metrics) return null;
@@ -208,11 +229,11 @@ export function MetricsGrid() {
       {/* Primary metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminMetric
-          label="Total Revenue"
-          value={`$${metrics.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+          label="Creator Earnings"
+          value={`$${metrics.creatorEarnings.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
           change={{
-            value: metrics.revenueChange,
-            isPositive: metrics.revenueChange >= 0,
+            value: metrics.earningsChange,
+            isPositive: metrics.earningsChange >= 0,
             label: "vs last 7 days",
           }}
         />

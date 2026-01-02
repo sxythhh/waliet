@@ -25,7 +25,6 @@ import {
   UserMinus,
   AlertTriangle,
   Search,
-  Loader2,
   TrendingUp,
   DollarSign,
   Shield,
@@ -33,6 +32,7 @@ import {
   Eye,
   X,
 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { useCreatorInsights, type CreatorInsight } from "@/hooks/useCreatorInsights";
 import { formatDistanceToNow } from "date-fns";
@@ -328,9 +328,7 @@ export default function AdminCreatorInsights() {
 
         <div className="flex-1 overflow-auto p-6">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
+            <PageLoading text="Loading insights..." />
           ) : (
             <div className="space-y-6">
               {/* Stats Cards */}

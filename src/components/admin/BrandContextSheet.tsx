@@ -60,7 +60,16 @@ interface TeamMember {
     username: string;
     full_name: string | null;
     avatar_url: string | null;
+    email?: string | null;
   } | null;
+}
+
+interface BrandOwner {
+  id: string;
+  username: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
 }
 
 interface RecentActivity {
@@ -90,6 +99,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
   const navigate = useNavigate();
   const [stats, setStats] = useState<BrandStats | null>(null);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [brandOwner, setBrandOwner] = useState<BrandOwner | null>(null);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
@@ -135,23 +145,44 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
           .limit(5),
         supabase
           .from("brand_members")
-          .select(`
-            id,
-            role,
-            user:profiles!brand_members_user_id_fkey (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          `)
+          .select("id, role, user_id")
           .eq("brand_id", brandId)
-          .limit(5)
+          .limit(10),
       ]);
 
       const transactions = transactionsRes.data || [];
       const campaignsData = campaignsRes.data || [];
-      const members = membersRes.data || [];
+      const membersData = membersRes.data || [];
+
+      // Fetch profiles for all members
+      const userIds = membersData.map(m => m.user_id).filter(Boolean);
+      let profilesMap = new Map<string, any>();
+
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url, email")
+          .in("id", userIds);
+
+        if (profilesData) {
+          profilesMap = new Map(profilesData.map(p => [p.id, p]));
+        }
+      }
+
+      // Map members with their profiles
+      const members: TeamMember[] = membersData.map(m => ({
+        id: m.id,
+        role: m.role,
+        user: profilesMap.get(m.user_id) || null,
+      }));
+
+      // Set brand owner (first member with 'owner' role)
+      const ownerMember = members.find(m => m.role === "owner");
+      if (ownerMember?.user) {
+        setBrandOwner(ownerMember.user as BrandOwner);
+      } else {
+        setBrandOwner(null);
+      }
 
       const walletBalance = transactions.reduce((acc, tx) => {
         if (tx.status !== "completed") return acc;
@@ -200,7 +231,7 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
       });
 
       setCampaigns(campaignsData);
-      setTeamMembers(members as unknown as TeamMember[]);
+      setTeamMembers(members);
 
       const activity: RecentActivity[] = transactions.slice(0, 8).map(tx => ({
         id: tx.id,
@@ -496,6 +527,39 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
           <div className="px-6 py-4">
             {activeTab === "overview" && (
               <div className="space-y-6">
+                {/* Brand Owner */}
+                {brandOwner && (
+                  <section>
+                    <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
+                      Created By
+                    </h3>
+                    <div
+                      className="flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/@${brandOwner.username}`)}
+                    >
+                      <Avatar className="h-10 w-10 border border-border/50">
+                        <AvatarImage src={brandOwner.avatar_url || ''} />
+                        <AvatarFallback className="text-xs font-inter tracking-[-0.5px]">
+                          {brandOwner.username?.slice(0, 2).toUpperCase() || "??"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium font-inter tracking-[-0.5px] truncate">
+                          {brandOwner.full_name || brandOwner.username}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                          @{brandOwner.username}
+                        </p>
+                        {brandOwner.email && (
+                          <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate">
+                            {brandOwner.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                )}
+
                 {/* Team Members */}
                 <section>
                   <div className="flex items-center justify-between mb-3">
@@ -594,16 +658,16 @@ export function BrandContextSheet({ brand, open, onOpenChange, onBrandUpdated }:
                   </h3>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => navigate(`/brand/${brand.slug}`)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                     >
                       Dashboard
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => navigate(`/brand/${brand.slug}/analytics`)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                     >
                       Analytics
                     </Button>

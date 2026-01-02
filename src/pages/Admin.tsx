@@ -2,11 +2,15 @@ import { useState, useEffect, lazy, Suspense, ComponentType } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { LogOut, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { AdminSearchCommand } from "@/components/admin/AdminSearchCommand";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageLoading } from "@/components/ui/loading-bar";
+import { OptimizedImage } from "@/components/OptimizedImage";
+import ghostLogoBlue from "@/assets/ghost-logo-blue.png";
 import {
   GaugeIcon,
   UsersIcon,
@@ -15,7 +19,6 @@ import {
   CurrencyDollarIcon,
   LayersIcon,
   MessageCircleIcon,
-  HeartIcon,
   ShieldCheckIcon,
   type AnimatedIconProps,
 } from "@/components/icons";
@@ -25,8 +28,8 @@ const OverviewContent = lazy(() => import("./admin/Overview"));
 const UsersContent = lazy(() => import("./admin/Users"));
 const BrandsContent = lazy(() => import("./admin/Brands"));
 const FinanceContent = lazy(() => import("./admin/Finance"));
+const ReferralsContent = lazy(() => import("./admin/Referrals"));
 const ResourcesContent = lazy(() => import("./admin/Resources"));
-const FeedbackContent = lazy(() => import("./admin/Feedback"));
 const TicketsContent = lazy(() => import("./admin/Tickets"));
 const PermissionsContent = lazy(() => import("./admin/Permissions"));
 const CampaignsContent = lazy(() => import("./admin/Campaigns"));
@@ -56,9 +59,9 @@ const tabs: { id: string; label: string; icon: ComponentType<AnimatedIconProps> 
   { id: "brands", label: "Brands", icon: TargetIcon },
   { id: "campaigns", label: "Campaigns", icon: RocketIcon },
   { id: "finance", label: "Finance", icon: CurrencyDollarIcon },
+  { id: "referrals", label: "Referrals", icon: UsersIcon },
   { id: "content", label: "Content", icon: LayersIcon },
   { id: "tickets", label: "Tickets", icon: MessageCircleIcon },
-  { id: "feedback", label: "Feedback", icon: HeartIcon },
   { id: "permissions", label: "Permissions", icon: ShieldCheckIcon },
 ];
 
@@ -100,7 +103,7 @@ export default function Admin() {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground" />
+        <PageLoading text="Loading admin..." />
       </div>
     );
   }
@@ -113,20 +116,24 @@ export default function Admin() {
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border px-6 py-3 flex items-center justify-between bg-card">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold font-inter tracking-[-0.5px]">Admin</h1>
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="flex items-center gap-6">
+          {/* Logo + Wordmark */}
+          <div className="flex items-center gap-1">
+            <OptimizedImage src={ghostLogoBlue} alt="Logo" className="h-7 w-7 rounded-none object-cover" />
+            <span className="font-geist font-bold tracking-tighter-custom text-base text-foreground">VIRALITY</span>
+          </div>
+
+          {/* Search Input */}
+          <button
             onClick={() => setSearchOpen(true)}
-            className="gap-2 text-muted-foreground"
+            className="flex items-center gap-2 h-9 px-3 w-64 bg-muted/40 hover:bg-muted/60 rounded-lg transition-colors text-left"
           >
-            <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Search...</span>
-            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground flex-1">Search...</span>
+            <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-border/50 bg-background/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
               <span className="text-xs">⌘</span>K
             </kbd>
-          </Button>
+          </button>
         </div>
         <Button
           variant="ghost"
@@ -191,6 +198,12 @@ export default function Admin() {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="referrals" className="m-0 h-full">
+            <Suspense fallback={<TabLoader />}>
+              <ReferralsContent />
+            </Suspense>
+          </TabsContent>
+
           <TabsContent value="content" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
               <ResourcesContent />
@@ -200,12 +213,6 @@ export default function Admin() {
           <TabsContent value="tickets" className="m-0 h-full">
             <Suspense fallback={<TabLoader />}>
               <TicketsContent />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="feedback" className="m-0 h-full">
-            <Suspense fallback={<TabLoader />}>
-              <FeedbackContent />
             </Suspense>
           </TabsContent>
 

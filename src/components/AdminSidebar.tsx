@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText, MessageSquareText, Shield, FileBarChart, UserCog, ClipboardCheck, TrendingUp, Lightbulb, Activity } from "lucide-react";
+import { Menu, BarChart3, Store, UserCircle, CreditCard, Receipt, LogOut, Search, FileText, Shield, FileBarChart, UserCog, ClipboardCheck, TrendingUp, Lightbulb, Activity } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +26,6 @@ const menuItems: MenuItem[] = [
   { title: "Campaign Review", icon: ClipboardCheck, path: "/admin/campaign-review", resource: "brands" },
   { title: "Security", icon: Shield, path: "/admin/security", resource: "security" },
   { title: "Reports", icon: FileBarChart, path: "/admin/reports", resource: "reports" },
-  { title: "Feedback", icon: MessageSquareText, path: "/admin/feedback" }, // No specific permission needed
   { title: "Resources", icon: FileText, path: "/admin/resources", resource: "resources" },
   { title: "Payouts", icon: CreditCard, path: "/admin/payouts", resource: "payouts" },
   { title: "Transactions", icon: Receipt, path: "/admin/transactions", resource: "payouts" }, // Same as payouts

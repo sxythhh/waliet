@@ -11,9 +11,10 @@ import { Input } from "@/components/ui/input";
 import {
   DollarSign, Clock, CheckCircle2, XCircle, Wallet, TrendingUp,
   ChevronDown, ChevronUp, RotateCcw, Copy, Search, X, ArrowUpRight,
-  ArrowDownRight, Loader2, Calendar, CreditCard, AlertTriangle,
+  ArrowDownRight, Calendar, CreditCard, AlertTriangle,
   Coins, ExternalLink
 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { CryptoPayoutDialog } from "@/components/admin/CryptoPayoutDialog";
 import { useTreasuryBalance, formatUsdcBalance } from "@/hooks/useTreasuryBalance";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -610,9 +611,7 @@ export default function AdminPayouts() {
           <ScrollArea className="h-full">
             <div className="max-w-7xl mx-auto p-6">
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
+                <PageLoading text="Loading payouts..." />
               ) : filteredRequests.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />

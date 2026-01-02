@@ -26,6 +26,7 @@ interface UserProfile {
   discord_username?: string | null;
   discord_avatar?: string | null;
   phone_number?: string | null;
+  email?: string | null;
   created_at?: string | null;
   total_earnings?: number;
   wallets?: {
@@ -55,6 +56,14 @@ interface Transaction {
   status: string;
   created_at: string;
   description?: string;
+  metadata?: {
+    campaign_id?: string;
+    platform?: string;
+    reversed?: boolean;
+    [key: string]: any;
+  };
+  campaign_name?: string;
+  campaign_logo_url?: string;
 }
 
 interface UserContextSheetProps {
@@ -82,12 +91,26 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   const [trustScore, setTrustScore] = useState<number>(0);
   const [isUpdatingTrust, setIsUpdatingTrust] = useState(false);
 
+  // Link account state
+  const [showLinkAccount, setShowLinkAccount] = useState(false);
+  const [linkPlatform, setLinkPlatform] = useState<"tiktok" | "instagram" | "youtube">("tiktok");
+  const [linkUsername, setLinkUsername] = useState("");
+  const [linkAccountUrl, setLinkAccountUrl] = useState("");
+  const [isLinkingAccount, setIsLinkingAccount] = useState(false);
+
+  // Transaction context state
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [transactionContextOpen, setTransactionContextOpen] = useState(false);
+
   useEffect(() => {
     if (user && open) {
       fetchUserData(user.id);
       setTrustScore(user.trust_score ?? 0);
       setActiveTab("overview");
       setShowBalanceAdjust(false);
+      setShowLinkAccount(false);
+      setLinkUsername("");
+      setLinkAccountUrl("");
     }
   }, [user, open]);
 
@@ -112,7 +135,29 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
       ]);
 
       setSocialAccounts(accountsRes.data || []);
-      setTransactions(transactionsRes.data || []);
+
+      // Fetch campaign info for transactions
+      const txData = transactionsRes.data || [];
+      const campaignIds = txData
+        .filter(tx => tx.metadata?.campaign_id)
+        .map(tx => tx.metadata.campaign_id);
+
+      let campaignsMap: Record<string, any> = {};
+      if (campaignIds.length > 0) {
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id, title, brand_logo_url")
+          .in("id", campaignIds);
+        campaignsMap = campaigns?.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}) || {};
+      }
+
+      const formattedTx = txData.map(tx => ({
+        ...tx,
+        campaign_name: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.title : null,
+        campaign_logo_url: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.brand_logo_url : null,
+      }));
+
+      setTransactions(formattedTx);
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
@@ -205,9 +250,104 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
     }
   };
 
+  const handleLinkAccount = async () => {
+    if (!user || !linkUsername.trim()) return;
+
+    setIsLinkingAccount(true);
+    try {
+      // Generate account link if not provided
+      let accountLink = linkAccountUrl.trim();
+      if (!accountLink) {
+        const cleanUsername = linkUsername.replace(/^@/, '');
+        switch (linkPlatform) {
+          case 'tiktok':
+            accountLink = `https://tiktok.com/@${cleanUsername}`;
+            break;
+          case 'instagram':
+            accountLink = `https://instagram.com/${cleanUsername}`;
+            break;
+          case 'youtube':
+            accountLink = `https://youtube.com/@${cleanUsername}`;
+            break;
+        }
+      }
+
+      // Check if account already exists for this user
+      const { data: existing } = await supabase
+        .from("social_accounts")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("platform", linkPlatform)
+        .eq("username", linkUsername.replace(/^@/, ''))
+        .maybeSingle();
+
+      if (existing) {
+        toast.error("This account is already linked");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("social_accounts")
+        .insert({
+          user_id: user.id,
+          platform: linkPlatform,
+          username: linkUsername.replace(/^@/, ''),
+          account_link: accountLink,
+          is_verified: false,
+        });
+
+      if (error) throw error;
+
+      toast.success(`${linkPlatform} account linked successfully`);
+      setLinkUsername("");
+      setLinkAccountUrl("");
+      setShowLinkAccount(false);
+      fetchUserData(user.id);
+      onUserUpdated?.();
+    } catch (error) {
+      console.error("Error linking account:", error);
+      toast.error("Failed to link account");
+    } finally {
+      setIsLinkingAccount(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied");
+  };
+
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      earning: 'Earning',
+      withdrawal: 'Withdrawal',
+      balance_correction: 'Correction',
+      transfer_sent: 'Transfer Out',
+      transfer_received: 'Transfer In',
+      referral_bonus: 'Referral',
+      admin_credit: 'Admin Credit',
+      admin_debit: 'Admin Debit',
+    };
+    return labels[type] || type.replace(/_/g, ' ');
+  };
+
+  const getTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      earning: 'text-emerald-500',
+      withdrawal: 'text-orange-500',
+      balance_correction: 'text-blue-500',
+      transfer_sent: 'text-red-500',
+      transfer_received: 'text-emerald-500',
+      referral_bonus: 'text-purple-500',
+      admin_credit: 'text-emerald-500',
+      admin_debit: 'text-red-500',
+    };
+    return colors[type] || 'text-muted-foreground';
+  };
+
+  const openTransactionContext = (tx: Transaction) => {
+    setSelectedTransaction(tx);
+    setTransactionContextOpen(true);
   };
 
   if (!user) return null;
@@ -224,6 +364,7 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
   ).length;
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-[420px] p-0 border-l border-border/50 bg-background">
         <ScrollArea className="h-full">
@@ -381,16 +522,99 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
           <div className="px-6 py-4">
             {activeTab === "overview" && (
               <div className="space-y-6">
+                {/* Account Info */}
+                <section>
+                  <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
+                    Account Info
+                  </h3>
+                  <div className="space-y-0">
+                    {user.email && (
+                      <div className="flex items-center justify-between py-2 border-b border-border/30">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Email</span>
+                        <span className="text-sm font-inter tracking-[-0.5px] truncate max-w-[180px]">{user.email}</span>
+                      </div>
+                    )}
+                    {user.phone_number && (
+                      <div className="flex items-center justify-between py-2 border-b border-border/30">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Phone</span>
+                        <span className="text-sm font-inter tracking-[-0.5px]">{user.phone_number}</span>
+                      </div>
+                    )}
+                    {user.discord_username && (
+                      <div className="flex items-center justify-between py-2 border-b border-border/30">
+                        <div className="flex items-center gap-2">
+                          <img src={discordIcon} alt="Discord" className="w-4 h-4 opacity-60" />
+                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Discord</span>
+                        </div>
+                        <span className="text-sm font-inter tracking-[-0.5px]">{user.discord_username}</span>
+                      </div>
+                    )}
+                    {user.created_at && (
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Member since</span>
+                        <span className="text-sm font-inter tracking-[-0.5px]">
+                          {format(new Date(user.created_at), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
                 {/* Social Accounts */}
                 <section>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase">
                       Social Accounts
                     </h3>
-                    <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                      {socialAccounts.length}
-                    </span>
+                    <button
+                      onClick={() => setShowLinkAccount(!showLinkAccount)}
+                      className="text-xs text-primary hover:text-primary/80 font-inter tracking-[-0.5px] font-medium"
+                    >
+                      {showLinkAccount ? "Cancel" : "+ Link Account"}
+                    </button>
                   </div>
+
+                  {/* Link Account Form */}
+                  {showLinkAccount && (
+                    <div className="mb-4 p-3 bg-muted/50 rounded-lg space-y-3">
+                      <div className="flex gap-2">
+                        {(["tiktok", "instagram", "youtube"] as const).map((platform) => (
+                          <button
+                            key={platform}
+                            onClick={() => setLinkPlatform(platform)}
+                            className={cn(
+                              "flex-1 py-2 text-xs font-inter tracking-[-0.5px] rounded-md transition-colors capitalize",
+                              linkPlatform === platform
+                                ? "bg-foreground text-background"
+                                : "bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {platform}
+                          </button>
+                        ))}
+                      </div>
+                      <Input
+                        value={linkUsername}
+                        onChange={(e) => setLinkUsername(e.target.value)}
+                        placeholder="@username"
+                        className="h-9 text-sm font-inter tracking-[-0.5px] bg-background border-0"
+                      />
+                      <Input
+                        value={linkAccountUrl}
+                        onChange={(e) => setLinkAccountUrl(e.target.value)}
+                        placeholder="Profile URL (optional)"
+                        className="h-9 text-sm font-inter tracking-[-0.5px] bg-background border-0"
+                      />
+                      <Button
+                        onClick={handleLinkAccount}
+                        disabled={isLinkingAccount || !linkUsername.trim()}
+                        className="w-full h-9 text-sm font-inter tracking-[-0.5px] bg-foreground text-background hover:bg-foreground/90"
+                      >
+                        {isLinkingAccount ? "Linking..." : "Link Account"}
+                      </Button>
+                    </div>
+                  )}
+
                   {loading ? (
                     <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px] py-4 text-center">
                       Loading...
@@ -445,51 +669,46 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                   )}
                 </section>
 
-                {/* Contact */}
-                {(user.discord_username || user.phone_number) && (
-                  <section>
-                    <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
-                      Contact
-                    </h3>
-                    <div className="space-y-2">
-                      {user.discord_username && (
-                        <div className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-2">
-                            <img src={discordIcon} alt="Discord" className="w-4 h-4 opacity-60" />
-                            <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Discord</span>
-                          </div>
-                          <span className="text-sm font-inter tracking-[-0.5px]">{user.discord_username}</span>
-                        </div>
-                      )}
-                      {user.phone_number && (
-                        <div className="flex items-center justify-between py-2">
-                          <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Phone</span>
-                          <span className="text-sm font-inter tracking-[-0.5px]">{user.phone_number}</span>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                )}
-
                 {/* Actions */}
                 <section>
                   <h3 className="text-xs font-medium text-muted-foreground font-inter tracking-[-0.5px] uppercase mb-3">
                     Actions
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => onPayUser?.(user)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                     >
                       Pay User
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => copyToClipboard(user.id)}
-                      className="flex-1 h-9 text-sm font-inter tracking-[-0.5px]"
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
                     >
                       Copy ID
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (user.email) {
+                          copyToClipboard(user.email);
+                        }
+                      }}
+                      disabled={!user.email}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+                    >
+                      Copy Email
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        window.open(`/creator/${user.username}`, '_blank');
+                      }}
+                      className="h-9 text-sm font-inter tracking-[-0.5px] bg-muted/50 hover:bg-muted"
+                    >
+                      View Profile
                     </Button>
                   </div>
                 </section>
@@ -508,25 +727,33 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
                 ) : transactions.length > 0 ? (
                   <div className="space-y-0">
                     {transactions.map((tx) => {
-                      const isCredit = ["earning", "campaign_payout", "bonus", "admin_credit", "refund"].includes(tx.type);
+                      const isCredit = ["earning", "campaign_payout", "bonus", "admin_credit", "refund", "transfer_received", "referral_bonus"].includes(tx.type);
                       return (
                         <div
                           key={tx.id}
-                          className="flex items-center justify-between py-3 border-b border-border/30 last:border-0"
+                          onClick={() => openTransactionContext(tx)}
+                          className="flex items-center justify-between py-3 border-b border-border/30 last:border-0 cursor-pointer group hover:bg-muted/30 -mx-3 px-3 rounded-lg transition-colors"
                         >
                           <div>
-                            <p className="text-sm font-inter tracking-[-0.5px] capitalize">
-                              {tx.type.replace(/_/g, " ")}
+                            <p className="text-sm font-inter tracking-[-0.5px] capitalize group-hover:underline">
+                              {getTypeLabel(tx.type)}
                             </p>
-                            <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                              {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
+                                {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
+                              </p>
+                              {tx.campaign_name && (
+                                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] truncate max-w-[120px]">
+                                  · {tx.campaign_name}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <span className={cn(
                             "text-sm font-medium font-inter tracking-[-0.5px] tabular-nums",
-                            isCredit ? "text-foreground" : "text-muted-foreground"
+                            isCredit ? "text-emerald-500" : "text-red-500"
                           )}>
-                            {isCredit ? "+" : "-"}${tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            {isCredit ? "+" : "-"}${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </span>
                         </div>
                       );
@@ -610,5 +837,205 @@ export function UserContextSheet({ user, open, onOpenChange, onUserUpdated, onPa
         </ScrollArea>
       </SheetContent>
     </Sheet>
+
+    {/* Transaction Context Sheet */}
+    <Sheet open={transactionContextOpen} onOpenChange={setTransactionContextOpen}>
+      <SheetContent className="w-full sm:max-w-md p-0 border-l border-border/50">
+        <ScrollArea className="h-full">
+          {selectedTransaction && (
+            <div className="p-6 space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={user?.avatar_url || ''} alt={user?.username} />
+                    <AvatarFallback className="text-sm font-medium">
+                      {(user?.username || 'U')[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold font-inter tracking-[-0.5px]">
+                      {user?.username || 'Unknown'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+                <span className={cn(
+                  "text-xs font-medium px-2.5 py-1 rounded-full",
+                  getTypeColor(selectedTransaction.type),
+                  selectedTransaction.amount >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"
+                )}>
+                  {getTypeLabel(selectedTransaction.type)}
+                </span>
+              </div>
+
+              {/* Amount */}
+              <div className="py-2">
+                <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px] mb-1">Amount</p>
+                <p className={cn(
+                  "text-3xl font-bold font-inter tracking-[-0.5px]",
+                  selectedTransaction.amount >= 0 ? "text-emerald-500" : "text-red-500"
+                )}>
+                  {selectedTransaction.amount >= 0 ? '+' : ''}${Math.abs(selectedTransaction.amount).toFixed(2)}
+                </p>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-4">
+                <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">Details</h4>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Status</span>
+                    <span className="text-sm font-inter tracking-[-0.5px] capitalize px-2 py-0.5 bg-muted rounded-md">
+                      {selectedTransaction.status}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Date</span>
+                    <span className="text-sm font-inter tracking-[-0.5px]">
+                      {format(new Date(selectedTransaction.created_at), "MMM dd, yyyy HH:mm")}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Time ago</span>
+                    <span className="text-sm font-inter tracking-[-0.5px]">
+                      {formatDistanceToNow(new Date(selectedTransaction.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+
+                  {selectedTransaction.campaign_name && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Campaign</span>
+                      <div className="flex items-center gap-2">
+                        {selectedTransaction.campaign_logo_url && (
+                          <img
+                            src={selectedTransaction.campaign_logo_url}
+                            alt=""
+                            className="h-4 w-4 rounded object-cover"
+                          />
+                        )}
+                        <span className="text-sm font-inter tracking-[-0.5px] truncate max-w-[150px]">
+                          {selectedTransaction.campaign_name}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedTransaction.metadata?.platform && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Platform</span>
+                      <div className="flex items-center gap-2">
+                        {getPlatformLogo(selectedTransaction.metadata.platform)}
+                        <span className="text-sm font-inter tracking-[-0.5px] capitalize">
+                          {selectedTransaction.metadata.platform}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedTransaction.metadata?.views && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Views</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">
+                        {selectedTransaction.metadata.views.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedTransaction.metadata?.rpm_rate && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">RPM Rate</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">
+                        ${selectedTransaction.metadata.rpm_rate}/1K
+                      </span>
+                    </div>
+                  )}
+
+                  {selectedTransaction.description && (
+                    <div>
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Description</span>
+                      <p className="text-sm font-inter tracking-[-0.5px] mt-1">
+                        {selectedTransaction.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Budget Impact - if campaign related */}
+                {selectedTransaction.metadata?.campaign_id && selectedTransaction.metadata?.budget_before !== undefined && (
+                  <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+                    <h4 className="text-sm font-medium text-muted-foreground font-inter tracking-[-0.5px]">Campaign Budget Impact</h4>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Before</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">
+                        ${selectedTransaction.metadata.budget_before?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">After</span>
+                      <span className="text-sm font-inter tracking-[-0.5px]">
+                        ${selectedTransaction.metadata.budget_after?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '0.00'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submission Link */}
+                {selectedTransaction.metadata?.submission_id && (
+                  <div className="bg-muted/30 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Submission</span>
+                      <button
+                        onClick={() => copyToClipboard(selectedTransaction.metadata?.submission_id)}
+                        className="flex items-center gap-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {selectedTransaction.metadata.submission_id.slice(0, 8)}...
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Transaction ID */}
+                <div className="bg-muted/30 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground font-inter tracking-[-0.5px]">Transaction ID</span>
+                    <button
+                      onClick={() => copyToClipboard(selectedTransaction.id)}
+                      className="flex items-center gap-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {selectedTransaction.id.slice(0, 8)}...
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Reversed indicator */}
+                {selectedTransaction.metadata?.reversed && (
+                  <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+                    <div className="flex items-center gap-2 text-amber-500">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span className="text-sm font-medium font-inter tracking-[-0.5px]">This transaction has been reversed</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  </>
   );
 }

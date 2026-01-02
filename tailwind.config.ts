@@ -184,6 +184,19 @@ export default {
   				'100%': {
   					backgroundPosition: '8px 8px'
   				}
+  			},
+  			'loading-bar': {
+  				'0%': {
+  					left: '-30%',
+  					width: '30%'
+  				},
+  				'50%': {
+  					width: '40%'
+  				},
+  				'100%': {
+  					left: '100%',
+  					width: '30%'
+  				}
   			}
   		},
   		animation: {
@@ -191,7 +204,8 @@ export default {
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'fade-in': 'fade-in 0.3s ease-out',
   			slide: 'slide 1.5s linear infinite',
-  			'diagonal-stripes': 'diagonal-stripes 0.5s linear infinite'
+  			'diagonal-stripes': 'diagonal-stripes 0.5s linear infinite',
+  			'loading-bar': 'loading-bar 1.2s ease-in-out infinite'
   		}
   	}
   },

@@ -21,14 +21,16 @@ import {
   Activity, Wallet, Clock, CheckCircle2, XCircle, RotateCcw, Copy, X,
   CreditCard, AlertTriangle, Coins, ExternalLink, ChevronDown, ChevronUp
 } from "lucide-react";
+import { PageLoading, LoadingBar, InlineLoading } from "@/components/ui/loading-bar";
 import { format, subDays, subWeeks, subMonths, formatDistanceToNow, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
+import { UserContextSheet } from "@/components/admin/UserContextSheet";
 import { CryptoPayoutDialog } from "@/components/admin/CryptoPayoutDialog";
 import { useTreasuryBalance, formatUsdcBalance, formatSolBalance } from "@/hooks/useTreasuryBalance";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 import { StatCard } from "@/components/admin/StatCard";
 import { PayoutApprovals } from "@/components/admin/PayoutApprovals";
+import { FinancialContextCard } from "@/components/admin/FinancialContextCard";
 import instagramLogo from "@/assets/instagram-logo-white.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import youtubeLogo from "@/assets/youtube-logo-white.png";
@@ -47,6 +49,8 @@ interface Transaction {
   avatar_url?: string;
   campaign_name?: string;
   campaign_logo_url?: string;
+  campaign_budget?: number | null;
+  campaign_budget_used?: number | null;
 }
 
 interface PayoutRequest {
@@ -275,7 +279,7 @@ export default function Finance() {
       if (campaignIds.length > 0) {
         const { data: campaigns } = await supabase
           .from("campaigns")
-          .select("id, title, brand_logo_url")
+          .select("id, title, brand_logo_url, budget, budget_used")
           .in("id", campaignIds);
         campaignsMap = campaigns?.reduce((acc, c) => ({ ...acc, [c.id]: c }), {}) || {};
       }
@@ -287,6 +291,8 @@ export default function Finance() {
         avatar_url: profilesMap[tx.user_id]?.avatar_url,
         campaign_name: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.title : null,
         campaign_logo_url: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.brand_logo_url : null,
+        campaign_budget: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.budget : null,
+        campaign_budget_used: tx.metadata?.campaign_id ? campaignsMap[tx.metadata.campaign_id]?.budget_used : null,
       }));
 
       setTransactions(formatted);
@@ -481,7 +487,11 @@ export default function Finance() {
     if (viewMode === "transactions") return filteredTransactions.map(t => ({ type: 'transaction' as const, data: t, date: t.created_at }));
     if (viewMode === "payouts") return filteredPayouts.map(p => ({ type: 'payout' as const, data: p, date: p.requested_at }));
 
-    const txItems = filteredTransactions.map(t => ({ type: 'transaction' as const, data: t, date: t.created_at }));
+    // In "All" view, exclude withdrawal transactions since payout requests already represent them
+    // This prevents duplicates where both the withdrawal tx and payout request would appear
+    const txItems = filteredTransactions
+      .filter(t => t.type !== 'withdrawal')
+      .map(t => ({ type: 'transaction' as const, data: t, date: t.created_at }));
     const payoutItems = filteredPayouts.map(p => ({ type: 'payout' as const, data: p, date: p.requested_at }));
     return [...txItems, ...payoutItems].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [viewMode, filteredTransactions, filteredPayouts]);
@@ -550,18 +560,17 @@ export default function Finance() {
     <AdminPermissionGuard resource="finance">
       <div className="h-full overflow-auto bg-background">
         {/* Header with Date Filter */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border/50">
+        <div className="bg-background border-b border-border/50">
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-semibold font-inter tracking-[-0.5px]">Finance</h1>
                 <p className="text-sm text-muted-foreground font-inter">Unified view of all financial activity</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {/* Date Preset Dropdown */}
                 <Select value={datePreset} onValueChange={(v) => handleDatePresetChange(v as DatePreset)}>
-                  <SelectTrigger className="w-[150px] h-9">
-                    <CalendarIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectTrigger className="w-[150px] h-9 border-0 bg-muted/50 hover:bg-muted transition-colors font-['Inter']">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -575,9 +584,9 @@ export default function Finance() {
                 {datePreset === "custom" && (
                   <Popover open={customDatePickerOpen} onOpenChange={setCustomDatePickerOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn("gap-2", dateFrom && "text-foreground")}>
+                      <button className={cn("px-3 py-2 text-sm rounded-lg bg-muted/50 hover:bg-muted transition-colors font-['Inter']", dateFrom && "text-foreground")}>
                         {dateFrom ? (dateTo ? `${format(dateFrom, "MMM d")} - ${format(dateTo, "MMM d")}` : format(dateFrom, "MMM d, y")) : "Pick dates"}
-                      </Button>
+                      </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
                       <div className="p-3 space-y-3">
@@ -591,14 +600,12 @@ export default function Finance() {
                   </Popover>
                 )}
 
-                <Button variant="outline" size="sm" onClick={exportToCSV} className="gap-2">
-                  <Download className="h-4 w-4" />
+                <button onClick={exportToCSV} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-['Inter']">
                   Export
-                </Button>
-                <Button variant="outline" size="sm" onClick={fetchAllData} className="gap-2">
-                  <RotateCcw className="h-4 w-4" />
+                </button>
+                <button onClick={fetchAllData} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-['Inter']">
                   Refresh
-                </Button>
+                </button>
               </div>
             </div>
 
@@ -608,107 +615,116 @@ export default function Finance() {
                 label="Earnings"
                 value={`$${stats.totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 subtext={datePreset !== "all_time" ? DATE_PRESETS.find(p => p.value === datePreset)?.label : undefined}
-                icon={TrendingUp}
               />
               <StatCard
                 label="Withdrawals"
                 value={`$${stats.totalWithdrawals.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                icon={TrendingDown}
               />
               <StatCard
                 label="Volume"
                 value={`$${stats.totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 subtext={`${stats.transactionCount} transactions`}
-                icon={Activity}
               />
               <StatCard
                 label="Pending Payouts"
                 value={`$${stats.totalPendingAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 subtext={`${stats.pendingPayoutsCount} requests`}
-                icon={Clock}
               />
               <StatCard
                 label="Processed"
                 value={`$${stats.totalProcessed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
                 subtext={`${stats.completedPayoutsCount} completed`}
-                icon={DollarSign}
               />
               <StatCard
                 label="Treasury"
                 value={treasuryLoading ? "..." : formatUsdcBalance(usdcBalance)}
                 subtext={treasuryLoading ? "Loading..." : `${formatSolBalance(solBalance)} SOL`}
-                icon={Coins}
                 variant="primary"
               />
             </div>
           </div>
         </div>
 
+        {/* Financial Overview */}
+        <div className="px-6 py-4">
+          <FinancialContextCard />
+        </div>
+
         {/* Pending Crypto Approvals */}
         <PayoutApprovals />
 
-        {/* Pending Payouts Queue (Collapsible) */}
+        {/* Pending Payouts Queue */}
         {pendingPayouts.length > 0 && (
-          <div className="border-b border-border/50 bg-amber-500/5">
-            <button
-              onClick={() => setPayoutQueueExpanded(!payoutQueueExpanded)}
-              className="w-full px-6 py-3 flex items-center justify-between hover:bg-amber-500/10 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-amber-500" />
+          <div className="px-6 py-4">
+            <div className="bg-muted/30 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-medium font-['Inter'] tracking-[-0.3px]">Pending Payouts</h3>
+                  <p className="text-xs text-muted-foreground font-['Inter'] mt-0.5">{pendingPayouts.length} requests • ${stats.totalPendingAmount.toFixed(2)} total</p>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">Pending Payouts</p>
-                  <p className="text-xs text-muted-foreground">{pendingPayouts.length} requests waiting • ${stats.totalPendingAmount.toFixed(2)}</p>
-                </div>
+                <button
+                  onClick={() => setPayoutQueueExpanded(!payoutQueueExpanded)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+                >
+                  {payoutQueueExpanded ? "Hide" : "Show"}
+                </button>
               </div>
-              {payoutQueueExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
 
-            {payoutQueueExpanded && (
-              <div className="px-6 pb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              {payoutQueueExpanded && (
+                <div className="space-y-2">
                   {pendingPayouts.slice(0, 6).map(request => (
                     <div
                       key={request.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-card border border-border/50 hover:border-amber-500/30 transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 rounded-xl bg-card/50 hover:bg-card transition-colors cursor-pointer"
                       onClick={() => { setSelectedPayout(request); setContextType('payout'); setContextOpen(true); }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-9 w-9">
                           <AvatarImage src={request.profiles?.avatar_url || ''} />
                           <AvatarFallback className="text-xs">{(request.profiles?.username || '?')[0].toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{request.profiles?.username}</p>
-                          <p className="text-xs text-muted-foreground">${Number(request.amount).toFixed(2)} • {request.payout_method}</p>
+                          <p className="text-sm font-medium truncate font-['Inter'] tracking-[-0.3px]">{request.profiles?.username}</p>
+                          <p className="text-xs text-muted-foreground font-['Inter']">${Number(request.amount).toFixed(2)} • {request.payout_method}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                         {request.payout_method === 'crypto' ? (
-                          <Button size="sm" variant="ghost" onClick={() => openCryptoPayoutDialog(request)} className="h-7 w-7 p-0 text-amber-500 hover:bg-amber-500/10">
-                            <Coins className="h-3.5 w-3.5" />
-                          </Button>
+                          <button
+                            onClick={() => openCryptoPayoutDialog(request)}
+                            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-['Inter']"
+                          >
+                            Send
+                          </button>
                         ) : (
-                          <Button size="sm" variant="ghost" onClick={() => handleCompletePayout(request)} disabled={processingPayout === request.id} className="h-7 w-7 p-0 text-emerald-500 hover:bg-emerald-500/10">
-                            {processingPayout === request.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                          </Button>
+                          <button
+                            onClick={() => handleCompletePayout(request)}
+                            disabled={processingPayout === request.id}
+                            className="text-xs text-emerald-500 hover:text-emerald-400 transition-colors font-['Inter'] disabled:opacity-50"
+                          >
+                            {processingPayout === request.id ? "..." : "Complete"}
+                          </button>
                         )}
-                        <Button size="sm" variant="ghost" onClick={() => { setSelectedPayout(request); setPayoutAction('reject'); setActionDialogOpen(true); }} className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-500/10">
-                          <XCircle className="h-3.5 w-3.5" />
-                        </Button>
+                        <button
+                          onClick={() => { setSelectedPayout(request); setPayoutAction('reject'); setActionDialogOpen(true); }}
+                          className="text-xs text-muted-foreground hover:text-rose-500 transition-colors font-['Inter']"
+                        >
+                          Reject
+                        </button>
                       </div>
                     </div>
                   ))}
+                  {pendingPayouts.length > 6 && (
+                    <button
+                      onClick={() => { setViewMode('payouts'); setPayoutStatusFilter('pending'); }}
+                      className="w-full py-2 text-xs text-muted-foreground hover:text-foreground transition-colors font-['Inter']"
+                    >
+                      View all {pendingPayouts.length} pending payouts
+                    </button>
+                  )}
                 </div>
-                {pendingPayouts.length > 6 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { setViewMode('payouts'); setPayoutStatusFilter('pending'); }}>
-                    View all {pendingPayouts.length} pending payouts
-                  </Button>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -785,9 +801,7 @@ export default function Finance() {
         {/* Main Table */}
         <div className="p-6">
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
+                <PageLoading />
               ) : combinedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -981,13 +995,23 @@ export default function Finance() {
                       <div className="flex justify-between"><span className="text-sm text-muted-foreground">Status</span><Badge variant="secondary" className="capitalize">{selectedTransaction.status}</Badge></div>
                       <div className="flex justify-between"><span className="text-sm text-muted-foreground">Date</span><span className="text-sm">{format(new Date(selectedTransaction.created_at), "MMM dd, yyyy HH:mm")}</span></div>
                       {selectedTransaction.campaign_name && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Campaign</span>
-                          <div className="flex items-center gap-2">
-                            {selectedTransaction.campaign_logo_url && <OptimizedImage src={selectedTransaction.campaign_logo_url} alt="" className="h-4 w-4 rounded" />}
-                            <span className="text-sm">{selectedTransaction.campaign_name}</span>
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Campaign</span>
+                            <div className="flex items-center gap-2">
+                              {selectedTransaction.campaign_logo_url && <OptimizedImage src={selectedTransaction.campaign_logo_url} alt="" className="h-4 w-4 rounded" />}
+                              <span className="text-sm">{selectedTransaction.campaign_name}</span>
+                            </div>
                           </div>
-                        </div>
+                          {selectedTransaction.campaign_budget && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Campaign Budget</span>
+                              <span className="text-sm">
+                                ${selectedTransaction.campaign_budget_used?.toLocaleString() || 0} / ${selectedTransaction.campaign_budget.toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
                       {selectedTransaction.metadata?.platform && (
                         <div className="flex items-center justify-between">
@@ -1141,24 +1165,12 @@ export default function Finance() {
           </DialogContent>
         </Dialog>
 
-        {/* User Details Dialog */}
-        <UserDetailsDialog
+        {/* User Context Sheet */}
+        <UserContextSheet
           open={userDetailsDialogOpen}
           onOpenChange={setUserDetailsDialogOpen}
           user={selectedUser}
-          socialAccounts={userSocialAccounts}
-          transactions={userTransactions}
-          paymentMethods={userPaymentMethods}
-          loadingSocialAccounts={loadingSocialAccounts}
-          loadingTransactions={loadingTransactions}
-          loadingPaymentMethods={loadingPaymentMethods}
-          socialAccountsOpen={socialAccountsOpen}
-          onSocialAccountsOpenChange={setSocialAccountsOpen}
-          transactionsOpen={transactionsOpen}
-          onTransactionsOpenChange={setTransactionsOpen}
-          paymentMethodsOpen={paymentMethodsOpen}
-          onPaymentMethodsOpenChange={setPaymentMethodsOpen}
-          onBalanceUpdated={() => { fetchAllData(); if (selectedUser) fetchUserData(selectedUser.id); }}
+          onUserUpdated={fetchAllData}
         />
 
         {/* Crypto Payout Dialog */}

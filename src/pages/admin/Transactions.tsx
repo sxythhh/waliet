@@ -9,6 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Calendar as CalendarIcon, Loader2, Undo2, ChevronLeft, ChevronRight, Download, ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react";
+import { InlineLoading } from "@/components/ui/loading-bar";
 import { format, subDays } from "date-fns";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -568,9 +569,7 @@ export default function Transactions() {
               {loading ? (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={6} className="text-center py-12">
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-white/40" />
-                    </div>
+                    <InlineLoading text="Loading transactions..." />
                   </TableCell>
                 </TableRow>
               ) : filteredTransactions.length === 0 ? (

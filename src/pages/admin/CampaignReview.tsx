@@ -15,8 +15,8 @@ import {
   Building2,
   DollarSign,
   Users,
-  Loader2,
 } from "lucide-react";
+import { PageLoading } from "@/components/ui/loading-bar";
 import { CampaignReviewDialog } from "@/components/admin/campaign-review/CampaignReviewDialog";
 import { AdminPermissionGuard } from "@/components/admin/AdminPermissionGuard";
 
@@ -228,9 +228,7 @@ export default function AdminCampaignReview() {
 
             <TabsContent value={activeTab}>
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
+                <PageLoading text="Loading campaigns..." />
               ) : filteredCampaigns.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-12">
