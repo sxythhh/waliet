@@ -54,7 +54,8 @@ setInterval(() => {
     const toDelete = processedMessages.size - MAX_PROCESSED_CACHE / 2;
     const iterator = processedMessages.values();
     for (let i = 0; i < toDelete; i++) {
-      processedMessages.delete(iterator.next().value);
+      const value = iterator.next().value;
+      if (value) processedMessages.delete(value);
     }
     log.debug(`Cleaned up ${toDelete} old processed messages`);
   }
@@ -115,7 +116,7 @@ async function syncMessage(message: Message) {
       return;
     }
 
-    const result = await response.json();
+    const result = await response.json() as { ticket_message_id?: string };
     log.info(`Successfully synced message ${message.id}: ticket_message_id=${result.ticket_message_id}`);
 
   } catch (error) {

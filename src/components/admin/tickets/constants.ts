@@ -27,48 +27,31 @@ export const PRIORITY_OPTIONS: Array<{ id: TicketPriority; name: string }> = [
   { id: "low", name: "Low" },
 ];
 
-// Status badge styles
+// Status badge styles - minimal, muted palette
 export const statusStyles: Record<TicketStatus, string> = {
-  open: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  in_progress: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  awaiting_reply: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  closed: "bg-muted text-muted-foreground border-border",
+  open: "text-foreground",
+  in_progress: "text-foreground",
+  awaiting_reply: "text-muted-foreground",
+  resolved: "text-muted-foreground",
+  closed: "text-muted-foreground",
 };
 
-// Priority badge styles
+// Priority badge styles - subtle differentiation
 export const priorityStyles: Record<TicketPriority, string> = {
-  urgent: "bg-red-500/10 text-red-500 border-red-500/20",
-  high: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  medium: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  low: "bg-muted text-muted-foreground border-border",
+  urgent: "text-foreground font-medium",
+  high: "text-foreground",
+  medium: "text-muted-foreground",
+  low: "text-muted-foreground",
 };
 
-// Category badge styles
+// Category badge styles - uniform subtle styling
 export const categoryStyles: Record<TicketCategory, string> = {
-  billing: "bg-green-500/10 text-green-500 border-green-500/20",
-  technical: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  account: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  campaign: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-  payout: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  other: "bg-muted text-muted-foreground border-border",
-};
-
-// Status icons (Lucide icon names)
-export const statusIcons: Record<TicketStatus, string> = {
-  open: "CircleDot",
-  in_progress: "Clock",
-  awaiting_reply: "MessageSquare",
-  resolved: "CheckCircle",
-  closed: "XCircle",
-};
-
-// Priority icons
-export const priorityIcons: Record<TicketPriority, string> = {
-  urgent: "AlertTriangle",
-  high: "ArrowUp",
-  medium: "Minus",
-  low: "ArrowDown",
+  billing: "text-muted-foreground",
+  technical: "text-muted-foreground",
+  account: "text-muted-foreground",
+  campaign: "text-muted-foreground",
+  payout: "text-muted-foreground",
+  other: "text-muted-foreground",
 };
 
 // Quick reply templates

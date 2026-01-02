@@ -273,6 +273,27 @@ async function discordApiRequest(endpoint: string, method: string, body?: any) {
   return response.json();
 }
 
+// Send a follow-up message to a deferred interaction
+async function sendFollowup(applicationId: string, interactionToken: string, content: string, ephemeral = false) {
+  const response = await fetch(`${DISCORD_API}/webhooks/${applicationId}/${interactionToken}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      content,
+      flags: ephemeral ? 64 : 0,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error(`Followup error: ${response.status} - ${error}`);
+  }
+
+  return response;
+}
+
 async function createTicketChannel(
   guildId: string,
   categoryId: string | null,
@@ -1434,126 +1455,143 @@ async function handleCreateTicketButton(supabase: any, interaction: any) {
   const guildId = interaction.guild_id;
   const discordId = interaction.member?.user?.id;
   const username = interaction.member?.user?.username || "user";
+  const interactionToken = interaction.token;
+  const applicationId = interaction.application_id;
 
-  try {
-    // Get ticket config for this guild
-    const { data: config, error: configError } = await supabase
-      .from("discord_ticket_config")
-      .select("*")
-      .eq("guild_id", guildId)
-      .single();
+  // Do the work in background and return deferred response
+  const doTicketCreation = async () => {
+    try {
+      // Get ticket config for this guild
+      const { data: config, error: configError } = await supabase
+        .from("discord_ticket_config")
+        .select("*")
+        .eq("guild_id", guildId)
+        .single();
 
-    if (configError || !config) {
-      return textResponse("Ticket system is not configured for this server.", true);
-    }
+      if (configError || !config) {
+        await sendFollowup(applicationId, interactionToken, "Ticket system is not configured for this server.", true);
+        return;
+      }
 
-    // Check if user already has an open ticket
-    const { data: existingTicket } = await supabase
-      .from("discord_ticket_channels")
-      .select("id, channel_id, ticket_id, support_tickets(status)")
-      .eq("guild_id", guildId)
-      .eq("discord_user_id", discordId)
-      .is("closed_at", null)
-      .single();
+      // Check if user already has an open ticket
+      const { data: existingTicket } = await supabase
+        .from("discord_ticket_channels")
+        .select("id, channel_id, ticket_id, support_tickets(status)")
+        .eq("guild_id", guildId)
+        .eq("discord_user_id", discordId)
+        .is("closed_at", null)
+        .single();
 
-    if (existingTicket && existingTicket.support_tickets?.status !== "closed") {
-      return textResponse(`You already have an open ticket: <#${existingTicket.channel_id}>`, true);
-    }
+      if (existingTicket && existingTicket.support_tickets?.status !== "closed") {
+        await sendFollowup(applicationId, interactionToken, `You already have an open ticket: <#${existingTicket.channel_id}>`, true);
+        return;
+      }
 
-    // Get or create linked user (optional - tickets can work without linking)
-    const linkedUser = await getLinkedUser(supabase, discordId);
+      // Get or create linked user (optional - tickets can work without linking)
+      const linkedUser = await getLinkedUser(supabase, discordId);
 
-    // Create support ticket in database
-    const { data: ticket, error: ticketError } = await supabase
-      .from("support_tickets")
-      .insert({
-        user_id: linkedUser?.id || null,
-        subject: `Discord Ticket from @${username}`,
-        category: "other",
-        priority: "medium",
-        status: "open",
-      })
-      .select()
-      .single();
+      // Create support ticket in database
+      const { data: ticket, error: ticketError } = await supabase
+        .from("support_tickets")
+        .insert({
+          user_id: linkedUser?.id || null,
+          subject: `Discord Ticket from @${username}`,
+          category: "other",
+          priority: "medium",
+          status: "open",
+        })
+        .select()
+        .single();
 
-    if (ticketError) {
-      console.error("Error creating ticket:", ticketError);
-      return textResponse("Failed to create ticket. Please try again.", true);
-    }
+      if (ticketError) {
+        console.error("Error creating ticket:", ticketError);
+        await sendFollowup(applicationId, interactionToken, "Failed to create ticket. Please try again.", true);
+        return;
+      }
 
-    // Create Discord channel
-    const channel = await createTicketChannel(
-      guildId,
-      config.ticket_category_id,
-      discordId,
-      username,
-      config.support_role_id,
-      ticket.ticket_number
-    );
+      // Create Discord channel
+      const channel = await createTicketChannel(
+        guildId,
+        config.ticket_category_id,
+        discordId,
+        username,
+        config.support_role_id,
+        ticket.ticket_number
+      );
 
-    // Link channel to ticket
-    const { error: linkError } = await supabase
-      .from("discord_ticket_channels")
-      .insert({
-        ticket_id: ticket.id,
-        channel_id: channel.id,
-        guild_id: guildId,
-        discord_user_id: discordId,
-        channel_name: channel.name,
+      // Link channel to ticket
+      const { error: linkError } = await supabase
+        .from("discord_ticket_channels")
+        .insert({
+          ticket_id: ticket.id,
+          channel_id: channel.id,
+          guild_id: guildId,
+          discord_user_id: discordId,
+          channel_name: channel.name,
+        });
+
+      if (linkError) {
+        console.error("Error linking channel:", linkError);
+        try {
+          await deleteChannel(channel.id);
+        } catch {}
+        await sendFollowup(applicationId, interactionToken, "Failed to create ticket channel.", true);
+        return;
+      }
+
+      // Send welcome message in the ticket channel
+      const welcomeEmbed = {
+        title: `🎫 Ticket ${ticket.ticket_number}`,
+        description: config.welcome_message,
+        fields: [
+          { name: "Created by", value: `<@${discordId}>`, inline: true },
+          { name: "Status", value: "🟢 Open", inline: true },
+        ],
+        color: Colors.SUCCESS,
+        footer: {
+          text: "Type your message below to get started",
+        },
+      };
+
+      await sendDiscordChannelMessage(channel.id, {
+        content: `<@${discordId}>${config.support_role_id ? ` <@&${config.support_role_id}>` : ""}`,
+        embeds: [welcomeEmbed],
+        components: [{
+          type: ComponentType.ACTION_ROW,
+          components: [
+            {
+              type: ComponentType.BUTTON,
+              style: ButtonStyle.DANGER,
+              label: "Close Ticket",
+              custom_id: `ticket:close:${ticket.id}`,
+              emoji: { name: "🔒" },
+            },
+            {
+              type: ComponentType.BUTTON,
+              style: ButtonStyle.LINK,
+              label: "View on Web",
+              url: `${SITE_URL}/support`,
+              emoji: { name: "🌐" },
+            },
+          ],
+        }],
       });
 
-    if (linkError) {
-      console.error("Error linking channel:", linkError);
-      // Try to clean up the channel
-      try {
-        await deleteChannel(channel.id);
-      } catch {}
-      return textResponse("Failed to create ticket channel.", true);
+      await sendFollowup(applicationId, interactionToken, `Ticket created! Head to <#${channel.id}> to continue.`, true);
+    } catch (error) {
+      console.error("Error in ticket creation:", error);
+      await sendFollowup(applicationId, interactionToken, "An error occurred while creating the ticket.", true);
     }
+  };
 
-    // Send welcome message in the ticket channel
-    const welcomeEmbed = {
-      title: `🎫 Ticket ${ticket.ticket_number}`,
-      description: config.welcome_message,
-      fields: [
-        { name: "Created by", value: `<@${discordId}>`, inline: true },
-        { name: "Status", value: "🟢 Open", inline: true },
-      ],
-      color: Colors.SUCCESS,
-      footer: {
-        text: "Type your message below to get started",
-      },
-    };
+  // Start the work in background
+  doTicketCreation();
 
-    await sendDiscordChannelMessage(channel.id, {
-      content: `<@${discordId}>${config.support_role_id ? ` <@&${config.support_role_id}>` : ""}`,
-      embeds: [welcomeEmbed],
-      components: [{
-        type: ComponentType.ACTION_ROW,
-        components: [
-          {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.DANGER,
-            label: "Close Ticket",
-            custom_id: `ticket:close:${ticket.id}`,
-            emoji: { name: "🔒" },
-          },
-          {
-            type: ComponentType.BUTTON,
-            style: ButtonStyle.LINK,
-            label: "View on Web",
-            url: `${SITE_URL}/support`,
-            emoji: { name: "🌐" },
-          },
-        ],
-      }],
-    });
-
-    return textResponse(`Ticket created! Head to <#${channel.id}> to continue.`, true);
-  } catch (error: any) {
-    console.error("Error creating ticket:", error);
-    return textResponse(`Failed to create ticket: ${error.message}`, true);
-  }
+  // Return deferred response immediately
+  return jsonResponse({
+    type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+    data: { flags: 64 }, // ephemeral
+  });
 }
 
 // Handle close ticket button

@@ -1,6 +1,5 @@
 import { TicketStats, TicketStatus } from "@/types/tickets";
 import { cn } from "@/lib/utils";
-import { CircleDot, Clock, MessageSquare, CheckCircle, XCircle } from "lucide-react";
 
 interface TicketStatsCardsProps {
   stats: TicketStats;
@@ -11,47 +10,14 @@ interface TicketStatsCardsProps {
 interface StatCard {
   id: TicketStatus | "all";
   label: string;
-  icon: React.ReactNode;
-  color: string;
-  bgColor: string;
 }
 
 const statCards: StatCard[] = [
-  {
-    id: "open",
-    label: "Open",
-    icon: <CircleDot className="h-4 w-4" />,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-  },
-  {
-    id: "in_progress",
-    label: "In Progress",
-    icon: <Clock className="h-4 w-4" />,
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
-  },
-  {
-    id: "awaiting_reply",
-    label: "Awaiting Reply",
-    icon: <MessageSquare className="h-4 w-4" />,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
-  },
-  {
-    id: "resolved",
-    label: "Resolved",
-    icon: <CheckCircle className="h-4 w-4" />,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10",
-  },
-  {
-    id: "closed",
-    label: "Closed",
-    icon: <XCircle className="h-4 w-4" />,
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-  },
+  { id: "open", label: "Open" },
+  { id: "in_progress", label: "In Progress" },
+  { id: "awaiting_reply", label: "Awaiting" },
+  { id: "resolved", label: "Resolved" },
+  { id: "closed", label: "Closed" },
 ];
 
 export function TicketStatsCards({
@@ -65,8 +31,8 @@ export function TicketStatsCards({
   };
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {statCards.map((card) => {
+    <div className="flex items-center gap-px border border-border rounded-md overflow-hidden">
+      {statCards.map((card, index) => {
         const count = getCount(card.id);
         const isActive = activeStatus === card.id;
 
@@ -75,18 +41,15 @@ export function TicketStatsCards({
             key={card.id}
             onClick={() => onStatusClick(card.id as TicketStatus)}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md transition-all duration-150 text-sm",
-              "hover:ring-1 hover:ring-primary/20",
+              "flex items-center gap-1.5 px-3 py-1.5 transition-colors text-sm",
+              index !== statCards.length - 1 && "border-r border-border",
               isActive
-                ? "ring-1 ring-primary bg-background shadow-sm"
-                : "bg-muted/30 hover:bg-muted/50"
+                ? "bg-foreground text-background"
+                : "bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground"
             )}
           >
-            <div className={cn("flex items-center justify-center", card.color)}>
-              {card.icon}
-            </div>
-            <span className="font-semibold tabular-nums">{count}</span>
-            <span className="text-xs text-muted-foreground hidden sm:inline">{card.label}</span>
+            <span className="font-medium tabular-nums">{count}</span>
+            <span className="text-xs hidden sm:inline">{card.label}</span>
           </button>
         );
       })}

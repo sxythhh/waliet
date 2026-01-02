@@ -354,17 +354,28 @@ export default function Tickets() {
     if (!replyText.trim() || !selectedTicket || !user) return;
     setSending(true);
     try {
-      const { error: messageError } = await supabase.from("ticket_messages").insert({
-        ticket_id: selectedTicket.id,
-        sender_id: user.id,
-        sender_type: "admin",
-        content: replyText.trim(),
-        is_internal: isInternal,
-      });
+      const { data: newMessage, error: messageError } = await supabase
+        .from("ticket_messages")
+        .insert({
+          ticket_id: selectedTicket.id,
+          sender_id: user.id,
+          sender_type: "admin",
+          content: replyText.trim(),
+          is_internal: isInternal,
+        })
+        .select("id")
+        .single();
       if (messageError) throw messageError;
 
       if (selectedTicket.status === "open" || selectedTicket.status === "awaiting_reply") {
         await supabase.from("support_tickets").update({ status: "in_progress" }).eq("id", selectedTicket.id);
+      }
+
+      // Push to Discord if ticket has a linked channel and not internal
+      if (!isInternal && selectedTicket.discord_channel && newMessage) {
+        supabase.functions.invoke("push-discord-message", {
+          body: { ticket_message_id: newMessage.id },
+        }).catch(err => console.error("Failed to push to Discord:", err));
       }
 
       setReplyText("");

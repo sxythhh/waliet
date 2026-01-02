@@ -1,5 +1,4 @@
 import { SupportTicket, TicketStatus, TicketPriority, AdminUser } from "@/types/tickets";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -10,14 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CheckCircle, User, XCircle } from "lucide-react";
-import DiscordIcon from "@/assets/discord-icon.png";
 import {
   STATUS_OPTIONS,
   PRIORITY_OPTIONS,
-  TICKET_CATEGORIES,
-  statusStyles,
-  priorityStyles,
   getCategoryName,
 } from "./constants";
 
@@ -47,72 +41,59 @@ export function TicketHeader({
   const isResolved = ticket.status === "resolved" || ticket.status === "closed";
 
   return (
-    <div className="border-b border-border px-3 py-2 space-y-2 shrink-0">
+    <div className="border-b border-border px-3 py-2.5 space-y-2 shrink-0">
       {/* Top: Subject + Quick Actions */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-mono text-muted-foreground">
-              {ticket.ticket_number}
-            </span>
-            <Badge
-              variant="outline"
-              className={cn("text-[10px] px-1.5 py-0", statusStyles[ticket.status])}
-            >
-              {ticket.status.replace("_", " ")}
-            </Badge>
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              {getCategoryName(ticket.category)}
-            </Badge>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-0.5">
+            <span className="font-mono">{ticket.ticket_number}</span>
+            <span>·</span>
+            <span className="capitalize">{ticket.status.replace("_", " ")}</span>
+            <span>·</span>
+            <span>{getCategoryName(ticket.category)}</span>
             {ticket.discord_channel && !ticket.discord_channel.closed_at && (
-              <Badge
-                variant="outline"
-                className="text-[10px] px-1.5 py-0 bg-[#5865F2]/10 text-[#5865F2] border-[#5865F2]/20"
-              >
-                <img src={DiscordIcon} alt="" className="h-2.5 w-2.5 mr-0.5" />
-                Discord
-              </Badge>
+              <>
+                <span>·</span>
+                <span>Discord</span>
+              </>
             )}
           </div>
-          <h2 className="text-sm font-semibold tracking-tight line-clamp-1">
+          <h2 className="text-sm font-medium tracking-tight line-clamp-1">
             {ticket.subject}
           </h2>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>
-              <span className="text-foreground">{ticket.user?.username || "Unknown"}</span>
-            </span>
-            <span>•</span>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+            <span>{ticket.user?.username || "Unknown"}</span>
+            <span>·</span>
             <span>{format(new Date(ticket.created_at), "MMM d 'at' h:mm a")}</span>
           </div>
         </div>
 
         {/* Quick Actions */}
         {!isResolved && (
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={onResolve}
               disabled={updating}
-              className="h-7 px-2 text-xs text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+              className="h-7 px-2.5 text-xs"
             >
-              <CheckCircle className="h-3.5 w-3.5 mr-1" />
               Resolve
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={onClose}
               disabled={updating}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 text-xs text-muted-foreground"
             >
-              <XCircle className="h-3.5 w-3.5" />
+              Close
             </Button>
           </div>
         )}
       </div>
 
-      {/* Bottom: Dropdowns - single compact row */}
+      {/* Bottom: Dropdowns */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Status */}
         <Select
@@ -120,15 +101,13 @@ export function TicketHeader({
           onValueChange={(value) => onStatusChange(value as TicketStatus)}
           disabled={updating}
         >
-          <SelectTrigger className="h-6 w-[110px] text-[11px]">
+          <SelectTrigger className="h-6 w-[100px] text-[11px] bg-transparent">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {STATUS_OPTIONS.map((status) => (
               <SelectItem key={status.id} value={status.id}>
-                <span className={cn("font-medium", statusStyles[status.id])}>
-                  {status.name}
-                </span>
+                {status.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -140,15 +119,13 @@ export function TicketHeader({
           onValueChange={(value) => onPriorityChange(value as TicketPriority)}
           disabled={updating}
         >
-          <SelectTrigger className="h-6 w-[90px] text-[11px]">
+          <SelectTrigger className="h-6 w-[80px] text-[11px] bg-transparent">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {PRIORITY_OPTIONS.map((priority) => (
               <SelectItem key={priority.id} value={priority.id}>
-                <span className={cn("font-medium", priorityStyles[priority.id])}>
-                  {priority.name}
-                </span>
+                {priority.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -160,7 +137,7 @@ export function TicketHeader({
           onValueChange={(value) => onAssigneeChange(value === "unassigned" ? null : value)}
           disabled={updating}
         >
-          <SelectTrigger className="h-6 w-[120px] text-[11px]">
+          <SelectTrigger className="h-6 w-[110px] text-[11px] bg-transparent">
             <SelectValue placeholder="Unassigned" />
           </SelectTrigger>
           <SelectContent>
@@ -168,12 +145,7 @@ export function TicketHeader({
               <span className="text-muted-foreground">Unassigned</span>
             </SelectItem>
             {currentUserId && (
-              <SelectItem value={currentUserId}>
-                <span className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  Me
-                </span>
-              </SelectItem>
+              <SelectItem value={currentUserId}>Me</SelectItem>
             )}
             {adminUsers
               .filter((a) => a.id !== currentUserId)
