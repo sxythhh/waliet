@@ -161,3 +161,6 @@ verify_jwt = false
 
 [functions.undo-transaction]
 verify_jwt = true
+
+[functions.discord-interactions]
+verify_jwt = false
