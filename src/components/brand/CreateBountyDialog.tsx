@@ -16,6 +16,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ApplicationQuestionsEditor } from "./ApplicationQuestionsEditor";
+import { ApplicationQuestion } from "@/types/applicationQuestions";
 interface Blueprint {
   id: string;
   title: string;
@@ -72,7 +74,7 @@ export function CreateBountyDialog({
     payment_schedule: "monthly" as "weekly" | "biweekly" | "monthly",
     blueprint_embed_url: "",
     is_private: false,
-    application_questions: [] as string[],
+    application_questions: [] as ApplicationQuestion[],
     content_distribution: "creators_own_page" as "creators_own_page" | "branded_accounts",
     position_type: "" as string,
     custom_position: "" as string,
@@ -88,7 +90,7 @@ export function CreateBountyDialog({
     categories: [] as string[],
     skills: [] as string[]
   });
-  const [newQuestion, setNewQuestion] = useState("");
+  
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [categoryInput, setCategoryInput] = useState("");
@@ -272,7 +274,7 @@ export function CreateBountyDialog({
         blueprint_embed_url: formData.blueprint_embed_url || null,
         blueprint_id: selectedBlueprintId && selectedBlueprintId !== "none" ? selectedBlueprintId : null,
         is_private: formData.is_private,
-        application_questions: formData.application_questions.length > 0 ? formData.application_questions : null,
+        application_questions: formData.application_questions.length > 0 ? formData.application_questions as unknown as any : null,
         content_distribution: formData.content_distribution,
         position_type: finalPositionType || null,
         availability_requirement: formData.availability_requirement || null,
@@ -333,7 +335,7 @@ export function CreateBountyDialog({
       payment_schedule: "monthly",
       blueprint_embed_url: "",
       is_private: false,
-      application_questions: [],
+      application_questions: [] as ApplicationQuestion[],
       content_distribution: "creators_own_page",
       position_type: "",
       custom_position: "",
@@ -349,7 +351,7 @@ export function CreateBountyDialog({
       categories: [],
       skills: []
     });
-    setNewQuestion("");
+    
     setTagInput("");
     setTags([]);
     setCategoryInput("");
@@ -714,49 +716,14 @@ export function CreateBountyDialog({
                   <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">(Optional)</span>
                 </div>
                 
-                {/* Existing Questions */}
-                {formData.application_questions.length > 0 && <div className="space-y-2">
-                    {formData.application_questions.map((question, index) => <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-muted/30">
-                        <span className="text-xs text-muted-foreground font-inter tracking-[-0.5px] shrink-0">Q{index + 1}.</span>
-                        <span className="text-sm text-foreground font-inter tracking-[-0.5px] flex-1">{question}</span>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" onClick={() => {
-                  const updated = formData.application_questions.filter((_, i) => i !== index);
-                  setFormData({
-                    ...formData,
-                    application_questions: updated
-                  });
-                }}>
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>)}
-                  </div>}
+                <ApplicationQuestionsEditor
+                  questions={formData.application_questions}
+                  onChange={(questions) => setFormData({ ...formData, application_questions: questions })}
+                  maxQuestions={10}
+                />
                 
-                {/* Add New Question */}
-                <div className="flex gap-2">
-                  <Input value={newQuestion} onChange={e => setNewQuestion(e.target.value)} placeholder="Enter a question for applicants..." className="h-10 bg-muted/30 border-0 focus:ring-1 focus:ring-primary/30 font-inter tracking-[-0.5px] flex-1" onKeyDown={e => {
-                if (e.key === 'Enter' && newQuestion.trim()) {
-                  e.preventDefault();
-                  setFormData({
-                    ...formData,
-                    application_questions: [...formData.application_questions, newQuestion.trim()]
-                  });
-                  setNewQuestion("");
-                }
-              }} />
-                  <Button type="button" variant="secondary" size="sm" className="h-10 px-3 font-inter tracking-[-0.5px]" disabled={!newQuestion.trim()} onClick={() => {
-                if (newQuestion.trim()) {
-                  setFormData({
-                    ...formData,
-                    application_questions: [...formData.application_questions, newQuestion.trim()]
-                  });
-                  setNewQuestion("");
-                }
-              }}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
                 <p className="text-xs text-muted-foreground font-inter tracking-[-0.5px]">
-                  Add questions that creators must answer when applying to this boost.
+                  Add text, dropdown, video, or image questions for applicants.
                 </p>
               </div>
 
