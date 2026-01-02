@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { RequireContactDialog } from "@/components/RequireContactDialog";
 import { ApplyToBountySheet } from "@/components/ApplyToBountySheet";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AuthDialog from "@/components/AuthDialog";
@@ -135,6 +136,9 @@ export default function CampaignApply() {
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
+  const [showContactDialog, setShowContactDialog] = useState(false);
+  const [hasPhone, setHasPhone] = useState(false);
+  const [hasDiscord, setHasDiscord] = useState(false);
   const [isBoost, setIsBoost] = useState(false);
   const [showApplySheet, setShowApplySheet] = useState(false);
   const [showFloatingMenu, setShowFloatingMenu] = useState(true);
@@ -144,6 +148,8 @@ export default function CampaignApply() {
   const [isCampaignMember, setIsCampaignMember] = useState(false);
   const [connectedAccounts, setConnectedAccounts] = useState<any[]>([]);
   const [availableToConnect, setAvailableToConnect] = useState<any[]>([]);
+  
+  const hasContactInfo = hasPhone || hasDiscord;
   useEffect(() => {
     fetchCampaignData();
   }, [slug]);
@@ -302,6 +308,17 @@ export default function CampaignApply() {
     setIsLoggedIn(!!session);
     if (!session) return;
     setLoadingAccounts(true);
+    
+    // Check for phone/discord contact info
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("phone_number, discord_id")
+      .eq("id", session.user.id)
+      .single();
+    
+    setHasPhone(!!profile?.phone_number);
+    setHasDiscord(!!profile?.discord_id);
+    
     const platforms = campaignData.allowed_platforms || [];
     const {
       data: accounts
@@ -366,6 +383,13 @@ export default function CampaignApply() {
       toast.error("Please select at least one social account");
       return;
     }
+    
+    // Check for contact info requirement
+    if (!hasContactInfo) {
+      setShowContactDialog(true);
+      return;
+    }
+    
     if (campaign.status === "ended") {
       toast.error("This campaign has ended and is no longer accepting applications");
       return;
@@ -1253,6 +1277,16 @@ export default function CampaignApply() {
       setShowAddAccountDialog(false);
       if (campaign) checkAuthAndLoadAccounts(campaign);
     }} />
+
+      <RequireContactDialog 
+        open={showContactDialog} 
+        onOpenChange={setShowContactDialog} 
+        onSuccess={() => {
+          if (campaign) checkAuthAndLoadAccounts(campaign);
+        }}
+        hasPhone={hasPhone}
+        hasDiscord={hasDiscord}
+      />
 
       {isBoost && boostCampaign && <ApplyToBountySheet open={showApplySheet} onOpenChange={setShowApplySheet} bounty={{
       ...boostCampaign,

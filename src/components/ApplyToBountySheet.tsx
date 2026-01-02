@@ -11,6 +11,7 @@ import { ExternalLink, AlertCircle, Upload, X } from "lucide-react";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { AddSocialAccountDialog } from "@/components/AddSocialAccountDialog";
+import { RequireContactDialog } from "@/components/RequireContactDialog";
 import discordIcon from "@/assets/discord-icon.png";
 import tiktokLogo from "@/assets/tiktok-logo-white.png";
 import instagramLogo from "@/assets/instagram-logo-white.png";
@@ -69,11 +70,14 @@ export function ApplyToBountySheet({
   const [userId, setUserId] = useState<string>("");
   const [showAddSocialDialog, setShowAddSocialDialog] = useState(false);
   const [showDiscordDialog, setShowDiscordDialog] = useState(false);
+  const [showContactDialog, setShowContactDialog] = useState(false);
+  const [hasPhone, setHasPhone] = useState(false);
   const [blueprint, setBlueprint] = useState<any>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, ApplicationAnswer>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const questions = parseApplicationQuestions(bounty?.application_questions);
+  const hasContactInfo = hasPhone || discordConnected;
 
   // Check for connected accounts and fetch blueprint when sheet opens
   useEffect(() => {
@@ -109,11 +113,12 @@ export function ApplyToBountySheet({
       } = await supabase.from('social_accounts').select('*').eq('user_id', session.user.id);
       setSocialAccounts(accounts || []);
 
-      // Check for Discord connection
+      // Check for Discord connection and phone number
       const {
         data: profile
-      } = await supabase.from('profiles').select('discord_id, discord_username').eq('id', session.user.id).single();
+      } = await supabase.from('profiles').select('discord_id, discord_username, phone_number').eq('id', session.user.id).single();
       setDiscordConnected(!!profile?.discord_id);
+      setHasPhone(!!profile?.phone_number);
 
       // User needs at least one social account OR Discord
       const hasAccounts = accounts && accounts.length > 0 || !!profile?.discord_id;
@@ -150,6 +155,13 @@ export function ApplyToBountySheet({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for contact info requirement
+    if (!hasContactInfo) {
+      setShowContactDialog(true);
+      return;
+    }
+    
     if (!videoUrl.trim() && !uploadedVideoFile) {
       toast.error("Please provide a video URL or upload a video");
       return;
@@ -248,7 +260,14 @@ export function ApplyToBountySheet({
   };
   return <>
       <AddSocialAccountDialog open={showAddSocialDialog} onOpenChange={setShowAddSocialDialog} onSuccess={checkConnectedAccounts} />
-
+      
+      <RequireContactDialog 
+        open={showContactDialog} 
+        onOpenChange={setShowContactDialog} 
+        onSuccess={checkConnectedAccounts}
+        hasPhone={hasPhone}
+        hasDiscord={discordConnected}
+      />
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-xl bg-background border-0 p-0 overflow-visible flex flex-col">
           {/* Floating Fullscreen Button */}
