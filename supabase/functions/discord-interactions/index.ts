@@ -115,7 +115,7 @@ async function getLinkedUser(supabase: any, discordId: string) {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, wallet_balance, discord_id, discord_username")
+    .select("id, username, full_name, discord_id, discord_username, wallets(balance, total_earned)")
     .eq("discord_id", discordId)
     .single();
 
@@ -135,7 +135,13 @@ async function getLinkedUser(supabase: any, discordId: string) {
   }
 
   console.log("Found user:", data.username, "with discord_id:", data.discord_id);
-  return data;
+
+  // Flatten wallet data for easier access
+  return {
+    ...data,
+    wallet_balance: data.wallets?.balance || 0,
+    total_earned: data.wallets?.total_earned || 0,
+  };
 }
 
 // Command Handlers
@@ -156,7 +162,7 @@ async function handleBalanceCommand(supabase: any, discordId: string) {
     title: "Your Balance",
     description: `**$${balance.toFixed(2)}**`,
     color: Colors.SUCCESS,
-    footer: { text: `@${user.username || user.display_name}` },
+    footer: { text: `@${user.username || user.full_name}` },
   }, true);
 }
 
@@ -272,7 +278,7 @@ async function handleStatsCommand(supabase: any, discordId: string) {
       { name: "Approval Rate", value: totalSubmissions > 0 ? `${((approvedSubmissions / totalSubmissions) * 100).toFixed(0)}%` : "N/A", inline: true },
     ],
     color: Colors.PRIMARY,
-    footer: { text: `@${user.username || user.display_name}` },
+    footer: { text: `@${user.username || user.full_name}` },
   }, true);
 }
 
@@ -287,11 +293,11 @@ async function handleLinkCommand(discordId: string) {
 }
 
 async function handleLeaderboardCommand(supabase: any) {
-  // Get top earners
+  // Get top earners by joining wallets with profiles
   const { data: topEarners, error } = await supabase
-    .from("profiles")
-    .select("username, display_name, wallet_balance")
-    .order("wallet_balance", { ascending: false })
+    .from("wallets")
+    .select("balance, profiles(username, full_name)")
+    .order("balance", { ascending: false })
     .limit(10);
 
   if (error) {
@@ -312,10 +318,10 @@ async function handleLeaderboardCommand(supabase: any) {
   }
 
   const leaderboardText = topEarners
-    .map((user: any, index: number) => {
+    .map((wallet: any, index: number) => {
       const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
-      const name = user.display_name || user.username || "Anonymous";
-      return `${medal} **${name}** - $${(user.wallet_balance || 0).toFixed(2)}`;
+      const name = wallet.profiles?.full_name || wallet.profiles?.username || "Anonymous";
+      return `${medal} **${name}** - $${(wallet.balance || 0).toFixed(2)}`;
     })
     .join("\n");
 
