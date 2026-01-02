@@ -179,3 +179,9 @@ verify_jwt = true
 
 [functions.approve-payout]
 verify_jwt = true
+
+[functions.sync-discord-message]
+verify_jwt = false
+
+[functions.push-discord-message]
+verify_jwt = false
