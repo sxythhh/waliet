@@ -2,6 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Safe Area Support (iOS notch, Android cutouts) */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* Apply safe area padding to body on native platforms */
+body.capacitor-ios,
+body.capacitor-android {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+}
+
+/* Keyboard handling - adjust layout when keyboard is open */
+body.keyboard-open {
+  /* Reduce bottom padding when keyboard is visible */
+  padding-bottom: 0 !important;
+}
+
+/* Disable text selection and callouts on mobile for native feel */
+body.capacitor-ios,
+body.capacitor-android {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Re-enable selection for input fields */
+body.capacitor-ios input,
+body.capacitor-ios textarea,
+body.capacitor-android input,
+body.capacitor-android textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Prevent overscroll bounce on iOS */
+body.capacitor-ios {
+  overscroll-behavior: none;
+}
+
 /* Phone Input Styling */
 .phone-input-wrapper {
   @apply w-full;
